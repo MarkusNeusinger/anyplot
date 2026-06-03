@@ -1,0 +1,257 @@
+library: ggplot2
+language: r
+specification_id: scatter-ashby-material
+created: '2026-06-03T16:06:37Z'
+updated: '2026-06-03T16:21:57Z'
+generated_by: claude-sonnet
+workflow_run: 26896799370
+issue: 4677
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Correct Ashby chart implementation: convex hull polygons per material family
+    rendered in log-log space — the canonical approach for this plot type'
+  - Guide line 'E/ρ = const' with annotation adds engineering context and creates
+    a focal reference for lightweight stiffness trade-offs
+  - Inline geom_label family labels inside regions eliminate the need for a separate
+    legend, keeping the chart clean
+  - 'Full Imprint palette in canonical order (Metals=brand-green first), correct backgrounds
+    (#FAF8F1 / #1A1A17), and all chrome tokens theme-adaptive'
+  - Realistic materials data (40 points across 6 families) with accurate density/modulus
+    values; both axes span the correct physical range on log scale
+  - Clean, linear code structure; dplyr chull() used idiomatically for hull computation;
+    ragg device used correctly
+  weaknesses:
+  - Ceramics and Metals label proximity in the upper-right region causes slight visual
+    crowding — label_data placement at geometric mean puts both labels near the same
+    area; a small offset or background-aware placement would resolve this
+  - Guide line annotation 'E/ρ = const' is at size 2.8 (mm ≈ 8pt) — slightly undersized
+    for the canvas; bumping to 3.2–3.5 would improve mobile readability without disrupting
+    the layout
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light surface. No pure white.
+      Chrome: Title "scatter-ashby-material · r · ggplot2 · anyplot.ai" at top in dark ink, clearly readable. Y-axis label "Young's Modulus (GPa)" and X-axis label "Density (kg/m³)" both legible. Tick labels (100, 1,000, 10,000 on x; 0.001–1,000 on y) readable in dark INK_SOFT. Subtle major grid in INK_SOFT (linewidth 0.18). Thin axis lines along both axes.
+      Data: Six material families in Imprint palette canonical order — Metals (#009E73 brand green), Ceramics (#C475FD lavender), Polymers (#4467A3 blue), Composites (#BD8233 ochre), Elastomers (#AE3030 red), Foams (#2ABCCD cyan). Each family shown as a semi-transparent convex hull filled polygon with a bold border outline and individual scatter points. Inline geom_label family name inside each region. Dashed guide line (E/ρ = const) runs diagonally across the chart.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface. No pure black.
+      Chrome: Title, axis labels, tick labels all rendered in light ink tokens (INK = #F0EFE8, INK_SOFT = #B8B7B0) — clearly visible against dark background. No dark-on-dark failures observed. Grid lines remain subtle. geom_label fills use ELEVATED_BG (#242420) providing slight contrast from the dark background, with colored text for each family.
+      Data: All six Imprint palette data colors are identical to the light render — only chrome (background, text, grid) has flipped. Family polygon fills and borders maintain their hues. Dashed guide line remains visible.
+      Legibility verdict: PASS — all text clearly readable against warm near-black background. Chrome correctly theme-adapted.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes at specified sizes. Title 12pt,
+          axis labels 10pt, tick labels 8pt, family labels 3.1mm. Guide annotation
+          at 2.8mm is slightly small but readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Ceramics and Metals labels slightly crowded in upper-right area due
+          to geometric-mean placement. No true text-on-text overlap, but minor visual
+          crowding.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 40 points at size 2.1 with alpha 0.88 — well visible. Polygon fills
+          at alpha 0.22, borders at alpha 0.75. Good density-appropriate sizing.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette used (CVD-safe). Inline labels provide redundant
+          encoding beyond color.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas (gate passed). Title well within canvas. Good margins.
+          Nothing clipped or overflowing.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Density (kg/m³)'', Y: ''Young''s Modulus (GPa)'' — descriptive
+          with correct units. Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First family (Metals) = #009E73. Full 6-color Imprint palette in
+          canonical order. Light bg #FAF8F1, dark bg #1A1A17. Both renders theme-correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Above default: convex hull polygon regions with semi-transparent
+          fills, dashed guide line with annotation, inline labels replacing legend.
+          Intentional design hierarchy.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: panel.border removed, panel.grid.minor blank, major grid at linewidth
+          0.18 (very subtle), legend suppressed, thin axis lines. Good minimalism.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: E/ρ = const guide line creates a specific focal story about lightweight
+          stiffness. Family regions clearly guide viewer through the material property
+          space.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Ashby chart: log-log scatter with convex hull family regions.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Log scales on both axes, convex hull envelopes, family text labels,
+          guide line for performance index.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=density(kg/m³), Y=Young's modulus(GPa), color=family. 40 points
+          across 6 families. Full range visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''scatter-ashby-material · r · ggplot2 · anyplot.ai''. No
+          separate legend (inline labels used appropriately).'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 6 material families, 40 data points. Covers metals, ceramics, polymers,
+          composites, elastomers, foams — the standard Ashby chart taxonomy.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Values are accurate engineering data (Al alloy: 2700 kg/m³ / 70
+          GPa; steel: 7850/210; SiC: 3200/420). Neutral scientific context.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Density: 50–19300 kg/m³; Modulus: 0.003–420 GPa. Both span 3–4 decades
+          on log scale — physically correct.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear top-down flow, no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present. Data is static.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr (used for hull/label computation), ragg (device).
+          All used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: dplyr chull() pipeline is idiomatic. No fake UI. Clear named variables.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: sprintf('plot-%s.png', THEME) correct. ragg::agg_png device. Correct
+          canvas dimensions.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Grammar of graphics well applied. geom_polygon for hull regions,
+          geom_label for inline labels, scale_*_log10 with custom breaks/labels, expansion()
+          for axis padding.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: chull() integration within dplyr group_by pipeline, geom_label with
+          bold fontface and custom label.size/padding, expansion() function, multiple
+          scale_*_log10 with formatted labels.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - dplyr
+  techniques:
+  - annotations
+  - layer-composition
+  - convex-hull
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep: []
+  styling:
+  - alpha-blending
