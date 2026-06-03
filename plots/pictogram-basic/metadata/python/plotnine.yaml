@@ -1,45 +1,51 @@
 library: plotnine
+language: python
 specification_id: pictogram-basic
 created: '2026-03-10T22:41:03Z'
-updated: '2026-03-10T23:18:00Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22927470238
+updated: '2026-06-03T14:18:57Z'
+generated_by: claude-sonnet
+workflow_run: 26889376111
 issue: 4674
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/plotnine/plot.png
-preview_html: null
-quality_score: 88
+language_version: 3.13.13
+library_version: 0.15.5
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
 review:
   strengths:
-  - Excellent spec compliance — all required pictogram features implemented faithfully
-  - Strong design with custom colorblind-safe palette and clean infographic aesthetic
-    via theme_void
-  - Clever partial tile implementation using layered geom_tile with dashed outlines
-    and proportional fills
-  - Data sorted by value creates natural visual hierarchy
-  - Value labels provide immediate data comprehension
-  - Perfect code quality — clean, deterministic, well-structured
+  - Full spec compliance including partial icon representation with dashed outlines
+  - Correct Imprint palette with semantic color matching (Grapes→lavender, Bananas→ochre,
+    Strawberries→red)
+  - Clean theme-adaptive chrome — both renders pass legibility checks
+  - Sorted data creates natural visual hierarchy
+  - Creative use of multi-layer geom_tile to represent fractional icons
+  - Clean, deterministic code with proper KISS structure
   weaknesses:
-  - Partial tile fill alignment appears slightly imprecise in some rows
-  - Some unused whitespace below the chart and to the right of shorter rows
-  image_description: 'The plot displays a pictogram chart (isotype visualization)
-    for fruit production data. Five categories are arranged vertically from top to
-    bottom: Apples (blue, #306998), Grapes (purple, #8E44AD), Oranges (orange, #E67E22),
-    Bananas (green, #27AE60), and Strawberries (dark red, #C0392B). Each category
-    has a row of colored rectangular tiles where each full tile represents 5,000 tonnes.
-    Apples has 7 full tiles (35k), Grapes has 5 full + 1 partial (28k), Oranges has
-    4 full + 1 partial (22k), Bananas has 3 full + 1 partial (18k), and Strawberries
-    has 2 full + 1 partial (12k). Partial tiles are shown with a dashed outline and
-    a proportionally-filled left-aligned portion at low opacity. Value labels (e.g.,
-    "35k") appear in bold gray text to the right of each row. The title "pictogram-basic
-    · plotnine · pyplots.ai" is bold and centered at the top. A bottom legend reads
-    "Each ■ = 5k tonnes" with a blue tile sample. A caption at the bottom left states
-    "Partial squares show fractional units · Source: FAO estimates". The background
-    is clean white (theme_void).'
+  - Partial fill icons at alpha=0.3 are faint in the light render (pale ochre/lavender/blue
+    on cream) and blend into the dark background; increase alpha to ~0.5-0.6 for better
+    visibility
+  - 'Canvas utilization is low: data rows span only ~35% of canvas width and ~20%
+    of canvas height; reduce plot_margin from 0.06 to 0.03 and adjust scale_y_discrete
+    expand to tighten spacing'
+  - Large dead zones above the Apples row and below the Strawberries row before the
+    legend; use scale_y_discrete expand parameter to reduce vertical spacing
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "pictogram-basic · python · plotnine · anyplot.ai" in bold dark text (~65% width). Category labels (Apples, Grapes, Oranges, Bananas, Strawberries) on left y-axis in dark secondary text. Value labels (35k, 28k, 22k, 18k, 12k) in bold dark text to the right of rows. Caption in muted small text at bottom. All readable.
+      Data: Full tile icons in Imprint palette — Apples #009E73, Grapes #C475FD, Oranges #4467A3, Bananas #BD8233, Strawberries #AE3030. First series is #009E73. Partial tiles show dashed outlines + alpha=0.3 left-aligned fills (somewhat faint on cream background).
+      Legibility verdict: PASS — all text readable, minor note: partial fill icons are faint at 0.3 alpha
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title, y-axis labels, value labels, and caption all render in light-colored text. Legend text light-colored. No dark-on-dark failures detected. All text clearly readable against dark background.
+      Data: Colors identical to light render — Apples #009E73, Grapes #C475FD, Oranges #4467A3, Bananas #BD8233, Strawberries #AE3030. Partial fills (alpha=0.3) on dark background are somewhat dark (especially ochre for Bananas and red for Strawberries), but dashed outlines preserve visibility.
+      Legibility verdict: PASS — all chrome elements properly light-colored; data colors preserved
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -47,66 +53,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 26pt, category labels 20pt, value labels size=16, all explicitly
-          set. Caption at 14pt slightly small.
+        comment: 'All font sizes explicitly set; readable in both themes; title ~65%
+          width. Minor: value labels small at mobile scale.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text anywhere.
+        comment: No overlapping text or data elements in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Full tiles clearly visible. Partial tile fill alignment slightly
-          off in some rows.
+        comment: Full icons clear. Partial fill icons at alpha=0.3 are faint in light
+          render and dark in dark render; dashed outlines compensate but partial icons
+          could be more prominent.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Colorblind-safe palette with well-separated hues.
+        comment: Imprint palette is CVD-safe; categories use color + positional encoding
+          redundantly.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 2
         max: 4
         passed: true
-        comment: Chart fills ~50-60% of canvas. Some unused whitespace below and to
-          the right.
+        comment: Data rows span ~35% canvas width and ~20% canvas height; noticeable
+          empty space above/below data rows; legend somewhat isolated.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive category labels, correct title format, legend provides
-          unit context.
+        comment: Descriptive category labels on Y-axis; correct title format; FAO
+          attribution in caption.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; semantic matches (Grapes→lavender, Bananas→ochre,
+          Strawberries→red); backgrounds #FAF8F1/#1A1A17; both renders theme-correct.'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom colorblind-safe palette, dashed outlines for partial tiles,
-          cohesive infographic aesthetic.
+        comment: 'Above configured default: semantic color matching, sorted data hierarchy,
+          clean void theme, attribution. Not publication-ready.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: theme_void removes all chrome, generous whitespace, caption with
-          source attribution.
+        comment: theme_void removes all axes/grid; explicit font sizing; legend styled
+          with elevated background. Empty space could be tighter.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Data sorted by value creates visual hierarchy. Value labels provide
-          immediate comprehension.
+        comment: Data sorted highest-to-lowest; varying row lengths immediately communicate
+          relative quantities; partial icons add precision.
     spec_compliance:
       score: 15
       max: 15
@@ -116,49 +131,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct pictogram/isotype chart with repeated tiles.
+        comment: Correct pictogram/isotype chart with grid-aligned tile icons.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: unit value, partial icons, grid rows,
-          left-aligned, category labels, legend.'
+        comment: Consistent unit value (5k/tile), legend with unit, partial icon fractional
+          remainders, left-aligned rows, left-axis category labels.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on y-axis, icon count along x-axis.
+        comment: Values correctly mapped to icon counts; all 5 categories visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format. Legend indicates unit value clearly.
+        comment: Title is exactly 'pictogram-basic · python · plotnine · anyplot.ai';
+          legend shows unit correctly.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Good variation in values with different partial fill amounts. Could
-          include one evenly-divisible category.
+        comment: Shows full icons, partial icons with varying fractional amounts,
+          and range of quantities.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Fruit production in thousands of tonnes. Real-world, neutral domain.
+        comment: Fruit production in thousands of tonnes with FAO attribution; real-world
+          neutral scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 12k-35k tonnes plausible for fruit production.
+        comment: Values (35k→12k tonnes) are plausible relative fruit production quantities.
     code_quality:
       score: 10
       max: 10
@@ -168,31 +185,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → data → plot → save. No functions or classes.
+        comment: 'Linear: imports → data → tile construction → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data.
+        comment: Fully deterministic hardcoded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All plotnine imports used; only pandas and os additionally imported.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured layered approach, appropriate complexity.
+        comment: Clean Pythonic code; layer-based tile composition is appropriately
+          clever without over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300.
+        comment: Saves as plot-{THEME}.png; current API.
     library_mastery:
       score: 7
       max: 10
@@ -202,14 +221,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Strong grammar-of-graphics: aes mapping, multiple geom layers, scale_fill_manual,
-          theme_void.'
+        comment: 'Strong ggplot grammar: layered geom_tile composition, scale_color_identity,
+          guide_legend customization, theme_void with explicit overrides.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Layer composition with multiple geom_tile layers, guide_legend, scale_color_identity.
+        comment: Variable-width geom_tile for partial icons and multi-layer tile composition
+          are creative plotnine-specific techniques.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -218,7 +238,6 @@ impl_tags:
   - annotations
   - custom-legend
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
