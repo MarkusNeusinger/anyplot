@@ -1,114 +1,139 @@
 library: seaborn
+language: python
 specification_id: spectrogram-mel
 created: '2026-03-11T19:41:49Z'
-updated: '2026-03-11T20:07:06Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22970857219
+updated: '2026-06-03T18:19:01Z'
+generated_by: claude-sonnet
+workflow_run: 26902695675
 issue: 4672
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/seaborn/plot.png
-preview_html: null
-quality_score: 93
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
 review:
   strengths:
-  - Cohesive dark theme design with golden accent color creates a professional, polished
-    aesthetic
-  - Two-panel layout with waveform + spectrogram provides excellent context and data
-    storytelling
-  - Harmonic annotations (f0, 2f0, 3f0) add educational value about overtone series
-  - Full spec compliance with all required parameters and features
-  - Excellent synthesized audio data showing varied notes, harmonics, and transients
-  - Good use of seaborn-specific features (mako palette, set_theme, heatmap, despine)
+  - Sophisticated three-panel layout (waveform + mel-spectrogram + KDE) tells a coherent
+    audio analysis story
+  - Fully vectorized mel filterbank implementation with numpy broadcasting — no nested
+    Python loops
+  - Scientifically rigorous IPA vowel synthesis with realistic formant frequencies
+  - Correct theme-adaptive chrome (INK, INK_SOFT, PAGE_BG tokens) applied throughout
+    all panels and colorbar
+  - Idiomatic seaborn usage across all three panel types (lineplot, heatmap, kdeplot)
+  - Harmonic annotations (F0/2F0/3F0) on the spectrogram add genuine scientific insight
+  - Custom Imprint-derived colormap correctly used for the spectrogram intensity scale
   weaknesses:
-  - Waveform line could be slightly thicker for better visibility at smaller display
-    sizes
-  - Library mastery could be higher if more seaborn-distinctive features were leveraged
-  image_description: The plot features a dark-themed two-panel layout. The top panel
-    displays a waveform (golden/yellow line with subtle fill) showing audio amplitude
-    over 4 seconds, with note labels (C4, E4, G4, C5, A4, F4, D4, C4) in golden text
-    at the top and subtle dashed white boundary lines between notes. The bottom panel
-    is a mel-spectrogram heatmap using the seaborn "mako" colormap (dark blue through
-    teal to bright yellow-green). The x-axis shows time from 0.0 to 4.0 seconds with
-    0.5s intervals. The y-axis shows mel-scaled frequency with Hz labels at 100, 200,
-    500, 1k, 2k, 4k, and 8k Hz. A colorbar on the right shows Power (dB) from -80
-    to 0. Harmonic annotations (f0, 2f0, 3f0) with yellow triangle markers appear
-    on the final C4 note segment. The spectrogram clearly shows fundamental frequencies
-    and harmonics for each note as bright horizontal bands, with onset transients
-    visible as vertical bright lines. The title reads "spectrogram-mel · seaborn ·
-    pyplots.ai" in white bold text.
+  - 'KDE panel: /o/ (#BD8233 ochre) and /u/ (#AE3030 red) distributions are barely
+    visible — both have similar amplitude profiles to /a/ and are masked by the dominant
+    green distribution; increase linewidth or reduce fill alpha to improve differentiation'
+  - imprint_seq colormap is reversed from the canonical definition (blue→green instead
+    of green→blue); while intuitive for a spectrogram, it deviates from the style-guide
+    spec
+  - Waveform IPA vowel labels and harmonic annotations (F0/2F0/3F0) use 7pt fontsize
+    — borderline small for a 3200×1800 canvas and may be nearly illegible when scaled
+    to mobile (~400px width)
+  - 'DE-01/DE-02: Colorbar placement pushes slightly into the right margin; consider
+    tighter integration with the spectrogram panel for cleaner layout'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "spectrogram-mel · python · seaborn · anyplot.ai" clearly readable in dark ink. Axis labels "Frequency (Hz)" and "Time (s)" readable at 10pt. Tick labels (100, 200, 500, 1k, 2k, 4k, 8k Hz; 0.0–4.0 s) readable at 8pt. Colorbar "Power (dB)" label readable. KDE axis labels ("Amplitude", "Density") readable at 9pt. Legend text at 7pt is small but legible.
+      Data: Spectrogram shows blue (#4467A3) for low-energy regions transitioning to brand green (#009E73) for high-energy formant bands. Six distinct horizontal formant bands visible across the 4-second vowel sequence. Waveform in brand green with subtle fill. KDE /a/ (green) dominant; /e/ (purple) partially visible; /i/ (blue) partially visible; /o/ (ochre) and /u/ (red) barely distinguishable.
+      Legibility verdict: PASS — all primary text readable; minor concern with 7pt annotation labels
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title, axis labels, and tick labels rendered in light #F0EFE8/B8B7B0 tokens — all clearly readable against the dark surface. No dark-on-dark failure detected. Colorbar tick labels light-colored and readable. KDE legend text light and readable.
+      Data: Spectrogram data colors identical to light render — blue-to-green colormap unchanged; formant band structure equally clear. Waveform brand green #009E73 remains visually prominent on dark background. KDE distributions show same color mapping, same visibility issues with /o/ and /u/.
+      Legibility verdict: PASS — both themes render correctly; no dark-on-dark failure
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24pt, labels=20pt, ticks=16pt,
-          note labels=15pt, colorbar=18pt'
+        comment: 'Title, axis labels, tick labels all readable in both themes. Minor
+          deduction: 7pt waveform vowel labels and harmonic annotations (F0/2F0/3F0)
+          are borderline small for mobile scaled view.'
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No overlapping text elements, note labels well-spaced, Hz labels
-          don't collide
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Spectrogram has excellent contrast, waveform linewidth=0.6 slightly
-          thin but visible
+        comment: 'No major overlaps. Minor concern: F0/2F0/3F0 annotations clustered
+          in lower-right of spectrogram near frequency tick labels.'
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Spectrogram formant bands and waveform clearly visible. KDE /o/ (#BD8233)
+          and /u/ (#AE3030) distributions are barely distinguishable — masked by the
+          dominant /a/ green series at fill alpha=0.3.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Mako colormap is perceptually uniform and colorblind-safe, good contrast
-          on dark background
+        comment: Imprint-derived continuous colormap used. Categorical series use
+          Imprint palette. No red-green sole encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Two-panel layout with 1:5 ratio well-proportioned, spectrogram fills
-          canvas, colorbar positioned well
+        comment: Canvas gate passed (no gate file). Three-panel layout well-proportioned
+          with height_ratios=[1,4,2]. No overflow or clipping. Title well-positioned.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (s), Frequency (mel scale), Power (dB) - all descriptive with
-          units
+        comment: 'Title correct format. Axes labeled with units: ''Frequency (Hz)'',
+          ''Time (s)'', colorbar ''Power (dB)''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq (Imprint-derived) used for continuous spectrogram data.
+          Categorical KDE starts with #009E73 as first series (/a/). Backgrounds correct
+          (#FAF8F1 light, #1A1A17 dark). Minor note: colormap is reversed (blue→green
+          vs canonical green→blue) but still Imprint-derived.'
     design_excellence:
-      score: 17
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Cohesive dark theme with mako palette and golden accents, professional
-          polish above defaults
+        comment: 'Well above default: three-panel scientific dashboard with custom
+          colormap, scientific annotations, and intentional panel sizing hierarchy.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines despined and styled, subtle boundaries, refined colorbar,
-          generous padding
+        comment: Spines removed via sns.despine throughout. Colorbar and legend styled
+          with Imprint tokens. Subtle grid (alpha=0.15). Vowel boundary dashed lines
+          at low alpha.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Two-panel layout connects waveform to spectrogram, note labels and
-          harmonic annotations guide viewer
+        comment: 'Three panels together tell the audio analysis story: time-domain
+          → spectral content → amplitude statistics. IPA vowel labels + boundary markers
+          on waveform and spectrogram link the narrative.'
     spec_compliance:
       score: 15
       max: 15
@@ -118,27 +143,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct mel-spectrogram with power spectrum as 2D heatmap
+        comment: Correct mel-spectrogram as center panel. Additional waveform and
+          KDE panels enhance context.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: dB scale, sequential colormap, Hz labels,
-          colorbar, correct parameters'
+        comment: Power-to-dB conversion, mel filterbank, Hz-labeled y-axis, colorbar
+          in dB, canonical parameters (n_fft=2048, hop_length=512, n_mels=128), synthesized
+          audio data.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time, Y=mel frequency, color=power in dB, all correct
+        comment: 'X: time in seconds. Y: mel-scaled frequency with Hz tick labels.
+          Color: power in dB.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format, no legend needed for heatmap with
-          colorbar
+        comment: Title 'spectrogram-mel · python · seaborn · anyplot.ai' is correct
+          format. Colorbar labeled 'Power (dB)'. KDE legend shows vowel categories.
     data_quality:
       score: 15
       max: 15
@@ -148,21 +176,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multiple notes, visible harmonics, onset transients, noise floor,
-          full dynamic range
+        comment: 'Comprehensive: waveform, mel-spectrogram with formant bands, amplitude
+          KDE. Temporal vowel progression, formant structure, harmonic series all
+          shown.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Musical melody with named notes C4-C5, realistic audio analysis scenario
+        comment: IPA vowel synthesis with realistic formant frequencies for a male
+          voice. Neutral linguistic data. 22050 Hz sample rate, 4-second duration
+          — standard audio ML parameters.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard sample rate 22050 Hz, 4s duration, appropriate frequency
-          and dB ranges
+        comment: Dynamic range -80 to 0 dB appropriate for speech. 128 mel bands is
+          standard. 22050 Hz Nyquist is appropriate for speech analysis.
     code_quality:
       score: 10
       max: 10
@@ -172,32 +203,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, audio synthesis, STFT, mel filterbank, plotting,
-          save'
+        comment: No functions or classes. Procedural code throughout.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before random operations
+        comment: np.random.seed(42). Deterministic synthesis.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used including os/sys for path workaround
+        comment: 'All imports used: matplotlib, numpy, pandas, seaborn, LinearSegmentedColormap,
+          scipy.signal.stft.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity, manual filterbank avoids librosa dependency
+        comment: No fake interactivity. Fully vectorized mel filterbank using numpy
+          broadcasting. Appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300 and bbox_inches=tight
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. Correct API.
     library_mastery:
       score: 7
       max: 10
@@ -207,14 +239,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of sns.set_theme, set_context, heatmap, lineplot, despine
+        comment: 'sns.heatmap, sns.lineplot, sns.kdeplot, sns.set_theme, sns.despine
+          all used idiomatically. Minor: could use sns.set_context for consistent
+          scaling.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses seaborn-exclusive mako palette, set_theme with rc, heatmap cbar_kws,
-          despine
+        comment: sns.heatmap for the spectrogram is the distinctively seaborn approach.
+          sns.kdeplot with fill=True and hue for multi-series distributions. Three-panel
+          integration of seaborn plot types.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -229,8 +264,7 @@ impl_tags:
   - matrix-construction
   - iteration-over-groups
   dataprep:
-  - binning
+  - normalization
   styling:
-  - dark-theme
   - custom-colormap
   - alpha-blending
