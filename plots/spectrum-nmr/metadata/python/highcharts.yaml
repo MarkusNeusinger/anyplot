@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: spectrum-nmr
 created: '2026-03-09T12:51:55Z'
-updated: '2026-06-03T12:12:40Z'
+updated: '2026-06-03T12:25:30Z'
 generated_by: claude-sonnet
 workflow_run: 26883137991
 issue: 4676
@@ -12,42 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/python/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - Chemically accurate synthetic ethanol 1H NMR with correct Lorentzian lineshapes,
-    realistic J-coupling (0.07 ppm), and correct multiplicity patterns (triplet 1:2:1,
-    quartet 1:3:3:1)
-  - 'Full theme adaptation: all chrome tokens (INK, INK_SOFT, ELEVATED_BG, PAGE_BG,
-    GRID) correctly applied across both light and dark renders'
-  - Highcharts annotations module with connector shapes effectively labels each NMR
-    peak — the highlight feature of this implementation
-  - 'Perfect spec compliance: reversed x-axis, TMS reference, clean baseline, all
-    required features present'
-  - Dynamic title fontsize formula correctly handles the longer descriptive prefix;
-    canvas dimensions pinned exactly via CDP override + PIL fallback
+  - Scientifically accurate ethanol 1H NMR spectrum with realistic Lorentzian peak
+    shapes for TMS (singlet), CH3 (triplet), CH2 (quartet), and OH (singlet)
+  - 'Full Imprint palette compliance: brand green #009E73 for data series, theme-adaptive
+    chrome tokens (INK, INK_SOFT, INK_MUTED) correctly wired to ANYPLOT_THEME'
+  - Reversed x-axis per NMR convention with -0.5 to 5.5 ppm window showing all ethanol
+    peaks — empty high-ppm region correctly cropped
+  - Highcharts annotations module used with connector-style labels pointing to each
+    key peak (TMS, CH3, OH, CH2) — a distinctive library feature
+  - Plot band highlighting the dominant CH3 triplet region with labelled band and
+    subtle green tint adds storytelling depth
+  - Informative subtitle with compound formula, solvent, and spectrometer frequency
+    (CH3CH2OH in CDCl3, 400 MHz)
+  - Dynamic title fontsize scaling logic correctly handles the mandated title string
+  - Single-series area fill with subtle rgba fill opacity perfectly suited to spectral
+    data density (~6000 points)
   weaknesses:
-  - DE-01 limited by standard Highcharts visual style — switch from LineSeries to
-    AreaSeries with fillColor rgba(0,158,115,0.12) to shade under the spectrum baseline
-    — the standard scientific publication convention for NMR spectra
-  - 'DE-02 spines not explicitly removed: top/right axis lines should be suppressed;
-    consider reducing annotation label color to INK_MUTED for softer visual hierarchy'
-  - DE-03 all peaks drawn identically — no visual emphasis on the dominant CH3 triplet
-    (tallest peak at delta 1.18)
-  - Annotation label font size (34px) below the 40px floor for readable secondary
-    text — increase to 40px
+  - 'CH3 (triplet) annotation at delta 1.18 and the plot-band ''dominant'' label are
+    both positioned near the top of the chart in the same x-region (~1.18 ppm) — the
+    annotation y:-50 offset pushes its label to the same vertical space as the band
+    label, causing visual crowding or overlap. Fix: increase the CH3 annotation y-offset
+    to y:-90 or reposition the band label (e.g. verticalAlign: bottom) so the two
+    text elements clear each other.'
+  - 'DE-02 visual refinement: annotation boxes in the dominant region are slightly
+    cluttered together. A small y-offset tweak to the CH3 annotation (see above) would
+    also resolve this. No other polish issues found.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "Ethanol 1H NMR · spectrum-nmr · python · highcharts · anyplot.ai" in bold dark text, clearly readable. Subtitle "CH3CH2OH in CDCl3 (400 MHz)" in INK_SOFT. Axis labels "Chemical Shift (ppm)" and "Intensity (a.u.)" dark and readable. Tick labels (dark) clearly visible. Dotted y-axis grid lines subtle and appropriate. Four peak annotations with connectors label TMS, CH3, OH, CH2 peaks.
-      Data: Brand green #009E73 line spectrum. Dominant CH3 triplet at 1.18 ppm (height ~1.30), CH2 quartet at 3.69 ppm (height ~0.66), OH singlet at 2.61 ppm (height ~0.40), TMS singlet at 0 ppm (height ~0.30). Baseline noise present. First series is #009E73 confirmed.
-      Legibility verdict: PASS — all text readable against light background, no light-on-light failures
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "Ethanol 1H NMR · spectrum-nmr · python · highcharts · anyplot.ai" in dark ink, clearly readable. Subtitle "CH3CH2OH in CDCl3 (400 MHz)" in muted INK_SOFT color. X-axis label "Chemical Shift (ppm)" and Y-axis label "Intensity (a.u.)" in dark ink at 56px — both clearly readable. Tick labels in INK_SOFT at 44px — readable. All chrome is dark-on-light with good contrast.
+      Data: Single area series in brand green #009E73 with subtle rgba(0,158,115,0.12) fill. Spectrum shows NMR peaks: CH2 quartet at ~3.69, OH singlet at ~2.61, CH3 triplet at ~1.18, TMS singlet at ~0.00. X-axis reversed (5.5 on left → -0.5 on right) per NMR convention. Connector annotations label CH2, OH, and TMS peaks clearly. "dominant" band label appears in the highlighted CH3 region. Dotted y-axis grid lines are subtle and not dominant. First series is correctly #009E73.
+      Legibility verdict: PASS — all text readable. Minor concern: CH3 annotation and "dominant" band label may crowd each other near the top of the highlighted band region.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct theme surface
-      Chrome: Title and all text rendered in light cream/off-white (F0EFE8 range). Axis labels, tick labels, and annotation text all clearly visible against dark background. Annotation label backgrounds use ELEVATED_BG (#242420 dark elevated). Dotted grid lines in rgba(240,239,232,0.15) visible but subtle.
-      Data: Data series color identical to light render — brand green #009E73 — confirmed. Peak positions, heights, and annotation placements identical. Only chrome elements (background, text, grid, legend box) have flipped.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures detected
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title, subtitle, axis labels, and tick labels all flip to light-colored text (INK = #F0EFE8 / INK_SOFT = #B8B7B0 / INK_MUTED = #A8A79F) — all clearly readable against the dark background. No dark-on-dark failure observed. Annotation boxes use ELEVATED_BG (#242420) background with INK_MUTED (#A8A79F) label text — light gray on near-black is readable. "dominant" band label visible in lighter color against the dark chart.
+      Data: Data series remains brand green #009E73 — identical to the light render as required. Area fill rgba(0,158,115,0.12) still visible as a subtle fill on dark background. Grid lines flip to rgba(240,239,232,0.15) — subtle but present.
+      Legibility verdict: PASS — all text readable in dark mode. Data colors match light render exactly.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -55,76 +59,87 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes. Annotation
-          labels at 34px slightly smaller than secondary text (44px) but still legible.
+        comment: 'All font sizes explicitly set: title 66px (dynamic scaling for 64-char
+          string), axis labels 56px, tick labels 44px, annotations 40px. Balanced
+          X/Y labels. Readable in both themes.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text collisions; annotations with connectors well-positioned.
+        comment: 'Minor crowding: CH3 annotation label (y:-50 from peak at intensity
+          1.30, near y-axis max 1.35) and ''dominant'' band label (verticalAlign:top,
+          y:20) both occupy the same vertical space at ~1.18 ppm.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 6000-point dense spectrum at lineWidth=2 with markers disabled —
-          appropriate density adaptation.
+        comment: 6000-point area series renders all NMR peaks sharply. Lorentzian
+          peak shapes are sharp and well-resolved. All peaks (TMS, CH3, CH2, OH) clearly
+          visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series brand green, good contrast on both surfaces, CVD-safe.
+        comment: 'Single series in #009E73 (brand green) has good luminance contrast
+          against both #FAF8F1 and #1A1A17 backgrounds. CVD-safe.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); generous margins; no overflow.
+        comment: Canvas gate passed (3200x1800). Good margins (spacingTop:40, spacingLeft:60,
+          spacingRight:60, marginBottom:140). Plot area uses canvas well. No overflow
+          or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Chemical Shift (ppm) and Intensity (a.u.) with correct units.
+        comment: 'X: ''Chemical Shift (ppm)'' — descriptive with units. Y: ''Intensity
+          (a.u.)'' — descriptive with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1 / #1A1A17; full theme-adaptive
-          chrome.'
+        comment: 'Single series = #009E73 in both renders. Background #FAF8F1 light
+          / #1A1A17 dark. All chrome tokens (INK, INK_SOFT, INK_MUTED, ELEVATED_BG,
+          GRID) correctly theme-adaptive. No legacy or forbidden colors.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Above default (subtitle, annotations, Lorentzian shapes, correct
-          reversed axis) but still reads as well-configured Highcharts default. No
-          fill-under-curve or unexpected design moments.
+        passed: true
+        comment: 'Strong scientific design: reversed NMR x-axis, connector annotations,
+          plot band highlighting, informative subtitle. Clearly above a well-configured
+          library default. Not publication-ready only because of minor annotation
+          crowding.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Dotted y-only grid, styled annotation backgrounds are refinements.
-          No explicit spine suppression; standard Highcharts frame.
+        passed: true
+        comment: Y-axis dotted grid only (no x-axis grid), legend disabled, credits
+          disabled, generous margins. Good refinement, minor annotation crowding slightly
+          detracts from perfect polish.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Peak annotations with connectors guide reader through ethanol NMR
-          story; subtitle contextualizes experiment. All peaks visually equal — no
-          emphasis on dominant CH3.
+        comment: 'Good storytelling: all peaks labeled with functional group and chemical
+          shift, ''dominant'' band highlights key CH3 region, subtitle gives scientific
+          context. Visual hierarchy guides viewer.'
     spec_compliance:
       score: 15
       max: 15
@@ -134,28 +149,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct NMR spectrum: line plot of intensity vs chemical shift.'
+        comment: 'Correct chart type: area series rendering intensity vs chemical
+          shift — the standard representation of NMR spectra.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Reversed x-axis, Lorentzian peaks, singlet/triplet/quartet patterns,
-          peak labels, TMS reference at 0 ppm, clean baseline with noise — all present.
+        comment: 'All spec features present: reversed x-axis, Lorentzian splitting
+          patterns (singlet/triplet/quartet), key peaks labeled, TMS reference at
+          0 ppm, clean baseline with minimal noise.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x = chemical shift reversed (-0.5 to 5.5 ppm displayed), y = intensity;
-          6000 synthetic data points.
+        comment: X = chemical shift (ppm), Y = intensity (a.u.), axis reversed correctly
+          (high ppm on left). All ethanol peaks within visible range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Ethanol 1H NMR · spectrum-nmr · python · highcharts · anyplot.ai
-          — correct optional-prefix format; legend disabled (single series).
+        comment: Title 'Ethanol 1H NMR · spectrum-nmr · python · highcharts · anyplot.ai'
+          matches {Descriptive Title} · {spec-id} · {language} · {library} · anyplot.ai
+          format. No legend appropriate for single-series chart.
     data_quality:
       score: 15
       max: 15
@@ -165,22 +183,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: TMS singlet, CH3 triplet (1:2:1), CH2 quartet (1:3:3:1), OH singlet;
-          Lorentzian lineshapes; baseline noise; all multiplet types demonstrated.
+        comment: 'Shows all NMR spectrum features: three distinct multiplet types
+          (triplet, quartet, singlet), realistic peak heights, TMS reference, clean
+          baseline with realistic Lorentzian shapes.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Ethanol 1H NMR is the canonical introductory NMR example; CDCl3 at
-          400 MHz is standard; peak positions chemically accurate.
+        comment: Ethanol 1H NMR in CDCl3 at 400 MHz — highly realistic, scientifically
+          accurate, neutral topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Chemical shift 0-12 ppm generated, display focused on 0-5.5 ppm (all
-          ethanol peaks); J-coupling 0.07 ppm realistic.
+        comment: 'Chemical shifts factually correct for ethanol: CH3 at 1.18, OH at
+          2.61, CH2 at 3.69, TMS at 0.00. J-coupling of 0.07 ppm realistic. Peak intensities
+          reflect 1:2:1 and 1:3:3:1 multiplet ratios.'
     code_quality:
       score: 10
       max: 10
@@ -190,65 +210,68 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → chart config → HTML → screenshot
-          → save.'
+        comment: 'Clean linear structure: imports → theme tokens → data generation
+          → chart config → export. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set before any stochastic operations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unused packages.
+        comment: 'All imports used: os, tempfile, time, urllib.request, pathlib.Path,
+          numpy, highcharts_core (Chart, HighchartsOptions, AreaSeries), PIL.Image,
+          selenium.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Lorentzian synthesis; dynamic title fontsize scaling; appropriate
-          complexity.
+        comment: Clean Pythonic code. Dynamic title fontsize calculation is a good
+          touch. No over-engineering, no fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Highcharts
-          API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current highcharts_core
+          API. PIL belt-and-braces canvas pinning included.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Idiomatic highcharts_core usage: Chart(container=''container''),
+          HighchartsOptions, AreaSeries. Correct inline JS embedding for headless
+          Chrome. CDP viewport override for exact canvas dims.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Correct Chart(container=''container''), HighchartsOptions, LineSeries;
-          turboThreshold=10000 for 6k-point series; CDP override for exact dimensions.
-          Minor: LineSeries imported from area module rather than line module.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Highcharts annotations module with connector shapes is a genuinely
-          distinctive feature; reversed axis via reversed:True; turboThreshold; interactive
-          tooltip retained in HTML artifact. Could go further with AreaSeries fill-under-curve.
-  verdict: REJECTED
+        comment: Uses Highcharts-specific plotBands for region highlighting and the
+          annotations module with connector-style labels — both features distinctive
+          to Highcharts. One point held back as the connector label placement could
+          be more refined.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   - pillow
   techniques:
   - annotations
-  - hover-tooltips
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
+  - alpha-blending
