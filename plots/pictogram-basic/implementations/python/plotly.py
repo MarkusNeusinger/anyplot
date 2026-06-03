@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pictogram-basic: Pictogram Chart (Isotype Visualization)
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-03
@@ -140,16 +140,16 @@ fig.add_annotation(
     xanchor="left",
 )
 
-# Subtitle — key insight above the chart
+# Subtitle — key insight above the chart (left-anchored to stay clear of right-side dropdown)
 fig.add_annotation(
     xref="paper",
     yref="paper",
-    x=0.5,
+    x=0.0,
     y=1.06,
     text="Apples lead with 35k tonnes — nearly double the next category",
     showarrow=False,
     font={"size": 14, "color": INK_SOFT, "family": "Arial"},
-    xanchor="center",
+    xanchor="left",
 )
 
 # Dropdown — toggle between all categories and top 3
