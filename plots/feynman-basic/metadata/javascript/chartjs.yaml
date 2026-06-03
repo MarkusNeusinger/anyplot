@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: feynman-basic
 created: '2026-06-03T06:22:14Z'
-updated: '2026-06-03T06:29:51Z'
+updated: '2026-06-03T06:52:53Z'
 generated_by: claude-sonnet
 workflow_run: 26866910639
 issue: 4667
@@ -12,49 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/feynman-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/javascript/chartjs/plot-dark.html
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - Clever use of Chart.js scatter type with hidden axes as a coordinate backdrop
-    for custom canvas drawing — the scale API (getPixelForValue) is used elegantly
-    for coordinate mapping
-  - 'Correct Imprint palette: fermion lines in brand green (#009E73), virtual photon
-    in lavender (#C475FD); colors identical across both themes'
-  - 'Both themes fully theme-adaptive: background, title, and chrome correctly use
-    ANYPLOT_TOKENS; dark render has light text on near-black background with no dark-on-dark
-    issues'
-  - Physics scenario is scientifically accurate (QED tree-level e⁺e⁻ → γ* → μ⁺μ⁻ annihilation);
-    arrow directions correctly distinguish particle from antiparticle
-  - Time indicator at the bottom guides reading direction; vertex dots cleanly mark
-    interaction points; particle labels in their respective line colors add clear
-    visual hierarchy
+  - 'All four Feynman particle line types implemented with distinct line styles: solid
+    with directional arrows for fermions, wavy for photons, curly/looped for gluons,
+    dashed for scalar bosons'
+  - Full Imprint palette applied semantically — each particle type mapped to a unique
+    palette color (#009E73 fermion, lavender photon, blue gluon, ochre boson)
+  - Two complete, textbook-accurate QFT processes side by side (e+e- → γ* → μ+μ- and
+    H → bb̄g)
+  - 'Excellent CVD accessibility through redundant encoding: shape/style AND color
+    distinguish particle types'
+  - Perfect Chart.js plugin usage with beforeDraw/afterDraw lifecycle hooks and getPixelForValue()
+    coordinate mapping
+  - Axes completely hidden for clean diagram aesthetic; time-direction arrow provides
+    spatial context
   weaknesses:
-  - 'Only 2 of the 4 required particle line types are demonstrated: fermion (solid
-    with arrow) and photon (wavy). The spec explicitly requires curly/looped lines
-    for gluons and dashed lines for scalar bosons. Add a more complete process (e.g.,
-    a QCD vertex with a gluon, or a Higgs decay) or expand the diagram to show all
-    four line styles, so all spec-required particle types are visualised'
-  - 'DQ-01 feature coverage is incomplete: the example hardcodes only the e⁺e⁻ → γ*
-    → μ⁺μ⁻ process, missing the gluon and scalar-boson line-style demonstrations called
-    out in the spec Notes section'
-  - 'CQ-01 deduction: helper functions (toPx, arrowHead, fermionLine, photonLine)
-    are present — acceptable for this diagram type, but they add structural complexity
-    beyond the flat KISS pattern'
+  - Helper functions (fermionLine, photonLine, gluonLine, bosonLine) add structural
+    complexity beyond KISS — acceptable given the bespoke drawing requirements, but
+    worth noting
+  - Right side of the diagram (H → bb̄g process) is slightly cramped with three particles
+    fanning out from V4, causing some labels (b, g) to land close to the right canvas
+    edge — consider shifting V3/V4 leftward to give more breathing room
+  - The time indicator label is italic 15px which may be very small at 400px mobile
+    scale — consider increasing to 17-18px
+  - LM-02 score limited because most of the actual drawing uses raw Canvas 2D API
+    rather than Chart.js-native constructs
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "feynman-basic · javascript · chartjs · anyplot.ai" in dark near-black text, clearly readable. No axis labels or tick labels (axes hidden, appropriate). Time indicator label "time" in soft dark color, readable.
-      Data: Two diagonal fermion lines (solid, brand green #009E73) converge at the left vertex dot; a horizontal wavy photon line (lavender #C475FD) connects two solid black vertex dots at center; two diagonal fermion lines (green) diverge from the right vertex. Arrow heads at mid-line on fermion lines indicate particle/antiparticle direction. Particle labels e⁻, e⁺ on the left and μ⁻, μ⁺ on the right in green; γ* label in lavender above the photon line. Dashed arrow with "time" label at the bottom.
-      Legibility verdict: PASS — all text clearly readable against the warm off-white background; no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface
+      Chrome: Title "feynman-basic · javascript · chartjs · anyplot.ai" in dark ink at top center, occupying ~65% of canvas width. No axis labels or tick labels (intentionally hidden). "time" label in italic inkSoft at bottom center with dashed arrow.
+      Data: Two Feynman processes separated by a dashed vertical grey divider. Left: e+e- → γ* → μ+μ- — solid green fermion lines with directional arrows meeting at black vertex dots, wavy lavender photon line between vertices, particle labels (e⁻, e⁺, μ⁻, μ⁺, γ*) in matching colors. Right: H → bb̄g — dashed ochre Higgs boson line, solid green fermion b-quark lines with arrows, curly blue gluon line from V4, labels (H, b, g, b̄) in palette colors.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background, no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface, not pure black.
-      Chrome: Title in light off-white text, clearly readable against dark background. Time indicator label "time" in soft light color, readable. Vertex dots render as white/light (using t.ink which is light in dark mode) — theme-consistent.
-      Data: Data colors (green fermion lines, lavender photon) are identical to the light render — only chrome flips. Particle labels remain in their respective line colors. All line styles, arrows, and labels clearly visible against dark background.
-      Legibility verdict: PASS — all text clearly readable; no dark-on-dark failures observed; the dark render is fully theme-correct.
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface
+      Chrome: Title in light ink, clearly readable. "time" label in light inkSoft. Vertex dots render as white circles (t.ink adapts to light in dark mode) — all correct theme adaptation.
+      Data: Identical data colors to light render — fermion green #009E73, photon lavender, gluon blue, boson ochre all unchanged. Only chrome (background, text, vertex dots) flipped for dark theme.
+      Legibility verdict: PASS — all text clearly readable against the near-black background. No dark-on-dark failures observed. Brand green #009E73 remains clearly visible.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -62,83 +61,83 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set throughout (title 22px, labels 20px bold,
-          time 15px). All text readable in both themes. Minor: title at ~45% canvas
-          width slightly below 50% guideline for its length, but acceptable.'
+        comment: 'Font sizes explicitly set throughout (title 22px, particle labels
+          20px bold, time label 15px italic). All readable in both themes. Minor deduction:
+          time label at 15px italic is slightly small at mobile scale.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Particle labels well-positioned away from
-          lines and each other.
+        comment: No overlapping text elements in either render. Particle labels carefully
+          offset from lines.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines at 3.5px weight are clearly visible. Arrow heads at 13px sz
-          are prominent. Vertex dots at r=6 are well-sized. Wavy photon clearly distinguishable
-          from straight fermion lines.
+        comment: All four particle line types clearly distinguishable. Line width
+          3.5 appropriate. Vertex dots visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Two colors used: green (#009E73) and lavender (#C475FD). Both are
-          CVD-safe Imprint palette members.'
+        comment: Four distinct hues from Imprint palette plus redundant line-style
+          encoding (solid/wavy/curly/dashed) — excellent CVD safety.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed. Diagram fills canvas area well with generous
-          symmetric margins. No content cut off at any edge.
+        comment: 'Canvas gate passed. Good canvas utilization. Minor deduction: right
+          H→bb̄g process slightly cramped, labels near right canvas edge.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes hidden (appropriate for Feynman diagram). Title format correct.
-          N/A for axis labels.
+        comment: Title correctly formatted. No traditional axis labels (appropriate
+          for diagram). Time-direction arrow provides spatial context.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (fermions) uses #009E73 brand green. Photon uses palette[1]
-          lavender. Background is theme-adaptive pageBg token. Data colors identical
-          between themes. Full compliance.'
+        comment: 'Fermion → palette[0] #009E73, photon → palette[1], gluon → palette[2],
+          boson → palette[3]. Background #FAF8F1 / #1A1A17 correct. Data colors identical
+          between renders. Chrome adapts correctly.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Semantic color assignment (green=matter/fermion, lavender=force-carrier/photon)
-          is above default. Clean professional style appropriate to physics diagrams.
-          Not publication-exceptional but clearly above configured-default level.
+        comment: 'Strong design: four custom rendering algorithms for distinct particle
+          types, semantic Imprint palette mapping, clean physics diagram aesthetic
+          with no axes/grid. Clearly above defaults. Not quite publication-ready due
+          to slight right-side crowding.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axes fully hidden, no grid, custom background fill via plugin beforeDraw,
-          generous padding, vertex dots as interaction markers, subtle time indicator.
-          Good refinement above library defaults.
+        comment: 'Axes completely hidden (display: false), no grid, clean pageBg fill,
+          tasteful dashed divider between processes. Well-refined for the diagram
+          type.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Arrow directions create visual hierarchy communicating particle vs.
-          antiparticle flow. Color distinction between matter and force carrier guides
-          the viewer. Time indicator contextualizes the left-to-right reading order.
+        comment: Two contrasting QFT processes side by side tell a clear physics story.
+          Time direction indicator guides the viewer. Particle flow traceable via
+          arrows. Good visual hierarchy.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -146,55 +145,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Feynman diagram implementation with vertices, propagators,
-          and particle labels.
+        comment: Correct Feynman diagram with all four particle line types.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 'Fermion (solid+arrow) and photon (wavy) line styles present. Missing:
-          curly/looped gluon lines and dashed scalar boson lines — both explicitly
-          required by the spec Notes section.'
+        passed: true
+        comment: 'All spec features present: solid+arrow fermions, wavy photon, curly
+          gluon, dashed boson, vertex dots, particle labels, time axis.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time flows left to right as per spec. Vertices at correct positions.
-          Particle flow direction correct.
+        comment: Both QFT processes correctly visualized with proper particle directions.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'feynman-basic · javascript · chartjs · anyplot.ai'.
-          No legend needed (direct labels used).
+        comment: 'Title: ''feynman-basic · javascript · chartjs · anyplot.ai''. No
+          legend (appropriate — particle types labeled directly on lines).'
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Shows fermion (solid+arrow) and photon (wavy) but not gluon (curly)
-          or scalar boson (dashed). Only 2 of 4 required particle line types demonstrated.
+        passed: true
+        comment: All four particle types shown in two distinct complete QFT processes.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: QED tree-level e⁺e⁻ → γ* → μ⁺μ⁻ annihilation is a canonical textbook
-          example. Particle symbols are physically correct.
+        comment: e+e- → γ* → μ+μ- (Drell-Yan) and H → bb̄g (Higgs decay) are real,
+          textbook-standard processes. Neutral scientific context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Coordinate system (0-10 × 0-7) and particle positions produce a well-proportioned,
-          symmetric Feynman diagram.
+        comment: 4 vertices, 10 propagators — within spec range (2-6 vertices, 3-10
+          propagators). Physics correct.
     code_quality:
       score: 9
       max: 10
@@ -204,64 +199,60 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Helper functions toPx, arrowHead, fermionLine, photonLine are present.
-          Acceptable given the custom canvas drawing requirement, but adds structural
-          complexity.
+        comment: Multiple helper functions defined (arrowHead, fermionLine, photonLine,
+          gluonLine, bosonLine). Acceptable given bespoke canvas drawing requirements,
+          but adds structural complexity.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is hardcoded deterministically — no RNG needed.
+        comment: Hard-coded coordinate data, fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports (browser context). Chart is a global. Clean.
+        comment: No imports at all — uses Chart.js and ANYPLOT_TOKENS globals only.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity. Code is clean and well-commented. Plugin pattern
-          is correctly applied.
+        comment: Clean, appropriate complexity for the visualization. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: No explicit save calls needed (harness handles output). Correct Chart.js
-          4.4.7 API usage.
+        comment: Chart.js 4.4.7 API used correctly. Output handled by harness.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert use of Chart.js: scatter type as coordinate canvas, plugin
-          lifecycle hooks (beforeDraw/afterDraw), scale.getPixelForValue() for coordinate
-          mapping — all idiomatic Chart.js patterns. responsive/maintainAspectRatio/animation
-          correctly set.'
+        comment: Correct use of Chart.js plugin lifecycle (beforeDraw/afterDraw),
+          getPixelForValue() coordinate mapping, scatter chart as coordinate substrate.
+          Creative idiomatic approach.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Chart.js Plugin API (id, beforeDraw, afterDraw) and scale coordinate
-          conversion API (getPixelForValue) are Chart.js-specific. Some distinctive
-          usage, though the diagram rendering itself relies on vanilla Canvas 2D.
-  verdict: REJECTED
+        comment: Uses Chart.js plugin registration API and getPixelForValue() which
+          are Chart.js-specific. However, most custom drawing relies on Canvas 2D
+          API rather than Chart.js-native constructs.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
   - annotations
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
