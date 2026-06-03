@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: spectrogram-mel
 created: '2026-03-11T19:39:40Z'
-updated: '2026-06-03T18:18:59Z'
+updated: '2026-06-03T18:29:59Z'
 generated_by: claude-sonnet
 workflow_run: 26903021800
 issue: 4672
@@ -12,46 +12,58 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrogr
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/python/altair/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - Complete mel-spectrogram pipeline implemented from scratch (STFT → mel filterbank
-    → dB conversion) using only numpy/pandas — no librosa dependency
-  - 'Excellent data storytelling: three annotated audio features (Harmonic Sweep,
-    Chirp Burst, 440 Hz Tone) guide the viewer through the signal''s structure'
-  - Idiomatic Altair mark_rect spectrogram with proper x2/y2 binned channel encodings
-  - Custom kHz tick formatting via alt.Axis(labelExpr=...) — a distinctive Vega-Lite/Altair
-    feature
-  - Theme-adaptive chrome correctly implemented across all elements (background, title,
-    axes, legend box)
-  - Canvas gate passed; PIL padding block correctly applied after vl-convert render;
-    HTML also saved
-  - Realistic audio synthesis parameters matching standard ASR/MIR pipeline conventions
-    (sample_rate=22050, n_fft=2048, hop_length=512, n_mels=128)
+  - Manual STFT and mel filterbank implementation without librosa dependency — demonstrates
+    genuine DSP knowledge and makes the code fully self-contained
+  - 'Correct Imprint sequential colormap (#009E73 → #4467A3) applied to continuous
+    dB data as required by style guide'
+  - 'Perfect spec compliance: all required parameters (n_fft=2048, hop_length=512,
+    n_mels=128), log frequency axis, dB-normalized colorbar, Hz tick labels at key
+    mel band edges'
+  - Theme-adaptive chrome properly applied to all axis, title, legend, and view elements
+    using INK/INK_SOFT/PAGE_BG tokens
+  - Three annotation features (Harmonic Sweep, Chirp Burst, 440 Hz Tone) guide the
+    viewer through distinct spectral events
+  - Canvas padding logic (PIL) ensures exact 3200×1800 output regardless of vl-convert
+    minor variation
+  - 'Idiomatic Altair: mark_rect with x/x2/y/y2 encoding for tiles, alt.layer composition,
+    labelExpr for custom k-notation tick formatting, HTML export with tooltips'
   weaknesses:
-  - 'Title wrong: uses ''spectrogram-mel · altair · pyplots.ai'' — fix to ''spectrogram-mel
-    · python · altair · anyplot.ai'' (add ''· python ·'' segment, fix domain from
-    pyplots.ai to anyplot.ai)'
-  - 'VQ-07 violation: scheme=''inferno'' is not an allowed Imprint continuous colormap
-    — replace alt.Scale(scheme=''inferno'', domain=[-80, 0]) with alt.Scale(range=[''#009E73'',
-    ''#4467A3''], domain=[-80, 0]) for imprint_seq compliance'
-  - 'Misleading docstring: remove the claim ''inferno approved in prior AI review
-    (VQ-04 ✅)'' — this is Attempt 1 with no prior review'
+  - 'Annotation label colors are hardcoded (#ffffff for text, #1a1a2e for stroke)
+    rather than using theme-adaptive INK/INK_SOFT tokens — violates the style guide
+    rule that every non-data element must use adaptive tokens; in practice both renders
+    are readable because annotations sit on teal data, but a theme-change could break
+    this'
+  - 'VQ-03 (Element Visibility): The spectrogram is dominated by a uniform teal/cyan
+    mid-range color; the dynamic range from -80 to 0 dB compresses most content into
+    the -40 to -20 dB region, making the lower-power noise floor and the higher-power
+    harmonics harder to distinguish — consider clamping the domain to a tighter range
+    (e.g., -60 to 0) to increase visible contrast'
+  - 'DE-01: The overall aesthetic is clean and functional but not publication-ready
+    — the chart lacks any focal-point emphasis beyond the annotation labels; consider
+    adding a very subtle horizontal reference line at 440 Hz or boosting the annotation
+    triangle marker size for stronger visual anchoring'
+  - 'LM-02: The implementation uses standard Altair patterns (mark_rect, layer, configure_*);
+    labelExpr is the most distinctive Altair-specific feature used — deeper Vega-Lite
+    features (selection-based brushing, resolve, transform_fold) could lift library
+    mastery higher in a future attempt'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "spectrogram-mel · altair · pyplots.ai" in dark INK (#1A1A17), readable. Subtitle in INK_SOFT, readable. Axis labels "Frequency (Hz)" and "Time (s)" in dark ink, readable. Tick labels (50, 100, 200, 500, 1k, 2k, 5k, 10k Hz; 0.0–4.0 s) in INK_SOFT, readable. Colorbar "Power (dB)" with values 0 to -80, readable.
-      Data: Inferno colormap — dark purple/black at low power (-80 dB), transitioning through red/orange to bright yellow at high power (0 dB). Three annotation markers (triangle-right) with white text and dark stroke: "Harmonic Sweep" (~1 kHz region), "Chirp Burst" (~6.5 kHz, 1.5-2.5 s window), "440 Hz Tone" (~350 Hz). All spectrogram tiles rendered correctly on log-scale frequency axis.
-      Legibility verdict: PASS — all text readable against light background, no light-on-light failures.
+      Background: Warm off-white #FAF8F1 surrounds the chart; the spectrogram plot area is filled with the Imprint sequential colormap ranging from green (#009E73, low power) to blue (#4467A3, high power), with the dominant midrange appearing as teal/cyan.
+      Chrome: Title "spectrogram-mel · python · altair · anyplot.ai" is rendered in dark #1A1A17 text, bold, clearly readable. Subtitle in muted #4A4A44 is readable. X-axis label "Time (s)" and Y-axis label "Frequency (Hz)" are readable. Tick labels (0.0–4.0 s on x; 50, 100, 200, 500, 1k, 2k, 5k, 10k on y) use INK_SOFT and are clearly legible. Colorbar title "Power (dB)" and values 0 to -80 are readable on the elevated (#FFFDF6) legend background.
+      Data: Mel-spectrogram as tiled rectangles. Three annotated spectral events visible: diagonal descending bands from the harmonic frequency sweep (~1200–300 Hz), a short-duration high-frequency burst at 1.5–2.5 s (Chirp Burst), and a subtle pulsed feature near 440 Hz. Annotation triangle markers and labels (white text, dark stroke) are positioned correctly and readable against the teal data background.
+      Legibility verdict: PASS — all text readable in light theme.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
-      Chrome: Title, subtitle, axis labels, tick labels, and colorbar labels all rendered in light-colored text (INK=#F0EFE8, INK_SOFT=#B8B7B0). Legend box uses elevated dark fill (#242420). No dark-on-dark failures — all chrome elements are clearly visible against the near-black surface.
-      Data: Inferno colormap colors are identical to the light render — same purple/black → red/orange → yellow gradient. Data identity confirmed across themes. Annotation white text with dark stroke readable over the spectrogram.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures detected.
+      Background: Warm near-black #1A1A17 outer canvas; the plot area retains the same teal-dominated spectrogram. Dark theme padding is correctly applied.
+      Chrome: Title and subtitle text switch to light #F0EFE8 and #B8B7B0 respectively — both clearly readable against the dark outer background. Axis labels and tick labels are rendered in INK_SOFT (#B8B7B0) and are legible. Colorbar title and values appear in light text on a dark elevated (#242420) legend background. No dark-on-dark text failures observed.
+      Data: Data colors are identical to the light render — same teal/green-to-blue gradient with identical harmonic and chirp features. No color drift between themes.
+      Legibility verdict: PASS — all text readable in dark theme. No dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -59,76 +71,78 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set throughout; all text readable in both
-          themes. Minor: annotation stroke-text sizing not proportionally adjusted.'
+        comment: 'All font sizes explicitly set; all text readable in both themes.
+          Minor: annotation text/stroke colors hardcoded (#ffffff/#1a1a2e) rather
+          than theme tokens, but functional in both renders.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; annotations placed in distinct regions.
+        comment: No overlapping text elements. Three annotations well-spaced and non-overlapping.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Spectrogram tiles render at full resolution; all three audio features
-          visually distinguishable.
+        comment: Spectrogram features visible; dominant teal midrange compresses dynamic
+          range visually — clamping domain to -60..0 dB would increase contrast.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Inferno is perceptually uniform; annotation contrast (white on dark
-          stroke) adequate.
+        comment: Imprint sequential (green→blue) is CVD-safe; adequate contrast between
+          power levels.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Spectrogram fills chart area; no AR-09 edge clipping
-          detected.
+        comment: Canvas gate passed (3200×1800). Plot fills canvas well with balanced
+          margins. No overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (s), Frequency (Hz), Power (dB) — all with units.
+        comment: 'X: ''Time (s)'', Y: ''Frequency (Hz)'', colorbar: ''Power (dB)''
+          — all descriptive with units.'
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Uses scheme='inferno' — not an allowed Imprint continuous colormap.
-          Only imprint_seq (range=['#009E73','#4467A3']) or imprint_div are permitted.
+        passed: true
+        comment: 'Imprint sequential colormap (#009E73→#4467A3) used for continuous
+          dB data. Light bg #FAF8F1, dark bg #1A1A17. Chrome theme-adaptive throughout.'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Layered composition, informative subtitle, custom tick formatting
-          elevate above default. Visual impact from inferno colormap but forbidden
-          by palette rules.
+        comment: Well-configured spectrogram with Imprint seq colormap and annotation
+          system. Not publication-ready; focal-point emphasis is limited to annotation
+          labels.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No grid (appropriate for spectrogram), strokeWidth=0, generous padding,
-          explicit chrome styling.
+        comment: Grid disabled (appropriate for spectrograms), strokeWidth=0 removes
+          chart border, theme tokens applied consistently, generous padding.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Three annotated audio features create clear focal points; synthesis
-          design tells a structured signal story.
+        comment: Three annotated features guide the viewer to key spectral events.
+          Descriptive subtitle explains signal composition. Above-default storytelling.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -136,31 +150,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct mel-spectrogram using mark_rect with log-scale frequency
-          axis.
+        comment: 'Correct mel-spectrogram: mark_rect tiles, log frequency scale, mel
+          filter bank computed from scratch.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Mel filterbank (128 bands), STFT (n_fft=2048, hop_length=512), dB
-          conversion, colorbar, log-scale frequency axis with Hz labels, synthesized
-          audio.
+        comment: dB scale, sequential colormap, time axis in seconds, Hz labels at
+          key mel band edges, colorbar labeled in dB, n_fft=2048/hop_length=512/n_mels=128,
+          synthesized audio — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time (s) on X, Frequency (Hz) log-scale on Y, Power (dB) mapped to
-          color. Full range visible.
+        comment: x=time, y=mel frequency (log scale), color=dB; full data range shown.
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title is 'spectrogram-mel · altair · pyplots.ai' — missing '· python
-          ·' language segment and uses wrong domain 'pyplots.ai' instead of 'anyplot.ai'.
-          Colorbar legend correctly labeled.
+        passed: true
+        comment: Title 'spectrogram-mel · python · altair · anyplot.ai' correct. Colorbar
+          'Power (dB)' correct.
     data_quality:
       score: 15
       max: 15
@@ -170,24 +182,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates descending frequency sweep with harmonics, amplitude-modulated
-          440 Hz tone, transient chirp burst, and noise floor.
+        comment: 'Covers all mel-spectrogram aspects: frequency sweep with harmonics,
+          pulsed amplitude-modulated tone, chirp burst, noise floor — comprehensive
+          feature set.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Synthesized audio signal simulating speech-like/musical content;
-          scientifically neutral audio ML context.
+        comment: Synthesized audio with realistic parameters (22050 Hz SR, 4s, DSP-correct
+          filter bank). Neutral and plausible scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: sample_rate=22050, 4s duration, n_mels=128, n_fft=2048, hop_length=512,
-          dB range [-80, 0] all standard.
+        comment: Sensible Hz ranges (20–11025 Hz), dB range (-80 to 0), 4s duration,
+          n_mels=128 — all standard for audio ML.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -195,68 +208,68 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → tokens → signal → STFT → mel filterbank →
-          dataframe → chart → save.'
+        comment: 'Flat script: imports → data → STFT/mel → chart → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before random operations.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, altair, numpy, pandas, PIL.Image — all used.
+        comment: All 5 imports (os, altair, numpy, pandas, PIL) are used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Generally clean. Deduction for misleading docstring: ''inferno approved
-          in prior AI review (VQ-04 ✅)'' on Attempt 1 where no prior review exists.'
+        passed: true
+        comment: Appropriate complexity for manual DSP pipeline. No over-engineering,
+          no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. PIL pad-to-canvas block
-          correctly applied.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; PIL padding ensures
+          exact 3200×1800.
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: mark_rect with x/x2/y/y2 binned encodings is the idiomatic Altair
-          tiled heatmap pattern. Proper alt.layer(), alt.Scale(type='log'), configure_*()
-          theming chain.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: alt.Axis(labelExpr=...) for JS-expression tick formatting (kHz conversion)
-          is Vega-Lite-specific. Dual x2/y2 encodings for rectangle marks not available
-          in most other Python libraries.
-  verdict: REJECTED
+        comment: Idiomatic mark_rect with x/x2/y/y2 encoding, alt.layer composition,
+          proper encoding types, labelExpr for k-notation ticks, full configure_*
+          chain.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: HTML export, interactive tooltips with format strings, labelExpr
+          (Vega expression language), layered composition — uses several Altair-distinctive
+          features.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
-  - colorbar
   - annotations
-  - layer-composition
-  - manual-ticks
   - hover-tooltips
   - html-export
+  - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
   - matrix-construction
+  - iteration-over-groups
   dataprep:
   - normalization
   styling:
