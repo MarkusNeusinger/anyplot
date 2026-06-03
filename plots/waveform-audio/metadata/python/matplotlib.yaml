@@ -1,37 +1,45 @@
 library: matplotlib
+language: python
 specification_id: waveform-audio
 created: '2026-03-07T14:57:54Z'
-updated: '2026-03-07T15:08:30Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22801238647
+updated: '2026-06-03T01:09:17Z'
+generated_by: claude-sonnet
+workflow_run: 26857156916
 issue: 4563
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/matplotlib/plot.png
-preview_html: null
-quality_score: 92
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent min/max envelope rendering technique that avoids aliasing at lower zoom
-    levels
-  - Phase region annotations (Attack/Sustain/Dip/Burst/Release) with color-coded backgrounds
-    create compelling data storytelling
-  - Rich synthetic audio data with realistic harmonic structure and dynamic envelope
-  - Perfect spec compliance with all required features implemented
-  - Path effects on phase labels ensure legibility over the waveform
+  - 'Full spec compliance: filled envelope, semi-transparent fill, zero reference
+    line, min/max envelope rendering, synthetic data — every requirement met'
+  - 'Excellent theme adaptation: INK/INK_SOFT/INK_MUTED tokens applied to all chrome
+    elements; both renders pass legibility check'
+  - 'Strong data storytelling: seismic narrative with phase regions, arrival markers,
+    and color-coded labels creates a highly readable visualization'
+  - 'Correct palette usage: brand green #009E73 as primary data series; Imprint positions
+    2-4 for semantic phase regions; no custom hexes'
+  - 'Clean code: seed set, no functions/classes, all imports used, no bbox_inches=tight'
   weaknesses:
-  - Red and green phase label colors could be improved for deuteranopia accessibility
-  image_description: 'The plot displays an audio waveform as a filled area symmetric
-    around a zero baseline. The waveform uses Python Blue (#306998) with semi-transparent
-    fill (alpha=0.45) and darker edge lines (#1E4F72) tracing the min/max envelope.
-    Five labeled phase regions are shaded with subtle colored backgrounds (alpha=0.06):
-    "Attack" (yellow, 0-0.05s), "Sustain" (blue, 0.05-0.55s), "Dip" (red, 0.55-0.7s),
-    "Burst" (green, 0.7-0.85s), and "Release" (purple, 0.85-1.5s). Phase labels appear
-    at the top in matching colors with white stroke path effects. The x-axis shows
-    "Time (seconds)" from 0.0 to 1.5 with major ticks at 0.25s intervals and minor
-    ticks at 0.05s. The y-axis shows "Amplitude" from -1.0 to 1.0. A subtle gray zero-line
-    runs horizontally. Top and right spines are removed with subtle y-axis grid. Title
-    reads "waveform-audio · matplotlib · pyplots.ai".'
+  - Phase region labels (fontsize=6) are at the lower bound of readability; at mobile
+    thumbnail scale (~400 px) these may become illegible — consider fontsize=7 or
+    8
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "waveform-audio · python · matplotlib · anyplot.ai" in dark ink, fully readable; X-axis label "Time (s)" and Y-axis label "Amplitude" in dark ink, readable; tick labels in INK_SOFT (#4A4A44), readable; phase region labels in palette colors at fontsize=6 with path_effects stroke, readable at full resolution
+      Data: Green (#009E73) filled min/max envelope waveform with alpha=0.5; four phase region background tints (muted for Background Noise, blue #4467A3 for P-wave, lavender #C475FD for S-wave, ochre #BD8233 for Coda); dashed vertical arrival markers at t=2s and t=4s; zero reference line in INK_SOFT
+      Legibility verdict: PASS — all text readable against the light background; first series correctly uses brand green #009E73
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title in light cream text (#F0EFE8), clearly readable; axis labels in light ink, readable; tick labels in INK_SOFT (#B8B7B0), readable; phase region labels with path_effects stroke readable against dark background
+      Data: Green (#009E73) waveform fill — identical color to light render; phase region tints subtle; arrival markers visible; zero reference line subtle
+      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures; data colors identical to light render
   criteria_checklist:
     visual_quality:
       score: 29
@@ -39,44 +47,55 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16, phase
-          labels=13 with white stroke'
+        comment: All title/axis/tick text readable in both themes; phase region labels
+          at fontsize=6 are small but visible at full resolution; minor mobile-readability
+          concern at 400px width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text well-spaced, phase labels non-overlapping
+        comment: No text-on-text or text-on-data collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Min/max envelope rendering handles dense 22050 Hz data cleanly
+        comment: Dense waveform correctly rendered as min/max envelope with fill_between;
+          semi-transparent alpha=0.5 fill; zero reference line present
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Phase label colors include red and green which may be hard to distinguish
-          for deuteranopia
+        comment: Imprint palette CVD-safe; phase colors use blue+lavender (no red/green
+          pair); redundant text labels reinforce region identity
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, 16:9, tight_layout, nothing cut off
+        comment: 3200x1800px confirmed (canvas gate passed); title proportions correct;
+          no overflow; tight_layout without bbox_inches=tight
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (seconds) with units, Amplitude descriptive
+        comment: Time (s) and Amplitude are descriptive with units; title matches
+          required format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Primary data series = #009E73; phase region tints use Imprint positions
+          2-4; backgrounds #FAF8F1/#1A1A17 correct; both renders theme-correct'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -84,22 +103,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Cohesive color palette, phase regions with matching text colors,
-          path effects, intentional hierarchy
+        comment: 'Above default: semantic phase region backgrounds with Imprint palette
+          tints, path_effects stroke on phase labels for dual-theme readability, intentional
+          visual hierarchy between envelope/arrivals/regions'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle y-grid, minor x-ticks, generous whitespace,
-          well-polished
+        comment: Top/right spines removed; y-axis-only grid at alpha=0.15; minor tick
+          locator for x-axis precision; path_effects add polish
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Phase labels and colored backgrounds create clear narrative through
-          waveform structure
+        comment: Clear narrative arc (background noise -> P-wave -> S-wave -> coda);
+          arrival markers anchor the temporal story; color-coded regions guide the
+          viewer through the seismogram
     spec_compliance:
       score: 15
       max: 15
@@ -109,26 +130,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct audio waveform with filled area symmetric around zero
+        comment: Correct time-domain waveform visualization
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Filled area, semi-transparent fill, zero-line, min/max envelope,
-          synthetic data
+        comment: Filled area (fill_between), semi-transparent fill (alpha=0.5), horizontal
+          zero-line (axhline), min/max envelope rendering — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on x-axis, amplitude on y-axis, correct ranges
+        comment: Time on X-axis (0-10s), normalized amplitude on Y-axis (-1 to +1);
+          axes show full data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct format, no legend needed for single series
+        comment: Title is waveform-audio · python · matplotlib · anyplot.ai; single-series
+          plot correctly omits redundant legend
     data_quality:
       score: 15
       max: 15
@@ -138,19 +161,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows attack, sustain, silence gap, burst, release phases
+        comment: 'Comprehensive: amplitude envelope, zero baseline, phase structure,
+          wave arrival markers, coda decay; all aspects of waveform visualization
+          demonstrated'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: A3 220Hz fundamental with harmonics at 22050Hz sample rate
+        comment: Synthetic seismic trace with realistic P-wave (10 Hz, 2s) and S-wave
+          (3 Hz, 4s) characteristics; seismology is explicitly listed as an application
+          in the spec; non-controversial
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard sample rate, real musical frequency, normalized amplitude
+        comment: 10,000 samples at 1000 Hz; within spec 5,000-50,000 sample range;
+          amplitude normalized to [-1, 1]; time scale appropriate for seismogram
     code_quality:
       score: 10
       max: 10
@@ -160,31 +188,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat imports to data to plot to save structure
+        comment: No functions or classes; linear procedural script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: patheffects, pyplot, ticker, numpy'
+        comment: All 5 imports (os, patheffects, pyplot, ticker, numpy) are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity with min/max envelope chunking
+        comment: Well-organized, appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, bbox_inches=tight, current API
+        comment: Saves as plot-{THEME}.png; no bbox_inches=tight; current matplotlib
+          API
     library_mastery:
       score: 7
       max: 10
@@ -194,23 +223,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper axes methods, fill_between, axhline, axvspan, ticker locators
+        comment: Axes methods throughout; ax.get_xaxis_transform() for mixed-coordinate
+          text; ticker.MultipleLocator for tick precision; idiomatic use of fill_between
+          for waveform
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses patheffects for text stroke, axvspan for phase shading, fill_between,
-          MultipleLocator
+        comment: matplotlib.patheffects (pe.withStroke) for label readability on colored
+          regions; ax.get_xaxis_transform() for blended coordinate text; fill_between
+          min/max envelope pattern
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - manual-ticks
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - alpha-blending
   - grid-styling
