@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-loss-triangle: Actuarial Loss Development Triangle
 Library: highcharts unknown | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-03

@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: heatmap-loss-triangle
 created: '2026-03-09T11:57:28Z'
-updated: '2026-06-03T10:16:11Z'
+updated: '2026-06-03T10:27:16Z'
 generated_by: claude-sonnet
 workflow_run: 26877326399
 issue: 4581
@@ -15,43 +15,42 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-l
 quality_score: 86
 review:
   strengths:
-  - 'Correct triangular loss development structure: actual (bold) in upper-left, projected
-    (italic) in lower-right, properly computed from i+j < n_years logic'
-  - Age-to-age development factors in annotated boxes below the grid add genuine actuarial
-    depth — the key analytical layer for a loss triangle
-  - 'Perfect theme-adaptive chrome: all INK/INK_SOFT/ELEVATED_BG tokens embedded both
-    in Python assignments and within JS f-strings so dark render shows light text
-    throughout'
-  - 'Imprint sequential colormap (green #009E73 to blue #4467A3) correctly applied
-    to continuous heatmap magnitude'
-  - Custom Highcharts renderer API (chart.renderer.rect/text/path) used creatively
-    for factor boxes, separator line, and legend swatches — genuinely distinctive
-    Highcharts usage
+  - Excellent use of Highcharts chart.renderer SVG API to render age-to-age development
+    factor boxes as custom elements below the heatmap grid — technically sophisticated
+    and distinctive
+  - Dual data-label strategy (bold for actual cells, italic for projected cells) combined
+    with theme-adaptive JS callbacks handles both light and dark themes correctly
+  - 'Imprint sequential colormap (#009E73 → #4467A3) correctly applied as colorAxis;
+    threshold-based contrast logic (light label on dark cells, dark label on light/green
+    cells) works in both themes'
+  - Theme-adaptive chrome fully implemented — INK and INK_SOFT tokens flip correctly,
+    projected-cell amber borders are more visible against the dark background
+  - Realistic actuarial data with properly decreasing chain-ladder development factors
+    (2.162, 1.446, 1.207, 1.112, …) that converge toward 1.0 at the tail
   weaknesses:
-  - Actual vs projected cell distinction relies on italic/bold text and 5px amber
-    cell borders — spec explicitly suggests background color or hatching; the boundary
-    is not obvious without reading the legend
-  - 'Both axis lines retained (lineColor: INK_SOFT) — style guide prefers removing
-    spines on enclosed heatmap grids; setting lineColor to transparent on both axes
-    would clean up the look'
-  - Factor box label text (transition labels like '1-to-2', '2-to-3') at 28px CSS
-    is below the 44px tick-label standard for this canvas size; may be difficult to
-    read at thumbnail scale
+  - The 5px amber border on projected cells is subtle in the light theme and may be
+    hard to distinguish at smaller viewing sizes. Consider adding a semi-transparent
+    amber overlay tint or a diagonal hatch pattern to projected cells to make the
+    actual/projected boundary more immediately obvious, per spec's suggestion of 'different
+    background colors or hatching'
+  - The bottom section (age-to-age development factor boxes + legend items) is somewhat
+    vertically cramped. Increasing marginBottom or adding explicit spacing between
+    the factor row and the custom legend would improve readability
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 confirmed — not pure white, not dark.
-      Chrome: Title "heatmap-loss-triangle · python · highcharts · anyplot.ai" in bold dark text, clearly readable. Subtitle in secondary dark text. X-axis label "Development Period (Years)" and Y-axis label "Accident Year" both dark and readable. Tick labels (years 2015-2024 and periods 1-10) in dark secondary color, all readable.
-      Data: Green (#009E73) to blue (#4467A3) gradient. Actual (upper-left) cells bold, projected (lower-right) cells italic. Amber borders on projected cells. Age-to-age factor boxes below grid. Colorbar legend on right. Custom swatch legend at bottom.
-      Legibility verdict: PASS — all text readable against light background; no light-on-light failures detected.
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "heatmap-loss-triangle · python · highcharts · anyplot.ai" in dark text, clearly readable; subtitle "Cumulative Paid Claims ($K) — Accident Years 2015–2024" in lighter INK_SOFT; Y-axis label "Accident Year" and X-axis label "Development Period (Years)" both in dark text, well-sized; tick labels (2015–2024 and 1–10) in INK_SOFT, clearly readable; development factor box labels readable; colorbar labels readable
+      Data: Sequential Imprint colormap from brand green (#009E73, low values) to blue (#4467A3, high values); each cell annotated with comma-separated value (e.g., "3,299", "17,739"); actual cells have bold data labels and background-colored borders; projected (IBNR) cells have italic data labels and subtle 5px amber (#DDCC77) borders; amber border faintly visible on lower-right projected triangle; age-to-age factors displayed as boxed annotations below grid
+      Legibility verdict: PASS — all text readable against light background; no light-on-light failure
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 confirmed — not pure black, not light.
-      Chrome: Title and axis labels in light #F0EFE8, clearly readable against dark background. Tick labels in muted light-gray #B8B7B0, readable. Factor box values in near-white INK, factor box labels in INK_SOFT — both readable against elevated dark background #242420. Legend text light-colored and readable.
-      Data: Heatmap cell colors identical to light render (green to blue gradient unchanged — only chrome flipped). Projected cell amber borders visible. Factor boxes retain elevated background for contrast.
-      Legibility verdict: PASS — no dark-on-dark failures; brand green #009E73 visible in upper-left cells; all text readable against dark background.
+      Background: Warm near-black (#1A1A17) — correct dark surface
+      Chrome: All chrome elements flip correctly to light colors — title, subtitle, axis labels, tick labels, colorbar labels, and development factor text all render in #F0EFE8 / #B8B7B0 against the dark background; no dark-on-dark failures detected; development factor boxes use elevated dark background (#242420) with light text
+      Data: Heatmap colors (green → blue gradient) are identical to the light render — data encoding unchanged; amber borders on projected cells are more visible against the dark background than the light render; cell data label contrast logic (light labels on darker mid/high cells, dark labels on green low-value cells) remains appropriate since heatmap cell colors don't change with theme
+      Legibility verdict: PASS — all text readable against dark background; data colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -59,49 +58,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; cell labels at 36px CSS are dense
-          but readable at full resolution; slight concern at mobile thumbnail scale
+        comment: 'All chrome text (title, axes, ticks, dev-factor boxes) readable
+          in both themes. Minor: data-label contrast at mid-range heatmap values is
+          borderline, but overall good'
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No overlapping elements; cells, factor boxes, and legend cleanly
-          spaced
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All cells clearly show values; actual vs projected distinction via
-          italic/bold styling is present but subtle
+        comment: No visible text overlap. Bottom section with dev-factor boxes and
+          legend items is slightly cramped but not overlapping
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All heatmap cells, data labels, colorbar, and bottom annotations
+          clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue gradient is CVD-safe; no red-green sole-signal issue
+        comment: Imprint sequential colormap is CVD-safe; no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed (2400x2400); heatmap fills canvas well with generous
-          margins and well-placed factor row
+        comment: 2400x2400 square canvas correct for symmetric heatmap. Bottom section
+          (dev factors + legend) somewhat cramped but functional
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: Development Period (Years), Y: Accident Year; subtitle with units
-          ($K) present'
+        comment: Descriptive axis labels with context; title format correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq (green #009E73 to blue #4467A3); light bg #FAF8F1, dark
-          bg #1A1A17; all chrome theme-adaptive via INK/INK_SOFT tokens'
+        comment: 'imprint_seq (#009E73 → #4467A3) colormap; backgrounds #FAF8F1/#1A1A17;
+          theme-adaptive chrome'
     design_excellence:
       score: 12
       max: 20
@@ -111,24 +110,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above generic default: factor box row, amber projected-cell borders,
-          custom legend swatches, subtitle with units; not publication-ready but clearly
-          crafted'
+        comment: Above default. Intentional dual label styling (bold/italic), age-to-age
+          factor boxes as custom renderer elements, amber semantic anchoring for projected
+          cells
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Grid removed (good); axis lines retained on both axes — style guide
-          prefers removing spines on enclosed heatmap grids; dashed separator and
-          rounded factor boxes show refinement effort
+        passed: true
+        comment: Above default. Clean heatmap grid, dashed separator line before dev-factor
+          section, hidden tick marks
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Triangular structure narrates claims development; age-to-age factors
-          add genuine actuarial analysis layer
+        comment: Triangular structure clearly conveys actual vs projected data. Dev
+          factors directly illustrate the chain-ladder method, creating good actuarial
+          narrative
     spec_compliance:
       score: 14
       max: 15
@@ -138,31 +137,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct heatmap with upper-left actual / lower-right projected triangular
-          structure
+        comment: Correct heatmap-loss-triangle with 10x10 actuarial structure
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Cell annotations with thousands separator, age-to-age factors, color
-          magnitude, and actual/projected legend all present; visual distinction between
-          actual/projected is subtle (italic/bold + amber borders vs background color
-          or hatching)
+        comment: Dev factors shown, cell annotations with thousands separators, color
+          encoding, legend present. Actual/projected distinction (italic + 5px amber
+          border) is present but less prominent than spec's suggestion of different
+          background colors or hatching
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: development periods 1-10, Y: accident years 2015-2024, color:
-          cumulative claim magnitude'
+        comment: X=development periods, Y=accident years, color=cumulative magnitude
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches format; colorbar legend and custom actual/projected
-          legend present
+        comment: Title correctly formatted as 'heatmap-loss-triangle · python · highcharts
+          · anyplot.ai'; legend distinguishes actual vs projected
     data_quality:
       score: 15
       max: 15
@@ -172,33 +169,32 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All data dimensions shown: triangular split, color magnitude, cell
-          labels, age-to-age factors, actual vs projected type'
+        comment: Full 10x10 triangle, actual/projected split, age-to-age factors,
+          color encoding
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic mid-sized insurance portfolio; accident years 2015-2024;
-          cumulative amounts in thousands; actuarially sound development pattern
+        comment: Authentic actuarial loss triangle data with plausible claim values
+          and realistic chain-ladder development factors
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Base claims 3200-6500K; development factors 2.15x to 1.008x converging
-          as expected; final values 17000-35000K plausible
+        comment: Values in $K range (3,200–35,000+) with development factors decreasing
+          from 2.162 to 1.001 as appropriate for tail development
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: No functions or classes; f-string JS callback generation is convoluted
-          but necessary for Highcharts theme-embedding
+        comment: No functions or classes; linear top-to-bottom execution
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -210,45 +206,48 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized for the complexity; no fake UI elements
+        comment: Clean organization; appropriate complexity for a heatmap with custom
+          annotations
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
       score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: HeatmapSeries, color_axis, CallbackFunction, chart events — all idiomatic
-          Highcharts patterns
+        comment: 'Excellent: two HeatmapSeries instances, CallbackFunction for formatters,
+          colorAxis, chart.renderer for SVG annotations — all idiomatic Highcharts
+          patterns'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: chart.renderer.rect/text/path via load event for custom factor boxes
-          and legend swatches is distinctly Highcharts renderer API usage; two HeatmapSeries
-          for actual/projected
-  verdict: REJECTED
+        comment: Good use of chart.renderer SVG API for custom post-render elements,
+          JS callback functions for dynamic label contrast and tooltip formatting,
+          dual-series heatmap approach
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   - pillow
   techniques:
   - colorbar
+  - annotations
   - html-export
   - custom-legend
   patterns:
