@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 calibration-beer-lambert: Beer-Lambert Calibration Curve
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-06-03
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-06-03
 """
 
 import os
