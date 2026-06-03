@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pictogram-basic: Pictogram Chart (Isotype Visualization)
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-03
@@ -92,7 +92,7 @@ label_df = pd.DataFrame(label_data)
 
 top_labels = (
     alt.Chart(label_df[label_df["is_top"]])
-    .mark_text(align="left", baseline="middle", fontSize=14, fontWeight="bold", color=INK)
+    .mark_text(align="left", baseline="middle", fontSize=17, fontWeight="bold", color="#009E73")
     .encode(x=alt.X("col:Q"), y=alt.Y("category:N", sort=sort_order), text=alt.Text("label:N"))
 )
 
@@ -106,7 +106,7 @@ other_labels = (
 highlight_df = pd.DataFrame([{"category": sort_order[0]}])
 highlight = (
     alt.Chart(highlight_df)
-    .mark_bar(color="#009E73", opacity=0.07, cornerRadius=4)
+    .mark_bar(color="#009E73", opacity=0.11, cornerRadius=4)
     .encode(y=alt.Y("category:N", sort=sort_order), x=alt.value(0), x2=alt.value(620))
 )
 
@@ -124,7 +124,7 @@ combined = (
                 f"● = {unit_value}k tonnes  |  partial ● = fractional amount",
             ],
             fontSize=16,
-            subtitleFontSize=14,
+            subtitleFontSize=11,
             subtitleColor=INK_MUTED,
             color=INK,
             anchor="start",
