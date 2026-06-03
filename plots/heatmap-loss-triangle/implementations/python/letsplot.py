@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-loss-triangle: Actuarial Loss Development Triangle
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-03
@@ -92,6 +92,17 @@ df_legend = pd.DataFrame(
 df_light_text = df[df["text_color"] == "white"].copy()
 df_dark_text = df[df["text_color"] != "white"].copy()
 
+# Focal point: identify peak projected (IBNR) cell for storytelling annotation
+max_proj_idx = df_projected["cumulative"].idxmax()
+max_proj_row = df_projected.loc[max_proj_idx]
+df_peak = pd.DataFrame(
+    {
+        "accident_year": [max_proj_row["accident_year"]],
+        "dev_period": [max_proj_row["dev_period"]],
+        "text": [f"Peak IBNR\n${max_proj_row['cumulative']:,.0f}"],
+    }
+)
+
 title = "heatmap-loss-triangle · python · letsplot · anyplot.ai"
 
 # Theme-adaptive chrome
@@ -100,10 +111,10 @@ anyplot_theme = theme(
     panel_background=element_rect(fill=PAGE_BG),
     panel_grid=element_blank(),
     panel_border=element_blank(),
-    axis_line=element_line(color=INK_SOFT),
+    axis_line=element_blank(),
     axis_ticks=element_blank(),
-    axis_title=element_text(color=INK, size=18, face="bold"),
-    axis_text=element_text(color=INK_SOFT, size=15),
+    axis_title=element_text(color=INK, size=14, face="bold"),
+    axis_text=element_text(color=INK_SOFT, size=12),
     plot_title=element_text(color=INK, size=16, face="bold"),
     plot_subtitle=element_text(color=INK_SOFT, size=12, face="italic"),
     plot_caption=element_text(color=INK_MUTED, size=11),
@@ -131,8 +142,8 @@ plot = (
         alpha=0.75,
     )
     # Cell annotations — split by text color for readability across gradient
-    + geom_text(aes(x="dev_period", y="accident_year", label="label"), data=df_light_text, color="white", size=3.5)
-    + geom_text(aes(x="dev_period", y="accident_year", label="label"), data=df_dark_text, color=INK, size=3.5)
+    + geom_text(aes(x="dev_period", y="accident_year", label="label"), data=df_light_text, color="white", size=4.5)
+    + geom_text(aes(x="dev_period", y="accident_year", label="label"), data=df_dark_text, color=INK, size=4.5)
     # Invisible points for Actual / Projected legend via guide_legend override_aes
     + geom_point(aes(x="x", y="y", color="region"), data=df_legend, size=0, alpha=0)
     + scale_color_manual(
@@ -144,7 +155,15 @@ plot = (
     + geom_tile(aes(x="dev_period", y="accident_year"), data=df_factors, fill=ELEVATED_BG, color=INK_SOFT, size=0.8)
     # Factor labels in bold
     + geom_text(
-        aes(x="dev_period", y="accident_year", label="label"), data=df_factors, color=INK, size=3.5, fontface="bold"
+        aes(x="dev_period", y="accident_year", label="label"), data=df_factors, color=INK, size=4.0, fontface="bold"
+    )
+    # Focal point: callout on peak projected (IBNR) cell for data storytelling
+    + geom_text(
+        aes(x="dev_period", y="accident_year", label="text"),
+        data=df_peak,
+        color=ANYPLOT_AMBER,
+        size=3.8,
+        fontface="bold",
     )
     # Imprint sequential colormap: brand green → blue (single-polarity magnitude)
     + scale_fill_gradient(low="#009E73", high="#4467A3", name="Cumulative\nClaims ($)")
