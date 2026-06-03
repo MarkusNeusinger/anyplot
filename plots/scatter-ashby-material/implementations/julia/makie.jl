@@ -23,7 +23,7 @@ const IMPRINT_PALETTE = [
     colorant"#BD8233",  # 4 — ochre (Composites)
     colorant"#AE3030",  # 5 — matte red (Elastomers)
     colorant"#2ABCCD",  # 6 — cyan (Foams)
-    colorant"#99B314",  # 7 — lime (Natural Mat.)
+    colorant"#954477",  # 7 — rose (Natural Mat.)
 ]
 
 # --- Data -------------------------------------------------------------------
@@ -129,7 +129,7 @@ for i in 1:n_fam
     ell = [Point2f(10.0^(fam_cx[i] + fam_rx[i] * cos(a)),
                    10.0^(fam_cy[i] + fam_ry[i] * sin(a))) for a in θ_pts]
     poly!(ax, ell;
-        color       = RGBAf(Float32(red(clr)), Float32(green(clr)), Float32(blue(clr)), 0.20f0),
+        color       = RGBAf(Float32(red(clr)), Float32(green(clr)), Float32(blue(clr)), 0.30f0),
         strokecolor = RGBAf(Float32(red(clr)), Float32(green(clr)), Float32(blue(clr)), 0.72f0),
         strokewidth = 1.5,
     )
@@ -137,17 +137,17 @@ for i in 1:n_fam
     # Individual material data points
     scatter!(ax, all_xs[i], all_ys[i];
         color       = clr,
-        markersize  = 9,
+        markersize  = 12,
         strokecolor = PAGE_BG,
         strokewidth = 0.8,
     )
 
-    # Family label at ellipse centroid
-    text!(ax, 10.0^fam_cx[i], 10.0^fam_cy[i];
+    # Family label offset above ellipse centroid to avoid scatter-point overlap
+    text!(ax, 10.0^fam_cx[i], 10.0^(fam_cy[i] + fam_ry[i] * 0.55);
         text     = family_names[i],
         fontsize = 11,
         color    = INK,
-        align    = (:center, :center),
+        align    = (:center, :bottom),
     )
 end
 
