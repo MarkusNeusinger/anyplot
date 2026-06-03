@@ -1,39 +1,49 @@
 library: plotnine
+language: python
 specification_id: waveform-audio
 created: '2026-03-07T14:58:25Z'
-updated: '2026-03-07T15:08:44Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22801238614
+updated: '2026-06-03T01:27:56Z'
+generated_by: claude-sonnet
+workflow_run: 26857483373
 issue: 4563
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/plotnine/plot.png
-preview_html: null
-quality_score: 92
+language_version: 3.13.13
+library_version: 0.15.5
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Excellent data storytelling through phase-colored waveform (Attack/Sustain/Release)
-    with boundary markers
-  - Min/max envelope downsampling properly handles dense waveform display
-  - Warm panel background and custom color palette create polished professional appearance
-  - Realistic audio data with harmonics vibrato and noise
-  - Full spec compliance with all required features implemented
+  - Three-phase color segmentation (Attack/Sustain/Release) with Imprint palette positions
+    1-3 in correct order creates an informative, visually purposeful waveform
+  - Min/max envelope downsampling (chunk_size=64) correctly avoids aliasing on the
+    22050 Hz signal — spec-compliant and technically sound
+  - All theme tokens properly adapted for both light and dark renders with no dark-on-dark
+    failures
+  - Realistic synthetic audio data (220 Hz + harmonics + vibrato + noise) at standard
+    22050 Hz sample rate
   weaknesses:
-  - Phase annotation label size (11) is smaller than other text elements
-  - Data downsampling uses list comprehensions instead of vectorized numpy reshape
-    operations
-  image_description: 'The plot displays an audio waveform as a filled ribbon symmetric
-    around a zero baseline on a warm off-white panel background (#f5f5f0). The x-axis
-    shows "Time (seconds)" from 0.00 to 1.50, and the y-axis shows "Amplitude" from
-    -1.00 to 1.00. The waveform is colored by three distinct phases: orange for the
-    short Attack phase (0-0.05s) showing rapid amplitude increase, steel blue for
-    the Sustain phase (0.05-1.10s) showing steady oscillation at ~0.75 amplitude,
-    and purple for the Release phase (1.10-1.50s) showing gradual decay to zero. Dashed
-    vertical lines mark the phase boundaries. Italic phase labels appear near the
-    top of each region. A subtle horizontal zero-line bisects the waveform. The title
-    reads "waveform-audio · plotnine · pyplots.ai" in bold at the top. Y-axis has
-    dotted grid lines; x-axis grid is removed. The waveform clearly shows the harmonic
-    content with visible beat patterns in the sustain region.'
+  - Y-axis label reads 'Amplitude' without a unit/range qualifier; change to 'Amplitude
+    (normalized)' or 'Amplitude [-1, 1]' to earn full VQ-06 points
+  - Phase annotation labels use size=3.5 (~10 pt) which is too small for annotations
+    at this canvas size and especially cramped for the narrow Attack region at x~0.025;
+    increase to size=5-6
+  - Design Excellence loses points due to the annotation labels being too small to
+    function as strong narrative anchors — the phase story is told by color but not
+    reinforced by legible text emphasis
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1) — correct, not pure white
+      Chrome: Title "waveform-audio · python · plotnine · anyplot.ai" in dark ink — readable. Axis labels "Time (seconds)" and "Amplitude" in dark ink — readable. Tick labels (-1.00 to 1.00 on y, 0.00 to 1.50 on x) in secondary ink — readable. Phase annotations "Attack", "Sustain", "Release" in respective palette colors — small but visible.
+      Data: Attack ribbon in Imprint green (#009E73), Sustain ribbon in Imprint lavender (#C475FD), Release ribbon in Imprint blue (#4467A3). All ribbons symmetric around zero. Horizontal zero reference line visible. Dashed vertical phase boundary lines visible.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17) — correct, not pure black
+      Chrome: Title and axis labels in light ink (#F0EFE8) — readable against dark background. Tick labels in secondary ink (#B8B7B0) — readable. Phase annotations in palette colors — legible. No dark-on-dark failures detected.
+      Data: Same Imprint green, lavender, and blue data colors as light render — palette is theme-independent and identical. Zero reference line visible in warm muted gray (INK_MUTED dark token). Grid lines subtle.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -41,63 +51,79 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All major font sizes explicitly set; phase annotation labels at size=11
-          slightly small
+        comment: All font sizes explicitly set (title=12pt, axis_title=10pt, axis_text=8pt);
+          well-proportioned in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No text or data collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Waveform clearly visible with min/max envelope rendering
+        comment: Min/max envelope downsampling correctly represents dense waveform;
+          ribbons clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Orange/blue/purple palette is colorblind-distinguishable
+        comment: CVD-safe Imprint green/lavender/blue triplet with sufficient hue
+          separation
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 layout with balanced margins
+        comment: Canvas gate passed; waveform fills canvas well; balanced margins
       - id: VQ-06
         name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: X-axis 'Time (seconds)' complete; Y-axis 'Amplitude' lacks unit qualifier
+          like '(normalized)' or '[-1, 1]'
+      - id: VQ-07
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Time (seconds) with units, Amplitude descriptive
+        comment: 'Attack=#009E73 (pos 1), Sustain=#C475FD (pos 2), Release=#4467A3
+          (pos 3); backgrounds #FAF8F1/#1A1A17 correct'
     design_excellence:
-      score: 16
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom phase palette, warm background, intentional typography hierarchy
+        comment: 'Above configured default: phase-segmented design with intentional
+          Imprint color assignment and per-phase alpha variation (0.85/0.65/0.55)
+          reflects real audio dynamics'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Removed x-grid, subtle dotted y-grid, warm panel background
+        comment: Y-only grid at alpha=0.15 subtle; x-grid suppressed; theme_minimal
+          base; axis lines colored. Above minimal but whitespace and typography could
+          be tighter
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Phase-colored waveform with boundary markers creates clear narrative
+        comment: ADSR phase narrative told via color; Sustain dominance is visually
+          clear. Phase annotation labels at size=3.5 too small to function as strong
+          narrative anchors
     spec_compliance:
       score: 15
       max: 15
@@ -107,47 +133,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct audio waveform with filled area symmetric around zero
+        comment: Correct audio waveform as filled ribbon symmetric around zero
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec features present including envelope rendering
+        comment: Filled area, semi-transparent fill, horizontal zero line, time x-axis,
+          amplitude y-axis, min/max envelope — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time, Y=amplitude, correct mapping
+        comment: Time (0-1.5 s) on x, amplitude (-1 to +1) on y, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, phase labels annotated directly
+        comment: Title is 'waveform-audio · python · plotnine · anyplot.ai'; no legend
+          (replaced by inline annotations)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows attack, sustain, release, harmonics, noise
+        comment: Attack envelope, sustained oscillation with vibrato, harmonic content,
+          amplitude decay, noise — strong coverage; minor deduction for harmonic detail
+          obscured by dense aliasing
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 220Hz A3 note with harmonics, realistic audio scenario
+        comment: 220 Hz fundamental (A3 note) with 2nd/3rd/5th harmonics, 22050 Hz
+          sample rate, 1.5 s duration, vibrato at 5 Hz — all real-world plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard sample rate, realistic duration and amplitude
+        comment: Normalized amplitude [-1, 1], realistic duration, proper sample rate;
+          np.clip prevents artefacts
     code_quality:
       score: 10
       max: 10
@@ -157,7 +189,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, save'
+        comment: 'Linear: imports → tokens → data → plot → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -169,19 +201,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imported symbols including scale_alpha_manual are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized code
+        comment: Appropriate complexity; no fake UI; chunking loop is clear and purposeful
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
+        comment: plot.save(f'plot-{THEME}.png', dpi=400, width=8, height=4.5, units='in')
+          — correct
     library_mastery:
       score: 7
       max: 10
@@ -191,23 +224,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good grammar of graphics usage with aes, geom_ribbon, scales
+        comment: Fluent ggplot2 grammar with geom_ribbon dual-aes mapping (fill+alpha),
+          scale_fill_manual + scale_alpha_manual; annotate, geom_hline, geom_vline
+          layered naturally
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Categorical fill mapping on geom_ribbon with scale_alpha_manual
+        comment: Combining geom_ribbon with simultaneous fill+alpha aesthetic mappings
+          from one categorical variable is a plotnine/ggplot2 distinctive pattern
+          not easily replicated in matplotlib
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - binning
   styling:
   - alpha-blending
-  - grid-styling
