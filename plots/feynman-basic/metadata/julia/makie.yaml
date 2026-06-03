@@ -1,0 +1,251 @@
+library: makie
+language: julia
+specification_id: feynman-basic
+created: '2026-06-03T06:19:47Z'
+updated: '2026-06-03T06:52:17Z'
+generated_by: claude-sonnet
+workflow_run: 26866836266
+issue: 4667
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
+review:
+  strengths:
+  - Exceptional use of Makie's @recipe system to create composable Feynman propagator
+    types (FermionProp, PhotonProp, GluonProp, ScalarProp) — a uniquely Makie-idiomatic
+    approach that makes the diagram grammar extensible
+  - 'Semantic color assignment aligns with physics conventions: green=fermion (#009E73),
+    blue=EM/photon (#4467A3), lavender=QCD/gluon (#C475FD), ochre=scalar (#BD8233)
+    — all from Imprint palette'
+  - Two-panel educational layout combining QED example diagram with propagator type
+    reference is informative and well-proportioned
+  - All spines removed, no grid — perfectly minimal chrome that doesn't distract from
+    the diagram physics
+  - Robust theme-adaptive tokens throughout; both light and dark renders pass all
+    readability checks with correct backgrounds and legible text
+  weaknesses:
+  - Reference panel propagator type labels at fontsize=13 may be marginally small
+    at mobile scale (~400px); consider increasing to fontsize=14-15
+  - Four @recipe type definitions add structural complexity before the main plot —
+    the KISS flat structure is deviated from, though justified for this diagram type
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "feynman-basic · julia · makie · anyplot.ai" at top in dark ink, clearly readable. Subtitle "e+e- → μ+μ- (QED s-channel)" in INK_SOFT. Particle labels e-, e+, μ-, μ+ in FERMION_COLOR green. Photon label "γ* (virtual photon)" in PHOTON_COLOR blue. Reference panel heading "Propagator Types" and type labels all readable. Time arrow label readable.
+      Data: Green (#009E73) fermion lines with midpoint direction arrows; blue (#4467A3) wavy sinusoidal photon propagator; lavender (#C475FD) curly gluon in reference; ochre (#BD8233) dashed scalar in reference. Black vertex dots at interaction points. First series is #009E73 (brand green) for fermions.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title and all labels rendered in light ink (#F0EFE8 / #B8B7B0) — clearly visible against dark background. No dark-on-dark failures. Vertex dots render as white. Reference panel on slightly elevated dark background (#222220).
+      Data: Colors identical to light render — fermion green #009E73, photon blue #4467A3, gluon lavender #C475FD, scalar ochre #BD8233 — only chrome flips between themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set; well-proportioned. Minor: reference
+          panel labels at fontsize=13 may be small at mobile scale (~400px).'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps in either render. All elements well-spaced.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All propagator types clearly visible with appropriate line weights
+          (2.5). Fermion arrows visible. Vertex dots prominent.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint palette CVD-safe. Strong redundant encoding: line style
+          (solid/wavy/curly/dashed) + color for all propagator types.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent 65/35 two-panel layout. Canvas well-utilized. No overflow
+          or clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis labels needed (axes hidden for diagram). Time arrow provides
+          temporal orientation. Title correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fermion = #009E73 (brand green, slot 1). Other propagators use Imprint
+          slots 2-4 with semantic-exception ordering. Backgrounds correct (#FAF8F1
+          light / #1A1A17 dark). Chrome theme-adaptive in both renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: semantic color per particle physics convention, clean
+          two-panel educational layout, intentional hierarchy. Clearly above defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Near-perfect: all spines removed, no grid, generous whitespace,
+          distinct panel backgrounds. Nearly every detail polished.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good: specific well-known QED process, time arrow orients viewer,
+          two-panel layout guides from diagram to reference. Clear visual hierarchy.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Feynman diagram with all required particle/propagator types
+          and QED example process.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Solid fermion lines with arrows, wavy photon, curly gluon, dashed
+          scalar, vertex dots, labels, time axis — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Vertices correctly positioned, propagators connecting them correctly,
+          particle labels at correct endpoints.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is 'feynman-basic · julia · makie · anyplot.ai'. Reference
+          panel serves as comprehensive propagator legend with correct labels.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All four propagator types shown. Both particle and antiparticle fermion
+          lines. Vertex interaction points. Full reference panel.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: QED e+e- → μ+μ- s-channel is real, well-known, scientifically accurate
+          particle physics process. Neutral scientific content.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagram proportions appropriate for Feynman diagrams. Particle labels
+          physically correct.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: Four @recipe type definitions (FermionProp, PhotonProp, GluonProp,
+          ScalarProp) deviate from flat Imports→Data→Plot→Save structure. Justified
+          but is a KISS deviation.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all three used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: '@recipe approach is idiomatic Makie for reusable diagram primitives.
+          No over-engineering.'
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save('plot-$(THEME).png', fig; px_per_unit = 2) correct. Uses modern
+          size= API (Makie 0.20+).
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert Makie usage: @recipe with Attributes, GridLayout with colsize!,
+          Label for cross-column title, proper Axis chrome token configuration.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: '@recipe macro system is Makie-exclusive — creates composable scene-integrated
+          plot primitives that cannot be easily replicated in other libraries without
+          significant boilerplate.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - subplots
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
