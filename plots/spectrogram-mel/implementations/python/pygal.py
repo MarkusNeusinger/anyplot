@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 spectrogram-mel: Mel-Spectrogram for Audio Analysis
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 80/100 | Updated: 2026-06-03
@@ -300,28 +300,8 @@ for idx, (name, freq) in enumerate(zip(note_names, note_freqs, strict=True)):
     freq_norm = 2595.0 * np.log10(1.0 + freq / 700.0) / mel_max
     annotations.append((name, freq_norm, time_frac))
 
-# Inferno colormap (19-stop interpolation for smooth gradients)
-inferno_colors = [
-    "#000004",
-    "#0d0829",
-    "#1b0c41",
-    "#2c105c",
-    "#4a0c6b",
-    "#651a80",
-    "#781c6d",
-    "#8c2981",
-    "#a52c60",
-    "#b73779",
-    "#cf4446",
-    "#dd513a",
-    "#ed6925",
-    "#f4821a",
-    "#fb9b06",
-    "#f7cf3a",
-    "#f7d13d",
-    "#f9e969",
-    "#fcffa4",
-]
+# Imprint sequential colormap: #4467A3 (low dB) → #009E73 (high dB)
+imprint_seq = ["#4467A3", "#009E73"]
 
 # Plot style with Imprint palette and theme-adaptive chrome
 custom_style = Style(
@@ -352,7 +332,7 @@ chart = MelSpectrogramChart(
     note_annotations=annotations,
     db_min=db_floor,
     db_max=0,
-    colormap=inferno_colors,
+    colormap=imprint_seq,
     show_legend=False,
     margin=40,
     margin_top=120,
