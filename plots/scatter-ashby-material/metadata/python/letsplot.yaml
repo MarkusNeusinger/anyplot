@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: scatter-ashby-material
 created: '2026-03-11T15:01:59Z'
-updated: '2026-06-03T16:16:24Z'
+updated: '2026-06-03T16:26:44Z'
 generated_by: claude-sonnet
 workflow_run: 26896678535
 issue: 4677
@@ -12,53 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-a
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/python/letsplot/plot-dark.html
-quality_score: 85
+quality_score: 86
 review:
   strengths:
-  - Eigendecomposition-based elliptical envelopes computed in log space — scientifically
-    accurate region boundaries that adapt to each family's actual data covariance
-  - Performance index guide lines (E/ρ = constant) add genuine engineering analysis
-    value, directly supporting the spec's material-selection use case
-  - Leader lines elegantly handle displaced labels to avoid crowding in the dense
-    upper-right quadrant (Ceramics/Composites/Metals)
-  - 'Complete spec compliance: all 7 material families, log-log axes, labeled regions,
-    guide lines, and interactive tooltips with full material details'
-  - 'Correct Imprint palette with brand green (#009E73) correctly assigned to Metals
-    (first factor), full theme-adaptive chrome (#FAF8F1 light / #1A1A17 dark)'
-  - Both PNG and HTML output generated; layer_tooltips() provides rich interactive
-    material info (density, modulus, family) in the HTML version
+  - 'Excellent spec compliance: all required features present — log-log axes, eigendecomposition
+    elliptical envelopes, per-family bold labels, axis labels with units, and optional
+    E/ρ performance index guide lines'
+  - 'Perfect data quality: 55 engineering materials across 7 families with factually
+    correct density/modulus values (e.g. Aluminum 2700 kg/m³ / 69 GPa, Gold 19300
+    kg/m³ / 79 GPa)'
+  - 'Complete theme-adaptive chrome: Imprint palette correctly applied, warm off-white
+    (#FAF8F1) and near-black (#1A1A17) backgrounds, all text tokens flip correctly
+    between themes'
+  - 'Clean KISS code: eigendecomposition for PCA-based ellipses is appropriate complexity,
+    no over-engineering'
+  - 'Idiomatic letsplot usage: layer_tooltips() with formatted .format()/.title()/.line()
+    chains is genuinely letsplot-distinctive'
+  - Dual encoding (color + shape) across 7 families for CVD safety; leader lines for
+    displaced labels add polish
   weaknesses:
-  - n=7 categorical series with no marker shape redundancy — at the CVD discrimination
-    floor (ΔE_CVD ≈ 10.7). The style guide requires marker shapes or direct labels
-    at n=7. Direct text labels on envelopes provide partial redundancy, but individual
-    geom_point markers all use shape=16 (circle); adding 7 distinct shapes would fully
-    address this.
-  - 'Semi-transparent envelope fills (alpha=0.22) lose distinctiveness in dark mode
-    on the near-black background — the fills become very dark tinted overlays. Consider
-    making alpha theme-adaptive: alpha=0.22 for light, alpha=0.30 for dark, or increasing
-    dark-mode alpha in the geom_polygon call.'
-  - Legend box uses a visible INK_SOFT border (color=INK_SOFT on legend_background
-    element_rect), which adds a distracting frame around the legend. The style guide
-    recommends removing or making legend box borders very subtle.
-  - 'Code comment ''# Alphabetical factor order: Ceramics, Composites, Elastomers,
-    Foams, Metals, Natural Materials, Polymers'' is factually incorrect — the rendered
-    output shows insertion order (Metals first), matching the families dict order.
-    Misleading comment should be corrected or removed.'
+  - 'Minor label-data overlap: the bold `Elastomers` family name sits directly over
+    the asterisk marker cluster in the lower-centre; the `Composites` label partially
+    overlaps adjacent markers in the crowded upper-right region — adjust label_offsets
+    to move these further from their cluster centroids'
+  - 'Crowded upper-right region: Ceramics/Composites/Metals envelopes overlap significantly,
+    making the boundaries hard to read — consider reducing the envelope_scale for
+    those three families slightly (e.g. 1.6-1.7 instead of 1.9)'
+  - 'Design storytelling: guide lines are present but the plot does not draw the eye
+    to any insight — a short annotation like `← best specific stiffness` near the
+    CFRP cluster (which sits above the E/ρ = 10⁻¹ line) would immediately tell the
+    material-selection story'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot.ai surface, not pure white.
-      Chrome: Title "scatter-ashby-material · python · letsplot · anyplot.ai" bold at ~60-65% of canvas width, fully readable. Subtitle "Young's Modulus vs Density — Material Selection Landscape" in smaller INK_SOFT text, readable. X-axis label "Density (kg/m³)" and Y-axis label "Young's Modulus (GPa)" clearly visible. Tick labels (log scale: 100, 1,000, 10,000 on x; 0.001, 0.01, 0.1, 1, 10, 100 on y) rendered in INK_SOFT, readable. Legend title "Material Family" and 7 family labels readable on the right.
-      Data: 7 material families shown as colored elliptical envelopes (alpha=0.22 fills) + 57 individual scatter points. Colors correctly follow Imprint palette: Metals=#009E73 (brand green), Polymers=#C475FD (lavender), Ceramics=#4467A3 (blue), Composites=#BD8233 (ochre), Elastomers=#AE3030 (red), Foams=#2ABCCD (cyan), Natural Materials=#954477 (rose). Performance index dashed guide lines (E/ρ = 10⁻³, 10⁻², 10⁻¹) at 38° angle with small labels. Bold family name labels with dotted leader lines for displaced labels (Ceramics, Natural Materials, Composites).
-      Legibility verdict: PASS — all text is clearly readable against the warm off-white background; no light-on-light issues.
+      Background: Warm off-white, visually consistent with #FAF8F1 — correct.
+      Chrome: Bold title "scatter-ashby-material · python · letsplot · anyplot.ai" in dark ink, clearly readable. Subtitle in lighter INK_SOFT tone. Axis labels "Density (kg/m³)" and "Young's Modulus (GPa)" with units, both dark and well-sized. Tick labels at log-scale positions are readable at size 10. Legend on right with "Material Family" header and all 7 entries (color + shape).
+      Data: 7 elliptical family envelopes in Imprint palette positions 1-7 with 22% fill alpha. Metals (green, #009E73, circles) top-right, Ceramics (blue, #4467A3, squares) upper-centre, Composites (ochre, #BD8233, crosses) mid-right, Natural Materials (lavender/pink, #954477, X) centre-left, Polymers (purple, #C475FD, triangles) centre, Elastomers (red, #AE3030, asterisks) lower-centre, Foams (cyan, #2ABCCD, diamonds) lower-left. Three dashed diagonal guide lines (E/ρ = 10⁻³, 10⁻², 10⁻¹) in muted gray from lower-left to upper-right. Bold family name labels placed near cluster centroids with dotted leader lines for offset labels.
+      Legibility verdict: PASS — all text readable against warm off-white. Minor overlap: "Elastomers" label overlaps the asterisk data point cluster; "Composites" label partially overlaps nearby markers in the crowded Ceramics/Composites/Metals region.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot.ai dark surface, not pure black.
-      Chrome: Title, subtitle, axis labels, tick labels, and legend text all rendered in light INK (#F0EFE8 / #B8B7B0) — clearly readable against the dark background. Family labels in bold light text, fully legible. No dark-on-dark failures observed.
-      Data: Imprint palette data colors are identical to light render (Metals green, Polymers lavender, Ceramics blue, etc.) — correct, only chrome flips. The elliptical envelopes at alpha=0.22 on dark background produce darker, less visible fills with white/light borders from the polygon stroke, which defines the boundaries effectively. Data points remain fully visible and distinguishable.
-      Legibility verdict: PASS — all text is readable against the dark background. The semi-transparent fills are somewhat less colorful in dark mode (alpha=0.22 on near-black yields dark tinted regions) but the white outlines and bold labels fully compensate.
+      Background: Warm near-black, visually consistent with #1A1A17 — correct.
+      Chrome: Title and subtitle appear in light text (#F0EFE8 equivalent), clearly readable against dark background. Axis labels and tick labels are light-colored. Legend background uses elevated dark tone (#242420). Grid lines are subtle and dark-themed. No dark-on-dark text failures observed.
+      Data: All 7 Imprint palette data colors are identical to the light render — Metals green, Ceramics blue, Composites ochre, etc. Envelope alpha slightly higher at 30% for dark theme. Guide lines in muted gray still visible. Bold family labels are light-colored (#F0EFE8 INK token for dark theme).
+      Legibility verdict: PASS — all text readable against near-black background. Data colors are identical between light and dark themes. No dark-on-dark failure observed.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -66,56 +64,58 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; all text readable in both themes.
-          Minor deduction: guide line labels (size=5mm, 38deg angle) are small but
-          acceptable at full resolution.'
+        comment: All font sizes explicitly set (axis_title=12, axis_text=10, plot_title=16,
+          subtitle=11, legend=10). Both themes fully readable. Title fills ~65-70%
+          of canvas width — expected for the mandated title format. Geom_text labels
+          at size=5mm (~14pt) are well-proportioned.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Leader lines successfully prevent label overlap; minor crowding in
-          Ceramics/Composites/Metals label cluster but no actual text overlap.
+        comment: 'Minor overlaps: Elastomers bold label sits on top of the asterisk
+          cluster in lower-centre; Composites label partially overlaps nearby markers
+          in the crowded upper-right envelope cluster. Main content remains readable.'
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 57 data points at size=3.5 alpha=0.88 are clearly visible. Envelope
-          fills at alpha=0.22 are slightly less distinctive in dark mode but white
-          outlines compensate.
+        comment: 55 data points at size=3.5 with alpha=0.88 are appropriately sized.
+          Different shapes per family aid CVD safety. Elliptical envelopes at 22%/30%
+          alpha maintain data visibility without obscuring points.
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Imprint palette CVD-safe. n=7 series without marker shape redundancy
-          is at the discrimination floor. Direct text labels on envelopes provide
-          partial redundancy but individual points use all shape=16.
+        comment: Imprint palette with redundant shape encoding (7 distinct shapes)
+          ensures CVD safety. Good luminance contrast across both themes.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Good canvas utilization, balanced
-          margins, legend appropriately placed to the right.
+        comment: 3200x1800px canvas (ggsize 800x450, scale=4) is correct. Good margins.
+          Legend integrated with plot. Minor crowding in the Ceramics/Metals/Composites
+          upper-right region.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
         comment: 'X: ''Density (kg/m³)'', Y: ''Young''s Modulus (GPa)'' — both descriptive
-          with units.'
+          with correct units. Subtitle adds meaningful context.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Metals (first series) correctly uses #009E73. All 7 Imprint positions
-          used in insertion order. Backgrounds #FAF8F1 light / #1A1A17 dark. Theme-adaptive
-          chrome correct in both renders.'
+        comment: 'First series (Metals) = #009E73 brand green. Full IMPRINT_7 palette
+          in canonical order. Backgrounds #FAF8F1 (light) and #1A1A17 (dark). All
+          chrome tokens theme-adaptive. Data colors identical across both renders.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -123,27 +123,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default (4): eigendecomposition envelopes, performance index
-          lines, leader lines, and interactive tooltips show intentional professional
-          design. Not quite publication-ready (6+) due to visible legend border and
-          no spine removal beyond theme_minimal.'
+        comment: 'Above defaults: Imprint palette, elliptical eigendecomposition envelopes,
+          dual encoding, performance index guide lines, leader lines, subtitle. Shows
+          real design intent. Not quite publication-ready due to crowded envelope
+          region.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Some refinement: minor grid removed, major grid subtle (size=0.25),
-          alpha=0.22 fills, explicit plot margins. Legend box has INK_SOFT colored
-          border adding visual noise. Doesn''t fully reach ''every detail polished''.'
+        comment: theme_minimal() base, subtle grid (0.25 size), minor grid removed,
+          generous margins via plot_margin, elevated legend background. Axis lines
+          kept — acceptable for this chart type.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Visual hierarchy guides reader: performance index lines provide
-          analytical context, labeled ellipses define material families, log-log scale
-          spans 6 orders of magnitude. Clear engineering story about material selection
-          tradeoffs.'
+        comment: E/ρ guide lines communicate material selection principles. Visual
+          hierarchy through envelope shapes guides the reader. Viewer can immediately
+          compare families. Lacks a focal annotation highlighting the key insight.
     spec_compliance:
       score: 15
       max: 15
@@ -153,29 +152,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: log-log scatter with elliptical family regions (convex-hull
-          envelopes as specified).'
+        comment: Correct log-log scatter with elliptical family envelope regions —
+          exactly what spec describes.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Log axes, family ellipses, text labels, axis units, distinct colors,
-          performance index guide lines — all present.
+        comment: Log-log axes, colored elliptical envelopes, per-family text labels,
+          axis labels with units, distinct colors, optional E/ρ guide lines — all
+          present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=density, Y=Young's modulus, color=family. Log-log scale covers
-          full data range.
+        comment: X = Density (kg/m³), Y = Young's Modulus (GPa), both log scale. All
+          55 data points across 7 families visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'scatter-ashby-material · python · letsplot · anyplot.ai' matches
-          required format exactly. Legend 'Material Family' with correct labels.
+        comment: 'Title: ''scatter-ashby-material · python · letsplot · anyplot.ai''
+          — correct format. Legend ''Material Family'' with all 7 family entries (color
+          + shape).'
     data_quality:
       score: 15
       max: 15
@@ -185,22 +186,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 7 families, 57 materials, individual points + ellipse regions + guide
-          lines — comprehensive Ashby chart coverage.
+        comment: 7 distinct families covering 6 orders of magnitude in modulus and
+          3 in density. Wide variation demonstrates all aspects of Ashby chart methodology.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real engineering materials (Steel, CFRP, Alumina, Silicone, etc.)
-          with accurate property values. Neutral technical topic.
+        comment: Real engineering materials science context. Named materials (Aluminum,
+          Steel, Alumina, Natural Rubber, etc.) with industry-standard property values.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Density 30-19300 kg/m³ and Young's modulus 0.001-380 GPa match known
-          material property ranges. Factually correct.
+        comment: 'Values factually correct: Aluminum 2700 kg/m³/69 GPa, Gold 19300
+          kg/m³/79 GPa, Natural Rubber ~0.005 GPa, Polyurethane Foam 30 kg/m³. All
+          match established materials science data.'
     code_quality:
       score: 10
       max: 10
@@ -210,62 +212,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports → theme tokens → data → envelopes → labels
-          → plot → save. No functions or classes.'
+        comment: 'Linear: imports → tokens → data dict → dataframe → envelopes → labels
+          → leaders → guide data → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before any random operations.
+        comment: np.random.seed(42) set before noise generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported names are used. Import list is specific (named imports
-          from lets_plot).
+        comment: All 17 letsplot symbols imported are used. os, numpy, pandas all
+          used. No unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Eigendecomposition loop is appropriate complexity for this chart
-          type. No fake UI. Clean dict-based data structure.
+        comment: Eigendecomposition for ellipses is appropriately complex for the
+          task. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html. ggsave API
-          used correctly.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via ggsave(). Correct
+          letsplot API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Good use of ggplot grammar: layered composition, scale_x_log10/scale_y_log10,
-          scale_color_manual/scale_fill_manual, layer_tooltips(), ggsize, guides().
-          Correct ggsize(800,450) + scale=4 per library guide.'
+        comment: 'Expert use of ggplot grammar: aes() mappings, scale_*_manual, guides(),
+          labs(), theme layers, geom_abline. Correct letsplot patterns throughout.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: layer_tooltips() with format chains and custom tooltip layout is
-          a key letsplot differentiator. Dual PNG+HTML output leverages letsplot's
-          interactive capability beyond static export.
-  verdict: REJECTED
+        comment: layer_tooltips() with .format()/.title()/.line()/.min_width() chains
+          is genuinely letsplot-distinctive and not found in other libraries. HTML
+          export alongside PNG also distinctive.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - hover-tooltips
   - html-export
-  - layer-composition
   - annotations
   patterns:
   - data-generation
