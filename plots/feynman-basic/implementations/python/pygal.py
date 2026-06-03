@@ -1,10 +1,11 @@
-""" anyplot.ai
+"""anyplot.ai
 feynman-basic: Feynman Diagram for Particle Interactions
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-03
 """
 
 import os
+import re
 import sys as _sys
 
 
@@ -164,7 +165,7 @@ custom_style = Style(
     title_font_size=_title_fs,
     label_font_size=56,
     major_label_font_size=44,
-    legend_font_size=44,
+    legend_font_size=48,
     value_font_size=36,
     stroke_width=3.0,
     legend_box_size=30,
@@ -213,7 +214,58 @@ chart.add("Z⁰ virtual boson", z_line, stroke_width=4, stroke_style={"dasharray
 # Vertex markers
 chart.add("Vertices", vertex_points, stroke=False, show_dots=True, dots_size=18)
 
-# Save
-chart.render_to_png(f"plot-{THEME}.png")
+
+# Post-process SVG for PNG: remove arrowhead legend entries and add on-diagram
+# particle labels for γ and Z⁰ propagators.
+# Series 1,3,5,7 (0-indexed) are the arrowhead helpers — hidden from legend in PNG.
+# Vertex circles (dots_size=18) anchor the coordinate transform for label placement.
+def _process_svg_for_png(svg_bytes):
+    svg = svg_bytes.decode("utf-8")
+
+    # Remove arrowhead legend entries by series id
+    for idx in (1, 3, 5, 7):
+        svg = re.sub(rf'<g\b[^>]*\bid="activate-serie-{idx}"[^>]*>[\s\S]*?</g>', "", svg)
+
+    # Find vertex-marker circles (dots_size=18 → r≈18 in SVG)
+    vertex_pts = []
+    for c in re.findall(r"<circle\b[^>]+>", svg, flags=re.IGNORECASE):
+        cx_m = re.search(r"\bcx=[\"']([^\"']+)[\"']", c)
+        cy_m = re.search(r"\bcy=[\"']([^\"']+)[\"']", c)
+        r_m = re.search(r"\br=[\"']([^\"']+)[\"']", c)
+        if cx_m and cy_m and r_m and 14 < float(r_m.group(1)) < 26:
+            vertex_pts.append((float(cx_m.group(1)), float(cy_m.group(1))))
+
+    if len(vertex_pts) >= 2:
+        vertex_pts.sort(key=lambda p: p[0])
+        sv1, sv2 = vertex_pts[0], vertex_pts[1]  # SVG px for v1=(3,5), v2=(7,5)
+        # x_scale: SVG pixels per data unit (derived from known Δx = 4 data units)
+        x_scale = (sv2[0] - sv1[0]) / (7.0 - 3.0)
+        # y_scale approximated as x_scale (square canvas, similar x/y data spans)
+        y_scale = x_scale
+        mid_sx = sv1[0] + 2.0 * x_scale  # data x=5.0 → midpoint
+        mid_sy = sv1[1]  # sv1[1] corresponds to data y=5.0
+        font_px = max(60, int(x_scale * 1.0))
+        g_sy = mid_sy - 1.05 * y_scale  # above wavy γ line
+        z_sy = mid_sy + 1.05 * y_scale  # below dashed Z⁰ line
+        svg = svg.replace(
+            "</svg>",
+            f'<text x="{mid_sx:.0f}" y="{g_sy:.0f}" font-family="sans-serif" '
+            f'font-size="{font_px}" font-weight="bold" fill="#AE3030" '
+            f'text-anchor="middle" dominant-baseline="central">γ</text>\n'
+            f'<text x="{mid_sx:.0f}" y="{z_sy:.0f}" font-family="sans-serif" '
+            f'font-size="{font_px}" font-weight="bold" fill="#2ABCCD" '
+            f'text-anchor="middle" dominant-baseline="central">Z⁰</text>\n'
+            "</svg>",
+            1,
+        )
+
+    return svg.encode("utf-8")
+
+
+from cairosvg import svg2png
+
+
+svg_bytes = chart.render()
+svg2png(bytestring=_process_svg_for_png(svg_bytes), write_to=f"plot-{THEME}.png", output_width=2400, output_height=2400)
 with open(f"plot-{THEME}.html", "wb") as f:
-    f.write(chart.render())
+    f.write(svg_bytes)
