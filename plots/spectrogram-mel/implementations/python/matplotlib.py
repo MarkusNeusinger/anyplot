@@ -1,16 +1,37 @@
-""" pyplots.ai
+"""anyplot.ai
 spectrogram-mel: Mel-Spectrogram for Audio Analysis
-Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-11
+Library: matplotlib | Python
 """
+
+import os
+import sys
+
+
+# This file is named matplotlib.py — remove its directory from sys.path so
+# "import matplotlib" resolves to the installed package, not this file.
+_here = os.path.abspath(os.path.dirname(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p or ".") != _here]
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.colors import Normalize
+from matplotlib.colors import LinearSegmentedColormap, Normalize
 from matplotlib.ticker import FuncFormatter
 
 
-# Data - synthesize a rich audio signal with melody-like frequency components
+THEME = os.getenv("ANYPLOT_THEME", "light")
+
+# Theme-adaptive chrome tokens — Imprint palette
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint sequential colormap — reversed so high energy (signal) maps to brand green,
+# low energy (noise floor) maps to blue; makes signal features stand out clearly.
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#4467A3", "#009E73"])
+
+# --- Data: synthesize a rich audio signal with melody-like frequency components ---
 np.random.seed(42)
 sample_rate = 22050
 duration = 4.0
@@ -23,7 +44,7 @@ audio_signal = 0.5 * np.sin(2 * np.pi * melody_freq * t)
 audio_signal += 0.3 * np.sin(2 * np.pi * 2 * melody_freq * t)
 audio_signal += 0.15 * np.sin(2 * np.pi * 3 * melody_freq * t)
 
-# Add percussive bursts at regular intervals
+# Percussive bursts at regular intervals
 for onset in np.arange(0.0, duration, 0.5):
     onset_idx = int(onset * sample_rate)
     burst_len = int(0.05 * sample_rate)
@@ -31,21 +52,19 @@ for onset in np.arange(0.0, duration, 0.5):
     envelope = np.exp(-np.linspace(0, 8, end_idx - onset_idx))
     audio_signal[onset_idx:end_idx] += 0.4 * envelope * np.random.randn(end_idx - onset_idx)
 
-# Add a rising tone in the second half
+# Rising tone in the second half
 rising_freq = np.linspace(500, 2000, n_samples)
 rising_mask = np.zeros(n_samples)
 rising_mask[n_samples // 2 :] = np.linspace(0, 0.3, n_samples - n_samples // 2)
 audio_signal += rising_mask * np.sin(2 * np.pi * rising_freq * t)
 
-# Normalize
 audio_signal = audio_signal / np.max(np.abs(audio_signal))
 
-# Compute mel-spectrogram manually
+# STFT (n_fft=2048, hop_length=512, n_mels=128 per spec)
 n_fft = 2048
 hop_length = 512
 n_mels = 128
 
-# STFT
 n_frames = 1 + (n_samples - n_fft) // hop_length
 window = np.hanning(n_fft)
 stft_matrix = np.zeros((n_fft // 2 + 1, n_frames))
@@ -79,32 +98,30 @@ for m in range(n_mels):
     )
     mel_filterbank[m] = up_slope + down_slope
 
-# Apply mel filter bank and convert to dB
+# Apply mel filter bank and convert to dB scale
 mel_spectrogram = mel_filterbank @ stft_matrix
 mel_spectrogram = np.maximum(mel_spectrogram, 1e-10)
 mel_spectrogram_db = 10.0 * np.log10(mel_spectrogram)
-ref_db = mel_spectrogram_db.max()
-mel_spectrogram_db = mel_spectrogram_db - ref_db
+mel_spectrogram_db -= mel_spectrogram_db.max()
 
-# Time and frequency axes
 time_axis = np.arange(n_frames) * hop_length / sample_rate
 mel_freqs = hz_points[1:-1]
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor="#0a0a0f")
-ax.set_facecolor("#0a0a0f")
+# --- Plot ---
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 img = ax.pcolormesh(
     time_axis,
     np.arange(n_mels),
     mel_spectrogram_db,
-    cmap="magma",
+    cmap=imprint_seq,
     shading="gouraud",
     norm=Normalize(vmin=-80, vmax=0),
     rasterized=True,
 )
 
-# Y-axis: show Hz labels at mel band edges
+# Y-axis: Hz labels at key mel band edges
 tick_hz_values = [64, 128, 256, 512, 1024, 2048, 4096, 8000]
 tick_mel_indices = []
 tick_labels = []
@@ -112,43 +129,42 @@ for hz in tick_hz_values:
     if hz <= f_max:
         idx = np.argmin(np.abs(mel_freqs - hz))
         tick_mel_indices.append(idx)
-        if hz >= 1000:
-            tick_labels.append(f"{hz / 1000:.0f}k")
-        else:
-            tick_labels.append(f"{hz}")
+        tick_labels.append(f"{hz // 1000}k" if hz >= 1000 else str(hz))
 ax.set_yticks(tick_mel_indices)
 ax.set_yticklabels(tick_labels)
 
-# X-axis formatting with FuncFormatter
 ax.xaxis.set_major_formatter(FuncFormatter(lambda x, _: f"{x:.1f}"))
 
-# Colorbar with musically meaningful dB levels
+# Colorbar with dB scale
 cbar = fig.colorbar(img, ax=ax, pad=0.02, aspect=30)
-cbar.set_label("Power (dB)", fontsize=20, color="#cccccc")
-cbar.set_ticks([0, -10, -20, -40, -60, -80])
-cbar.set_ticklabels(["0", "−10", "−20", "−40", "−60", "−80"])
-cbar.ax.tick_params(labelsize=14, colors="#cccccc")
-cbar.outline.set_edgecolor("#333333")
+cbar.set_label("Power (dB)", fontsize=10, color=INK_SOFT)
+cbar.set_ticks([0, -20, -40, -60, -80])
+cbar.set_ticklabels(["0", "−20", "−40", "−60", "−80"])
+cbar.ax.tick_params(labelsize=8, colors=INK_SOFT)
+cbar.outline.set_edgecolor(INK_SOFT)
 cbar.outline.set_linewidth(0.5)
 
-# Subtle horizontal reference lines at key frequency bands
-speech_band_idx = np.argmin(np.abs(mel_freqs - 300))
-ax.axhline(y=speech_band_idx, color="#ffffff", alpha=0.08, linewidth=0.6, linestyle="--")
-harmonic_band_idx = np.argmin(np.abs(mel_freqs - 1000))
-ax.axhline(y=harmonic_band_idx, color="#ffffff", alpha=0.08, linewidth=0.6, linestyle="--")
+# Reference lines with text labels — more visible than before, guides the viewer
+speech_idx = np.argmin(np.abs(mel_freqs - 300))
+harmonic_idx = np.argmin(np.abs(mel_freqs - 1000))
+ax.axhline(y=speech_idx, color=INK_SOFT, alpha=0.45, linewidth=0.9, linestyle="--")
+ax.axhline(y=harmonic_idx, color=INK_SOFT, alpha=0.45, linewidth=0.9, linestyle="--")
+ax.text(time_axis[-1] * 0.02, speech_idx + 1.5, "speech band", fontsize=7, color=INK_MUTED, va="bottom", ha="left")
+ax.text(
+    time_axis[-1] * 0.02, harmonic_idx + 1.5, "harmonic region", fontsize=7, color=INK_MUTED, va="bottom", ha="left"
+)
 
-# Style
-text_color = "#cccccc"
-ax.set_xlabel("Time (s)", fontsize=20, color=text_color, labelpad=10)
-ax.set_ylabel("Frequency (Hz)", fontsize=20, color=text_color, labelpad=10)
-ax.set_title("spectrogram-mel · matplotlib · pyplots.ai", fontsize=24, fontweight="medium", color="#e8e8e8", pad=16)
-ax.tick_params(axis="both", labelsize=16, colors=text_color)
-ax.tick_params(axis="x", which="both", length=4, width=0.8, color="#555555")
-ax.tick_params(axis="y", which="both", length=4, width=0.8, color="#555555")
+# Chrome — theme-adaptive
+title = "spectrogram-mel · python · matplotlib · anyplot.ai"
+ax.set_title(title, fontsize=12, fontweight="medium", color=INK, pad=8)
+ax.set_xlabel("Time (s)", fontsize=10, color=INK, labelpad=6)
+ax.set_ylabel("Frequency (Hz)", fontsize=10, color=INK, labelpad=6)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
+ax.tick_params(axis="x", which="both", length=3, width=0.6, color=INK_SOFT)
+ax.tick_params(axis="y", which="both", length=3, width=0.6, color=INK_SOFT)
 
-# Remove all spines for cleaner look
 for spine in ax.spines.values():
     spine.set_visible(False)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor=fig.get_facecolor())
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
+plt.close()
