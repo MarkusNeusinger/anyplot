@@ -1,7 +1,7 @@
 # anyplot.ai
 # heatmap-loss-triangle: Actuarial Loss Development Triangle
-# Library: Makie.jl | Julia 1.11
-# Quality: pending | Created: 2026-06-03
+# Library: makie 0.22.10 | Julia 1.11.9
+# Quality: 83/100 | Created: 2026-06-03
 
 using CairoMakie
 using Colors
