@@ -1,94 +1,114 @@
 library: altair
+language: python
 specification_id: piano-roll-midi
 created: '2026-03-07T19:47:04Z'
-updated: '2026-03-07T20:00:50Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22805912211
+updated: '2026-06-03T03:47:34Z'
+generated_by: claude-sonnet
+workflow_run: 26861756737
 issue: 4565
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/altair/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/python/altair/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Expert Altair layer composition combining 5 chart layers (background, beat grid,
-    measure grid, notes, labels)
-  - Excellent musical data with three distinct layers (bass, chords, melody) creating
-    a realistic piano roll
-  - 'Well-executed improvements from attempt 1: font sizes fixed, axis title corrected,
-    Altair selections added'
-  - Custom warm palette creates distinctive DAW-like aesthetic
-  - Legend-bound selection for interactive layer filtering is a compelling Altair-specific
-    feature
-  - Clean, well-structured code with clear musical intent
+  - 'Excellent spec compliance — all required features present: piano roll layout,
+    note names on Y-axis, alternating piano key row shading, dashed beat grid + solid
+    measure boundary lines, and Imprint sequential velocity colormap'
+  - Five-layer Altair composition (background rows, beat grid, measure grid, note
+    bars, layer labels) is idiomatic and sophisticated
+  - Musical layer labels ('Bass', 'Chords', 'Melody') at right margin add strong data
+    storytelling and visual hierarchy
+  - Interactive legend selection (layer_selection) and HTML brush export demonstrate
+    full use of Altair's distinctive interactivity features
+  - Theme-adaptive chrome correctly threaded through all elements — both light (#FAF8F1)
+    and dark (#1A1A17) renders are fully readable with appropriate text colors
+  - Measure labels (M1–M9) using labelExpr is a thoughtful UX detail that makes beat
+    positions immediately interpretable
+  - Canvas correctly padded to 3200×1800 with PIL; fail-loud logic if vl-convert overshoots
+    is a production-quality guard
   weaknesses:
-  - Color palette not as perceptually uniform as viridis/cividis; mid-range purple-pink
-    transition could be harder for some colorblind users
-  - Some empty pitch rows between musical layers create vertical dead space (though
-    this mirrors piano layout)
-  image_description: 'The plot displays a piano roll visualization of MIDI notes across
-    8 measures (M1-M9) on the x-axis and pitch names (G#2 to G#5) on the y-axis. Horizontal
-    bars represent individual notes, with bar length encoding note duration and color
-    encoding velocity. The background alternates between warm off-white (#f5f3ef)
-    and light beige (#d4d0c8) rows to distinguish white and black piano keys. Note
-    bars are colored using a custom sequential palette from deep purple (#2c1654)
-    for soft notes (~40 velocity) through magenta, pink, and orange to golden yellow
-    (#ffd54f) for loud notes (~120 velocity). Each bar has rounded corners (cornerRadius=4)
-    and a subtle dark stroke. Dashed gray vertical lines mark individual beats with
-    stronger solid brown lines at measure boundaries every 4 beats. The title reads
-    "piano-roll-midi · altair · pyplots.ai" centered at top in dark navy. Three musical
-    layers are visible: bass notes in the lower register (C3-E3), chord voicings in
-    the mid range (C4-A4 in deep purple), and a melody line in the upper range (C5-G5
-    in warmer colors). Italic bold layer labels ("Bass", "Chords", "Melody") appear
-    on the right edge. A velocity gradient legend is positioned on the right side
-    showing the full color range from 40-120.'
+  - Y-axis tick label fontsize=9 is on the small side for a 40-row piano roll; with
+    4× scale_factor this is ~36 source pixels — readable on desktop but tight on mobile
+    at 400px width; consider raising to fontSize=10 to match the X-axis tick labels
+  - 'Black key / white key row contrast is very subtle in the dark render (#1A1A17
+    vs #242420 differ by only ~14 luminance units); the piano keyboard metaphor could
+    be clearer with a slightly stronger delta — consider #2A2A26 for white-key rows
+    in dark mode'
+  - The velocity colormap direction (green=soft, blue=loud) is counterintuitive relative
+    to most DAW conventions (warm=loud, cool=soft); while Imprint sequential is correct,
+    a note or a reversed domain could better serve musical semantics
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "piano-roll-midi · python · altair · anyplot.ai" in bold dark text, centered, clearly readable. Y-axis label "Pitch" and X-axis label "Measure" in dark ink, readable. Y-axis tick labels (G#2 through G#5 note names) at fontSize=9 — small but readable. Measure labels M1–M9 at fontSize=10 — clearly readable. Velocity colorbar with "Velocity" title and labels "127"/"40" in dark text — all visible.
+      Data: Note bars rendered in Imprint sequential colormap — green (#009E73) for low velocity (~40) to blue (#4467A3) for high velocity (~127). Alternating row shading: white-key rows at #F0EDE6, black-key rows at #D8D4CC — subtle but visible piano keyboard layout. Dashed beat grid lines at opacity=0.25 and solid measure boundary lines at opacity=0.5 both clearly rendered. Layer labels "Melody", "Chords", "Bass" in italic bold at right margin — readable.
+      Legibility verdict: PASS — all text readable in light theme, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title in light text (#F0EFE8) clearly visible against dark background. Y-axis label "Pitch" and X-axis label "Measure" in light ink — readable. Y-axis tick labels in light gray (#B8B7B0) — readable. Measure labels in light gray — readable. Velocity colorbar legend text in light tones — readable. Layer labels "Melody", "Chords", "Bass" in italic, readable. No dark-on-dark text failures detected.
+      Data: Note bar colors are identical to light render — same green-to-blue gradient confirming only chrome flips between themes. Alternating row shading (white-key rows #242420 vs black-key rows #1A1A17) is very subtle in dark mode — distinguishable on close inspection but less prominent than the light render.
+      Legibility verdict: PASS — all text readable in dark theme, no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis titles 20pt, tick
-          labels 16pt, legend title 18pt, legend labels 16pt. All perfectly readable.'
+        comment: Title, axis labels, and measure ticks all clearly readable in both
+          themes. Y-axis note name labels at fontSize=9 are on the small side for
+          40 rows but readable at full resolution; slight mobile concern.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text elements fully readable with no collisions.
+        comment: No text or element overlap detected. Layer labels at right margin
+          are well-separated from the legend.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Most note bars clearly visible. Some 0.5-beat melody notes are small
-          but distinguishable.
+        comment: All note bars clearly visible in both themes. Alternating background
+          rows, beat/measure grid lines all rendered at appropriate opacity.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Custom purple-to-yellow palette has good luminance progression but
-          mid-range is not as perceptually uniform as viridis.
+        comment: Imprint sequential colormap (green to blue) is CVD-safe. No red-green-only
+          encoding.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good width usage. Some empty pitch rows between layers create vertical
-          dead space, though this mirrors piano layout.
+        comment: Canvas correctly padded to 3200×1800. Canvas gate passed. Good proportions
+          — title at ~60% width, balanced layout with legend and layer labels.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Measure with M1-M9 labels and Pitch with note names are domain-appropriate
-          descriptive labels.
+        comment: X-axis 'Measure' with M1–M9 labels, Y-axis 'Pitch' with note names.
+          Correct title format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint sequential (green #009E73 → blue #4467A3) used for continuous
+          velocity data. Plot backgrounds #FAF8F1 light / #1A1A17 dark. Both renders
+          theme-correct.'
     design_excellence:
       score: 14
       max: 20
@@ -98,22 +118,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom warm palette, rounded corners, alternating key backgrounds,
-          italic layer labels, custom measure numbering. Clearly above defaults.
+        comment: Piano keyboard alternating background, multi-layer composition, velocity
+          gradient, musical layer labels at margin — well above generic defaults.
+          Professional DAW-like aesthetic.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid disabled, custom beat/measure grid with dashed/solid differentiation,
-          view stroke removed, warm neutral tones.
+        comment: strokeWidth=0 removes view border; configure_axis(grid=False) with
+          custom manual grid lines shows deliberate design; cornerRadius=3 on note
+          bars adds polish; dashed vs solid grid differentiates beat/measure hierarchy.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Three distinct musical layers with velocity dynamics. Layer labels
-          guide viewer. Interactive selection in HTML.
+        comment: Musical layer labels guide viewer through Bass/Chords/Melody structure.
+          Velocity gradient communicates dynamics. Interactive legend selection enables
+          exploration. Clear focal hierarchy from the melody at top.
     spec_compliance:
       score: 15
       max: 15
@@ -123,27 +146,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal rectangles positioned by pitch and time.
+        comment: Piano roll visualization with horizontal note bars — correct chart
+          type for MIDI data.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: note names, key shading, beat/measure grid, velocity
-          color, auto-fit range.'
+        comment: Note names on Y-axis ✓, alternating piano key row shading ✓, dashed
+          beat grid + solid measure lines ✓, sequential velocity colorscale ✓, auto-fit
+          pitch range with ±1 semitone margin ✓.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time in measures, Y=pitch with note names. Correctly mapped with
-          proper sort order.
+        comment: Time (beat) on X-axis, pitch on Y-axis, velocity on color, note duration
+          as bar width. All mappings correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Velocity gradient legend with appropriate range.
+        comment: Title 'piano-roll-midi · python · altair · anyplot.ai' matches required
+          format. Velocity colorbar with gradient legend.
     data_quality:
       score: 15
       max: 15
@@ -153,20 +179,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bass, chords, melody layers with varying durations and velocities
-          across full range.
+        comment: 'Shows bass line, chord voicings, and melody with varying rhythms
+          and dynamics across 8 measures. Covers all aspects of a piano roll: pitch,
+          time, duration, velocity.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: C major chord progression with melody - musically coherent and neutral.
+        comment: C major harmonic progression with realistic chord voicings, melodic
+          phrases, and bass line. MIDI data is musically plausible and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic MIDI pitches, velocities, and durations across 8 measures.
+        comment: 8 measures (32 beats), MIDI notes 45–79 (A2 to G5), velocity 50–120.
+          Appropriate scale for a musical demo.
     code_quality:
       score: 10
       max: 10
@@ -176,62 +205,68 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow with no functions/classes.
+        comment: No functions or classes. Procedural top-down code with clear sections
+          (data, background, grid, notes, labels, composition).
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set before any random calls.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (altair, numpy, pandas).
+        comment: All imports (altair, numpy, pandas, PIL, os, sys) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured with clear musical intent. Interactive features are
-          genuine Altair capabilities.
+        comment: Clean Altair layer composition. No fake UI or simulated interactivity.
+          Sensible variable naming.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html with current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct file naming
+          convention.
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert declarative Altair: layered composition, conditional encoding,
-          proper types, labelExpr, sort, x2 encoding.'
+        comment: Proper use of Altair layer composition (+), encoding types (Q/N),
+          alt.condition for opacity, sort=pitch_labels for nominal axis ordering,
+          configure_* chaining. All idiomatic.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: selection_point with legend binding, selection_interval for brush
-          zoom, alt.condition for opacity. Distinctly Altair features.
+        comment: 'Uses Altair-specific interactive features: selection_point with
+          bind=''legend'' for layer filtering, selection_interval for brush selection
+          in HTML output, alt.condition for conditional opacity. These are distinctly
+          Altair capabilities not available in static libraries.'
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
   - hover-tooltips
   - html-export
-  - custom-legend
+  - colorbar
   patterns:
   - data-generation
   dataprep: []
   styling:
   - custom-colormap
-  - grid-styling
+  - alpha-blending
   - edge-highlighting
