@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 calibration-beer-lambert: Beer-Lambert Calibration Curve
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-06-03
@@ -18,6 +18,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+PI_ALPHA = 0.18 if THEME == "dark" else 0.10  # more visible against near-black background
 
 # Imprint palette — brand green always first
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
@@ -75,8 +76,8 @@ unknown_concentration = (unknown_absorbance - intercept) / slope
 # Canvas: landscape 3200×1800 px — figsize × dpi, no bbox_inches='tight'
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 
-# Prediction interval band
-ax.fill_between(fit_x, pred_lower, pred_upper, color=BRAND, alpha=0.10, label="95% Prediction Interval")
+# Prediction interval band (alpha theme-adaptive for dark-bg visibility)
+ax.fill_between(fit_x, pred_lower, pred_upper, color=BRAND, alpha=PI_ALPHA, label="95% Prediction Interval")
 
 # Scatter + regression line with 95% CI via regplot
 sns.regplot(
@@ -90,6 +91,9 @@ sns.regplot(
     line_kws={"linewidth": 2.0, "zorder": 4},
     label="Linear Fit (95% CI)",
 )
+
+# Rug ticks showing calibration standard positions along concentration axis
+sns.rugplot(x=concentrations, height=0.04, color=BRAND, alpha=0.5, expand_margins=False, ax=ax)
 
 # Unknown sample marker
 ax.plot(
@@ -129,18 +133,18 @@ ax.text(
     0.93,
     eq_text,
     transform=ax.transAxes,
-    fontsize=8,
+    fontsize=9,
     verticalalignment="top",
     color=INK,
     bbox={"boxstyle": "round,pad=0.4", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.9},
 )
 
-# Unknown sample annotation arrow
+# Unknown sample annotation — shows interpolation direction explicitly (storytelling)
 ax.annotate(
-    f"Unknown: {unknown_concentration:.1f} mg/L",
+    f"A = {unknown_absorbance:.2f} AU  →  c = {unknown_concentration:.1f} mg/L",
     xy=(unknown_concentration, unknown_absorbance),
-    xytext=(unknown_concentration - 4.5, unknown_absorbance + 0.07),
-    fontsize=8,
+    xytext=(unknown_concentration - 6.5, unknown_absorbance + 0.07),
+    fontsize=7.5,
     color=SECOND,
     arrowprops={"arrowstyle": "->", "color": SECOND, "lw": 1.1},
 )
