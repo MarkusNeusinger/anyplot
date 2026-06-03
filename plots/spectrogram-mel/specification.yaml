@@ -3,7 +3,7 @@ title: Mel-Spectrogram for Audio Analysis
 
 # Specification tracking
 created: "2026-03-07T20:32:10Z"
-updated: null
+updated: "2026-06-03T17:43:14Z"
 issue: 4672
 suggested: MarkusNeusinger
 
@@ -11,7 +11,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - heatmap
-    - spectrogram
   data_type:
     - numeric
     - timeseries
