@@ -1,0 +1,266 @@
+library: echarts
+language: javascript
+specification_id: piano-roll-midi
+created: '2026-06-03T03:59:24Z'
+updated: '2026-06-03T04:06:34Z'
+generated_by: claude-sonnet
+workflow_run: 26862319794
+issue: 4565
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/javascript/echarts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Idiomatic ECharts custom series with dual-layer rendering (background black-key
+    shading + foreground note bars) faithfully replicates a professional DAW piano-roll
+    layout
+  - 'Correct imprint_seq colormap applied to velocity: green (#009E73) for soft notes,
+    blue (#4467A3) for loud notes, with a hand-crafted right-margin legend'
+  - 'Musical data is genuine and musically correct: C major melody in mm.1-2, D-minor
+    and C-major block chords in mm.3, descending cadence in mm.4; all MIDI pitch values
+    and note names accurate'
+  - ECharts minor tick and minorSplitLine used for beat subdivisions with stronger
+    lines at measure boundaries — exactly what the spec requires
+  - Both light and dark renders are fully readable with theme-adaptive chrome (t.ink
+    / t.inkSoft / t.grid tokens applied to every chrome element)
+  - Auto-fit pitch range (minPitch-1 to maxPitch+1) ensures only the relevant octave
+    is shown, not all 128 MIDI notes
+  weaknesses:
+  - Velocity gradient bar is only 14 CSS-px wide (rendered ~28 source-px), which is
+    quite narrow for a 3200×1800 canvas; a wider or visualMap-based legend would be
+    more readable at smaller display sizes
+  - 'Helper function count (6 functions: noteName, isBlackKey, hexRgb, velColor, renderBgItem,
+    renderNoteItem) is above the KISS ideal, though renderItem callbacks are a hard
+    ECharts API requirement'
+  - Black-key row shading (rgba opacity ~0.07–0.08) is very subtle in the light render;
+    slightly higher contrast (0.10–0.12) would make the keyboard layout more immediately
+    obvious
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "piano-roll-midi · javascript · echarts · anyplot.ai" in bold dark ink, centered, clearly readable. Y-axis label "Pitch" and X-axis label "Measure" in inkSoft. Tick labels (B3, C4, D4, E4, F4, G4, A4, B4, C5, D5, E5, F5 for white keys only; black-key rows unlabeled) in inkSoft at fontSize 11. Measure labels M1–M5 along the bottom. Velocity legend ("Velocity", "ff", gradient bar, "pp") in top-right margin in inkSoft — legible but small.
+      Data: Note bars in a teal→blue range (imprint_seq from #009E73 to #4467A3). Alternating gray bands for black-key rows (very subtle, rgba 0.08). Measure-boundary grid lines slightly heavier than beat sub-divisions.
+      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct.
+      Chrome: Title, axis labels, tick labels, and velocity legend labels all render in light-colored ink (t.ink / t.inkSoft tokens). No dark-on-dark failures detected — all chrome elements visibly contrast against the dark background.
+      Data: Same teal→blue imprint_seq colors as light render; they appear more vivid against the dark background (expected perceptual contrast effect, not an actual palette change). Black-key alternating bands slightly lighter (rgba 0.07 on dark surface).
+      Legibility verdict: PASS — all text clearly readable against dark background; no dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All main text explicitly sized and proportional; velocity legend
+          labels (fontSize:11) are slightly small for the canvas size
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; white-key-only y-axis labels prevent crowding
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Note bars clearly visible in both themes; velocity color range covers
+          the data well
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (green→blue) is colorblind-safe; alternating row shading
+          adds redundant encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid margins accommodate velocity legend on right; balanced whitespace
+          around plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct format; Pitch and Measure labels descriptive; M1-M5
+          effectively communicates units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq (t.seq) used for velocity continuous data; t.palette
+          set on option.color; transparent background inherits #FAF8F1/#1A1A17; all
+          chrome uses t.ink/t.inkSoft/t.grid tokens'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: dual-layer custom series creates genuine DAW piano-roll
+          aesthetic; custom velocity color ramp; alternating black-key row shading;
+          clearly above library defaults'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Good refinement: differentiated grid weights (measure vs beat),
+          subtle black-key bands, right-margin velocity legend, appropriate whitespace;
+          slightly crude manual graphic legend vs visualMap'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Musical structure readable: ascending melody mm.1-2, block chords
+          mm.3, descending cadence mm.4; velocity dynamics encoded in color; no single
+          focal point but natural musical narrative'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct piano roll: horizontal bars by pitch (y) and time (x), with
+          duration encoded as bar width'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Note names on y-axis (white keys); black-key row alternating shading;
+          beat/measure grid lines; sequential velocity colormap; auto-fit pitch range
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time in beats/measures, Y=pitch as note names, color=velocity,
+          width=duration — all correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''piano-roll-midi · javascript · echarts · anyplot.ai'' —
+          exact correct format; velocity legend descriptive'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows single notes (melody), simultaneous chords, sustained notes,
+          short staccato notes, wide velocity range (62-112) — all aspects of piano
+          roll covered
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: C major composition with melodic phrase + harmonic block chords +
+          cadence — musically plausible, neutral domain, correct MIDI values
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: MIDI note numbers correct (C4=60), velocity range realistic (soft
+          mp to loud ff), durations in valid beat fractions (0.5=eighth, 1.0=quarter,
+          2.0=half)
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: 6 functions defined; renderBgItem and renderNoteItem are hard ECharts
+          API requirements; helper functions (noteName, isBlackKey, hexRgb, velColor)
+          are necessary utilities — unavoidable for this plot type
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully hardcoded deterministic note data — no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused globals accessed; only window.ANYPLOT_TOKENS, window.ANYPLOT_THEME,
+          window.echarts
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, purposeful code; no over-engineering; no fake interactive
+          elements
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct init pattern (no explicit size, no devicePixelRatio), animation:false,
+          backgroundColor transparent
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of ECharts custom series with renderItem callbacks, api.coord()
+          for coordinate mapping, z2 layer ordering — idiomatic high-level API
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Dual custom series (background + foreground layers with z/z2), minorTick
+          + minorSplitLine for beat subdivisions, graphic elements for custom legend
+          — distinctly ECharts features not available in most other libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - manual-ticks
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
