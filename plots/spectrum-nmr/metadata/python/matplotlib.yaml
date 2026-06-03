@@ -1,85 +1,101 @@
 library: matplotlib
+language: python
 specification_id: spectrum-nmr
 created: '2026-03-09T12:51:54Z'
-updated: '2026-03-09T13:04:19Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22854183207
+updated: '2026-06-03T11:55:33Z'
+generated_by: claude-sonnet
+workflow_run: 26882427076
 issue: 4676
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/matplotlib/plot.png
-preview_html: null
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 91
 review:
   strengths:
-  - Excellent domain accuracy with Lorentzian line shapes, correct splitting ratios
-    (1:2:1 triplet, 1:3:3:1 quartet), and realistic chemical shifts
-  - Integration ratio bars below baseline add analytical value beyond basic plotting
-  - Cohesive single-color design with path effects creates a clean, professional appearance
-  - All NMR conventions correctly followed (reversed x-axis, hidden y-ticks, TMS reference)
+  - Realistic Lorentzian peak shapes with correct NMR multiplet physics (triplet 1:2:1,
+    quartet 1:3:3:1, singlet) — well beyond a generic line plot
+  - Integration bars with rounded caps and H-count labels (1H, 2H, 3H) add genuine
+    domain value
+  - Path-effect text outlines (withStroke) keep annotation text readable against the
+    spectrum in both themes
+  - 'Complete theme-adaptive chrome: all INK / INK_SOFT / INK_MUTED / ELEVATED_BG
+    tokens correctly applied in light and dark renders'
+  - 'Correct NMR conventions: reversed x-axis, no y-ticks, only bottom spine, no grid'
   weaknesses:
-  - Triplet/quartet sub-peaks are tightly spaced; slightly wider coupling constant
-    would make splitting patterns more visually striking
-  - Integration bars are subtle and could be more prominent
-  image_description: 'The plot displays an ethanol 1H NMR spectrum with chemical shift
-    (ppm) on a reversed x-axis (5 to -0.5) and Intensity on the y-axis (no tick marks,
-    standard for NMR). A blue (#306998) line with light blue fill-under traces the
-    spectrum. Four distinct peak groups are visible: a CH2 quartet at 3.69 ppm (left
-    side, showing four sub-peaks), an OH singlet at 2.61 ppm (center), a prominent
-    CH3 triplet at 1.18 ppm (three sub-peaks visible), and a small TMS reference peak
-    at 0.00 ppm (right side). Each peak is annotated with arrows pointing to peak
-    tops, labeled with group name, splitting pattern, and chemical shift value. Light
-    blue vertical highlight bands mark each peak region. Below the baseline, integration
-    ratio bars (2H, 1H, 3H) indicate hydrogen counts for each group. The molecular
-    formula CH3CH2OH appears as a faint italic watermark in the upper right. Top,
-    right, and left spines are removed. Minor x-axis ticks are visible at 0.2 ppm
-    intervals. The title reads "Ethanol 1H NMR · spectrum-nmr · matplotlib · pyplots.ai"
-    in large text.'
+  - 'Title missing the required python language token — current: "Ethanol ¹H NMR ·
+    spectrum-nmr · matplotlib · anyplot.ai"; correct: "Ethanol ¹H NMR · spectrum-nmr
+    · python · matplotlib · anyplot.ai"'
+  - TMS annotation offset (42, 28) points right from the 0.00 ppm peak which is already
+    near the right axis edge — text sits within ~5-10 px of the canvas right border;
+    change offset to (-45, 28) to place label to the left of the peak
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface
+      Chrome: Title "Ethanol ¹H NMR · spectrum-nmr · matplotlib · anyplot.ai" in dark INK (#1A1A17) — clearly readable. Axis labels "Chemical Shift (ppm)" and "Intensity" in INK (#1A1A17) at 10pt — readable. Tick labels in INK_SOFT (#4A4A44) at 8pt — readable. Annotation texts at 9pt semibold with path-effect white stroke outline — readable against spectrum.
+      Data: Brand green (#009E73) Lorentzian spectrum line at linewidth=2.5. Area fill at alpha=0.12 in brand green. Integration bars (2H, 1H, 3H) as thick rounded segments in brand green at alpha=0.75. Peak highlight bands at alpha=0.06. TMS annotation near right canvas edge but pixels appear fully visible.
+      Legibility verdict: PASS — all text readable against light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface
+      Chrome: Title in light INK (#F0EFE8) — clearly readable against dark background. Axis labels and tick labels in INK_SOFT (#B8B7B0) — readable. Annotation texts with path-effect outlines (ELEVATED_BG #242420) — legible. No dark-on-dark failures detected.
+      Data: Colors identical to light render — brand green (#009E73) spectrum line, fill, and integration bars. The brand green reads well on the near-black surface.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          annotations 16pt'
+        comment: All text readable in both themes. Annotation text at 9pt with path-effect
+          outlines is legible at full resolution; slightly small at mobile widths.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All annotations well-positioned with custom offsets, no collisions
+        comment: No collisions between annotations, integration bars, or spectrum.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Peaks clearly visible; triplet/quartet sub-peaks tight but discernible
-          at full resolution
+        comment: 6000-point spectrum at linewidth=2.5 is crisp. Integration bars at
+          alpha=0.75 are prominent.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Single blue color scheme, no colorblind issues
+        comment: Single-series brand green. Good contrast on both surfaces. CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization with tight_layout, balanced margins
+        comment: Canvas correctly 3200x1800 px. TMS annotation sits within ~5-10 px
+          of the right canvas border — tight but pixels appear visible.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Chemical Shift (ppm) with units, Intensity standard for NMR
+        comment: Chemical Shift (ppm) and Intensity are descriptive with correct units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73. Backgrounds #FAF8F1 / #1A1A17. All chrome
+          tokens flip correctly between themes.'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -87,24 +103,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Cohesive blue theme, path effects, highlight bands, integration bars,
-          molecule watermark
+        comment: Realistic Lorentzian peaks, path-effect annotation outlines, watermark,
+          integration bars, and peak highlight bands show genuine craft.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Three spines removed, y-ticks hidden, minor ticks configured, path
-          effects for contrast
+        comment: Three spines removed, no grid, subtle fills, peak bands at alpha=0.06,
+          integration bars with rounded caps.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Annotations identify splitting patterns, integration ratios guide
-          interpretation
+        comment: Integration bars with H-counts, functional-group labels, TMS reference
+          labeled. Clear visual hierarchy connecting structure to spectrum.
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -112,26 +128,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct NMR spectrum as line plot
+        comment: Correct NMR line spectrum on reversed chemical-shift x-axis.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: reversed axis, splitting, labels, TMS,
-          clean baseline'
+        comment: X-axis reversed, splitting patterns (triplet/quartet/singlet), peak
+          labels, TMS at 0.00 ppm, clean baseline — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Chemical shift on x-axis (reversed), intensity on y-axis
+        comment: Chemical shift on x-axis, intensity on y-axis, all peaks within displayed
+          range.
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title contains spec-id, library, pyplots.ai; no legend needed
+        passed: false
+        comment: 'Title missing python language token. Current: ''Ethanol ¹H NMR ·
+          spectrum-nmr · matplotlib · anyplot.ai''. Correct: ''Ethanol ¹H NMR · spectrum-nmr
+          · python · matplotlib · anyplot.ai''.'
     data_quality:
       score: 15
       max: 15
@@ -141,20 +160,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Singlet, triplet, quartet, TMS reference, integration ratios all
-          shown
+        comment: Demonstrates Lorentzian peaks, all four multiplet types, integration
+          bars, TMS reference, baseline noise, reversed-axis convention.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Ethanol is the classic neutral NMR example
+        comment: Ethanol 1H NMR is the canonical teaching example in organic chemistry.
+          Completely neutral and universally recognized.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Accurate chemical shifts and splitting ratios for ethanol
+        comment: 0-5 ppm range correct for ethanol. 6000 points ensures smooth peaks.
+          Realistic intensities and J-coupling constants.
     code_quality:
       score: 10
       max: 10
@@ -164,47 +185,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, annotations, style, save'
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imports used
+        comment: os, matplotlib.patheffects, matplotlib.pyplot, matplotlib.ticker,
+          numpy — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Lorentzian peak generation, no over-engineering
+        comment: Lorentzian math cleanly inlined; annotation and integration loops
+          are concise.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
+        comment: Saves as plot-{THEME}.png. No bare plot.png.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Axes methods throughout. mticker.MultipleLocator, ax.axvspan, ax.fill_between
+          — all idiomatic.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Proper Axes methods, subplots, fill_between, annotate, axvspan
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: patheffects, axvspan, MultipleLocator, solid_capstyle are matplotlib-specific
+        comment: matplotlib.patheffects.withStroke for annotation outlines, mticker.MultipleLocator
+          for NMR tick spacing, arrowprops with -|> arrowstyle. Distinctive matplotlib-specific
+          techniques used well.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -213,6 +239,7 @@ impl_tags:
   - manual-ticks
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
