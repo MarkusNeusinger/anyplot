@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 spectrogram-mel: Mel-Spectrogram for Audio Analysis
 Library: highcharts unknown | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-03
@@ -90,7 +90,7 @@ mel_spec = np.maximum(mel_spec, 1e-10)
 mel_spec_db = 10 * np.log10(mel_spec)
 ref_db = mel_spec_db.max()
 mel_spec_db = mel_spec_db - ref_db
-mel_spec_db = np.clip(mel_spec_db, -80, 0)
+mel_spec_db = np.clip(mel_spec_db, -60, 0)
 
 # Trim mel bins above ~5000 Hz
 max_display_hz = 5000
@@ -183,7 +183,7 @@ chart.options.y_axis = {
 
 # Imprint sequential colormap: green (#009E73) → blue (#4467A3) for single-polarity power data
 chart.options.color_axis = {
-    "min": -80,
+    "min": -60,
     "max": 0,
     "minColor": "#009E73",
     "maxColor": "#4467A3",
@@ -263,7 +263,7 @@ setTimeout(function() {{
 
   labels.forEach(function(lbl) {{
     var px = xAxis.toPixels(lbl.x);
-    chart.renderer.text(lbl.text, px, plotTop + 52)
+    chart.renderer.text(lbl.text, px, plotTop - 20)
       .css({{color: '{label_color}', fontSize: '38px', fontWeight: '600'}})
       .attr({{align: 'center', zIndex: 11}})
       .add();
