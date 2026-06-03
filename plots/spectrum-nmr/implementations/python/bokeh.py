@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 spectrum-nmr: NMR Spectrum (Nuclear Magnetic Resonance)
-Library: bokeh | Python 3.13
-Quality: pending | Created: 2026-06-03
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-06-03
 """
 
 import os
