@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: spectrogram-mel
 created: '2026-03-11T19:41:13Z'
-updated: '2026-06-03T18:13:47Z'
+updated: '2026-06-03T18:22:08Z'
 generated_by: claude-sonnet
 workflow_run: 26903242916
 issue: 4672
@@ -15,40 +15,39 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogr
 quality_score: 80
 review:
   strengths:
-  - 'Excellent spec compliance: all required features present (dB conversion, mel-scaled
-    y-axis, colorbar, synthesized audio, n_fft=2048/hop_length=512/n_mels=128)'
-  - 'Outstanding data quality: realistic C-major arpeggio (C4→E4→G4→C5→G4→E4) with
-    correct note frequencies and harmonics'
-  - Note annotation design (dual-ring circle + text shadow) provides strong data storytelling
-  - Both themes render correctly with no dark-on-dark failures; all chrome is theme-adaptive
-  - Canvas size 3200×1800 is correct; canvas gate passed; HTML interactive output
-    saved
+  - Creative and correct use of pygal's Graph extension mechanism to implement a heatmap-style
+    mel-spectrogram — the only viable approach given pygal's chart type limitations
+  - Note annotations (C4, E4, G4, C5, G4, E4) with dual-ring markers and text shadows
+    create effective data storytelling and guide the viewer through the arpeggio
+  - 'Fully spec-compliant: dB scale, colorbar, mel-scaled frequency y-axis with Hz
+    labels, correct STFT parameters (n_fft=2048, hop_length=512, n_mels=128)'
+  - Both light and dark renders pass readability checks with correct Imprint palette
+    backgrounds and theme-adaptive chrome
   weaknesses:
-  - '[CRITICAL] Non-Imprint colormap: uses inferno instead of the required imprint_seq
-    (#009E73 → #4467A3). Per the pygal library rules, must interpolate manually between
-    Imprint palette endpoints — never substitute any named cmap. Fix: replace inferno_colors
-    list with a gradient from #4467A3 (low dB) to #009E73 (high dB) using the existing
-    interpolate_color() helper.'
-  - 'Low library idiomatic score: implementation bypasses pygal''s public API in favour
-    of raw svg.node() calls; the _plot() method is 115 lines of manual SVG manipulation.'
-  - 'KISS violation: interpolate_color() function and MelSpectrogramChart class are
-    necessary given pygal constraints but push complexity above the preferred flat
-    script style.'
+  - 'CQ-01: Defines both a helper function (interpolate_color) and a class (MelSpectrogramChart)
+    — violates the flat-script no-functions/classes rule; the interpolation logic
+    could be inlined and the class replaced with top-level procedural code'
+  - 'Two-stop colormap (#4467A3 → #009E73) reduces perceptual dynamic range; adding
+    intermediate stops would reveal more spectral texture'
+  - Blue-to-teal/green endpoint pair has limited luminance contrast, making low-vs-high
+    dB differences harder to perceive for CVD users; a darker blue start point or
+    additional stops would improve accessibility
+  - Bottom margin is slightly tight between x-axis tick labels and the canvas edge
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface.
-      Chrome: Title "spectrogram-mel · python · pygal · anyplot.ai" visible at top in dark ink; Y-axis label "Frequency (Hz)" vertical on left; X-axis label "Time (s)" at bottom; tick labels (100, 200, 500, 1.0k, 2.0k, 4.0k, 8.0k) on Y; (0.0–3.0 s) on X; colorbar values (0 to -80 dB) all in dark ink. All text readable.
-      Data: Inferno colormap (deep purple for low-dB regions, orange-yellow for energy peaks). Six note annotations (C4, E4, G4, C5, G4, E4) as white text with dual-ring circle markers at note onsets in the 330–524 Hz frequency band. Horizontal energy bands show the C-major arpeggio pattern.
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "spectrogram-mel · python · pygal · anyplot.ai" in dark text, clearly readable. Y-axis label "Frequency (Hz)" and X-axis label "Time (s)" in dark bold text. Tick labels (100, 200, 500, 1.0k, 2.0k, 4.0k, 8.0k Hz; 0.0–3.0 s) in INK_SOFT. Colorbar title "dB" and tick labels (0, -16, -32, -48, -64, -80) readable.
+      Data: Spectrogram filled with colormap from #4467A3 (low dB) to #009E73 (high dB). Horizontal harmonic bands visible below ~1 kHz corresponding to C-major arpeggio notes. Six note annotations with dual-ring circle markers and white text (C4, E4, G4, C5, G4, E4) placed at note onsets. Colorbar on right side shows gradient from blue to teal-green.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark theme surface.
-      Chrome: Title, axis labels, tick labels, and colorbar values all rendered in light ink (off-white); fully readable against the dark background. No dark-on-dark failures observed.
-      Data: Inferno colormap gradient is visually identical to the light render — data colors (purple → orange → yellow) are unchanged. Note annotations (white text + dual-ring markers) remain visible against the spectrogram content.
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title, axis labels, and tick labels appear in light text (#F0EFE8 / #B8B7B0 tokens) — all readable against dark background. Colorbar labels and title readable. No dark-on-dark failures observed.
+      Data: Spectrogram data colors (blue #4467A3 → teal-green #009E73 gradient) visually identical to light render — only page background and chrome colors have flipped. Note annotation circles (white ring, white text) remain clearly visible over the spectrogram.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -56,75 +55,68 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title dynamically scaled; readable
-          in both themes. Minor deduction for crude annotation shadow rendering.
+        comment: Font sizes explicitly set throughout; all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Note annotations staggered at distinct time positions; no text collisions.
+        comment: Note annotation labels spread across x-axis without overlap
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Spectrogram cells clearly visible; dual-ring note markers visible
-          against varying spectrogram colors.
+        comment: Harmonic bands and markers clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
-        passed: true
-        comment: Inferno is luminance-monotonic and functional for CVD but Imprint
-          palette is specifically CVD-optimized; partial credit.
+        passed: false
+        comment: Blue-to-teal colormap has similar luminance; limited contrast for
+          CVD users
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 3200×1800 correct; spectrogram fills plot area well; colorbar properly
-          positioned; balanced margins.
+        comment: Good 3200x1800 proportions; slight tightness at bottom canvas edge
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: Time (s), Y: Frequency (Hz), colorbar: dB — all descriptive with
-          units.'
+        comment: Title format correct; both axes labeled with units; colorbar labeled
+          dB
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Non-compliant: uses inferno colormap instead of required imprint_seq
-          (#009E73→#4467A3). Pygal library rules explicitly forbid substituting any
-          named cmap. Backgrounds and chrome are correct.'
+        passed: true
+        comment: Imprint palette endpoints used; correct theme backgrounds
     design_excellence:
       score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Looks like a well-configured scientific visualization default. Dual-ring
-          note markers add design polish but not enough to push above default tier.
+        comment: Custom chart class with styled annotations and dual-ring markers
+          shows design intent
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: No grid lines (appropriate); explicit border around plot area; clean
-          colorbar; balanced whitespace. Above minimal but not exceptional.
+        comment: Clean layout, no extraneous chrome
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Six note annotations actively guide viewer through C-major arpeggio
-          structure. Ascending then descending energy bands tell a clear musical story.
+        comment: Note annotations guide viewer through C-major arpeggio progression
     spec_compliance:
       score: 15
       max: 15
@@ -134,125 +126,114 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct mel-spectrogram implementation.
+        comment: Correct mel-spectrogram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Power converted to dB; x-axis time in seconds; y-axis mel-scaled
-          Hz with tick labels; colorbar labeled dB; n_fft=2048/hop_length=512/n_mels=128;
-          synthesized audio.
+        comment: 'All required features present: dB scale, colorbar, mel freq axis,
+          STFT params'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on x, mel-frequency on y, dB intensity as color.
+        comment: X=time, Y=mel-freq, color=dB
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is spectrogram-mel · python · pygal · anyplot.ai; no legend
-          needed.
+        comment: Title in correct format; colorbar serves as color legend
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Full frequency range, temporal variation, harmonic overtones, exponential
-          envelope, spectral contrast between notes.
+        comment: Full coverage; 2-stop colormap slightly limits intensity resolution
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: C-major arpeggio (C4→E4→G4→C5→G4→E4) is real, neutral, comprehensible
-          musical scenario.
+        comment: C-major arpeggio is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: sample_rate=22050 Hz, duration=3s, correct note frequencies, dB range
-          -80 to 0.
+        comment: 3s at 22050 Hz, 128 mel bands, -80 to 0 dB — all canonical
     code_quality:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 0
         max: 3
         passed: false
-        comment: Class (MelSpectrogramChart) and helper function (interpolate_color)
-          present; violates KISS. Necessary given pygal's lack of native spectrogram
-          type.
+        comment: Defines both interpolate_color() function and MelSpectrogramChart
+          class — violates no-functions/classes rule
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys, numpy, scipy.signal, pygal internals.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Functional but verbose; _plot() is ~115 lines of raw SVG node manipulation.
-          Acceptable given constraints.
+        comment: Well-structured; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, .svg, and .html correctly.
+        comment: Saves plot-{THEME}.png, .svg, .html
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Bypasses pygal's public API; directly manipulates internal svg.node()
-          tree and _box coordinate system. Treats pygal as SVG framework rather than
-          charting library.
+        passed: true
+        comment: Extends Graph, overrides _plot() and _compute(), uses svg.node —
+          idiomatic pygal extension pattern
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: HTML interactive output is a genuine pygal strength and is implemented.
-          Custom Graph subclass is library-specific. Core rendering is manual SVG,
-          not leveraging pygal's charting capabilities.
-  verdict: REJECTED
+        passed: true
+        comment: HTML export, custom chart type, direct SVG node manipulation
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - colorbar
   - annotations
-  - manual-ticks
   - html-export
   patterns:
   - data-generation
   - matrix-construction
   - iteration-over-groups
   dataprep:
-  - binning
   - normalization
   styling:
   - custom-colormap
+  - alpha-blending
