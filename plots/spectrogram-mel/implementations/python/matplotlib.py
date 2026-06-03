@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 spectrogram-mel: Mel-Spectrogram for Audio Analysis
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-03
@@ -150,9 +150,25 @@ speech_idx = np.argmin(np.abs(mel_freqs - 300))
 harmonic_idx = np.argmin(np.abs(mel_freqs - 1000))
 ax.axhline(y=speech_idx, color=INK_SOFT, alpha=0.45, linewidth=0.9, linestyle="--")
 ax.axhline(y=harmonic_idx, color=INK_SOFT, alpha=0.45, linewidth=0.9, linestyle="--")
-ax.text(time_axis[-1] * 0.02, speech_idx + 1.5, "speech band", fontsize=7, color=INK_MUTED, va="bottom", ha="left")
 ax.text(
-    time_axis[-1] * 0.02, harmonic_idx + 1.5, "harmonic region", fontsize=7, color=INK_MUTED, va="bottom", ha="left"
+    time_axis[-1] * 0.02,
+    speech_idx + 1.5,
+    "speech band",
+    fontsize=9,
+    color=INK_SOFT,
+    va="bottom",
+    ha="left",
+    bbox={"facecolor": ELEVATED_BG, "edgecolor": "none", "alpha": 0.7, "pad": 2},
+)
+ax.text(
+    time_axis[-1] * 0.02,
+    harmonic_idx + 1.5,
+    "harmonic region",
+    fontsize=9,
+    color=INK_SOFT,
+    va="bottom",
+    ha="left",
+    bbox={"facecolor": ELEVATED_BG, "edgecolor": "none", "alpha": 0.7, "pad": 2},
 )
 
 # Chrome — theme-adaptive
