@@ -1,0 +1,255 @@
+library: chartjs
+language: javascript
+specification_id: scatter-ashby-material
+created: '2026-06-03T17:16:07Z'
+updated: '2026-06-03T17:36:30Z'
+generated_by: claude-sonnet
+workflow_run: 26897045599
+issue: 4677
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/javascript/chartjs/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Sophisticated custom Chart.js plugin implementing convex hull envelopes (Andrew's
+    monotone chain algorithm) at pixel-space with scale-aware getPixelForValue — the
+    defining visual feature of an Ashby chart, done properly
+  - 'Full Imprint palette compliance: Metals first in #009E73, 7 families in canonical
+    ordinal order, correct backgrounds in both themes, data colors theme-invariant'
+  - 'Complete spec implementation: log-log axes, hull envelopes, pill labels at log-centroids,
+    E/ρ guide lines, descriptive axis labels with units'
+  - Realistic and accurately-scaled materials science data spanning the correct orders
+    of magnitude for each family
+  weaknesses:
+  - 'Chart.js default chart border visible on all four sides — add scales.x.border.display:
+    false and scales.y.border.display: false to remove the box frame and achieve a
+    cleaner L-frame or borderless aesthetic consistent with DE-02 Visual Refinement
+    expectations'
+  - 'pointRadius: 9 is slightly conservative for 81 points on a 3200×1800 canvas —
+    increasing to 11–13 would improve readability when scaled to mobile (400 px width)'
+  - Four helper functions (logCentroid, guideLineData, convexHull, expandHull) depart
+    from flat-script KISS; convex hull logic is unavoidably complex, but guideLineData
+    could be inlined
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "scatter-ashby-material · javascript · chartjs · anyplot.ai" fully visible in dark ink; axis labels "Density (kg/m³)" and "Young's Modulus (GPa)" in dark ink with good contrast; tick labels in softer dark tone — all readable
+      Data: 7 material families in Imprint palette canonical order: Metals (#009E73 green), Ceramics (#C475FD lavender), Polymers (#4467A3 blue), Composites (#BD8233 ochre), Elastomers (#AE3030 red), Foams (#2ABCCD cyan), Natural (#954477 rose); each family has a convex hull filled region with matching semi-transparent stroke; family name pills at log-centroids; dashed E/ρ guide lines annotated in lower right
+      Legibility verdict: PASS — all text elements readable against off-white background; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title rendered in light text (#F0EFE8 equivalent), fully visible; axis labels in light ink; tick labels in softer light tone (inkSoft token) — all readable against dark background; no dark-on-dark failures detected
+      Data: All 7 family data colors are identical to the light render — only chrome flips between themes; family pill labels use family color on semi-transparent dark background (pageBg token) — legible; guide line annotations in muted light tone, readable
+      Legibility verdict: PASS — all text clearly readable against near-black background; brand green #009E73 (Metals) remains visible; no element disappears into background
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis labels 16px, ticks
+          13px, pills 18px bold); fully readable in both themes; well-proportioned
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Label pills and legend clean; Ceramics/Metals hull regions visually
+          overlap in upper-right quadrant (expected for adjacent families) but no
+          text-on-text collision
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 'pointRadius: 9 adequate for 81 scatter points; hull regions strongly
+          aid identification; slightly conservative marker size for 3200x1800 canvas'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette with CVD-safe hue selection; adequate luminance differences
+          across all 7 families in both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; plot fills canvas well with balanced margins;
+          no clipping; guide line annotations within bounds
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Density (kg/m³) and Young's Modulus (GPa) with units; title is exact
+          spec format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Metals) = palette[0] = #009E73; 7 families in canonical
+          ordinal order; backgrounds #FAF8F1/#1A1A17; data colors theme-invariant'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom convex hull plugin, semi-transparent fills with matching strokes
+          at different opacities, pill labels with rounded backdrop, filtered legend
+          — clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Grid is subtle and theme-adaptive; whitespace decent; Chart.js default
+          4-sided chart border visible — explicit border removal would improve refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Convex hull regions communicate clustering immediately; log-log scale
+          spans 6+ decades naturally telling the Ashby story; guide lines provide
+          engineering context; family labels guide viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Log-log scatter with convex hull envelopes — exactly the Ashby chart
+          type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Log axes, hull envelopes, family text labels, E/ρ guide lines, axis
+          labels with units, distinct colors — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=density (kg/m³), Y=Young's modulus (GPa); 81 points across 7 families;
+          axes span foams to metals
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is exact format; legend shows all 7 families with correct names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All Ashby chart features: wide property range, 7 distinct clusters,
+          convex hull envelopes, guide lines'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Materials science domain, neutral; steel/aluminum/elastomers/foams
+          all realistic values
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values align with established materials science data; log scale correctly
+          chosen for 6+ decade ranges
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: Four helper functions defined (logCentroid, guideLineData, convexHull,
+          expandHull); justified by algorithm complexity but departs from flat-script
+          KISS
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully hardcoded data arrays; no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No explicit imports; all tokens used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized sections; clear naming; no fake UI; guide line label
+          uses inkSoft token
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct Chart.js API; harness handles file output
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Custom afterDatasetsDraw plugin; mixed scatter+line chart types;
+          logarithmic scale with custom tick callbacks; legend filter; tooltip label
+          callback — expert usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Convex hull via Chart.js plugin using getPixelForValue (pixel-space
+          scale access); guide line as line dataset with parsing: false — Chart.js-idiomatic
+          patterns not replicable in other libraries without equivalent plugin systems'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
