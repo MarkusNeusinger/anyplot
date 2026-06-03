@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 piano-roll-midi: MIDI Piano Roll Visualization
 Library: plotnine 0.15.5 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-03
@@ -38,9 +38,9 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Piano key shading (theme-adaptive)
-WHITE_KEY_BG = "#EDE9DE" if THEME == "light" else "#212120"
-BLACK_KEY_BG = "#D8D4C8" if THEME == "light" else "#141413"
+# Piano key shading (theme-adaptive) — dark values boosted for visible contrast over #1A1A17
+WHITE_KEY_BG = "#EDE9DE" if THEME == "light" else "#272720"
+BLACK_KEY_BG = "#D8D4C8" if THEME == "light" else "#0D0D0B"
 BEAT_LINE = "#C4C0B4" if THEME == "light" else "#2C2C29"
 MEASURE_LINE = "#8A8780" if THEME == "light" else "#4A4A46"
 OCTAVE_LINE = "#ABA89C" if THEME == "light" else "#363632"
@@ -116,11 +116,11 @@ beat_lines = [b for b in range(total_beats + 1) if b not in measure_lines]
 
 # Chord labels at measure tops
 measure_labels = pd.DataFrame(
-    {"x": [2, 6, 10, 14], "label": ["I  (C)", "IV  (F)", "V  (G)", "I  (C)"], "y": [pitch_max + 0.8] * 4}
+    {"x": [2, 6, 10, 14], "label": ["I  (C)", "IV  (F)", "V  (G)", "I  (C)"], "y": [pitch_max + 1.8] * 4}
 )
 
 # Dynamic markings below piano roll
-dynamic_labels = pd.DataFrame({"x": [2, 6.5, 10, 14.5], "label": ["mf", "ff", "dim.", "p"], "y": [pitch_min - 0.3] * 4})
+dynamic_labels = pd.DataFrame({"x": [2, 6.5, 10, 14.5], "label": ["mf", "ff", "dim.", "p"], "y": [pitch_min - 0.6] * 4})
 
 # Octave boundary lines at each C note
 octave_cs = [p for p in range(pitch_min, pitch_max + 1) if p % 12 == 0]
@@ -154,16 +154,16 @@ plot = (
     # Climax annotation
     + annotate("text", x=7.6, y=72 + 1.0, label="← climax", size=3.0, color="#AE3030", fontstyle="italic", ha="left")
     # Chord labels at top of each measure
-    + geom_text(measure_labels, aes(x="x", y="y", label="label"), size=3.5, color=INK_SOFT, fontstyle="italic")
+    + geom_text(measure_labels, aes(x="x", y="y", label="label"), size=4.0, color=INK_SOFT, fontstyle="italic")
     # Dynamic markings below
-    + geom_text(dynamic_labels, aes(x="x", y="y", label="label"), size=3.0, color=INK_MUTED, fontstyle="italic")
+    + geom_text(dynamic_labels, aes(x="x", y="y", label="label"), size=3.5, color=INK_MUTED, fontstyle="italic")
     # Imprint sequential cmap: #009E73 (soft/piano) → #4467A3 (loud/forte)
     + scale_fill_gradient(
         low="#009E73", high="#4467A3", limits=(55, 120), name="Velocity", guide=guide_colorbar(nbin=200)
     )
     + scale_y_continuous(breaks=label_pitches, labels=label_names, expand=(0.02, 0.02))
     + scale_x_continuous(breaks=measure_lines, labels=["0", "4", "8", "12", "16"], expand=(0.01, 0.01))
-    + coord_cartesian(xlim=(-0.3, total_beats + 0.3), ylim=(pitch_min - 1.2, pitch_max + 1.5))
+    + coord_cartesian(xlim=(-0.3, total_beats + 0.3), ylim=(pitch_min - 1.5, pitch_max + 2.5))
     + labs(x="Time (beats)", y="Pitch", title=title)
     + theme_void()
     + theme(
