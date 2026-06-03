@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 spectrogram-mel: Mel-Spectrogram for Audio Analysis
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-03
@@ -17,7 +17,6 @@ sys.path = [p for p in sys.path if os.path.abspath(p) != _here]
 import numpy as np
 from bokeh.io import output_file, save
 from bokeh.models import BasicTicker, BoxAnnotation, ColorBar, FixedTicker, HoverTool, Label, LinearColorMapper, Span
-from bokeh.palettes import Magma256
 from bokeh.plotting import figure
 from scipy import signal
 from selenium import webdriver
@@ -29,6 +28,16 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+
+def _lerp_hex(c0, c1, t):
+    r0, g0, b0 = (int(c0[i : i + 2], 16) for i in (1, 3, 5))
+    r1, g1, b1 = (int(c1[i : i + 2], 16) for i in (1, 3, 5))
+    r, g, b = (int(round(a + (b - a) * t)) for a, b in ((r0, r1), (g0, g1), (b0, b1)))
+    return f"#{r:02X}{g:02X}{b:02X}"
+
+
+ANYPLOT_SEQ256 = [_lerp_hex("#009E73", "#4467A3", t / 255.0) for t in range(256)]
 
 # Data — synthesize a C-major melody with harmonics and transients
 np.random.seed(42)
@@ -143,7 +152,7 @@ p = figure(
 )
 
 # Render mel-spectrogram using Bokeh's native image glyph
-color_mapper = LinearColorMapper(palette=Magma256, low=vmin, high=vmax)
+color_mapper = LinearColorMapper(palette=ANYPLOT_SEQ256, low=vmin, high=vmax)
 p.image(image=[mel_spectrogram_db], x=time_start, y=0, dw=time_duration, dh=n_mels, color_mapper=color_mapper)
 
 # HoverTool for interactive readout in the HTML export
@@ -208,6 +217,8 @@ color_bar = ColorBar(
     title_text_color=INK,
     major_label_text_font_size="22pt",
     major_label_text_color=INK_SOFT,
+    background_fill_color=PAGE_BG,
+    background_fill_alpha=1.0,
     width=55,
     padding=30,
     title_standoff=20,
@@ -246,7 +257,7 @@ p.xgrid.grid_line_alpha = 0.0
 p.ygrid.grid_line_alpha = 0.0
 
 # Background — dark spectrogram canvas, theme-adaptive border
-p.background_fill_color = "#000004"  # Magma minimum: dark reference for spectrogram
+p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 p.outline_line_color = None  # removed for cleaner aesthetic (DE-02)
 
