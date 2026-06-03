@@ -6,7 +6,7 @@ title: Pictogram Chart (Isotype Visualization)
 
 # Specification tracking
 created: "2026-03-07T20:32:28Z"
-updated: null
+updated: "2026-06-03T13:40:38Z"
 issue: 4674
 suggested: MarkusNeusinger
 
@@ -14,7 +14,6 @@ suggested: MarkusNeusinger
 # See docs/reference/tagging-system.md for detailed guidelines
 tags:
   plot_type:
-    - pictogram
     - bar
   data_type:
     - categorical
