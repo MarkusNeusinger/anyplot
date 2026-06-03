@@ -1,37 +1,30 @@
 // anyplot.ai
 // waveform-audio: Audio Waveform Plot
-// Library: echarts 5.5.1 | JavaScript 22.22.3
-// Quality: 84/100 | Created: 2026-06-03
-//# anyplot-orientation: landscape
-// anyplot.ai
-// waveform-audio: Audio Waveform Plot
 // Library: echarts 5.5.1 | JavaScript 22
 // Quality: pending | Created: 2026-06-03
+//# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
 
-function hexToRgba(hex, alpha) {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    return `rgba(${r},${g},${b},${alpha})`;
-}
+// Inline RGB components for gradient stops (palette[0] = #009E73)
+const waveColor = t.palette[0];
+const wR = parseInt(waveColor.slice(1, 3), 16);
+const wG = parseInt(waveColor.slice(3, 5), 16);
+const wB = parseInt(waveColor.slice(5, 7), 16);
 
 // Synthetic speech-like waveform: 5000 samples over 1 second
 const N = 5000;
 const duration = 1.0;
-const waveData = [];
+const rawData = [];
 
 for (let i = 0; i < N; i++) {
     const time = (i / N) * duration;
-
-    // Three Gaussian envelopes mimicking syllabic bursts at 0.14s, 0.47s, 0.81s
+    // Three Gaussian syllabic envelopes at 0.14 s, 0.47 s, 0.81 s
     const env1 = Math.exp(-32 * Math.pow(time - 0.14, 2));
     const env2 = Math.exp(-28 * Math.pow(time - 0.47, 2));
     const env3 = Math.exp(-38 * Math.pow(time - 0.81, 2));
     const envelope = (env1 + 0.88 * env2 + 0.72 * env3) * 0.85;
-
-    // Harmonic carrier at 175 Hz fundamental with four overtones
+    // 175 Hz fundamental with four harmonics
     const f0 = 175;
     const carrier =
         0.48 * Math.sin(2 * Math.PI * f0 * time) +
@@ -39,11 +32,25 @@ for (let i = 0; i < N; i++) {
         0.14 * Math.sin(2 * Math.PI * 3 * f0 * time) +
         0.09 * Math.sin(2 * Math.PI * 4 * f0 * time) +
         0.03 * Math.sin(2 * Math.PI * 5 * f0 * time);
-
-    waveData.push([time, Math.max(-1, Math.min(1, carrier * envelope))]);
+    rawData.push(Math.max(-1, Math.min(1, carrier * envelope)));
 }
 
-const waveColor = t.palette[0];
+// Downsample to 300-bin min/max envelope to avoid aliasing
+const BINS = 300;
+const binSize = Math.floor(N / BINS);
+const maxEnv = [], minEnv = [];
+for (let b = 0; b < BINS; b++) {
+    const start = b * binSize;
+    const end = Math.min(start + binSize, N);
+    const tCenter = ((start + end) / 2 / N) * duration;
+    let bMax = -Infinity, bMin = Infinity;
+    for (let k = start; k < end; k++) {
+        if (rawData[k] > bMax) bMax = rawData[k];
+        if (rawData[k] < bMin) bMin = rawData[k];
+    }
+    maxEnv.push([tCenter, bMax]);
+    minEnv.push([tCenter, bMin]);
+}
 
 const chart = echarts.init(document.getElementById("container"));
 
@@ -93,23 +100,20 @@ chart.setOption({
     },
     series: [
         {
+            // Upper envelope: max amplitude per bin
             type: "line",
-            data: waveData,
+            data: maxEnv,
             symbol: "none",
             smooth: false,
-            lineStyle: { color: waveColor, width: 1, opacity: 0.9 },
+            lineStyle: { color: waveColor, width: 0.8, opacity: 0.9 },
             areaStyle: {
                 origin: 0,
                 color: {
                     type: "linear",
-                    x: 0,
-                    y: 0,
-                    x2: 0,
-                    y2: 1,
+                    x: 0, y: 0, x2: 0, y2: 1,
                     colorStops: [
-                        { offset: 0,   color: hexToRgba(waveColor, 0.55) },
-                        { offset: 0.5, color: hexToRgba(waveColor, 0.08) },
-                        { offset: 1,   color: hexToRgba(waveColor, 0.55) }
+                        { offset: 0, color: `rgba(${wR},${wG},${wB},0.62)` },
+                        { offset: 1, color: `rgba(${wR},${wG},${wB},0.05)` }
                     ]
                 }
             },
@@ -119,6 +123,44 @@ chart.setOption({
                 lineStyle: { color: t.inkSoft, width: 1.5, type: "solid", opacity: 0.5 },
                 label: { show: false },
                 symbol: ["none", "none"]
+            },
+            markArea: {
+                silent: true,
+                label: {
+                    show: true,
+                    position: "insideTop",
+                    color: t.inkSoft,
+                    fontSize: 12
+                },
+                itemStyle: {
+                    color: `rgba(${wR},${wG},${wB},0.07)`,
+                    borderColor: `rgba(${wR},${wG},${wB},0.22)`,
+                    borderWidth: 1
+                },
+                data: [
+                    [{ name: "Syllable 1", xAxis: 0.05 }, { xAxis: 0.24 }],
+                    [{ name: "Syllable 2", xAxis: 0.36 }, { xAxis: 0.58 }],
+                    [{ name: "Syllable 3", xAxis: 0.70 }, { xAxis: 0.92 }]
+                ]
+            }
+        },
+        {
+            // Lower envelope: min amplitude per bin
+            type: "line",
+            data: minEnv,
+            symbol: "none",
+            smooth: false,
+            lineStyle: { color: waveColor, width: 0.8, opacity: 0.9 },
+            areaStyle: {
+                origin: 0,
+                color: {
+                    type: "linear",
+                    x: 0, y: 0, x2: 0, y2: 1,
+                    colorStops: [
+                        { offset: 0, color: `rgba(${wR},${wG},${wB},0.05)` },
+                        { offset: 1, color: `rgba(${wR},${wG},${wB},0.62)` }
+                    ]
+                }
             }
         }
     ]
