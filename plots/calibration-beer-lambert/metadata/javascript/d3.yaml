@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: calibration-beer-lambert
 created: '2026-06-03T08:22:46Z'
-updated: '2026-06-03T08:29:47Z'
+updated: '2026-06-03T08:44:59Z'
 generated_by: claude-sonnet
 workflow_run: 26872200581
 issue: 4410
@@ -12,56 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibrati
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/javascript/d3/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - 'Full spec compliance: all required features present — calibration scatter points,
-    linear regression line, 95% prediction interval band, equation/R² annotation box,
-    and unknown sample with dashed horizontal + vertical guide lines'
-  - Correct OLS regression with proper t-critical (2.447 for df=6) 95% prediction
-    interval — statistically sound implementation
-  - 'Theme-adaptive throughout: pageBg, inkSoft, ink, elevatedBg, and grid tokens
-    correctly applied to all chrome elements; data colors identical between light
-    and dark renders'
-  - 'Good visual hierarchy: green calibration standards (#009E73) as primary series,
-    blue regression line + band, matte-red unknown sample creating a clear analytical
-    narrative'
-  - Equation annotation box with rounded corners and semi-transparent elevated background
-    sits cleanly in the upper-left without obscuring any data points
-  - 'Idiomatic D3 patterns: d3.area() for prediction band, data().join() pattern,
-    d3.scaleLinear() with custom tickValues(), proper margin/inner-width math'
+  - Semantic color assignment (green=calibration standards, blue=regression fit, red=unknown
+    sample) shows genuine design thinking rather than ordinal defaults
+  - 'Full spec compliance: all required features present — scatter standards, regression
+    line, 95% prediction interval band, equation+R² annotation, and dashed guide lines
+    for unknown sample'
+  - Theme-adaptive band opacity (0.15 light / 0.25 dark) is a non-trivial craft decision
+    that improves readability on both surfaces
+  - 'Idiomatic D3 usage: d3.area() for prediction band, d3.line() for regression path,
+    proper data-join pattern for gridlines'
+  - Manual OLS regression with prediction interval computed correctly in-code — deterministic
+    and self-contained
+  - Custom legend with per-element swatches (dot, line, band rect+outline) adds visual
+    clarity beyond a generic color square
+  - 'Perfect data quality: realistic UV-Vis spectrophotometry context, plausible concentration/absorbance
+    values, R²=0.9998 consistent with careful lab calibration'
   weaknesses:
-  - 'Prediction band barely visible in dark render: palette[2] (#4467A3) at opacity
-    0.15 on #1A1A17 background produces near-invisible shading — increase band opacity
-    to 0.20–0.25 for dark theme or use t.palette[2] at higher opacity when ANYPLOT_THEME
-    is dark'
-  - 'Non-canonical Imprint palette order: unknown sample uses palette[4] (matte red
-    #AE3030) while palette[1] (lavender) and palette[3] (ochre) are skipped — if the
-    intent is semantic (unknown/target = red), add a brief comment explaining the
-    semantic exception; otherwise use palette[1] for the unknown sample'
-  - Regression line color (palette[2] = blue) skips palette[1] (lavender) without
-    explicit semantic rationale — while visually effective, the code would benefit
-    from a comment noting that the regression line uses blue as a deliberate stylistic
-    contrast with the green data points
-  - 'Design defaults relatively conservative: no spine removal explicitly coded (D3
-    axis .domain is L-shaped by default, which is fine), legend swatch for the 95%
-    prediction interval band shows a very faint fill rectangle that is nearly invisible
-    in dark mode at the legend position'
+  - Tick labels set at 14px CSS (28 source px at deviceScaleFactor=2) — at the lower
+    bound of the 14–22 px recommendation; increasing to 15–16px would improve legibility
+    at full canvas size
+  - DE-01 limited by lack of typographic hierarchy beyond bold title — axis labels
+    and tick labels share the same visual weight; subtle weight differentiation would
+    add sophistication
+  - 'DE-02 could be refined further: the axis domain lines (spines) use inkSoft which
+    is fine, but removing top/right domain strokes entirely or reducing tick line
+    length would tighten the minimal-chrome look'
+  - Legend position (bottom-right) slightly crowds the data region near the high-concentration
+    end; repositioning to top-left (below the equation box) or adjusting iw/margin
+    allocation would give the regression line more breathing room
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "calibration-beer-lambert · javascript · d3 · anyplot.ai" centered at top in dark text (22px, bold), clearly readable. X-axis label "Concentration (mg/L)" and Y-axis label "Absorbance" (rotated 90°) in dark ink at 16px, clearly readable. Tick labels at 14px readable. Equation annotation box in upper-left shows "y = 0.0451x + 0.0021" and "R² = 0.9998" on a warm elevated background with dark text — fully readable. Legend in lower-right shows 4 entries with text readable.
-      Data: 8 calibration standards as green (#009E73) filled circles (r=8) with white stroke border — prominent and visible. Regression line in blue (#4467A3) width=2.5, spans full data range. Prediction band in matching blue at opacity 0.15 — visible as a clear shaded corridor around the regression line. Unknown sample as matte-red (#AE3030) filled circle at ~7.1 mg/L / 0.320 abs. Dashed guide lines in same red extend from y-axis to unknown point (horizontal) and from unknown point to x-axis (vertical), clearly showing the concentration determination.
-      Legibility verdict: PASS — all text and data elements clearly readable against the warm off-white background.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "calibration-beer-lambert · javascript · d3 · anyplot.ai" in bold dark text at top, clearly visible; X-axis label "Concentration (mg/L)" and Y-axis label "Absorbance" in dark ink, both readable; tick labels (0, 2, 4...14 on X; 0.0, 0.1...0.7 on Y) in slightly muted dark ink — small but legible; equation annotation box (top-left) shows "y = 0.0451x + 0.0021" and "R² = 0.9998" on elevated cream background, readable
+      Data: 8 calibration standard circles in #009E73 (Imprint green, palette[0]) with white strokes; regression line in #4467A3 (Imprint blue, palette[2]); light blue prediction band (~15% opacity); unknown sample circle in #AE3030 (Imprint matte red, palette[4]) with dashed horizontal+vertical guide lines in the same red; legend in bottom-right with custom swatches for all 4 series
+      Legibility verdict: PASS — all text readable against the light background; no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title, axis labels, and tick labels all render in light/white text (F0EFE8 / B8B7B0 tokens), clearly readable against the dark background. No dark-on-dark failures detected. Annotation box shows dark elevated background (#242420) with light text — readable. Legend text is light and readable. Grid lines subtle (lighter shade against dark bg).
-      Data: All data colors identical to light render — green calibration standards, blue regression line, matte-red unknown sample and guide lines confirm identical Imprint palette colors. Prediction band at 0.15 opacity on dark background is noticeably fainter than in light mode — marginally visible but could be slightly stronger for better readability in dark theme.
-      Legibility verdict: PASS — all text and key data elements readable; prediction band is the only element that is marginally faint in dark mode.
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and all text rendered in light ink (#F0EFE8 / #B8B7B0 range) — clearly visible against dark background; equation annotation box uses elevated dark background (#242420), text is light; legend text and swatches readable; axis tick labels are light-colored, no dark-on-dark issues observed
+      Data: Calibration standard circles remain #009E73 — identical to light render; regression line remains #4467A3; prediction band slightly more opaque (25%) for better visibility on dark surface; unknown sample and dashed lines remain #AE3030 — all data colors identical to light render as required
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures detected; theme-adaptive chrome working correctly
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -69,56 +65,55 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All text readable in both themes at appropriate D3 pixel sizes (title
-          22px, axis labels 16px, ticks 14px). Minor: annotation and legend text at
-          13-14px is on the smaller side but readable at 3200px canvas.'
+        comment: All font sizes explicitly set (title 22px, axis labels 16px, ticks
+          14px, annotation 14px, legend 13px). Well-proportioned in both themes. Tick
+          labels at 14px CSS (28 source px) are at the lower bound of the recommended
+          range — readable but not generous.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Equation box placed upper-left where no
-          data points exist. Legend in lower-right with clear spacing.
+        comment: No overlap anywhere. Equation box, legend, and data elements all
+          well-separated.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Calibration points (r=8) and unknown sample clearly visible. Prediction
-          band clearly visible in light render; marginally faint in dark render at
-          0.15 opacity on #1A1A17 background.'
+        comment: r=8 CSS circles (16 source px radius) appropriate for 9 data points
+          (sparse dataset). Prediction band opacity adapted to theme. All elements
+          clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-optimized. Green/blue/red combination uses
-          palette positions with documented CVD safety. White strokes on markers aid
-          contrast.
+        comment: Imprint palette; green and red series also distinguished by shape/context
+          (dashed guides). CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Generous margins (top:80, right:80, bottom:90,
-          left:100). Title at ~60% width. No overflow or clipping.
+        comment: Canvas gate passed. Margins 80/80/90/100 — generous but not excessive.
+          Plot fills canvas well. Title, axes, legend all within bounds.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''Concentration (mg/L)'' with units. Y-axis: ''Absorbance''.
-          Title: ''calibration-beer-lambert · javascript · d3 · anyplot.ai''. All
-          correct.'
+        comment: 'X: ''Concentration (mg/L)'' with units; Y: ''Absorbance'' (dimensionless
+          per spec). Title format correct.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (calibration standards) = palette[0] = #009E73. Regression
-          line uses palette[2] (blue), unknown sample uses palette[4] (matte red).
-          Palette order skips [1] and [3] but choices are visually defensible. Both
-          renders use correct theme backgrounds.'
+        comment: 'First series palette[0]=#009E73. Regression uses palette[2]=#4467A3
+          (semantic: scientific fit line convention). Unknown uses palette[4]=#AE3030
+          (semantic: special/unknown value). Backgrounds #FAF8F1/#1A1A17. Data colors
+          identical across themes. Chrome adapts correctly.'
     design_excellence:
       score: 13
       max: 20
@@ -128,25 +123,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Intentional visual hierarchy (green standards, blue fit, red unknown),
-          annotation box with rounded corners and elevated background, white strokes
-          on markers for definition. Above generic defaults.
+        comment: Semantic color assignments (not ordinal), theme-adaptive band opacity,
+          elevated background boxes with rounded corners, white marker strokes — clearly
+          above defaults but not FiveThirtyEight-level polish.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: L-shaped axis frame (only bottom/left domain paths), horizontal-only
-          gridlines, generous margins, white strokes on data markers. Good refinement
-          above defaults.
+        comment: Y-axis-only horizontal gridlines (appropriate), L-shaped axes (D3
+          axisBottom/axisLeft only), elevated legend/annotation backgrounds, good
+          whitespace. Some further refinement possible.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Dashed guide lines from unknown sample to both axes create effective
-          visual narrative of calibration curve usage. Equation box provides analytical
-          result. Clear focal story.
+        comment: Dashed guide lines from unknown sample to both axes tell the analytical
+          chemistry story explicitly. R²=0.9998 annotation signals excellent linearity
+          at a glance. Color hierarchy (green/blue/red) guides the eye through the
+          calibration narrative.
     spec_compliance:
       score: 15
       max: 15
@@ -156,31 +152,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: scatter plot (calibration standards) + linear regression
-          fit line.'
+        comment: 'Correct: scatter calibration standards + regression line + prediction
+          band — all components of a Beer-Lambert calibration curve.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: calibration scatter points, linear regression
-          line, 95% prediction interval band, equation/R² annotation, unknown sample
-          with dashed horizontal+vertical guide lines.'
+        comment: 'All required features: regression equation (y=mx+b), R², 95% prediction
+          interval band, unknown sample with dashed horizontal+vertical guide lines,
+          units on X-axis.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=concentration (independent), Y=absorbance (dependent). Axes show
-          full data range 0-15 mg/L. Beer-Lambert linear relationship correctly represented.
+        comment: Concentration on X, Absorbance on Y. All 8 standards + unknown visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''calibration-beer-lambert · javascript · d3 · anyplot.ai''.
-          Legend labels: ''Calibration standards'', ''Linear fit'', ''95% prediction
-          interval'', ''Unknown sample''.'
+        comment: 'Title: ''calibration-beer-lambert · javascript · d3 · anyplot.ai''
+          — correct format. Legend labels match data series exactly.'
     data_quality:
       score: 15
       max: 15
@@ -190,24 +184,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: blank standard (conc=0), 7 calibration levels,
-          regression line, prediction band, unknown determination via dashed guides.'
+        comment: Covers blank (conc=0), 7 calibration levels, linear Beer-Lambert
+          relationship, unknown sample demonstration, and statistical uncertainty
+          (prediction interval).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: UV-Vis spectrophotometry data with realistic concentration range
-          (0-15 mg/L) and absorbance values (0.002-0.681). Beer-Lambert linear relationship
-          faithfully represented. Neutral scientific context.
+        comment: UV-Vis spectrophotometry calibration is a real, neutral, widely-used
+          analytical chemistry scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Concentration 0-15 mg/L and absorbance 0-0.7 are plausible for typical
-          UV-Vis calibration. R²=0.9998 is extremely high but not implausible for
-          a well-prepared Beer-Lambert calibration.
+        comment: Concentration 0–15 mg/L, absorbance 0–0.68 (well within Beer-Lambert
+          linearity limit of A<1.5), R²=0.9998 realistic for careful lab conditions,
+          unknown at 0.320 within calibration range.
     code_quality:
       score: 10
       max: 10
@@ -217,36 +211,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Flat procedural script — appropriate for
-          D3 snippet.
+        comment: 'Linear: data → regression → scales → draw → annotate. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hard-coded as literal arrays. Deterministic — no RNG.
+        comment: All data hardcoded; regression computed deterministically from fixed
+          arrays.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports. d3 is a global per the D3 harness contract.
+        comment: No imports needed (d3 is global). No unused references.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the statistical chart. OLS computation
-          is inline and clear. No fake interactivity.
+        comment: Clean D3 idioms, appropriate complexity, no over-engineering, no
+          fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Implementation builds SVG in #container per D3 harness contract.
-          Harness emits plot-{theme}.png and plot-{theme}.html.'
+        comment: Harness handles output; uses D3 7.9.0 API correctly.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -254,29 +248,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good idiomatic D3: d3.select/append, data().join(), d3.scaleLinear(),
-          d3.axisBottom/Left() with tickValues(), proper margin/transform pattern.
-          Token usage correct. Minor: forEach loop instead of D3 data-join for gridlines
-          and legend could be more idiomatic.'
+        comment: Data join for gridlines, d3.area() for band, d3.line() for regression
+          path, d3.axisBottom/Left, d3.scaleLinear — correct idiomatic D3. Not quite
+          expert-level (e.g., no clip path to prevent band overflow at scale boundaries).
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: true
-        comment: Uses d3.area() for prediction interval band (distinctly D3), d3.range()
-          for band sampling, D3 axis system with custom tick values. Functional but
-          not showcasing advanced D3 capabilities like path generators, transitions,
-          or hierarchical layouts.
+        comment: d3.area() path generator for prediction interval band is distinctively
+          D3; data-join pattern for gridlines is characteristic D3 idiom; scale/axis
+          API used well. Could push further with D3-specific features like clip paths
+          or d3.bisector for annotation positioning.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
+  - manual-ticks
   patterns:
   - data-generation
   dataprep:
   - regression
   styling:
   - alpha-blending
-  - edge-highlighting
