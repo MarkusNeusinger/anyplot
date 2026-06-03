@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-ashby-material: Ashby Material Selection Chart
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 76/100 | Updated: 2026-06-03
@@ -107,7 +107,7 @@ chart = pygal.XY(
     y_title="Young's Modulus (GPa)",
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=7,
+    legend_at_bottom_columns=4,
     legend_box_size=36,
     stroke=False,
     dots_size=10,
@@ -121,8 +121,45 @@ chart = pygal.XY(
     margin_left=40,
     margin_right=40,
     print_values=False,
-    truncate_legend=-1,
+    truncate_legend=20,
+    truncate_label=16,
+    show_minor_x_labels=False,
 )
+
+# Restrict x-axis to decade tick marks only — set all sub-decade ticks explicitly
+# so show_minor_x_labels=False can suppress non-major ones
+chart.x_labels = [
+    10,
+    20,
+    30,
+    40,
+    50,
+    60,
+    70,
+    80,
+    90,
+    100,
+    200,
+    300,
+    400,
+    500,
+    600,
+    700,
+    800,
+    900,
+    1000,
+    2000,
+    3000,
+    4000,
+    5000,
+    6000,
+    7000,
+    8000,
+    9000,
+    10000,
+    20000,
+]
+chart.x_labels_major = [30, 100, 300, 1000, 3000, 10000]
 
 # Add data with slight jitter for visual separation within families
 jitter = np.random.normal(1.0, 0.03, (250, 2))
@@ -138,7 +175,11 @@ for family_name, fdata in families.items():
         )
     chart.add(family_name, points)
 
-# Render SVG for post-processing
+# Save interactive HTML before post-processing — preserves pygal's JS tooltips
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
+
+# Render SVG for post-processing (PNG only)
 svg_bytes = chart.render()
 svg_string = svg_bytes.decode("utf-8")
 
@@ -226,13 +267,13 @@ labels_group = ET.SubElement(root, "{http://www.w3.org/2000/svg}g")
 labels_group.set("class", "family-labels")
 
 label_offsets = {
-    "Metals": (0, -52),
-    "Ceramics": (0, -52),
-    "Polymers": (0, -42),
-    "Composites": (0, 58),
-    "Elastomers": (0, -42),
-    "Foams": (110, -42),
-    "Natural Materials": (90, -42),
+    "Metals": (0, -58),
+    "Ceramics": (0, -58),
+    "Polymers": (-100, -55),
+    "Composites": (80, 70),
+    "Elastomers": (-100, -50),
+    "Foams": (120, -50),
+    "Natural Materials": (150, -55),
 }
 
 for serie_idx, circles in series_circles.items():
@@ -312,10 +353,6 @@ if all_cx and all_cy:
 
 # Serialize
 final_svg = ET.tostring(root, encoding="unicode", xml_declaration=False)
-
-# Save interactive HTML (pygal is an interactive library)
-with open(f"plot-{THEME}.html", "w") as f:
-    f.write(final_svg)
 
 # Save PNG
 cairosvg.svg2png(bytestring=final_svg.encode("utf-8"), write_to=f"plot-{THEME}.png")
