@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: calibration-beer-lambert
 created: '2026-03-09T10:48:59Z'
-updated: '2026-06-03T08:14:11Z'
+updated: '2026-06-03T08:28:35Z'
 generated_by: claude-sonnet
 workflow_run: 26871620703
 issue: 4410
@@ -12,143 +12,124 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibrati
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/python/pygal/plot-dark.html
-quality_score: 84
+quality_score: 85
 review:
   strengths:
-  - 'Imprint palette correctly applied with semantic color choices: brand green for
-    calibration standards, semantic red for the unknown determination, blue for the
-    regression fit line'
-  - Both light and dark renders have correct theme-adaptive chrome — warm off-white
-    / near-black backgrounds, all text clearly legible in both themes, no dark-on-dark
-    issues
-  - Font sizes explicitly set following pygal style guide defaults (title=66, label=56,
-    major_label=44, legend=44)
-  - Realistic copper sulfate 810 nm calibration scenario with factually plausible
-    Beer-Lambert data (R²=0.9985, absorbance 0–0.57)
-  - 'Interactive pygal features used well: html-export, tooltip_fancy_mode, per-point
-    dict labels with values, dashed stroke_dasharray for crosshair and PI bands'
-  - np.random.seed(42) for reproducibility; clean KISS structure with no functions
-    or classes
-  - Unknown sample crosshair effectively guides the viewer to the key analytical insight
-    — the red determination lines tell the story clearly
+  - Full Imprint palette with well-reasoned semantic color assignment (green=standards,
+    blue=fit, ochre=uncertainty band, red=result)
+  - Regression equation + R² annotation correctly injected into the SVG at a non-overlapping
+    upper-left position
+  - Crosshair dashed lines effectively demonstrate the Beer-Lambert concentration-determination
+    workflow
+  - Both themes render correctly with full chrome adaptation; no dark-on-dark or light-on-light
+    failures
+  - Code is clean, reproducible, and idiomatic pygal throughout (per-point tooltip
+    labels, None gaps, HTML export)
+  - Interactive HTML output saved alongside the PNG
   weaknesses:
-  - 'The regression equation and R² value are displayed only in the legend series
-    label ("Fit: A = 0.0457·C + 0.0031 (R² = 0.9985)") — the spec explicitly requires
-    them as a text annotation INSIDE the plot area. In pygal this can be achieved
-    via a single-point stub series placed at an appropriate location (e.g. x=1.5,
-    y=0.50) with show_dots=False and the equation as the series value label rendered
-    via print_values=True, or by post-rendering SVG text injection'
-  - 'The 95% prediction interval is shown as two dashed boundary lines rather than
-    a filled shaded band. Pygal XY does not natively support area fills between lines.
-    A workaround: render the band as a filled polygon series using a sequence of points
-    tracing the upper boundary then reversed lower boundary, which pygal renders as
-    a closed stroke that can approximate a band'
-  - The prediction interval band is visually very narrow (high R², narrow CI) making
-    it nearly indistinguishable from the fit line at a glance — consider filling the
-    band even with a low-opacity workaround, or making the band lines slightly thicker
-    to be more visible
-  - Design excellence is limited — no spine removal, grid uses pygal defaults with
-    minimal visual refinement. The CSS override removes axis lines but the overall
-    look is functional rather than polished
+  - 'Prediction interval is shown as two dashed boundary lines (upper + lower) rather
+    than a filled band — spec says ''prediction interval band'', which implies a shaded
+    area. Repair should inject a semi-transparent polygon via SVG (fill-opacity~0.15
+    in OCHRE #BD8233) using the same SVG-injection mechanism already used for the
+    equation annotation.'
+  - PI upper/lower dashed lines and the regression fit line are visually very close
+    together, making the three lines hard to distinguish at first glance — increase
+    stroke_dasharray spacing (e.g., '12,8') or reduce PI stroke width to 6 to differentiate
+    from the 5px solid fit line.
+  - Bottom legend with 4 entries is slightly cramped; nudging legend_font_size to
+    48 would improve mobile-scale readability without overflow.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct Imprint light surface, not pure white
-      Chrome: Title "calibration-beer-lambert · python · pygal · anyplot.ai" is dark-colored and clearly readable at ~80% of canvas width. Y-axis label "Absorbance" (vertical) and X-axis label "Concentration (mg/L)" are dark and well-readable. Tick labels (0.0–0.6 on Y, 0.0–13.0 on X) are dark and legible. Grid lines are subtle dashed horizontal lines.
-      Data: 7 calibration standard scatter points in brand green (#009E73) — large, prominent circles. Blue regression fit line (#4467A3) running through the data. Narrow ochre (#BD8233) dashed upper/lower PI boundary lines very close to the fit line. Red (#AE3030) dashed horizontal crosshair at A=0.350 and vertical crosshair at C≈7.59 mg/L, with a red dot at both the horizontal start and the intersection/base.
-      Legend: 4 entries at the bottom (2 columns): Calibration Standards (green), Fit equation with R² (blue), 95% Prediction Interval (ochre), Unknown determination result (red).
-      Legibility verdict: PASS — all text readable; fit line and PI band visually close together but distinguishable by color.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "calibration-beer-lambert · python · pygal · anyplot.ai" clearly readable in dark ink. X-axis label "Concentration (mg/L)" and Y-axis label "Absorbance" clearly readable. Tick labels (0.0–13.0, 0.0–0.6) legible. Regression equation annotation "A = 0.0457·C + 0.0031 R² = 0.9985" in italic muted text upper-left — readable. Bottom legend 4 entries in 2 columns — legible.
+      Data: 7 green (#009E73) scatter dots for calibration standards. Blue (#4467A3) regression fit line running diagonally bottom-left to top-right (partially overlapped by ochre PI band). Ochre (#BD8233) dashed lines for upper/lower PI bounds close to fit line. Red (#AE3030) crosshair (horizontal + vertical dashed lines with markers) at ~7.59 mg/L.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct Imprint dark surface, not pure black
-      Chrome: Title text is light-colored and clearly readable. Y-axis and X-axis labels are light and well-readable. Tick labels are light against the dark background — no dark-on-dark issues. Grid lines are subtle dashed lines visible against the dark surface.
-      Data: Data colors are identical to the light render — brand green calibration points, blue fit line, ochre PI bands, red crosshair. Colors correctly theme-invariant (only chrome flipped).
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures detected; brand green (#009E73) is distinctly visible on the dark surface.
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title, axis labels, tick labels, annotation all rendered in light text appropriate for dark surface. Annotation (#B8B7B0 INK_SOFT in dark mode) provides adequate contrast against near-black background. Bottom legend legible. No dark-on-dark failures detected.
+      Data: Colors identical to light render — green standards dots (#009E73), blue/ochre fit+PI lines (#4467A3/#BD8233), red crosshair (#AE3030). Only chrome flipped between themes.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=66, label=56, major_label=44,
-          legend=44). Well-proportioned, readable in both themes, no overflow.
+        comment: All text readable in both themes; bottom legend slightly small but
+          legible at full resolution
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text overlaps with other text or data elements. Clean layout.
+        comment: Slight visual crowding near crosshair intersection (~7.59 mg/L) but
+          no true overlap
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Scatter points and crosshair clearly visible. PI band lines very
-          close to fit line (narrow CI) making band hard to distinguish visually.
+        comment: All elements visible; PI dashed lines sit very close to fit line
+          making them hard to distinguish
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe. Multiple encoding cues (color + linestyle
-          + dots vs lines).
+        comment: Adequate contrast; red/green used with shape redundancy (dots vs
+          crosshair lines)
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good layout with legend at bottom in 2 columns. Plot fills canvas
-          well. No cutoff content. Appropriate margins.
+        comment: 3200x1800 correct; good proportions, generous margins, title ~70%
+          width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''Concentration (mg/L)'' with units. Y-axis: ''Absorbance''
-          (dimensionless per spec). Both descriptive.'
+        comment: Concentration (mg/L) with units and Absorbance correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73. Colors come from Imprint palette with semantic
-          exception: blue (#4467A3) for regression fit line (scientific convention),
-          red (#AE3030) for determination highlight. Backgrounds #FAF8F1 / #1A1A17.
-          Theme chrome correct in both renders.'
+        comment: 'First series #009E73; semantic exception for blue fit/ochre PI/red
+          unknown is well-reasoned; backgrounds correct'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured with semantic color choices and correct Imprint palette.
-          Shows design thought (semantic red for determination). Does not rise to
-          publication-ready level.
+        passed: true
+        comment: Purposeful semantic color scheme, equation annotation, custom CSS
+          border removal, 4-layer visual hierarchy
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Custom Style with all font sizes, dashed grid lines (subtle), CSS
-          override for axis line removal. No spine removal visible. Modest refinement
-          above defaults.
+        passed: true
+        comment: Chart border CSS removed, y-only grid, generous margins, theme-adaptive
+          chrome
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Red crosshair effectively draws viewer to the key insight (unknown
-          determination at 7.59 mg/L). Visual hierarchy from green standards → blue
-          fit → red unknown is clear. Missing: in-plot text annotation for the equation
-          that would complete the analytical story.'
+        comment: Crosshair effectively demonstrates analytical workflow; clear narrative
+          from standards to fit to unknown determination
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -156,57 +137,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: XY scatter with regression line = calibration curve.'
+        comment: XY scatter with regression fit line is correct chart type
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Calibration standards ✓, regression fit line ✓, R²/equation in legend
-          (NOT as in-plot text annotation as spec requires) ✗, PI shown as boundary
-          lines not filled band ✗, unknown sample crosshair ✓.
+        passed: true
+        comment: Standards, fit, equation+R2, crosshair all present; PI shown as dashed
+          boundary lines not filled band
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Concentration (mg/L), Y=Absorbance. All data visible across the
-          specified range.
+        comment: X=Concentration(mg/L), Y=Absorbance, all 7 standards visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''calibration-beer-lambert · python · pygal · anyplot.ai''
-          — correct format. Legend labels are descriptive and include the regression
-          equation.'
+        comment: Title matches spec-id · python · pygal · anyplot.ai exactly; legend
+          labels descriptive
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Shows all key features: calibration standards, regression fit, PI
-          bands, unknown determination crosshair. PI band not visually prominent enough
-          to demonstrate the interval clearly.'
+        comment: 'All features present: scatter, fit, R2, PI boundaries, unknown crosshair'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Copper sulfate at 810 nm — specific, real-world UV-Vis spectrophotometry
-          scenario. Fully neutral, not controversial.
+        comment: Copper sulfate at 810 nm plausible; 0-12 mg/L range and absorbance
+          0-0.55 physically realistic; R2=0.9985 typical; neutral scientific context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Absorbance 0–0.57 (Beer-Lambert optimal range). Concentrations 0–12
-          mg/L realistic. R²=0.9985 typical for good calibration. Slope 0.0457 consistent
-          with moderate molar absorptivity.
+        comment: Y-axis -0.02 to 0.62, X-axis -0.3 to 13.0; data breathes with good
+          padding
     code_quality:
       score: 10
       max: 10
@@ -216,33 +191,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Clean Imports → Data → Plot → Save structure.
+        comment: No functions or classes; clean sequential script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys (path fix), numpy, pygal, pygal.style.Style,
-          scipy.stats.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code. List comprehensions for data series. sys.path
-          fix is a documented workaround for the pygal.py filename collision.
+        comment: No fake interactivity; SVG injection for annotation is legitimate
+          creative workaround
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct API usage.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html for interactive library
     library_mastery:
       score: 7
       max: 10
@@ -252,26 +226,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good idiomatic pygal: XY chart type, Style object, dict format for
-          per-point data with labels, xrange/range limits, formatters, dots_size,
-          stroke_style.'
+        comment: pygal.XY correct; Style with Imprint tokens; per-point dict format;
+          None gaps; HTML export
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Uses pygal-specific: None as gap in series for disconnected line
-          segments (crosshair), stroke_dasharray for dashed lines, tooltip_fancy_mode,
-          html-export with render(). These pygal patterns are non-trivial.'
-  verdict: REJECTED
+        comment: Per-point tooltip labels, None-gap discontinuity, custom CSS injection,
+          SVG annotation injection, interactive HTML
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
-  - hover-tooltips
   - html-export
+  - annotations
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep:
   - regression
-  styling: []
+  styling:
+  - minimal-chrome
