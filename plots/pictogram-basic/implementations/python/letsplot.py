@@ -1,27 +1,43 @@
-""" pyplots.ai
+""" anyplot.ai
 pictogram-basic: Pictogram Chart (Isotype Visualization)
-Library: letsplot 4.8.2 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-10
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-06-03
 """
+
+import os
 
 from lets_plot import *
 
 
 LetsPlot.setup_html()
 
-# Data - Fruit production (thousands of tonnes)
-categories = ["Apples", "Oranges", "Bananas", "Grapes", "Mangoes"]
-values = [35, 22, 18, 12, 8]
-colors = ["#306998", "#E8843C", "#E8C53C", "#7B4F8B", "#3DAE6F"]
-icon_value = 5  # Each icon represents 5 thousand tonnes
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Subtle alternating lane color derived from theme surface
+LANE_BG = "#E4E2DB" if THEME == "light" else "#2A2A26"
+
+# Imprint palette — canonical order, first series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+
+# Data — Top coffee-producing countries (thousands of metric tonnes, ~2023)
+categories = ["Brazil", "Vietnam", "Colombia", "Indonesia", "Ethiopia"]
+values = [45, 32, 14, 11, 8]
+icon_value = 5  # Each icon represents 5 thousand metric tonnes
+
 max_icons = max(v // icon_value + (1 if v % icon_value else 0) for v in values)
 
-# Build pictogram grid using numeric y positions
+MIN_ALPHA = 0.33  # floor so faintest partial icon remains clearly visible
+
+# Build pictogram grid — full icons at alpha=1.0, partial via fractional alpha
 tile_data = {"category": [], "col": [], "row": [], "alpha": [], "value": []}
 
 for i, (cat, val) in enumerate(zip(categories, values)):
     y_pos = len(categories) - 1 - i  # Highest value at top
-    full_icons = int(val // icon_value)
+    full_icons = val // icon_value
     remainder = val % icon_value
     for c in range(full_icons):
         tile_data["category"].append(cat)
@@ -33,77 +49,81 @@ for i, (cat, val) in enumerate(zip(categories, values)):
         tile_data["category"].append(cat)
         tile_data["col"].append(float(full_icons))
         tile_data["row"].append(float(y_pos))
-        tile_data["alpha"].append(remainder / icon_value)
+        tile_data["alpha"].append(max(MIN_ALPHA, remainder / icon_value))
         tile_data["value"].append(val)
 
-# Alternating background lanes for visual rhythm (even rows)
+# Alternating background lanes for readability (even category indices)
 even_lanes = {
     "ymin": [float(len(categories) - 1 - i) - 0.48 for i in range(len(categories)) if i % 2 == 0],
     "ymax": [float(len(categories) - 1 - i) + 0.48 for i in range(len(categories)) if i % 2 == 0],
 }
 
-# Value labels at end of each row
+# Value labels placed to the right of each row
 label_data = {
-    "col": [max_icons + 0.3] * len(categories),
+    "col": [float(max_icons) + 0.3] * len(categories),
     "row": [float(len(categories) - 1 - i) for i in range(len(categories))],
-    "label": [f"{v}k tonnes" for v in values],
+    "label": [f"{v}k MT" for v in values],
 }
 
-# Top producer annotation for storytelling emphasis
-anno_data = {"col": [max_icons + 0.3], "row": [float(len(categories) - 1) + 0.38], "label": ["\u2605 Top producer"]}
+# Top producer annotation for data storytelling
+anno_data = {"col": [float(max_icons) + 0.3], "row": [float(len(categories) - 1) + 0.42], "label": ["★ Top producer"]}
 
-# Y-axis labels
+# Icon scale legend note in bottom-left corner for self-contained chart
+scale_note = {"col": [-0.45], "row": [-0.44], "label": ["● = 5k MT"]}
+
 y_breaks = [float(len(categories) - 1 - i) for i in range(len(categories))]
 
-# Plot with layered composition for visual depth
+title = "pictogram-basic · python · letsplot · anyplot.ai"
+subtitle = "Coffee Production by Country — Each icon represents 5 thousand metric tonnes"
+
+# Plot
 plot = (
     ggplot()
-    # Subtle alternating row bands for readability
-    + geom_rect(aes(ymin="ymin", ymax="ymax"), data=even_lanes, xmin=-0.6, xmax=max_icons + 2.2, fill="#f0f0f0", size=0)
-    # Main pictogram tiles with interactive tooltips
-    + geom_tile(
+    + geom_rect(
+        aes(ymin="ymin", ymax="ymax"), data=even_lanes, xmin=-0.6, xmax=float(max_icons) + 2.2, fill=LANE_BG, size=0
+    )
+    + geom_point(
         aes(x="col", y="row", alpha="alpha", fill="category"),
         data=tile_data,
-        width=0.82,
-        height=0.82,
-        color="white",
-        size=2.5,
-        tooltips=layer_tooltips().line("@category").line("Total: @value thousand tonnes").format("@value", "d"),
+        shape=21,
+        size=12,
+        color=PAGE_BG,
+        stroke=1.5,
+        tooltips=layer_tooltips().line("@category").line("Total: @value thousand metric tonnes").format("@value", "d"),
     )
     + scale_alpha_identity()
-    + scale_fill_manual(values=colors, limits=categories)
-    # Value labels (20pt for optimal legibility)
+    + scale_fill_manual(values=IMPRINT_PALETTE, limits=categories)
+    + geom_text(aes(x="col", y="row", label="label"), data=label_data, size=5, color=INK_SOFT, hjust=0, fontface="bold")
     + geom_text(
-        aes(x="col", y="row", label="label"), data=label_data, size=20, color="#333333", hjust=0, fontface="bold"
+        aes(x="col", y="row", label="label"),
+        data=anno_data,
+        size=4,
+        color=IMPRINT_PALETTE[0],
+        hjust=0,
+        fontface="italic",
     )
-    # Top producer annotation for data storytelling
     + geom_text(
-        aes(x="col", y="row", label="label"), data=anno_data, size=16, color="#306998", hjust=0, fontface="italic"
+        aes(x="col", y="row", label="label"), data=scale_note, size=3.5, color=INK_SOFT, hjust=0, fontface="italic"
     )
     + scale_y_continuous(breaks=y_breaks, labels=categories, limits=[-0.6, len(categories) - 0.3], expand=[0, 0])
-    + scale_x_continuous(limits=[-0.6, max_icons + 2.3], expand=[0, 0])
-    + labs(
-        x="",
-        y="",
-        title="pictogram-basic \u00b7 letsplot \u00b7 pyplots.ai",
-        subtitle="Fruit Production \u2014 Each square represents 5 thousand tonnes",
-    )
-    + ggsize(1600, 900)
+    + scale_x_continuous(limits=[-0.6, float(max_icons) + 2.3], expand=[0, 0])
+    + labs(x="", y="", title=title, subtitle=subtitle)
+    + ggsize(800, 450)
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=24, face="bold", color="#222222"),
-        plot_subtitle=element_text(size=20, color="#666666"),
+        plot_title=element_text(size=16, face="bold", color=INK),
+        plot_subtitle=element_text(size=11, color=INK_SOFT),
         axis_title=element_blank(),
-        axis_text_y=element_text(size=20, face="bold", color="#333333"),
+        axis_text_y=element_text(size=10, face="bold", color=INK),
         axis_text_x=element_blank(),
         axis_ticks=element_blank(),
         panel_grid=element_blank(),
         legend_position="none",
-        plot_background=element_rect(fill="white", color="white", size=0),
-        panel_background=element_rect(fill="white", color="white", size=0),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG, size=0),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG, size=0),
     )
 )
 
 # Save
-ggsave(plot, "plot.png", path=".", scale=3)
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, f"plot-{THEME}.html", path=".")

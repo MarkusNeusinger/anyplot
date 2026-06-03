@@ -1,0 +1,239 @@
+library: chartjs
+language: javascript
+specification_id: pictogram-basic
+created: '2026-06-03T14:17:30Z'
+updated: '2026-06-03T14:36:03Z'
+generated_by: claude-sonnet
+workflow_run: 26890116822
+issue: 4674
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/javascript/chartjs/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Excellent spec compliance: all pictogram requirements (consistent unit, partial
+    icons, left-aligned rows, legend) fully implemented'
+  - Creative use of Chart.js plugin hooks (beforeDraw/afterDraw) to build a non-native
+    chart type without external libraries
+  - Correct Imprint palette assignment across all 5 categories with both themes handled
+    cleanly
+  - Real-world coffee production dataset with accurate proportions that reinforce
+    the visual storytelling
+  weaknesses:
+  - Partial-circle ghost portions use globalAlpha=0.18 of the data color, which becomes
+    nearly invisible on dark background (especially red/ochre categories) — increase
+    alpha to ~0.30 or use t.inkSoft at low alpha for ghost fill so fraction indicator
+    reads equally well in both themes
+  - Two helper functions (filledCircle, partialCircle) defined — departs from strict
+    KISS; could be inlined into the plugin
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct
+      Chrome: Title "pictogram-basic · javascript · chartjs · anyplot.ai" in bold dark text — readable. Category labels (Brazil, Vietnam, Colombia, Indonesia, Ethiopia) in dark text — readable. X-axis ticks and title "Production (million 60 kg bags)" readable. Footnote readable.
+      Data: Brazil=9 green (#009E73) circles, Vietnam=4 lavender (#C475FD) + 1 partial, Colombia=2 blue (#4467A3), Indonesia=1 ochre (#BD8233) + 1 partial, Ethiopia=1 red (#AE3030) + 1 partial. Partial circles show ghosted outline at 18% alpha + clipped solid fill — clearly visible.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct
+      Chrome: Title and all category labels rendered in light text — fully readable. X-axis title and ticks in light text — readable. Footnote text readable. No dark-on-dark failures.
+      Data: Colors identical to light render (Imprint palette positions 1–5 unchanged). Partial-circle ghost portions noticeably more subtle on dark surface — 18% alpha of data color blends into near-black background, particularly for Ethiopia (red ghost nearly invisible) and Vietnam (faint purple ghost). Still perceptible but weaker than light render.
+      Legibility verdict: PASS (with minor note: partial ghost circles less visible in dark theme)
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 22px, y-ticks 16px, x-ticks
+          14px, axis title 16px, footnote 16px), readable in both themes. Minor: footnote
+          uses plain sans-serif.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Circles well-sized and visible. Partial-circle ghost at 18% alpha
+          is significantly less visible in dark theme.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette used; CVD-safe, good contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good use of space; empty right side is correct for pictogram chart
+          type.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis descriptive with units; no y-axis title needed for categorical
+          axis.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette positions 1-5 correctly used; backgrounds and chrome
+          theme-adaptive.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Multi-color approach with Imprint palette per category, white-stroke
+          circle separation, clean typography. Above configured default.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines hidden, y-axis grid off, subtle vertical grid, good padding.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Visual hierarchy clear: Brazil''s 9-circle row dominates; declining
+          row lengths tell the production story at a glance.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct pictogram/isotype chart with repeated icons.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Consistent unit (7M bags/icon), partial icons, left-aligned rows,
+          category labels, legend footnote.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis=production quantity, Y-axis=countries; all data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is 'pictogram-basic · javascript · chartjs · anyplot.ai'; footnote
+          serves as legend.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 5 categories, distinct values, all showing full and partial icons.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real-world coffee production data; neutral topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values match real-world approximate figures.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Two helper functions and two plugin objects defined; justified for
+          custom drawing but departs from strict KISS.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded data; fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; Chart is a global.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-structured; no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness handles output; current Chart.js API used.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of Chart.js plugin hooks, getPixelForValue, getDatasetMeta,
+          indexAxis:'y'.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Transparent bar scaffold + plugin hooks to borrow coordinate system
+          for custom pictogram rendering — highly Chart.js-specific.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - html-export
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - alpha-blending
