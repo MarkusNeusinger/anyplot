@@ -80,7 +80,7 @@ p <- ggplot(df, aes(x = concentration, y = absorbance)) +
     aes(x = concentration, ymin = lwr, ymax = upr),
     inherit.aes = FALSE,
     fill        = IMPRINT_PALETTE[1],
-    alpha       = 0.12
+    alpha       = 0.20
   ) +
   # Regression fit line
   geom_line(
@@ -139,7 +139,7 @@ p <- ggplot(df, aes(x = concentration, y = absorbance)) +
   # Unknown sample label
   annotate(
     "text",
-    x          = unknown_conc + 0.10,
+    x          = unknown_conc + 0.20,
     y          = unknown_abs + 0.03,
     label      = sprintf("Unknown\nC = %.2f mg/L", unknown_conc),
     hjust      = 0,
