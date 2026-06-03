@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: piano-roll-midi
 created: '2026-03-07T19:47:15Z'
-updated: '2026-06-03T03:32:32Z'
+updated: '2026-06-03T03:43:56Z'
 generated_by: claude-sonnet
 workflow_run: 26861566820
 issue: 4565
@@ -12,136 +12,119 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/piano-rol
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 93
 review:
   strengths:
-  - 'Excellent spec compliance: alternating piano-keyboard background rows, hierarchical
-    beat grid (measure/half-beat/quarter-beat), pitch labels on white keys only, and
-    velocity colorbar all implemented per spec'
-  - 'Musically rich data: full Jazz ii-V-I-turnaround with 8 measures, chord tones
-    + melody, dynamic arc from pianissimo to fortissimo (velocity 35-127), blue notes
-    and chromatic approach notes'
-  - Correct Imprint sequential colormap (green→blue) for single-polarity velocity
-    data; proper theme-adaptive chrome with all tokens set on tick params, labels,
-    and colorbar
-  - 'Domain-appropriate annotations: chord names (Dm⁷, G⁷, Cmaj⁷, A⁷) above each measure,
-    ff/pp dynamic markings at musically correct points, octave boundary lines at C
-    notes'
-  - 'Perfect code quality: reproducible seed, all imports used, no functions/classes,
-    savefig without bbox_inches=''tight'' per seaborn canvas rules'
+  - Musically accurate jazz ii-V-I chord data with correct MIDI note numbers and voicings
+  - 'Full theme adaptation: all chrome correctly flips between light and dark without
+    dark-on-dark failures'
+  - Imprint sequential colormap correctly applied for continuous velocity data
+  - Hierarchical beat grid (3 opacity/weight levels) creates authentic DAW aesthetic
+  - Black key row shading accurately mirrors piano keyboard layout with subtle edge
+    depth
+  - Dynamic markings (ff/pp) and chord name labels provide genuine musical storytelling
+  - All 6 spec requirements fully implemented and working
   weaknesses:
-  - 'Chord name labels (fontsize=7) and the ''pp'' annotation color (#4467A3 blue
-    on #1A1A17 dark background) are slightly small/low-contrast — chord labels will
-    be barely readable when scaled to mobile (~400 px); consider bumping chord labels
-    to fontsize=8 and using INK_SOFT for ''pp'' color in dark theme'
-  - 'DE-01 gap: the implementation is aesthetically competent but relies on seaborn
-    heatmap defaults without additional design elevation (e.g., no title padding refinement,
-    no subtle gradient on black-key rows)'
-  - 'DE-02 gap: the heatmap frame border is still visible as a thin box outline around
-    the plot area — full spine removal via the seaborn despine is applied but heatmap''s
-    own border persists; could set ax.spines to invisible explicitly after heatmap
-    render'
+  - 'LM-02 headroom: most visual customization is matplotlib-level; seaborn statistical
+    or faceting features unused beyond heatmap'
+  - DE-01 could reach 7-8 with a subtitle or section labels making the dynamic arc
+    legible without musical expertise
+  - Chord labels positioned via clip_on=False at y=-0.7 is fragile — an inset text
+    approach would be more robust
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface. Alternating slightly-darker (#EDE9E2) rows mark black piano keys against the off-white white-key rows, creating a subtle keyboard stripe pattern throughout the heatmap.
-      Chrome: Title "piano-roll-midi · python · seaborn · anyplot.ai" in dark INK (#1A1A17) at fontsize=12 — fills ~65% of plot width, well-proportioned. Y-axis label "Pitch" and X-axis label "Measure (4/4 time, jazz ii-V-I)" in dark INK at 10pt. Tick labels (pitch names on Y, M1-M8 on X) in INK_SOFT (#4A4A44) at 8pt — all clearly readable. Chord names (Dm⁷, G⁷, Cmaj⁷, A⁷) above the heatmap in INK_MUTED (#6B6A63) at fontsize=7 — small but legible at full resolution. Colorbar label "Velocity (MIDI 0–127)" readable in dark INK.
-      Data: Green (#009E73) at lower velocities, blue (#4467A3) at higher — imprint_seq colormap correctly applied. Chord tones appear as long horizontal green bars across measures; melody notes are short colored cells at higher pitches. "ff" annotation in #AE3030 red visible near M5/Eb5. "pp" annotation in #4467A3 blue visible near M6/G4. Hierarchical vertical grid lines mark measure boundaries (heavier) and beat subdivisions (lighter). Octave C-note horizontal lines provide structural reference.
-      Legibility verdict: PASS — all primary text elements are clearly readable against the light background.
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "piano-roll-midi · python · seaborn · anyplot.ai" in dark ink (#1A1A17), clearly readable. Y-axis pitch labels (white keys: A2–F5) in INK_SOFT (#4A4A44), readable. X-axis measure labels M1–M8 in INK_SOFT, readable. Colorbar label "Velocity (MIDI 0–127)" in INK, readable. Chord names (Dm⁷, G⁷, Cmaj⁷, A⁷) in INK_MUTED, readable. "ff" annotation in #AE3030, "pp" in #4467A3 — both readable.
+      Data: Imprint sequential colormap (#009E73 green → #4467A3 blue). Low-velocity chord blocks appear teal-green; high-velocity melody notes appear deep blue. Black key rows have subtle darker shading. Hierarchical beat grid (3 levels) visible.
+      Legibility verdict: PASS — all text elements clearly readable against warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface. Black-key rows appear as slightly-darker stripes (#232320) against the near-black base, creating a subtle but visible keyboard pattern.
-      Chrome: Title and all axis labels flip to light INK (#F0EFE8) — clearly readable against dark background. Tick labels in INK_SOFT (#B8B7B0) — readable. Chord labels in INK_MUTED (#A8A79F) at fontsize=7 — visible in light gray on dark. Colorbar ticks and label in light chrome colors — readable. No dark-on-dark failures detected for primary chrome elements. The "pp" annotation in #4467A3 (mid-blue) has somewhat reduced contrast on the near-black background — visible but borderline.
-      Data: Colors are identical to light render — same green-to-blue velocity gradient, same chord tone and melody note positions. Data colors consistent across themes as required. "ff" in #AE3030 red remains visible on dark background.
-      Legibility verdict: PASS — all primary text is readable; minor concern with "pp" annotation contrast (mid-blue on near-black) but within acceptable range.
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title in light text (#F0EFE8), clearly readable. Y-axis pitch labels in INK_SOFT (#B8B7B0), readable. X-axis measure labels in INK_SOFT, readable. Colorbar label in INK (#F0EFE8), readable. Chord names in INK_MUTED (#A8A79F), readable. "ff" in #AE3030 (semantic red, visible on dark), "pp" in #8AAAD6 (dark-adaptive blue), both readable. No dark-on-dark failures detected.
+      Data: Colors identical to light render — same green-to-blue imprint_seq gradient, same teal chord blocks, same deep blue melody notes. Black key shading adapts subtly to dark surface (#252522 vs #1A1A17).
+      Legibility verdict: PASS — all text elements clearly readable against warm near-black background. No dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: 'Title, axis labels, tick labels all explicitly set and readable
-          in both themes. Minor: chord name labels at fontsize=7 are slightly small
-          for mobile scaling (~400px width); ''pp'' annotation in #4467A3 blue has
-          borderline contrast on dark #1A1A17 background.'
+        comment: All font sizes explicitly set (title=12, labels=10, ticks=8, colorbar=8-9,
+          annotations=8). Proportions balanced in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements — chord labels, ff/pp annotations,
-          and pitch tick labels are well-spaced.
+        comment: White-key-only labeling creates natural gaps. No tick label collisions.
+          Chord names adequately spaced.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All note cells clearly visible; velocity gradient from green to blue
-          reads well; alternating keyboard rows subtle without obscuring data.
+        comment: Heatmap cells clearly visible across full velocity range. High-velocity
+          melody tiles contrast well with lower-velocity chord blocks.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (green→blue) is CVD-safe; no red-green sole signal (velocity
-          uses full sequential range).
+        comment: Imprint sequential (green to blue) is CVD-safe. No red-green reliance
+          for primary encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Landscape 3200×1800 correct. Title ~65% plot
-          width. Colorbar proportionally sized. No overflow or clipping detected.
+        comment: 3200x1800 canvas confirmed. Heatmap fills plot area well, colorbar
+          appropriately sized, balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title in correct format. X-axis 'Measure (4/4 time, jazz ii-V-I)'
-          is descriptive. Y-axis 'Pitch' is concise but appropriate for MIDI pitch
-          context.
+        comment: 'X: ''Measure (4/4 time, jazz ii-V-I)'', Y: ''Pitch'', colorbar:
+          ''Velocity (MIDI 0-127)'' with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq correctly used for single-polarity velocity data. Backgrounds
-          #FAF8F1 (light) / #1A1A17 (dark). All chrome tokens theme-adaptive. ''ff''
-          annotation uses Imprint semantic red #AE3030 appropriately.'
+        comment: 'imprint_seq (#009E73 to #4467A3) for continuous velocity. Backgrounds
+          #FAF8F1/#1A1A17. All chrome theme-adaptive.'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above default: piano keyboard alternating background rows are domain-appropriate
-          and distinctive. Hierarchical beat grid (3 weight levels), chord name labels,
-          ff/pp dynamic markings, and octave boundary lines show intentional design
-          thought. Custom Imprint colormap. Slightly held back by reliance on standard
-          heatmap cell rendering.'
+        comment: 'Strong domain-specific design: black key shading, hierarchical beat
+          grid (3 weight levels), dynamic markings (ff/pp), octave boundary lines.
+          Clearly above defaults.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: 'Above default: all spines removed (sns.despine with left=True, bottom=True),
-          colorbar outline removed, linewidths=0 on heatmap cells. Heatmap frame border
-          still visible as a thin box outline around the plot area — could be fully
-          suppressed.'
+        comment: All spines removed, tick marks hidden, hierarchical grid with varying
+          opacity, colorbar border removed, generous padding. Near-perfect chrome
+          removal.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Above default: the ff/pp dynamic annotations create a clear narrative
-          arc (tension → resolution), chord names above measures provide harmonic
-          context, and the velocity gradient makes the dynamic shape immediately visible.'
+        comment: Dynamic arc visible through velocity colormap intensity. ff/pp emphasize
+          climax and soft passage. Chord labels provide harmonic context. Requires
+          musical knowledge to fully read.
     spec_compliance:
       score: 15
       max: 15
@@ -151,29 +134,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Piano roll correctly implemented as time-pitch matrix heatmap — horizontal
-          note extent by time, pitch on Y axis. Valid seaborn approach.
+        comment: 'Correct piano roll heatmap: horizontal note tiles by pitch (Y) and
+          time (X), color encoding velocity.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: velocity→color, pitch labels on Y (white
-          keys), alternating black/white key background, hierarchical beat/measure
-          grid lines, colorbar with velocity range.'
+        comment: Note names on Y-axis, alternating black/white key shading, hierarchical
+          beat grid, velocity colormap, pitch auto-fit with margin.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: start→X, duration→cell width, pitch→Y, velocity→color. All correct.
+        comment: 'X: time in beats/measures, Y: MIDI pitch with note names, color:
+          velocity (0-127).'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'piano-roll-midi · python · seaborn · anyplot.ai' matches required
-          format. Colorbar labeled 'Velocity (MIDI 0–127)'.
+        comment: 'Title: ''piano-roll-midi · python · seaborn · anyplot.ai'' (exact
+          format). Colorbar label matches spec.'
     data_quality:
       score: 15
       max: 15
@@ -183,23 +166,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full coverage: polyphonic chord tones + melody, varying durations
-          (0.25 to 4.0 beats), full velocity range (35-127), 8 measures spanning 3
-          octaves, blue notes and chromatic approach notes demonstrating jazz phrasing.'
+        comment: Chord voicings, single-note melody, varying durations, wide pitch
+          range (A2-F5), velocity range 45-127, rhythmic variety with chromatic approach
+          notes.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Jazz ii-V-I-turnaround progression (Dm7-G7-Cmaj7-A7) is a canonical
-          jazz harmony sequence. Neutral and musically accurate.
+        comment: 'Authentic jazz ii-V-I-turnaround: Dm7-G7-Cmaj7-A7. Realistic music
+          production context, neutral domain.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 8 measures of 4/4 time at sixteenth-note resolution. MIDI pitches
-          A2-F5 (45-77) — realistic range. Velocity 35-127 — spans piano to fortissimo.
+        comment: MIDI note numbers factually correct. Jazz chord voicings musically
+          accurate. Beat/measure timing correct. Velocity range realistic.
     code_quality:
       score: 10
       max: 10
@@ -209,54 +192,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes — fully procedural.
+        comment: 'Linear flow: imports, theme, data, matrix construction, plot, save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before synthetic data generation.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All 6 imports used: os, matplotlib.colors, matplotlib.pyplot, numpy,
+        comment: 'All imports used: os, matplotlib.colors, matplotlib.pyplot, numpy,
           pandas, seaborn.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the matrix-based piano roll. No fake UI
-          elements.
+        comment: Clean, Pythonic. Matrix construction loop appropriate for note-to-grid
+          conversion. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=400, no bbox_inches='tight' —
-          correct per seaborn canvas rules.
+        comment: Saves as plot-{THEME}.png. No deprecated APIs.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: sns.heatmap() with mask=np.isnan() is the idiomatic seaborn approach
-          for a matrix-based piano roll. sns.set_theme() and sns.despine() used correctly.
-          cbar_kws for colorbar configuration is proper seaborn API.
+        comment: Expert use of sns.heatmap with NaN masking, cbar_kws, yticklabels/xticklabels,
+          sns.set_theme with full rc dict, sns.despine.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Uses seaborn-specific features: heatmap mask for NaN cells, cbar_kws
-          with shrink/aspect/pad, xticklabels=False for clean axis, yticklabels=1
-          for full pitch label display.'
+        comment: sns.heatmap with mask=np.isnan() is seaborn-distinctive; cbar_kws
+          is seaborn-idiomatic. Most post-plot customization is raw matplotlib (axhspan,
+          axvline, annotate, text).
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -268,9 +250,7 @@ impl_tags:
   - data-generation
   - matrix-construction
   - iteration-over-groups
-  - explicit-figure
   dataprep: []
   styling:
   - custom-colormap
   - alpha-blending
-  - grid-styling
