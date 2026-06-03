@@ -105,11 +105,14 @@ ax = Axis(
 
 # 95% prediction interval band
 band!(ax, x_fit, y_lower, y_upper;
-    color = (IMPRINT_PALETTE[1], 0.15))
+    color = (IMPRINT_PALETTE[1], 0.15),
+    label = "95% Prediction interval")
 
 # Regression line
 lines!(ax, x_fit, y_fit;
-    color = IMPRINT_PALETTE[1], linewidth = 2.5)
+    color     = IMPRINT_PALETTE[1],
+    linewidth = 2.5,
+    label     = "Linear fit")
 
 # Calibration standard points
 scatter!(ax, concentrations, absorbance;
@@ -117,9 +120,10 @@ scatter!(ax, concentrations, absorbance;
     markersize  = 14,
     strokecolor = PAGE_BG,
     strokewidth = 1,
+    label       = "Calibration standards",
 )
 
-# Dashed guide lines for unknown sample determination
+# Dashed guide lines for unknown sample determination (no legend entry)
 lines!(ax, [0.0, unknown_conc], [unknown_abs, unknown_abs];
     color     = IMPRINT_PALETTE[3],
     linewidth = 1.5,
@@ -138,6 +142,7 @@ scatter!(ax, [unknown_conc], [unknown_abs];
     marker      = :diamond,
     strokecolor = PAGE_BG,
     strokewidth = 1,
+    label       = "Unknown sample (A = 0.520)",
 )
 
 # Regression equation and R² annotation (lower-right area, data coordinates)
@@ -145,11 +150,21 @@ text!(ax, 15.8, 0.04;
     text     = eq_str,
     align    = (:right, :bottom),
     color    = INK_MUTED,
-    fontsize = 13,
+    fontsize = 15,
 )
 
 xlims!(ax, -0.5, 17.0)
 ylims!(ax, -0.05, 1.15)
+
+# Legend — identifies all four visual elements for unfamiliar readers
+axislegend(ax;
+    position        = :lt,
+    labelcolor      = INK,
+    labelsize       = 12,
+    framecolor      = INK_SOFT,
+    backgroundcolor = ELEVATED_BG,
+    framevisible    = true,
+)
 
 # Save
 save("plot-$(THEME).png", fig; px_per_unit = 2)
