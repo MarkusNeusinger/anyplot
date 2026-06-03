@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 pictogram-basic: Pictogram Chart (Isotype Visualization)
-Library: bokeh 3.8.2 | Python 3.14.3
-Quality: 90/100 | Updated: 2026-06-03
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-06-03
 """
 
 import base64
