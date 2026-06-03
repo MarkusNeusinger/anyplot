@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-loss-triangle: Actuarial Loss Development Triangle
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-03
@@ -94,7 +94,7 @@ for i in range(n_years):
     for j in range(n_periods):
         val = cumulative[i, j]
         relative = (val - z_min) / (z_max - z_min)
-        font_color = "#F0EFE8" if relative > 0.50 else "#1A1A17"
+        font_color = "#F0EFE8" if relative > 0.50 else INK
         boundary = j == n_years - 1 - i
         projected = not is_actual[i, j]
         # Typographic distinction: actual cells use Arial Black, projected use regular Arial
@@ -105,7 +105,7 @@ for i in range(n_years):
                 "y": i,
                 "text": f"{val:,.0f}",
                 "showarrow": False,
-                "font": {"size": 8, "color": font_color, "family": font_family},
+                "font": {"size": 9, "color": font_color, "family": font_family},
                 "bgcolor": ELEVATED_BG if boundary else None,
                 "borderpad": 2 if boundary else 0,
             }
