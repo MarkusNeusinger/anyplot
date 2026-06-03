@@ -1,0 +1,233 @@
+library: makie
+language: julia
+specification_id: waveform-audio
+created: '2026-06-03T01:31:21Z'
+updated: '2026-06-03T01:49:44Z'
+generated_by: claude-sonnet
+workflow_run: 26857805059
+issue: 4563
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
+review:
+  strengths:
+  - Min/max envelope with band!() is the correct Makie idiom for dense waveform visualization;
+    avoids aliasing while preserving visual density.
+  - Layered opacity system (noise floor 8% → outline 55% → fill 72%) creates professional
+    visual depth without clutter.
+  - Seismogram context delivers a complete, coherent data story with clearly annotated
+    P-wave and S-wave arrivals.
+  - 'Perfect spec compliance: all required waveform features present (filled band,
+    semi-transparent fill, zero-line, envelope rendering, synthetic data).'
+  - Full theme-adaptive chrome wiring — dark render reads cleanly with zero dark-on-dark
+    failures.
+  weaknesses:
+  - P-wave and S-wave annotation labels (fontsize=11) are small at mobile scale (~400
+    px rendering); consider bumping to fontsize=12-13 for marginal readability gain.
+  - Noise-floor band at 8% opacity on dark background is nearly invisible — a minor
+    missed opportunity for consistent visual depth across themes.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light surface
+      Chrome: Title "Earthquake Seismogram · waveform-audio · julia · makie · anyplot.ai" in dark ink (#1A1A17), clearly visible. Axis labels "Time (seconds)" and "Normalized Amplitude" in dark ink. Tick labels in secondary dark (#4A4A44). All readable.
+      Data: Brand green (#009E73) filled envelope at 0.72 opacity with faint outline strokes at 0.55 opacity. Noise floor band at 0.08 opacity. Dashed vertical arrival markers at 35% ink opacity. P-wave and S-wave text annotations in INK_SOFT.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface
+      Chrome: Title and axis labels in light near-white (#F0EFE8), clearly visible against dark background. Tick labels in secondary light (#B8B7B0). No dark-on-dark failure observed anywhere.
+      Data: Waveform fill color identical to light render — same brand green (#009E73) at same opacity levels. Data colors are theme-invariant as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set; both themes readable. Minor: annotation
+          fontsize=11 is compact at mobile scale.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Min/max envelope with band!() ideal for dense 30k-sample waveform.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single series brand green; good contrast in both themes.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). Clean proportions, nothing clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units. Title follows optional prefix + mandatory
+          format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green first series; correct backgrounds; full chrome adaptation.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Noise floor band, layered opacity system, arrival annotations — above
+          defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, y-grid only, subtle annotation line opacity.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Strong narrative arc from silence to P-wave to S-wave decay; annotations
+          guide viewer.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct waveform as filled area envelope, symmetric around zero.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: filled band, semi-transparent fill, zero-line, envelope
+          rendering, synthetic data.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time on X, normalized amplitude on Y, full range shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows descriptive prefix + mandatory spec-id · julia · makie
+          · anyplot.ai format.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All waveform phases: noise floor, P-wave, S-wave, damped oscillation.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Earthquake seismogram — real-world neutral domain, plausible parameters.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Normalized [-1, +1] amplitude; 30s at 1000 Hz; geophysically realistic.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat linear script, no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set at top.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All four imports used: CairoMakie, Colors, Random, Statistics.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png; uses size= (Makie 0.22+ API); no HTML.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: band!(), hlines!(), vlines!(), text!(), RGBAf() all used idiomatically.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'band!() is Makie-distinctive; layer composition showcases recipe
+          composability. Minor deduction: no advanced features like Observables or
+          custom recipes.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - rolling-window
+  styling:
+  - alpha-blending
