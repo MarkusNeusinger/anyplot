@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 heatmap-loss-triangle: Actuarial Loss Development Triangle
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-09
+Library: seaborn | Python 3.13
+Quality: pending | Created: 2026-06-03
 """
+
+import os
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -11,6 +13,34 @@ import pandas as pd
 import seaborn as sns
 from matplotlib.colors import LinearSegmentedColormap
 
+
+# Theme
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Imprint sequential colormap for continuous heatmap data (single-polarity)
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
 
 # Data
 np.random.seed(42)
@@ -39,12 +69,11 @@ for i in range(n_years):
     for j in range(actual_periods, n_periods):
         is_projected[i, j] = True
 
-# Create DataFrames for heatmap
 heatmap_data = pd.DataFrame(
     cumulative, index=[str(y) for y in accident_years], columns=[str(p) for p in development_periods]
 )
 
-# Build annotation string array for seaborn's annot parameter
+# Annotation strings
 annot_labels = np.empty_like(cumulative, dtype=object)
 for i in range(n_years):
     for j in range(n_periods):
@@ -52,99 +81,112 @@ for i in range(n_years):
         annot_labels[i, j] = f"{val / 1000:.0f}K" if val >= 10000 else f"{val:,.0f}"
 annot_df = pd.DataFrame(annot_labels, index=heatmap_data.index, columns=heatmap_data.columns)
 
-# Masks for seaborn's mask parameter — distinguishes actual vs projected regions
+# Masks for actual vs projected regions
 mask_projected = pd.DataFrame(is_projected, index=heatmap_data.index, columns=heatmap_data.columns)
 mask_actual = ~mask_projected
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+# Plot — square canvas for symmetric heatmap (2400 × 2400 px)
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400)
 
-# Custom colormap
-cmap = LinearSegmentedColormap.from_list("loss_triangle", ["#e8f0fe", "#306998", "#1a3a5c"], N=256)
 vmin, vmax = np.nanmin(cumulative), np.nanmax(cumulative)
 
-# Draw actual cells using seaborn's annot and mask features
+# Draw actual cells (bold annotations)
 sns.heatmap(
     heatmap_data,
     ax=ax,
-    cmap=cmap,
+    cmap=imprint_seq,
     vmin=vmin,
     vmax=vmax,
     mask=mask_projected,
     annot=annot_df,
     fmt="",
-    annot_kws={"fontsize": 13, "fontweight": "bold"},
-    linewidths=1.5,
-    linecolor="white",
+    annot_kws={"fontsize": 8, "fontweight": "bold"},
+    linewidths=1.0,
+    linecolor=PAGE_BG,
     cbar_kws={"label": "Cumulative Claims ($K)", "shrink": 0.8},
 )
 
-# Draw projected cells as overlay with distinct annotation style
+# Draw projected cells (italic annotations, no extra colorbar)
 sns.heatmap(
     heatmap_data,
     ax=ax,
-    cmap=cmap,
+    cmap=imprint_seq,
     vmin=vmin,
     vmax=vmax,
     mask=mask_actual,
     annot=annot_df,
     fmt="",
-    annot_kws={"fontsize": 13, "fontweight": "normal", "fontstyle": "italic"},
-    linewidths=1.5,
-    linecolor="white",
+    annot_kws={"fontsize": 8, "fontweight": "normal", "fontstyle": "italic"},
+    linewidths=1.0,
+    linecolor=PAGE_BG,
     cbar=False,
 )
 
-# Fix annotation text colors based on background brightness
+# Adaptive annotation text colors based on cell brightness in the colormap
 for text in ax.texts:
     x, y = text.get_position()
     col, row = int(x), int(y)
     if 0 <= row < n_years and 0 <= col < n_periods:
         val = cumulative[row, col]
         norm_val = (val - vmin) / (vmax - vmin)
-        text.set_color("white" if norm_val > 0.55 else "#1a1a1a")
+        text.set_color("white" if norm_val > 0.55 else INK)
 
-# Add hatching overlay for projected cells
+# Hatching overlay for projected cells
 for i in range(n_years):
     for j in range(n_periods):
         if is_projected[i, j]:
-            ax.add_patch(mpatches.Rectangle((j, i), 1, 1, facecolor="white", edgecolor="none", alpha=0.25))
+            ax.add_patch(mpatches.Rectangle((j, i), 1, 1, facecolor=PAGE_BG, edgecolor="none", alpha=0.2))
             ax.add_patch(
-                mpatches.Rectangle((j, i), 1, 1, facecolor="none", edgecolor="#666666", hatch="////", linewidth=0)
+                mpatches.Rectangle((j, i), 1, 1, facecolor="none", edgecolor=INK_SOFT, hatch="////", linewidth=0)
             )
 
-# Customize colorbar
+# Colorbar styling
 cbar = ax.collections[0].colorbar
-cbar.ax.tick_params(labelsize=13)
-cbar.set_label("Cumulative Claims ($K)", fontsize=15)
+if cbar is not None:
+    cbar.ax.tick_params(labelsize=8, labelcolor=INK_SOFT)
+    cbar.set_label("Cumulative Claims ($K)", fontsize=10, color=INK)
+    plt.setp(cbar.ax.yaxis.get_ticklabels(), color=INK_SOFT)
 
-# Development factors display
-factor_text = "  Dev Factors:  " + "  ".join([f"{f:.3f}" for f in dev_factors])
+# Development factors text — placed above the heatmap
+factor_text = "Dev Factors: " + "  ".join([f"{f:.3f}" for f in dev_factors])
 ax.text(
     0.5,
-    1.06,
+    1.05,
     factor_text,
     transform=ax.transAxes,
     ha="center",
     va="bottom",
-    fontsize=13,
+    fontsize=7,
     fontfamily="monospace",
-    color="#555555",
-    bbox={"boxstyle": "round,pad=0.4", "facecolor": "#f5f5f5", "edgecolor": "#cccccc"},
+    color=INK_MUTED,
+    bbox={"boxstyle": "round,pad=0.3", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "linewidth": 0.5},
 )
 
 # Style
-ax.set_title("heatmap-loss-triangle · seaborn · pyplots.ai", fontsize=24, fontweight="medium", pad=50)
-ax.set_xlabel("Development Period (Years)", fontsize=20)
-ax.set_ylabel("Accident Year", fontsize=20)
-ax.tick_params(axis="both", labelsize=16)
+title = "heatmap-loss-triangle · python · seaborn · anyplot.ai"
+n_chars = len(title)
+ratio = 67 / n_chars if n_chars > 67 else 1.0
+title_fontsize = max(8, round(12 * ratio))
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=40)
+ax.set_xlabel("Development Period (Years)", fontsize=10, color=INK)
+ax.set_ylabel("Accident Year", fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8)
 ax.tick_params(axis="x", rotation=0)
 ax.tick_params(axis="y", rotation=0)
 
-# Legend for actual vs projected
-actual_patch = mpatches.Patch(facecolor="#7ba3c9", edgecolor="black", label="Actual")
-projected_patch = mpatches.Patch(facecolor="#7ba3c9", edgecolor="black", hatch="///", label="Projected (IBNR)")
-ax.legend(handles=[actual_patch, projected_patch], loc="lower right", fontsize=14, framealpha=0.9, edgecolor="#cccccc")
+# Legend for actual vs projected regions
+actual_patch = mpatches.Patch(facecolor="#009E73", edgecolor=INK_SOFT, label="Actual")
+projected_patch = mpatches.Patch(facecolor="#4467A3", edgecolor=INK_SOFT, hatch="///", label="Projected (IBNR)")
+ax.legend(
+    handles=[actual_patch, projected_patch],
+    loc="lower right",
+    fontsize=8,
+    framealpha=0.9,
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
+    labelcolor=INK,
+)
 
+# Save — no bbox_inches='tight'; figsize×dpi fixes the canvas at 2400×2400
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
