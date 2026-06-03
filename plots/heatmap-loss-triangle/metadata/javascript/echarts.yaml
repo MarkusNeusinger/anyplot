@@ -1,0 +1,259 @@
+library: echarts
+language: javascript
+specification_id: heatmap-loss-triangle
+created: '2026-06-03T10:21:22Z'
+updated: '2026-06-03T10:45:11Z'
+generated_by: claude-sonnet
+workflow_run: 26877932079
+issue: 4581
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/javascript/echarts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - ATA development factors cleverly embedded in x-axis tick labels using label formatter,
+    adding domain insight without cluttering the layout
+  - Dual visualMap instances with one shown (colorbar) and one hidden gives independent
+    color control over actual vs projected series — demonstrates deep ECharts knowledge
+  - ECharts graphic API used for staircase polyline boundary and custom bottom legend
+    — genuinely distinctive features of this library
+  - 'Perfect spec compliance: every required feature (distinct actual/projected styling,
+    cell annotations, ATA factors, legend, color encoding) is present and working'
+  - Highly realistic general liability data with authentic development pattern (ATA
+    factors tapering from 1.607 to 1.010) and believable dollar magnitudes
+  weaknesses:
+  - 'Cell labels hardcode color: ''#FFFFFF'' for actual series regardless of theme
+    — works fine for darker blue cells but produces borderline contrast on lighter
+    green cells (period 1, low-value rows); consider deriving label color from cell
+    darkness or using t.ink for near-white cells'
+  - ATA factor sub-labels at 13px are tight in the axis; a slightly smaller font (11-12px)
+    with increased nameGap would give more breathing room without losing readability
+  - 'Colorbar uses standard ECharts styling (default itemWidth/itemHeight proportions);
+    a slightly wider bar (itemWidth: 18) would feel more proportional on the square
+    canvas'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "heatmap-loss-triangle · javascript · echarts · anyplot.ai" in dark ink, clearly readable. Subtitle in inkSoft, readable. X-axis label "Development Period (Years)" and Y-axis label "Accident Year" in inkSoft, readable. Tick labels (period numbers 1-10, ATA factors ×1.607–×1.010, accident years 2015–2024) all readable. Colorbar labels "$58M"/"$11M" readable. Bottom legend "Actual (Observed)" / "Projected / IBNR" readable.
+      Data: Actual upper-left triangle uses Imprint seq colormap (brand green #009E73 for low values → blue #4467A3 for high values) at full opacity with white cell labels. Projected lower-right triangle uses 38% opacity muted variant of same palette with italic inkSoft labels. Bold staircase polyline in t.ink separates the two regions.
+      Legibility verdict: PASS — all text readable against warm off-white background; white labels on lighter green cells (period 1) borderline but visible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title, subtitle, axis labels, tick labels all rendered in light-colored text against dark background — no dark-on-dark failures. Colorbar text light-colored. Legend text light-colored. All chrome elements adapt correctly to dark theme.
+      Data: Data colors identical to light render — same Imprint seq green→blue gradient for actual cells; same muted 38% opacity variant for projected cells. Staircase boundary line rendered in light ink, clearly visible against dark background.
+      Legibility verdict: PASS — all text readable against warm near-black background; no dark-on-dark failures detected
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; cell labels (13px) tight but readable
+          in dense 10x10 grid; white hardcoded label color on actual cells has borderline
+          contrast on lighter green cells
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps anywhere; ATA factors and tick numbers in distinct
+          rows
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Actual cells vivid full-opacity; projected cells intentionally muted
+          at 38% opacity but clearly distinguishable; staircase boundary prominent
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint sequential palette is CVD-safe; actual vs projected differentiated
+          by opacity and border, not hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (2400x2400 square); grid fills ~80% of canvas;
+          margins balanced; colorbar and legend fit cleanly
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Development Period (Years)''; Y: ''Accident Year''; subtitle
+          provides units context'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential colormap from t.seq || ['#009E73','#4467A3'] — correct
+          Imprint seq; background transparent (inherits page surface); all chrome
+          uses t.ink/t.inkSoft tokens; data colors identical across both renders
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above configured default: dual visualMap, ATA factors in axis labels,
+          subtitle, staircase polyline, muted-italic vs vivid-regular typographic
+          distinction'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No axis ticks, no grid lines, cell borders use pageBg for theme adaptation;
+          standard ECharts colorbar styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Staircase diagonal frames IBNR story; ATA factors explain maturation;
+          color gradient emphasizes high-value years; italic/muted projected region
+          signals estimates
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct triangular heatmap: upper-left actual, lower-right projected'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: actual/projected distinction, cell annotations
+          with $ amounts, ATA factors, legend, color encoding'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: development periods 1-10; Y: accident years 2015-2024; color:
+          cumulative claim magnitude'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''heatmap-loss-triangle · javascript · echarts · anyplot.ai'';
+          legend: ''Actual (Observed)'' / ''Projected / IBNR'''
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full 10x10 triangular grid, observed and projected cells, development
+          factors, dollar amounts, authentic GL casualty context
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: General liability insurance portfolio — neutral, specific, real-world
+          domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values $10-67M realistic for GL; development pattern 28%->100% authentic;
+          ATA factors 1.607 tapering to 1.010 match real GL tail behavior
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat procedural: data -> boundary computation -> init -> setOption;
+          no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic; all data from fixed arrays
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses only ECharts global and ANYPLOT_TOKENS
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and well-commented; grid pixel math for graphic API boundary
+          is necessarily explicit; no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'No explicit size/devicePixelRatio in echarts.init; animation: false;
+          square orientation directive present'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Dual heatmap series with independent visualMap instances; category
+          axes with inverse; label formatter functions — all idiomatic ECharts
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: ECharts graphic API for staircase polyline boundary and custom rect+text
+          legend group; dual visualMap controlling separate series independently
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
