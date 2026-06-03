@@ -1,86 +1,115 @@
 library: letsplot
+language: python
 specification_id: feynman-basic
 created: '2026-03-07T21:22:29Z'
-updated: '2026-03-07T21:55:24Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22807440338
+updated: '2026-06-03T06:45:27Z'
+generated_by: claude-sonnet
+workflow_run: 26866684133
 issue: 4667
-python_version: 3.14.3
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/letsplot/plot.html
-quality_score: 84
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/python/letsplot/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - 'Excellent use of lets-plot distinctive features: native arrow(), geom_label backgrounds,
-    layer_tooltips for interactive hover'
-  - Clean Feynman diagram layout with proper physics notation and reaction equation
-  - Comprehensive legend showing all 4 particle types with correct line styles
-  - Professional color palette with good visual hierarchy
+  - 'Correct Imprint palette with semantic assignments: brand green for fermions,
+    lavender for Z* boson, blue for gluon, ochre for photon in legend — canonical
+    order maintained'
+  - 'Full theme-adaptive chrome: PAGE_BG/INK/INK_SOFT tokens thread through all elements,
+    both renders pass legibility checks'
+  - 'Letsplot-distinctive features used expertly: layer_tooltips on vertices and fermion
+    lines, native arrow() on geom_segment, geom_label with label_r for rounded particle
+    boxes, HTML export alongside PNG'
+  - Reaction equation e⁻e⁺ → Z* → qq̄g as bold focal point provides immediate storytelling
+    clarity; Z* boson line visually emphasized with larger size and distinct color
+  - Factually correct QED+QCD process with accurate particle labeling, directional
+    arrows on fermion lines, curly gluon via parametric geom_path, and time axis annotation
+  - Clean KISS flat structure with deterministic geometry; all imports used; theme_void
+    plus rounded label boxes gives publication-ready physics illustration aesthetic
   weaknesses:
-  - Data storytelling could be stronger - no visual emphasis or focal point beyond
-    basic diagram structure
-  - Legend construction is verbose with many separate DataFrames
-  - Gluon and boson line types only appear in the legend, not as propagators in the
-    actual diagram
-  image_description: 'The plot displays a Feynman diagram for electron-positron annihilation
-    (e⁻e⁺ → γ → μ⁻μ⁺) on a light gray background with a white border. Four blue diagonal
-    fermion lines with arrowheads converge at two black vertex dots in the center.
-    An orange/gold wavy photon propagator line connects the two vertices horizontally.
-    Particle labels (e⁻, e⁺, μ⁻, μ⁺) appear in rounded white boxes at the four endpoints,
-    and a γ label sits above the photon line. A reaction equation "e⁻e⁺ → γ → μ⁻μ⁺"
-    is displayed in blue-gray at the top center. A manual legend in the upper-left
-    shows four particle types: Fermion (blue arrow), Photon (gold wavy), Gluon (teal
-    curly), and Boson (purple dashed). A gray "time" arrow runs along the bottom.
-    The title "feynman-basic · letsplot · pyplots.ai" appears bold in dark blue at
-    the top-left.'
+  - Photon wavy line appears only in the legend, not as a propagator in the main diagram
+    — the chosen process e⁺e⁻ → Z* → qq̄g is physically correct but the spec explicitly
+    calls for wavy photon lines as one of the four required line types; adding a photon-mediated
+    sub-process or using a QED annihilation example that includes a photon propagator
+    would fully satisfy SC-02 and DQ-01
+  - Plot title element_text(size=13) is slightly below the letsplot recommended starting
+    value of 16px; the title is readable but appears noticeably small relative to
+    the diagram elements — consider size=14 or 15
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — matches the required light surface exactly.
+      Chrome: Title "feynman-basic · python · letsplot · anyplot.ai" at top-left in INK_SOFT (dark gray), small but readable. Reaction equation "e⁻e⁺ → Z* → qq̄g" in bold INK text at upper-center is the dominant text element and clearly legible. Time arrow and "time" label in INK_SOFT at bottom-center are subtle but visible.
+      Data: Fermion lines in #009E73 (brand green) with closed arrowheads. Z* boson as thick dashed #C475FD (lavender) segment connecting V1-V2. Gluon as curly #4467A3 (blue) parametric path from V3 lower-right. Vertex dots as dark filled circles (INK = #1A1A17). Particle labels (e⁻, e⁺, Z*, q, g, q̄) in rounded boxes with #FFFDF6 elevated background and INK_SOFT text — all clearly readable. Legend at upper-left shows all four particle types with color-coded line samples.
+      Legibility verdict: PASS — all text elements are clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — matches the required dark surface exactly.
+      Chrome: Title in INK_SOFT dark-mode (#B8B7B0 light gray), readable. Reaction equation in INK dark-mode (#F0EFE8 near-white) — bold and clearly legible. Time label in INK_SOFT is visible. Vertex dots flip to light (INK = #F0EFE8) — correctly theme-adaptive, no dark-on-dark issue.
+      Data: Data colors identical to light render — fermion lines still #009E73 green, boson still #C475FD lavender, gluon still #4467A3 blue. Particle label boxes use elevated dark background #242420 with INK_SOFT text (#B8B7B0) — all readable. Legend text in INK_SOFT is legible against the dark surface.
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome elements correctly flip to light-mode counterparts while data colors remain constant.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, particle labels size=24,
-          legend 14pt, equation 20pt, time label 16pt'
+        comment: All font sizes explicitly set throughout; particle labels, reaction
+          equation, and legend all well-proportioned; title element_text(size=13)
+          is slightly below the recommended 16px starting value but readable; no overflow
+          or clipping in either render
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All labels well-positioned, no collisions between text or elements
+        comment: No text overlaps in either render; particle label boxes well-spaced;
+          legend entries clearly separated; no collision between diagram elements
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Fermion lines and photon wavy line well-sized; vertex dots clearly
-          visible
+        comment: Fermion lines size=2.5 with clear arrows; Z* boson size=3.8 emphasized;
+          gluon curly path size=2.5 visible; vertex dots size=10 prominent; all elements
+          clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
-        passed: true
-        comment: Good palette but blue and teal could challenge some deuteranopia
-          types
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good central layout but some unused space at bottom
-      - id: VQ-06
-        name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive title present; time axis label but no units (appropriate
-          for diagram type)
+        comment: Four particle types use four distinct Imprint palette hues spanning
+          green/purple/blue/ochre — CVD-safe combination, no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagram fills canvas well with coord_fixed(0.5625) maintaining 16:9
+          proportions; generous margins; no cut-off elements in either render
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate for Feynman diagram type — particle labels at endpoints
+          and a time axis annotation serve the axis-label role; title correctly formatted
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (fermions) = #009E73 brand green; positions 2-4 used
+          for boson/gluon/photon in canonical Imprint order; backgrounds #FAF8F1 light
+          / #1A1A17 dark; all chrome theme-adaptive'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -88,22 +117,27 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom color palette, rounded label backgrounds, clean composition
-          — above defaults
+        comment: 'Strong design: Imprint palette with semantic particle-type assignments,
+          theme_void for clean illustration aesthetic, rounded particle-label boxes
+          via geom_label, bold reaction equation as focal point — clearly above configured
+          defaults, approaching publication quality'
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: theme_void eliminates chrome, light background, generous whitespace,
-          polished labels
+        comment: theme_void removes all unnecessary chrome; no grid; generous whitespace;
+          polished elevated-background label boxes; consistent INK/INK_SOFT token
+          use; manually constructed legend necessary for wavy/curly line representation
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Reaction equation provides context but no strong focal point or visual
-          emphasis
+        passed: true
+        comment: Bold reaction equation at top provides immediate process summary;
+          Z* boson visually emphasized with larger size and distinct color as key
+          mediator; time arrow guides directionality; clear visual hierarchy — above
+          default 'just display data' level
     spec_compliance:
       score: 14
       max: 15
@@ -113,29 +147,34 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Feynman diagram with vertices, propagators, and proper line
-          styles
+        comment: 'Correct Feynman diagram with proper physics-illustration conventions:
+          solid+arrow for fermions, dashed for boson, curly path for gluon, vertices
+          as dots'
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Distinct line styles, arrows, vertex dots, particle labels, time
-          axis. Gluon/boson only in legend
+        comment: Solid/arrow fermion lines, dashed boson, curly gluon, vertex dots,
+          particle labels, time axis all present; photon wavy line shown only in legend
+          — not as a propagator in the main diagram; spec calls for wavy photon lines
+          as one of the four required line types
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Vertices positioned correctly, time flows left to right
+        comment: Time axis left-to-right; correct propagator connections between vertices;
+          directional arrows on fermion lines; particle labels at correct endpoints
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend shows all 4 particle types
+        comment: Title = 'feynman-basic · python · letsplot · anyplot.ai' — correct
+          format; manual legend shows all four particle types with color-coded samples
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -143,22 +182,28 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows fermion arrows, wavy photon, vertex points, all 4 line types
-          in legend
+        comment: Shows fermion lines with arrows, boson as dashed mediator, gluon
+          as curly emission, vertex interaction points, time axis, particle labels
+          — minor deduction because photon wavy line only demonstrated in legend rather
+          than as a propagator
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real QED process: electron-positron annihilation to muon pair'
+        comment: 'Depicts real QED+QCD process: e+e- → Z* → qq̄g (electron-positron
+          annihilation, Z-boson mediation, quark pair production with gluon bremsstrahlung);
+          neutral scientific topic; accurate particle symbols'
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Symmetric layout appropriate; somewhat compressed vertically
+        comment: Physically correct process with accurate fermion-flow direction arrows;
+          gluon bremsstrahlung correctly emitted from a quark; vertex positions and
+          propagator structure are plausible
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -166,59 +211,72 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports, colors, data, plot, save'
+        comment: 'Flat structure: imports → theme tokens → geometry coordinates →
+          DataFrames → plot composition → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — all positions hardcoded
+        comment: 'Fully deterministic: all coordinates hardcoded, np.linspace for
+          parametric paths — no random elements'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports verified as used: os for ANYPLOT_THEME, numpy for linspace/sin,
+          pandas for DataFrames, all lets_plot symbols appear in plot construction'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Verbose with many separate DataFrames for legend elements
+        passed: true
+        comment: Clean, well-organized with logical sections; appropriate complexity
+          for the diagram; no over-engineering; DataFrames used appropriately per
+          element type
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with ggsave(scale=3), also exports HTML
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html; ggsize(800,
+          450) produces correct 3200×1800 canvas; current letsplot API used
     library_mastery:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Good ggplot grammar: aes mappings, geom layers, theme_void, coord_fixed,
-          scale_*_identity'
+        comment: 'Expert ggplot grammar: aes() mappings, + operator for layer composition,
+          scale_color_identity/scale_fill_identity for direct hex values, coord_fixed
+          for aspect ratio, labs() for title, ggsize() for canvas — all idiomatic
+          letsplot patterns'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Native arrow(), geom_label with fill, layer_tooltips(), HTML export
-  verdict: REJECTED
+        comment: 'Uses three letsplot-distinctive features: layer_tooltips() for interactive
+          vertex/fermion hover info in HTML output, native arrow() on geom_segment
+          for particle direction arrows, geom_label() with label_r/label_padding/label_size
+          for rounded label boxes — these clearly differentiate this from a generic
+          ggplot2-alike implementation'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
-  - custom-legend
   - layer-composition
+  - custom-legend
   - hover-tooltips
   - html-export
+  - annotations
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome

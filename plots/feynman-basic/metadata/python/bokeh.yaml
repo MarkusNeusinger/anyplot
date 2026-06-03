@@ -1,44 +1,65 @@
 library: bokeh
+language: python
 specification_id: feynman-basic
 created: '2026-03-07T21:22:12Z'
-updated: '2026-03-07T21:54:55Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22807440282
+updated: '2026-06-03T06:18:48Z'
+generated_by: claude-sonnet
+workflow_run: 26866329837
 issue: 4667
-python_version: 3.14.3
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/bokeh/plot.html
-quality_score: 84
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/python/bokeh/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - 'Excellent physics accuracy: real Higgs-strahlung process with all four particle
-    types'
-  - Custom color palette with strong visual identity (blue fermions, gold photons,
-    green gluons, purple bosons)
-  - Legend rendered with actual line style samples matching the diagram
-  - Process equation annotation adds educational value
-  - Clean vertex styling with white-bordered black dots
+  - Correct Imprint palette applied in canonical order (green fermion, lavender photon,
+    blue Higgs, ochre gluon)
+  - All four spec-required particle types with distinct line styles (solid/wavy/dashed/curly)
+    plus redundant shape encoding
+  - Higgs-strahlung e⁻e⁺ → Z* → ZH process is a real, scientifically accurate physics
+    interaction (used for Higgs boson discovery at LEP)
+  - Process equation annotation and time arrow create an immediate narrative — viewer
+    understands particle flow without prior knowledge
+  - 'Perfect theme adaptation: INK/INK_SOFT/INK_MUTED tokens propagated to all chrome
+    elements, vertex dots flip from black+page_bg-border in light to white+dark-border
+    in dark'
+  - 'Clean KISS code: deterministic hardcoded data, no functions/classes, all imports
+    used, idiomatic Bokeh Arrow/NormalHead/BoxAnnotation usage'
+  - Gluon line uses tapered sin-coil with np.minimum taper — subtle physical realism
+    detail
+  - All font sizes explicitly set at appropriate sizes (50pt title, 34pt labels, 28pt
+    legend/time)
   weaknesses:
-  - Canvas utilization is suboptimal - diagram shifted left with wasted space on right
-    and bottom
-  - Legend rendering logic duplicates the main propagator drawing code, adding verbosity
-  - Minor label crowding near the H decay vertex
-  image_description: 'The plot displays a Feynman diagram for the Higgs-strahlung
-    process (e⁻e⁺ → Z* → ZH → μ⁻μ⁺ + bb̄ + g) on a warm off-white background (#f5f5f0).
-    Incoming electron (e⁻) and positron (e⁺) are shown as blue solid lines with directional
-    arrows converging at a vertex (black dot with white border) on the left. A gold
-    wavy line (Z*/γ) connects to a second vertex, which splits into an upward gold
-    wavy Z boson line and a downward purple dashed Higgs (H) line. The Z vertex produces
-    two blue fermion lines (μ⁻, μ⁺) going right, and the H vertex produces blue fermion
-    lines (b, b̄) and a green curly gluon (g) line. A custom legend in the top-left
-    shows all four line styles with matching colors: blue solid (fermion), gold wavy
-    (photon/Z), green curly (gluon), purple dashed (scalar H). A time arrow runs along
-    the bottom. The process equation is annotated at the top center. Title reads "feynman-basic
-    · bokeh · pyplots.ai".'
+  - Dark render has a faint thin rectangular outline/border around the entire canvas
+    — likely a browser CSS artifact from the headless Chrome screenshot; removing
+    it would improve DE-02 visual polish (no hard fix needed — the dark background
+    itself could be set on the html/body via CSS injection to eliminate any default
+    canvas border)
+  - Legend line swatches at leg_len=0.9 data units are on the small side — wavy photon
+    line in the legend is visible but somewhat fine at this scale; increasing leg_len
+    to ~1.2 and widening the box slightly would improve swatch legibility at mobile
+    widths
+  - 'LM-02: The core diagram drawing (line, add_layout) uses generic Bokeh primitives
+    — could leverage Bokeh server callbacks or interactive HoverTool for the particle
+    labels to showcase Bokeh-specific interactive capabilities in the HTML artifact'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, fills entire canvas cleanly with no visible border
+      Chrome: Bold centered title "feynman-basic · python · bokeh · anyplot.ai" in dark #1A1A17 ink at ~65-70% canvas width; italic process equation "e⁻e⁺ → Z* → ZH → μ⁻μ⁺ + bb̄ + g" in #4A4A44 INK_SOFT below the title; particle labels (e⁻, e⁺, Z*/γ, Z, H, μ⁻, μ⁺, b, b̄, g) in dark ink; time arrow with "time" label in #6B6A63 INK_MUTED at bottom — all clearly readable
+      Data: 4-vertex Higgs-strahlung Feynman diagram: incoming e⁻/e⁺ fermion lines in brand green #009E73 with directional NormalHead arrows; horizontal and diagonal wavy photon/Z propagators in lavender #C475FD; dashed Higgs scalar in blue #4467A3; curly gluon decay in ochre #BD8233; vertex dots in dark ink with off-white border; upper-right legend box on #FFFDF6 elevated background with matching line style samples
+      Legibility verdict: PASS — all text readable, no overlap, no clipping, all font sizes explicitly set
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct; a faint thin rectangular browser-CSS outline is just visible around the canvas edge (minor artifact, not clipping)
+      Chrome: Title in #F0EFE8 light ink — clearly readable; process equation in #B8B7B0 INK_SOFT — readable; particle labels in #F0EFE8 — all readable; "time" label in #A8A79F INK_MUTED — readable; legend text in #B8B7B0 — readable; NO dark-on-dark failures detected
+      Data: Fermion lines #009E73 (identical to light ✓), photon/Z lavender #C475FD (identical ✓), Higgs blue #4467A3 (identical ✓), gluon ochre #BD8233 (identical ✓); vertex dots correctly flip to white #F0EFE8 with dark page_bg border; legend box on #242420 elevated dark background
+      Legibility verdict: PASS — all text readable against dark background, data colors identical to light render, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -46,41 +67,58 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (28pt title, 24pt labels, 22pt time,
-          20pt legend). Perfectly readable.
+        comment: All font sizes explicitly set (50pt title, 34pt particle labels,
+          32pt equation, 28pt legend/time); well-proportioned across both themes;
+          title at ~65-70% canvas width; all readable at desktop and mobile scale
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Minor crowding near H decay vertex where b-bar and g labels converge.
+        comment: No overlapping text detected; perpendicular label offsets keep all
+          particle symbols clear of their propagators; legend entries well-spaced
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Lines and vertices clearly visible. Wavy/curly styles render distinctly.
-          Some lines could be thicker.
+        comment: 'All particle types clearly visible: fermion lines 5px, photon wavy
+          5px, gluon 4px, Higgs dashed 7px; vertex dots size=28 with contrasting border;
+          NormalHead arrows size=30'
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 4 distinct hue families (green/purple/blue/yellow) from CVD-safe
+          Imprint palette; redundant encoding via line styles (solid/wavy/dashed/curly)
+          ensures accessibility beyond color alone
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue, gold, green, purple palette is colorblind-safe with good contrast.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 2
-        max: 4
-        passed: false
-        comment: Diagram shifted left with significant empty space on right and bottom.
+        comment: Canvas gate passed; diagram fills ~70-75% of canvas with generous
+          balanced margins; explicit min_border settings; time arrow anchors bottom,
+          legend fills upper-right corner; no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes appropriately hidden. Time arrow with label serves as axis indicator.
+        comment: No traditional axes needed for Feynman diagram type; time arrow with
+          'time' label replaces x-axis; mandatory title format correct; process equation
+          provides reaction context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint positions 1-4 in canonical order: fermion=#009E73, photon=#C475FD,
+          Higgs=#4467A3, gluon=#BD8233; backgrounds #FAF8F1 light / #1A1A17 dark;
+          INK/INK_SOFT/INK_MUTED tokens applied throughout chrome in both themes'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -88,24 +126,31 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom color palette, warm background, vertex styling, legend with
-          rendered line samples.
+        comment: 'Strong design clearly above defaults: custom Imprint palette applied
+          semantically, no-axis minimalist layout appropriate for physics diagrams,
+          tapered gluon coil shows physical realism, clean typography hierarchy; not
+          quite FiveThirtyEight-level but genuinely professional'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axes/grid/outline removed, subtle border box, clean background. Good
-          but canvas issues.
+        comment: 'Good refinement: axes/grid completely removed, explicit generous
+          margins, elevated legend box with ELEVATED_BG token, tapered gluon, proper
+          vertex dot styling; minor deduction for faint browser-CSS canvas border
+          visible in dark render'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clear physics story with particle flow, time arrow, and process equation
-          annotation.
+        comment: 'Excellent storytelling: process equation annotation provides reaction
+          context, time arrow establishes left-to-right temporal flow, color coding
+          by particle type creates immediate visual hierarchy, redundant line styles
+          reinforce particle identity; viewer can follow the Higgs-strahlung cascade
+          clearly'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -113,29 +158,34 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Feynman diagram with vertices, propagators, interaction points.
+        comment: 'Correct Feynman diagram with all four required particle line types:
+          solid+arrow fermions, wavy photons, dashed Higgs, curly gluon'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All four line styles, vertex dots, particle labels, arrows, time
-          axis present.
+        comment: 'All spec features present: distinct line styles, directional arrows
+          on fermions (forward=particle/backward=antiparticle), labeled time axis,
+          vertex dots, particle symbol labels on all propagators'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Vertices and propagators correctly connected. Time flows left to
-          right.
+        comment: Vertices at physically correct positions, propagators correctly connecting
+          them, arrow directions follow QFT convention, diagram topology is correct
+          for Higgs-strahlung
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format correct. Custom legend with line samples works well.
+        comment: Title exactly matches mandatory format 'feynman-basic · python ·
+          bokeh · anyplot.ai'; legend correctly labels all 4 particle types with matching
+          line style samples
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -143,23 +193,27 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 4 particle types, particle/antiparticle arrows, multiple vertices,
-          complex decay chain.
+        comment: 'Shows all Feynman diagram features: all 4 particle types, both incoming
+          and outgoing fermions, internal virtual propagators, multi-vertex cascade,
+          particle/antiparticle arrow convention'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Higgs-strahlung is a real particle physics process. Neutral scientific
-          context.
+        comment: Higgs-strahlung e⁻e⁺ → Z* → ZH → μ⁻μ⁺ + bb̄ + g is a real LEP/ILC
+          physics process; scientifically accurate topology; real particle symbols;
+          non-controversial
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Reasonable layout. Gluon radiation angle slightly unusual.
+        comment: Process equation physically correct; arrow directions follow QFT
+          conventions; vertex positions create plausible symmetric layout; all particle
+          identities and interactions are physically valid
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -167,59 +221,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, plot, save.'
+        comment: 'Clean linear flow: imports → tokens → data → figure → draw propagators
+          → vertex dots → legend → time arrow → process equation → save; no functions/classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded positions.
+        comment: 'Fully deterministic: all coordinates hardcoded, no random data generation,
+          no seed needed'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All 9 imports are used (os, time, Path, numpy, bokeh.io, bokeh.models
+          ×5, bokeh.plotting, selenium, Options)
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Verbose with repeated ColumnDataSource creation and duplicated legend
-          logic.
+        passed: true
+        comment: Clean Pythonic code; propagator loop handles 4 types cleanly with
+          elif; numpy vectorized gluon taper; no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png. Also produces HTML.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Bokeh API;
+          Selenium pattern with OUTER_H=1939 for correct 3200×1800 viewport
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, Arrow, NormalHead, Label, BoxAnnotation.
+        comment: 'Expert use of Bokeh annotation API: Arrow+NormalHead for arrowheads,
+          Label for text overlays, BoxAnnotation for legend box, Range1d for explicit
+          axis extents, output_file+save+Selenium for HTML+PNG export'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Bokeh-specific Arrow/NormalHead, BoxAnnotation, HTML export
-          with CDN.
-  verdict: REJECTED
+        comment: Uses Bokeh-specific BoxAnnotation, NormalHead arrowheads, Range1d,
+          and HTML+CSS-injection export pattern; core diagram drawing is generic line
+          primitives replicable in matplotlib — could add HoverTool to HTML artifact
+          for a more distinctly Bokeh showcase
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - annotations
-  - custom-legend
   - html-export
+  - custom-legend
   patterns:
-  - data-generation
-  - columndatasource
   - iteration-over-groups
   dataprep: []
   styling:
