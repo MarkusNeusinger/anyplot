@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 spectrum-nmr: NMR Spectrum (Nuclear Magnetic Resonance)
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-03
@@ -83,7 +83,8 @@ fig.add_trace(
     )
 )
 
-# Region shadings — Imprint palette, very low opacity
+# Region shadings — Imprint palette, slightly higher opacity on dark for perceptibility
+region_alpha = 0.07 if THEME == "light" else 0.13
 peak_regions = [
     {"x0": -0.05, "x1": 0.05, "color": peak_colors["TMS"]},
     {"x0": 1.05, "x1": 1.32, "color": peak_colors["CH₃"]},
@@ -99,7 +100,7 @@ shapes = [
         "x1": region["x1"],
         "y0": 0,
         "y1": 1,
-        "fillcolor": hex_to_rgba(region["color"], 0.07),
+        "fillcolor": hex_to_rgba(region["color"], region_alpha),
         "line": {"width": 0},
         "layer": "below",
     }
@@ -123,7 +124,7 @@ styled_annotations = [
         "arrowsize": 1.2,
         "arrowwidth": 2,
         "arrowcolor": peak_colors[ann["key"]],
-        "font": {"size": 10, "color": INK, "family": "Arial, sans-serif"},
+        "font": {"size": 11, "color": INK, "family": "Arial, sans-serif"},
         "ax": 0,
         "ay": ann["ay"],
         "bgcolor": ELEVATED_BG,
@@ -194,7 +195,7 @@ fig.update_layout(
     shapes=shapes,
     showlegend=False,
     margin={"l": 80, "r": 40, "t": 80, "b": 60},
-    hoverlabel={"bgcolor": ELEVATED_BG, "bordercolor": BRAND, "font": {"size": 10, "color": INK}},
+    hoverlabel={"bgcolor": ELEVATED_BG, "bordercolor": BRAND, "font": {"size": 11, "color": INK}},
     hovermode="x unified",
 )
 
