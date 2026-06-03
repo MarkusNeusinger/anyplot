@@ -1,4 +1,8 @@
-"""spectrogram-mel · python · plotly · anyplot.ai"""
+""" anyplot.ai
+spectrogram-mel: Mel-Spectrogram for Audio Analysis
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-03
+"""
 
 import os
 
