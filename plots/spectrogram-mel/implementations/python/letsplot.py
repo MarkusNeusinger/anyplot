@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 spectrogram-mel: Mel-Spectrogram for Audio Analysis
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-03
@@ -127,12 +127,15 @@ df = pd.DataFrame(
     }
 )
 
+# Clamp displayed frequency range to 0–4000 Hz so harmonic content fills the canvas
+df = df[df["Freq (Hz)"] <= 4000]
+
 # Y-axis breaks: map Hz values to mel band indices
-label_hz = [100, 200, 500, 1000, 2000, 5000, 10000]
+label_hz = [100, 200, 500, 1000, 2000, 4000]
 label_mel_vals = [2595 * np.log10(1 + f / 700) for f in label_hz]
 mel_range = np.linspace(mel_low, mel_high, n_mels)
 label_indices = [float(np.interp(mv, mel_range, np.arange(n_mels))) for mv in label_mel_vals]
-label_strs = ["100", "200", "500", "1k", "2k", "5k", "10k"]
+label_strs = ["100", "200", "500", "1k", "2k", "4k"]
 
 # Note annotation positions (fundamental frequency of each arpeggio note)
 note_annotations = []
@@ -150,7 +153,7 @@ title = "spectrogram-mel · python · letsplot · anyplot.ai"
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
-    panel_grid_major=element_line(color=INK_SOFT, size=0.3),
+    panel_grid_major=element_blank(),
     panel_grid_minor=element_blank(),
     axis_title=element_text(color=INK, size=12),
     axis_text=element_text(color=INK_SOFT, size=10),
@@ -175,7 +178,7 @@ plot = (
         .format("Power (dB)", ".1f")
         .min_width(180)
     )
-    + geom_text(aes(x="x", y="y", label="label"), data=df_notes, color=INK, size=4, fontface="bold", alpha=0.9)
+    + geom_text(aes(x="x", y="y", label="label"), data=df_notes, color=INK, size=5, fontface="bold", alpha=0.9)
     + scale_fill_gradient(low="#009E73", high="#4467A3", name="Power\n(dB)", limits=[db_min, db_max])
     + scale_y_continuous(breaks=label_indices, labels=label_strs, expand=[0, 0])
     + scale_x_continuous(expand=[0, 0])
