@@ -1,7 +1,7 @@
 // anyplot.ai
 // heatmap-loss-triangle: Actuarial Loss Development Triangle
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-06-03
+// Library: chartjs 4.4.7 | JavaScript 22.22.3
+// Quality: 91/100 | Created: 2026-06-03
 //# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
