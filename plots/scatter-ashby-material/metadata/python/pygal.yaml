@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: scatter-ashby-material
 created: '2026-03-11T14:58:15Z'
-updated: '2026-06-03T16:16:15Z'
+updated: '2026-06-03T16:35:14Z'
 generated_by: claude-sonnet
 workflow_run: 26896441462
 issue: 4677
@@ -12,97 +12,112 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-a
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/python/pygal/plot-dark.html
-quality_score: 76
+quality_score: 84
 review:
   strengths:
-  - Convex hull regions implemented correctly via SVG post-processing — adds the spec-required
-    bubble regions that pygal cannot do natively
-  - E/rho performance index guide lines included with correct slope-1 log-log geometry
-    and INK_MUTED styling
-  - Full Imprint palette compliance with both themes adapting chrome correctly
-  - Family labels with stroke background provide readability in both light and dark
-    modes
-  - Physically accurate material property data spanning the correct order-of-magnitude
-    ranges
+  - Convex hull regions drawn via SVG post-processing give authentic Ashby-chart family
+    envelopes — visually distinct from simple scatter plots
+  - E/ρ performance-index guide lines (log-log slope-1 dashed lines) add genuine scientific
+    context for material selection decisions
+  - 'Imprint palette applied in canonical order with brand green #009E73 correctly
+    assigned to Metals (first series)'
+  - 'Both themes correctly use #FAF8F1 / #1A1A17 backgrounds with all chrome tokens
+    (foreground, foreground_subtle) properly flipped'
+  - Logarithmic dual-axis correctly spans 6+ decades on both axes, matching the wide
+    property ranges of engineering materials
+  - Interactive HTML output with per-point density/modulus tooltips leverages pygal's
+    native JS feature
+  - Code is flat, reproducible (np.random.seed(42)), and all imports are used
   weaknesses:
-  - X-axis tick labels are severely truncated in log scale — pygal generates too many
-    minor tick marks and they crowd/truncate to '4... 5.6.7.8.91...'; fix by providing
-    explicit x_labels at decade values only (e.g., [30, 100, 300, 1000, 3000, 10000])
-    so each label has room to display fully
-  - Legend entry 'Natural Materials' truncated to 'Natural Materia' — truncate_legend=-1
-    does not disable truncation; replace with truncate_legend=20 or a larger positive
-    value
-  - Some family label positions overlap nearby data markers, particularly in the overlapping
-    Polymers/Natural Materials/Composites region; increase offset magnitudes or compute
-    a gap away from the nearest hull boundary
-  - pygal's JS tooltip interactivity is lost by saving the post-processed SVG string
-    to .html — call chart.render_to_file() for the interactive HTML separately before
-    SVG post-processing
+  - Family labels injected via SVG post-processing use font-size='28' SVG units —
+    at 3200×1800 this is 0.875% of canvas width; at mobile 400 px the labels shrink
+    to ~3.5 px and become unreadable. Raise to at least font-size='40' (ideally 44–48)
+    to match the scale of other secondary text
+  - E/ρ guide-line labels use font-size='22' SVG units — even smaller than family
+    labels; unreadable at any scale below 800 px. Raise to at least font-size='32'
+  - 'Default pygal four-sided box frame is used; removing top and right spines would
+    improve visual refinement. If pygal''s Style does not expose a direct spine toggle,
+    set stroke_style={''dash'': [0,0]} on the top/right rule elements or suppress
+    via SVG post-processing'
+  - The 'Composites' family label offset (80, 70) places the label BELOW and RIGHT
+    of its median point — it may overlap nearby Ceramics or Metals hull border; verify
+    no collision and consider a cleaner anchor (e.g. above-left offset or leader line)
+  - 'With 7 series the style guide requires redundant encoding beyond color (marker
+    shapes or direct labels). Direct family labels are present in the SVG, which satisfies
+    this — but the legend at bottom also shows color-only swatches. No change needed
+    beyond confirming the on-chart labels are legible (see weakness #1)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "scatter-ashby-material · python · pygal · anyplot.ai" readable. Y-axis label "Young's Modulus (GPa)" readable. X-axis label "Density (kg/m3)" readable. Y-axis ticks (600, 400, 200, 100 ... 0.001) clearly readable. X-axis ticks severely truncated — log-scale density produces "30 40 5060708 0... 2... 3... 4... 5.6.7.8.91..." pattern that is unreadable.
-      Data: Seven families in Imprint palette canonical order. First series Metals = #009E73 (brand green). Ceramics #C475FD lavender, Polymers #4467A3 blue, Composites #BD8233 ochre, Elastomers #AE3030 red, Foams #2ABCCD cyan, Natural Materials #954477 rose. Convex hull regions rendered as semi-transparent fills behind scatter markers. E/rho guide lines as dashed diagonal lines.
-      Legend: "Natural Materials" truncated to "Natural Materia" at bottom.
-      Legibility verdict: PARTIAL FAIL (x-axis tick labels unreadable due to log-scale truncation; legend entry truncated)
+      Background: Warm off-white (#FAF8F1) — correct; not pure white.
+      Chrome: Title "scatter-ashby-material · python · pygal · anyplot.ai" in dark ink at the top, clearly readable. Y-axis label "Young's Modulus (GPa)" and X-axis label "Density (kg/m³)" in dark ink, both readable. Log-scale tick labels on both axes in dark ink — major labels (30, 100, 300, 1000, 3000, 10000 on X; decade intervals on Y) are clearly readable; minor intermediate ticks are present but not labeled (correct). Grid lines are subtle. Bottom legend shows all 7 families with correct color swatches and readable labels.
+      Data: Seven material families with Imprint palette in canonical order: Metals (#009E73 brand green, upper-right high density/modulus), Ceramics (#C475FD lavender, upper-right high modulus), Polymers (#4467A3 blue, middle cluster), Composites (#BD8233 ochre, middle-right), Elastomers (#AE3030 red, bottom-middle low modulus), Foams (#2ABCCD cyan, lower-left low density/modulus), Natural Materials (#954477 rose, middle range). Each family has a convex hull polygon (fill opacity 0.14, stroke opacity 0.55) in its family color. In-chart family name labels appear in family colors with PAGE_BG stroke for contrast. Two E/ρ dashed guide lines visible with small italic labels "E/ρ = 0.01" and "E/ρ = 10⁻⁴". First series (Metals) is correctly #009E73.
+      Legibility verdict: PASS for primary elements (title, axis labels, tick labels, legend). Family labels (28px SVG) and guide-line labels (22px SVG) are small — readable at full 3200×1800 but marginal at mobile scale.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title and all axis labels switch to light text (#F0EFE8) — readable against dark background. Y-axis ticks readable. X-axis tick truncation persists. No dark-on-dark failures detected. Family labels remain readable with stroke backgrounds.
-      Data: Colors identical to light render — all 7 Imprint palette positions unchanged. Hull regions and guide lines clearly visible on dark background.
-      Legend: Same "Natural Materials" truncation as light render.
-      Legibility verdict: PARTIAL FAIL (x-axis tick labels unreadable; legend entry truncated — same issues as light render)
+      Background: Warm near-black (#1A1A17) — correct; not pure black.
+      Chrome: Title, axis labels, and tick labels all render in warm light tone (#F0EFE8 range) against the dark background — clearly readable, no dark-on-dark failures. Legend text at bottom is readable. Grid lines are subtle and appropriate.
+      Data: All 7 family colors are identical to the light render — Imprint palette hues are unchanged between themes (only chrome flips). Convex hull fills and strokes retain their family colors. Family name labels remain in their family colors (which are all saturated/bright and read well on dark backgrounds). The in-chart label stroke changes to PAGE_BG (#1A1A17 dark) which provides appropriate contrast on the dark surface. Brand green #009E73 (Metals) is clearly visible on the dark background.
+      Legibility verdict: PASS. No dark-on-dark issues found. Data colors are identical to the light render confirming correct theme separation (only chrome flips).
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Font sizes explicitly set; y-axis ticks readable; x-axis tick labels
-          severely truncated in log scale showing '4... 5.6.7.8.91...' pattern — unreadable
+        passed: true
+        comment: Title (66px), axis labels (56px), and tick labels (44px) all clearly
+          readable in both themes. Family labels (28px SVG) and guide-line labels
+          (22px SVG) are small — readable at full 3200x1800 but marginal at mobile
+          scale (~400px)
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Some family label/data-marker overlap in dense regions; x-axis tick
-          crowding
+        passed: true
+        comment: No severe text collisions. Some minor overlap between Composites
+          label placement (offset +80,+70) and adjacent hull borders, and some hull
+          region overlap inherent to materials science data — expected for Ashby charts
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers visible at dots_size=10; hull regions and guide lines clear
+        comment: Scatter dots at size=10 are clearly visible. Hull fills at opacity
+          0.14 are correctly subtle. ~80 total points across 7 families — medium density
+          well handled
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette CVD-safe; good contrast in both themes
+        comment: Imprint palette used (CVD-safe). No red-green as sole distinguisher.
+          7 series addressed by in-chart family labels (direct labeling redundant
+          encoding)
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization; tick truncation hurts usability; no edge
-          clipping detected
+        comment: 3200x1800 canvas correct. Canvas gate passed. Title proportion appropriate.
+          Legend at bottom well-organized in 4 columns. Proportions balanced.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Density (kg/m3) and Young's Modulus (GPa) descriptive with units
+        comment: 'X: ''Density (kg/m³)'', Y: ''Young''s Modulus (GPa)'' — both descriptive
+          with units. Title format correct.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Imprint palette canonical order; backgrounds
-          #FAF8F1/#1A1A17; chrome adapts correctly in both themes'
+        comment: 'Metals (first series) = #009E73 brand green ✓. Canonical Imprint
+          order for 7 families ✓. PAGE_BG #FAF8F1 light / #1A1A17 dark ✓. Both renders
+          theme-correct ✓.'
     design_excellence:
       score: 12
       max: 20
@@ -112,24 +127,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Convex hull regions and E/rho guide lines elevate above plain scatter;
-          Imprint palette well-applied; default 4-sided pygal box frame reduces polish
+        comment: 'Genuine sophistication: SVG-injected convex hull regions, E/ρ guide
+          lines with italic labels, colored family name labels with background stroke
+          for contrast. Above the DE-01=4 default with clear evidence.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Hull semi-transparency and family label stroke-backgrounds are refined
-          touches; default pygal border frame visible, no explicit spine removal
+        passed: true
+        comment: Hull fills at 0.14 opacity are subtle and clean. Style object correctly
+          sets all chrome tokens. Default 4-sided box frame not removed (pygal limitation).
+          Minor improvement over DE-02=2 default.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: E/rho guide lines explicitly communicate material selection criteria;
-          hull groupings make family patterns immediately clear
+        comment: E/ρ guide lines directly support material selection decisions — clear
+          engineering story. Family hull regions create distinct zones that guide
+          the viewer. Well above DE-03=2 default.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -137,115 +155,124 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct log-log XY scatter via pygal.XY with logarithmic=True
+        comment: Log-log XY scatter with convex hull family regions — correct Ashby
+          chart implementation
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Log-log scale; convex hull regions; family text labels; E/rho guide
-          lines — all present
+        comment: Log scale both axes ✓, family hull regions ✓, family text labels
+          ✓, performance guide lines ✓, legend ✓
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Density on X, Young's modulus on Y, correctly mapped with appropriate
-          units
+        comment: X=density (kg/m³), Y=Young's modulus (GPa). All 7 families plotted.
+          Log scale correctly spans full data range.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title format correct; 'Natural Materials' legend entry truncated
-          to 'Natural Materia' — truncate_legend=-1 does not disable truncation
+        passed: true
+        comment: Title 'scatter-ashby-material · python · pygal · anyplot.ai' ✓. Legend
+          shows all 7 families with correct color swatches ✓.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 7 material families spanning metals, ceramics, polymers, composites,
-          elastomers, foams, natural materials; realistic property variation
+        comment: 'Shows all major Ashby chart aspects: log-log scatter, family convex
+          hulls, labels, guide lines. Minor: individual material names only in tooltips
+          (HTML), not as static labels on PNG.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic Ashby chart domain; neutral educational/engineering topic
+        comment: 'Real engineering material properties: steel (7850 kg/m³, 200 GPa),
+          aluminum (2700 kg/m³, 69 GPa), polyethylene (~960 kg/m³, 1.1 GPa) etc. Realistic
+          and neutral.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Densities 25-19300 kg/m3 and moduli 0.001-680 GPa are physically
-          accurate
+        comment: Density 25–19300 kg/m³ and modulus 0.001–680 GPa match real material
+          property ranges in engineering handbooks.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: No functions/classes; but ~100 lines of SVG post-processing adds
-          substantial complexity
+        passed: true
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set before jitter generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: cairosvg (PNG save), numpy (data+jitter), pygal+Style
+          (chart), scipy.spatial.ConvexHull (hulls), math (log10), xml.etree.ElementTree
+          (SVG), os, sys'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: SVG manipulation verbose but serves legitimate purpose; coordinate
-          mapping brittle to pygal SVG structure changes
+        passed: true
+        comment: SVG post-processing for hull rendering is appropriate — convex hull
+          regions are not native pygal features; manual SVG injection is the correct
+          solution. sys.path manipulation is a necessary workaround for the pygal.py
+          naming conflict.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses current pygal
+          3.1.0 API.
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good idiomatic pygal: Style object for all theme tokens, logarithmic=True,
+          x_labels + x_labels_major for major-tick control, legend_at_bottom_columns,
+          show_minor_x_labels, per-point label dict format'
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: pygal.XY, logarithmic=True, Style object, value formatters, legend_at_bottom
-          all idiomatic; SVG post-processing bypasses pygal's native API
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: HTML output file produced but contains raw SVG; pygal's JavaScript
-          tooltip interactivity lost when saving post-processed SVG string instead
-          of using chart.render_to_file()
-  verdict: REJECTED
+        comment: Interactive HTML with per-point density/modulus tooltips leverages
+          pygal's native JS rendering — the primary distinctive feature of the library.
+          SVG post-processing is sophisticated but circumvents native API.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
-  - cairosvg
   techniques:
   - html-export
   - annotations
+  - manual-ticks
   - patches
   patterns:
   - data-generation
