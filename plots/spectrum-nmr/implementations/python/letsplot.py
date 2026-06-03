@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 spectrum-nmr: NMR Spectrum (Nuclear Magnetic Resonance)
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-03
@@ -16,11 +16,13 @@ from lets_plot import (
     element_rect,
     element_text,
     geom_area,
+    geom_hline,
     geom_line,
     geom_text,
     ggplot,
     ggsize,
     labs,
+    layer_tooltips,
     scale_x_reverse,
     scale_y_continuous,
     theme,
@@ -72,24 +74,34 @@ df = pd.DataFrame({"chemical_shift": chemical_shift, "intensity": intensity})
 peak_labels = pd.DataFrame(
     {
         "x": [0.0, 1.18, 2.61, 3.69],
-        "y": [1.15, 1.65, 0.78, 1.42],
+        "y": [1.15, 1.58, 0.78, 1.42],
         "label": ["TMS\n0.00 ppm", "CH₃ (triplet)\n1.18 ppm", "OH (singlet)\n2.61 ppm", "CH₂ (quartet)\n3.69 ppm"],
     }
 )
 
-# Plot — geom_area fill gives distinctive spectrum appearance
+# Interactive tooltips — distinctly lets-plot (not available in plotnine)
+spectrum_tooltips = (
+    layer_tooltips()
+    .format("@{chemical_shift}", ".3f")
+    .line("δ: @{chemical_shift} ppm")
+    .format("@{intensity}", ".4f")
+    .line("Intensity: @{intensity} a.u.")
+)
+
+# Plot — geom_area fill gives distinctive spectrum appearance; tooltips add interactive HTML layer
 plot = (
     ggplot(df, aes(x="chemical_shift", y="intensity"))
+    + geom_hline(yintercept=0, color=INK_SOFT, size=0.5)
     + geom_area(fill=BRAND, alpha=0.15)
-    + geom_line(color=BRAND, size=1.2)
-    + geom_text(data=peak_labels, mapping=aes(x="x", y="y", label="label"), size=5, color=INK)
+    + geom_line(color=BRAND, size=1.2, tooltips=spectrum_tooltips)
+    + geom_text(data=peak_labels, mapping=aes(x="x", y="y", label="label"), size=5.5, color=INK, fontface="bold")
     + labs(
         x="δ Chemical Shift (ppm)",
         y="Intensity (a.u.)",
         title="Ethanol ¹H NMR · spectrum-nmr · python · letsplot · anyplot.ai",
     )
     + scale_x_reverse(limits=[-0.5, 5.0])
-    + scale_y_continuous(expand=[0.02, 0, 0.15, 0])
+    + scale_y_continuous(expand=[0.02, 0, 0.20, 0])
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
