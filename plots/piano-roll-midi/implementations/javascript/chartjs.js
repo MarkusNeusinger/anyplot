@@ -1,7 +1,7 @@
 // anyplot.ai
 // piano-roll-midi: MIDI Piano Roll Visualization
 // Library: chartjs 4.4.7 | JavaScript 22.22.3
-// Quality: 82/100 | Created: 2026-06-03
+// Quality: 88/100 | Created: 2026-06-03
 
 //# anyplot-orientation: landscape
 
