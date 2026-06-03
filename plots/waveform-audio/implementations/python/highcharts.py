@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 waveform-audio: Audio Waveform Plot
 Library: highcharts unknown | Python 3.13.13
-Quality: 84/100 | Created: 2026-06-03
+Quality: 89/100 | Created: 2026-06-03
 """
 
 import os
