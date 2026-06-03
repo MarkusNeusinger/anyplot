@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 piano-roll-midi: MIDI Piano Roll Visualization
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-06-03

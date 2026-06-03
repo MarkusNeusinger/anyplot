@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: piano-roll-midi
 created: '2026-03-07T19:55:12Z'
-updated: '2026-06-03T04:37:44Z'
+updated: '2026-06-03T04:51:42Z'
 generated_by: claude-sonnet
 workflow_run: 26861876845
 issue: 4565
@@ -15,44 +15,50 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/piano-rol
 quality_score: 84
 review:
   strengths:
-  - SVG post-processing for alternating black-key row shading is technically impressive
-    and uniquely leverages pygal's SVG-first architecture
-  - Musically authentic D-minor jazz ii-V-I-vi dataset with three-layer texture (bass,
-    chords, melody) covering all spec-required aspects
-  - Semantic-exception velocity coloring (cool=soft to warm=loud) correctly applies
-    Imprint palette in a musically meaningful order as the spec requests
-  - 'Both light and dark themes adapt correctly: title, labels, tick marks, and background
-    switch while data colors stay identical across themes'
-  - 'Perfect Code Quality: deterministic, no unnecessary abstractions, graceful SVG
-    degradation, correct output files (PNG + HTML)'
+  - Piano roll aesthetic is well-executed using pygal.XY with thick stroke (stroke_width=38)
+    to simulate horizontal note bars — creative workaround for a library without native
+    gantt/bar-over-pitch support
+  - SVG post-processing injects black-key row shading, beat subdivision lines, and
+    measure boundary lines that faithfully mirror DAW piano roll conventions
+  - G7 dominant climax highlight (subtle amber wash over beats 8-16) is a polished
+    data-storytelling touch that guides the viewer to the harmonic tension peak
+  - Velocity color scheme (cool blue→warm red across 5 Imprint palette members) follows
+    the spec's explicit blue=soft / red=loud convention and uses only canonical palette
+    hexes
+  - Full 3-layer jazz arrangement (bass/chord/melody) across an 8-measure ii-V-I-vi
+    progression demonstrates realistic, musically correct data
+  - 'Both themes render correctly: warm off-white (#FAF8F1) in light, near-black (#1A1A17)
+    in dark; all chrome tokens flip; data colors stay identical across themes'
+  - 'Perfect spec compliance: note names on Y-axis, alternating black-key row shading,
+    beat/measure grid lines, velocity-to-color mapping, pitch range auto-fit to data'
   weaknesses:
-  - 'Missing per-beat grid lines within measures: spec requires beat-level (quarter-note)
-    vertical grid divisions with stronger lines at measure boundaries; currently only
-    measure-level lines are drawn (x_labels every 4 beats). Add beat ticks at every
-    1-beat interval with a thinner/muted stroke and keep the 4-beat measure lines
-    more prominent.'
-  - 'Design Excellence is limited: DE-02 retains default pygal spines and lacks clear
-    typographic hierarchy. DE-03 misses opportunity to emphasize dynamic climax (measures
-    3-4 G7 dominant tension with ff notes) through visual emphasis such as stroke-width
-    variation per velocity band.'
-  - Dense Y-axis (33 pitch rows) reduces mobile legibility at ~400px; consider showing
-    only natural-note labels (C4, D4, E4...) by default and using subtler markers
-    for sharps/flats.
+  - Y-axis has 33 pitch labels for the full A2-E5 range — at major_label_font_size=44
+    they are densely packed; consider thinning to white-key pitches only (C, D, E,
+    F, G, A, B) to reduce crowding without losing context
+  - 'CQ-04: SVG regex post-processing (~80 lines) adds significant maintenance complexity;
+    the graceful-degradation try/except masks errors silently — if the inject logic
+    breaks, no visual indication is given'
+  - 'VQ-01: Y-axis tick labels in both renders are legible but noticeably small relative
+    to the chart area; increasing major_label_font_size from 44 to ~52 would improve
+    mobile readability'
+  - The SVG row-shading uses x='0' anchoring rather than the actual plot-area left
+    edge extracted from v_guides — on charts with wider left margins this could misalign
+    the shading rectangles
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "piano-roll-midi · python · pygal · anyplot.ai" in dark ink — readable. Y-axis labels (A2–F5, 33 pitch rows) in dark ink — dense but legible at full resolution. X-axis "Time (beats)" label and tick labels (0,4,8,...32) — readable.
-      Data: 5 velocity bands as thick colored horizontal segments — pp (65-74) in #4467A3 steel blue, p (75-84) in #2ABCCD cyan, mp (85-94) in #009E73 brand green, f (95-104) in #BD8233 ochre, ff (105-115) in #AE3030 matte red. Alternating beige row shading marks piano black-key positions.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct, not pure white. Plot area matches the page surface.
+      Chrome: Title "piano-roll-midi · python · pygal · anyplot.ai" is clearly readable in dark ink at the top. Y-axis label "Pitch" and X-axis label "Time (beats)" are readable in dark ink. X-axis tick labels (0, 4, 8, 12, 16, 20, 24, 28, 32) are clear. Y-axis pitch-name labels (A2 through E5) are small but legible — densely packed due to 33 MIDI pitches in range.
+      Data: Five velocity bands rendered as thick horizontal line-segments (acting as filled bars): pp (65-74) in Imprint blue #4467A3, p (75-84) in cyan #2ABCCD, mp (85-94) in brand green #009E73, f (95-104) in ochre #BD8233, ff (105-115) in matte red #AE3030. Row shading (subtle warm tan) marks black-key rows. Beat subdivision dashed lines and solid measure boundary lines create a DAW-style grid. A very subtle amber wash covers the G7 dominant measures (beats 8-16).
+      Legibility verdict: PASS — all text elements are readable against the warm off-white background; no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
-      Chrome: Title and all axis labels in light #F0EFE8 — fully readable against dark surface. Tick labels are light-colored. No dark-on-dark failures detected. Alternating row shading shows as slightly lighter dark stripes.
-      Data: Identical data colors to light render (same blue/cyan/green/ochre/red velocity bands) — only chrome flips between themes. Legend at bottom with same labels and color swatches.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct, not pure black. Plot area matches the dark page surface.
+      Chrome: Title readable in light cream text. Y-axis "Pitch" and X-axis "Time (beats)" labels visible in light color. X-axis tick numbers and Y-axis note-name labels are visible against the dark background — no dark-on-dark failure observed. Black-key row shading shows as slightly darker bands on the near-black background (subtle but present).
+      Data: Data colors are visually identical to the light render (Imprint palette positions stay constant): blue pp bars, cyan p bars, green mp bars, ochre f bars, red ff bars. Legend at bottom is readable in light text. The amber climax wash is even more subtle in dark mode (rgba opacity reduced to 0.07 vs 0.10 in light).
+      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -60,76 +66,81 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set. Readable in both themes. Dense Y-axis
-          (33 rows) reduces mobile readability at ~400px.
+        comment: Title, axis labels, and tick labels readable in both themes. Y-axis
+          pitch labels (33 labels, A2-E5) are small but legible; mobile readability
+          slightly reduced by density.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No visible overlap at full resolution. Adjacent pitch rows are close
-          but non-overlapping.
+        comment: No clear text-on-text overlap. Minor crowding on Y-axis due to 33
+          pitch labels; no data element collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All velocity-band segments clearly visible. Thick stroke_width=38
-          effectively simulates note bars.
+        comment: Bars (thick horizontal strokes) clearly visible in both themes. All
+          5 velocity colors distinguishable. Row shading provides keyboard context.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Cool-to-warm velocity progression is CVD-safe. No red-green sole-signal
-          issue.
+        comment: All colors from CVD-safe Imprint palette. Velocity bands have text
+          labels as redundant encoding — not relying on color alone.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas 3200x1800, gate passed. Good margins and canvas utilization.
+        comment: 3200x1800 canvas correct. Title fits without overflow. Margins generous.
+          Dense Y-axis prevents a perfect 4/4.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: Time (beats), Y: Pitch with note names. Title in correct mandated
-          format.'
+        comment: Title is exact required format. X-axis 'Time (beats)' and Y-axis
+          'Pitch' are descriptive.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Semantic exception for velocity (cool=soft to warm=loud). All colors
-          from Imprint palette. Correct backgrounds and theme-adaptive chrome.
+        comment: 'All 5 colors are Imprint palette members. Semantic ordering (cool=soft,
+          warm=loud) matches spec''s explicit ''blue=piano/soft to red=forte/loud''
+          directive — valid semantic exception. Backgrounds #FAF8F1 / #1A1A17 correct.'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: SVG alternating row shading elevates design above default (4). Velocity
-          semantic color mapping is purposeful. Not yet publication-ready polish.
+        comment: 'Strong domain-specific aesthetic: DAW-style piano roll with black-key
+          row shading, measure grid lines, beat subdivisions, and harmonic climax
+          highlight. Intentional visual hierarchy.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Clean subtle grid, bottom legend. Alternating shading adds refinement.
-          Default pygal spines remain; limited typographic hierarchy.
+        comment: Alternating row shading, dashed beat lines vs solid measure lines,
+          theme-adaptive colors. Subtle amber wash for climax. Clean overall look.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Velocity-to-color creates implicit dynamic narrative. ii-V-I-vi structure
-          produces melodic contour. No explicit visual hierarchy emphasizing climax.
+        comment: Velocity color gradient communicates dynamics progression. G7 climax
+          highlight draws attention to harmonic tension. Three-layer bass/chord/melody
+          arrangement visible.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -137,30 +148,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct MIDI piano roll: horizontal note bars by pitch/time, length=duration,
-          color=velocity.'
+        comment: Correct piano roll visualization with horizontal bars for pitch/time/duration.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Note names on Y-axis, alternating black-key shading, velocity color
-          scale with legend all present. Missing: per-beat grid lines within measures
-          (only measure-level grid shown).'
+        comment: Note names on Y-axis, black-key row shading, beat/measure grid lines,
+          velocity-to-color scale all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Start time → X, pitch → Y, duration → bar length, velocity → color
-          band. All correctly mapped.
+        comment: Start time on X-axis, pitch on Y-axis, velocity mapped to color,
+          duration shown as bar length.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is piano-roll-midi · python · pygal · anyplot.ai. Legend labels
-          pp/p/mp/f/ff with velocity ranges.
+        comment: Title is exact required 'piano-roll-midi · python · pygal · anyplot.ai'.
+          Legend shows 5 velocity bands with musical notation labels (pp/p/mp/f/ff).
     data_quality:
       score: 15
       max: 15
@@ -170,58 +179,59 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three-layer texture (bass/chords/melody), 67 notes, 5 velocity bands,
-          8 measures, full ii-V-I-vi cycle.
+        comment: 'Full coverage: multiple velocity bands, 3-layer arrangement (bass/chord/melody),
+          8 measures, varying note durations.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: D-minor jazz ii-V-I-vi (Dm7-G7-Cmaj7-Am7) is a canonical, musically
-          authentic progression. Neutral educational context.
+        comment: Musically correct D-minor jazz ii-V-I-vi progression (Dm7-G7-Cmaj7-Am7).
+          Realistic MIDI values, neutral context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Pitch A2-F5, velocity 65-115, 8 measures — all appropriate for keyboard/piano
-          performance.
+        comment: 32 beats (8 measures 4/4), pitch A2-E5, velocity 65-115 — all realistic.
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Linear flow: imports -> tokens -> data -> chart config -> render
-          -> SVG post-process -> save. No functions or classes.'
+        comment: No functions or classes. Top-level code throughout. SVG post-processing
+          section (~80 lines) adds complexity but no unnecessary abstraction.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All note data hard-coded and deterministic.
+        comment: Data is hardcoded; no randomness. Fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, re, sys, pygal, pygal.style.Style, cairosvg — all used.
+        comment: os, re, sys, pygal, pygal.style.Style, cairosvg — all imported and
+          used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: SVG regex post-processing justified (pygal lacks native alternating-row
-          support). Graceful try/except degradation. No fake interactivity.
+        comment: SVG regex post-processing adds maintenance complexity; try/except
+          silently swallows all errors which can hide bugs.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png via cairosvg and plot-{THEME}.html. Correct
+          naming.
     library_mastery:
       score: 7
       max: 10
@@ -231,25 +241,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper Style object with all tokens, pygal.XY for coordinate-based
-          data, y_labels dict format, XY line-pair trick for note simulation.
+        comment: Correct pygal.XY usage with Style object for theming, structured
+          y_labels dicts, allow_interruptions for None separators.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Interactive HTML export (pygal's defining feature) and SVG rendering
-          pipeline exploited for background shading injection.
-  verdict: REJECTED
+        comment: 'Creative: thick stroke_width=38 simulates filled rectangle bars
+          from line segments; SVG post-processing exploits pygal''s raw SVG output
+          for features the library doesn''t natively expose.'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
-  - manual-ticks
   - html-export
+  - manual-ticks
   patterns:
   - iteration-over-groups
   dataprep:
   - binning
   styling:
   - grid-styling
+  - alpha-blending
