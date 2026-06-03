@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 spectrogram-mel: Mel-Spectrogram for Audio Analysis
-Library: highcharts | Python 3.13
-Quality: 90/100 | Updated: 2026-06-03
+Library: highcharts unknown | Python 3.13.13
+Quality: 86/100 | Updated: 2026-06-03
 """
 
 import os
