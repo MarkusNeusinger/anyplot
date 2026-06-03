@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: piano-roll-midi
 created: '2026-06-03T03:53:14Z'
-updated: '2026-06-03T04:00:28Z'
+updated: '2026-06-03T04:18:19Z'
 generated_by: claude-sonnet
 workflow_run: 26862129221
 issue: 4565
@@ -15,39 +15,44 @@ preview_html_dark: null
 quality_score: 89
 review:
   strengths:
-  - 'Complete spec implementation: all five required features (note names, keyboard
-    row shading, beat/measure grid, velocity colormap, auto-fit pitch range) present
-    and working'
-  - 'Domain-appropriate data: realistic C-major phrase with melody + chord accompaniment,
-    varying note durations, and a musically meaningful velocity arc (climax at C5
-    in Measure 2)'
-  - 'Excellent theme adaptation: both renders fully readable; chrome tokens thread
-    correctly to every element including the colorbar'
-  - Custom beat-grid styling (differentiated opacity/width for beat vs. measure lines)
-    is the right design call for a piano roll
-  - Piano keyboard row-shading implemented correctly using music-theory pitch class
-    arithmetic
+  - 'Full spec compliance: alternating piano-keyboard row backgrounds, note names
+    on Y-axis, beat/measure grid lines, velocity-mapped color, and velocity colorbar
+    all present and correct'
+  - 'Imprint sequential colormap (green #009E73 → blue #4467A3) correctly applied
+    to velocity data with inverted mapping (high velocity = brighter green)'
+  - 'Excellent data quality: 48-note C major phrase across 4 measures with realistic
+    melody + chord accompaniment, clear ascending-climax-descent-resolution arc'
+  - 'Complete theme-adaptive chrome: PAGE_BG, INK, INK_SOFT tokens applied to every
+    axis element, both renders fully readable'
+  - 'Clean Julia/Makie idioms: single poly! call with Rect2f slice for all note rectangles,
+    Colorbar widget, colsize! for layout — efficient and idiomatic'
+  - 'Perfect code quality: KISS structure, explicit font sizes, Random.seed!(42),
+    only used imports'
   weaknesses:
-  - 'VQ-07 (1pt): Velocity colormap uses reversed imprint_seq — cgrad([colorant"#4467A3",
-    colorant"#009E73"]) (blue→green) instead of canonical cgrad([colorant"#009E73",
-    colorant"#4467A3"]) (green→blue). Fix: define VEL_CMAP as canonical imprint_seq
-    and use 1.0 - v/127.0 for the velocity lookup to preserve musically-correct blue=soft
-    direction.'
-  - 'CQ-01 (1pt): Two helper functions (is_black_key, midi_to_name) violate KISS no-functions
-    rule. Fix: inline is_black_key as a one-liner at the call site; replace midi_to_name
-    with an inline array lookup at the ytick assignment.'
+  - 'Design Excellence held at mid-range: the implementation is polished and musically
+    accurate but the visual identity is primarily driven by the piano-keyboard row
+    shading and Imprint colormap rather than additional typographic hierarchy or compositional
+    emphasis that would push it to publication-ready'
+  - 'DE-02 refinement: grid is handled via vlines! (good), but the note stroke (strokewidth=0.7f0,
+    alpha=0.55f0) is subtle to the point where at mobile-scaled widths the note outlines
+    disappear — a slightly thicker stroke (1.0–1.2f0) would preserve definition across
+    scales'
+  - 'LM-02: the implementation uses poly! with Rect2f correctly, but does not leverage
+    any more distinctive Makie feature (e.g. recipe system, Observable-free layout,
+    linkaxes) that would clearly differentiate it from a generic polygon-drawing approach
+    in any other library'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface.
-      Chrome: Title "piano-roll-midi · julia · makie · anyplot.ai" in dark ink, fully readable. Axis labels "Time (beats)" and "Pitch" clearly visible. Tick labels (note names B2–C5 on Y; beat numbers 0–16 on X) readable in dark #4A4A44 ink. Colorbar labeled "Velocity" with legible tick labels. Measure labels "Meas. 1–4" in subdued ink inside plot area.
-      Data: Note rectangles colored by a blue (#4467A3) to green (#009E73) velocity gradient. Higher-velocity melody notes are visibly greener; lower-velocity chord accompaniment notes are more blue. Alternating row backgrounds correctly distinguish white-key rows (lighter) from black-key rows (darker). Vertical beat lines at quarter-note intervals, stronger at measure boundaries.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "piano-roll-midi · julia · makie · anyplot.ai" in dark ink, centered, clearly readable. Y-axis label "Pitch" (vertical) and X-axis label "Time (beats)" both dark and readable. Tick labels show note names (B2, C3, D3 … C5) on Y-axis and beat numbers (0, 4, 8, 12, 16) on X-axis in INK_SOFT dark gray. "Meas. 1" through "Meas. 4" labels at top of each measure section in soft dark gray, small but legible. Colorbar on right labeled "Velocity" with ticks 0, 32, 64, 96, 127 — readable.
+      Data: Note rectangles colored on imprint_seq gradient — high-velocity melody notes (68–102) render in teal-green (#009E73 range), lower-velocity chord accompaniment (48–54) renders in blue-teal (#4467A3 range). Alternating row backgrounds clearly distinguish white-key pitches (lighter off-white) from black-key pitches (slightly darker warm-gray). Vertical measure-boundary lines are clearly visible at beats 0, 4, 8, 12, 16; quarter-note lines are subtler.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface.
-      Chrome: Title, axis labels, tick labels, colorbar labels all rendered in light ink (#F0EFE8 / #B8B7B0). All text clearly visible against the dark background. No dark-on-dark failures. Row alternating backgrounds flip to dark variants. Vertical beat lines remain visible at reduced alpha.
-      Data: Note rectangle colors are identical to the light render — same blue-to-green velocity gradient. Data colors unchanged between themes; only chrome flipped.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in near-white/cream INK (#F0EFE8), fully readable. Axis labels and tick labels in INK_SOFT (#B8B7B0), readable against dark background. Measure labels in INK_SOFT visible. Colorbar tick labels and "Velocity" label in INK_SOFT — readable. No dark-on-dark failures observed.
+      Data: Note rectangle colors are identical to light render — same teal-green for high velocity, same steel-blue for low velocity. Alternating row backgrounds flip to dark variants (near-black shades) maintaining keyboard pattern. Data colors clearly distinguishable from the dark background with the teal-green #009E73 particularly prominent.
+      Legibility verdict: PASS — all text readable in light-on-dark; data colors identical to light render; no dark-on-dark failures
   criteria_checklist:
     visual_quality:
       score: 29
@@ -55,57 +60,59 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
         comment: All font sizes explicitly set (titlesize=20, xlabelsize=14, ylabelsize=14,
-          tick sizes 11-12, colorbar 11-13). Both themes fully readable. Proportions
-          well-calibrated.
+          xticklabelsize=12, yticklabelsize=11, colorbar labelsize=13/11). All text
+          readable in both themes. Base fontsize=13 (vs recommended 14) is minor.
+          Measure labels at 11pt are small but legible.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or note rectangle collisions in either render.
+        comment: No overlapping text or data elements. Pitch labels well-spaced (white
+          keys only). Beat labels non-overlapping.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Note rectangles well-proportioned to pitch rows; velocity gradient
-          cleanly distinguishable across full 0-127 range.
+        comment: Note rectangles well-sized with 0.84 height, small gap (0.04 duration
+          trim), clearly distinguishable. Velocity colormap visible across full range.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Both colormap endpoints from CVD-optimised Imprint palette; adequate
-          luminance contrast.
+        comment: Imprint sequential colormap (green→blue) is CVD-safe. Good contrast
+          between notes and alternating row backgrounds.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas 3200x1800 confirmed, gate not triggered. Plot fills canvas
-          well; colorbar well-positioned; margins balanced.
+        comment: Landscape 3200x1800 canvas (size=(1600,900), px_per_unit=2). Canvas
+          gate passed. Plot fills canvas well with colorbar at right. colsize! assigns
+          93% to plot, 7% to colorbar — balanced.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (beats) and Pitch are descriptive; colorbar labeled Velocity
-          with correct range.
+        comment: 'X-axis: ''Time (beats)'' — descriptive with units. Y-axis: ''Pitch''
+          — acceptable given note names are shown on ticks. Title correctly formatted.'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Backgrounds correct (#FAF8F1/#1A1A17); chrome theme-adaptive in
-          both renders. However velocity colormap cgrad([#4467A3, #009E73]) is reversed
-          imprint_seq — not the authorized form. Authorized forms: imprint_seq (green→blue)
-          or imprint_div (diverging) only.'
+        passed: true
+        comment: 'Continuous velocity data uses imprint_seq (green #009E73 → blue
+          #4467A3). Backgrounds #FAF8F1 (light) / #1A1A17 (dark). Theme-adaptive chrome
+          correctly applied. Data colors identical between themes.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -113,27 +120,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Clearly above defaults: custom velocity colormap, piano-keyboard
-          alternating row backgrounds, custom beat/measure grid with distinct opacity
-          levels. Not FiveThirtyEight-level (no typographic weight variation, no extra
-          emphasis on melodic arc).'
+        comment: 'Above well-configured default: piano keyboard row shading adds genuine
+          domain character, note strokes add definition, Imprint colormap applied
+          correctly. Not quite publication-ready — no typographic emphasis or compositional
+          focal point beyond the colormap.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed; custom beat grid with differentiated opacity/width;
-          subtle stroke on note rectangles; alternating row backgrounds are a refined
-          domain-specific touch.
+        comment: 'Grid replaced with custom vlines! at beat boundaries (good). Top/right
+          spines removed. Alternating row backgrounds are refined. Note stroke alpha=0.55
+          is subtle. Minor: strokewidth=0.7 is thin at mobile scale.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Musical arc traceable: ascending melody rises to C5 peak (visibly
-          greener/louder), then descends and resolves. Velocity encoding makes dynamics
-          visible. Score stops short of 6 because storytelling relies on domain knowledge;
-          no additional visual hierarchy emphasizing the climax.'
+        comment: 'Musical arc is visually clear: ascending melody in upper register
+          (Meas. 1-2), climax at C5 (beat 7), descent (Meas. 3), resolution (Meas.
+          4). Velocity colormap creates visual hierarchy — brighter notes draw the
+          eye. Measure labels provide structural context.'
     spec_compliance:
       score: 15
       max: 15
@@ -143,30 +150,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct piano roll: horizontal note rectangles, pitch on Y, time
-          on X, velocity encoded by color.'
+        comment: 'Correct MIDI piano roll: horizontal note rectangles on pitch/time
+          grid.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Note names on Y-axis, alternating white/black key row backgrounds,
-          beat-division grid with stronger measure boundaries, sequential velocity
-          colormap, pitch range auto-fit with margin — all present.
+        comment: 'All spec features present: note names on Y-axis, alternating white/black
+          key row shading, beat/measure grid lines with stronger measure boundaries,
+          velocity colormap.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time in beats, Y=MIDI pitch names, color=velocity. All 50 notes
-          visible.
+        comment: X=time in beats, Y=pitch as note names, width=duration, color=velocity.
+          All correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'piano-roll-midi · julia · makie · anyplot.ai' correct. Colorbar
-          labeled 'Velocity' with correct 0-127 range and ticks.
+        comment: 'Title: ''piano-roll-midi · julia · makie · anyplot.ai'' — correct
+          format. Velocity colorbar labeled with ticks at 0,32,64,96,127.'
     data_quality:
       score: 15
       max: 15
@@ -176,58 +183,60 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Four measures with melody (single notes, varying durations 0.5-1.5
-          beats), chord accompaniment (multi-note stacks), note range B2-C5, velocity
-          range 48-102.
+        comment: '48 notes show: varying velocity dynamics, varying durations (eighth
+          to whole notes), both melody and chord accompaniment, full 4-measure structure,
+          pitch range C3-C5.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'C-major piano arrangement: neutral, musically plausible, non-controversial
-          domain.'
+        comment: C major phrase in 4/4 time with ascending melody, climax, descent,
+          resolution — musically coherent and realistic DAW content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: MIDI notes 48-72 (C3-C5) correct for piano; velocities 48-102 realistic
-          DAW range; beat durations correspond to standard note values.
+        comment: MIDI note numbers correct (C4=60), velocities 48-102 are realistic,
+          durations in standard note values, 4 measures = 16 beats in 4/4.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Two helper functions defined (is_black_key, midi_to_name). Both could
-          be inlined at their single call sites.
+        passed: true
+        comment: 'Linear flow: imports → tokens → data → plot elements → save. No
+          functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set; data is deterministic.
+        comment: Random.seed!(42) set. Data is deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random all used.
+        comment: CairoMakie, Colors, Random — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No over-engineering, no fake UI, appropriate complexity.
+        comment: Comprehensions for note_rects and note_colors are clean Julia idiom.
+          No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png with px_per_unit=2; current CairoMakie API.
+        comment: Saves as plot-$(THEME).png with px_per_unit=2. Modern size= API (Makie
+          0.22+).
     library_mastery:
       score: 7
       max: 10
@@ -237,18 +246,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: poly!(ax, Rect2f[]) for batch note rendering, Colorbar component,
-          vlines! for grid, colsize! for layout, ax.yticks with (positions, labels)
-          — all idiomatic CairoMakie.
+        comment: 'Good idiomatic use: poly! with Rect2f slice, Colorbar widget, vlines!,
+          text!, colsize! for layout. Slightly below expert level — could use layout
+          padding (rowgap!/colgap!) for spacing control.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Batch Rect2f[] poly rendering is a Makie strength. get(VEL_CMAP,
-          v/127) for cgrad lookup is Makie/Colors-specific. colsize!(fig.layout, ...)
-          uses Makie declarative layout. Features are real but not deeply distinctive.
-  verdict: REJECTED
+        comment: 'Uses Makie-specific: poly! with Rect2f for efficient batch polygon
+          rendering, Colorbar widget with reverse cmap, colsize! Relative layout.
+          Does not use more distinctive Makie features like recipes or Observable-driven
+          layout.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -262,3 +272,4 @@ impl_tags:
   styling:
   - custom-colormap
   - alpha-blending
+  - edge-highlighting
