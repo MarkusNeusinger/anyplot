@@ -1,13 +1,16 @@
-""" pyplots.ai
+"""anyplot.ai
 pictogram-basic: Pictogram Chart (Isotype Visualization)
-Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 88/100 | Created: 2026-03-10
+Library: plotnine | Python 3.14
+Quality: 88/100 | Updated: 2026-06-03
 """
+
+import os
 
 import pandas as pd
 from plotnine import (
     aes,
     element_blank,
+    element_rect,
     element_text,
     geom_text,
     geom_tile,
@@ -23,46 +26,46 @@ from plotnine import (
 )
 
 
-# Data: Fruit production (thousands of tonnes) — sorted by value for visual hierarchy
+# Theme tokens — Imprint palette, theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint categorical palette (hybrid-v3) — first series always #009E73
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+
+# Data: Fruit production (thousands of tonnes), sorted by value for visual hierarchy
 categories = ["Apples", "Grapes", "Oranges", "Bananas", "Strawberries"]
 values = [35, 28, 22, 18, 12]
 unit_value = 5  # Each icon = 5 thousand tonnes
 
-# Colorblind-safe palette (well-separated hues, starts with Python Blue)
-fruit_colors = {
-    "Apples": "#306998",  # Python Blue
-    "Grapes": "#8E44AD",  # Purple
-    "Oranges": "#E67E22",  # Orange
-    "Bananas": "#27AE60",  # Green (distinct from orange for colorblind safety)
-    "Strawberries": "#C0392B",  # Dark red
-}
+# Imprint palette by category (ordinal; Grapes=purple and Strawberries=red are semantic matches)
+fruit_colors = dict(zip(categories, IMPRINT, strict=True))
 
 # Tile dimensions
 tile_w, tile_h = 0.82, 0.70
 
-# Build icon tiles: full icons + partial icons (half-filled approach)
+# Build icon tiles: full icons + partial icons (left-aligned fraction)
 cat_order = categories[::-1]  # highest value at top
 
 tile_rows = []
-
 for cat, val in zip(categories, values, strict=True):
     full_icons = val // unit_value
     remainder = val % unit_value
     color = fruit_colors[cat]
 
-    # Full icon tiles
     for i in range(full_icons):
         tile_rows.append({"category": cat, "col": i + 1, "border": "none", "width": tile_w, "layer": "full"})
 
-    # Partial icon: background outline (dashed border) + left-aligned fill
     if remainder > 0:
         px = full_icons + 1
         frac = remainder / unit_value
-        # Outline tile (dashed border in category color, tinted fill)
         tile_rows.append({"category": cat, "col": px, "border": color, "width": tile_w, "layer": "outline"})
-        # Filled portion — shifted left so it fills from the left edge
         filled_w = tile_w * frac
-        offset = (tile_w - filled_w) / 2  # shift left
+        offset = (tile_w - filled_w) / 2
         tile_rows.append(
             {"category": cat, "col": px - offset, "border": "none", "width": filled_w, "layer": "partial_fill"}
         )
@@ -70,7 +73,6 @@ for cat, val in zip(categories, values, strict=True):
 df = pd.DataFrame(tile_rows)
 df["category"] = pd.Categorical(df["category"], categories=cat_order, ordered=True)
 
-# Separate layers for correct z-ordering
 df_full = df[df["layer"] == "full"].copy()
 df_outline = df[df["layer"] == "outline"].copy()
 df_partial = df[df["layer"] == "partial_fill"].copy()
@@ -87,15 +89,15 @@ label_df = pd.DataFrame(
     }
 )
 
-# Dynamic x-axis limit
 x_max = max(max_cols.values()) + 2.0
 
-# Build plot with layered grammar of graphics — fill mapped to category via scale_fill_manual
+TITLE = "pictogram-basic · python · plotnine · anyplot.ai"
+
 plot = (
     ggplot(df_full, aes(x="col", y="category"))
-    # Layer 1: Full icon tiles — fill mapped to category (grammar-of-graphics aesthetic mapping)
+    # Layer 1: Full icon tiles — fill mapped to category via Imprint palette
     + geom_tile(aes(fill="category"), width=tile_w, height=tile_h)
-    # Layer 2: Partial icon outline (dashed border, tinted category fill at low alpha)
+    # Layer 2: Partial icon outline (dashed border, low alpha)
     + geom_tile(
         aes(fill="category", color="border"),
         data=df_outline,
@@ -106,40 +108,34 @@ plot = (
         size=0.6,
         show_legend=False,
     )
-    # Layer 3: Partial icon fill (left-aligned filled portion)
+    # Layer 3: Partial icon fill (left-aligned proportion)
     + geom_tile(aes(fill="category", width="width"), data=df_partial, height=tile_h, show_legend=False)
     # Layer 4: Value labels
     + geom_text(
-        aes(x="col", y="category", label="label"), data=label_df, size=16, color="#444444", ha="left", fontweight="bold"
+        aes(x="col", y="category", label="label"), data=label_df, size=3.5, color=INK, ha="left", fontweight="bold"
     )
-    # Grammar-of-graphics scales: category-mapped fill with structured guide_legend
     + scale_fill_manual(
-        name="Each \u25a0", values=fruit_colors, breaks=["Apples"], labels=["= 5k tonnes"], guide=guide_legend(nrow=1)
+        name="Each ■", values=fruit_colors, breaks=["Apples"], labels=["= 5k tonnes"], guide=guide_legend(nrow=1)
     )
     + scale_color_identity()
     + scale_x_continuous(limits=(0.3, x_max), expand=(0, 0))
     + scale_y_discrete(expand=(0.2, 0.15))
-    # Labels
-    + labs(
-        x="",
-        y="",
-        title="pictogram-basic \u00b7 plotnine \u00b7 pyplots.ai",
-        caption="Partial squares show fractional units  \u00b7  Source: FAO estimates",
-    )
-    # Clean infographic theme
+    + labs(x="", y="", title=TITLE, caption="Partial squares show fractional units  ·  Source: FAO estimates")
     + theme_void()
     + theme(
-        figure_size=(16, 9),
-        plot_title=element_text(size=26, weight="bold", margin={"b": 20}),
-        plot_caption=element_text(size=14, color="#777777", ha="left", margin={"t": 18}),
-        axis_text_y=element_text(size=20, color="#333333", ha="right", margin={"r": 14}),
+        figure_size=(8, 4.5),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        plot_title=element_text(size=12, weight="bold", color=INK, margin={"b": 15}),
+        plot_caption=element_text(size=7, color=INK_MUTED, ha="left", margin={"t": 12}),
+        axis_text_y=element_text(size=8, color=INK_SOFT, ha="right", margin={"r": 10}),
         axis_text_x=element_blank(),
         legend_position="bottom",
-        legend_title=element_text(size=14, weight="bold", color="#555555"),
-        legend_text=element_text(size=14, color="#555555"),
+        legend_background=element_rect(fill=ELEVATED_BG),
+        legend_title=element_text(size=8, weight="bold", color=INK_SOFT),
+        legend_text=element_text(size=8, color=INK_SOFT),
         plot_margin=0.06,
     )
 )
 
-# Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
