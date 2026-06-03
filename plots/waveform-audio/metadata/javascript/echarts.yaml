@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: waveform-audio
 created: '2026-06-03T01:31:18Z'
-updated: '2026-06-03T01:37:29Z'
+updated: '2026-06-03T01:51:49Z'
 generated_by: claude-sonnet
 workflow_run: 26857994292
 issue: 4563
@@ -12,58 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waveform-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/javascript/echarts/plot-dark.html
-quality_score: 84
+quality_score: 92
 review:
   strengths:
-  - 'Correct waveform-audio plot type: filled area chart symmetric around zero baseline
-    using ECharts areaStyle with origin:0'
-  - Imprint brand green (#009E73) correctly used as primary series color via t.palette[0]
-  - 'Theme-adaptive chrome fully wired: title uses t.ink, axis labels use t.inkSoft,
-    grid uses t.grid token'
-  - Sophisticated gradient fill (opaque at extremes, transparent at center) mimics
-    professional DAW aesthetics
-  - Zero reference line implemented via markLine — clean and idiomatic ECharts approach
-  - 'Highly realistic speech-like synthetic data: three Gaussian syllabic envelopes
-    at 175 Hz fundamental with four harmonics'
-  - Deterministic data generation (pure math, no RNG) ensures perfect reproducibility
-  - 'Well-balanced font hierarchy: title 22px, axis names 18px, tick labels 14px —
-    all explicitly set'
-  - Correct canvas orientation directive and proper harness contract (no explicit
-    width/height, no devicePixelRatio)
+  - Min/max envelope binning (300 bins from 5000 samples) correctly avoids aliasing
+    — spec explicitly required this for dense waveforms
+  - Gradient areaStyle with origin:0 creates an authentic DAW-like filled waveform
+    appearance; mirrored inverted gradient on lower envelope is a clever dual-series
+    approach
+  - Syllabic region annotations (markArea) with labels add genuine storytelling value
+    — viewer immediately understands the 3-syllable speech structure
+  - Fully deterministic data generation using a physically plausible speech model
+    (Gaussian envelopes + 175 Hz harmonic carrier)
+  - 'Perfect theme adaptation: both light and dark renders pass all legibility checks
+    with no dark-on-dark failures; all chrome tokens (t.ink, t.inkSoft, t.grid) correctly
+    applied'
   weaknesses:
-  - 'DE-01/DE-03: No visual storytelling elements — the three syllabic peaks are the
-    core insight but nothing highlights them. Add subtle vertical annotations or colored
-    region spans marking the three burst centers (0.14s, 0.47s, 0.81s) with light
-    labels (''Syllable 1'', ''Syllable 2'', ''Syllable 3'') to give the chart a narrative
-    and elevate design sophistication.'
-  - 'SC-02 minor: Spec recommends min/max envelope rendering for dense waveforms to
-    avoid aliasing artifacts. Consider computing and rendering a downsampled min/max
-    envelope (e.g. 200 bins) as a solid fill behind the fine line, which is also more
-    authentic to how professional DAWs display waveforms.'
-  - 'DE-01: Gradient fill is a good touch but the linear vertical gradient (from y=0
-    to y=1) doesn''t fully capture the symmetric waveform aesthetics — the top half
-    fades from opaque at top to transparent at center and the bottom half is nearly
-    invisible. Consider making the gradient symmetric around zero with equal fill
-    intensity above and below, or use two separate series (positive / negative envelope
-    bands) for a more polished professional look.'
-  - 'CQ-01: Small hexToRgba helper function deviates from the flat KISS structure
-    rule. Could inline the rgba calculation or use ECharts'' built-in rgba support
-    via a string template if available.'
+  - Syllable region labels at markArea.label.fontSize=12 are slightly small on the
+    3200x1800 canvas — increase to 14-15 for better mobile readability
+  - Axis name labels at nameTextStyle.fontSize=18 are somewhat large relative to tick
+    labels at fontSize=14; reduce to 15-16 for better typographic balance
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correctly matches the light theme surface.
-      Chrome: Title "waveform-audio · javascript · echarts · anyplot.ai" in dark ink, centered, clearly readable. Y-axis label "Amplitude" and X-axis label "Time (s)" in secondary ink (inkSoft), both readable. Tick labels at 14px in inkSoft, well-spaced on both axes. Y-axis grid lines are subtle and understated. No top/right frame lines visible (ECharts default).
-      Data: A filled area waveform rendered in Imprint brand green (#009E73). The fill uses a vertical linear gradient — opaque green at the waveform extremes fading to near-transparent at the zero crossing, creating an envelope-style visual. A thin horizontal zero line (markLine) in inkSoft runs across the entire width. Three distinct amplitude peaks are visible (syllabic bursts), with near-silence regions between them. The dense oscillations (5000 samples) are individually visible as rapid vertical strokes.
-      Legibility verdict: PASS — all text clearly readable against the warm off-white background, no light-on-light failures.
+      Background: Warm off-white (~#FAF8F1) — correct theme surface
+      Chrome: Title "waveform-audio · javascript · echarts · anyplot.ai" in dark ink, centered. Y-axis label "Amplitude" and X-axis label "Time (s)" in dark-gray (t.inkSoft). Tick labels -1.0 to 1.0 on Y and 0 to 1.00 on X in same dark-gray. All readable.
+      Data: Waveform in brand green (#009E73). Gradient area fill — 62% alpha at envelope peak fading to 5% at zero axis on upper envelope, inverted on lower. Three syllabic regions highlighted with faint semi-transparent green rectangles and "Syllable 1/2/3" labels. Zero reference line visible.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correctly matches the dark theme surface.
-      Chrome: Title in light ink (F0EFE8-range), axis labels and tick labels in lighter inkSoft token — all clearly readable against the dark background. Grid lines use the dark-theme grid token and remain subtle. No dark-on-dark failures detected.
-      Data: Green waveform (#009E73) is identical to the light render — data colors unchanged, only chrome flipped. The gradient fill reads slightly differently on dark (the semi-transparent regions blend into the near-black background cleanly), creating an equally professional look. The zero line is visible in the lighter inkSoft on dark background.
-      Legibility verdict: PASS — all text clearly readable against the warm near-black background, no dark-on-dark failures.
+      Background: Warm near-black (~#1A1A17) — correct dark surface
+      Chrome: Title and all axis/tick labels render in light text (t.ink = #F0EFE8 and t.inkSoft = #B8B7B0). Syllable region labels render in light gray (t.inkSoft). Grid lines are subtle. No dark-on-dark failures detected.
+      Data: Waveform colors IDENTICAL to light render — brand green (#009E73) with same gradient fill. Syllabic region highlights are faint lighter-dark rectangles with legible light labels.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -71,81 +54,79 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=22, axis names=18, tick labels=14).
-          Readable in both themes. Axis names at fontSize:18 are slightly large relative
-          to recommended pattern but not distracting.
+        comment: 'All font sizes explicitly set (title 22, axis names 18, tick labels
+          14, syllable labels 12). Minor deduction: syllable region labels at fontSize
+          12 are slightly small on the canvas.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements in either render.
+        comment: No overlapping text elements. Syllable labels sit cleanly inside
+          their respective regions.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Waveform visible with gradient fill compensating for thin line. Dense
-          5000 samples render cleanly; gradient fill ensures even the zero-crossings
-          remain visible.
+        comment: 300-bin min/max envelope correctly represents 5000-sample waveform.
+          Gradient fill makes envelope shape immediately legible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series in brand green (#009E73), CVD-safe, adequate contrast
-          on both backgrounds.
+        comment: Single series in brand green with semi-transparent fill. Good contrast
+          on both surfaces. CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good layout with proper margins (left:95, right:50, top:80, bottom:85).
-          Waveform fills canvas width well.
+        comment: Landscape orientation appropriate. Good canvas utilization with balanced
+          margins. containLabel prevents overflow.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (s) with units; Amplitude is the standard domain label for a
-          normalized audio signal (-1 to 1 scale provides implicit unit context).
+        comment: Time (s) and Amplitude are descriptive. Normalized range self-explanatory
+          from tick labels.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series correctly uses t.palette[0]=#009E73. Backgrounds are
-          theme-correct (#FAF8F1 light, #1A1A17 dark). All chrome tokens correctly
-          wired (t.ink, t.inkSoft, t.grid).'
+        comment: 'First series is #009E73 (t.palette[0]). Background inherits correct
+          theme surface. All chrome tokens applied correctly in both renders.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above average: gradient fill creates professional DAW aesthetics,
-          clean token-driven chrome. Not quite publication-ready due to absence of
-          visual storytelling or annotations for the syllabic peaks.'
+        comment: Gradient fill with origin:0, mirrored lower envelope, semi-transparent
+          region shading — clearly above generic defaults. Strong design, not quite
+          publication-ready.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: y-axis only grid, markLine for zero reference,
-          no legend (appropriate for single series). Subtle token-driven colors throughout.'
+        comment: Y-axis-only grid with t.grid color, no top/right spines, generous
+          whitespace, containLabel. Solid refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Deliberate data choice (speech-like with 3 syllabic bursts) adds
-          narrative potential, but nothing highlights the peaks. Above the default
-          2 but no visual hierarchy or emphasis elements.
+        passed: true
+        comment: Labeled syllabic regions create clear narrative about speech structure.
+          Zero reference and gradient emphasis reinforce story. Good visual hierarchy.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -153,122 +134,122 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: filled area chart symmetric around zero via areaStyle origin:0.'
+        comment: Correct waveform with filled area mirrored around zero. Min/max envelope
+          rendering per spec.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Most features present: filled area, semi-transparent fill, zero
-          line, correct axes, synthetic data. Minor omission: spec recommends min/max
-          envelope rendering for dense waveforms to avoid aliasing.'
+        comment: 'All features present: filled area, semi-transparent fill, zero reference
+          line, time X-axis, amplitude Y-axis (-1 to +1), min/max envelope, synthetic
+          speech data.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time in seconds (0–1.0), Y=normalized amplitude (−1.0 to +1.0).
-          Correct.
+        comment: Time on X, amplitude on Y. Full +-1 range displayed.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'waveform-audio · javascript · echarts · anyplot.ai'. No
-          legend appropriate for single series.
+        comment: Title is exactly waveform-audio · javascript · echarts · anyplot.ai.
+          No legend appropriate for single-series.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows dynamic range variation, near-silence between syllables, transient
-          rises/falls, harmonic content. Clipping (amplitude hitting exactly ±1) not
-          demonstrated.
+        comment: Three distinct syllabic bursts, inter-syllable near-silence, varying
+          peak amplitudes, 175 Hz fundamental with 4 harmonics.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Highly realistic synthetic speech: 175 Hz fundamental, 4 harmonics,
-          3 Gaussian syllabic envelopes. Scientifically grounded and domain-appropriate.'
+        comment: Gaussian syllabic envelopes over voiced carrier is exactly how real
+          speech waveforms appear. Immediately recognizable to audio engineers.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1 second, 5000 samples, amplitude −1 to +1 — all correct for normalized
-          audio. 175 Hz is realistic speech fundamental.
+        comment: 5000 samples over 1 second, 175 Hz fundamental with realistic harmonic
+          decay weights, normalized amplitude +-1. Physically correct.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Small hexToRgba helper function deviates from flat structure rule.
-          Function is minimal and purposeful but still breaks the no-functions guideline.
+        comment: 'Clear linear flow: tokens -> data generation -> downsampling ->
+          init -> setOption. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: pure trigonometric functions with fixed parameters,
-          no RNG.'
+        comment: 'Fully deterministic: pure mathematical formula, no random number
+          generation.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused globals; all referenced symbols (echarts, window.ANYPLOT_TOKENS,
-          document) are expected harness-provided globals.
+        comment: No imports; only window.ANYPLOT_TOKENS and window.echarts globals
+          used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable JS. Gradient configuration is appropriately verbose.
-          No fake functionality.
+        comment: Appropriately complex for the task. Min/max binning loop is clean
+          and necessary.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness outputs plot-{theme}.png and plot-{theme}.html. Snippet follows
-          harness contract (no write calls, no devicePixelRatio, correct init pattern).
+        comment: ECharts is interactive library; harness generates both .png and .html.
+          animation:false set correctly.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses areaStyle.origin:0, markLine with silent:true, markArea with
+          labels, gradient colorStops, symbol:none — all idiomatic ECharts patterns.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Good idiomatic ECharts usage: line series with areaStyle, markLine
-          for reference, gradient colorStops, token-driven option config. Could leverage
-          more advanced ECharts patterns.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses ECharts-specific gradient area fill (areaStyle with colorStops
-          and origin:0), markLine for reference annotation. These features go beyond
-          basic line chart usage but stop short of distinctively ECharts-only capability.
-  verdict: REJECTED
+        comment: 'markArea for time-region annotation, gradient areaStyle with origin:0,
+          mirrored dual-series envelope technique. Minor deduction: no tooltip/dataZoom
+          configuration.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - binning
   styling:
   - alpha-blending
   - gradient-fill
