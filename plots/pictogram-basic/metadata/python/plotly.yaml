@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: pictogram-basic
 created: '2026-03-10T22:42:01Z'
-updated: '2026-06-03T14:02:42Z'
+updated: '2026-06-03T14:11:49Z'
 generated_by: claude-sonnet
 workflow_run: 26889018076
 issue: 4674
@@ -12,40 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pictogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/python/plotly/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance — all pictogram features present: unit icons, partial
-    opacity for fractional remainders, row alignment, value labels, and legend'
-  - 'Excellent Plotly-specific interactivity: updatemenus dropdown for category filtering,
-    customdata+hovertemplate for rich hover tooltips, HTML export alongside PNG'
-  - 'Clean theme adaptation in both renders — correct backgrounds (#FAF8F1 / #1A1A17),
-    all chrome tokens (INK, INK_SOFT, INK_MUTED) wired through to every text element'
-  - 'Strong data storytelling: subtitle insight annotation, leader row visually emphasised
-    with bold label and larger icon/value font, row background bands aid row reading'
-  - Perfect code quality — KISS structure with no functions or classes, fully deterministic
-    data, minimal clean imports
+  - 'Correct Imprint palette positions 1-5 used in order with #009E73 as first category
+    (Apples)'
+  - Partial icons elegantly encoded via reduced opacity — fraction of unit visually
+    clear in both themes
+  - Row background tinted bands add visual depth without competing with data
+  - Interactive Plotly dropdown (updatemenus) allows filtering to Top 3, genuine library-native
+    interactivity
+  - Rich hover tooltips via customdata + hovertemplate with contextual category/value
+    info
+  - HTML output alongside PNG makes full interactivity available
+  - Leader row emphasis (bold label, larger icons) creates clear visual hierarchy
+    for Apples as top producer
+  - 'Perfect spec compliance: unit legend, partial icons, left-aligned grid layout,
+    category labels all present'
+  - Theme-adaptive chrome correctly implemented — both renders fully readable with
+    correct backgrounds
   weaknesses:
-  - 'Subtitle annotation overlaps the All Categories dropdown button in both renders
-    — the subtitle text Apples lead with 35k tonnes — nearly double the next catego...
-    is cut off at catego with the final ry hidden behind the dropdown widget. Fix:
-    reposition subtitle to y=1.0 (below the dropdown which anchors at y=1.12) or shift
-    it left with x=0.0, xanchor=left to stay clear of the right-side dropdown.'
-  - 'Minor: the dropdown button and subtitle occupy the same visual band at the top
-    of the chart — consider offsetting one of them vertically or horizontally to avoid
-    the collision and ensure the full insight text is readable.'
+  - 'Subtitle annotation overlaps with dropdown button in both renders — text reads
+    "...nearly double the next catego" with "ry" hidden behind the All Categories
+    widget. Fix: move subtitle y-position higher (e.g. y=1.18) and adjust dropdown
+    to y=1.10, or shorten subtitle to avoid horizontal collision; verify no overlap
+    in the saved PNG before finalising.'
+  - Minor crowding in top-right corner where subtitle and dropdown compete for space
+    degrades perceived layout refinement.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, matches spec
-      Chrome: Title "Fruit Production · pictogram-basic · python · plotly · anyplot.ai" in dark ink, clearly readable. Y-axis category labels (Apples bold/large, others regular) in dark INK_SOFT, clearly visible. Value labels (35k bold, 22k/18k/12k/10k regular) in dark text at end of each row. Legend annotation "▪ = 5k tonnes | Faded ▪ = partial unit" visible at bottom in INK_MUTED. Subtitle "Apples lead with 35k tonnes — nearly double the next catego..." partially hidden by the "All Categories" dropdown button.
-      Data: Apples = #009E73 (brand green) 7 full squares. Oranges = #C475FD (lavender) 4 full + 1 faded. Bananas = #4467A3 (blue) 3 full + 1 faded. Grapes = #BD8233 (ochre) 2 full + 1 faded. Mangoes = #AE3030 (matte red) 2 full. All first series correctly using brand green. Partial icons shown via opacity fade. Subtle row background bands in each category's color.
-      Legibility verdict: PASS (all elements readable except subtitle last 2 chars "ry" hidden by dropdown)
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface.
+      Chrome: Title "Fruit Production · pictogram-basic · python · plotly · anyplot.ai" centred at top in dark ink — clearly readable. Y-axis tick labels (Apples bold, Oranges, Bananas, Grapes, Mangoes) readable in INK_SOFT. Subtitle "Apples lead with 35k tonnes — nearly double the next catego" visible but PARTIALLY OBSCURED — the word "ry" is hidden behind the "All Categories" dropdown button positioned in the top-right corner. Bottom legend "▪ = 5k tonnes | Faded ▪ = partial unit" readable in muted ink.
+      Data: Apples row shows 7 full #009E73 green squares. Oranges shows 4 full + 1 faded #C475FD lavender squares (22/5 = 4.4). Bananas shows 3 full + 1 faded #4467A3 blue squares (18/5 = 3.6). Grapes shows 2 full + 1 faded #BD8233 ochre squares (12/5 = 2.4). Mangoes shows 2 full #AE3030 red squares (10/5 = 2.0 exactly). Row background bands in tinted Imprint colors. Value labels (35k bold, 22k, 18k, 12k, 10k) at end of each row.
+      Legibility verdict: PASS for main data elements. PARTIAL FAIL for subtitle — text clipped behind dropdown.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title in light #F0EFE8 text, clearly readable. Category labels in light INK_SOFT, readable. Value labels in light text, readable. Legend annotation in INK_MUTED, readable. Same subtitle/dropdown overlap issue as light render — "ry" at end of subtitle hidden by dropdown button. No dark-on-dark failures. Brand green #009E73 clearly visible against dark background.
-      Data: Colors identical to light render — all 5 Imprint palette positions unchanged across themes. Only chrome (background, text, row bands) adapted to dark surface.
-      Legibility verdict: PASS (all elements readable; no dark-on-dark failures; subtitle overlap same as light render)
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface.
+      Chrome: Title readable in light #F0EFE8 ink. Y-axis labels visible in B8B7B0 secondary text. Same subtitle overlap issue — "...next catego" visible with "ry" behind dropdown. Legend text readable. Value labels readable.
+      Data: Data colors IDENTICAL to light render — #009E73 green (Apples), #C475FD lavender (Oranges), #4467A3 blue (Bananas), #BD8233 ochre (Grapes), #AE3030 red (Mangoes). Partial icons at reduced opacity still distinguishable on dark surface. No dark-on-dark issues observed.
+      Legibility verdict: PASS for main data elements. PARTIAL FAIL for subtitle — same overlap as light render.
   criteria_checklist:
     visual_quality:
       score: 25
@@ -56,86 +61,81 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set throughout (title_fontsize calculated,
-          icon_size=38/34, value labels 22/18px, tick labels 20px). All text readable
-          in both themes. Subtitle overlap with dropdown is a layout issue, not a
-          legibility failure.
+        comment: All font sizes explicitly set; title, axis labels, value labels and
+          legend readable in both themes. Subtitle partially obscured by dropdown
+          reduces to 7.
       - id: VQ-02
         name: No Overlap
         score: 3
         max: 6
         passed: false
-        comment: Subtitle annotation 'Apples lead with 35k tonnes — nearly double
-          the next category' is partially occluded by the All Categories dropdown
-          button — the final 'ry' is hidden behind the widget in both renders.
+        comment: Subtitle annotation overlapped by dropdown button in both renders
+          — last word 'category' hidden. Main chart content fully readable.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Square icons well-sized (34-38px at scale=4 = 136-152 effective pixels).
-          Partial icons via opacity fade are visually distinct. All data elements
-          clearly visible.
+        comment: Square markers well-sized (38px leader, 34px others). Partial icons
+          clearly distinct via opacity. All elements clearly visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used — all 5 hues perceptually distinct under CVD.
-          Good luminance contrast. Category identity maintained through color + row
-          position.
+        comment: Imprint palette is colorblind-safe. Icon borders use PAGE_BG for
+          definition. Good contrast throughout.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Canvas correct 3200x1800. Good margins (t=120, b=80, l=150, r=50).
-          Plot fills canvas well. Minor deduction for subtitle/dropdown positional
-          collision at top.
+        comment: Canvas 3200x1800 (gate passed). Good use of space overall; minor
+          crowding in top-right due to subtitle-dropdown collision.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct. Y-axis shows category names. X-axis has no label (appropriate
-          — icon count axis needs no label in pictogram context).
+        comment: Title descriptive with spec-id prefix. Y-axis category labels clear.
+          X-axis intentionally hidden for pictogram layout. Unit context provided
+          by bottom legend.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Apples) = #009E73. Subsequent series follow Imprint
-          canonical order: #C475FD, #4467A3, #BD8233, #AE3030. Backgrounds: light=#FAF8F1,
-          dark=#1A1A17. Data colors identical across themes. Full compliance.'
+        comment: 'Imprint positions 1-5 in canonical order. First series #009E73.
+          Backgrounds #FAF8F1 / #1A1A17. All chrome theme-adaptive. Data colors identical
+          across both renders.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above configured-default level: row background bands (subtle per-category
-          tints), leader row emphasis (bold Apples label, larger icon_size=38, larger
-          value font), partial opacity icons for fractional units. Not quite FiveThirtyEight-level
-          but clearly thoughtful.'
+        comment: 'Clearly above default: row background tinted bands, leader row emphasis,
+          interactive dropdown, dotted baseline connectors, partial opacity fraction
+          encoding. Cohesive and intentional design.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No grid (showgrid=False), no axis lines (showline=False), no tick
-          labels on X-axis. Row background bands add visual structure. Clean, uncluttered
-          layout.
+        comment: No spines, no grid, icon borders use PAGE_BG. Subtle row bands add
+          texture. Theme tokens correctly applied throughout. Subtitle-dropdown collision
+          is a minor refinement gap.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Subtitle directly states the key insight. Leader row is visually
-          emphasised (bold, larger). Row ordering largest-to-smallest creates natural
-          ranking hierarchy. Story is clear despite subtitle partial occlusion.
+        comment: Visual hierarchy guides viewer to Apples via bold label and larger
+          icons. Key insight subtitle present (partially obscured). Dropdown allows
+          Top 3 filter. Decreasing order aids comparison.
     spec_compliance:
       score: 15
       max: 15
@@ -145,31 +145,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct ISOTYPE/pictogram chart: repeated icons per row, each representing
-          a fixed unit value (5k tonnes).'
+        comment: Correct pictogram chart with square markers as icons, one icon per
+          fixed unit count.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Consistent unit value with legend, partial icons for fractional remainders
-          (opacity), grid-like row arrangement, category labels on left axis — all
-          spec requirements met.
+        comment: Unit legend present, partial icons shown via reduced opacity, grid-like
+          row layout, category labels on left axis — all spec requirements met.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 5 categories correctly mapped, values 10-35k represented as icon
-          counts. All data visible.
+        comment: Correct icon counts for all categories. Partial icons correctly compute
+          remainder/ICONS_PER_UNIT fraction.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: 'Title: ''Fruit Production · pictogram-basic · python · plotly ·
-          anyplot.ai'' — correct format. Footer legend explains icon unit and partial
-          icon meaning.'
+          anyplot.ai'' — correct format with descriptive prefix. Unit legend at bottom
+          clearly explains icon value.'
     data_quality:
       score: 15
       max: 15
@@ -179,23 +178,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows full icons, partial/faded icons for fractional remainders,
-          varied row lengths, all 5 categories within 3-8 range. Complete pictogram
-          feature coverage.
+        comment: 'Shows all pictogram features: integer icons, partial (fractional)
+          icons, unit legend, 5 categories with varied values.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Fruit production (thousands of tonnes) — neutral, scientifically
-          plausible scenario.
+        comment: Fruit production dataset (Apples, Oranges, Bananas, Grapes, Mangoes)
+          is neutral, comprehensible, real-world plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 10k-35k tonnes plausible for fruit production. Apples leading
-          is factually credible.
+        comment: Values in thousands of tonnes with Apples leading — plausible proportions
+          for agricultural production context.
     code_quality:
       score: 10
       max: 10
@@ -205,34 +203,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'No functions or classes. Direct top-level code: tokens → data →
-          figure → layout → save.'
+        comment: 'Flat script: theme tokens → data → layout params → traces → save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — all data hardcoded, no randomness.
+        comment: Fully deterministic hardcoded data — no random state needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os and plotly.graph_objects — both used.
+        comment: Only os and plotly.graph_objects — both actively used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. The dropdown is real Plotly interactivity (not fake).
-          No over-engineering.
+        comment: Clean, Pythonic code. Good use of zip(strict=True), list comprehensions,
+          and computed layout params.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct autosize=False
-          with explicit width/height/scale.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct landscape dimensions
+          (width=800 height=450 scale=4).
     library_mastery:
       score: 9
       max: 10
@@ -242,17 +240,17 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert idiomatic Plotly: go.Figure, add_trace(go.Scatter), add_shape,
-          add_annotation, update_layout with full property dict, updatemenus for interactivity.'
+        comment: Expert use of go.Figure, go.Scatter, add_shape, add_annotation, update_layout
+          — all idiomatic Plotly Graph Objects patterns.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Uses Plotly-distinctive features: updatemenus dropdown for trace
-          visibility toggling, customdata+hovertemplate for rich category-aware tooltips,
-          HTML export. These features are distinctly Plotly.'
-  verdict: REJECTED
+        comment: updatemenus dropdown (native Plotly interactivity), customdata+hovertemplate
+          (rich tooltips), write_html for full interactive output — features unique
+          to Plotly in the catalog.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
