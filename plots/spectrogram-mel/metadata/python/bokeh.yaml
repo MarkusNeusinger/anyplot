@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: spectrogram-mel
 created: '2026-03-11T19:42:55Z'
-updated: '2026-06-03T18:14:04Z'
+updated: '2026-06-03T18:24:40Z'
 generated_by: claude-sonnet
 workflow_run: 26902913063
 issue: 4672
@@ -12,129 +12,120 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrogr
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - 'Excellent spec compliance: mel filterbank computed from scratch, correct STFT
-    parameters (n_fft=2048, hop_length=512, n_mels=128), dB scale, all required Hz
-    tick labels at mel band edges, colorbar labeled in dB'
-  - 'Strong data storytelling: arpeggio annotations, dashed section separator, C4/C5
-    horizontal reference lines create a clear musical narrative with immediate readability'
-  - 'Expert Bokeh library usage: HoverTool with spectrogram pixel value readout (@image
-    dB format), major_label_overrides for Hz axis labels, BoxAnnotation and Span for
-    annotations — idiomatic and distinctive'
-  - Correct canvas sizing (3200x1800) with proper min_border reservations and CDP
-    setDeviceMetricsOverride for exact PNG dimensions
-  - 'Realistic, correctly-parameterized synthesized audio: correct musical note frequencies
-    (C4=261.63 Hz, E4=329.63 Hz, etc.), harmonic overtones with attack/release envelopes,
-    background noise'
+  - Mel filterbank computed from scratch (triangular filters) without librosa dependency,
+    demonstrating deep signal processing knowledge
+  - Correct imprint_seq colormap applied to continuous power data, with theme-adaptive
+    chrome throughout both renders
+  - 'Annotations narrate the C major arpeggio story: BoxAnnotation region, italic
+    labels, C4/C5 Span guides, and Hz ticks at perceptually meaningful frequencies'
+  - HoverTool provides time/dB readout in the HTML artifact, a genuine Bokeh interactive
+    advantage
+  - CDP-based Selenium screenshot + PIL canvas-pinning ensures exact 3200x1800 output
+    dimensions
   weaknesses:
-  - 'Non-Imprint continuous colormap: Magma256 (a Bokeh named palette) is used instead
-    of the required imprint_seq. The bokeh.md guide and style guide explicitly forbid
-    all Bokeh named palettes for continuous data. Replace with: ANYPLOT_SEQ256 = [_lerp_hex(''#009E73'',
-    ''#4467A3'', t/255.0) for t in range(256)] and pass to LinearColorMapper(palette=ANYPLOT_SEQ256,
-    low=vmin, high=vmax)'
-  - 'ColorBar background not theme-adaptive: color_bar.background_fill_color was not
-    set, defaulting to white in the dark render — creates a jarring white rectangle
-    on the dark background. Fix: add background_fill_color=PAGE_BG and background_fill_alpha=1.0
-    to the ColorBar constructor'
-  - 'Colorbar tick label contrast in dark mode: INK_SOFT (#B8B7B0) on white colorbar
-    background gives very low contrast for the dB tick values. Once background is
-    fixed to PAGE_BG (#1A1A17), contrast will be correct'
+  - Colorbar tick labels (22pt) and inner annotation labels (22pt) are below the canonical
+    34pt tick size; at mobile widths these may be harder to read — raise colorbar
+    major_label_text_font_size to 28pt and annotation text_font_size to 26pt
+  - 'The imprint_seq green-to-blue direction maps low energy to bright green and high
+    energy to darker blue, which is counter-intuitive for spectrograms (traditional:
+    dark=silence, bright=signal); consider reversing the palette stops so the silence
+    floor is dark blue and active notes are bright green'
+  - DE-02 could be elevated by adding a subtle separation between the colorbar and
+    the spectrogram edge
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) border with dark spectrogram interior (#000004 matching Magma minimum)
-      Chrome: Title "spectrogram-mel · python · bokeh · anyplot.ai" bold dark ink, clearly readable. Y-axis label "Frequency (Hz)" and X-axis label "Time (seconds)" in dark ink, readable. Tick labels (50 Hz to 8000 Hz on Y; 0-4s on X) in INK_SOFT, readable. Colorbar "Power (dB)" title and tick values (-20 to -60 dB) readable against light colorbar background.
-      Data: Magma colormap from dark purple (low power) through orange-red to bright yellow (high power). Harmonic bands of C-major melody visible as horizontal bright streaks. White italic annotations label arpeggio and descending sections. Dashed vertical separator at ~2.5s. Dotted C4/C5 reference lines.
+      Background: Warm off-white #FAF8F1 — correct theme surface.
+      Chrome: Title "spectrogram-mel · python · bokeh · anyplot.ai" in bold dark INK (#1A1A17) — clearly readable. Y-axis label "Frequency (Hz)" and x-axis label "Time (seconds)" in dark INK at 42pt — readable. Tick labels (Hz values and time values) in INK_SOFT (#4A4A44) at 34pt — readable. Colorbar title "Power (dB)" in dark INK at 28pt — readable. Colorbar tick labels in INK_SOFT at 22pt — readable though slightly small.
+      Data: Spectrogram rendered with imprint_seq colormap (green #009E73 = low dB, blue #4467A3 = high dB). Musical notes appear as horizontal blue bands against a green noise floor. White BoxAnnotation dashes separate arpeggio region; white italic annotations label the two sections. Dotted white Spans mark C4/C5 fundamentals.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) border with dark spectrogram interior (#000004)
-      Chrome: Title and axis labels appear in light-colored text against dark border — readable. Main plot tick labels readable. CRITICAL FAILURE: The ColorBar widget background_fill_color was not set to PAGE_BG, defaulting to white — the colorbar area on the right side has a white background against the dark page. Colorbar tick labels are INK_SOFT (#B8B7B0, light gray) on this white background — very low contrast, barely readable.
-      Data: Spectrogram colors identical to light render (Magma colormap unchanged — this is correct for data colors even though the colormap itself is non-compliant with Imprint rules).
-      Legibility verdict: FAIL — colorbar tick labels (-20 to -60 dB) have very low contrast (light gray on white background) due to missing color_bar.background_fill_color = PAGE_BG setting
+      Background: Warm near-black #1A1A17 — correct dark surface.
+      Chrome: Title in light INK (#F0EFE8) — clearly readable against dark background. Axis labels in light INK — readable. Tick labels in light INK_SOFT (#B8B7B0) — readable. Colorbar background matches #1A1A17 with light text — no dark-on-dark failure. No "dark on dark" issues observed.
+      Data: Spectrogram colors are IDENTICAL to light render — same green-to-blue gradient, same horizontal note bands. Only chrome (background, text, colorbar background) flips. Confirms correct theme separation.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
-        passed: false
-        comment: 'All sizes explicitly set (title 50pt, axis 42pt, ticks 34pt). Main
-          plot text readable. Dark render colorbar tick labels (INK_SOFT #B8B7B0)
-          on white colorbar background — very low contrast, barely readable.'
+        passed: true
+        comment: 'All sizes explicitly set; minor: colorbar tick labels (22pt) and
+          inner annotations (22pt) slightly below canonical 34pt — may be harder to
+          read at mobile widths'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements in either render.
+        comment: No overlapping text or data elements in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Spectrogram image fully visible; harmonic bands clearly discernible.
+        comment: Spectrogram image fully visible; note bands clearly distinguishable
+          from noise floor
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Magma is perceptually uniform and CVD-safe. White annotations visible
-          against dark spectrogram.
+        comment: imprint_seq (green→blue) is perceptually uniform and CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas 3200x1800, min_borders correct. Colorbar white background
-          in dark render creates visual artifact.
+        comment: 3200x1800 canvas gate passed; min_border_* values correct; plot fills
+          canvas well
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: Time (seconds), Y: Frequency (Hz), Colorbar: Power (dB) — all
-          descriptive with units.'
+        comment: Time (seconds), Frequency (Hz), Power (dB) — all descriptive with
+          units
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Non-compliant: uses Magma256 (Bokeh named palette) instead of required
-          imprint_seq. Bokeh guide explicitly forbids all named palettes for continuous
-          data. Additionally, colorbar background_fill_color not set to PAGE_BG causing
-          white colorbar in dark mode.'
+        passed: true
+        comment: 'imprint_seq (#009E73→#4467A3) for continuous data; backgrounds #FAF8F1/#1A1A17;
+          all chrome theme-adaptive'
     design_excellence:
       score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above default: custom mel filterbank from scratch, harmonically
-          synthesized melody, thoughtful annotation strategy. Non-compliant colormap
-          and colorbar background bug reduce polish.'
+        comment: Custom imprint_seq colormap, BoxAnnotation region highlight, Span
+          guides, hz-calibrated FixedTicker, HoverTool. Non-traditional sequential
+          direction (bright=low) slightly below publication-ready
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid hidden (appropriate for image glyph), outline removed, min_borders
-          set, annotations semi-transparent. Colorbar background not theme-adaptive
-          in dark mode is a refinement oversight.
+        comment: Grid hidden (correct for spectrogram), outline removed, colorbar
+          styled with INK/INK_SOFT, axis chrome themed
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 'Strong storytelling: C-major arpeggio narrative with labeled ascending/descending
-          sections, dashed box separating regions, C4/C5 horizontal reference guides.'
+        comment: Annotations narrate C major arpeggio and descending passage; BoxAnnotation,
+          C4/C5 Spans, and perceptually-meaningful Hz ticks guide the viewer
     spec_compliance:
       score: 15
       max: 15
@@ -144,29 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct mel-spectrogram: STFT -> mel filterbank -> dB scale -> image
-          glyph.'
+        comment: 'Correct mel-spectrogram: STFT + triangular mel filterbank + dB conversion'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: dB scale, Hz labels at mel band edges, colorbar in
-          dB, n_fft=2048, hop_length=512, n_mels=128, synthesized audio.'
+        comment: n_fft=2048, hop_length=512, n_mels=128; dB-scale; Hz labels at key
+          mel band edges; colorbar labeled in dB; synthesized audio
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: time in seconds, Y: mel-frequency bands with Hz overrides, color:
-          power in dB.'
+        comment: X=time (seconds), Y=mel band index with Hz override labels, Color=power
+          (dB)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly. No categorical legend needed;
-          colorbar serves as legend.
+        comment: Title is exactly spectrogram-mel · python · bokeh · anyplot.ai; colorbar
+          serves legend role
     data_quality:
       score: 15
       max: 15
@@ -176,22 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows mel compression, harmonic overtones, temporal note structure,
-          attack/release envelopes, background noise.
+        comment: C major arpeggio + descending with harmonics (4 partials), ADSR envelopes,
+          background noise — full mel-spectrogram feature set
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: C-major melody with correct note frequencies is a natural, neutral
-          audio ML context.
+        comment: Real musical note frequencies (C4=261.63 Hz etc.); neutral, comprehensible
+          musical scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 4s at 22050 Hz, canonical STFT parameters, realistic dB range, correct
-          musical note frequencies.
+        comment: sample_rate=22050 Hz, 4s duration, dB range typical for normalized
+          audio; note frequencies factually accurate
     code_quality:
       score: 10
       max: 10
@@ -201,32 +191,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no functions/classes.
+        comment: 'Linear flow: imports → data generation → STFT → mel filterbank →
+          plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extras.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean mel filterbank from scratch avoids librosa dependency; CDP
-          override for exact canvas dimensions is correct pattern.
+        comment: Clean, Pythonic; HoverTool legitimate for interactive library; _lerp_hex
+          minimal and necessary
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html.
+        comment: Saves plot-{THEME}.html + plot-{THEME}.png; current Bokeh 3.x API
     library_mastery:
       score: 9
       max: 10
@@ -236,18 +227,18 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert Bokeh usage: p.image() for spectrogram, LinearColorMapper
-          + ColorBar, HoverTool with @image dB format, FixedTicker + major_label_overrides,
-          BoxAnnotation, Span, Label.'
+        comment: Expert use of figure.image() + LinearColorMapper, ColorBar, BoxAnnotation,
+          Span, Label, FixedTicker+major_label_overrides, HoverTool; output_file+Selenium
+          pattern
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: HoverTool reading spectrogram pixel values, major_label_overrides
-          for custom Hz labels, BoxAnnotation for region highlighting are distinctively
-          Bokeh.
-  verdict: REJECTED
+        comment: BoxAnnotation, Span, interactive HoverTool with image pixel readout,
+          major_label_overrides — all Bokeh-specific. Slightly below 5/5 as image-glyph+hover
+          is a common Bokeh pattern
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
@@ -257,13 +248,14 @@ impl_tags:
   - colorbar
   - annotations
   - hover-tooltips
-  - manual-ticks
   - html-export
+  - manual-ticks
   patterns:
   - data-generation
   - matrix-construction
+  - iteration-over-groups
   dataprep:
-  - normalization
+  - binning
   styling:
   - custom-colormap
   - alpha-blending
