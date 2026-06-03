@@ -7,10 +7,10 @@
 
 const t = window.ANYPLOT_TOKENS;
 
-// Data: Top coffee-producing countries (thousand 60 kg bags per year, simplified)
+// Data: Top coffee-producing countries (million 60 kg bags per year, approx.)
 const categories = ["Brazil", "Vietnam", "Colombia", "Indonesia", "Ethiopia"];
-const values = [35, 25, 18, 14, 9];
-const ICON_VALUE = 5; // one icon = 5 thousand 60 kg bags
+const values = [63, 29, 14, 10, 9];
+const ICON_VALUE = 7; // one icon = 7 million 60 kg bags
 
 const maxCols = Math.ceil(Math.max(...values) / ICON_VALUE);
 
@@ -91,7 +91,7 @@ const pictogramPlugin = {
     ctx.textAlign = "left";
     ctx.textBaseline = "bottom";
     ctx.fillText(
-      "● = " + ICON_VALUE + " thousand 60 kg bags  ·  partial circle = fractional unit",
+      "● = " + ICON_VALUE + " million 60 kg bags  ·  partial circle = fractional unit",
       chartArea.left,
       chart.height - 14
     );
@@ -132,7 +132,8 @@ new Chart(canvas, {
     scales: {
       y: {
         ticks: { color: t.inkSoft, font: { size: 16 } },
-        grid: { color: t.grid },
+        grid: { display: false },
+        border: { display: false },
       },
       x: {
         min: 0,
@@ -143,9 +144,10 @@ new Chart(canvas, {
           stepSize: ICON_VALUE,
         },
         grid: { color: t.grid },
+        border: { display: false },
         title: {
           display: true,
-          text: "Production (thousand 60 kg bags)",
+          text: "Production (million 60 kg bags)",
           color: t.ink,
           font: { size: 16 },
         },
