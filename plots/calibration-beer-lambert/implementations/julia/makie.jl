@@ -1,7 +1,7 @@
 # anyplot.ai
 # calibration-beer-lambert: Beer-Lambert Calibration Curve
 # Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 88/100 | Created: 2026-06-03
+# Quality: 91/100 | Created: 2026-06-03
 
 using CairoMakie
 using Colors
