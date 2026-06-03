@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 piano-roll-midi: MIDI Piano Roll Visualization
 Library: plotnine 0.15.5 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-06-03
+Quality: 91/100 | Updated: 2026-06-03
 """
 
 import os
