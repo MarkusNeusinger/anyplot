@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pictogram-basic: Pictogram Chart (Isotype Visualization)
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-03
@@ -12,7 +12,6 @@ import sys
 _this_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path = [p for p in sys.path if p != _this_dir]
 
-import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
@@ -36,16 +35,6 @@ unit_value = 10  # each icon = 10% of respondents
 
 # Category colors from Imprint palette in canonical order
 cat_colors = {cat: IMPRINT_PALETTE[i] for i, cat in enumerate(categories)}
-
-# Faded colors for partial icons — blend with PAGE_BG to signal fractional remainder
-cat_faded = {}
-for i, cat in enumerate(categories):
-    rc, gc, bc = mcolors.to_rgb(IMPRINT_PALETTE[i])
-    rb, gb, bb = mcolors.to_rgb(PAGE_BG)
-    opacity = 0.35
-    cat_faded[cat] = mcolors.to_hex(
-        (rc * opacity + rb * (1 - opacity), gc * opacity + gb * (1 - opacity), bc * opacity + bb * (1 - opacity))
-    )
 
 # Build icon DataFrame — each row is one icon dot
 rows = []
@@ -110,10 +99,11 @@ for cat in categories:
             x="x",
             y="category",
             order=categories,
-            color=cat_faded[cat],
+            color=cat_colors[cat],
+            alpha=0.35,
             size=14,
             marker="o",
-            edgecolor=PAGE_BG,
+            edgecolor=cat_colors[cat],
             linewidth=0.8,
             jitter=False,
             dodge=False,
