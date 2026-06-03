@@ -1,7 +1,7 @@
 # anyplot.ai
 # scatter-ashby-material: Ashby Material Selection Chart
-# Library: Makie.jl | Julia 1.11
-# Quality: pending | Created: 2026-06-03
+# Library: makie 0.22.10 | Julia 1.11.9
+# Quality: 82/100 | Created: 2026-06-03
 
 using CairoMakie
 using Colors
