@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 spectrogram-mel: Mel-Spectrogram for Audio Analysis
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-06-03
+Quality: 90/100 | Updated: 2026-06-03
 """
 
 import os
