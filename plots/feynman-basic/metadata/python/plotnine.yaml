@@ -1,39 +1,45 @@
 library: plotnine
+language: python
 specification_id: feynman-basic
 created: '2026-03-07T21:21:57Z'
-updated: '2026-03-07T21:43:20Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22807440281
+updated: '2026-06-03T06:08:04Z'
+generated_by: claude-sonnet
+workflow_run: 26866470336
 issue: 4667
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/plotnine/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 0.15.5
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent physics accuracy with correct arrow conventions for particles vs antiparticles
-  - Comprehensive legend showing all 4 particle line types (fermion, photon, gluon,
-    scalar boson)
-  - Clean professional design with custom color palette and Unicode particle symbols
-  - Good use of process subtitle and time axis for educational context
-  - Deterministic well-structured code following KISS principles
+  - Physics-accurate Feynman diagram with correct particle/antiparticle arrow conventions
+    (forward/backward in time)
+  - Elegant custom legend showing each particle type via its actual representative
+    line style (wavy, curly, dashed)
+  - 'Full Imprint palette compliance: fermion #009E73 first, positions 2-4 for photon/gluon/boson'
+  - 'Complete theme adaptation: vertex dots flip dark/light via INK token; chrome
+    uses INK_SOFT/INK_MUTED tokens'
+  - Correct canvas dimensions (3200x1800) and exact title format
   weaknesses:
-  - Library mastery limited by diagram nature — Feynman diagrams are inherently drawing-oriented
-    rather than data-visualization-oriented
-  - Legend text slightly small compared to diagram particle labels
-  image_description: 'The plot displays a Feynman diagram for the e⁻e⁺ → γ → μ⁻μ⁺
-    process on a clean white background. The title "feynman-basic · plotnine · pyplots.ai"
-    appears at the top in bold black text. Below it, the process notation "e⁻e⁺ →
-    γ → μ⁻μ⁺" is shown in italic. Four blue (#306998) fermion lines with directional
-    arrows connect to two central black vertex dots — e⁻ enters from upper-left, e⁺
-    from lower-left (with antiparticle arrow convention), μ⁻ exits upper-right, μ⁺
-    exits lower-right. An orange (#E0672A) wavy line represents the virtual photon
-    (γ) connecting the two vertices, with the γ label above in orange bold text. A
-    gray time arrow runs left-to-right near the bottom with italic "time" label. Below
-    the diagram, a legend displays all four particle line types: blue solid arrow
-    for Fermion, orange wavy for Photon, green curly/looped for Gluon, and purple
-    dashed for Scalar Boson, each clearly labeled.'
+  - Particle labels (e-, e+, mu-, mu+) at size=4 mm could be slightly larger (~5 mm)
+    for better mobile readability at 400px viewport width
+  - Time axis label at size=3 mm is very small; consider raising to 3.5 mm to match
+    other secondary text
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface
+      Chrome: Title "feynman-basic · python · plotnine · anyplot.ai" in bold dark ink, clearly readable. Particle labels (e-, e+, mu-, mu+) in #009E73 green, gamma label in #C475FD lavender, time label and legend text in INK_SOFT (#4A4A44) — all readable against light background.
+      Data: Fermion lines in #009E73 (brand green), photon wavy path in #C475FD (lavender), vertex dots in near-black INK (#1A1A17). Legend: gluon in #4467A3 (blue), scalar boson in #BD8233 (ochre, dashed). First series is #009E73 — correct.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface
+      Chrome: Title in bold near-white (#F0EFE8), clearly readable. Particle labels in #009E73 green (visible on dark), gamma label in #C475FD lavender (visible). Legend text and time label in INK_SOFT (#B8B7B0 in dark mode) — light grey on dark background, readable. No dark-on-dark failures detected.
+      Data: Colors identical to light render — fermion #009E73, photon #C475FD, gluon #4467A3, boson #BD8233. Vertex dots flip to near-white (#F0EFE8 = INK in dark mode), correctly adapting to dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -44,40 +50,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 26pt, labels 22pt, legend 16pt).
-          Legend labels slightly small.
+        comment: Title bold and clear in both themes; particle labels at size=4mm
+          readable; time/subtitle labels at size=3mm are small but appropriate for
+          diagram context
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text and elements well-separated, no collisions.
+        comment: No text-on-text or text-on-data overlaps in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines at size 2.0, vertex dots size 8, all clearly visible.
+        comment: All four particle line styles clearly visible; vertex dots adapt
+          correctly between themes
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/orange/green/purple palette is colorblind-safe.
+        comment: Imprint palette is CVD-safe; no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Diagram fills canvas well with balanced margins.
+        comment: Canvas gate passed (3200x1800); good proportions; no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: theme_void appropriate for diagram. Title follows correct format.
+        comment: Title in exact required format; time axis label present
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fermions #009E73 first; positions 2-4 for photon/gluon/boson; backgrounds
+          #FAF8F1/#1A1A17 correct; chrome tokens theme-adaptive'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -85,21 +100,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom color palette, Unicode symbols, professional look. Above defaults.
+        comment: Physics-accurate conventions; custom legend shows representative
+          line style per particle type; proper Imprint color assignment for particle
+          families
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: theme_void, white background, generous whitespace, well-organized
-          legend.
+        comment: theme_void() cleanly removes unnecessary chrome; generous whitespace;
+          correct background surfaces
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Process subtitle, time arrow, correct arrow conventions tell the
-          physics story.
+        comment: Subtitle annotation identifies physical process; time-axis arrow
+          orients viewer; fermion arrows distinguish particle from antiparticle
     spec_compliance:
       score: 15
       max: 15
@@ -109,25 +126,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Feynman diagram.
+        comment: Correct Feynman diagram implementation
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All 4 line styles, arrows, vertex dots, labels, time axis present.
+        comment: Fermion lines with arrows, wavy photon, curly gluon loop, dashed
+          scalar boson, vertex dots, particle labels, time axis all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Vertices and propagators positioned correctly.
+        comment: Time runs left-to-right; vertex positions and propagator connections
+          accurate
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and comprehensive particle type legend.
+        comment: 'Title: feynman-basic · python · plotnine · anyplot.ai; legend labels:
+          Fermion, Photon, Gluon, Scalar Boson'
     data_quality:
       score: 15
       max: 15
@@ -137,19 +157,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all 4 particle line types, vertex dots, directional arrows.
+        comment: All four particle types represented; arrow conventions demonstrated;
+          interaction vertices shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real QED process: electron-positron annihilation to muon pair.'
+        comment: e-e+ to gamma to mu-mu+ is a real, well-known QED process; physically
+          accurate
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Clean symmetric layout with sensible proportions.
+        comment: 2 vertices, 5 propagators — within spec range (2-6 vertices, 3-10
+          propagators)
     code_quality:
       score: 10
       max: 10
@@ -159,33 +182,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, save. No functions or classes.'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data deterministic, no randomness.
+        comment: All data is deterministic; no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used; no unused symbols
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized code appropriate for plotnine grammar.
+        comment: Appropriate complexity; no fake UI elements
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, current API.
+        comment: Saves as plot-{THEME}.png correctly
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -193,22 +216,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good use of grammar of graphics: ggplot + geom layers, aes, scales,
-          themes.'
+        comment: Proper grammar-of-graphics layer composition; coord_fixed for aspect
+          ratio; theme_void() for clean canvas; scale_color_manual used correctly
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Feynman diagrams are drawing-oriented, not where plotnine's grammar
-          shines.
+        passed: true
+        comment: arrow parameter on geom_segment for particle direction; geom_path
+          for sinusoidal particle paths; gluon loop via superposed translation + sinusoidal
+          displacement
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - layer-composition
   - custom-legend
+  - annotations
   patterns:
   - data-generation
   dataprep: []
