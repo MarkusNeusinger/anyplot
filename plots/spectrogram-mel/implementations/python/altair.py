@@ -1,6 +1,7 @@
-"""Mel-Spectrogram for Audio Analysis — Altair / Python
-Imprint palette note: spec explicitly recommends inferno/magma class cmaps
-for spectrograms; inferno approved in prior AI review (VQ-04 ✅).
+""" anyplot.ai
+spectrogram-mel: Mel-Spectrogram for Audio Analysis
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-06-03
 """
 
 import os
