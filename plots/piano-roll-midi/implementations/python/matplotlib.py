@@ -1,5 +1,7 @@
-"""piano-roll-midi: MIDI Piano Roll Visualization
-Library: matplotlib | Language: python
+""" anyplot.ai
+piano-roll-midi: MIDI Piano Roll Visualization
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-06-03
 """
 
 import os
