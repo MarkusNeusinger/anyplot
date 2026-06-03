@@ -1,14 +1,51 @@
-""" pyplots.ai
+"""anyplot.ai
 scatter-ashby-material: Ashby Material Selection Chart
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 92/100 | Created: 2026-03-11
+Library: seaborn 0.13.2 | Python 3.14
+Quality: pending | Created: 2026-06-03
 """
+
+import os
+import sys
+
+
+# Remove the script's own directory from sys.path so that matplotlib.py (a sibling
+# implementation file) does not shadow the installed matplotlib package.
+_this_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p or ".") != _this_dir]
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 
+
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — canonical order, 7 positions for 7 material families
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
 
 # Data — density (kg/m³) vs Young's modulus (GPa) for common engineering materials
 np.random.seed(42)
@@ -128,35 +165,23 @@ for family, props in families.items():
             rows.append({"family": family, "density": d, "modulus": m})
 
 df = pd.DataFrame(rows)
-
-# Log-transform columns for seaborn KDE (works in linear space)
 df["log_density"] = np.log10(df["density"])
 df["log_modulus"] = np.log10(df["modulus"])
 
-# Seaborn styling
-sns.set_context("talk", font_scale=1.1)
-sns.set_style("white")
+family_order = list(families.keys())
+palette = dict(zip(family_order, IMPRINT_PALETTE, strict=False))
 
-# Colorblind-safe palette
-palette = {
-    "Metals": "#306998",
-    "Polymers": "#E07A3A",
-    "Ceramics": "#D94F4F",
-    "Composites": "#2A9D8F",
-    "Elastomers": "#9B6DB7",
-    "Foams": "#C4A03C",
-    "Natural Materials": "#6AADBD",
-}
+# Canvas — landscape 3200×1800 px (figsize=(8, 4.5) × dpi=400, no bbox_inches="tight")
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-fig, ax = plt.subplots(figsize=(16, 9))
-
-# Use seaborn's kdeplot to draw family envelopes — distinctive seaborn feature
-# KDE operates in log-space, then we relabel axes to show original values
+# KDE envelopes — seaborn's idiomatic family-region feature (operates in log-space)
 sns.kdeplot(
     data=df,
     x="log_density",
     y="log_modulus",
     hue="family",
+    hue_order=family_order,
     palette=palette,
     levels=2,
     thresh=0.3,
@@ -169,61 +194,71 @@ sns.kdeplot(
     common_norm=False,
 )
 
-# Scatter using seaborn with hue and style mapping
+# Scatter points
 sns.scatterplot(
     data=df,
     x="log_density",
     y="log_modulus",
     hue="family",
+    hue_order=family_order,
     palette=palette,
     style="family",
-    s=80,
-    alpha=0.7,
-    edgecolor="white",
-    linewidth=0.5,
+    s=60,
+    alpha=0.75,
+    edgecolor=PAGE_BG,
+    linewidth=0.4,
     ax=ax,
     legend=False,
     zorder=3,
 )
 
-# Performance index guide lines (E/ρ = const) — characteristic of Ashby charts
+# Performance index guide lines E/ρ = const — ratios 0.01, 1, 100 (Ashby chart signature)
 log_d_range = np.linspace(np.log10(10), np.log10(20000), 200)
-guide_indices = [(1e-3, "E/ρ = 0.001"), (1e-1, "E/ρ = 0.1"), (1e1, "E/ρ = 10")]
+guide_indices = [(0.01, "E/ρ=0.01"), (1.0, "E/ρ=1"), (100.0, "E/ρ=100")]
 for ratio, label in guide_indices:
     log_m_line = np.log10(ratio) + log_d_range
     mask = (log_m_line >= np.log10(5e-4)) & (log_m_line <= np.log10(1000))
-    ax.plot(log_d_range[mask], log_m_line[mask], color="#BBBBBB", linewidth=0.7, linestyle="--", alpha=0.45, zorder=0)
-    vis_d = log_d_range[mask]
-    vis_m = log_m_line[mask]
-    if len(vis_d) > 10:
-        idx = int(len(vis_d) * 0.12)
-        ax.text(
-            vis_d[idx],
-            vis_m[idx] + 0.12,
-            label,
-            fontsize=10,
-            color="#AAAAAA",
-            fontstyle="italic",
-            rotation=30,
-            ha="center",
-            va="bottom",
-            zorder=0,
+    if mask.sum() > 0:
+        ax.plot(
+            log_d_range[mask], log_m_line[mask], color=INK_MUTED, linewidth=0.7, linestyle="--", alpha=0.5, zorder=0
         )
+        vis_d = log_d_range[mask]
+        vis_m = log_m_line[mask]
+        if len(vis_d) > 10:
+            idx = int(len(vis_d) * 0.12)
+            ax.text(
+                vis_d[idx],
+                vis_m[idx] + 0.1,
+                label,
+                fontsize=6,
+                color=INK_MUTED,
+                fontstyle="italic",
+                rotation=30,
+                ha="center",
+                va="bottom",
+                zorder=0,
+            )
 
-# Highlight the lightweight-stiff "sweet spot" direction for data storytelling
+# Lightweight & stiff directional annotation
 ax.annotate(
     "Lightweight\n& Stiff ↗",
     xy=(np.log10(200), np.log10(80)),
-    fontsize=12,
+    fontsize=6,
     fontstyle="italic",
-    color="#666666",
+    color=INK_SOFT,
     ha="center",
     va="center",
     zorder=4,
-    bbox={"boxstyle": "round,pad=0.4", "facecolor": "white", "alpha": 0.7, "edgecolor": "#CCCCCC", "linewidth": 0.5},
+    bbox={
+        "boxstyle": "round,pad=0.4",
+        "facecolor": ELEVATED_BG,
+        "alpha": 0.85,
+        "edgecolor": INK_SOFT,
+        "linewidth": 0.5,
+    },
 )
 
-# Family labels — offset positions to reduce crowding in upper-right
+# Family labels near cluster centroids
 label_offsets = {
     "Metals": (0.3, 0.35),
     "Ceramics": (-0.4, 0.35),
@@ -234,32 +269,35 @@ label_offsets = {
     "Natural Materials": (-0.2, 0.2),
 }
 
-for family in df["family"].unique():
+for family in family_order:
     subset = df[df["family"] == family]
     color = palette[family]
-
     centroid_log_d = subset["log_density"].mean()
     centroid_log_m = subset["log_modulus"].mean()
-
     offset = label_offsets.get(family, (0, 0))
     label_log_d = centroid_log_d + offset[0]
     label_log_m = centroid_log_m + offset[1]
-
     ax.annotate(
         family,
         xy=(centroid_log_d, centroid_log_m),
         xytext=(label_log_d, label_log_m),
-        fontsize=14,
+        fontsize=7,
         fontweight="bold",
         color=color,
         ha="center",
         va="center",
         zorder=5,
-        bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "alpha": 0.9, "edgecolor": color, "linewidth": 0.5},
+        bbox={
+            "boxstyle": "round,pad=0.3",
+            "facecolor": ELEVATED_BG,
+            "alpha": 0.9,
+            "edgecolor": color,
+            "linewidth": 0.5,
+        },
         arrowprops={"arrowstyle": "-", "color": color, "alpha": 0.5, "linewidth": 0.8} if offset != (0, 0) else None,
     )
 
-# Custom tick labels to show real density/modulus values on log-transformed axes
+# Custom tick labels showing real values on log-transformed axes
 density_ticks = [10, 100, 1000, 10000]
 modulus_ticks = [0.001, 0.01, 0.1, 1, 10, 100]
 ax.set_xticks([np.log10(v) for v in density_ticks])
@@ -267,15 +305,15 @@ ax.set_xticklabels([str(v) for v in density_ticks])
 ax.set_yticks([np.log10(v) for v in modulus_ticks])
 ax.set_yticklabels([str(v) for v in modulus_ticks])
 
-# Axis styling — y-axis only grid for cleaner look
-ax.set_xlabel("Density (kg/m³)", fontsize=20)
-ax.set_ylabel("Young's Modulus (GPa)", fontsize=20)
-ax.set_title("scatter-ashby-material · seaborn · pyplots.ai", fontsize=24, fontweight="medium", pad=15)
-ax.tick_params(axis="both", labelsize=16)
-ax.yaxis.grid(True, alpha=0.12, linewidth=0.6, color="#CCCCCC")
-ax.xaxis.grid(False)
+ax.set_xlabel("Density (kg/m³)", fontsize=10, color=INK)
+ax.set_ylabel("Young's Modulus (GPa)", fontsize=10, color=INK)
+ax.set_title("scatter-ashby-material · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.6, color=INK)
+ax.xaxis.grid(True, alpha=0.15, linewidth=0.6, color=INK)
 
 sns.despine(ax=ax)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
+plt.close()
