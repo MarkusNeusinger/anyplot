@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 calibration-beer-lambert: Beer-Lambert Calibration Curve
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-03
@@ -10,6 +10,7 @@ import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
+from matplotlib.patches import FancyBboxPatch
 from scipy import stats
 
 
@@ -110,25 +111,50 @@ ax.scatter(
     label="Unknown Sample",
 )
 
-# Regression equation annotation
-eq_text = f"y = {slope:.4f}x + {intercept:.4f}\nR² = {r_squared:.4f}"
+# Regression equation annotation — FancyBboxPatch background + two text elements
+# for visual hierarchy: R² line rendered bold in brand green
+ann_patch = FancyBboxPatch(
+    (0.035, 0.775),
+    0.265,
+    0.175,
+    boxstyle="round,pad=0.01",
+    transform=ax.transAxes,
+    facecolor=ELEVATED_BG,
+    edgecolor=STANDARDS_COLOR,
+    alpha=0.95,
+    linewidth=1.0,
+    zorder=7,
+)
+ax.add_patch(ann_patch)
 ax.text(
-    0.04,
-    0.93,
-    eq_text,
+    0.055,
+    0.925,
+    f"y = {slope:.4f}x + {intercept:.4f}",
     transform=ax.transAxes,
     fontsize=8,
     fontfamily="monospace",
     verticalalignment="top",
     color=INK,
-    bbox={"boxstyle": "round,pad=0.4", "facecolor": ELEVATED_BG, "edgecolor": STANDARDS_COLOR, "alpha": 0.95, "linewidth": 1.0},
+    zorder=8,
+)
+ax.text(
+    0.055,
+    0.845,
+    f"R² = {r_squared:.4f}",
+    transform=ax.transAxes,
+    fontsize=9,
+    fontfamily="monospace",
+    fontweight="bold",
+    verticalalignment="top",
+    color=STANDARDS_COLOR,
+    zorder=8,
 )
 
 # Unknown annotation with arrow
 ax.annotate(
     f"Unknown: {unknown_concentration:.1f} mg/L",
     xy=(unknown_concentration, unknown_absorbance),
-    xytext=(unknown_concentration + 1.6, unknown_absorbance + 0.07),
+    xytext=(unknown_concentration - 1.5, unknown_absorbance + 0.13),
     fontsize=8,
     fontweight="semibold",
     color=UNKNOWN_COLOR,
@@ -162,7 +188,7 @@ title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
 ax.set_title(title, fontsize=title_fontsize, fontweight="medium", pad=10, color=INK)
 ax.set_xlabel("Concentration (mg/L)", fontsize=10, labelpad=8, color=INK)
 ax.set_ylabel("Absorbance", fontsize=10, labelpad=8, color=INK)
-ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT, length=0)
 for spine in ["top", "right"]:
     ax.spines[spine].set_visible(False)
 for spine in ["bottom", "left"]:
