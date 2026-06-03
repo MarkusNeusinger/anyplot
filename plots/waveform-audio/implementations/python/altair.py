@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 waveform-audio: Audio Waveform Plot
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-06-03
@@ -41,7 +41,18 @@ attack = int(0.05 * sample_rate)
 release = int(0.3 * sample_rate)
 envelope[:attack] = np.linspace(0, 1, attack)
 envelope[-release:] = np.linspace(1, 0, release)
-envelope[int(0.4 * sample_rate) : int(0.7 * sample_rate)] *= 0.5
+
+# Smooth amplitude dip (0.4-0.7 s) via cosine taper — avoids abrupt rectangular step
+dip_start = int(0.4 * sample_rate)
+dip_end = int(0.7 * sample_rate)
+transition_len = int(0.035 * sample_rate)
+t_fade = np.linspace(0, 1, transition_len)
+dip_mult = np.ones_like(time)
+dip_mult[dip_start : dip_start + transition_len] = 1.0 - 0.25 * (1 - np.cos(np.pi * t_fade))
+dip_mult[dip_start + transition_len : dip_end - transition_len] = 0.5
+dip_mult[dip_end - transition_len : dip_end] = 0.5 + 0.25 * (1 - np.cos(np.pi * t_fade))
+envelope *= dip_mult
+
 envelope[int(0.15 * sample_rate) : int(0.25 * sample_rate)] *= 1.35
 
 signal = signal * envelope
@@ -78,10 +89,10 @@ waveform_gradient = (
         color=alt.Gradient(
             gradient="linear",
             stops=[
-                alt.GradientStop(color="rgba(0, 158, 115, 0.10)", offset=0),
+                alt.GradientStop(color="rgba(0, 158, 115, 0.28)", offset=0),
                 alt.GradientStop(color="rgba(0, 158, 115, 0.60)", offset=0.45),
                 alt.GradientStop(color="rgba(0, 158, 115, 0.60)", offset=0.55),
-                alt.GradientStop(color="rgba(0, 158, 115, 0.10)", offset=1),
+                alt.GradientStop(color="rgba(0, 158, 115, 0.28)", offset=1),
             ],
             x1=0,
             x2=0,
@@ -147,7 +158,7 @@ chart = (
         height=320,
         background=PAGE_BG,
         title=alt.Title(
-            "waveform-audio · altair · anyplot.ai",
+            "waveform-audio · python · altair · anyplot.ai",
             fontSize=16,
             subtitle="440 Hz tone with harmonics · attack–sustain–release envelope · clipped region highlighted",
             subtitleFontSize=10,
