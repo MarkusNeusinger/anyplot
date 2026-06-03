@@ -1,6 +1,7 @@
 #' anyplot.ai
 #' spectrogram-mel: Mel-Spectrogram for Audio Analysis
 #' Library: ggplot2 3.5.1 | R 4.4.1
+#' Quality: 88/100 | Created: 2026-06-03
 
 library(ggplot2)
 library(scales)
