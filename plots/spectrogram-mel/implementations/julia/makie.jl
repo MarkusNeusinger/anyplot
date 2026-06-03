@@ -15,8 +15,8 @@ const PAGE_BG     = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
 const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 
-# Imprint sequential colormap (reversed: high power = brand green, noise = blue)
-const ANYPLOT_SEQ = cgrad([colorant"#4467A3", colorant"#009E73"])
+# Imprint sequential colormap — canonical imprint_seq direction: green (low) → blue (high)
+const ANYPLOT_SEQ = cgrad([colorant"#009E73", colorant"#4467A3"])
 
 # Mel scale helpers
 hz_to_mel(hz) = 2595.0 * log10(1.0 + hz / 700.0)
@@ -87,6 +87,7 @@ clamp!(mel_spec_db, -80.0, 0.0)
 # Plot
 fig = Figure(
     size            = (1600, 900),
+    figure_padding  = (10, 10, 10, 25),  # extra top padding for title breathing room
     fontsize        = 14,
     backgroundcolor = PAGE_BG,
 )
@@ -119,9 +120,12 @@ ax = Axis(
 )
 
 # mel_spec_db is (N_MELS, N_FRAMES); heatmap expects (N_FRAMES, N_MELS)
+# highclip/lowclip set here so the Colorbar inherits them (Makie requirement)
 hm = heatmap!(ax, T_FRAMES, 1:N_MELS, mel_spec_db';
     colormap   = ANYPLOT_SEQ,
     colorrange = (-80.0, 0.0),
+    highclip   = colorant"#4467A3",
+    lowclip    = colorant"#009E73",
 )
 
 # Y-axis: show Hz labels at perceptually meaningful frequency landmarks
@@ -137,7 +141,8 @@ Colorbar(fig[1, 2], hm;
     ticklabelsize  = 12,
     ticklabelcolor = INK_SOFT,
     tickcolor      = INK_SOFT,
-    width          = 20,
+    width          = 28,
+    ticks          = WilkinsonTicks(6),
 )
 
 save("plot-$(THEME).png", fig; px_per_unit = 2)
