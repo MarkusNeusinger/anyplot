@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: feynman-basic
 created: '2026-03-07T21:22:41Z'
-updated: '2026-06-03T06:04:00Z'
+updated: '2026-06-03T06:27:47Z'
 generated_by: claude-sonnet
 workflow_run: 26866122235
 issue: 4667
@@ -12,133 +12,120 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/feynman-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - Custom numpy-generated photon wave (sin envelope) and gluon coil (phase + envelope)
-    rendering produces physically accurate particle line styles well above typical
-    matplotlib usage
-  - 'Perfect Imprint palette compliance across all four particle types (fermion=green
-    #009E73, photon=lavender, gluon=blue, gluon=ochre) with full theme-adaptive chrome
-    — vertex dots adapt INK token correctly in both renders'
-  - 'Complete spec compliance: fermion arrows with correct particle/antiparticle directionality,
-    wavy photon, coiled gluon, dashed Higgs boson, vertex dots, particle labels, and
-    time axis all present'
-  - 'Two real physics processes (QED: e+e- → γ → μ+μ- and QCD: gg → H → bb̄) with
-    correct topologies and factually accurate propagator structure'
-  - Flat KISS code structure, deterministic hardcoded data, clean imports, frameless
-    legend via custom handles, and correct plot-{THEME}.png output without bbox_inches=tight
+  - 'patheffects.withStroke used creatively: luminous glow on the photon propagator
+    and separating halos on fermion arrows demonstrate advanced matplotlib mastery'
+  - 'Semantic Imprint palette: each particle type maps to a distinct canonical palette
+    position — aesthetically consistent and physically meaningful'
+  - 'Perfect dual-theme adaptation: vertex dots, labels, separator, and legend all
+    correctly use theme tokens; data colors remain identical across themes'
+  - Dual-process layout (QED + QCD) with process labels, separator, and time arrow
+    creates a rich showcase of all four particle types in authentic physics context
+  - Fully deterministic hardcoded data with physics-accurate processes (e+e- annihilation,
+    Higgs production via gluon fusion) and correct arrow direction conventions for
+    particle vs antiparticle
   weaknesses:
-  - 'LM-02: The most visually impressive work (wave/coil generation) is numpy math
-    rather than distinctively matplotlib-specific; upgrade by using matplotlib FancyArrowPatch
-    or PathPatch for particle lines, or matplotlib.patheffects for glow/glow-on-dark
-    effect on fermion lines'
-  - 'DE-02: Minor polish gap — process labels at x=0.005 are very tight to left canvas
-    edge; QED/QCD labels at 9pt rotated 90° risk being hard to read at mobile widths;
-    consider nudging x to 0.02 and bumping to fontsize=10'
-  - 'VQ-01: Secondary labels (QED/QCD process labels at 9pt rotated, time label at
-    9pt) are on the smaller end for mobile readability at ~400px viewport width; raise
-    to 10pt'
-  - 'DE-01: Vertex legend handle uses color=w (white line) in a frameless legend —
-    on light background this creates a faint horizontal line artifact before the vertex
-    dot marker; set color=PAGE_BG or lw=0 explicitly to avoid it'
+  - The two gluon coils entering vertex v3 overlap heavily, creating a visually tangled
+    coil mass in the QCD bottom-left — slightly more angular separation between the
+    two gluon input lines would make each coil more visually distinct before merging
+    at the vertex
+  - Visual hierarchy relies entirely on color and path effects; drawing internal propagator
+    lines (photon gamma, Higgs H) slightly thicker than external fermion legs (lw=3.5
+    vs lw=2.5) would strengthen focal structure and improve DE-03 storytelling depth
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — not pure white, correct anyplot surface.
-      Chrome: Title "feynman-basic · python · matplotlib · anyplot.ai" in dark ink at top, clearly readable. QED and QCD process labels in muted gray italic (rotated 90°) at far left margin. Time arrow and "time" italic label visible below the diagram, above the legend. All chrome uses dark INK / INK_SOFT / INK_MUTED tokens correctly.
-      Data: Two Feynman diagrams separated by a faint dashed separator at y=0.50. Top (QED): green (#009E73) fermion lines with solid arrows for e-, e+, μ-, μ+; lavender (#C475FD) sinusoidal photon wave (γ) in center. Bottom (QCD): blue (#4467A3) coiled gluon spirals (g, g) on left; ochre (#BD8233) dashed Higgs boson line (H) across center; green (#009E73) fermion lines with arrows for b, b̄ on right. Vertex dots are solid black circles (INK). Legend at bottom row: Fermion (green arrow), Photon (lavender wavy), Gluon (blue), Boson (ochre dashed), Vertex (black dot) — all with INK_SOFT text.
-      Legibility verdict: PASS — all text is readable against the warm off-white background; no light-on-light issues. Secondary labels (QED/QCD, time) are small (9pt) but discernible.
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "feynman-basic · python · matplotlib · anyplot.ai" in dark ink at top — clearly readable. QED/QCD italic labels rotated on left in INK_MUTED — readable. "time" italic label at bottom in INK_MUTED — readable. Legend text in INK_SOFT — readable. All chrome text correctly dark on light background.
+      Data: Fermion lines and labels in green (#009E73) — first series correct. Photon wavy line in lavender (#C475FD) with luminous glow path effect. Gluon coiled lines in blue (#4467A3). Higgs dashed line in ochre (#BD8233). Vertex dots in INK (near-black). Imprint palette positions 1-4 in canonical order.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black consistent with #1A1A17 — not pure black, correct anyplot surface.
-      Chrome: Title in light cream text (#F0EFE8 region) against dark background — clearly readable. QED and QCD muted-gray labels (A8A79F) readable on dark. Time label and arrow in muted gray — visible. Legend text in secondary light tone (B8B7B0) — readable.
-      Data: Data colors are IDENTICAL to the light render — fermion green (#009E73), photon lavender (#C475FD), gluon blue (#4467A3), Higgs boson ochre (#BD8233). Only chrome flips. Vertex dots are now white/light circles (INK token = #F0EFE8 in dark mode) — correct theme-adaptive behavior. Separator line visible in muted gray.
-      Legibility verdict: PASS — no dark-on-dark failures detected. All title, process labels, particle labels, and legend text are light against the dark background. Brand green #009E73 is clearly visible on the near-black surface.
+      Background: Warm near-black (#1A1A17) — correct dark surface
+      Chrome: Title in light ink (#F0EFE8 equivalent) — clearly readable. QED/QCD labels in INK_MUTED dark-theme value — readable. "time" label readable. Legend text in INK_SOFT dark-theme value — readable. Vertex dots adapt to light/white (INK dark-theme token) — correct. No dark-on-dark failures: all chrome uses light tokens on dark background.
+      Data: All data colors identical to light render — fermion green, photon lavender, gluon blue, boson ochre. Gluon label 'g' in #4467A3 (blue) against #1A1A17 has lower contrast but remains readable at 14pt bold. Brand green (#009E73) clearly visible on dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Particle labels at 14pt bold and title at 12pt are excellent; QED/QCD
-          process labels (9pt rotated) and time label (9pt) are small for mobile widths
+        comment: All font sizes explicitly set; particle labels 14pt bold, title 12pt,
+          legend 8pt, process/time labels 10pt; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Perpendicular offset label placement prevents any text-on-data or
-          text-on-text overlap in both renders
+        comment: No text overlaps; perpendicular offsets cleanly separate particle
+          labels from propagator lines
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All particle lines (lw=2.0-2.5), arrows (mutation_scale=20), and
-          vertex dots (markersize=10) clearly visible against both surfaces
+        comment: All four particle line types clearly distinguishable; path effects
+          give each appropriate visual weight; vertex dots prominent
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette positions 1-4 are CVD-safe; line styles (solid+arrow,
-          wavy, coiled, dashed) provide redundant encoding beyond color alone
+        comment: Four distinct hue families; redundant linestyle encoding adds CVD
+          safety; all labels readable in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); tight_layout(rect=[0,0.08,1,1]) reserves
-          legend space; no clipping detected in either render
+        comment: Canvas gate passed; balanced dual-process layout; title proportions
+          correct; no overflow or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Feynman diagram has no conventional axes; particle labels, process
-          labels (QED/QCD), and time axis label all present as spec requires
+        comment: Axis correctly turned off for diagram type; title correctly formatted;
+          time axis annotated with arrow
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Fermion=pos1 #009E73, photon=pos2 #C475FD, gluon=pos3 #4467A3, boson=pos4
-          #BD8233; backgrounds #FAF8F1 light / #1A1A17 dark; data colors identical
-          across both themes'
+        comment: 'Imprint positions 1-4 in canonical order; backgrounds #FAF8F1/#1A1A17;
+          both renders theme-correct'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom numpy-generated photon wave (sin envelope) and gluon coil
-          (phase + perpendicular components) clearly above library defaults; Imprint
-          palette semantically applied to particle types; good typography hierarchy
-          (14pt bold particles, 9pt italic process labels, 12pt medium title)
+        comment: patheffects.withStroke creates luminous photon glow and fermion halos;
+          semantic palette; above defaults but gluon section visual density holds
+          back from 6/8
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'ax.axis(''off'') removes all chrome; frameless legend; subtle dashed
-          separator; muted italic process labels; minor gap: vertex legend uses color=''w''
-          line which creates faint white artifact on light theme; process labels x=0.005
-          are very tight to left margin'
+        comment: Clean axis.off(), frameless legend, subtle dashed separator; genuinely
+          refined over matplotlib defaults
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Time arrow guides left-to-right reading; QED/QCD labels contextualize
-          processes; directional fermion arrows (particle vs antiparticle convention)
-          encode physics meaning; two-process layout creates comparison structure
+        comment: Time arrow, QED/QCD labels, photon glow as focal point; visual hierarchy
+          through color and path effects
     spec_compliance:
       score: 15
       max: 15
@@ -148,28 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Feynman diagram correctly implemented with all four line-type conventions
+        comment: Correct Feynman diagram with all four particle line types
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Solid+arrow fermions, wavy photon, coiled gluon, dashed boson, vertex
-          dots, particle labels, time axis — all spec requirements met
+        comment: 'All required features present: fermion arrows, wavy photons, coiled
+          gluons, dashed bosons, vertex dots, particle labels, time axis'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: QED (e+e- → γ → μ+μ-) and QCD (gg → H → bb̄) topologies correctly
-          mapped to vertices and propagators
+        comment: Vertices correctly positioned; propagators connect correct endpoints;
+          time flows left to right
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'feynman-basic · python · matplotlib · anyplot.ai'; legend
-          covers all 5 element types with correct labels
+        comment: Title correctly formatted; legend labels match all four particle
+          types plus vertex
     data_quality:
       score: 15
       max: 15
@@ -179,23 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All four particle types (fermion, photon, gluon, scalar boson) shown
-          across two distinct interaction topologies
+        comment: All four particle types shown; two complete processes with input/output
+          legs; arrow direction conventions for particle vs antiparticle
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'QED: electron-positron annihilation (real process measured at LEP/B-factories);
-          QCD: gluon-fusion Higgs production (dominant LHC Higgs channel) — both are
-          canonical, neutral physics examples'
+        comment: QED (e+e- annihilation) and QCD (gg -> H -> bb-bar) are real neutral
+          particle physics processes
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: '4 vertices (spec: 2-6), 10 propagators (spec: 3-10); loop-free tree-level
-          diagrams appropriate for ''basic'' spec'
+        comment: 4 vertices, 10 propagators within spec range (2-6 vertices, 3-10
+          propagators); proportions clear and readable
     code_quality:
       score: 10
       max: 10
@@ -205,38 +191,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat procedural script: theme tokens → data → plot loop → vertex
-          dots → annotations → title → legend → save'
+        comment: No functions or classes; linear structure with type-dispatch loop
+          over propagators
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: hardcoded vertex positions and propagator list,
-          numpy linspace (no random)'
+        comment: Fully deterministic hardcoded physics data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, matplotlib.lines.Line2D — all four
-          imports are actively used
+        comment: 'All 6 imports used: patheffects, pyplot, numpy, Line2D, FancyArrowPatch,
+          os'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; appropriate complexity for custom curve generation;
-          no fake UI elements
+        comment: Appropriate complexity for diagram rendering; no fake interactivity;
+          clean dispatch structure
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; no bbox_inches='tight'; uses current matplotlib
-          3.9+ API
+        comment: Saves as plot-{THEME}.png; no bbox_inches=tight; dpi=400; current
+          matplotlib API
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -244,26 +229,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ax.annotate with arrowprops/arrowstyle for directional arrows; ax.legend(handles=[...])
-          for custom legend; plt.setp for batch text styling; bbox_to_anchor+bbox_transform
-          for precise legend placement — clearly above default patterns
+        comment: FancyArrowPatch with transData, patheffects module, ax.add_patch(),
+          axes-method pattern throughout
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: ax.annotate arrowstyle='-|>' with mutation_scale is matplotlib-specific;
-          bbox_to_anchor+bbox_transform is also library-specific; but the main visual
-          sophistication (wave/coil generation) relies on numpy math over any matplotlib-distinctive
-          API
-  verdict: REJECTED
+        passed: true
+        comment: patheffects.withStroke for per-element glow/halo effects; custom
+          parametric wavy and coiled lines via numpy
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
+  - patches
   patterns:
-  - explicit-figure
   - iteration-over-groups
   dataprep: []
   styling:
