@@ -74,28 +74,18 @@ function generateSpec() {
 const specData = generateSpec();
 
 // --- Color mapping: imprint_seq (pageBg → seq[0] → seq[1]) ---------------
-function hexToRgb(hex) {
-  return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
-}
-function lerp(a, b, n) {
-  return a + n * (b - a);
-}
+// Pre-parse hex stops once so dbToColor avoids repeated string parsing in the pixel loop
+const _p = (h) => [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)];
+const BG = _p(t.pageBg), C0 = _p(t.seq[0]), C1 = _p(t.seq[1]);
 function dbToColor(db) {
-  const norm = (db - DB_MIN) / (DB_MAX - DB_MIN);
-  const bg = hexToRgb(t.pageBg);
-  const c0 = hexToRgb(t.seq[0]); // #009E73 brand green
-  const c1 = hexToRgb(t.seq[1]); // #4467A3 blue
-  let r, g, b;
-  if (norm < 0.4) {
-    const n = norm / 0.4;
-    r = lerp(bg[0], c0[0], n);
-    g = lerp(bg[1], c0[1], n);
-    b = lerp(bg[2], c0[2], n);
+  const n = (db - DB_MIN) / (DB_MAX - DB_MIN);
+  let r, g, b, s;
+  if (n < 0.4) {
+    s = n / 0.4;
+    r = BG[0] + s*(C0[0]-BG[0]); g = BG[1] + s*(C0[1]-BG[1]); b = BG[2] + s*(C0[2]-BG[2]);
   } else {
-    const n = (norm - 0.4) / 0.6;
-    r = lerp(c0[0], c1[0], n);
-    g = lerp(c0[1], c1[1], n);
-    b = lerp(c0[2], c1[2], n);
+    s = (n - 0.4) / 0.6;
+    r = C0[0] + s*(C1[0]-C0[0]); g = C0[1] + s*(C1[1]-C0[1]); b = C0[2] + s*(C1[2]-C0[2]);
   }
   return [Math.round(r), Math.round(g), Math.round(b)];
 }
@@ -151,15 +141,20 @@ const spectrogramPlugin = {
     ctx.drawImage(off, left, top);
     ctx.restore();
 
-    // Redraw chart border over spectrogram
-    ctx.strokeStyle = t.inkSoft;
-    ctx.lineWidth = 1;
+    // Redraw chart border over spectrogram — thicker for visual weight
+    ctx.strokeStyle = t.ink;
+    ctx.lineWidth = 2;
     ctx.strokeRect(left, top, W, H);
 
     // --- Colorbar ---------------------------------------------------------
     const cbX = right + 20;
     const cbW = 24;
     const cbH = H;
+    const fs = Math.max(11, Math.round(H / 36));
+
+    // Elevated background separating the colorbar column from the plot
+    ctx.fillStyle = t.elevatedBg;
+    ctx.fillRect(right + 8, top - 6, 108, cbH + 12);
 
     const grad = ctx.createLinearGradient(0, top, 0, top + cbH);
     grad.addColorStop(0, t.seq[1]);
@@ -170,8 +165,6 @@ const spectrogramPlugin = {
     ctx.strokeStyle = t.inkSoft;
     ctx.lineWidth = 1;
     ctx.strokeRect(cbX, top, cbW, cbH);
-
-    const fs = Math.max(11, Math.round(H / 36));
 
     // Colorbar tick marks and dB labels
     ctx.fillStyle = t.inkSoft;
@@ -203,7 +196,7 @@ const spectrogramPlugin = {
 
 // --- Title ----------------------------------------------------------------
 const titleText = 'spectrogram-mel · javascript · chartjs · anyplot.ai';
-const titleSize = Math.round(22 * Math.min(1, 67 / titleText.length));
+const titleSize = 26;
 
 // --- Mount ----------------------------------------------------------------
 const canvas = document.createElement('canvas');
@@ -242,7 +235,7 @@ new Chart(canvas, {
           callback: (v) => v.toFixed(1) + 's',
           maxTicksLimit: 7,
         },
-        grid: { color: t.grid },
+        grid: { display: false },
         title: {
           display: true,
           text: 'Time (s)',
@@ -265,7 +258,7 @@ new Chart(canvas, {
             return hz >= 1000 ? (Math.round(hz / 100) / 10) + 'k' : `${hz}`;
           },
         },
-        grid: { color: t.grid },
+        grid: { display: false },
         title: {
           display: true,
           text: 'Frequency (Hz, mel scale)',
