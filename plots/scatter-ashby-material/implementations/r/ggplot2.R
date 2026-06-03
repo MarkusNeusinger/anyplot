@@ -109,7 +109,7 @@ p <- ggplot(materials, aes(x = density, y = modulus)) +
     x = 13000, y = 0.6,
     label  = "E/ρ = const",
     color  = INK_MUTED,
-    size   = 2.3,
+    size   = 2.8,
     hjust  = 0,
     angle  = 0
   ) +
@@ -117,7 +117,7 @@ p <- ggplot(materials, aes(x = density, y = modulus)) +
   geom_polygon(
     data  = hull_data,
     aes(fill = family, group = family),
-    alpha = 0.13,
+    alpha = 0.22,
     color = NA
   ) +
   # Hull border outlines
@@ -131,7 +131,7 @@ p <- ggplot(materials, aes(x = density, y = modulus)) +
   # Individual data points
   geom_point(
     aes(color = family),
-    size  = 1.7,
+    size  = 2.1,
     alpha = 0.88
   ) +
   # Family labels inside regions
@@ -139,7 +139,7 @@ p <- ggplot(materials, aes(x = density, y = modulus)) +
     data          = label_data,
     aes(x = label_x, y = label_y, label = family, color = family),
     fill          = ELEVATED_BG,
-    size          = 2.6,
+    size          = 3.1,
     fontface      = "bold",
     label.size    = 0.2,
     label.padding = unit(0.15, "lines"),
