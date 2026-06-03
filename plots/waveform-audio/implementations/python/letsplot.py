@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 waveform-audio: Audio Waveform Plot
-Library: letsplot | Python
-Quality: pending | Created: 2026-06-03
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-03
 """
 
 import os
