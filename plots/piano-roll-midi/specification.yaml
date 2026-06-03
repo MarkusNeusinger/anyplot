@@ -3,19 +3,19 @@ title: MIDI Piano Roll Visualization
 
 # Specification tracking
 created: "2026-03-06T19:52:49Z"
-updated: null
+updated: "2026-06-03T00:00:00Z"
 issue: 4565
 suggested: MarkusNeusinger
 
 # Classification tags
 tags:
   plot_type:
-    - heatmap
+    - gantt
     - bar
   data_type:
     - numeric
     - discrete
-    - temporal
+    - timeseries
   domain:
     - music
     - education
