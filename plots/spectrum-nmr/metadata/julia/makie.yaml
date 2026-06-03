@@ -1,0 +1,247 @@
+library: makie
+language: julia
+specification_id: spectrum-nmr
+created: '2026-06-03T12:11:21Z'
+updated: '2026-06-03T12:26:51Z'
+generated_by: claude-sonnet
+workflow_run: 26883442581
+issue: 4676
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Chemically accurate NMR data with correct coupling constants, realistic Lorentzian
+    peak shapes, and authentic 1:2:1 triplet and 1:3:3:1 quartet ratios
+  - 'Full spec compliance: reversed x-axis, all four peak groups labelled, TMS reference
+    at 0 ppm, clean baseline noise'
+  - 'Excellent theme adaptation: all chrome tokens correctly applied in both renders
+    with no dark-on-dark failures'
+  - 'Clean NMR-appropriate design: no grid (correct for spectra), subtle shaded fill
+    (band!) adds depth without clutter'
+  - Flat, readable Julia-idiomatic code with explicit font sizes and reproducible
+    seed
+  weaknesses:
+  - 'DE-01 could reach 6/8 with finishing touches: add hlines!(ax, 0.0; color=(INK_SOFT,
+    0.4), linewidth=1.0) baseline rule and increase annotation fontsize from 13 to
+    14-15 pt'
+  - LM-02 could reach 5/5 by adding a cumulative integral trace as a secondary lines!
+    overlay (light color, dashed, alpha=0.6) — a standard NMR display convention showcasing
+    Makie layer composition
+  - Peak annotation for CH3 at y=2.2 is positioned too far above the peak top (~2.05
+    a.u.); tighten by using y=2.15 or auto-positioning closer to the peak
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "Ethanol ¹H NMR · spectrum-nmr · julia · makie · anyplot.ai" in dark INK (#1A1A17), centred, bold, clearly readable. X-axis label "Chemical Shift (ppm)" and Y-axis label "Intensity (a.u.)" in dark INK at fontsize 14. Tick labels in INK_SOFT at fontsize 12. Peak annotations in INK_SOFT at fontsize 13; TMS label in INK_MUTED at fontsize 11. All text readable.
+      Data: Single NMR spectrum line in #009E73 (Imprint brand green) with semi-transparent (#009E73, 0.15) fill underneath. X-axis reversed (high ppm on left). Three labelled peak groups: CH2 quartet at 3.69 ppm (~3.15 a.u.), OH singlet at 2.61 ppm (~1.5 a.u.), CH3 triplet at 1.18 ppm (~2.05 a.u.), TMS reference at 0 ppm. Baseline noise visible. No grid (appropriate for NMR). L-shaped spines.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title, axis labels, tick labels, and peak annotations all flip to light off-white tones matching INK (#F0EFE8), INK_SOFT (#B8B7B0), INK_MUTED (#A8A79F) tokens. All text clearly readable against the dark background. No dark-on-dark failures. Spine colours adapt to INK_SOFT (light grey).
+      Data: Spectrum line and fill remain in #009E73 — identical to light render. Colors are theme-invariant as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: titlesize=20, label=14, tick=12,
+          annotation=13/11; proportions balanced in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Peak labels positioned above peaks without collisions; no text-on-data
+          overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: linewidth=1.5 appropriate for 5000-point dense spectrum; shaded fill
+          adds depth
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single-series green #009E73 with high contrast on both surfaces;
+          CVD-safe'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; plot fills canvas well with balanced margins
+          and whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Chemical Shift (ppm) and Intensity (a.u.) both include units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, background #FAF8F1/#1A1A17, all chrome tokens
+          correctly applied'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above generic default: intentional shaded fill, correct palette,
+          clean typography; not yet strong-design level'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No grid (correct for NMR), L-spines only, generous whitespace, subtle
+          alpha fill
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Peak labels with chemical assignments guide viewer through molecular
+          structure; visual hierarchy clear
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct NMR spectrum: intensity vs chemical shift with all required
+          features'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Reversed x-axis, triplet/singlet/quartet splitting patterns, peak
+          shift labels, TMS at 0 ppm, clean baseline
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Chemical shift on x-axis (reversed), intensity on y-axis; all data
+          in visible range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title format: Descriptive · spec-id · julia · makie · anyplot.ai;
+          no legend needed for single series'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All multiplet types: singlet (OH), triplet (CH3 1:2:1), quartet
+          (CH2 1:3:3:1), TMS reference, baseline noise'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Ethanol 1H NMR is canonical organic chemistry; scientifically neutral
+          topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: CH3 at 1.18 ppm, OH at 2.61 ppm, CH2 at 3.69 ppm, TMS at 0 ppm; J=7
+          Hz at 300 MHz is chemically accurate
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat script: imports -> seed -> tokens -> data -> figure -> save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Julia-idiomatic; inline Lorentzian function appropriate; no
+          over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2; current CairoMakie
+          API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: band!, xreversed=true, text! with align tuple, theme tokens wired
+          through all Axis colour attributes
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: band! filled area and xreversed are Makie-specific; could add integral
+          overlay for higher score
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

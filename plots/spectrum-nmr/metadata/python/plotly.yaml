@@ -1,105 +1,135 @@
 library: plotly
+language: python
 specification_id: spectrum-nmr
 created: '2026-03-09T12:51:38Z'
-updated: '2026-03-09T13:03:39Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22854183200
+updated: '2026-06-03T12:10:23Z'
+generated_by: claude-sonnet
+workflow_run: 26882632316
 issue: 4676
-python_version: 3.14.3
-library_version: 6.6.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/plotly/plot.html
-quality_score: 93
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/python/plotly/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent scientific accuracy with correct splitting patterns and realistic chemical
-    shift values for ethanol
-  - Cohesive color-coded design system linking annotations, arrows, and region shadings
-  - Clean visual refinement with subtle grid, minor ticks, and polished typography
-  - Good use of Plotly-specific features (hover templates, spike lines, HTML export)
-  - Perfect spec compliance with all required NMR features present
+  - 'Perfect spec compliance: reversed NMR x-axis, all splitting patterns (singlet/triplet/quartet),
+    TMS reference, and peak labels all correctly implemented'
+  - 'Color-coded design language: each functional group (TMS, CH3, OH, CH2) uses the
+    same Imprint palette color across annotation box border, arrowhead, and region
+    shading — highly coherent'
+  - Scientifically accurate ethanol 1H NMR data with correct ppm positions, relative
+    intensities, and splitting ratios matching literature values
+  - Theme-adaptive implementation is complete — INK, INK_SOFT, PAGE_BG, ELEVATED_BG
+    all correctly applied to annotations, axes, and backgrounds; no dark-on-dark failure
+  - 'Distinctive Plotly features used well: spike crosshair, minor ticks at 0.1 ppm,
+    tozeroy fill, and interactive HTML export'
   weaknesses:
-  - DE-01 could reach 7-8 with more distinctive design elements (e.g., integration
-    curves, more refined color palette)
-  - LM-01 could improve by using Plotly Express or more advanced graph object patterns
-  image_description: 'The plot displays an ethanol 1H NMR spectrum with the x-axis
-    reversed (5.0 to -0.5 ppm, high ppm on the left per NMR convention). The y-axis
-    shows intensity in arbitrary units ranging from 0 to approximately 1.25. Four
-    distinct peak groups are visible: a CH2 quartet near 3.69 ppm with four sharp
-    peaks, an OH singlet near 2.61 ppm, a CH3 triplet near 1.18 ppm (the tallest peaks
-    in a three-peak pattern), and a TMS reference peak at 0.00 ppm. Each peak group
-    has a subtle color-coded rectangular shading (orange for CH2, purple/lavender
-    for OH, blue for CH3, green for TMS) and matching color-coded annotation boxes
-    with arrows pointing to the peak tops. The spectrum line is dark blue (#306998)
-    with a very light fill to zero. The background is white with subtle dotted y-axis
-    grid lines. The title reads "Ethanol 1H NMR · spectrum-nmr · plotly · pyplots.ai"
-    in bold sans-serif font. Minor tick marks are visible on the x-axis at 0.1 ppm
-    intervals.'
+  - hex_to_rgba helper function breaks the KISS no-functions rule; inline the rgba
+    strings or use plotly's native rgba format directly
+  - Annotation font (11px) is slightly small at mobile-scaled widths; consider 12px
+    to match axis label size and improve mobile readability
+  - Region shadings are noticeably more prominent in dark mode (13% opacity) vs light
+    mode (7%), creating slightly inconsistent visual weight between themes; unify
+    or reduce dark opacity to ~10%
+  - 'DE-01 ceiling: the plot is functionally correct and well-styled but lacks a differentiating
+    design moment (e.g., peak area integration values, a chemical structure inset)
+    that would push it toward publication quality'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "Ethanol 1H NMR · spectrum-nmr · python · plotly · anyplot.ai" centered at 16px, fully readable. Axis labels "Chemical Shift delta (ppm)" and "Intensity (a.u.)" in dark INK (#1A1A17) at 12px. Tick labels in INK_SOFT (#4A4A44) at 10px with minor ticks at 0.1 ppm. Annotation text at 11px with colored borders (green/blue/lavender/ochre per Imprint palette). All text clearly readable against the warm off-white background.
+      Data: Main NMR spectrum line in brand green #009E73 with subtle 7% opacity tozeroy fill. Four peaks visible: CH2 quartet (~3.7 ppm, ochre region), OH singlet (~2.61 ppm, lavender region), CH3 triplet (~1.18 ppm, blue region), TMS reference (0.00 ppm, green region). First series correctly uses #009E73. Region shadings at 7% opacity subtle and non-intrusive.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and axis labels rendered in light INK (#F0EFE8), clearly readable. Tick labels in INK_SOFT (#B8B7B0). Annotation boxes use ELEVATED_BG (#242420) backgrounds with light INK text and colored borders. No dark-on-dark failure — all chrome elements adapt correctly to dark surface. Dotted y-axis grid subtle at 0.15 opacity.
+      Data: Spectrum line remains identical brand green #009E73 — colors unchanged from light render as required. Region shadings at 13% opacity are slightly more prominent than light render (notably the ochre CH2 and lavender OH zones), but data colors are correctly unchanged across themes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, labels 22pt, ticks 18pt,
-          annotations 16pt'
+        comment: All font sizes explicitly set (title 16px, axis labels 12px, ticks
+          10px, annotations 11px). Readable in both themes. Annotation font 11px slightly
+          small at mobile-scaled widths.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text, annotations well-positioned
+        comment: No collision between annotations, data, or tick labels.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Sharp peaks clearly visible with 2.5px line width and fill-to-zero
+        comment: 6000-point line at width=2.5 with tozeroy fill; peaks sharp and well-resolved.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Four distinct colorblind-safe colors (blue, green, purple, orange)
+        comment: Imprint palette throughout; CVD-safe by construction.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization with balanced margins
+        comment: 3200x1800 landscape, canvas gate passed, margins l=80 r=40 t=80 b=60,
+          no clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Chemical Shift δ (ppm) and Intensity
-          (a.u.)'
+        comment: Chemical Shift delta (ppm) and Intensity (a.u.) — both descriptive
+          with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Main spectrum in #009E73; region shadings and annotation borders
+          use Imprint positions 1-4; backgrounds #FAF8F1/#1A1A17; both renders theme-correct.'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Strong design with coordinated color system, custom typography hierarchy
+        comment: 'Above defaults: color-coded annotation boxes with matching arrow
+          colors and region shadings, theme-adaptive fill opacity, minor tick marks,
+          spike crosshair, styled hover labels. Stops short of 6+ — functional rather
+          than editorial.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Subtle dotted grid, clean axes, minor ticks, polished whitespace
+        comment: L-shaped axes (no top/right spines), dotted y-axis grid at 0.15 opacity,
+          no x-axis grid, spline smoothing, styled annotation boxes with elevated
+          backgrounds. Dotted grid technically deviates from solid-line style guide.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color-coded peak groups with splitting pattern labels guide the viewer
+        comment: Color-coded peak labels with multiplicity type guide the viewer through
+          ethanol's molecular signature. Visual hierarchy present but the story is
+          expected rather than surprising.
     spec_compliance:
       score: 15
       max: 15
@@ -109,26 +139,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct NMR spectrum line plot
+        comment: 'Correct NMR spectrum: reversed x-axis, sharp Gaussian line shape,
+          peaks rising from near-zero baseline.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: reversed x-axis, splitting patterns, peak labels,
-          TMS reference, clean baseline'
+        comment: Reversed x-axis, triplet (1:2:1), quartet (1:3:3:1), singlet, TMS
+          reference, labeled peaks, clean baseline with noise — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=chemical shift, Y=intensity, correct range
+        comment: 'X: chemical_shift (ppm), Y: intensity (a.u.); 6000 points; range
+          -0.5 to 5.0 ppm covers all ethanol proton signals.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title includes spec-id · library · pyplots.ai format
+        comment: Title 'Ethanol 1H NMR · spectrum-nmr · python · plotly · anyplot.ai'
+          uses optional descriptive prefix correctly. No legend appropriate for single-trace
+          spectrum.
     data_quality:
       score: 15
       max: 15
@@ -138,53 +172,60 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows singlet, triplet, quartet, and TMS reference with correct ratios
+        comment: 'All NMR features: singlet (OH), triplet (CH3, 1:2:1), quartet (CH2,
+          1:3:3:1), TMS reference, region shadings. Comprehensive coverage.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Ethanol is the classic NMR teaching example
+        comment: Ethanol 1H NMR is a canonical organic chemistry teaching example.
+          Neutral, universally recognized, factually grounded.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Accurate chemical shifts and realistic peak ratios
+        comment: 'Chemical shift positions match literature: CH3 ~1.17 ppm, CH2 ~3.69
+          ppm, OH ~2.6 ppm, TMS 0.00 ppm. Intensity ratios reflect proton count. Baseline
+          noise level realistic.'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Clean linear flow with no functions or classes
+        comment: Mostly flat/procedural. One small hex_to_rgba helper function technically
+          breaks strict KISS, though genuinely needed for plotly rgba conversion.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures deterministic baseline noise.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects, both used
+        comment: Only os, numpy, plotly.graph_objects — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, data-driven annotation styling
+        comment: Clean list comprehensions for shapes and annotations; no fake UI;
+          appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct dimensions
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; autosize=False with
+          explicit width/height; current Plotly API.
     library_mastery:
       score: 8
       max: 10
@@ -194,13 +235,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Scatter, shapes, annotations, hover templates
+        comment: Correct use of go.Figure(), go.Scatter() with fill, shapes as layout
+          elements, annotations with arrow styling, update_layout() for complete theme
+          control. Above the default-3 level.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Hover templates, spike lines, unified hover, HTML export
+        comment: 'Uses plotly-exclusive features: fill=''tozeroy'', spikemode=''across''
+          crosshair, minor tick configuration API, hovertemplate with delta symbol
+          formatting, write_html() for interactive HTML alongside static PNG.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -208,9 +253,10 @@ impl_tags:
   - annotations
   - hover-tooltips
   - html-export
+  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling
