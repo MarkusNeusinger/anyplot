@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 scatter-ashby-material: Ashby Material Selection Chart
-Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 89/100 | Created: 2026-03-11
+Library: plotnine 0.15.5 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-03
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -29,7 +31,18 @@ from plotnine import (
 )
 
 
-# Data - Density (kg/m^3) vs Young's Modulus (GPa) for common engineering materials
+# Theme tokens — Imprint palette (see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint categorical palette — positions 1–6 for 6 material families
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
+
+# Data — Density (kg/m³) vs. Young's Modulus (GPa) for common engineering materials
 np.random.seed(42)
 
 families = {
@@ -43,97 +56,87 @@ families = {
 
 materials = []
 for family, props in families.items():
-    log_d_min, log_d_max = np.log10(props["density"][0]), np.log10(props["density"][1])
-    log_m_min, log_m_max = np.log10(props["modulus"][0]), np.log10(props["modulus"][1])
+    log_d_min = np.log10(props["density"][0])
+    log_d_max = np.log10(props["density"][1])
+    log_m_min = np.log10(props["modulus"][0])
+    log_m_max = np.log10(props["modulus"][1])
     density = 10 ** np.random.uniform(log_d_min, log_d_max, props["n"])
     modulus = 10 ** np.random.uniform(log_m_min, log_m_max, props["n"])
     for d, m in zip(density, modulus, strict=True):
         materials.append({"family": family, "density": d, "modulus": m})
 
 df = pd.DataFrame(materials)
-
-# Compute label positions from group centroids in log space
 family_order = list(families.keys())
+
+# Label positions — group centroids in log space with nudges to reduce upper-right crowding
 label_rows = []
 for family in family_order:
     subset = df[df["family"] == family]
-    log_d = np.log10(subset["density"].values)
-    log_m = np.log10(subset["modulus"].values)
-    centroid_d, centroid_m = log_d.mean(), log_m.mean()
+    cx = np.log10(subset["density"].values).mean()
+    cy = np.log10(subset["modulus"].values).mean()
 
-    # Nudge labels away from crowded upper-right region
-    nudge_x, nudge_y = 0, 0
+    nudge_x, nudge_y = 0.0, 0.0
     if family == "Ceramics":
-        nudge_y = 0.35
-        nudge_x = -0.15
-    elif family == "Composites":
-        nudge_y = -0.3
+        nudge_y = 0.42  # push well above Metals cluster
+        nudge_x = -0.20
     elif family == "Metals":
-        nudge_x = 0.2
+        nudge_x = 0.28  # push right and slightly down from Ceramics
+        nudge_y = -0.22
+    elif family == "Composites":
+        nudge_y = -0.42  # push below the Ceramics/Metals zone
+        nudge_x = -0.15
     elif family == "Foams":
         nudge_x = -0.15
-    label_rows.append(
-        {"family": family, "density": 10 ** (centroid_d + nudge_x), "modulus": 10 ** (centroid_m + nudge_y)}
-    )
+
+    label_rows.append({"family": family, "density": 10 ** (cx + nudge_x), "modulus": 10 ** (cy + nudge_y)})
 
 df_labels = pd.DataFrame(label_rows)
+palette = dict(zip(family_order, IMPRINT, strict=True))
 
-# Colors - distinct hues with good colorblind separation
-palette = {
-    "Metals": "#306998",
-    "Ceramics": "#C75B39",
-    "Polymers": "#4DAF4A",
-    "Composites": "#D4A017",
-    "Elastomers": "#984EA3",
-    "Foams": "#A6761D",
-}
-
-# Set categorical ordering
 df["family"] = pd.Categorical(df["family"], categories=family_order, ordered=True)
 df_labels["family"] = pd.Categorical(df_labels["family"], categories=family_order, ordered=True)
 
-# Performance index guide lines: E/rho = constant (slope=1 in log-log space)
-# log10(E) = log10(rho) + log10(C), so intercept = log10(C)
-# Three lines for lightweight stiffness: E/rho = 0.01, 1, 100 GPa/(kg/m³)
+# E/ρ performance index guide lines: log10(E) = log10(ρ) + log10(C), slope=1 in log-log space
 guide_intercepts = [np.log10(c) for c in [0.001, 0.1, 10]]
-guide_labels_data = pd.DataFrame(
+guide_labels_df = pd.DataFrame(
     {
-        "density": [15, 15, 15],
-        "modulus": [15 * 0.001, 15 * 0.1, 15 * 10],
+        "density": [18.0, 18.0, 18.0],
+        "modulus": [18 * 0.001, 18 * 0.1, 18 * 10],
         "label": ["E/ρ = 0.001", "E/ρ = 0.1", "E/ρ = 10"],
     }
 )
 
+title = "scatter-ashby-material · python · plotnine · anyplot.ai"
+
 # Plot
 plot = (
     ggplot(df, aes(x="density", y="modulus"))
-    # Performance index guide lines (behind everything)
-    + geom_abline(intercept=guide_intercepts[0], slope=1, linetype="dashed", color="#B0B0B0", size=0.5, alpha=0.6)
-    + geom_abline(intercept=guide_intercepts[1], slope=1, linetype="dashed", color="#B0B0B0", size=0.5, alpha=0.6)
-    + geom_abline(intercept=guide_intercepts[2], slope=1, linetype="dashed", color="#B0B0B0", size=0.5, alpha=0.6)
-    # Guide line labels
+    # E/ρ guide lines (behind data)
+    + geom_abline(intercept=guide_intercepts[0], slope=1, linetype="dashed", color=INK_MUTED, size=0.35, alpha=0.5)
+    + geom_abline(intercept=guide_intercepts[1], slope=1, linetype="dashed", color=INK_MUTED, size=0.35, alpha=0.5)
+    + geom_abline(intercept=guide_intercepts[2], slope=1, linetype="dashed", color=INK_MUTED, size=0.35, alpha=0.5)
     + geom_text(
-        guide_labels_data,
+        guide_labels_df,
         aes(x="density", y="modulus", label="label"),
-        size=11,
-        color="#999999",
+        size=2.5,
+        color=INK_MUTED,
         fontstyle="italic",
         ha="left",
         va="bottom",
         show_legend=False,
     )
-    # Stat ellipse envelopes - plotnine-native alternative to scipy ConvexHull
+    # Family envelope ellipses — idiomatic plotnine for material region boundaries
     + stat_ellipse(
         aes(fill="family", group="family"),
         geom="polygon",
         level=0.90,
         alpha=0.12,
-        color="#666666",
+        color=INK_SOFT,
         size=0.3,
         linetype="solid",
     )
     # Scatter points
-    + geom_point(aes(color="family"), size=4.5, alpha=0.8, stroke=0.3)
+    + geom_point(aes(color="family"), size=2.5, alpha=0.8, stroke=0.3)
     + scale_x_log10()
     + scale_y_log10()
     + scale_color_manual(values=palette, name="Material Family")
@@ -141,41 +144,39 @@ plot = (
     + labs(
         x="Density (kg/m³)",
         y="Young's Modulus (GPa)",
-        title="scatter-ashby-material · plotnine · pyplots.ai",
-        subtitle="Density vs. stiffness with E/ρ performance index lines",
+        title=title,
+        subtitle="Density vs. stiffness · E/ρ performance index lines",
     )
-    # Family labels
+    # Family name labels at nudged centroids
     + geom_text(
         df_labels,
         aes(x="density", y="modulus", label="family"),
-        size=15,
+        size=3.5,
         fontweight="bold",
-        color="#2A2A2A",
-        alpha=0.85,
+        color=INK,
         show_legend=False,
     )
-    + guides(color=guide_legend(override_aes={"size": 5, "alpha": 1}), fill="none")
+    + guides(color=guide_legend(override_aes={"size": 3, "alpha": 1}), fill="none")
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
-        plot_title=element_text(size=24, weight="bold", margin={"b": 5}),
-        plot_subtitle=element_text(size=16, color="#666666", margin={"b": 15}),
-        axis_title=element_text(size=20, margin={"t": 10, "r": 10}),
-        axis_text=element_text(size=16, color="#333333"),
-        legend_title=element_text(size=18, weight="bold"),
-        legend_text=element_text(size=16),
+        figure_size=(8, 4.5),
+        plot_title=element_text(size=12, weight="bold", color=INK),
+        plot_subtitle=element_text(size=9, color=INK_SOFT),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
+        legend_title=element_text(size=8, weight="bold", color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
         legend_position="right",
-        legend_background=element_rect(fill="#FAFAFA", color="#E0E0E0", size=0.5),
-        legend_key=element_rect(fill="white", color="none"),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.3),
+        legend_key=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_grid_minor=element_blank(),
-        panel_grid_major=element_line(color="#DCDCDC", size=0.3, alpha=0.4),
-        panel_background=element_rect(fill="#F8F9FA", color="none"),
+        panel_grid_major=element_line(color=INK, size=0.2, alpha=0.12),
+        panel_background=element_rect(fill=PAGE_BG),
         panel_border=element_blank(),
-        axis_line=element_blank(),
-        plot_background=element_rect(fill="white", color="none"),
-        plot_margin=0.04,
+        axis_line=element_line(color=INK_SOFT, size=0.3),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)

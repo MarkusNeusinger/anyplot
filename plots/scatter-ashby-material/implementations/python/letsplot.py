@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 scatter-ashby-material: Ashby Material Selection Chart
-Library: letsplot 4.8.2 | Python 3.14.3
-Quality: 87/100 | Created: 2026-03-11
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-06-03
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -26,6 +28,7 @@ from lets_plot import (
     layer_tooltips,
     scale_color_manual,
     scale_fill_manual,
+    scale_shape_manual,
     scale_x_log10,
     scale_y_log10,
     theme,
@@ -35,7 +38,20 @@ from lets_plot import (
 
 LetsPlot.setup_html()
 
-# Data - Density (kg/m^3) vs Young's modulus (GPa) for common engineering materials
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID_COLOR = "#D8D7D0" if THEME == "light" else "#3A3A36"
+FILL_ALPHA = 0.22 if THEME == "light" else 0.30
+
+# Imprint palette — 7 canonical positions for 7 material families (insertion order: Metals first)
+IMPRINT_7 = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+
+# Data — Density (kg/m^3) vs Young's modulus (GPa) for common engineering materials
 np.random.seed(42)
 
 families = {
@@ -113,7 +129,7 @@ families = {
     },
 }
 
-# Build dataframe with scatter noise for visual spread
+# Build dataframe with small scatter noise for visual spread
 rows = []
 for family, props in families.items():
     for d, m, name in zip(props["density"], props["modulus"], props["names"], strict=True):
@@ -123,12 +139,12 @@ for family, props in families.items():
 
 df = pd.DataFrame(rows)
 
-# Compute elliptical envelopes for each material family (in log space)
+# Elliptical envelopes per family (eigendecomposition in log space)
 envelope_rows = []
 n_pts = 80
 theta = np.linspace(0, 2 * np.pi, n_pts, endpoint=False)
-# Per-family envelope scale: tighter for Foams to avoid extending into empty space
-envelope_scales = {"Foams": 1.8, "Elastomers": 2.2}
+# Tighter scales for Ceramics/Composites to reduce their overlap
+envelope_scales = {"Foams": 1.8, "Elastomers": 2.2, "Ceramics": 1.9, "Composites": 1.9}
 default_scale = 2.4
 for family in df["family"].unique():
     sub = df[df["family"] == family]
@@ -145,7 +161,7 @@ for family in df["family"].unique():
 
 df_envelopes = pd.DataFrame(envelope_rows)
 
-# Compute label positions with manual offsets to separate crowded center labels
+# Label positions with manual offsets to avoid crowding
 label_offsets = {
     "Metals": (0.15, 0.2),
     "Ceramics": (-0.3, 0.45),
@@ -161,13 +177,11 @@ for family in df["family"].unique():
     log_cx = np.log10(sub["density"]).mean()
     log_cy = np.log10(sub["modulus"]).mean()
     off_x, off_y = label_offsets.get(family, (0, 0))
-    cx = 10 ** (log_cx + off_x)
-    cy = 10 ** (log_cy + off_y)
-    label_rows.append({"family": family, "density": cx, "modulus": cy})
+    label_rows.append({"family": family, "density": 10 ** (log_cx + off_x), "modulus": 10 ** (log_cy + off_y)})
 
 df_labels = pd.DataFrame(label_rows)
 
-# Leader lines connecting labels to envelope centers for displaced labels
+# Leader lines connecting displaced labels to their envelope centres
 leader_rows = []
 for family in df["family"].unique():
     sub = df[df["family"] == family]
@@ -181,96 +195,85 @@ for family in df["family"].unique():
 
 df_leaders = pd.DataFrame(leader_rows)
 
-# Palette: colorblind-safe with high distinction (designed for deuteranopia/protanopia)
-# Metals=steel blue, Polymers=warm orange, Ceramics=teal, Composites=violet,
-# Elastomers=rose, Foams=sky blue, Natural=amber/gold
-palette = ["#2C5F8A", "#E5883E", "#2A9D8F", "#9B59B6", "#D4526E", "#5DADE2", "#D4A017"]
+# Performance index guide line annotation positions
+guide_df = pd.DataFrame(
+    {"density": [35, 35, 35], "modulus": [0.035, 0.35, 3.5], "label": ["E/ρ = 10⁻³", "E/ρ = 10⁻²", "E/ρ = 10⁻¹"]}
+)
+
+title = "scatter-ashby-material · python · letsplot · anyplot.ai"
 
 # Plot
 plot = (
     ggplot()
-    # Performance index guide lines (E/rho = constant, slope=1 on log-log)
-    + geom_abline(intercept=np.log10(0.001), slope=1, color="#D0D0D0", size=0.5, linetype="dashed")
-    + geom_abline(intercept=np.log10(0.01), slope=1, color="#D0D0D0", size=0.5, linetype="dashed")
-    + geom_abline(intercept=np.log10(0.1), slope=1, color="#D0D0D0", size=0.5, linetype="dashed")
-    # Guide line labels positioned within visible area
+    # Performance index guide lines (E/rho = constant, slope=1 on log-log axes)
+    + geom_abline(intercept=np.log10(0.001), slope=1, color=INK_MUTED, size=0.4, linetype="dashed")
+    + geom_abline(intercept=np.log10(0.01), slope=1, color=INK_MUTED, size=0.4, linetype="dashed")
+    + geom_abline(intercept=np.log10(0.1), slope=1, color=INK_MUTED, size=0.4, linetype="dashed")
+    # Guide line labels (same muted color, angled to follow the slope)
     + geom_text(
-        data=pd.DataFrame(
-            {
-                "density": [35, 35, 35],
-                "modulus": [0.035, 0.35, 3.5],
-                "label": ["E/\u03c1 = 10\u207b\u00b3", "E/\u03c1 = 10\u207b\u00b2", "E/\u03c1 = 10\u207b\u00b9"],
-            }
-        ),
-        mapping=aes(x="density", y="modulus", label="label"),
-        size=10,
-        color="#B0B0B0",
-        angle=38,
-        hjust=0,
+        data=guide_df, mapping=aes(x="density", y="modulus", label="label"), size=5, color=INK_MUTED, angle=38, hjust=0
     )
-    # Elliptical envelopes
-    + geom_polygon(data=df_envelopes, mapping=aes(x="density", y="modulus", fill="family"), alpha=0.22)
-    # Data points with interactive tooltips
+    # Elliptical envelopes per family
+    + geom_polygon(data=df_envelopes, mapping=aes(x="density", y="modulus", fill="family"), alpha=FILL_ALPHA)
+    # Individual material data points with interactive tooltips; shape encodes family for CVD safety
     + geom_point(
         data=df,
-        mapping=aes(x="density", y="modulus", color="family"),
-        size=7,
+        mapping=aes(x="density", y="modulus", color="family", shape="family"),
+        size=3.5,
         alpha=0.88,
-        shape=16,
         tooltips=layer_tooltips()
         .format("density", ".0f")
         .format("modulus", ".3g")
         .title("@material")
         .line("Family|@family")
-        .line("Density|@{density} kg/m\u00b3")
+        .line("Density|@{density} kg/m³")
         .line("Modulus|@{modulus} GPa")
         .min_width(180),
     )
-    # Leader lines from envelope center to displaced labels
+    # Dotted leader lines from envelope centre to displaced labels
     + geom_segment(
         data=df_leaders,
         mapping=aes(x="x", y="y", xend="xend", yend="yend"),
-        color="#999999",
+        color=INK_MUTED,
         size=0.4,
         linetype="dotted",
     )
-    # Family labels
+    # Bold family name labels
     + geom_text(
         data=df_labels,
         mapping=aes(x="density", y="modulus", label="family"),
-        size=12,
-        color="#1A1A1A",
+        size=5,
+        color=INK,
         fontface="bold",
         label_padding=0.3,
     )
-    + scale_x_log10(name="Density (kg/m\u00b3)")
-    + scale_y_log10(name="Young\u2019s Modulus (GPa)")
-    + scale_color_manual(values=palette, name="Material Family")
-    + scale_fill_manual(values=palette)
+    + scale_x_log10(name="Density (kg/m³)")
+    + scale_y_log10(name="Young’s Modulus (GPa)")
+    + scale_color_manual(values=IMPRINT_7, name="Material Family")
+    + scale_fill_manual(values=IMPRINT_7)
+    + scale_shape_manual(values=[16, 17, 15, 3, 8, 5, 4], name="Material Family")
     + guides(fill="none")
-    + labs(
-        title="scatter-ashby-material \u00b7 letsplot \u00b7 pyplots.ai",
-        subtitle="Young\u2019s Modulus vs Density \u2014 Material Selection Landscape",
-    )
+    + labs(title=title, subtitle="Young’s Modulus vs Density — Material Selection Landscape")
     + theme_minimal()
     + theme(
-        axis_title=element_text(size=20, color="#333333", margin=[10, 10, 10, 10]),
-        axis_text=element_text(size=16, color="#555555"),
-        plot_title=element_text(size=24, face="bold", color="#1A1A1A", margin=[0, 0, 4, 0]),
-        plot_subtitle=element_text(size=16, color="#666666", margin=[0, 0, 14, 0]),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
+        plot_title=element_text(size=16, face="bold", color=INK),
+        plot_subtitle=element_text(size=11, color=INK_SOFT),
         plot_margin=[30, 40, 20, 20],
-        plot_background=element_rect(fill="#F7F7F7", color="#F7F7F7"),
-        panel_background=element_rect(fill="#FFFFFF", color="#FFFFFF"),
-        legend_title=element_text(size=16, face="bold"),
-        legend_text=element_text(size=14),
-        panel_grid_major=element_line(size=0.25, color="#ECECEC"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        legend_title=element_text(size=10, face="bold", color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
+        panel_grid_major=element_line(size=0.25, color=GRID_COLOR),
         panel_grid_minor=element_blank(),
         legend_position="right",
-        legend_background=element_rect(fill="#F7F7F7", color="#F7F7F7"),
+        legend_background=element_rect(fill=ELEVATED_BG, color="transparent"),
+        axis_line=element_line(color=INK_SOFT, size=0.3),
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
 # Save
-ggsave(plot, "plot.png", path=".", scale=3)
-plot.to_html("plot.html")
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, f"plot-{THEME}.html", path=".")
