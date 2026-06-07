@@ -4,7 +4,6 @@
 #' Quality: 85/100 | Created: 2026-06-07
 
 library(ggplot2)
-library(dplyr)
 library(scales)
 library(ragg)
 
@@ -151,7 +150,7 @@ p <- ggplot() +
     label = sprintf("β (shape) = %.2f\nη (scale) = %.0f h", beta_hat, eta_hat),
     hjust = 0,
     vjust = 1,
-    size  = 3.0,
+    size  = 3.5,
     color = INK_SOFT,
     fill  = ELEVATED_BG,
     label.size = 0.3
