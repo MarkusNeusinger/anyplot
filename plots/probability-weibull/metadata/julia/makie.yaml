@@ -1,0 +1,264 @@
+library: makie
+language: julia
+specification_id: probability-weibull
+created: '2026-06-07T23:21:11Z'
+updated: '2026-06-07T23:46:15Z'
+generated_by: claude-sonnet
+workflow_run: 27107300229
+issue: 4668
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Correct Weibull probability plot with log x-axis and linearized Weibull y-axis
+  - Johnson adjusted-rank method for censored data — statistically sophisticated and
+    correct
+  - 'All spec features implemented: fitted line with beta/eta annotation, hollow censored
+    markers vs filled failures, 63.2% reference line, B10 life marker'
+  - Both light and dark themes work correctly with Imprint palette — data colors identical,
+    chrome flips cleanly
+  - 'Clean idiomatic Julia/Makie code: explicit font sizes throughout, seed set, all
+    imports used'
+  - B10 life graphical marker and vertical guide line adds engineering relevance beyond
+    spec requirements
+  weaknesses:
+  - 'DE-01: Design is polished but not exceptional — stays at strong-but-configured
+    level; consider slightly bolder parameter callout box or refined annotation placement
+    for publication quality'
+  - 'DE-02: Both x and y grid lines shown — a technical plot benefits from this but
+    removing the x-grid would further reduce visual noise and improve refinement'
+  - 'LM-02: Library usage is correct and idiomatic but does not leverage distinctively
+    Makie-specific features (e.g. Makie recipes, Observable-driven data, layout slots
+    beyond fig[1,1]) that would not translate easily to another library'
+  - 'Minor: Imprint palette positions 1, 3, 4 used (skipping lavender at pos 2 for
+    the fit line) — blue for a regression line is a defensible technical convention
+    but slightly deviates from canonical ordering'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "probability-weibull · julia · makie · anyplot.ai" in dark INK, centered — fully readable. Y-axis label "Cumulative Failure Probability" and X-axis label "Time to Failure (hours)" in dark INK — both readable and descriptive. Tick labels in INK_SOFT (#4A4A44) on both axes — clearly visible against light background. Y-axis shows custom probability percentages (1%, 5%, 10%, 20%, 50%, 63.2%, 90%, 99%). X-axis shows log10 scale (10^3.0, 10^3.5, 10^4.0).
+      Data: ~25 filled green (#009E73) circles for failure observations, 1 hollow circle with ochre (#BD8233) stroke for censored observation. Blue (#4467A3) fitted Weibull line spans the full data range and extrapolates beyond. Dashed muted reference line at 63.2% probability level. Small diamond marker at B10 life with vertical dashed guide and "B10" label. Parameter annotation (β=1.89, η=9380h, B10=2844h) in upper-left in INK_SOFT — readable. Legend in bottom-right with ELEVATED_BG (#FFFDF6) box: 4 entries (63.2%(η), Weibull fit, Failure, Censored).
+      Legibility verdict: PASS — all text elements are clearly readable against the warm off-white background. No light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light INK (#F0EFE8) — clearly visible against dark background. Axis labels in light INK — readable. Tick labels in INK_SOFT (#B8B7B0) — visible medium gray on near-black, no dark-on-dark issue. Legend in ELEVATED_BG (#242420) box with light label text — readable.
+      Data: Data colors identical to light render — green (#009E73) failure points, hollow ochre (#BD8233) censored point, blue (#4467A3) Weibull fit line. The reference dashed lines and B10 elements use INK_MUTED (#A8A79F) — visible on dark background. Parameter annotation text in INK_SOFT (#B8B7B0) — readable.
+      Legibility verdict: PASS — all text elements are clearly readable against the warm near-black background. No dark-on-dark failures observed. Brand green #009E73 remains clearly visible.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (titlesize=20, label=14, tick=12, annotation=13,
+          legend=11). Proportions well-balanced, readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements. Parameter annotation placed
+          in sparse upper-left region. B10 label clear of data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: markersize=12 appropriate for ~25 data points. Fit line at linewidth=2.5
+          clear. 63.2% dashed reference visible. Hollow censored circle distinct.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette — green/blue/ochre all perceptually distinct. Reference
+          lines use muted neutral. CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills good proportion of canvas with balanced margins. Legend
+          in bottom-right, well-positioned. No content cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Time to Failure (hours)'' with units. Y: ''Cumulative Failure
+          Probability'' descriptive. Title correct format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (failures) = #009E73. Fit line uses Imprint pos 3 (blue
+          — defensible for technical regression line). Censored uses Imprint pos 4
+          (ochre). Backgrounds #FAF8F1/#1A1A17 correct. Both themes correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional color hierarchy (green data, blue fit, ochre censored,
+          muted references). Theme-adaptive chrome. Spines removed. Clearly above
+          library defaults but not FiveThirtyEight-level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed. Both-axis subtle grid at 0.15 opacity.
+          Legend boxed with ELEVATED_BG. Generous whitespace. Good but not fully minimal.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 63.2% reference line creates focal point at characteristic life.
+          B10 marker with guide line is an actionable engineering reference. Parameter
+          annotation provides key takeaways. Good visual hierarchy.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Weibull probability plot: log x-axis (log10), linearized
+          Weibull y-axis (ln(-ln(1-F))), fitted straight line.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Log x-axis, Weibull-linearized y-axis, fitted line, annotated beta
+          and eta, median rank (Bernard's), hollow vs filled censored distinction,
+          63.2% reference line — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time to failure (hours, log scale), Y=cumulative probability (Weibull
+          scale). Both failure and censored data shown correctly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''probability-weibull · julia · makie · anyplot.ai'' — exact
+          correct format. Legend labels: 63.2%(η), Weibull fit, Failure, Censored
+          — all appropriate.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows failures AND censored observations. Johnson's adjusted-rank
+          method for censored data. Weibull fit, 63.2% reference, B10 life marker.
+          Comprehensive coverage.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Bearing fatigue-life qualification test (hours) — real engineering
+          reliability context. Neutral, science domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Time range 1000-10000 hours typical for bearing fatigue. True beta=2.5,
+          eta=8500h are realistic Weibull parameters for engineering components. n=35
+          with censoring is realistic for reliability testing.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports → constants → data → Johnson ranking → OLS
+          → plot → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random, Statistics — all 4 are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic Julia. let block for Johnson's method is appropriate.
+          Broadcasting throughout. No over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as 'plot-$(THEME).png'. Uses current CairoMakie API (size=
+          rather than deprecated resolution=).
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: scatter!, lines!, hlines!, text!, axislegend!, ylims! used correctly.
+          colorant'' strings, RGBAf for grid opacity — idiomatic Makie/Colors patterns
+          throughout.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: axislegend! for positioned legend, custom (values, labels) tuple
+          for y-axis Weibull probability scale, RGBAf for grid color opacity — Makie-specific.
+          But the core visualization does not use deeply distinctive Makie capabilities
+          (recipes, observables, multi-axis layout).
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling: []
