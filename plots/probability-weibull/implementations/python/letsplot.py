@@ -1,9 +1,10 @@
-""" anyplot.ai
+"""anyplot.ai
 probability-weibull: Weibull Probability Plot for Reliability Analysis
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-07
 """
-# ruff: noqa: F403, F405
+
+# ruff: noqa: F403, F405, E402
 """anyplot.ai
 probability-weibull: Weibull Probability Plot for Reliability Analysis
 Library: letsplot | Python 3.13
@@ -111,6 +112,7 @@ TITLE = "probability-weibull · python · letsplot · anyplot.ai"
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
+    panel_border=element_blank(),
     panel_grid_major=element_line(color=INK_MUTED, size=0.25),
     panel_grid_minor=element_blank(),
     axis_title=element_text(color=INK, size=12),
@@ -120,7 +122,7 @@ anyplot_theme = theme(
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     legend_text=element_text(color=INK_SOFT, size=10),
     legend_title=element_text(color=INK, size=10),
-    legend_position=[0.05, 0.10],
+    legend_position=[0.05, 0.17],
 )
 
 # Plot
@@ -128,7 +130,7 @@ plot = (
     ggplot(df_all, aes(x="log_time", y="weibull_y", color="status", shape="status"))
     # Fitted regression line
     + geom_line(
-        data=df_fit, mapping=aes(x="log_time", y="weibull_y"), color=INK, size=1.4, alpha=0.65, inherit_aes=False
+        data=df_fit, mapping=aes(x="log_time", y="weibull_y"), color=INK, size=1.6, alpha=0.90, inherit_aes=False
     )
     # 63.2% horizontal reference
     + geom_hline(yintercept=ref_y, linetype="dashed", color=INK_MUTED, size=0.6)
@@ -176,7 +178,13 @@ plot = (
     )
     # Weibull parameter annotation (upper-left, away from dense data region)
     + geom_text(
-        data=df_annot, mapping=aes(x="x", y="y", label="label"), size=5, color=INK_SOFT, hjust=0, inherit_aes=False
+        data=df_annot,
+        mapping=aes(x="x", y="y", label="label"),
+        size=6,
+        color=INK_SOFT,
+        hjust=0,
+        fontface="bold",
+        inherit_aes=False,
     )
     + scale_color_manual(name="Observation", values={"Failure": BRAND, "Censored": COLOR_CENSORED})
     + scale_shape_manual(name="Observation", values={"Failure": 16, "Censored": 1})
