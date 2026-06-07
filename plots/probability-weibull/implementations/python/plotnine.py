@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 probability-weibull: Weibull Probability Plot for Reliability Analysis
 Library: plotnine 0.15.5 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-07
@@ -128,8 +128,9 @@ scatter_df = pd.concat([failures_plot, censored_plot], ignore_index=True)
 highlight_df = pd.DataFrame({"time": [eta], "weibull_y": [ref_y]})
 
 # Annotation positions in data space (time units for x; Weibull-y for y)
-annot_time = eta * 1.30
-annot_y = ref_y + 0.62
+# Shift further right to avoid crowding with high-probability scatter points
+annot_time = eta * 1.55
+annot_y = ref_y + 0.42
 
 plot = (
     ggplot()
@@ -174,7 +175,7 @@ plot = (
         x=annot_time,
         y=annot_y,
         label=f"η = {eta:,.0f} hrs (63.2%)",
-        size=3.0,
+        size=3.5,
         ha="left",
         color=CHAR_COLOR,
         fontweight="bold",
@@ -193,7 +194,7 @@ plot = (
         x=x_tick_values[0] * 1.06,
         y=weibull_ticks[-2] + 0.22,
         label=f"β = {beta:.2f}  ·  η = {eta:,.0f} hrs  ·  R² = {r_value**2:.3f}",
-        size=3.0,
+        size=3.5,
         ha="left",
         va="top",
         color=FIT_COLOR,
