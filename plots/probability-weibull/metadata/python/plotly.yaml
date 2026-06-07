@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: probability-weibull
 created: '2026-03-11T21:53:38Z'
-updated: '2026-06-07T22:55:06Z'
+updated: '2026-06-07T23:05:06Z'
 generated_by: claude-sonnet
 workflow_run: 27106940482
 issue: 4668
@@ -15,36 +15,47 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/probabili
 quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance: all required Weibull features implemented (log x-axis,
-    Weibull-linearized y-axis, median rank formula, fitted line with beta/eta annotation,
-    censored marker distinction, 63.2% reference line)'
-  - 'Excellent theme adaptation: all chrome tokens correctly wired through every element;
-    no dark-on-dark failures in dark render'
-  - Sophisticated Plotly updatemenus pattern for toggling the confidence band — genuinely
-    distinctive library feature
-  - Clean, reproducible, flat code structure with correct canvas dimensions (3200x1800)
-  - 'Strong data storytelling: B10 life annotation, 63.2% characteristic life reference,
-    parameter box, and confidence band together tell a complete reliability analysis
-    story'
+  - 'Perfect spec compliance — all required features present: log x-axis, Weibull
+    CDF y-axis, fitted line with beta/eta annotation, median rank plotting positions,
+    censored-vs-failure visual distinction, and 63.2% characteristic life reference
+    line'
+  - 'Excellent data quality: turbine blade fatigue-life scenario is realistic, well-scaled
+    (1000–10000h range, β≈2.44 is physically plausible for fatigue failure), and neutral'
+  - 'Strong library mastery: updatemenus with Show/Hide Band toggle showcases a distinctively
+    Plotly interactive feature; rich hovertemplate with customdata provides meaningful
+    hover tooltips'
+  - 'Perfect code quality: KISS structure, seeded randomness (np.random.seed(42)),
+    clean imports, correct 3200×1800 canvas output'
+  - 'Good data storytelling: B10 life annotation with arrow, 63.2% reference line
+    with characteristic life read-off, and parameter box (β, η, R²) guide viewer through
+    the reliability analysis workflow'
+  - 'Full Imprint palette compliance in both themes — brand green #009E73 for failures,
+    lavender #C475FD for censored, correct warm backgrounds (#FAF8F1 light / #1A1A17
+    dark), all chrome theme-adaptive'
   weaknesses:
-  - Legend box (positioned x=0.02, y=0.98 top-left) overlaps the 63.2% hline annotation
-    in both renders, partially obscuring the annotation text; move legend to a non-conflicting
-    position (e.g., lower-left) or change annotation_position to top right
-  - 'Slight upper-area crowding: legend at top-left and Show/Hide Band buttons at
-    top-right both compete for vertical space near the chart top; consider adjusting
-    top margin or legend y position'
+  - 'Minor visual crowding: Show Band / Hide Band updatemenus buttons (paper coords
+    x=0.99, y=0.99) are positioned in the upper-right corner where data markers cluster
+    near the 99% probability level — consider moving buttons to below the legend or
+    using x=0.01, y=0.01 to reduce overlap with data'
+  - The 63.2% reference line annotation (annotation_position=bottom left) renders
+    in close proximity to the y-axis tick label area, creating visual clutter at the
+    63.2% level — consider annotation_position=top right or increasing standoff
+  - 'Design Excellence has room to grow: the compositional choices are functional
+    but not exceptional — richer visual hierarchy (e.g., slightly larger data markers
+    with white stroke, slightly bolder fit line, dimmed confidence band) would push
+    toward publication-ready level'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "probability-weibull · python · plotly · anyplot.ai" in dark ink, clearly readable. X-axis label "Time to Failure (hours)" and Y-axis label "Cumulative Failure Probability (Weibull Scale)" both legible at 12px. Custom Weibull probability tick labels (1%, 2%, 5%, 10%, 20%, 50%, 63.2%, 90%, 95%, 99%) in INK_SOFT. Legend box top-left with 4 entries. ISSUE: legend overlaps with "63.2% — η ≈ 4625h" hline annotation.
-      Data: Green filled circles (#009E73, size=14) for 25 failures; hollow purple diamond outlines (#C475FD) for 5 censored observations; green fit line (width=3); light green confidence band (10% fill alpha); dotted 63.2% horizontal reference line; faint dotted vertical eta line; parameter annotation box (lower-right) showing beta=2.44, eta=4625h, R²=0.9785 with green border accent.
-      Legibility verdict: PASS (main text elements readable; minor annotation obscured by legend)
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
+      Chrome: Title "probability-weibull · python · plotly · anyplot.ai" centered at top in dark ink, fontsize 16 — fully readable. X-axis label "Time to Failure (hours)" and Y-axis label "Cumulative Failure Probability (Weibull Scale)" in dark ink, fontsize 12 — both readable. Tick labels at fontsize 10 in INK_SOFT — readable, with custom Weibull probability scale (1%–99%) on y-axis. Legend in upper-left with elevated-bg box. Parameter annotation box lower-right with green border. All chrome elements dark on warm-cream — no legibility issues.
+      Data: Failure markers are large filled green circles (#009E73). Censored markers are hollow lavender diamonds (#C475FD) with transparent fill. Fitted line in green (width 3). 90% confidence band is a semi-transparent green shaded area. 63.2% reference horizontal dashed line across the plot. B10 arrow annotation visible. Show Band / Hide Band buttons in upper-right (standard Plotly updatemenus). First data series is #009E73.
+      Legibility verdict: PASS — all text readable on warm-cream background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title and axis labels switch to light ink (#F0EFE8 / #B8B7B0) — all clearly readable against dark surface. No dark-on-dark text failures. Tick labels legible. Legend text in B8B7B0 on #242420 legend bg — readable. Show/Hide Band buttons: #B8B7B0 text on #242420 bg — legible. Same legend-annotation overlap present.
-      Data: Colors identical to light render — green failures (#009E73), purple diamond censored (#C475FD), green fit line, confidence band at 16% alpha. Parameter box adapts to dark ELEVATED_BG (#242420).
-      Legibility verdict: PASS (no dark-on-dark failures; same minor annotation overlap as light render)
+      Background: Warm near-black #1A1A17 — correct theme surface, not pure black.
+      Chrome: Same title, axis labels, and tick labels in light ink (#F0EFE8 / #B8B7B0) — all clearly readable against dark background. No dark-on-dark failures detected. Legend, parameter box, and annotation text all use light-colored fonts. Show Band / Hide Band buttons have elevated-dark background (#242420).
+      Data: Failure marker color (#009E73) and censored marker color (#C475FD) are identical to light render — only chrome flipped. Confidence band uses slightly higher opacity on dark background (rgba(0,158,115,0.16) vs 0.10 on light) for better visibility. This is correct behavior.
+      Legibility verdict: PASS — all text readable on near-black background, no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
       score: 26
@@ -55,49 +66,57 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels legible in both themes; 63.2% annotation
-          partially obscured by legend
+        comment: All font sizes explicitly set (title 16px, axis labels 12px, tick
+          labels 10px). Both themes fully readable. Minor crowding near 63.2% annotation/y-axis
+          tick and buttons in upper-right.
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
-        passed: false
-        comment: Legend box overlaps with 63.2% hline annotation in both renders
+        passed: true
+        comment: Show Band/Hide Band updatemenus buttons overlap with data markers
+          in upper-right (near 99% probability level). 63.2% annotation (bottom-left
+          position) creates crowding near y-axis tick labels. Main content still readable.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 'All data elements clearly visible: failure circles, censored diamonds,
-          fit line, confidence band, reference lines'
+        comment: 30 data points at size=14 well-adapted to density (~30 points). Fit
+          line width=3 prominent. Confidence band clearly visible without overwhelming
+          data. Hollow diamond markers for censored are distinctive.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Green #009E73 + lavender #C475FD, Imprint positions 1-2; redundant
-          fill vs hollow encoding; CVD-safe'
+        comment: Green vs. lavender have distinct luminance and hue. Redundant shape
+          encoding (filled circle vs. hollow diamond) provides CVD-safe distinction
+          beyond color alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas; slight crowding in upper area with legend
-          + update menu buttons
+        comment: Canvas gate passed (3200x1800). Good margins (l=90, r=40, t=80, b=60).
+          Buttons in upper-right slightly intrude on the data area. Overall layout
+          is good.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; custom Weibull probability tick labels;
-          correct title format
+        comment: 'X-axis: ''Time to Failure (hours)'' with units. Y-axis: ''Cumulative
+          Failure Probability (Weibull Scale)'' with scale type. Title follows mandated
+          format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; censored #C475FD; backgrounds #FAF8F1/#1A1A17;
-          data colors identical across themes; chrome theme-adaptive'
+        comment: First series (#009E73 brand green for failures) correct. Second series
+          (#C475FD lavender for censored) correct Imprint position 2. Warm backgrounds
+          correct in both themes. All chrome theme-adaptive.
     design_excellence:
       score: 13
       max: 20
@@ -107,22 +126,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Weibull probability paper layout; styled parameter box with green
-          border; interactive update menu; B10 annotation
+        comment: 'Good design above library defaults: parameter box with green border,
+          semi-transparent confidence band, B10 arrow annotation. Not yet publication-ready
+          — lacks the signature compositional choices (stronger data-ink ratio, bolder
+          focal elements) to reach 6+.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: showline=False on both axes; two-level grid (0.15/0.07 opacity);
-          confidence band at 10%/16% alpha; subtle borders
+        comment: Spines removed (showline=False). Subtle grid at 15% opacity with
+          minor grid lines for log scale. Good margins. Clean overall. Some refinement
+          is clearly present.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 63.2% reference annotated with eta; B10 annotation with arrow; parameter
-          box; clear reliability analysis narrative
+        comment: 'Strong storytelling for a reliability engineering plot: B10 annotation
+          with arrow guides viewer to key engineering quantity, 63.2% reference line
+          marks characteristic life, parameter box shows fit quality (R²=0.9785).
+          Viewer is guided through the reliability analysis workflow.'
     spec_compliance:
       score: 15
       max: 15
@@ -132,29 +156,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Weibull probability plot: log x-axis, ln(-ln(1-F)) y-axis,
-          straight line fit'
+        comment: Correct Weibull probability plot with log x-axis and linearized Weibull
+          CDF y-axis.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: log x, Weibull y, fitted line with beta/eta,
-          median rank formula, censored distinction, 63.2% reference'
+        comment: 'All required features present: log scale, Weibull y-axis (ln(-ln(1-F))),
+          fitted line with beta/eta, median rank (i-0.3)/(n+0.4), censored vs failure
+          distinction (hollow diamond vs filled circle), 63.2% reference line.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: time_to_failure on log x, Weibull-transformed probability on y, is_censored
-          distinguishes hollow vs filled
+        comment: 'X: time_to_failure, Y: cumulative_probability (Weibull-linearized),
+          is_censored correctly distinguishes marker types.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches required format; legend identifies all 4 trace
-          types
+        comment: 'Title: ''probability-weibull · python · plotly · anyplot.ai'' —
+          correct format. Legend labels (90% Confidence Band, Weibull Fit, Failures,
+          Censored (suspended)) are clear and match data.'
     data_quality:
       score: 15
       max: 15
@@ -164,21 +190,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Failures + censored, fit line, confidence band, 63.2% reference,
-          B10 annotation, parameter display — full coverage
+        comment: 'Shows all aspects: failures, censored (suspended) observations,
+          fitted line, confidence band, characteristic life, B10 life. Mix of 25 failures
+          and 5 censored observations is realistic.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Turbine blade fatigue-life: beta=2.44 (wear-out), eta=4625h, mix
-          of failures/suspensions; neutral engineering scenario'
+        comment: Turbine blade fatigue-life data is a canonical reliability engineering
+          scenario. Real, neutral, non-controversial.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 600-10000h log-scale range; 1-99% probability; seed=42 reproducible
+        comment: Time range 1000-10000h plausible for turbine blades. β≈2.44 consistent
+          with fatigue failure mode (β=2-3 typical). η≈4625h reasonable. R²=0.9785
+          indicates good fit.
     code_quality:
       score: 10
       max: 10
@@ -188,32 +217,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat sequential script, no classes or functions
+        comment: 'Linear flow: imports → data generation → fitting → figure → layout
+          → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys, numpy, plotly.graph_objects, scipy.stats'
+        comment: os (THEME env var), sys (path fix), numpy, plotly.graph_objects,
+          scipy.stats — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; sys.path guard is necessary boilerplate;
-          no fake UI
+        comment: Appropriate complexity for the task. No over-engineering. Clean,
+          Pythonic code.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Plotly API
+        comment: Saves plot-{THEME}.png (width=800, height=450, scale=4 → 3200x1800)
+          and plot-{THEME}.html. Current Plotly API.
     library_mastery:
       score: 9
       max: 10
@@ -223,25 +255,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: go.Figure() + add_trace(), add_hline(), add_vline(), add_annotation(),
-          update_layout() with updatemenus, hovertemplate+customdata — canonical Graph
-          Objects patterns
+        comment: 'Expert Plotly usage: add_trace(), add_hline(), add_vline(), add_annotation(),
+          update_layout(), updatemenus — all idiomatic. hovertemplate with customdata
+          for rich tooltips.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: updatemenus buttons for toggling confidence band; custom hovertemplate;
-          mixed paper/axis coordinate annotations; minor grid; HTML+PNG dual export
+        comment: updatemenus with buttons to toggle confidence band visibility is
+          a distinctively Plotly feature not easily replicated in static libraries.
+          hovertemplate with customdata providing probability values is also Plotly-specific.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - annotations
-  - manual-ticks
   - hover-tooltips
   - html-export
+  - manual-ticks
   patterns:
   - data-generation
   dataprep:
