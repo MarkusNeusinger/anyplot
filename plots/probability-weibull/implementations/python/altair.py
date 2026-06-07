@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 probability-weibull: Weibull Probability Plot for Reliability Analysis
 Library: altair 6.2.1 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-06-07
+Quality: 90/100 | Updated: 2026-06-07
 """
 
 import os
