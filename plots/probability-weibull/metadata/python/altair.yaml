@@ -1,115 +1,152 @@
 library: altair
+language: python
 specification_id: probability-weibull
 created: '2026-03-11T21:55:41Z'
-updated: '2026-03-11T22:21:17Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22976096566
+updated: '2026-06-07T23:17:14Z'
+generated_by: claude-sonnet
+workflow_run: 27107030497
 issue: 4668
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/altair/plot.html
-quality_score: 93
+language_version: 3.13.13
+library_version: 6.2.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/python/altair/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent Weibull probability paper implementation with proper linearized y-axis
-    using Vega expressions for probability tick labels
-  - All spec requirements fully met including median rank formula, censored point
-    distinction, fitted line, parameter annotations, and 63.2% reference line
-  - Professional design with custom color palette, refined typography hierarchy, and
-    subtle grid styling
-  - 'Effective use of Altair-specific features: interactive hover, tooltips, layered
-    composition, Vega expressions'
-  - Realistic turbine blade fatigue data with plausible engineering parameter values
+  - 'Full spec compliance: log X-axis, linearized Weibull Y-axis with custom probability
+    tick labels via labelExpr, fitted line, annotated β/η parameters, 63.2% reference
+    line, and visually distinguished failure vs. censored observations'
+  - Expert Altair layer composition — ref_line + fit_line + failures + censored +
+    legend_points + param_text + ref_label — all sharing a consistent coordinate system
+    with proper log scale
+  - 'Theme-adaptive chrome wired correctly throughout: PAGE_BG, ELEVATED_BG, INK,
+    INK_SOFT, INK_MUTED tokens applied to background, axis labels, ticks, grid, legend
+    fill/stroke — both renders are fully legible'
+  - 'Distinctive Altair features leveraged: selection_point for interactive hover,
+    condition for size encoding, labelExpr in Vega-Lite expression language for the
+    custom Weibull probability axis, and HTML export alongside PNG'
+  - Realistic and contextually rich engineering data (turbine blade fatigue-life,
+    Weibull β≈2.2 η≈5428 hrs) with proper median-rank plotting positions and mix of
+    failure and censored observations
+  - 'Canvas handling is correct: PAD-only approach with PIL, no cropping, exact 3200×1800
+    target'
   weaknesses:
-  - Legend uses opacity=0 hack to generate separate legend layer, could be slightly
-    cleaner
-  - Axis domain lines still visible (minor refinement opportunity)
-  image_description: The plot displays a Weibull probability plot on a light gray
-    (#FAFBFC) background. The title "probability-weibull · altair · pyplots.ai" appears
-    top-left in dark bold text (28pt) with a gray subtitle "Turbine Blade Fatigue-Life
-    Analysis — Weibull Distribution Fit" below it. The x-axis is "Time to Failure
-    (hours)" on a logarithmic scale from ~800 to 10k with SI-prefix formatting (1k,
-    2k, etc.). The y-axis is "Cumulative Failure Probability" with Weibull-linearized
-    probability labels (1%, 5%, 10%, 20%, 50%, 63.2%, 90%, 95%). Blue filled circles
-    with white stroke represent 25 failure observations, while orange open triangles
-    represent 5 censored observations. A dark gray dashed fitted line runs diagonally
-    through the data points. A light gray dashed horizontal reference line at 63.2%
-    is labeled "63.2% Characteristic Life" in italic gray text. Parameter annotation
-    in the lower-right reads "beta = 2.21  eta = 5428 hrs" in bold dark text. A boxed
-    legend in the upper-right corner shows "Observation Type" with Failure (circle)
-    and Censored (triangle) entries.
+  - The '63.2% Characteristic Life' italic label (fontSize=10, align='left') is positioned
+    at x_min*1.05 which places it behind or very close to the top-left legend box
+    — at small viewport scales this label is effectively hidden; consider positioning
+    it to the right of the plot area or at a less obstructed x position
+  - DE-01 could reach the 'strong design' tier with one more intentional design move
+    — for example, color-coding the fitted line to match the brand green, or adding
+    a secondary annotation showing B10 life extrapolation (reading off the fit at
+    10% cumulative probability), which is explicitly mentioned in the spec's applications
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct Imprint surface, not pure white.
+      Chrome: Title "probability-weibull · python · altair · anyplot.ai" in bold dark ink (~55% of plot width, appropriate for 50-char string at fontSize=16). Subtitle "Turbine Blade Fatigue-Life Analysis — Weibull Distribution Fit" in INK_SOFT below. Y-axis title "Cumulative Failure Probability" and X-axis title "Time to Failure (hours)" both at fontSize=12, legible and balanced. Tick labels at fontSize=10: Y-axis shows 1%, 5%, 10%, 20%, 50%, 63.2%, 90%, 95% via custom labelExpr; X-axis shows 800, 1k, 2k, 3k, 4k, 5k, 6k, 7k, 8k, 10k in SI notation. All chrome text is clearly readable against warm off-white.
+      Data: 25 filled green circles (#009E73) for failures — well-sized at size=110 for 25 points, prominent and clear. 5 amber open triangles (#DDCC77) for censored observations — distinguishable by both color and hollow/shape encoding. Dashed fitted line (INK_SOFT, strokeWidth=2.5, dash=[8,4]) traces the Weibull fit from lower-left to upper-right. Horizontal dashed reference line at 63.2% (INK_MUTED, dash=[4,4]) crosses the plot. Parameter annotation "β = 2.21   η = 5428 hrs" in bold INK at lower right — readable. Legend top-left: "Observation Type" header with green circle (Failure) and amber triangle (Censored).
+      Note: The "63.2% Characteristic Life" italic label at x_min*1.05 is close to or partially behind the legend box — minor legibility concern at small scale.
+      Legibility verdict: PASS — all critical text readable at full resolution; minor concern about label near legend.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface, not pure black.
+      Chrome: Title and subtitle display in light ink (#F0EFE8 range) against the dark background — fully readable. Axis labels, tick labels all rendered in light INK_SOFT tokens; no dark-on-dark failure observed anywhere. Legend box shows elevated background (#242420) with INK_SOFT stroke and light label/title text — correctly elevated from the page surface.
+      Data: Green circles (#009E73) for failures are identical in color to the light render — brand green reads confidently on dark surfaces. Amber triangles (#DDCC77) for censored are identical to light render. Fitted line and reference line are rendered in lighter gray tones (INK_SOFT/INK_MUTED dark values) — both clearly visible against the near-black background. Parameter annotation "β = 2.21   η = 5428 hrs" is legible in light ink. Grid lines are very subtle (opacity 0.08–0.15) and appropriately faint on the dark surface.
+      Legibility verdict: PASS — all text is light-colored against dark background; no dark-on-dark failures; data colors identical to light render.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis titles 22pt, tick
-          labels 18pt, legend 16pt, annotation 21pt'
+        comment: 'All font sizes explicitly set (title 16, subtitle 12, axis labels
+          12, ticks 10, legend 10, param annotation 12, ref label 10). Both renders
+          fully readable. Minor: italic reference label at fontSize=10 positioned
+          near legend box may be hard to read at small viewport scale.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text elements. Legend in upper-right, annotation in
-          lower-right
+        comment: No severe overlap. Minor clustering of censored and failure points
+          in the 3000–4500 hr range — distinguishable via shape+color redundant encoding.
+          Legend and data do not overlap.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Point size 220 well-adapted for ~30 points. Filled circles vs open
-          triangles excellent distinction
+        comment: 25 failure points at size=110 and 5 censored at size=80 are well-adapted
+          to the sparse dataset (~30 total). Fitted line strokeWidth=2.5, reference
+          line strokeWidth=1.5 — both clearly visible in both themes.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/orange colorblind-safe palette with redundant shape encoding
+        comment: 'Redundant encoding via color (#009E73 vs #DDCC77) AND shape (filled
+          circle vs open triangle) AND fill state ensures CVD safety. Brand green
+          has strong luminance contrast on both surfaces.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well at 1600x900. Balanced margins, nothing cut
-          off
+        comment: Canvas gate passed (3200×1800). Plot fills the canvas well with balanced
+          margins. Legend near data (top-left). No content cut off. PAD-only approach
+          used correctly.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Time to Failure (hours), Cumulative Failure
-          Probability'
+        comment: 'X: ''Time to Failure (hours)'' with units. Y: ''Cumulative Failure
+          Probability'' with % shown via tick labels. Title correct format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (#009E73 brand green for failures) correct. Censored
+          uses amber (#DDCC77) semantic anchor — appropriate for uncertain/caution
+          role. Background #FAF8F1 light / #1A1A17 dark. All theme-adaptive chrome
+          tokens wired correctly. Data colors identical across both renders.'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom palette, professional typography hierarchy, clearly above
-          defaults
+        comment: Custom Imprint palette, intentional stroke on failure markers (PAGE_BG
+          edge), parameter annotation adds professional polish, distinct dash patterns
+          for fit vs reference line, elevated legend with rounded corners. Clearly
+          above library defaults but not quite FiveThirtyEight publication-ready.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: View border removed, subtle y-grid only, custom domain colors, good
-          whitespace
+        comment: 'Chart frame removed (strokeWidth=0 on configure_view). Grid is subtle
+          with different opacities (X: 0.08, Y: 0.15) and distinct dash patterns.
+          Legend styled with cornerRadius=6 and ELEVATED_BG. Good refinement above
+          defaults.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Fitted line and annotated parameters guide interpretation. 63.2%
-          reference adds engineering context
+        comment: The parameter annotation (β=2.21, η=5428 hrs) directly communicates
+          the reliability engineering insight. The 63.2% reference line anchors the
+          characteristic life concept. The subtitle contextualizes the application.
+          Clear focal point and visual hierarchy guide the viewer to the fit parameters.
     spec_compliance:
       score: 15
       max: 15
@@ -119,28 +156,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Weibull probability plot with log x-axis and linearized Weibull
-          y-axis
+        comment: 'Correct Weibull probability plot: log X-axis, linearized Weibull
+          CDF Y-axis (ln(-ln(1-F)) transform), scatter + fitted line + reference line.
+          All plot type requirements met.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: log x, Weibull y, fitted line, parameters, censored
-          markers, 63.2% reference'
+        comment: Log X-axis, linearized Weibull Y-axis, median rank positions, fitted
+          line, annotated β and η, 63.2% reference line, distinct censored vs failure
+          markers — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X maps time on log scale, Y maps cumulative probability on Weibull
-          scale
+        comment: 'X: time to failure (log scale), Y: Weibull linearized CDF with probability
+          labels. All 30 data points plotted.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend shows Observation Type with Failure/Censored
+        comment: Title 'probability-weibull · python · altair · anyplot.ai' — correct
+          format. Legend 'Observation Type' with 'Failure' and 'Censored' entries
+          matching data categories.
     data_quality:
       score: 15
       max: 15
@@ -150,22 +191,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both failures (25) and censored (5) shown. Full range from ~1% to
-          ~90% probability
+        comment: Both failures (25) and censored observations (5) shown. Fitted Weibull
+          line, 63.2% reference line, and parameter annotation all present. Data spans
+          a realistic range of failure times.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Turbine blade fatigue-life analysis is a classic reliability engineering
-          scenario
+        comment: Turbine blade fatigue-life analysis — real engineering domain. Neutral,
+          non-controversial. Weibull parameters (β≈2.2, η≈5428 hrs) are realistic
+          for fatigue wear-out failures (β>1).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1000-8000 hours realistic for turbine blades. Beta=2.2, eta=5400
-          are plausible values
+        comment: Shape β=2.5 (true) → estimated 2.21 realistic for fatigue failures.
+          Scale η≈5428 hrs plausible for turbine blade life. Time range 1000–8000
+          hours appropriate for the domain.
     code_quality:
       score: 10
       max: 10
@@ -175,67 +219,73 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, Weibull calculations, chart layers,
-          combine, save'
+        comment: 'Linear structure: imports → theme tokens → data generation → transforms
+          → chart layers → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at start
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: altair, numpy, pandas, scipy.stats'
+        comment: 'All imports used: os, altair, numpy, pandas, PIL.Image, scipy.stats.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. Vega expression for y-axis labels is clean
-          Altair pattern
+        comment: Clean Altair-idiomatic code. The invisible legend_points layer is
+          a well-known Altair pattern for custom legend entries with shape+color.
+          The labelExpr string construction is necessarily complex for the Weibull
+          axis.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png with scale_factor=3.0 and plot.html. Current Altair
-          API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. PIL PAD-only approach.
+          Current Altair 6.2.1 API.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Good declarative grammar: proper encodings, layered composition,
-          alt.Scale/Axis config'
+        comment: 'Expert Altair declarative grammar: layer composition with + operator,
+          proper encoding types (:Q, :N), alt.Scale/alt.Axis/alt.Title configuration,
+          alt.selection_point, alt.condition for conditional encoding, configure_*
+          for global theming.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Vega expressions for y-axis labels, interactive selection_point,
-          tooltips, HTML export
+        comment: 'Altair-specific features: selection_point for interactive hover
+          highlight, condition for size encoding, labelExpr in Vega-Lite expression
+          language for custom Weibull probability axis labels, HTML export, tooltip
+          encoding with format specifiers. Strong case for Altair distinctiveness.'
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
+  - pillow
   techniques:
-  - annotations
   - layer-composition
-  - custom-legend
-  - hover-tooltips
+  - annotations
   - manual-ticks
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   dataprep:
   - regression
   styling:
-  - grid-styling
   - edge-highlighting
+  - grid-styling
