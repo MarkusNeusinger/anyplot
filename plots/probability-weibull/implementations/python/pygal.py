@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 probability-weibull: Weibull Probability Plot for Reliability Analysis
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-06-07
@@ -197,7 +197,7 @@ censored_points = [
     {"value": (float(x), float(y)), "label": f"Censored at {np.exp(x):,.0f}h (suspended test)"}
     for x, y in zip(ln_censored_x, censored_y_on_line, strict=True)
 ]
-chart.add(f"Censored (n={n_censored})", censored_points, stroke=False, dots_size=9)
+chart.add(f"Censored (n={n_censored})", censored_points, stroke=False, dots_size=12)
 
 # 63.2% reference line — theme-adaptive muted (structural reference, not data)
 ref_line = [(float(x_min_ln), float(ref_y)), (float(x_max_ln), float(ref_y))]
@@ -206,7 +206,7 @@ chart.add(
     ref_line,
     stroke=True,
     show_dots=False,
-    stroke_style={"width": 4, "dasharray": "16, 10", "linecap": "round"},
+    stroke_style={"width": 6, "dasharray": "16, 10", "linecap": "round"},
 )
 
 # η marker — ochre (Imprint position 4), characteristic life
