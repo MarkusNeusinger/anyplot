@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 probability-weibull: Weibull Probability Plot for Reliability Analysis
 Library: highcharts unknown | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-11
+Quality: 90/100 | Updated: 2026-06-07
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -18,10 +19,22 @@ from highcharts_core.options.axes.y_axis import YAxis
 from highcharts_core.options.series.scatter import ScatterSeries
 from highcharts_core.options.series.spline import SplineSeries
 from highcharts_core.utility_classes.javascript_functions import CallbackFunction
+from PIL import Image
 from scipy import stats
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens — Imprint palette (see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint palette — canonical order, first series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data — turbine blade fatigue-life (hours) with censored observations
 np.random.seed(42)
@@ -73,9 +86,9 @@ eta = np.exp(-intercept / slope)
 x_range = np.array([min(fit_x) - 0.3, max(fit_x) + 0.3])
 y_fit = slope * x_range + intercept
 
-# Reference line at 63.2% (characteristic life)
+# Reference positions
 y_632 = np.log(-np.log(1 - 0.632))
-ln_eta = np.log(eta)
+ln_eta = float(np.log(eta))
 
 # Actual time tick values for x-axis labels
 time_ticks = [1000, 2000, 3000, 5000, 8000, 12000, 18000]
@@ -86,13 +99,14 @@ prob_ticks = [0.01, 0.05, 0.10, 0.20, 0.50, 0.632, 0.90, 0.99]
 weibull_ticks = [float(np.log(-np.log(1 - p))) for p in prob_ticks]
 prob_labels = ["1%", "5%", "10%", "20%", "50%", "63.2%", "90%", "99%"]
 
-# Build formatter JS functions
+# JS formatter for x-axis (display original hours, not ln values)
 x_map_entries = ",".join(f"'{ln_t:.4f}':'{t:,}'" for t, ln_t in zip(time_ticks, ln_time_ticks, strict=True))
 x_formatter = CallbackFunction.from_js_literal(
     f"function() {{ var m = {{{x_map_entries}}}; "
     "var k = this.value.toFixed(4); return m[k] || Math.round(Math.exp(this.value)); }"
 )
 
+# JS formatter for y-axis (display cumulative probability %)
 y_map_entries = ",".join(f"'{w:.4f}':'{p}'" for p, w in zip(prob_labels, weibull_ticks, strict=True))
 y_formatter = CallbackFunction.from_js_literal(
     f"function() {{ var m = {{{y_map_entries}}}; var k = this.value.toFixed(4); return m[k] || ''; }}"
@@ -104,77 +118,96 @@ chart.options = HighchartsOptions()
 
 chart.options.chart = {
     "type": "scatter",
-    "width": 4800,
-    "height": 2700,
-    "backgroundColor": "#fafbfc",
-    "style": {"fontFamily": "'Segoe UI', Helvetica, Arial, sans-serif"},
-    "marginTop": 180,
-    "marginBottom": 300,
-    "marginLeft": 280,
-    "marginRight": 340,
+    "width": 3200,
+    "height": 1800,
+    "backgroundColor": PAGE_BG,
+    "style": {"fontFamily": "'Segoe UI', Helvetica, Arial, sans-serif", "color": INK},
+    "marginTop": 160,
+    "marginBottom": 240,
+    "marginLeft": 240,
+    "marginRight": 200,
     "plotBorderWidth": 1,
-    "plotBorderColor": "rgba(0, 0, 0, 0.08)",
-    "plotBackgroundColor": "#ffffff",
+    "plotBorderColor": GRID,
+    "plotBackgroundColor": PAGE_BG,
 }
 
 chart.options.title = {
-    "text": "probability-weibull \u00b7 highcharts \u00b7 pyplots.ai",
-    "style": {"fontSize": "60px", "fontWeight": "600", "color": "#2c3e50", "letterSpacing": "1px"},
-    "margin": 50,
+    "text": "probability-weibull · python · highcharts · anyplot.ai",
+    "style": {"fontSize": "66px", "fontWeight": "600", "color": INK},
+    "margin": 40,
 }
 
 chart.options.subtitle = {
-    "text": (f"Turbine Blade Fatigue Life \u2014 \u03b2 = {beta:.2f}, \u03b7 = {eta:.0f} hours"),
-    "style": {"fontSize": "38px", "color": "#7f8c8d", "fontWeight": "400"},
+    "text": f"Turbine Blade Fatigue Life — β = {beta:.2f}, η = {eta:.0f} hours",
+    "style": {"fontSize": "44px", "color": INK_SOFT, "fontWeight": "400"},
 }
 
-# X-axis (ln scale with time labels)
+# X-axis (Weibull: ln(time) internally, displayed as original hours)
 x_axis = XAxis()
 x_axis.title = {
     "text": "Time to Failure (hours)",
-    "style": {"fontSize": "44px", "color": "#34495e", "fontWeight": "500"},
-    "margin": 30,
+    "style": {"fontSize": "56px", "color": INK, "fontWeight": "500"},
+    "margin": 24,
 }
 x_labels = AxisLabelOptions()
-x_labels.style = {"fontSize": "34px", "color": "#7f8c8d"}
+x_labels.style = {"fontSize": "44px", "color": INK_SOFT}
 x_labels.formatter = x_formatter
 x_axis.labels = x_labels
 x_axis.tick_positions = ln_time_ticks
 x_axis.min = float(np.log(800))
 x_axis.max = float(np.log(20000))
 x_axis.grid_line_width = 1
-x_axis.grid_line_color = "rgba(0, 0, 0, 0.06)"
+x_axis.grid_line_color = GRID
 x_axis.grid_line_dash_style = "Dot"
 x_axis.line_width = 0
 x_axis.tick_width = 0
+# Vertical reference line at η (characteristic life) — plotLine avoids a redundant legend entry
+x_axis.plot_lines = [
+    {
+        "value": ln_eta,
+        "color": IMPRINT_PALETTE[4],
+        "width": 2,
+        "dashStyle": "ShortDot",
+        "label": {
+            "text": f"η = {eta:.0f}h",
+            "style": {"fontSize": "36px", "color": INK_SOFT, "fontWeight": "400"},
+            "align": "right",
+            "rotation": 270,
+            "x": -8,
+            "y": 90,
+        },
+        "zIndex": 3,
+    }
+]
 chart.options.x_axis = x_axis
 
-# Y-axis (Weibull linearized scale with probability labels)
+# Y-axis (Weibull linearized cumulative probability scale)
 y_axis = YAxis()
 y_axis.title = {
     "text": "Cumulative Failure Probability",
-    "style": {"fontSize": "44px", "color": "#34495e", "fontWeight": "500"},
-    "margin": 30,
+    "style": {"fontSize": "56px", "color": INK, "fontWeight": "500"},
+    "margin": 24,
 }
 y_labels = AxisLabelOptions()
-y_labels.style = {"fontSize": "34px", "color": "#7f8c8d"}
+y_labels.style = {"fontSize": "44px", "color": INK_SOFT}
 y_labels.formatter = y_formatter
 y_axis.labels = y_labels
 y_axis.tick_positions = weibull_ticks
 y_axis.grid_line_width = 1
-y_axis.grid_line_color = "rgba(0, 0, 0, 0.06)"
+y_axis.grid_line_color = GRID
 y_axis.grid_line_dash_style = "Dot"
 y_axis.line_width = 0
 y_axis.tick_width = 0
+# Horizontal reference line at 63.2% (characteristic life threshold)
 y_axis.plot_lines = [
     {
         "value": y_632,
-        "color": "rgba(231, 76, 60, 0.6)",
+        "color": IMPRINT_PALETTE[4],
         "width": 3,
         "dashStyle": "LongDash",
         "label": {
-            "text": "63.2% \u2014 Characteristic Life",
-            "style": {"fontSize": "30px", "color": "rgba(231, 76, 60, 0.8)", "fontWeight": "500"},
+            "text": "63.2% — Characteristic Life",
+            "style": {"fontSize": "36px", "color": IMPRINT_PALETTE[4], "fontWeight": "500"},
             "align": "left",
             "x": 15,
             "y": -12,
@@ -193,11 +226,11 @@ chart.options.legend = {
     "x": -40,
     "y": 80,
     "floating": True,
-    "backgroundColor": "rgba(255, 255, 255, 0.90)",
+    "backgroundColor": ELEVATED_BG,
     "borderWidth": 1,
-    "borderColor": "#e0e0e0",
+    "borderColor": INK_SOFT,
     "borderRadius": 8,
-    "itemStyle": {"fontSize": "30px", "fontWeight": "400", "color": "#34495e"},
+    "itemStyle": {"fontSize": "44px", "fontWeight": "400", "color": INK_SOFT},
     "padding": 16,
     "symbolRadius": 6,
 }
@@ -207,81 +240,68 @@ chart.options.credits = {"enabled": False}
 chart.options.tooltip = {
     "headerFormat": "",
     "pointFormat": (
-        '<span style="font-size:24px;color:{point.color}">\u25cf</span> '
-        '<span style="font-size:26px">'
+        '<span style="font-size:34px;color:{point.color}">●</span> '
+        '<span style="font-size:36px">'
         "Time: <b>{point.x:.2f}</b> (ln hours)<br/>"
         "Weibull Y: <b>{point.y:.3f}</b></span>"
     ),
-    "backgroundColor": "rgba(255, 255, 255, 0.95)",
-    "borderColor": "#306998",
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
     "borderRadius": 10,
-    "borderWidth": 2,
-    "style": {"fontSize": "26px"},
+    "borderWidth": 1,
+    "style": {"fontSize": "36px"},
 }
 
-# Failure data points (filled markers)
+# Failure data points — Imprint position 1 (#009E73), always first series
 failures = ScatterSeries()
 failures.data = [[x, y] for x, y in zip(failure_plot_x, failure_plot_y, strict=True)]
 failures.name = "Failures"
-failures.color = "#306998"
+failures.color = IMPRINT_PALETTE[0]
 failures.marker = {
-    "radius": 14,
+    "radius": 12,
     "symbol": "circle",
     "lineWidth": 2,
-    "lineColor": "#ffffff",
-    "fillColor": "#306998",
-    "states": {"hover": {"radiusPlus": 4, "lineWidthPlus": 1}},
+    "lineColor": PAGE_BG,
+    "fillColor": IMPRINT_PALETTE[0],
+    "states": {"hover": {"radiusPlus": 3, "lineWidthPlus": 1}},
 }
 failures.z_index = 3
 
-# Censored data points (hollow markers)
+# Censored data points (hollow markers) — Imprint position 2 (#C475FD)
 censored = ScatterSeries()
 censored.data = [[x, y] for x, y in zip(censored_plot_x, censored_plot_y, strict=True)]
 censored.name = "Censored (suspended)"
-censored.color = "#e67e22"
+censored.color = IMPRINT_PALETTE[1]
 censored.marker = {
-    "radius": 14,
+    "radius": 12,
     "symbol": "circle",
     "lineWidth": 3,
-    "lineColor": "#e67e22",
-    "fillColor": "#fafbfc",
-    "states": {"hover": {"radiusPlus": 4}},
+    "lineColor": IMPRINT_PALETTE[1],
+    "fillColor": PAGE_BG,
+    "states": {"hover": {"radiusPlus": 3}},
 }
 censored.z_index = 3
 
-# Fitted Weibull line
+# Fitted Weibull line — Imprint position 3 (#4467A3)
 fit_line = SplineSeries()
 fit_line.data = [[float(x_range[0]), float(y_fit[0])], [float(x_range[1]), float(y_fit[1])]]
-fit_line.name = f"Weibull Fit (\u03b2={beta:.2f}, \u03b7={eta:.0f}h)"
-fit_line.color = "#e74c3c"
+fit_line.name = f"Weibull Fit (β={beta:.2f}, η={eta:.0f}h)"
+fit_line.color = IMPRINT_PALETTE[2]
 fit_line.line_width = 4
 fit_line.dash_style = "Solid"
 fit_line.marker = {"enabled": False}
 fit_line.enable_mouse_tracking = False
 fit_line.z_index = 2
 
-# Characteristic life vertical marker
-eta_line = SplineSeries()
-eta_line.data = [[float(ln_eta), float(min(weibull_ticks) - 0.3)], [float(ln_eta), float(y_632)]]
-eta_line.name = f"\u03b7 = {eta:.0f}h"
-eta_line.color = "rgba(231, 76, 60, 0.4)"
-eta_line.line_width = 3
-eta_line.dash_style = "ShortDot"
-eta_line.marker = {"enabled": False}
-eta_line.enable_mouse_tracking = False
-eta_line.z_index = 1
-
 chart.add_series(failures)
 chart.add_series(censored)
 chart.add_series(fit_line)
-chart.add_series(eta_line)
 
-# Download Highcharts JS
+# Download Highcharts JS (must be inline — headless Chrome blocks CDN from file://)
 highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.js"
 with urllib.request.urlopen(highcharts_url, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
-# Generate HTML with inline scripts
 html_str = chart.to_js_literal()
 
 html_content = f"""<!DOCTYPE html>
@@ -290,45 +310,44 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0; background:#fafbfc;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
+<body style="margin:0; background:{PAGE_BG};">
+    <div id="container" style="width: 3200px; height: 1800px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
-# Write temp HTML and take screenshot
+# Save HTML artifact for the interactive site view
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# Write temp HTML and take screenshot for the PNG artifact
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
+# CDP override is authoritative — --window-size alone loses ~139 px to Chrome chrome in headless mode
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-
-container = driver.find_element("id", "container")
-container.screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
 
-# Save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
-    interactive_html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <script src="https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.js"></script>
-</head>
-<body style="margin:0; background:#fafbfc;">
-    <div id="container" style="width: 100%; height: 100vh;"></div>
-    <script>{html_str}</script>
-</body>
-</html>"""
-    f.write(interactive_html)
+# Pin to exact canvas dimensions (guards against sub-pixel rounding)
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (3200, 1800):
+    _norm = Image.new("RGB", (3200, 1800), PAGE_BG)
+    _norm.paste(_img, ((3200 - _img.size[0]) // 2, (1800 - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")
