@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 probability-weibull: Weibull Probability Plot for Reliability Analysis
 Library: plotly 6.8.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-07
@@ -162,7 +162,7 @@ fig.add_hline(
     line_color=INK_MUTED,
     line_width=1.5,
     annotation_text=f"63.2% — η ≈ {eta_fit:.0f}h",
-    annotation_position="top left",
+    annotation_position="bottom left",
     annotation_font={"size": 10, "color": INK_MUTED, "family": font_family},
 )
 fig.add_vline(x=eta_fit, line_dash="dot", line_color=INK_MUTED, line_width=1, opacity=0.5)
@@ -253,7 +253,11 @@ fig.update_layout(
         "yanchor": "top",
     },
     xaxis={
-        "title": {"text": "Time to Failure (hours)", "font": {"size": 12, "family": font_family, "color": INK}, "standoff": 15},
+        "title": {
+            "text": "Time to Failure (hours)",
+            "font": {"size": 12, "family": font_family, "color": INK},
+            "standoff": 15,
+        },
         "tickfont": {"size": 10, "family": font_family, "color": INK_SOFT},
         "type": "log",
         "showgrid": True,
