@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 probability-weibull: Weibull Probability Plot for Reliability Analysis
 Library: altair 6.2.1 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-07
@@ -120,7 +120,7 @@ tooltip_enc = [
 # Failure points (filled circles)
 failures_chart = (
     alt.Chart(df[df["status"] == "Failure"])
-    .mark_point(size=80, filled=True, color=CLR_FAILURE, strokeWidth=1.5, stroke=PAGE_BG)
+    .mark_point(size=110, filled=True, color=CLR_FAILURE, strokeWidth=1.5, stroke=PAGE_BG)
     .encode(x=x_enc, y=y_enc, tooltip=tooltip_enc)
 )
 
@@ -153,7 +153,7 @@ legend_points = (
 # Fitted Weibull line
 fit_line = (
     alt.Chart(df_fit)
-    .mark_line(strokeWidth=2.0, color=INK_SOFT, strokeDash=[8, 4])
+    .mark_line(strokeWidth=2.5, color=INK_SOFT, strokeDash=[8, 4])
     .encode(x=alt.X("time:Q", scale=alt.Scale(type="log")), y=alt.Y("weibull_y:Q"))
 )
 
@@ -192,7 +192,7 @@ ref_label = (
 # Interactive hover highlight on failure points
 highlight = alt.selection_point(name="hover", on="pointerover", fields=["status"], empty=False)
 failures_interactive = failures_chart.add_params(highlight).encode(
-    size=alt.condition(highlight, alt.value(130), alt.value(80))
+    size=alt.condition(highlight, alt.value(170), alt.value(110))
 )
 
 # Title: 50 chars — under 67 baseline, no fontsize scaling needed
@@ -222,7 +222,9 @@ chart = (
     .configure_axisX(
         labelFontSize=10,
         titleFontSize=12,
-        grid=False,
+        gridOpacity=0.08,
+        gridDash=[2, 4],
+        gridColor=INK,
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
         labelColor=INK_SOFT,
@@ -242,7 +244,7 @@ chart = (
         titlePadding=10,
     )
     .configure_legend(
-        orient="top-right",
+        orient="top-left",
         padding=12,
         cornerRadius=6,
         strokeColor=INK_SOFT,
