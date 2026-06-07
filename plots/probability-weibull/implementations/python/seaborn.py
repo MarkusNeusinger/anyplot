@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 probability-weibull: Weibull Probability Plot for Reliability Analysis
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-07
@@ -107,7 +107,7 @@ sns.scatterplot(
     x="log_time",
     y="weibull_y",
     color=COLOR_FAILURE,
-    s=80,
+    s=110,
     marker="o",
     edgecolor=PAGE_BG,
     linewidth=0.5,
@@ -121,7 +121,7 @@ sns.scatterplot(
     x="log_time",
     y="weibull_y",
     color="none",
-    s=80,
+    s=110,
     marker="D",
     edgecolor=COLOR_CENSORED,
     linewidth=1.5,
@@ -142,10 +142,18 @@ sns.lineplot(
     ax=ax,
 )
 
+# Confidence band on fit line (±1σ prediction interval approximation)
+n_fit = failure_mask.sum()
+x_mean = log_times[failure_mask].mean()
+ss_xx = np.sum((log_times[failure_mask] - x_mean) ** 2)
+se_fit = np.sqrt(np.sum((weibull_y[failure_mask] - (slope * log_times[failure_mask] + intercept)) ** 2) / (n_fit - 2))
+ci_half = se_fit * np.sqrt(1 / n_fit + (x_fit - x_mean) ** 2 / ss_xx)
+ax.fill_between(x_fit, y_fit - ci_half, y_fit + ci_half, color=COLOR_FIT, alpha=0.12, zorder=3)
+
 # Reference line at 63.2% characteristic life
 y_632 = np.log(-np.log(1 - 0.632))
 ax.axhline(y=y_632, color=INK_SOFT, linewidth=0.8, linestyle=":", alpha=0.6, zorder=3)
-ax.text(np.log(1050), y_632 + 0.07, "63.2% (characteristic life)", fontsize=6, color=INK_MUTED)
+ax.text(np.log(14000), y_632 - 0.18, "63.2% (characteristic life)", fontsize=7, color=INK_MUTED, ha="right")
 
 # B10 life — time at 10% cumulative failure probability
 b10_y = np.log(-np.log(1 - 0.10))
@@ -156,7 +164,7 @@ ax.annotate(
     f"B10 ≈ {b10_time:,.0f} h",
     xy=(b10_x, b10_y),
     xytext=(b10_x + 0.35, b10_y - 0.55),
-    fontsize=6,
+    fontsize=8,
     color=INK,
     arrowprops={"arrowstyle": "->", "color": INK_SOFT, "linewidth": 0.8},
     bbox={"boxstyle": "round,pad=0.3", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.9},
@@ -168,7 +176,7 @@ ax.text(
     0.06,
     f"β = {beta:.2f}  (shape)\nη = {eta:.0f} h  (scale)\nR² = {r_value**2:.4f}",
     transform=ax.transAxes,
-    fontsize=6,
+    fontsize=8,
     fontfamily="monospace",
     ha="right",
     va="bottom",
