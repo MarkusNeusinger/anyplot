@@ -1,0 +1,250 @@
+library: chartjs
+language: javascript
+specification_id: probability-weibull
+created: '2026-06-07T23:11:56Z'
+updated: '2026-06-07T23:31:52Z'
+generated_by: claude-sonnet
+workflow_run: 27107343505
+issue: 4668
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Mathematically correct Weibull probability plot: proper ln(-ln(1-F)) transform,
+    OLS fit, median rank formula, and 63.2% characteristic-life reference all implemented
+    accurately.'
+  - Custom Chart.js spine plugin delivers clean L-shaped axes — a sophisticated Chart.js-specific
+    technique that materially improves aesthetics.
+  - afterBuildTicks hook enables precisely correct Weibull probability labels (1%,
+    5%, ..., 63.2%, ..., 99%) — idiomatic and accurate.
+  - Redundant encoding (color + marker shape) makes failures vs. suspensions distinguishable
+    under all color-vision-deficiency types.
+  - Legend labels carry computed beta and eta values, turning the legend into a mini
+    reliability report.
+  - Fully deterministic implementation with realistic turbine blade engineering data.
+  weaknesses:
+  - Y-axis probability tick labels at font size 12px are borderline at mobile-scaled
+    (400px) widths; consider bumping to 13-14px.
+  - No direct chart annotation pointing to the eta crossing on the 63.2% reference
+    line — adding a small callout at the intersection would elevate the storytelling
+    from good to excellent.
+  - DE-01 could reach 6/8 with a slightly more distinctive visual treatment (e.g.,
+    a subtle confidence band around the fit line or shading between 10%-90% probability
+    zone).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface.
+      Chrome: Title "Turbine Blade Fatigue · probability-weibull · javascript · chartjs · anyplot.ai" in dark text at scaled ~19px font; axis labels "Time to Failure (hours)" (X) and "Cumulative Failure Probability F(t)" (Y) at 16px; Y-axis tick labels (1%, 5%, 10%, 20%, 30%, 50%, 63.2%, 80%, 90%, 95%, 99%) at 12px; legend at 14px. All text readable against light background.
+      Data: Green (#009E73) filled circles for 18 failures; lavender (#C475FD border) × crosses for 5 suspensions; blue (#4467A3) OLS fit line; dashed inkSoft reference at 63.2%. L-shaped spine via custom plugin.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface.
+      Chrome: Title, axis labels, tick labels, and legend text all light-colored and clearly readable. No dark-on-dark failures observed. Grid lines correctly rendered in dark-theme subtle tone.
+      Data: Colors identical to light render — green circles, lavender × crosses, blue fit line, dashed reference. Imprint palette data colors unchanged across themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicitly set; Y-axis ticks at 12px borderline for 400px
+          mobile width
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: pointRadius=7 well-suited for 18 sparse failure points; fit line
+          lineWidth=3 prominent
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette; redundant encoding via marker shape distinguishes
+          failures from suspensions
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; landscape fills well with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: Time to Failure (hours); Y: Cumulative Failure Probability F(t)
+          — both with units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Failures=palette[0] #009E73; suspensions=palette[1]; fit=palette[2];
+          background #FAF8F1/#1A1A17; chrome theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom spine plugin and scaled title are above defaults; functional
+          and clean but not visually exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped spine via afterDatasetsDraw plugin; border:false on axes;
+          subtle grid — good refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 63.2% reference line as focal point; legend shows computed beta/eta;
+          clear visual hierarchy — but no direct chart annotation at eta crossing
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Weibull probability plot with log-X and linearized Weibull
+          Y
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Log X, Weibull Y, fit line with beta/eta, median rank (j+1-0.3)/(n+0.4),
+          censored markers, 63.2% reference — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time on X (log), ln(-ln(1-F)) on Y; all 18+5=23 points rendered
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: Turbine Blade Fatigue · probability-weibull · javascript
+          · chartjs · anyplot.ai (valid descriptive prefix format); informative legend
+          with beta/eta'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all Weibull plot features: failures, censored suspensions,
+          OLS fit, 63.2% reference line'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Turbine blade fatigue-life data — canonical reliability engineering
+          scenario, neutral and scientifically grounded
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Failure times 1580-9100h plausible; beta=2.54 correct for wear-out
+          mode; eta=5669h realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow; spine plugin is idiomatic Chart.js, not over-engineering
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded deterministic data array; no random numbers
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; Chart is global; no unused variables
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex; custom plugin and afterBuildTicks are necessary
+          and concise
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: No savefig; animation:false, responsive:true, maintainAspectRatio:false
+          all correct
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Mixed dataset types per-dataset, order property, afterBuildTicks,
+          logarithmic scale, custom plugin API — expert usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: afterDatasetsDraw plugin for L-shaped spine and afterBuildTicks for
+          Weibull ticks are distinctively Chart.js; OLS math is library-agnostic
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - minimal-chrome
