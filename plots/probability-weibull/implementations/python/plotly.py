@@ -1,15 +1,38 @@
-""" pyplots.ai
+"""anyplot.ai
 probability-weibull: Weibull Probability Plot for Reliability Analysis
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 92/100 | Created: 2026-03-11
+Library: plotly | Python
 """
+
+import os
+import sys
+
+
+# Script name matches the library — remove script dir to avoid shadowing the package
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p) != _script_dir]
 
 import numpy as np
 import plotly.graph_objects as go
 from scipy import stats
 
 
-# Data - turbine blade fatigue life (hours)
+# Theme-adaptive chrome — Imprint palette
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+GRID_MINOR = "rgba(26,26,23,0.07)" if THEME == "light" else "rgba(240,239,232,0.07)"
+
+# Imprint palette — positions 1 & 2
+FAILURE_COLOR = "#009E73"  # brand green — failures / fit line
+CENSORED_COLOR = "#C475FD"  # lavender — censored/suspended
+
+font_family = "Helvetica Neue, Helvetica, Arial, sans-serif"
+
+# Data — turbine blade fatigue life (hours)
 np.random.seed(42)
 n_failures = 25
 n_censored = 5
@@ -38,20 +61,20 @@ failure_mask = ~is_censored
 failure_t = all_times[failure_mask]
 failure_prob = failure_ranks[failure_mask]
 
-# Weibull linearization: ln(t) vs ln(-ln(1-F))
+# Weibull linearization: y = ln(-ln(1-F))
 weibull_y_failures = np.log(-np.log(1 - failure_prob))
 
-# Fit line in Weibull space: weibull_y = beta * ln(t) - beta * ln(eta)
+# Fit line in Weibull space
 slope, intercept, r_value, _, _ = stats.linregress(np.log(failure_t), weibull_y_failures)
 beta_fit = slope
 eta_fit = np.exp(-intercept / beta_fit)
 
-# Probability tick values and labels for Weibull y-axis
+# Probability axis ticks (Weibull paper y-axis)
 prob_ticks = [0.01, 0.02, 0.05, 0.10, 0.20, 0.50, 0.632, 0.90, 0.95, 0.99]
 prob_labels = ["1%", "2%", "5%", "10%", "20%", "50%", "63.2%", "90%", "95%", "99%"]
 weibull_tick_vals = [np.log(-np.log(1 - p)) for p in prob_ticks]
 
-# Confidence band (approximate 90% bounds for the fitted line)
+# Confidence band (90% bounds for fitted line)
 t_range = np.logspace(np.log10(failure_t.min() * 0.5), np.log10(failure_t.max() * 1.5), 200)
 fit_weibull_y = beta_fit * np.log(t_range) - beta_fit * np.log(eta_fit)
 se_fit = np.sqrt(
@@ -60,47 +83,45 @@ se_fit = np.sqrt(
 conf_upper = fit_weibull_y + 1.645 * se_fit
 conf_lower = fit_weibull_y - 1.645 * se_fit
 
-# Typography
-font_family = "Helvetica Neue, Helvetica, Arial, sans-serif"
-
-# Plot - using Weibull linearized y-axis
+# Figure
 fig = go.Figure()
 
-# 90% confidence band as filled area
+# 90% confidence band (trace 0 — toggleable via update menu)
+band_fill = "rgba(0,158,115,0.10)" if THEME == "light" else "rgba(0,158,115,0.16)"
 fig.add_trace(
     go.Scatter(
         x=np.concatenate([t_range, t_range[::-1]]),
         y=np.concatenate([conf_upper, conf_lower[::-1]]),
         fill="toself",
-        fillcolor="rgba(48, 105, 152, 0.08)",
+        fillcolor=band_fill,
         line={"width": 0},
-        name="90% Confidence",
+        name="90% Confidence Band",
         hoverinfo="skip",
         showlegend=True,
     )
 )
 
-# Fitted line (straight in Weibull space)
+# Fitted line (trace 1)
 fig.add_trace(
     go.Scatter(
         x=t_range,
         y=fit_weibull_y,
         mode="lines",
         name="Weibull Fit",
-        line={"color": "#306998", "width": 3.5, "dash": "solid"},
+        line={"color": FAILURE_COLOR, "width": 3},
         hovertemplate="Time: %{x:.0f}h<br>Probability: %{customdata:.1%}<extra>Weibull Fit</extra>",
         customdata=1 - np.exp(-np.exp(fit_weibull_y)),
     )
 )
 
-# Failure data points (larger markers for <30 data points)
+# Failure data points (trace 2)
 fig.add_trace(
     go.Scatter(
         x=failure_t,
         y=weibull_y_failures,
         mode="markers",
         name="Failures",
-        marker={"size": 18, "color": "#306998", "line": {"color": "white", "width": 2}, "opacity": 0.9},
+        marker={"size": 14, "color": FAILURE_COLOR, "line": {"color": PAGE_BG, "width": 2}, "opacity": 0.9},
         hovertemplate=(
             "<b>Failure #%{text}</b><br>Time: %{x:.0f} hours<br>Cum. Probability: %{customdata:.1%}<extra></extra>"
         ),
@@ -109,11 +130,10 @@ fig.add_trace(
     )
 )
 
-# Censored data points - estimate their probability from the fitted model
+# Censored data points (trace 3)
 censored_t = all_times[is_censored]
 censored_weibull_y = beta_fit * np.log(censored_t) - beta_fit * np.log(eta_fit)
 censored_prob_est = 1 - np.exp(-np.exp(censored_weibull_y))
-
 fig.add_trace(
     go.Scatter(
         x=censored_t,
@@ -121,9 +141,9 @@ fig.add_trace(
         mode="markers",
         name="Censored (suspended)",
         marker={
-            "size": 18,
-            "color": "rgba(232, 93, 58, 0.15)",
-            "line": {"color": "#E85D3A", "width": 3},
+            "size": 14,
+            "color": "rgba(196,117,253,0.15)",
+            "line": {"color": CENSORED_COLOR, "width": 2.5},
             "symbol": "diamond",
         },
         hovertemplate=(
@@ -133,43 +153,45 @@ fig.add_trace(
     )
 )
 
-# 63.2% reference line (characteristic life) in Weibull coordinates
+# 63.2% characteristic life reference line
 weibull_632 = np.log(-np.log(1 - 0.632))
 fig.add_hline(
     y=weibull_632,
     line_dash="dot",
-    line_color="rgba(100, 100, 100, 0.5)",
-    line_width=2,
-    annotation_text=f"63.2% — characteristic life (η ≈ {eta_fit:.0f}h)",
+    line_color=INK_MUTED,
+    line_width=1.5,
+    annotation_text=f"63.2% — η ≈ {eta_fit:.0f}h",
     annotation_position="top left",
-    annotation_font={"size": 16, "color": "#555555", "family": font_family},
+    annotation_font={"size": 10, "color": INK_MUTED, "family": font_family},
 )
+fig.add_vline(x=eta_fit, line_dash="dot", line_color=INK_MUTED, line_width=1, opacity=0.5)
 
-# Vertical drop line from characteristic life to x-axis
-fig.add_vline(x=eta_fit, line_dash="dot", line_color="rgba(100, 100, 100, 0.3)", line_width=1.5)
-
-# On-plot annotation for fitted parameters
+# Parameter box (lower-right corner, paper coordinates to avoid log-scale issues)
+annot_bg = "rgba(255,253,246,0.93)" if THEME == "light" else "rgba(36,36,32,0.93)"
+annot_border = "rgba(0,158,115,0.35)"
 fig.add_annotation(
-    x=np.log10(eta_fit * 1.3),
-    y=weibull_tick_vals[2],
-    xref="x",
-    yref="y",
+    x=0.98,
+    y=0.05,
+    xref="paper",
+    yref="paper",
     text=(
-        f"<b style='font-size:17px'>Weibull Parameters</b><br>"
-        f"<span style='color:#306998'>β</span> (shape) = {beta_fit:.2f}<br>"
-        f"<span style='color:#306998'>η</span> (scale) = {eta_fit:.0f}h<br>"
+        f"<b>Weibull Parameters</b><br>"
+        f"β (shape) = {beta_fit:.2f}<br>"
+        f"η (scale) = {eta_fit:.0f}h<br>"
         f"R² = {r_value**2:.4f}"
     ),
     showarrow=False,
-    font={"size": 16, "color": "#2a2a2a", "family": font_family},
+    font={"size": 11, "color": INK, "family": font_family},
     align="left",
-    bgcolor="rgba(255,255,255,0.92)",
-    bordercolor="rgba(48, 105, 152, 0.25)",
+    bgcolor=annot_bg,
+    bordercolor=annot_border,
     borderwidth=1.5,
-    borderpad=12,
+    borderpad=10,
+    xanchor="right",
+    yanchor="bottom",
 )
 
-# B10 life annotation (time at 10% failure probability)
+# B10 life annotation — points to actual data coordinate
 b10_life = eta_fit * (-np.log(1 - 0.10)) ** (1 / beta_fit)
 weibull_10 = np.log(-np.log(1 - 0.10))
 fig.add_annotation(
@@ -181,77 +203,94 @@ fig.add_annotation(
     showarrow=True,
     arrowhead=2,
     arrowsize=1,
-    arrowcolor="#888888",
-    ax=50,
-    ay=30,
-    font={"size": 15, "color": "#555555", "family": font_family},
-    bgcolor="rgba(255,255,255,0.85)",
-    bordercolor="rgba(0,0,0,0.1)",
+    arrowcolor=INK_SOFT,
+    ax=55,
+    ay=28,
+    font={"size": 10, "color": INK_MUTED, "family": font_family},
+    bgcolor=annot_bg,
+    bordercolor="rgba(26,26,23,0.12)" if THEME == "light" else "rgba(240,239,232,0.12)",
     borderwidth=1,
-    borderpad=6,
+    borderpad=5,
 )
 
-# Style - Weibull probability paper with custom y-axis ticks
+# Update menu — toggle confidence band on/off (LM-01 advanced Plotly pattern)
 fig.update_layout(
+    updatemenus=[
+        {
+            "type": "buttons",
+            "showactive": True,
+            "x": 0.99,
+            "y": 0.99,
+            "xanchor": "right",
+            "yanchor": "top",
+            "bgcolor": ELEVATED_BG,
+            "bordercolor": INK_SOFT,
+            "font": {"color": INK_SOFT, "size": 10, "family": font_family},
+            "buttons": [
+                {"label": "Show Band", "method": "update", "args": [{"visible": [True, True, True, True]}]},
+                {"label": "Hide Band", "method": "update", "args": [{"visible": [False, True, True, True]}]},
+            ],
+        }
+    ]
+)
+
+# Layout
+fig.update_layout(
+    autosize=False,
+    width=800,
+    height=450,
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK, "family": font_family},
+    template="plotly_white",
     title={
-        "text": "probability-weibull · plotly · pyplots.ai",
-        "font": {"size": 28, "family": font_family, "color": "#1a1a1a"},
+        "text": "probability-weibull · python · plotly · anyplot.ai",
+        "font": {"size": 16, "family": font_family, "color": INK},
         "x": 0.5,
-        "y": 0.96,
+        "y": 0.98,
+        "xanchor": "center",
+        "yanchor": "top",
     },
     xaxis={
-        "title": {
-            "text": "Time to Failure (hours)",
-            "font": {"size": 22, "family": font_family, "color": "#333333"},
-            "standoff": 15,
-        },
-        "tickfont": {"size": 18, "family": font_family, "color": "#444444"},
+        "title": {"text": "Time to Failure (hours)", "font": {"size": 12, "family": font_family, "color": INK}, "standoff": 15},
+        "tickfont": {"size": 10, "family": font_family, "color": INK_SOFT},
         "type": "log",
         "showgrid": True,
-        "gridcolor": "rgba(0,0,0,0.06)",
+        "gridcolor": GRID,
         "gridwidth": 1,
-        "showline": True,
-        "linecolor": "rgba(0,0,0,0.2)",
-        "linewidth": 1.5,
-        "minor": {"showgrid": True, "gridcolor": "rgba(0,0,0,0.03)"},
+        "showline": False,
+        "minor": {"showgrid": True, "gridcolor": GRID_MINOR},
         "zeroline": False,
     },
     yaxis={
         "title": {
             "text": "Cumulative Failure Probability (Weibull Scale)",
-            "font": {"size": 22, "family": font_family, "color": "#333333"},
+            "font": {"size": 12, "family": font_family, "color": INK},
             "standoff": 10,
         },
-        "tickfont": {"size": 18, "family": font_family, "color": "#444444"},
+        "tickfont": {"size": 10, "family": font_family, "color": INK_SOFT},
         "tickmode": "array",
         "tickvals": weibull_tick_vals,
         "ticktext": prob_labels,
         "showgrid": True,
-        "gridcolor": "rgba(0,0,0,0.06)",
+        "gridcolor": GRID,
         "gridwidth": 1,
-        "showline": True,
-        "linecolor": "rgba(0,0,0,0.2)",
-        "linewidth": 1.5,
+        "showline": False,
         "range": [weibull_tick_vals[0] - 0.3, weibull_tick_vals[-1] + 0.3],
         "zeroline": False,
     },
-    template="plotly_white",
     legend={
-        "font": {"size": 17, "family": font_family},
+        "font": {"size": 10, "family": font_family, "color": INK_SOFT},
         "x": 0.02,
         "y": 0.98,
-        "bgcolor": "rgba(255,255,255,0.9)",
-        "bordercolor": "rgba(0,0,0,0.08)",
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
         "borderwidth": 1,
     },
-    plot_bgcolor="rgba(250, 251, 253, 1)",
-    paper_bgcolor="white",
-    margin={"l": 90, "r": 40, "t": 70, "b": 75},
-    hoverlabel={"font": {"size": 14, "family": font_family}, "bgcolor": "white", "bordercolor": "#306998"},
-    width=1600,
-    height=900,
+    margin={"l": 90, "r": 40, "t": 80, "b": 60},
+    hoverlabel={"font": {"size": 10, "family": font_family}, "bgcolor": ELEVATED_BG, "bordercolor": FAILURE_COLOR},
 )
 
 # Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
