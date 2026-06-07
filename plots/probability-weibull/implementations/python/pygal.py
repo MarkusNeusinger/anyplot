@@ -1,14 +1,33 @@
-""" pyplots.ai
+""" anyplot.ai
 probability-weibull: Weibull Probability Plot for Reliability Analysis
-Library: pygal 3.1.0 | Python 3.14.3
-Quality: 87/100 | Created: 2026-03-11
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 83/100 | Updated: 2026-06-07
 """
+
+import os
+import sys
+
+
+# Remove the script's own directory so pygal.py doesn't shadow the installed pygal package
+_here = os.path.dirname(os.path.abspath(__file__))
+if _here in sys.path:
+    sys.path.remove(_here)
 
 import numpy as np
 import pygal
 from pygal.style import Style
 from scipy import stats
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint categorical palette — Weibull fit takes position 1 (brand green)
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD")
 
 # Data — turbine blade fatigue-life (hours) with failures and suspensions
 np.random.seed(42)
@@ -49,23 +68,23 @@ eta_est = np.exp(-intercept / beta_est)
 x_fit_range = np.linspace(np.log(min(all_times) * 0.7), np.log(max(all_times) * 1.3), 100)
 y_fit_line = slope * x_fit_range + intercept
 
-# Censored points — place on the fitted line at their log-time
+# Censored points — placed on the fitted line at their log-time
 censored_x = all_times[~failure_mask]
 ln_censored_x = np.log(censored_x)
 censored_y_on_line = slope * ln_censored_x + intercept
 
-# 63.2% reference line (characteristic life): F = 0.632 → ln(-ln(1-0.632)) ≈ 0.0
+# 63.2% reference line (characteristic life)
 ref_y = np.log(-np.log(1 - 0.632))
 
-# B10 life: F = 0.10 → time where 10% of units have failed
+# B10 life: F=0.10 → time where 10% of units have failed
 b10_y = np.log(-np.log(1 - 0.10))
 b10_ln_x = (b10_y - intercept) / slope
 b10_hours = np.exp(b10_ln_x)
 
-# Characteristic life intersection: where fitted line crosses 63.2%
+# Characteristic life intersection on fitted line
 eta_ln_x = (ref_y - intercept) / slope
 
-# Axis labels — convert back from log/Weibull scale for readability
+# Axis tick values
 x_tick_values = [1000, 2000, 3000, 5000, 7000, 10000, 15000]
 x_tick_ln = [np.log(v) for v in x_tick_values]
 
@@ -73,52 +92,53 @@ prob_levels = [0.01, 0.05, 0.10, 0.20, 0.50, 0.632, 0.80, 0.90, 0.95, 0.99]
 y_tick_weibull = [np.log(-np.log(1.0 - p)) for p in prob_levels]
 y_tick_labels = [f"{p * 100:.1f}%" if p == 0.632 else f"{p * 100:.0f}%" for p in prob_levels]
 
-# Style — cohesive blue-tonal palette with warm accent for annotations
-font = "DejaVu Sans, Helvetica, Arial, sans-serif"
+# Axis bounds
+x_min_ln = np.log(800)
+x_max_ln = np.log(18000)
+y_min_w = np.log(-np.log(1 - 0.008))
+y_max_w = np.log(-np.log(1 - 0.993))
+
+# Title fontsize scaled for title length (baseline 66 at 67 chars, floor 44)
+title_str = "Turbine Blade Fatigue Life · probability-weibull · python · pygal · anyplot.ai"
+title_font_size = max(44, round(66 * 67 / len(title_str)))
+
+# Style — Imprint palette + theme-adaptive chrome
 custom_style = Style(
-    background="white",
-    plot_background="#fafbfc",
-    foreground="#2c3e50",
-    foreground_strong="#1a252f",
-    foreground_subtle="#e0e4e8",
-    guide_stroke_color="#e0e4e8",
-    guide_stroke_dasharray="4, 8",
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
     colors=(
-        "#4a7fb5",  # fit line — medium blue
-        "#1b3a5c",  # failures — dark navy
-        "#7cadd4",  # censored — light steel blue
-        "#95a5a6",  # 63.2% reference — cool gray
-        "#d35400",  # η marker — warm burnt orange (accent)
-        "#27ae60",  # B10 marker — muted green (distinct from blue)
+        IMPRINT[0],  # fit line — brand green (Imprint pos 1)
+        IMPRINT[2],  # failures — blue (Imprint pos 3)
+        IMPRINT[1],  # censored — lavender (Imprint pos 2, lighter read than blue)
+        INK_MUTED,  # 63.2% reference — theme-adaptive neutral
+        IMPRINT[3],  # η marker — ochre (Imprint pos 4)
+        IMPRINT[4],  # B10 marker — matte red (Imprint pos 5, reliability threshold)
     ),
-    font_family=font,
-    title_font_family=font,
-    title_font_size=56,
-    label_font_size=40,
-    major_label_font_size=36,
-    legend_font_size=38,
-    legend_font_family=font,
-    value_font_size=32,
-    tooltip_font_size=28,
-    tooltip_font_family=font,
+    font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
+    title_font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
+    title_font_size=title_font_size,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    legend_font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
+    value_font_size=36,
+    tooltip_font_size=36,
+    tooltip_font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
     opacity=0.92,
     opacity_hover=1.0,
     stroke_opacity=1,
     stroke_opacity_hover=1,
 )
 
-# Axis bounds — tighter y-range to reduce wasted space at extremes
-x_min_ln = np.log(800)
-x_max_ln = np.log(18000)
-y_min_w = np.log(-np.log(1 - 0.008))
-y_max_w = np.log(-np.log(1 - 0.993))
-
 # Chart configuration
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="Turbine Blade Fatigue Life · probability-weibull · pygal · pyplots.ai",
+    title=title_str,
     x_title="Time to Failure (hours, log scale)",
     y_title="Cumulative Failure Probability",
     show_legend=True,
@@ -152,7 +172,7 @@ chart = pygal.XY(
 chart.y_labels = [{"value": float(v), "label": lbl} for v, lbl in zip(y_tick_weibull, y_tick_labels, strict=True)]
 chart.x_labels = [{"value": float(v), "label": f"{int(t):,}"} for v, t in zip(x_tick_ln, x_tick_values, strict=True)]
 
-# Fitted line — medium blue, prominent stroke
+# Fitted line — brand green (Imprint position 1)
 fit_points = [(float(x), float(y)) for x, y in zip(x_fit_range, y_fit_line, strict=True)]
 chart.add(
     f"Weibull Fit (β={beta_est:.2f}, η={eta_est:,.0f}h, R²={r_value**2:.3f})",
@@ -162,7 +182,7 @@ chart.add(
     stroke_style={"width": 8, "linecap": "round", "linejoin": "round"},
 )
 
-# Failure data points — dark navy with per-point tooltip labels
+# Failure data points — blue (Imprint position 3)
 failure_points = [
     {
         "value": (float(x), float(y)),
@@ -172,24 +192,24 @@ failure_points = [
 ]
 chart.add(f"Failures (n={n_failures})", failure_points, stroke=False, dots_size=12)
 
-# Censored data points — light steel blue, visually lighter than failures
+# Censored data points — lavender (Imprint position 2), visually distinct from failures
 censored_points = [
     {"value": (float(x), float(y)), "label": f"Censored at {np.exp(x):,.0f}h (suspended test)"}
     for x, y in zip(ln_censored_x, censored_y_on_line, strict=True)
 ]
-chart.add(f"Censored (n={n_censored})", censored_points, stroke=False, dots_size=9)
+chart.add(f"Censored (n={n_censored})", censored_points, stroke=False, dots_size=12)
 
-# 63.2% reference line — cool gray dashed
+# 63.2% reference line — theme-adaptive muted (structural reference, not data)
 ref_line = [(float(x_min_ln), float(ref_y)), (float(x_max_ln), float(ref_y))]
 chart.add(
     "63.2% Characteristic Life",
     ref_line,
     stroke=True,
     show_dots=False,
-    stroke_style={"width": 4, "dasharray": "16, 10", "linecap": "round"},
+    stroke_style={"width": 6, "dasharray": "16, 10", "linecap": "round"},
 )
 
-# η marker — warm burnt orange accent, on-chart printed value
+# η marker — ochre (Imprint position 4), characteristic life
 eta_marker = [
     {"value": (float(eta_ln_x), float(ref_y)), "label": f"η = {eta_est:,.0f}h (Characteristic Life at 63.2%)"}
 ]
@@ -202,7 +222,7 @@ chart.add(
     formatter=lambda x: f"η = {eta_est:,.0f}h",
 )
 
-# B10 marker — muted green, distinct from blues, on-chart printed value
+# B10 marker — matte red (Imprint position 5), 10% reliability threshold
 b10_marker = [{"value": (float(b10_ln_x), float(b10_y)), "label": f"B10 = {b10_hours:,.0f}h (10% Failure Life)"}]
 chart.add(
     f"B10 = {b10_hours:,.0f}h",
@@ -214,5 +234,5 @@ chart.add(
 )
 
 # Save
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+chart.render_to_png(f"plot-{THEME}.png")
+chart.render_to_file(f"plot-{THEME}.html")
