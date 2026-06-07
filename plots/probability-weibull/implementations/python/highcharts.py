@@ -1,6 +1,6 @@
-"""anyplot.ai
+""" anyplot.ai
 probability-weibull: Weibull Probability Plot for Reliability Analysis
-Library: highcharts unknown | Python 3.14.3
+Library: highcharts unknown | Python 3.13.13
 Quality: 90/100 | Updated: 2026-06-07
 """
 
