@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 probability-weibull: Weibull Probability Plot for Reliability Analysis
-Library: bokeh 3.9.0 | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-11
+Library: bokeh 3.9.1 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-06-07
 """
 
 import os
