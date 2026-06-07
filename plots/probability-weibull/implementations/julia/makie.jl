@@ -169,9 +169,29 @@ ann_y   = y_tick_vals[end] - 0.10
 ann_txt = "β = $(round(beta_hat, digits=2))\nη = $(round(Int, eta_hat)) h\nB10 = $(round(Int, t_b10)) h"
 text!(ax, [ann_x], [ann_y];
     text    = [ann_txt],
-    fontsize = 11,
+    fontsize = 13,
     color   = INK_SOFT,
     align   = (:left, :top),
+)
+
+# B10 life graphical marker — vertical dashed line from bottom of plot to the 10% level
+y_b10 = log(-log(1.0 - 0.10))
+lines!(ax, [t_b10, t_b10], [y_tick_vals[1] - 0.35, y_b10];
+    color     = INK_MUTED,
+    linewidth = 1.5,
+    linestyle = :dash,
+)
+scatter!(ax, [t_b10], [y_b10];
+    color       = INK_SOFT,
+    marker      = :diamond,
+    markersize  = 10,
+    strokewidth = 0,
+)
+text!(ax, [t_b10], [y_b10 + 0.08];
+    text     = ["B10"],
+    fontsize = 12,
+    color    = INK_SOFT,
+    align    = (:center, :bottom),
 )
 
 # Legend
