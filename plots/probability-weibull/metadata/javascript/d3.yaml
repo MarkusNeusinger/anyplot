@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: probability-weibull
 created: '2026-06-07T23:22:07Z'
-updated: '2026-06-07T23:29:36Z'
+updated: '2026-06-07T23:48:57Z'
 generated_by: claude-sonnet
 workflow_run: 27107387875
 issue: 4668
@@ -12,44 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/probabili
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/javascript/d3/plot-dark.html
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - 'Perfect spec compliance: all required Weibull probability plot elements (log
-    X-axis, linearized Y-axis, fitted line, β/η annotations, median rank plotting
-    positions, censored point markers, 63.2% reference) are correctly implemented'
-  - 'Semantically correct use of Imprint tokens: amber for the characteristic-life
-    reference line, elevated background for info boxes, green for failures — deliberate
-    and appropriate'
-  - Turbine blade fatigue data with β=2.00 (wear-out mode) and η≈4000 h is factually
-    grounded and scientifically credible
-  - Fully deterministic, clean flat code with correct D3 clip-path boundary handling
+  - 'Correct Weibull probability paper implementation: log x-axis + linearized CDF
+    y-axis with full OLS regression in Weibull coordinates — mathematically sound
+    and matches spec precisely'
+  - 'All required spec features present: fitted line, annotated β/η parameters, 63.2%
+    characteristic-life reference line, distinct failure (filled green) vs suspended
+    (hollow crosshair) markers, median rank approximation'
+  - Elegant amber reference line with matching vertical drop-down to η creating a
+    clear visual narrative about the Weibull parameters
+  - Parameter box with amber accent border + drop shadow filter shows genuine design
+    sophistication above D3 defaults
+  - Major/minor grid line differentiation (1.5px vs 0.75px) mimics classic Weibull
+    paper texture — domain-savvy design choice
+  - Both light (#FAF8F1) and dark (#1A1A17) renders are fully readable with correctly
+    adaptive chrome tokens
+  - 'Idiomatic D3 usage throughout: d3.scaleLog, d3.axisLeft/axisBottom with custom
+    tickValues and tickFormat, d3.line, clipPath, defs filter, modern .join() pattern'
+  - Custom SVG feDropShadow filter on annotation boxes — a D3/SVG-native capability
+    not reproducible in static Python libraries
+  - Clean deterministic data generation with realistic turbine blade fatigue scenario
   weaknesses:
-  - 'DE-01 (5/8): Aesthetic sophistication is above plain defaults but not yet at
-    ''strong design''. The parameter box and legend are functional but visually similar;
-    adding subtle shadow, refined border color, or slightly more whitespace inside
-    the boxes would lift the polish'
-  - 'DE-02 (4/6): Axis area has no visual refinement beyond structure — consider differentiating
-    grid lines by weight (major vs minor probability ticks) to mimic real Weibull
-    probability paper texture; remove redundant domain line in favour of pure grid-based
-    framing'
-  - 'VQ-01 minor: Secondary annotation labels (''63.2% — Characteristic Life'', ''η
-    = 3,999 h'') at 13 px are marginally small for important informational labels
-    — 14–15 px would be safer at mobile scale'
-  - 'LM-01 (4/5): X-axis uses a manual tick loop rather than d3.axisBottom().tickValues().tickFormat()
-    which is the more idiomatic D3 pattern for custom tick sets'
+  - 'DE-01 moderate: Design is above defaults but not yet FiveThirtyEight-level —
+    consider adding intentional typographic weight variation (e.g. bold category labels
+    in legend, lighter tick labels) to create clearer visual hierarchy'
+  - 'VQ-01 minor: censored marker placement at cy = ih + 38 leaves only ~18px vertical
+    clearance above x-axis tick labels — at mobile widths this could become crowded;
+    increase to cy = ih + 50 for safer spacing'
+  - 'DE-02 minor: horizontal grid lines at 1.5px for major and 0.75px for minor are
+    visible but slightly heavy for the large canvas — reducing to 1.0px/0.5px would
+    make the Weibull paper texture feel lighter and let the data breathe more'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface
-      Chrome: Title "probability-weibull · javascript · d3 · anyplot.ai" at 22 px centered; X-axis label "Time to Failure (hours)" and Y-axis label "Cumulative Failure Probability F(t)" both at 16 px; probability tick labels (1%–99%) and log tick labels (500–8k) at 14 px; all dark text clearly readable
-      Data: 17 green filled circles (#009E73, r=7) as failure points; 3 hollow circle+crosshair markers below X-axis for right-censored suspensions; blue (#4467A3) Weibull fit line (stroke-width 2.5); amber (#DDCC77) dashed horizontal reference at 63.2%; amber dashed vertical marker at η=3,999 h; parameter box (top-left) with β=2.00, η=3,999 h on elevated #FFFDF6 background; legend (top-right) on elevated background
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct, no pure white.
+      Chrome: Title "probability-weibull · javascript · d3 · anyplot.ai" in dark ink at 22px — clearly readable. Y-axis label "Cumulative Failure Probability F(t)" rotated vertical in dark ink at 16px — readable. X-axis label "Time to Failure (hours)" in dark ink at 16px — readable. Y-axis tick labels (1%, 5%, 10%, 20%, 50%, 63.2%, 90%, 99%) and X-axis tick labels (500, 1k, 2k, 4k, 8k) at 14px in inkSoft color — all readable. All chrome is correctly dark on light background.
+      Data: 17 green (#009E73, palette[0]) filled circles for failures with white stroke, 3 hollow crosshair circles (inkSoft) for suspended data below x-axis. Blue (#4467A3, palette[2]) fit line at 2.5px stroke. Amber (#DDCC77) dashed 63.2% horizontal reference line spanning full plot width with vertical drop-down to η. Parameter box (top-left) with amber border and drop shadow showing β = 2.00 (shape) and η = 3,999 h (scale). Legend (top-right) with drop shadow showing Failure / Suspended / Weibull fit entries. First series (failures) is #009E73 — correct.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface
-      Chrome: All text elements (title, axis labels, tick labels, parameter box, legend) flip to light tones using inkSoft token; no dark-on-dark failures; elevated boxes use #242420 fill; grid lines subtle but visible
-      Data: Green failure points (#009E73) and blue fit line (#4467A3) are identical to light render — data colors unchanged as required; amber reference line (#DDCC77) readable; suspension crosshairs visible
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct, no pure black.
+      Chrome: Title, axis labels, tick labels all appear in light cream/off-white — correctly adapted for dark theme. Parameter box text and legend text are light-colored on dark elevated background. Grid lines appear as subtle light strokes. No dark-on-dark failures observed.
+      Data: Green circles (#009E73), blue fit line (#4467A3), amber reference lines — identical to light render as required. Only chrome (background, text, grid, legend boxes) has flipped.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -60,50 +66,55 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All sizes explicitly set (14px ticks, 16px axis labels, 22px title,
-          13px annotations); both themes readable; minor deduction for 13px annotation
-          labels being marginally small for prominent reference text
+        comment: 'All font sizes explicitly set (title 22px, axis labels 16px, tick
+          labels 14px, annotations 15px). Readable in both themes. Minor: censored
+          marker placement at cy=ih+38 leaves tight clearance above x-axis tick labels.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Parameter box and legend in distinct corners; no overlapping text
-          elements
+        comment: No overlapping text or data elements. Parameter box, legend, 63.2%
+          annotation and η annotation are all spatially separated. Last data point
+          at ~5230h is 22px left of legend boundary.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 17 sparse failure points at r=7 appropriately prominent; suspension
-          crosshairs clear; fit line stroke-width 2.5 well-weighted
+        comment: Failure circles at r=7 are clearly visible for 17 sparse data points.
+          Censored crosshair markers visible below x-axis. Fit line at 2.5px is prominent.
+          Amber reference lines clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/blue/amber well-separated in luminance and hue; CVD-safe
+        comment: Green (#009E73) failures and blue (#4467A3) fit line are CVD-safe
+          Imprint palette members. No red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; inner area ~60% of canvas; generous balanced
-          margins; no content cut off
+        comment: No canvas gate failure. Good margins (80/100/120/130). Plot fills
+          70%+ of canvas. Balanced whitespace. Title spans ~65% of canvas width. No
+          overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis labels descriptive with units
+        comment: 'Y-axis: ''Cumulative Failure Probability F(t)'' — descriptive with
+          units. X-axis: ''Time to Failure (hours)'' — descriptive with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Failures use palette[0] #009E73; fit uses palette[2] #4467A3; amber
-          used semantically for reference line; backgrounds correct for both themes;
-          chrome tokens correctly adaptive'
+        comment: 'First series (failures) = #009E73 (palette[0]). Amber used semantically
+          for reference line. Backgrounds #FAF8F1 (light) / #1A1A17 (dark) — correct.
+          Data colors identical across themes.'
     design_excellence:
       score: 13
       max: 20
@@ -113,25 +124,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above plain default: elevated-background boxes, semantic amber,
-          intentional color hierarchy. Below ''strong design'' — clean and functional
-          but not visually distinctive'
+        comment: 'Above library defaults: drop shadow SVG filter on annotation boxes,
+          amber accent border on parameter box, major/minor grid line differentiation
+          for Weibull paper texture. Thoughtful color assignments. Not yet at FiveThirtyEight
+          publication level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Custom grid at statistically meaningful positions; manual L-spine;
-          elevated box fills. Does not yet achieve every-detail-polished — no grid
-          weight differentiation, no refined axis framing
+        comment: No top/right spines (D3 default), grid adapted for Weibull paper
+          effect, generous margins, clip path for clean rendering. Grid lines at 1.5/0.75px
+          are slightly heavy but domain-appropriate.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Amber 63.2%+η annotation creates focal point; parameter box delivers
-          fit result immediately; failure vs suspension distinction guides reading;
-          good visual hierarchy through color contrast
+        comment: Amber 63.2% reference line with vertical drop to η creates visual
+          narrative about Weibull parameters. Parameter box immediately communicates
+          β and η. Color hierarchy (green failures → blue fit → amber reference) guides
+          viewer through reliability analysis story.
     spec_compliance:
       score: 15
       max: 15
@@ -141,31 +154,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Weibull probability plot with log X-axis and linearized ln(-ln(1-F))
-          Y-axis
+        comment: 'Correct Weibull probability plot: log x-axis (d3.scaleLog), linearized
+          Weibull CDF y-axis (ln(-ln(1-F)) transform), data on Weibull probability
+          paper.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: log X-axis, Weibull CDF Y-axis, fitted
-          line, β/η annotated, Bernard median rank, censored points distinguished,
-          63.2% reference line'
+        comment: Fitted line present. β (shape) annotated. η (scale) annotated. 63.2%
+          reference line present. Censored points visually distinguished (hollow crosshair
+          vs filled circle). Median rank approximation (i-0.3)/(n+0.4) used.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on X (log scale), cumulative probability on Y (Weibull scale);
-          all 17 failures and 3 suspensions visible
+        comment: 'X: time to failure on log scale. Y: cumulative failure probability
+          on linearized Weibull scale. All 20 observations plotted.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'probability-weibull · javascript · d3 · anyplot.ai' exactly
-          matches required format; legend labels Failure/Suspended/Weibull fit are
-          accurate
+        comment: 'Title: ''probability-weibull · javascript · d3 · anyplot.ai'' —
+          correct format. Legend labels: ''Failure'', ''Suspended'', ''Weibull fit''
+          — appropriate and accurate.'
     data_quality:
       score: 15
       max: 15
@@ -175,23 +189,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows failures AND right-censored suspensions; OLS regression fit;
-          characteristic life reference; annotated shape+scale parameters; 17+3 realistic
-          split
+        comment: 'Shows all aspects: failure points, censored/suspended points, fitted
+          Weibull line, 63.2% reference, Weibull paper grid texture, annotated parameters.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Turbine blade fatigue-life scenario is a canonical reliability engineering
-          case; comprehensible, neutral, scientifically appropriate
+        comment: Turbine blade fatigue-life data — realistic reliability engineering
+          scenario. 17 failures + 3 right-censored suspensions. Neutral, non-controversial
+          topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: β=2.00 (wear-out mode) physically plausible for fatigue; η≈4000 h
-          realistic turbine blade life; times 750–5230 h credible Weibull spread
+        comment: Times 750-5230h plausible for turbine components. Domain 400-8000h
+          appropriate. β≈2, η≈4000h physically reasonable Weibull parameters. Data
+          well-distributed across scale.
     code_quality:
       score: 10
       max: 10
@@ -201,62 +216,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat linear flow: data → OLS → SVG mount → scales → grid → reference
-          lines → data elements → axes → labels → title; no functions or classes'
+        comment: 'Flat procedural D3 script. No functions or classes. Clear section
+          organization: data → SVG → scales → grid → reference lines → fit → data
+          points → axes → annotations → legend → labels → title.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hard-coded data array; no RNG
+        comment: All data hard-coded deterministically. No random generation. Math
+          is fully reproducible.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No import statements; only consumes window.ANYPLOT_TOKENS, window.ANYPLOT_SIZE,
-          and global d3
+        comment: No imports — uses d3 global and window.ANYPLOT_TOKENS/ANYPLOT_SIZE
+          as required by harness.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; d3.sum() used cleanly for OLS regression;
-          clip path correctly applied to plotG only
+        comment: Clean, idiomatic D3. No fake UI, no over-engineering. d3.sum for
+          OLS math is idiomatic. forEach for minor elements is appropriate.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Mounts to #container; sizes SVG from window.ANYPLOT_SIZE; harness
-          produces plot-{theme}.png and plot-{theme}.html'
+        comment: Output handled by harness. Correctly uses window.ANYPLOT_TOKENS,
+          window.ANYPLOT_SIZE, and d3 global.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: d3.scaleLog, d3.scaleLinear, d3.axisLeft/axisBottom with tickValues/tickFormat,
+          d3.line, SVG defs with clipPath and filter, modern .join() pattern — expert
+          D3 usage throughout.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Correct data binding with .data().join(); d3.scaleLog() and d3.scaleLinear();
-          d3.sum() for statistics; clip path. Minor deduction: manual tick loops rather
-          than d3.axisBottom().tickValues().tickFormat()'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: SVG clipPath for boundary enforcement; d3.scaleLog() for logarithmic
-          probability axis; in-browser OLS regression via d3.sum(); custom suspension
-          crosshair markers with raw SVG primitives
-  verdict: REJECTED
+        comment: SVG feDropShadow filter — D3/SVG-native, not replicable in matplotlib.
+          Custom Weibull tick formatter (converting linearized scale back to percentages).
+          Clip path for plot area. Major/minor grid line width differentiation. These
+          are distinctively D3/SVG features.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - manual-ticks
   - annotations
   - custom-legend
-  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
@@ -264,4 +282,3 @@ impl_tags:
   - regression
   styling:
   - edge-highlighting
-  - grid-styling

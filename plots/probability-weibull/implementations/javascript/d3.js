@@ -1,7 +1,7 @@
 // anyplot.ai
 // probability-weibull: Weibull Probability Plot for Reliability Analysis
 // Library: d3 7.9.0 | JavaScript 22.22.3
-// Quality: 89/100 | Created: 2026-06-07
+// Quality: 91/100 | Created: 2026-06-07
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
