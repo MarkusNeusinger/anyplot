@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' probability-weibull: Weibull Probability Plot for Reliability Analysis
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 85/100 | Created: 2026-06-07
+#' Quality: 90/100 | Created: 2026-06-07
 
 library(ggplot2)
 library(scales)

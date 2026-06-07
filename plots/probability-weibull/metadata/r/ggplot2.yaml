@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: probability-weibull
 created: '2026-06-07T23:04:09Z'
-updated: '2026-06-07T23:09:51Z'
+updated: '2026-06-07T23:19:08Z'
 generated_by: claude-sonnet
 workflow_run: 27107254366
 issue: 4668
@@ -12,47 +12,58 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/probabili
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 90
 review:
   strengths:
-  - 'Correct Weibull probability paper setup: log x-axis with properly linearized
-    Weibull CDF y-axis expressed as intuitive percentage labels — technically sound
-    and rare to get right.'
-  - 'Palette compliance is excellent: semantic use of matte red for censored/suspended
-    aligns with the Imprint palette''s semantic anchor rule; shape+color redundancy
-    ensures CVD safety.'
-  - Both light and dark themes render cleanly with proper chrome token application
-    throughout — no dark-on-dark failures.
-  - Parameter annotation box (beta, eta) and 63.2% characteristic life reference with
-    vertical eta drop create genuine data storytelling.
-  - Dynamic title size calculation avoids overflow on the long mandated title.
+  - 'Correct Weibull probability paper implementation: log x-axis, linearized CDF
+    y-axis with proper probability labels (1%–99%), and straight-line Weibull fit'
+  - 'All required spec features present: beta/eta parameter annotation box, 63.2%
+    horizontal reference line with vertical drop to x-axis (characteristic life guide),
+    and clear failure vs censored distinction'
+  - 'Statistically rigorous: Benard''s median rank approximation using n_total in
+    denominator (correct for censored data), OLS fit on linearized Weibull coordinates'
+  - 'Full Imprint palette compliance with semantic exceptions: #009E73 (failures),
+    #AE3030 matte red (censored/suspended — semantically justified), #4467A3 blue
+    (fitted line)'
+  - 'Perfect theme-adaptive chrome: both renders pass readability checks; light (#FAF8F1)
+    and dark (#1A1A17) backgrounds correct; all text tokens (INK/INK_SOFT/INK_MUTED)
+    properly applied'
+  - 'Idiomatic ggplot2 usage: grammar-of-graphics layering, scale_x_log10(), scale_color_manual()
+    + scale_shape_manual() for dual-encoding legend, annotate() for labels'
+  - 'Clean KISS code: flat structure, set.seed(42), all imports used, dynamic title
+    font size calculated from title length'
   weaknesses:
-  - library(dplyr) is imported but unused — remove it; all data manipulation uses
-    base R functions (data.frame, pmin, order, which, seq_along).
-  - Censored point y-placement at median(weibull_y) is an informal approximation;
-    conventionally, right-censored points on a Weibull plot are either not plotted
-    at a CDF position or shown with a special indicator. This can mislead readers
-    into thinking the censored observation has a defined failure probability at ~50%.
-  - Parameter annotation text (size=3.0 geom units) is slightly small for the 3200x1800
-    canvas; consider increasing to size=3.5.
-  - Minor point clustering in the upper-right (6-8 overlapping failures near 63-82%
-    probability at 5000-8000 h) — slight alpha or size reduction could help differentiation
-    there.
+  - 'VQ-01 minor: y-axis has 11 probability tick labels (1%, 5%, 10%, 20%, 30%, 50%,
+    63.2%, 80%, 90%, 95%, 99%) at size=8pt — slightly dense at mobile scale (~400px);
+    consider dropping 1–2 intermediate labels (e.g. 30%, 80%) to give more breathing
+    room'
+  - 'DE-01/DE-02: All four spines kept via panel.border — for a Weibull probability
+    plot this is defensible (enclosed paper analogy), but removing top/right spines
+    would better align with the style guide''s default aesthetic; could be improved
+    by using panel.border = element_blank() and explicit element_line on left/bottom
+    axes instead'
+  - 'LM-02: The Weibull y-axis is constructed via manual breaks/labels on scale_y_continuous
+    rather than a formal ggplot2 trans object (e.g. custom scales::trans_new(''weibull'',
+    ...)) — a missed opportunity to use ggplot2''s scale transformation system more
+    idiomatically'
+  - Censored point y-placement at median(weibull_y) is a statistical simplification
+    (all censored obs at same rank) — visually acceptable but could be improved by
+    using Johnson's adjusted rank method to assign individual positions
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Bold dark title "probability-weibull · r · ggplot2 · anyplot.ai" at ~60-65% canvas width, fully readable. Y-axis "Cumulative Failure Probability" and X-axis "Time to Failure (hours)" labels in dark ink, readable. Tick labels in INK_SOFT (#4A4A44) at 8pt — readable. Parameter annotation box (beta=2.07, eta=6730 h) with elevated-bg fill clearly legible. Legend at bottom with elevated background, text readable.
-      Data: Filled green circles (#009E73) for ~37 failure points on log-scale x, linearized Weibull y. Single hollow red circle (#AE3030) for censored observation near 10,000 h. Solid blue (#4467A3) fitted Weibull line. Dashed grey horizontal 63.2% reference line with label. Dashed vertical eta indicator.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background.
+      Background: Warm off-white (#FAF8F1) — correct surface, not pure white.
+      Chrome: Title "probability-weibull · r · ggplot2 · anyplot.ai" in bold dark ink, comfortably fitting ~75% of plot width. Axis labels "Time to Failure (hours)" and "Cumulative Failure Probability" in dark INK at 10pt. Y-axis tick labels show 11 probability values (1%–99%) in INK_SOFT at 8pt — readable but dense. X-axis tick labels (comma-formatted hours) clear.
+      Data: ~35 filled green (#009E73) circles for failures, 1 hollow red (#AE3030) circle for censored at ~10,000 h. Blue (#4467A3) solid fitted line runs from ~800 to ~13,000 h. Dashed grey horizontal reference line at 63.2% with label. Dashed grey vertical line drops from 63.2% crossing to x-axis at ~6,700 h. Parameter annotation box (ELEVATED_BG fill, 0.3 border) shows "β (shape) = 2.07 / η (scale) = 6730 h". Legend at bottom: Censored (suspended) [hollow red] / Failure [filled green].
+      Legibility verdict: PASS — all text clearly readable against light background. No light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: Title, axis labels, tick labels all use light chrome tokens (#F0EFE8 / #B8B7B0) — fully readable against dark background. No dark-on-dark failures detected. Annotation box uses elevated dark fill (#242420) with light text — legible. Legend box uses same elevated dark fill — legible.
-      Data: Identical data colors to light render — green failure points (#009E73), red hollow censored circle (#AE3030), blue fitted line (#4467A3). All data elements clearly distinguishable from the dark background. Brand green #009E73 reads well on dark surface.
-      Legibility verdict: PASS — all text clearly readable against warm near-black background; no dark-on-dark issues.
+      Background: Warm near-black (#1A1A17) — correct dark surface.
+      Chrome: Title in light #F0EFE8 text, clearly visible. Axis labels and tick labels in INK_SOFT (#B8B7B0) — readable. Grid lines subtle. Annotation box uses elevated dark bg (#242420) with appropriate border. Legend text in B8B7B0 against dark background.
+      Data: Colors are identical to light render — same #009E73 green filled markers, same #AE3030 hollow red censored marker, same #4467A3 blue fitted line. The 63.2% reference lines and labels remain clearly visible. No dark-on-dark failures observed.
+      Legibility verdict: PASS — all text clearly readable against dark background. Brand green #009E73 is highly visible. No chrome-flipping failures.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -60,48 +71,55 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All text readable in both themes. Minor: parameter annotation size=3.0
-          is slightly small for 3200x1800 canvas.'
+        comment: 'All font sizes explicitly set (axis.title=10, axis.text=8, title
+          dynamically scaled). Readable in both themes. Minor: 11 y-axis probability
+          labels slightly dense at mobile scale.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, data, or annotation elements.
+        comment: No overlapping text elements. Parameter annotation, 63.2% label,
+          and legend are all well-positioned.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers size=2.8 appropriate for ~37 points. Minor clustering in
-          upper-right.
+        comment: ~35 failure points at size=2.8 appropriate for this density. Hollow
+          censored marker clearly distinguishable. Fitted line at linewidth=1.0 well
+          visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Color+shape redundancy (filled vs hollow) provides CVD safety.
+        comment: 'Redundant encoding: failures vs censored distinguished by both color
+          (green vs red) AND shape (filled vs hollow). CVD-safe.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 landscape; title proportion correct; no clipping.
+        comment: Canvas 3200x1800 correct. Plot fills canvas well with balanced margins.
+          Legend at bottom near data. No clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; title in correct spec format.
+        comment: 'X: ''Time to Failure (hours)'' with log scale, Y: ''Cumulative Failure
+          Probability'' — both descriptive with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; red semantic anchor for censored; blue fitted
-          line; correct backgrounds.'
+        comment: 'First series (Failure) = #009E73. Censored uses #AE3030 with semantic
+          justification (suspended/lost). Fitted line uses #4467A3. Backgrounds: #FAF8F1
+          light / #1A1A17 dark. Both renders theme-correct.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -109,24 +127,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Professional Weibull probability-paper aesthetic; Imprint palette
-          applied correctly; annotation box adds polish.
+        comment: 'Above configured default: Imprint palette with semantic exceptions,
+          styled annotation box with ELEVATED_BG, clean font hierarchy. Not exceptional
+          but thoughtful.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Grid linewidth=0.15 is nicely subtle; four-sided border is intentional
-          for Weibull paper look.
+        comment: Very subtle grid (linewidth=0.15, minor grid blanked). Generous margins.
+          Panel border kept on all 4 sides — defensible for Weibull paper analogy
+          but departs from style-guide L-shape default.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 63.2% reference line + vertical eta drop creates clear characteristic-life
-          narrative; parameter annotation prominent.
+        comment: 'Good storytelling: 63.2% reference line + vertical drop guides viewer
+          to read characteristic life; parameter annotation explains the fitted line;
+          failure vs censored distinction narrates the data collection story.'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -134,29 +155,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Weibull probability plot with log x-axis and linearized Weibull
-          CDF y-axis.
+        comment: 'Correct Weibull probability plot: log x-axis, linearized CDF y-axis,
+          fitted line, both failure and censored series.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Fitted line, annotated beta and eta, 63.2% reference, censored distinction,
-          median rank all present.
+        comment: 'All spec features: log x-axis, linearized Weibull y-axis, fitted
+          line, beta/eta annotation, median rank (Benard''s), censored vs failure
+          visual distinction, 63.2% reference line.'
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: 'Log x-axis and linearized y-axis correctly set up. Minor: censored
-          at median(weibull_y) is non-standard simplification.'
+        comment: X = time to failure (log scale), Y = cumulative failure probability
+          (linearized Weibull). All data visible on axes.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend correctly labels both series with matching
-          symbols.
+        comment: 'Title: ''probability-weibull · r · ggplot2 · anyplot.ai'' correct.
+          Legend: ''Failure'' and ''Censored (suspended)'' match data.'
     data_quality:
       score: 15
       max: 15
@@ -166,23 +188,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All key Weibull plot features demonstrated.
+        comment: 'Shows all aspects: failure points on probability scale, censored
+          observations, fitted line, characteristic life reference, parameter estimates.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Turbine blade fatigue-life data with Weibull(2.3, 8000 h) is engineering-realistic
-          and neutral.
+        comment: Turbine blade fatigue-life data with right-censoring at 10,000 hours.
+          Real engineering scenario, neutral topic, plausible Weibull(2.3, 8000) parameters.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Time 1000-10000 h, probabilities 1-99%, beta~2, eta~6730 h — all
-          plausible.
+        comment: Hours to failure in 800–12,000 range realistic for turbine components.
+          Estimated β=2.07, η=6730 h reasonable for simulated data from true(2.3,
+          8000).
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -190,7 +214,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat linear script, no functions/classes.
+        comment: 'Flat structure: imports → tokens → data → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -199,44 +224,50 @@ review:
         comment: set.seed(42) present.
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: library(dplyr) imported but unused — all manipulation uses base R.
+        passed: true
+        comment: ggplot2, scales, ragg — all actually used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable, no fake UI.
+        comment: Clean, idiomatic R. No over-engineering. Statistical simplification
+          (censored at median) is acceptable for readability.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: sprintf('plot-%s.png', THEME) produces correct filenames.
+        comment: Saves as plot-{THEME}.png via sprintf. ragg::agg_png device used
+          correctly.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct grammar-of-graphics layer composition; scale_color_manual
-          + scale_shape_manual for unified legend; custom y-axis breaks idiomatic.
+        comment: 'Expertly uses ggplot2 grammar: scale_x_log10(), scale_y_continuous
+          with custom breaks/labels for Weibull probability scale, dual scale_color_manual
+          + scale_shape_manual, annotate(), geom_segment(), proper theme() layering.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom Weibull-linearized y-axis with computed breaks; mixed geom
-          layers (line, two point series with different shapes, two segments, annotate
-          label).
+        comment: Custom Weibull probability paper y-axis (manual breaks mapping F
+          values through log(-log(1-F))) is a distinctive use of scale customization.
+          Could have used a formal scales::trans_new() transformation for more idiomatic
+          ggplot2 scale composition.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - scales
+  - ragg
   techniques:
   - annotations
   - manual-ticks
