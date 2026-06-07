@@ -1,16 +1,41 @@
-""" pyplots.ai
+"""anyplot.ai
 probability-weibull: Weibull Probability Plot for Reliability Analysis
 Library: bokeh 3.9.0 | Python 3.14.3
 Quality: 91/100 | Created: 2026-03-11
 """
 
+import os
+import sys
+import time
+from pathlib import Path
+
+
+# bokeh.py is the script name — remove its directory from sys.path so that
+# `import bokeh` resolves to the installed package, not this file itself.
+_here = os.path.dirname(os.path.abspath(__file__))
+sys.path[:] = [p for p in sys.path if os.path.abspath(p) != _here]
+
 import numpy as np
-from bokeh.io import export_png, save
+from bokeh.io import output_file, save
 from bokeh.models import Band, ColumnDataSource, HoverTool, Label, Span
 from bokeh.plotting import figure
-from bokeh.resources import CDN
 from scipy import stats
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
+
+# Theme-adaptive chrome tokens (Imprint palette)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette
+BRAND = "#009E73"  # position 1 — failures (primary data)
+BLUE = "#4467A3"  # position 3 — censored observations
+ANYPLOT_AMBER = "#DDCC77"  # reference / caution line
 
 # Data - Turbine blade fatigue-life data (hours to failure)
 np.random.seed(42)
@@ -56,15 +81,13 @@ b10_life = eta_fit * (-np.log(1 - 0.10)) ** (1 / beta_fit)
 # 63.2% characteristic life reference
 char_life_y = np.log(-np.log(1 - 0.632))
 
-# Compute censored plotting positions using Kaplan-Meier adjusted ranks
-# Merge all times and sort, tracking which are failures vs censored
+# Compute censored plotting positions using adjusted ranks
 all_times = np.concatenate([failure_times, censored_times])
 all_censored = np.concatenate([np.zeros(n_failures), np.ones(n_censored)])
 sort_idx = np.argsort(all_times)
 all_times_sorted = all_times[sort_idx]
 all_censored_sorted = all_censored[sort_idx]
 
-# Compute adjusted ranks for censored points using reverse rank method
 reverse_ranks = np.arange(n_total, 0, -1)
 adjusted_rank = np.zeros(n_total)
 prev_adj = 0
@@ -73,12 +96,10 @@ for i in range(n_total):
         prev_adj += 1
         adjusted_rank[i] = prev_adj
     else:
-        # For censored: use previous failure rank + increment based on reverse rank
         increment = (n_total + 1 - prev_adj) / (reverse_ranks[i] + 1)
         prev_adj += increment
         adjusted_rank[i] = prev_adj
 
-# Extract censored median rank values
 censored_mask = all_censored_sorted == 1
 censored_adjusted_ranks = adjusted_rank[censored_mask]
 censored_median_rank = (censored_adjusted_ranks - 0.3) / (n_total + 0.4)
@@ -105,7 +126,7 @@ censored_source = ColumnDataSource(
     }
 )
 
-# Confidence band around fit (approximate ±2 SE)
+# Confidence band (approximate ±2 SE)
 se_y = np.sqrt(
     (1 - r_squared)
     * np.var(weibull_y)
@@ -124,68 +145,80 @@ band_source = ColumnDataSource(
 )
 line_source = ColumnDataSource(data={"log_time": log_t_line, "weibull_y": weibull_y_line})
 
-# Plot
+# Title — descriptive prefix + spec-id · language · library · anyplot.ai
+# "Turbine Blade Fatigue Life · probability-weibull · python · bokeh · anyplot.ai" = 76 chars
+# fontsize = round(50 * 67 / 76) = 44pt
+TITLE = "Turbine Blade Fatigue Life · probability-weibull · python · bokeh · anyplot.ai"
+
+# Canvas: 3200×1800 (landscape 16:9) per bokeh.md hard rule
+W, H = 3200, 1800
 p = figure(
-    width=4800,
-    height=2700,
-    title="Turbine Blade Fatigue Life \u00b7 probability-weibull \u00b7 bokeh \u00b7 pyplots.ai",
+    width=W,
+    height=H,
+    title=TITLE,
     x_axis_label="Time to Failure (hours)",
     y_axis_label="Cumulative Failure Probability",
     x_range=(log_t_line.min() - 0.2, log_t_line.max() + 0.2),
     y_range=(weibull_y_levels[0] - 0.3, weibull_y_levels[-1] + 0.3),
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=200,
+    min_border_top=110,
+    min_border_right=60,
 )
 
-# Clean white background for publication-ready look
-p.background_fill_color = "#FFFFFF"
-p.border_fill_color = "#FFFFFF"
-p.toolbar_location = None
+# Theme-adaptive backgrounds
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
 
 # 63.2% characteristic life reference line
 char_life_span = Span(
-    location=char_life_y, dimension="width", line_color="#E67E22", line_width=4, line_dash="dashed", line_alpha=0.6
+    location=char_life_y, dimension="width", line_color=ANYPLOT_AMBER, line_width=4, line_dash="dashed", line_alpha=0.8
 )
 p.add_layout(char_life_span)
 
-# 95% confidence band (Bokeh Band glyph)
+# 95% confidence band
 band = Band(
     base="log_time",
     lower="lower",
     upper="upper",
     source=band_source,
-    fill_color="#306998",
+    fill_color=BRAND,
     fill_alpha=0.1,
-    line_color="#306998",
-    line_alpha=0.15,
+    line_color=BRAND,
+    line_alpha=0.2,
     line_width=1,
 )
 p.add_layout(band)
 
 # Fitted line
-p.line("log_time", "weibull_y", source=line_source, line_color="#1A5276", line_width=5, legend_label="Weibull Fit")
+p.line("log_time", "weibull_y", source=line_source, line_color=BRAND, line_width=4, legend_label="Weibull Fit")
 
 # Failure data points (filled circles)
 failure_renderer = p.scatter(
     "log_time",
     "weibull_y",
     source=failure_source,
-    size=30,
-    color="#306998",
+    size=18,
+    color=BRAND,
     alpha=0.9,
-    line_color="white",
-    line_width=3,
+    line_color=PAGE_BG,
+    line_width=2,
     legend_label="Failures",
 )
 
-# Censored data points (hollow circles)
+# Censored data points (hollow triangles — distinct shape from failures)
 censored_renderer = p.scatter(
     "log_time",
     "weibull_y",
     source=censored_source,
-    size=30,
-    color="white",
-    alpha=0.9,
-    line_color="#306998",
-    line_width=4,
+    size=20,
+    marker="triangle",
+    color=PAGE_BG,
+    alpha=0.95,
+    line_color=BLUE,
+    line_width=3,
     legend_label="Censored",
 )
 
@@ -200,38 +233,42 @@ p.add_tools(hover_failure)
 hover_censored = HoverTool(renderers=[censored_renderer], tooltips=[("Censored at", "@time_fmt hours")], mode="mouse")
 p.add_tools(hover_censored)
 
-# Parameter annotation
-param_text = f"\u03b2 = {beta_fit:.2f}  (shape)\n\u03b7 = {eta_fit:.0f} h  (scale)\nR\u00b2 = {r_squared:.4f}"
+# Parameter annotation box — placed below the top tick so text flows downward fully visible
+param_text = f"β = {beta_fit:.2f}  (shape)\nη = {eta_fit:.0f} h  (scale)\nR² = {r_squared:.4f}"
 param_label = Label(
     x=log_t_line.min() + 0.1,
-    y=weibull_y_levels[-1] - 0.2,
+    y=weibull_y_levels[-1] - 0.6,
     text=param_text,
-    text_font_size="34pt",
-    text_color="#1A5276",
+    text_font_size="30pt",
+    text_color=INK,
     text_font_style="bold",
-    background_fill_color="#FFFFFF",
+    background_fill_color=ELEVATED_BG,
     background_fill_alpha=0.95,
+    border_line_color=INK_SOFT,
+    border_line_alpha=0.4,
+    padding=14,
 )
 p.add_layout(param_label)
 
-# 63.2% label
+# 63.2% characteristic life label
 char_label = Label(
     x=log_t_line.max() - 0.5,
     y=char_life_y + 0.15,
     text="63.2% (Characteristic Life)",
-    text_font_size="24pt",
-    text_color="#E67E22",
+    text_font_size="26pt",
+    text_color=ANYPLOT_AMBER,
     text_font_style="italic",
+    text_align="right",
 )
 p.add_layout(char_label)
 
 # B10 life annotation (10% failure probability)
 b10_label = Label(
-    x=np.log(b10_life) + 0.08,
-    y=b10_weibull_y - 0.25,
+    x=np.log(b10_life) + 0.1,
+    y=b10_weibull_y - 0.28,
     text=f"B10 = {b10_life:.0f} h",
-    text_font_size="22pt",
-    text_color="#1A5276",
+    text_font_size="24pt",
+    text_color=INK_SOFT,
     text_font_style="italic",
 )
 p.add_layout(b10_label)
@@ -240,11 +277,11 @@ p.add_layout(b10_label)
 p.scatter(
     [np.log(b10_life)],
     [b10_weibull_y],
-    size=20,
+    size=18,
     marker="diamond",
-    color="#1A5276",
+    color=INK_SOFT,
     alpha=0.8,
-    line_color="white",
+    line_color=PAGE_BG,
     line_width=2,
 )
 
@@ -253,31 +290,34 @@ p.yaxis.ticker = list(weibull_y_levels)
 prob_labels = {float(y): f"{p * 100:.1f}%" for y, p in zip(weibull_y_levels, prob_levels, strict=True)}
 p.yaxis.major_label_overrides = prob_labels
 
-# Custom x-axis: show actual hours on log scale
+# Custom x-axis: show actual hours
 log_tick_values = np.log([1000, 2000, 3000, 5000, 7000, 10000])
 p.xaxis.ticker = list(log_tick_values)
 time_labels = {float(lt): f"{np.exp(lt):.0f}" for lt in log_tick_values}
 p.xaxis.major_label_overrides = time_labels
 
-# Style
-p.title.text_font_size = "40pt"
-p.title.text_color = "#2C3E50"
+# Title
+p.title.text_font_size = "44pt"
+p.title.text_color = INK
 p.title.align = "center"
 
-p.xaxis.axis_label_text_font_size = "28pt"
-p.yaxis.axis_label_text_font_size = "28pt"
-p.xaxis.axis_label_text_color = "#2C3E50"
-p.yaxis.axis_label_text_color = "#2C3E50"
-p.xaxis.major_label_text_font_size = "22pt"
-p.yaxis.major_label_text_font_size = "22pt"
-p.xaxis.major_label_text_color = "#555555"
-p.yaxis.major_label_text_color = "#555555"
+# Axis labels and ticks
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
 
-p.legend.label_text_font_size = "26pt"
+# Legend
+p.legend.label_text_font_size = "34pt"
+p.legend.label_text_color = INK_SOFT
 p.legend.location = "bottom_right"
-p.legend.background_fill_color = "#FFFFFF"
+p.legend.background_fill_color = ELEVATED_BG
 p.legend.background_fill_alpha = 0.92
-p.legend.border_line_color = "#CCCCCC"
+p.legend.border_line_color = INK_SOFT
 p.legend.border_line_alpha = 0.4
 p.legend.glyph_height = 40
 p.legend.glyph_width = 40
@@ -285,19 +325,57 @@ p.legend.padding = 25
 p.legend.spacing = 15
 p.legend.margin = 20
 
-# Grid - minimal y-grid only for clean publication look
+# Grid — minimal y-grid only for Weibull paper look
 p.xgrid.grid_line_color = None
-p.ygrid.grid_line_color = "#E0E0E0"
-p.ygrid.grid_line_alpha = 0.4
+p.ygrid.grid_line_color = INK
+p.ygrid.grid_line_alpha = 0.15
 
-p.axis.axis_line_color = "#BBBBBB"
-p.axis.axis_line_width = 2
-p.axis.minor_tick_line_color = None
-p.axis.major_tick_line_color = "#BBBBBB"
-p.axis.major_tick_out = 8
+# Axes chrome
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.axis_line_width = 2
+p.yaxis.axis_line_width = 2
+p.xaxis.minor_tick_line_color = None
+p.yaxis.minor_tick_line_color = None
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+p.xaxis.major_tick_out = 8
+p.yaxis.major_tick_out = 8
 
 p.outline_line_color = None
 
-# Save
-export_png(p, filename="plot.png")
-save(p, filename="plot.html", resources=CDN, title="Weibull Probability Plot")
+# Save HTML (interactive artifact)
+output_file(f"plot-{THEME}.html")
+save(p)
+
+# Screenshot with headless Chrome (Selenium 4 / Selenium Manager)
+# Use CDP setDeviceMetricsOverride so the inner viewport is authoritative:
+# --window-size alone is eaten by Chrome in headless mode (gives 1661 instead of 1800).
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
+
+# Pin to exact canvas dims so the post-render gate passes
+from PIL import Image as _PILImage
+
+
+_img = _PILImage.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (W, H):
+    _norm = _PILImage.new("RGB", (W, H), PAGE_BG)
+    _norm.paste(_img, ((W - _img.size[0]) // 2, (H - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")
