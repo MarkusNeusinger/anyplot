@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: probability-weibull
 created: '2026-06-07T23:11:56Z'
-updated: '2026-06-07T23:17:40Z'
+updated: '2026-06-07T23:31:52Z'
 generated_by: claude-sonnet
 workflow_run: 27107343505
 issue: 4668
@@ -12,45 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/probabili
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/javascript/chartjs/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - Correct Weibull probability plot with logarithmic x-axis and linearized Weibull
-    CDF y-axis using afterBuildTicks for custom probability tick labels
-  - 'All spec features implemented: median rank plotting positions, annotated beta
-    and eta parameters, censored point visual distinction (cross markers vs filled
-    circles), 63.2% reference line'
-  - 'Perfect palette compliance — failures use brand green #009E73, suspensions use
-    palette[1] lavender, fit line uses palette[2] blue, reference uses inkSoft theme-adaptive
-    color'
-  - Both light and dark renders are fully readable with correct theme-adaptive chrome
-    — no dark-on-dark or light-on-light issues
-  - 'Excellent code quality: flat structure, deterministic hardcoded data, idiomatic
-    Chart.js mixed chart type with scatter + line datasets, proper afterBuildTicks
-    callback'
+  - 'Mathematically correct Weibull probability plot: proper ln(-ln(1-F)) transform,
+    OLS fit, median rank formula, and 63.2% characteristic-life reference all implemented
+    accurately.'
+  - Custom Chart.js spine plugin delivers clean L-shaped axes — a sophisticated Chart.js-specific
+    technique that materially improves aesthetics.
+  - afterBuildTicks hook enables precisely correct Weibull probability labels (1%,
+    5%, ..., 63.2%, ..., 99%) — idiomatic and accurate.
+  - Redundant encoding (color + marker shape) makes failures vs. suspensions distinguishable
+    under all color-vision-deficiency types.
+  - Legend labels carry computed beta and eta values, turning the legend into a mini
+    reliability report.
+  - Fully deterministic implementation with realistic turbine blade engineering data.
   weaknesses:
-  - 'DE-02: No explicit spine removal — Chart.js default box border is retained rather
-    than removing top/right borders; the plot would look more refined with just the
-    bottom/left L-shaped frame'
-  - 'LM-02: Advanced Chart.js features used well (mixed chart type, afterBuildTicks,
-    logarithmic scale, pointStyle crossRot) but some additional distinctive features
-    like annotation plugin usage for parameter labels on the fit line would further
-    elevate library showcase'
-  - 'VQ-01 minor: the bottom ~20% of the plot area (below 1% probability) has limited
-    data density — the y-axis min could be tuned slightly to reduce empty extrapolation
-    space below the lowest data point'
+  - Y-axis probability tick labels at font size 12px are borderline at mobile-scaled
+    (400px) widths; consider bumping to 13-14px.
+  - No direct chart annotation pointing to the eta crossing on the 63.2% reference
+    line — adding a small callout at the intersection would elevate the storytelling
+    from good to excellent.
+  - DE-01 could reach 6/8 with a slightly more distinctive visual treatment (e.g.,
+    a subtle confidence band around the fit line or shading between 10%-90% probability
+    zone).
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1) — correct theme surface.
-      Chrome: Title "Turbine Blade Fatigue · probability-weibull · javascript · chartjs · anyplot.ai" in dark ink, ~65% of plot width, scaled correctly for length. Y-axis label "Cumulative Failure Probability F(t)" rotated, fully visible. X-axis label "Time to Failure (hours)" clearly readable. Tick labels dark (inkSoft) at 13px/12px — fully legible. Four-item legend at top (Failures, Suspensions, Weibull Fit, 63.2% Reference) all readable.
-      Data: 18 green (#009E73) filled circle failure markers, 5 lavender (#C475FD) cross suspension markers, blue (#4467A3) Weibull fit line (width 3), dashed inkSoft 63.2% horizontal reference line. Logarithmic x-axis (1,200–11,000 h), linearized Weibull y-axis (1%–99%).
-      Legibility verdict: PASS — all text, tick labels, and legend items are clearly readable against the light background.
+      Chrome: Title "Turbine Blade Fatigue · probability-weibull · javascript · chartjs · anyplot.ai" in dark text at scaled ~19px font; axis labels "Time to Failure (hours)" (X) and "Cumulative Failure Probability F(t)" (Y) at 16px; Y-axis tick labels (1%, 5%, 10%, 20%, 30%, 50%, 63.2%, 80%, 90%, 95%, 99%) at 12px; legend at 14px. All text readable against light background.
+      Data: Green (#009E73) filled circles for 18 failures; lavender (#C475FD border) × crosses for 5 suspensions; blue (#4467A3) OLS fit line; dashed inkSoft reference at 63.2%. L-shaped spine via custom plugin.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface.
-      Chrome: Title, axis labels, and tick labels all rendered in light ink (#F0EFE8/B8B7B0) — fully readable. No dark-on-dark failure. Legend entries clearly visible in light text.
-      Data: Data colors identical to light render — green failures, lavender crosses, blue fit line. 63.2% reference dashed line appears in light inkSoft. All markers and lines clearly distinguishable from the near-black background. Brand green #009E73 retains strong contrast.
-      Legibility verdict: PASS — all text and data elements readable against the dark background. Theme-adaptive chrome is correctly implemented throughout.
+      Background: Warm near-black (#1A1A17) — correct dark surface.
+      Chrome: Title, axis labels, tick labels, and legend text all light-colored and clearly readable. No dark-on-dark failures observed. Grid lines correctly rendered in dark-theme subtle tone.
+      Data: Colors identical to light render — green circles, lavender × crosses, blue fit line, dashed reference. Imprint palette data colors unchanged across themes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -61,54 +58,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Title scaled for length (19px for 79-char string), axis labels 16px,
-          ticks 13/12px, legend 14px — all readable in both themes. Minor: bottom
-          20% of plot sparse below 1%.'
+        comment: All sizes explicitly set; Y-axis ticks at 12px borderline for 400px
+          mobile width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap issues — data markers, fit line, reference line, and legend
-          all well separated.
+        comment: No overlapping elements in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 23 data points with pointRadius=7 appropriate for density. Fit line
-          width=3 clearly visible. Reference line dashed and distinguishable.
+        comment: pointRadius=7 well-suited for 18 sparse failure points; fit line
+          lineWidth=3 prominent
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Redundant shape encoding (filled circles vs crossRot) in addition
-          to color. No red-green sole signal.
+        comment: CVD-safe Imprint palette; redundant encoding via marker shape distinguishes
+          failures from suspensions
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Good proportions and margins. Title 65% width,
-          well balanced layout.
+        comment: Canvas gate passed; landscape fills well with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Time to Failure (hours)'', Y: ''Cumulative Failure Probability
-          F(t)'' — descriptive with units and notation.'
+        comment: 'X: Time to Failure (hours); Y: Cumulative Failure Probability F(t)
+          — both with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Failures = palette[0] #009E73, Suspensions = palette[1] lavender,
-          Fit = palette[2] blue, Reference = inkSoft (theme-adaptive). Light bg #FAF8F1,
-          dark bg #1A1A17.'
+        comment: 'Failures=palette[0] #009E73; suspensions=palette[1]; fit=palette[2];
+          background #FAF8F1/#1A1A17; chrome theme-adaptive'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -116,23 +109,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default (4): intentional marker style differentiation, meaningful
-          palette assignment, professional scientific chart look.'
+        comment: Custom spine plugin and scaled title are above defaults; functional
+          and clean but not visually exceptional
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: 'Default (2): Chart.js full box border retained — no explicit spine
-          removal. Grid is subtle using t.grid token.'
+        passed: true
+        comment: L-shaped spine via afterDatasetsDraw plugin; border:false on axes;
+          subtle grid — good refinement
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Above default (2): 63.2% reference line provides clear visual focal
-          point. Annotated β and η in legend give practical reliability interpretation.
-          Clear hierarchy: data → fit → reference.'
+        comment: 63.2% reference line as focal point; legend shows computed beta/eta;
+          clear visual hierarchy — but no direct chart annotation at eta crossing
     spec_compliance:
       score: 15
       max: 15
@@ -142,29 +134,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Weibull probability plot: log x-axis, linearized Weibull
-          CDF y-axis, fitted straight line.'
+        comment: Correct Weibull probability plot with log-X and linearized Weibull
+          Y
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Median rank positions (i-0.3)/(n+0.4), annotated β and η, censored
-          point visual distinction (cross vs filled), 63.2% reference line.
+        comment: Log X, Weibull Y, fit line with beta/eta, median rank (j+1-0.3)/(n+0.4),
+          censored markers, 63.2% reference — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Log x-axis for time, linearized Weibull y (ln(-ln(1-F))), all data
-          visible in range.
+        comment: Time on X (log), ln(-ln(1-F)) on Y; all 18+5=23 points rendered
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''Turbine Blade Fatigue · probability-weibull · javascript
-          · chartjs · anyplot.ai''. Legend has 4 informative entries.'
+        comment: 'Title: Turbine Blade Fatigue · probability-weibull · javascript
+          · chartjs · anyplot.ai (valid descriptive prefix format); informative legend
+          with beta/eta'
     data_quality:
       score: 15
       max: 15
@@ -174,22 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full coverage: failures, suspensions, fitted Weibull, annotated
-          parameters, reference line, custom probability tick labels.'
+        comment: 'Shows all Weibull plot features: failures, censored suspensions,
+          OLS fit, 63.2% reference line'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Turbine blade fatigue life in hours — realistic industrial reliability
-          engineering context. Mix of failures and suspensions as expected in practice.
+        comment: Turbine blade fatigue-life data — canonical reliability engineering
+          scenario, neutral and scientifically grounded
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1,580–9,100 h range plausible for turbine components. β=2.54 (wear-out
-          mode), η=5,669h physically reasonable. n=23 in specified 10-100 range.
+        comment: Failure times 1580-9100h plausible; beta=2.54 correct for wear-out
+          mode; eta=5669h realistic
     code_quality:
       score: 10
       max: 10
@@ -199,60 +191,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes, clean sequential flow.
+        comment: Linear flow; spine plugin is idiomatic Chart.js, not over-engineering
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — data hardcoded, no RNG.
+        comment: Hard-coded deterministic data array; no random numbers
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports needed — Chart.js is a global from the harness.
+        comment: No imports; Chart is global; no unused variables
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean OLS regression inline, appropriate use of map/filter/reduce,
-          custom tooltip callbacks.
+        comment: Appropriately complex; custom plugin and afterBuildTicks are necessary
+          and concise
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'animation: false, responsive: true, maintainAspectRatio: false —
-          all mandatory flags set. No savefig call.'
+        comment: No savefig; animation:false, responsive:true, maintainAspectRatio:false
+          all correct
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Mixed dataset types per-dataset, order property, afterBuildTicks,
+          logarithmic scale, custom plugin API — expert usage
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Above default (3): mixed chart type with scatter+line datasets,
-          afterBuildTicks for custom Weibull ticks, logarithmic scale type, tooltip
-          callbacks.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: 'Above default (1): logarithmic scale, mixed chart type, afterBuildTicks
-          custom tick positioning, pointStyle crossRot, custom tooltip label callbacks.'
+        comment: afterDatasetsDraw plugin for L-shaped spine and afterBuildTicks for
+          Weibull ticks are distinctively Chart.js; OLS math is library-agnostic
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
+  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - regression
-  styling: []
+  styling:
+  - minimal-chrome
