@@ -56,7 +56,7 @@ const fitData = [];
 for (let i = 0; i <= 60; i++) {
   const lnx = xLogMin + (i / 60) * (xLogMax - xLogMin);
   const y = betaHat * lnx + c0;
-  if (y >= -5.5 && y <= 2.5) fitData.push({ x: Math.exp(lnx), y });
+  if (y >= -4.8 && y <= 2.5) fitData.push({ x: Math.exp(lnx), y });
 }
 
 // 63.2% reference line (y = 0 on Weibull scale, crossing at x = eta)
@@ -70,6 +70,23 @@ const probLevels = [0.01, 0.05, 0.10, 0.20, 0.30, 0.50, 0.6321, 0.80, 0.90, 0.95
 const yTickVals = probLevels.map(p => Math.log(-Math.log(1 - p)));
 const yTickLabels = ['1%', '5%', '10%', '20%', '30%', '50%', '63.2%', '80%', '90%', '95%', '99%'];
 
+// L-shaped spine: draw only bottom + left borders, removing the default chart box
+const spinePlugin = {
+  id: 'spines',
+  afterDatasetsDraw({ ctx, chartArea: { top, right, bottom, left } }) {
+    ctx.save();
+    ctx.strokeStyle = t.inkSoft;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(left, top);
+    ctx.lineTo(left, bottom);
+    ctx.moveTo(left, bottom);
+    ctx.lineTo(right, bottom);
+    ctx.stroke();
+    ctx.restore();
+  },
+};
+
 // Mount canvas
 const canvas = document.createElement('canvas');
 document.getElementById('container').appendChild(canvas);
@@ -79,6 +96,7 @@ const titleText = 'Turbine Blade Fatigue · probability-weibull · javascript ·
 const titleSize = Math.max(14, Math.round(22 * 67 / titleText.length));
 
 new Chart(canvas, {
+  plugins: [spinePlugin],
   data: {
     datasets: [
       {
@@ -182,10 +200,11 @@ new Chart(canvas, {
           },
         },
         grid: { color: t.grid },
+        border: { display: false },
       },
       y: {
         type: 'linear',
-        min: -5.5,
+        min: -4.8,
         max: 2.5,
         title: {
           display: true,
@@ -205,6 +224,7 @@ new Chart(canvas, {
           },
         },
         grid: { color: t.grid },
+        border: { display: false },
       },
     },
   },
