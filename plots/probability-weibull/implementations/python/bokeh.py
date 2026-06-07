@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 probability-weibull: Weibull Probability Plot for Reliability Analysis
 Library: bokeh 3.9.1 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-07
@@ -34,7 +34,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Imprint palette
 BRAND = "#009E73"  # position 1 — failures (primary data)
-BLUE = "#4467A3"  # position 3 — censored observations
+LAVENDER = "#C475FD"  # position 2 — censored observations
 ANYPLOT_AMBER = "#DDCC77"  # reference / caution line
 
 # Data - Turbine blade fatigue-life data (hours to failure)
@@ -217,7 +217,7 @@ censored_renderer = p.scatter(
     marker="triangle",
     color=PAGE_BG,
     alpha=0.95,
-    line_color=BLUE,
+    line_color=LAVENDER,
     line_width=3,
     legend_label="Censored",
 )
@@ -259,6 +259,8 @@ char_label = Label(
     text_color=ANYPLOT_AMBER,
     text_font_style="italic",
     text_align="right",
+    background_fill_color=ELEVATED_BG,
+    background_fill_alpha=0.9,
 )
 p.add_layout(char_label)
 
@@ -267,7 +269,7 @@ b10_label = Label(
     x=np.log(b10_life) + 0.1,
     y=b10_weibull_y - 0.28,
     text=f"B10 = {b10_life:.0f} h",
-    text_font_size="24pt",
+    text_font_size="27pt",
     text_color=INK_SOFT,
     text_font_style="italic",
 )
@@ -306,6 +308,8 @@ p.xaxis.axis_label_text_font_size = "42pt"
 p.yaxis.axis_label_text_font_size = "42pt"
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
+p.xaxis.axis_label_text_font_style = "normal"
+p.yaxis.axis_label_text_font_style = "normal"
 p.xaxis.major_label_text_font_size = "34pt"
 p.yaxis.major_label_text_font_size = "34pt"
 p.xaxis.major_label_text_color = INK_SOFT
