@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 probability-weibull: Weibull Probability Plot for Reliability Analysis
 Library: letsplot 4.10.1 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-06-07
+Quality: 86/100 | Updated: 2026-06-07
 """
 
 # ruff: noqa: F403, F405, E402
