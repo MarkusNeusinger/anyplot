@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: probability-weibull
 created: '2026-03-11T21:52:04Z'
-updated: '2026-06-07T22:48:22Z'
+updated: '2026-06-07T22:56:00Z'
 generated_by: claude-sonnet
 workflow_run: 27106896000
 issue: 4668
@@ -12,49 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/probabili
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance: all five required features implemented (fitted line,
-    Benard median rank, censored vs. failure distinction, 63.2% reference line, B10
-    annotation)'
-  - 'Excellent Imprint palette usage: canonical 3-color order with first series =
-    #009E73, redundant encoding (color + shape) for failure vs. suspended — CVD-safe'
-  - Full theme-adaptive chrome in both renders with no dark-on-dark failures; elevated
-    background boxes distinguish callouts from page background
-  - seaborn rugplot adds genuine distributional insight as a distinctive library feature
-    not trivially replicated in raw matplotlib
-  - Realistic turbine blade engineering scenario with statistically coherent data
-    (beta=2.16, eta=9133 h, R2=0.9548) — neutral, plausible domain
-  - Clean flat script structure with np.random.seed(42), correct canvas sizing (figsize=(8,4.5)
-    dpi=400), no bbox_inches='tight'
+  - 'Complete spec compliance: all Weibull reliability engineering features present
+    (log-scale x, linearized Weibull y, fit line with beta/eta annotation, Benard
+    median rank, censored vs. failure distinction, 63.2% reference line).'
+  - 'Sophisticated multi-layer design: confidence band, B10 callout box with arrow,
+    Weibull parameter box in monospace, rugplot — all coexist without crowding.'
+  - Perfect Imprint palette usage with correct first-series brand green (#009E73)
+    and shape-redundant encoding (circles vs. diamonds) for CVD safety.
+  - Full theme adaptation with no dark-on-dark failures in either render; chrome flips
+    correctly in both light and dark renders.
+  - Clean, reproducible code following KISS structure with np.random.seed(42), no
+    functions/classes, and no fake functionality.
   weaknesses:
-  - Failure scatter markers at s=80 are below the recommended 100-200 range for 32
-    data points — increase to s=110-120 for better density-appropriate prominence
-  - The '63.2% (characteristic life)' text label at fontsize=6 positioned near log(1050)
-    creates crowding near the y-axis spine — reposition to log(14000)-log(15000) right-aligned
-    or increase to fontsize=7-8
-  - B10 annotation text and parameter box text at fontsize=6 are small for mobile
-    readability — increase to fontsize=7-8 throughout tertiary annotations
-  - 'DE-01 could be elevated: annotation boxes feel utilitarian — consider adding
-    a subtle shaded confidence band on the Weibull fit line (fit color, alpha=0.12)
-    to push toward publication quality'
+  - Failure marker size (s=110) is slightly below the density-appropriate range for
+    25 points (s=200-400 recommended for < 30 points); could be larger for more visual
+    prominence.
+  - The '(characteristic life)' annotation label at fontsize=7 is at the lower legibility
+    boundary — bumping to 8pt would improve mobile readability.
+  - 'LM-02 limited: sns.rugplot is the only distinctively seaborn feature; the core
+    scatter/line/regression is mostly matplotlib-level using seaborn API wrappers.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "probability-weibull · python · seaborn · anyplot.ai" in dark ink at ~75% canvas width — readable. Y-axis label "Cumulative Failure Probability" and X-axis label "Time to Failure (hours)" at 10pt — both readable. Tick labels (1.0%–99.0% on Y, 1,000–18,000 on X) at 8pt — readable. Legend ("Failure", "Suspended", "Weibull fit") in upper-left — readable.
-      Data: Green filled circles (#009E73) for 25 failure points; open lavender diamond markers (#C475FD) for 7 suspended points; blue dashed line (#4467A3) for Weibull fit. All data elements clearly distinguishable. Rug plot of green ticks along bottom x-axis.
-      Annotations: "63.2% (characteristic life)" reference line label at fontsize=6 — small but legible at full resolution. B10 callout box and parameter stats box (beta=2.16, eta=9133 h, R2=0.9548) at fontsize=6 monospace — readable at full resolution, marginal at mobile scale.
-      Legibility verdict: PASS — all major text elements readable; minor concern on fontsize=6 tertiary annotations at mobile widths.
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
+      Chrome: Title "probability-weibull · python · seaborn · anyplot.ai" in dark ink, clearly readable. Y-axis label "Cumulative Failure Probability" and X-axis label "Time to Failure (hours)" in dark ink at 10pt. Tick labels at 8pt in dark secondary ink. All text readable against light background.
+      Data: Filled green circles (#009E73) for 25 failure observations; hollow lavender diamonds (#C475FD, edgecolor only) for 7 suspended observations; blue dashed fit line (#4467A3) with subtle confidence band. B10 callout box with arrow annotation. Weibull parameter box (beta, eta, R^2) in lower right. 63.2% reference line (dotted). Rugplot in brand green along x-axis bottom.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title, axis labels, and tick labels appear in light cream text (#F0EFE8 / #B8B7B0) — clearly readable against dark background. No dark-on-dark failures detected. Legend frame uses elevated dark background (#242420) with INK_SOFT border. Grid lines show as faint light-colored horizontal rules.
-      Data: Colors are identical to light render — green (#009E73) filled circles, lavender (#C475FD) open diamonds, blue (#4467A3) dashed fit line. Brand green #009E73 reads clearly on dark surface. B10 callout box and parameter box retain the elevated dark background for subtle distinction.
-      Legibility verdict: PASS — all text readable on dark surface; no dark-on-dark issues; chrome correctly flips while data colors remain constant.
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black.
+      Chrome: Title, axis labels, and tick labels all render in light cream text (#F0EFE8 / #B8B7B0). Legend box and annotation callout boxes use elevated dark surface (#242420). All text clearly readable against dark background. No dark-on-dark failures detected.
+      Data: Colors identical to light render — green filled circles (#009E73), lavender hollow diamonds (#C475FD), blue dashed fit line (#4467A3), blue confidence band. B10 annotation, parameter box, 63.2% reference line all present and legible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -62,55 +56,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 12pt, axis labels 10pt, tick
-          labels 8pt, legend 8pt). Minor deduction: tertiary annotation text at fontsize=6pt
-          (reference line label, B10 callout, parameter box) is borderline for mobile
-          readability.'
+        comment: 'All font sizes explicitly set; both themes readable. Minor: 7pt
+          annotation text is at the lower mobile legibility boundary.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Minor crowding: ''63.2% (characteristic life)'' label at log(1050)
-          is positioned very close to the y-axis spine, slightly crowding the left
-          axis area.'
+        comment: No text overlaps; annotations, legend, and data points are well-separated.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Failure markers at s=80 are below the recommended 100-200 range for
-          30-100 data points (32 total points). Visually acceptable but could be more
-          prominent.
+        comment: Markers visible (s=110) but slightly below density-appropriate range
+          for 25 failure points (recommended s=200-400 for <30 pts).
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint palette with redundant encoding: filled circle vs hollow
-          diamond differentiates failure/suspended by both color and shape. CVD-safe.'
+        comment: Good contrast; shape redundancy (circles vs diamonds) provides CVD-safe
+          distinction.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas (figsize=(8,4.5) x dpi=400). Good margins
-          via subplots_adjust. No edge clipping.
+        comment: Canvas gate passed; balanced margins via subplots_adjust; no overflow
+          or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Time to Failure (hours)'', Y: ''Cumulative Failure Probability''
-          — descriptive with units.'
+        comment: 'Descriptive labels with units: ''Time to Failure (hours)'' and ''Cumulative
+          Failure Probability''.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Failures=#009E73 (slot 1), Suspended=#C475FD (slot 2), Fit=#4467A3
-          (slot 3) — canonical Imprint order. Backgrounds #FAF8F1/#1A1A17. Full theme-adaptive
-          chrome in both renders.'
+        comment: 'First series #009E73, second #C475FD, fit line #4467A3. Backgrounds
+          #FAF8F1/#1A1A17. Data colors identical across themes.'
     design_excellence:
       score: 13
       max: 20
@@ -120,26 +108,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: Imprint 3-color scheme, monospace font in parameter
-          box, theme-adaptive chrome, rug plot. Not quite publication-ready — annotation
-          boxes utilitarian, no distinctive typographic hierarchy.'
+        comment: 'Above ''well-configured default'' (4/8): confidence band, B10 callout
+          with arrow, monospace parameter box, rugplot show intentional design. Not
+          quite FiveThirtyEight-level (6/8+).'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: sns.despine applied, y-axis-only grid at alpha=0.15, custom probability
-          and hour tick labels, deliberate margins via subplots_adjust. Some room
-          to further refine spine styling and rug plot visibility.
+        comment: Spines removed via sns.despine, subtle grid (alpha=0.15), elevated
+          background for annotation boxes, marker edgecolor matches plot background.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear engineering narrative: Weibull fit with R2=0.9548, B10 life
-          annotated as decision-relevant threshold, 63.2% characteristic life reference,
-          suspended observations visually distinguished. Viewer guided to B10 as focal
-          point.'
+        comment: B10 annotation highlights key reliability metric; 63.2% reference
+          contextualizes characteristic life; parameter box gives immediate fit quality
+          insight. Guides viewer through reliability story.
     spec_compliance:
       score: 15
       max: 15
@@ -149,32 +135,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Weibull probability plot: linearized Weibull y-scale (ln(-ln(1-F))
-          values with probability labels), log x-axis via custom ticks showing hours,
-          straight fit line demonstrating Weibull linearity.'
+        comment: 'Correct Weibull probability plot: log x-axis (via transform + custom
+          ticks), linearized Weibull y-axis (ln(-ln(1-F))), fitted straight line.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features: fitted line with annotated beta and eta,
-          Benard median rank (i-0.3)/(n+0.4), censored/suspended hollow diamond vs
-          filled circle, 63.2% reference line, B10 life annotation.'
+        comment: 'All features present: log x-axis, linearized Weibull y-axis, fitted
+          line with annotated beta and eta, Benard median rank, censored vs. failure
+          distinction, 63.2% reference line.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = log(time_to_failure) shown as hour values; Y = linearized Weibull
-          CDF shown as cumulative probabilities. All 32 observations plotted (25 failures
-          + 7 suspended).
+        comment: Time on x, cumulative probability on y, all data visible across the
+          plot range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''probability-weibull · python · seaborn · anyplot.ai''.
-          Legend: ''Failure'', ''Suspended'', ''Weibull fit''.'
+        comment: Title 'probability-weibull · python · seaborn · anyplot.ai' correct.
+          Legend labels 'Failure', 'Suspended', 'Weibull fit' match data.
     data_quality:
       score: 15
       max: 15
@@ -184,24 +168,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows: failure scatter, right-censored suspensions, fitted Weibull
-          line, characteristic life reference, B10 threshold, parameter statistics
-          (beta, eta, R2), data density rug. All key aspects covered.'
+        comment: Demonstrates failures and suspended observations, Weibull fit with
+          confidence band, B10 life, characteristic life reference, parameter estimation
+          — all key features.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Turbine blade fatigue-life data with mixed failures and suspensions.
-          Real engineering scenario; neutral domain.
+        comment: Turbine blade fatigue-life scenario is a classic, neutral reliability
+          engineering domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Hours range 1000-18000 credible for turbine blade fatigue. beta=2.16
-          (wear-out mode), eta=9133 h, R2=0.9548 internally consistent. B10 at ~3223
-          h coherent with distribution.
+        comment: beta=2.16 (typical wear-out failure shape), eta=9133 h (plausible
+          industrial lifetime), B10=3223 h — all realistic.
     code_quality:
       score: 10
       max: 10
@@ -211,35 +194,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports -> theme setup -> data generation -> plot ->
-          save. No functions or classes.'
+        comment: Imports -> theme tokens -> data -> plot -> save; no functions or
+          classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before data generation.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: matplotlib.pyplot, numpy, pandas, seaborn, scipy.stats,
-          os, sys.'
+        comment: All imports (os, sys, matplotlib, numpy, pandas, seaborn, scipy.stats)
+          are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. No fake interactivity. B10 annotation is a legitimate
-          static callout per spec requirements.
+        comment: Clean, Pythonic; no fake functionality; appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; no bbox_inches='tight' per seaborn canvas
-          rule. Current API.
+        comment: Saves plot-{THEME}.png; bbox_inches not set to tight per seaborn
+          canvas rule.
     library_mastery:
       score: 7
       max: 10
@@ -249,17 +231,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: sns.set_theme with full rc dict, sns.scatterplot/lineplot/rugplot
-          used correctly, sns.despine applied. Proper axes-level API throughout.
+        comment: Correct axes-level seaborn pattern (scatterplot, lineplot, rugplot,
+          set_theme with rc dict, despine). Solid but doesn't leverage high-level
+          statistical features.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: sns.rugplot is the distinctive seaborn feature — adds marginal data
-          density along x-axis that is natural in seaborn but not idiomatic in raw
-          matplotlib.
-  verdict: REJECTED
+        comment: sns.rugplot for marginal failure density is distinctively seaborn.
+          Core scatter/line/regression is largely matplotlib-level using seaborn API
+          wrappers.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
@@ -274,4 +257,3 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling
