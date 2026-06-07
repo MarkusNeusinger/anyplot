@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 probability-weibull: Weibull Probability Plot for Reliability Analysis
-Library: matplotlib | Python
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-07
 """
 
 import os
