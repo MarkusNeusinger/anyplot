@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' indicator-ichimoku: Ichimoku Cloud Technical Indicator Chart
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 80/100 | Created: 2026-06-08
+#' Quality: 88/100 | Created: 2026-06-08
 
 library(ggplot2)
 library(dplyr)

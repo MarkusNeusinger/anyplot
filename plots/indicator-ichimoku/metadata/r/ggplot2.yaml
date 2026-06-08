@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: indicator-ichimoku
 created: '2026-06-08T01:50:51Z'
-updated: '2026-06-08T01:56:42Z'
+updated: '2026-06-08T02:15:40Z'
 generated_by: claude-sonnet
 workflow_run: 27111318250
 issue: 4669
@@ -12,47 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 80
+quality_score: 88
 review:
   strengths:
-  - Correctly implements all five Ichimoku lines with proper 9/26/52 parameters and
-    time shifts
-  - Cloud (Kumo) correctly changes color between bullish (green) and bearish (red)
-    segments using geom_ribbon split
-  - Full Imprint palette applied semantically — green for bullish, matte red for bearish,
-    matching finance conventions
-  - Both theme tokens wired correctly; no dark-on-dark failure in dark render
-  - 'Clean ggplot2 grammar: geom_segment for wicks, geom_rect for candle bodies, geom_ribbon
-    for cloud — idiomatic layer composition'
-  - Canvas matches 3200×1800 exactly; ragg device used correctly
+  - Complete Ichimoku implementation with all 5 lines (Tenkan-sen, Kijun-sen, Chikou
+    Span, Senkou Span A, Senkou Span B) and correctly-colored Kumo cloud
+  - 'Semantic color mapping: green (#009E73) for bullish/up candles and Senkou Span
+    A, red (#AE3030) for bearish/down candles and Senkou Span B — aligns perfectly
+    with finance conventions'
+  - 'Idiomatic ggplot2 scale trick: combined color+linetype into single Lines legend
+    using matching scale names and breaks= to suppress candle entries from legend
+    display'
+  - Both theme renders fully readable — all chrome tokens correctly flipped (INK,
+    INK_SOFT, PAGE_BG, ELEVATED_BG) and data palette stays identical across themes
+  - Kumo twist annotation with arrow adds genuine analytical value, highlighting a
+    key trend-change signal
   weaknesses:
-  - No legend present — a 7-element chart (Tenkan-sen, Kijun-sen, Chikou Span, Senkou
-    Span A, Senkou Span B, bullish cloud, bearish cloud) is unreadable without one;
-    add a manual legend identifying all Ichimoku components
-  - Chikou Span (dotted ochre) is visually lost in the mid-chart candlestick forest;
-    consider slightly thicker linewidth (1.0) or a distinct linetype
-  - 'Dark render: bullish cloud fill appears darker/heavier than intended — alpha=0.25
-    over #1A1A17 produces a muted forest-green; increase alpha to 0.30 for dark theme
-    or adjust cloud fill to be more visually distinct'
-  - Design could benefit from a minimal annotation pointing out the cloud flip (bullish→bearish)
-    as the key signal
-  - 'DE-03 low: no visual hierarchy or annotations guide the viewer through the Ichimoku
-    story'
+  - Tenkan-sen and Senkou Span A share the same color (#009E73) — while distinguishable
+    by line style and weight, assigning a different Imprint slot (e.g. IMPRINT_PALETTE[2])
+    to Span A would better separate the cloud boundary from the momentum conversion
+    line visually
+  - Chikou Span dots (ochre, dotted, linewidth=1.0) are hard to track through the
+    dense 160-bar candlestick forest; a slightly thicker line (linewidth=1.3) or larger
+    dot size would improve traceability
+  - Bullish cloud in the dark render is somewhat muted at alpha=0.25 against the near-black
+    background; bumping to 0.30 in dark theme would improve cloud readability without
+    overwhelming the chart
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "Nikkei 225 · indicator-ichimoku · r · ggplot2 · anyplot.ai" in bold dark ink, clearly readable. Y-axis label "Price (USD)" in dark ink. X-axis tick labels (Jan 2023 through Jul 2023) rotated 30° — all legible. Grid lines subtle at low linewidth. No top/right spines.
-      Data: Green (#009E73) up-candlesticks and matte-red (#AE3030) down-candlesticks. Tenkan-sen = solid green line (prominent). Kijun-sen = solid blue (#4467A3) line. Chikou Span = dotted ochre (#BD8233) line shifted 26 periods back. Senkou Span A/B as dashed cloud boundary lines. Bullish cloud: light green semi-transparent fill. Bearish cloud: light red/pink semi-transparent fill visible in mid-chart ~May 2023 and future cloud visible right portion. No legend present.
-      Legibility verdict: PASS — all text readable; data elements distinguishable
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface.
+      Chrome: Title "Nikkei 225 · indicator-ichimoku · r · ggplot2 · anyplot.ai" in bold dark ink, clearly readable. Y-axis label "Price (USD)" in dark ink. X-axis date tick labels ("Jan 2023", "Feb 2023", ...) rotated 30°, readable. Y-axis dollar tick labels readable. Two separate legends (Cloud, Lines) on the right with elevated-bg boxes and dark text.
+      Data: Candlesticks green (#009E73) for up-days and red (#AE3030) for down-days. Tenkan-sen: thick green solid line. Kijun-sen: thick blue (#4467A3) solid line. Chikou Span: ochre (#BD8233) dotted line weaving through candlestick area. Senkou Span A: thin green dashed line. Senkou Span B: thin red dashed line. Bullish cloud (Span A > Span B): semi-transparent green fill. Bearish cloud (Span B > Span A): semi-transparent red fill. "Kumo twist" annotation with arrow marks the first cloud color flip.
+      Legibility verdict: PASS — all text is clearly readable against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title text renders in near-white (#F0EFE8 range) — clearly readable against dark background. Y-axis label and tick labels are light-colored — no dark-on-dark failures observed. Grid lines visible at subtle contrast. INK_SOFT tokens correctly applied to axis elements.
-      Data: Same Imprint palette data colors as light render (green candlesticks, red candlesticks, green Tenkan-sen, blue Kijun-sen, ochre dotted Chikou, dashed cloud boundaries). Bullish cloud fill appears darker/more saturated in dark mode (alpha=0.25 over near-black creates heavy forest green); bearish cloud appears as a dark brownish-red region. Data colors are identical to light render — only chrome adapts. Brand green #009E73 remains visible.
-      Legibility verdict: PASS — all text legible; mild concern about cloud fill appearing heavy in dark mode but not a failure
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface.
+      Chrome: Title in light ink (#F0EFE8), clearly readable on dark bg. Y-axis label in light ink. X-axis and Y-axis tick labels in secondary light ink (#B8B7B0), readable against dark bg. Legend boxes use elevated dark bg (#242420) with light text. No dark-on-dark failures detected.
+      Data: All data colors are identical to light render — Tenkan-sen green, Kijun-sen blue, Chikou Span ochre, Senkou spans green/red dashed, candlesticks green/red. Cloud fills same hues, appear slightly more muted at alpha=0.25 against the dark background but remain visible.
+      Legibility verdict: PASS — all text is readable against the dark background; chrome adapts correctly.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -60,52 +60,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; rotated x-axis tick labels legible;
-          title and axis label sizes appropriate
+        comment: All text readable in both themes; title scaled to 14pt for 58-char
+          title; axis labels 8-10pt adequate
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Chart is dense with multiple overlapping layers; Chikou Span dotted
-          line is visually lost within the candlestick forest in the mid-chart region
+        comment: Chart is busy with 160 candles + 5 indicator lines but no severe
+          text overlap; Chikou Span dots partially obscured by candles by design
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All elements visible; cloud fills slightly different in darkness
-          between themes due to alpha blending on dark background
+        comment: Tenkan/Kijun thick lines clearly visible; Senkou span dashed boundaries
+          visible through cloud; cloud fills at alpha=0.25 appropriate
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint palette; green/red for bullish/bearish is domain-conventional
-          semantic exception
+        comment: Imprint palette with semantic finance exception; linetype redundant
+          encoding for line indicators
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas, no clipping, good margins; right edge slightly
-          tight where future cloud extends
+        comment: 3200x1800 canvas; no clipping; legend on right fits comfortably;
+          balanced layout
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title has descriptive prefix format; Y-axis 'Price (USD)' with units;
-          X-axis NULL appropriate for date
+        comment: Title with descriptive prefix correct; Y-axis Price (USD) with units;
+          X-axis NULL (date self-explanatory)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used correctly; PAGE_BG correct for both themes;
-          data colors identical between themes
+        comment: 'Background #FAF8F1 light / #1A1A17 dark; data colors identical across
+          themes; semantic exception for finance colors correctly applied'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -113,25 +113,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Professionally styled with semantic color assignments, multi-linetype
-          differentiation (solid/dashed/dotted), clean minimal theme; no legend is
-          a professional-finish miss
+        comment: Semantic color mapping, separate Cloud+Lines legends, Kumo twist
+          annotation, varying line widths by role — above generic but not exceptional
       - id: DE-02
         name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: panel.border removed, minor grid disabled, subtle grid at linewidth=0.2,
+          legend with elevated-bg and subtle border
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle minor-grid removed, major grid at
-          low linewidth, axis lines preserved — clean composition
-      - id: DE-03
-        name: Data Storytelling
-        score: 2
-        max: 6
-        passed: false
-        comment: Cloud color flip signals trend change but no legend/annotations guide
-          the viewer; chart is only interpretable with prior Ichimoku knowledge
+        comment: Cloud color flip visually telegraphs trend change; Kumo twist annotation
+          highlights key signal; multiple layers tell coherent Ichimoku narrative
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -139,30 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Ichimoku Cloud chart overlaid on candlestick price chart
+        comment: Ichimoku Cloud overlay on candlestick chart — correct
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All five lines present (Tenkan-sen, Kijun-sen, Senkou A, Senkou B,
-          Chikou); cloud with bullish/bearish split; correct 9/26/52 parameters; correct
-          time shifts
+        comment: All 5 lines present; cloud fill with bullish/bearish color; standard
+          9/26/52 parameters; candlesticks green/red
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Y=price; future cloud correctly shifted +26; Chikou correctly
-          shifted -26
+        comment: X=date, Y=price; 160 trading days; Chikou shifted 26 back; Senkou
+          shifted 26 forward
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title follows correct format with descriptive prefix; but NO legend
-          for a 7-element chart — viewer cannot identify Tenkan-sen vs Kijun-sen vs
-          Chikou Span vs cloud spans without domain knowledge
+        passed: true
+        comment: 'Title: Nikkei 225 · indicator-ichimoku · r · ggplot2 · anyplot.ai
+          — correct descriptive prefix format; legend labels match indicator names'
     data_quality:
       score: 15
       max: 15
@@ -172,22 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All Ichimoku components shown: OHLC candlesticks, five indicator
-          lines, dual-color cloud'
+        comment: All 5 Ichimoku lines, cloud fill, OHLC candlesticks, Kumo twist annotation
+          — comprehensive
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Nikkei 225 context; realistic OHLC with plausible volatility; not
-          controversial
+        comment: Synthetic Nikkei 225 daily data; log-normal returns; plausible price
+          range $145-$175; neutral financial context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range ~$148-$170 over 160 trading days; realistic drift and
-          volatility; standard Ichimoku parameters
+        comment: 160 trading days exceeds 52-period minimum lookback; standard 9/26/52
+          Ichimoku parameters
     code_quality:
       score: 10
       max: 10
@@ -197,8 +194,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear structure; roll_high/roll_low helpers are necessary for Ichimoku
-          calculation
+        comment: Flat script; roll_high/roll_low are minimal necessary helpers for
+          Ichimoku computation
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -210,48 +207,49 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: ggplot2, dplyr (filter/mutate/if_else), tidyr,
-          scales (label_dollar), ragg'
+        comment: All 5 imports (ggplot2, dplyr, tidyr, scales, ragg) are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean grammar-of-graphics composition; no fake UI
+        comment: Combined scale trick for selective legend display is elegant; no
+          fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: sprintf('plot-%s.png', THEME) with ragg::agg_png; modern linewidth=
-          API used
+        comment: sprintf('plot-%s.png', THEME); no bare plot.png; ragg::agg_png device
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: scale_color_manual with breaks= for selective legend; same-name scale
+          merge for unified Lines legend; pivot_longer for tidy multi-series; expansion()
+          for padding — deeply idiomatic ggplot2
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Correct ggplot2 grammar: geom_ribbon for cloud, geom_segment for
-          wicks, geom_rect for bodies; scale_*_manual for candle colors; modern linewidth=
-          not deprecated size='
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Uses geom_ribbon for dual-color cloud — a ggplot2-specific approach
-          — and multi-layer composition, but no advanced ggplot2 features like custom
-          stat_*, coord_trans, or annotate
+        comment: geom_ribbon for Kumo cloud; guide_legend(override.aes) for custom
+          swatch appearance; scale name merge trick; all distinctively ggplot2
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - layer-composition
+  - custom-legend
   patterns:
   - data-generation
+  - wide-to-long
   dataprep:
   - rolling-window
   - time-series
