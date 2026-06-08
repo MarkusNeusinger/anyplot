@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
 Library: plotly 6.8.0 | Python 3.13.13
 Quality: 81/100 | Updated: 2026-06-08
@@ -297,17 +297,17 @@ lons = np.array(
 
 density = population * 1e6 / area_sq_miles
 
-# Reduced NE state offsets to prevent bubbles from leaving the map area
+# NE state offsets fan states into distinct positions to avoid bubble overlap
 ne_offsets = {
-    "NJ": (0.2, 1.0),
-    "CT": (-0.1, 1.3),
-    "MA": (0.6, 1.2),
-    "RI": (-0.7, 1.5),
-    "NH": (1.0, 0.8),
-    "VT": (1.3, 0.0),
-    "DE": (-0.6, 1.0),
-    "MD": (-1.0, 0.5),
-    "ME": (0.8, 1.2),
+    "NJ": (-2.0, 3.0),  # → (38.1, -71.4) over Atlantic SE of NJ
+    "CT": (0.5, 5.0),  # → (42.1, -67.8) east of Maine coast
+    "MA": (1.5, 3.0),  # → (43.9, -68.4) NE of natural position
+    "RI": (-1.5, 4.0),  # → (40.1, -67.5) well east of CT
+    "NH": (2.5, 1.5),  # → (45.7, -70.1) north-east
+    "VT": (3.0, -0.5),  # → (47.6, -73.1) far north
+    "DE": (-3.0, 3.0),  # → (35.9, -72.5) far south over Atlantic
+    "MD": (-3.0, 0.5),  # → (36.1, -76.1) far south
+    "ME": (2.5, 2.0),  # → (47.8, -67.5) far north-east
 }
 for i, s in enumerate(states):
     if s in ne_offsets:
@@ -435,7 +435,7 @@ fig.update_layout(
     showlegend=False,
     annotations=[
         {
-            "text": "<b>Area</b> proportional to population  ·  <b>Color</b> proportional to density",
+            "text": "Dorling bubble cartogram  ·  <b>Area</b> ∝ population  ·  <b>Color</b> ∝ density",
             "xref": "paper",
             "yref": "paper",
             "x": 0.5,
@@ -448,7 +448,7 @@ fig.update_layout(
             "xref": "paper",
             "yref": "paper",
             "x": 0.02,
-            "y": 0.27,
+            "y": 0.08,
             "showarrow": False,
             "font": {"size": 12, "color": INK_MUTED, "family": "Arial"},
             "align": "left",
