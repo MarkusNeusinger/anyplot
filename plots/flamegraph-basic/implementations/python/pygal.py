@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 flamegraph-basic: Flame Graph for Performance Profiling
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-08
@@ -6,8 +6,11 @@ Quality: 87/100 | Updated: 2026-06-08
 
 import importlib
 import os
+import re
 import sys
 from collections import defaultdict
+
+import cairosvg
 
 
 # Import pygal package (avoid name collision with this filename)
@@ -21,6 +24,8 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+INK_DARK = "#1A1A17"  # for bright bars
+INK_LIGHT = "#F0EFE8"  # for dark bars (improves contrast on matte-red rows)
 
 # Warm flame-graph gradient built from Imprint anchors: amber → ochre → matte red.
 # Flame graphs carry a strong domain convention for warm yellow/orange/red coloring
@@ -142,7 +147,10 @@ for d in range(num_levels):
 max_segs = max(len(s) for s in all_segments)
 
 # Pre-compute one warm color per depth: amber → ochre → matte red
+# Also pick a per-depth label ink: light text on low-luminance bars stays punchy
+# on the matte-red rows in both themes (the dark-theme weakness flagged in review).
 depth_colors = []
+depth_label_inks = []
 for d in range(num_levels):
     t = d / max_depth if max_depth else 0.0
     if t < 0.5:
@@ -153,6 +161,8 @@ for d in range(num_levels):
     g = round(c0[1] + (c1[1] - c0[1]) * u)
     b = round(c0[2] + (c1[2] - c0[2]) * u)
     depth_colors.append(f"#{r:02X}{g:02X}{b:02X}")
+    perceived_lum = 0.299 * r + 0.587 * g + 0.114 * b
+    depth_label_inks.append(INK_DARK if perceived_lum >= 130 else INK_LIGHT)
 
 # Style
 custom_style = _Style(
@@ -168,7 +178,7 @@ custom_style = _Style(
     colors=("#BD8233",),
     title_font_size=66,
     label_font_size=56,
-    major_label_font_size=44,
+    major_label_font_size=36,
     legend_font_size=44,
     value_font_size=30,
     value_label_font_size=30,
@@ -194,7 +204,7 @@ chart = _pygal.HorizontalStackedBar(
     rounded_bars=0,
     margin_top=20,
     margin_bottom=30,
-    margin_right=40,
+    margin_right=90,
     margin_left=20,
     truncate_label=-1,
     truncate_legend=-1,
@@ -244,10 +254,36 @@ for col in range(max_segs):
         )
     chart.add("", values)
 
-# Output — PNG via cairosvg + interactive SVG-in-HTML
-chart.render_to_png(f"plot-{THEME}.png")
-
+# Output — render SVG, recolor in-bar labels per bar luminance, then write PNG + HTML.
+# pygal's CSS sets `.label { fill: ... }` globally. We inject an inline style on each
+# in-bar `<text class="label">` based on its y-position → depth → light/dark ink, so
+# the matte-red deepest bars get a light ink (the dark-theme weakness flagged in review).
 svg_content = chart.render(is_unicode=True)
+
+# Collect unique y-positions from in-bar label text elements (pygal emits x,y,class order)
+label_y_pattern = re.compile(r'<text\b[^>]*\by="([0-9.]+)"[^>]*\bclass="label"')
+unique_y_values = sorted({float(y) for y in label_y_pattern.findall(svg_content)})
+# Row centers from bottom (depth 0) up to deepest leaf (depth num_levels-1)
+row_centers_bottom_up = list(reversed(unique_y_values))
+
+
+def _y_to_depth(y_val):
+    return min(range(len(row_centers_bottom_up)), key=lambda d: abs(row_centers_bottom_up[d] - y_val))
+
+
+def _recolor_label(match):
+    attrs, body = match.group(1), match.group(2)
+    y_match = re.search(r'\by="([0-9.]+)"', attrs)
+    if not y_match:
+        return match.group(0)
+    depth = _y_to_depth(float(y_match.group(1)))
+    return f'<text{attrs} style="fill:{depth_label_inks[depth]}">{body}'
+
+
+label_pattern = re.compile(r'<text\b([^>]*\bclass="label"[^>]*)>([^<]*)')
+svg_content = label_pattern.sub(_recolor_label, svg_content)
+
+cairosvg.svg2png(bytestring=svg_content.encode("utf-8"), write_to=f"plot-{THEME}.png")
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
