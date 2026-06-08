@@ -79,8 +79,8 @@ ax = Axis(
     title             = title_str,
     titlesize         = title_sz,
     titlecolor        = INK,
-    xlabel            = "Period",
-    ylabel            = "Price",
+    xlabel            = "Period (days)",
+    ylabel            = "Price (USD)",
     xlabelsize        = 13,
     ylabelsize        = 13,
     xlabelcolor       = INK,
@@ -91,6 +91,8 @@ ax = Axis(
     yticklabelcolor   = INK_SOFT,
     xtickcolor        = INK_SOFT,
     ytickcolor        = INK_SOFT,
+    xticksvisible     = false,
+    yticksvisible     = false,
     backgroundcolor   = PAGE_BG,
     topspinevisible   = false,
     rightspinevisible = false,
@@ -109,6 +111,8 @@ band!(ax, cloud_x, sb_bull, sa_bull; color = (colorant"#009E73", 0.22))
 
 # Bearish region: Span B > Span A → red fill
 bear        = span_b_cld .> span_a_cld
+# Price trend change at period 120 (bull → bear phase boundary in generated data)
+trans_x = 120.0
 sa_bear     = copy(span_a_cld); sa_bear[.!bear] .= NaN
 sb_bear     = copy(span_b_cld); sb_bear[.!bear] .= NaN
 band!(ax, cloud_x, sa_bear, sb_bear; color = (colorant"#AE3030", 0.22))
@@ -149,6 +153,13 @@ lines!(ax, xs, tenkan; color = IMPRINT_PALETTE[2], linewidth = 1.8)
 lines!(ax, xs, kijun;  color = IMPRINT_PALETTE[3], linewidth = 1.8)
 lines!(ax, chikou_x, chikou_y; color = IMPRINT_PALETTE[4], linewidth = 1.5, linestyle = :dot)
 
+# ── Data storytelling: mark trend reversal at period 120 ────────────────────
+y_hi = maximum(filter(isfinite, high_px))
+y_lo = minimum(filter(isfinite, low_px))
+vlines!(ax, [trans_x]; color = RGBAf(INK.r, INK.g, INK.b, 0.25), linewidth = 1.2, linestyle = :dash)
+text!(ax, [trans_x + 1.5], [y_lo + (y_hi - y_lo) * 0.90];
+    text = ["Trend reversal"], color = INK_SOFT, fontsize = 9, align = (:left, :top))
+
 # ── Legend ───────────────────────────────────────────────────────────────────
 legend_elems = [
     LineElement(color = IMPRINT_PALETTE[2], linewidth = 2.5),
@@ -166,12 +177,11 @@ legend_labels = [
 ]
 
 Legend(fig[1, 2], legend_elems, legend_labels;
-    framecolor   = INK_SOFT,
-    framevisible = true,
-    labelcolor   = INK_SOFT,
-    backgroundcolor = ELEVATED_BG,
-    patchsize    = (28, 12),
-    labelsize    = 11,
+    framevisible    = false,
+    labelcolor      = INK,
+    backgroundcolor = PAGE_BG,
+    patchsize       = (28, 12),
+    labelsize       = 11,
 )
 
 colsize!(fig.layout, 1, Relative(0.82))
