@@ -6,7 +6,7 @@
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
 
-const margin = { top: 90, right: 230, bottom: 60, left: 30 };
+const margin = { top: 130, right: 230, bottom: 60, left: 30 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
@@ -69,15 +69,17 @@ const states = [
 states.forEach(d => { d.gdpPerCapita = (d.gdp / d.pop) * 1000; });
 
 // AlbersUSA composite projection handles AK + HI insets automatically
+const geoFeatures = {
+  type: "FeatureCollection",
+  features: states.map(d => ({
+    type: "Feature",
+    geometry: { type: "Point", coordinates: [d.lon, d.lat] },
+  })),
+};
+
 const projection = d3.geoAlbersUsa().fitExtent(
-  [[0, 0], [iw, ih]],
-  {
-    type: "FeatureCollection",
-    features: states.map(d => ({
-      type: "Feature",
-      geometry: { type: "Point", coordinates: [d.lon, d.lat] },
-    })),
-  }
+  [[0, 12], [iw, ih]],
+  geoFeatures
 );
 
 states.forEach(d => {
@@ -134,20 +136,63 @@ g.selectAll("circle.state")
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 1.5);
 
-// Abbreviation labels for circles large enough to contain text
+// Abbreviation labels: threshold lowered to 8px; AK always labeled
 g.selectAll("text.abbr")
-  .data(states.filter(d => rScale(d.pop) >= 10))
+  .data(states.filter(d => rScale(d.pop) >= 8 || d.abbr === "AK"))
   .join("text")
   .attr("class", "abbr")
   .attr("x", d => d.x)
   .attr("y", d => d.y)
   .attr("text-anchor", "middle")
   .attr("dominant-baseline", "central")
-  .attr("fill", "#FAF8F1")
+  .attr("fill", t.pageBg)
   .style("font-size", d => `${Math.max(9, Math.min(16, rScale(d.pop) * 0.44))}px`)
   .style("font-weight", "700")
   .style("pointer-events", "none")
   .text(d => d.abbr);
+
+// --- Geographic reference inset (bottom-right of inner plot) ---
+// Shows states at equal size by actual geographic position — contrast with cartogram
+const insetW = 270, insetH = 155;
+const insetX = iw - insetW - 4;
+const insetY = ih - insetH - 4;
+
+const insetProj = d3.geoAlbersUsa().fitExtent(
+  [[6, 6], [insetW - 6, insetH - 22]],
+  geoFeatures
+);
+
+g.append("rect")
+  .attr("x", insetX)
+  .attr("y", insetY)
+  .attr("width", insetW)
+  .attr("height", insetH)
+  .attr("fill", t.elevatedBg)
+  .attr("stroke", t.grid)
+  .attr("stroke-width", 1)
+  .attr("rx", 4)
+  .attr("opacity", 0.95);
+
+g.append("text")
+  .attr("x", insetX + insetW / 2)
+  .attr("y", insetY + insetH - 5)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "13px")
+  .style("font-style", "italic")
+  .text("Geographic reference (equal-size dots)");
+
+states.forEach(d => {
+  const p = insetProj([d.lon, d.lat]);
+  if (!p) return;
+  g.append("circle")
+    .attr("cx", insetX + p[0])
+    .attr("cy", insetY + p[1])
+    .attr("r", 4)
+    .attr("fill", colorScale(d.gdpPerCapita))
+    .attr("stroke", t.pageBg)
+    .attr("stroke-width", 0.8);
+});
 
 // Title (scaled for length)
 const titleStr = "US Population Cartogram · cartogram-area-distortion · javascript · d3 · anyplot.ai";
@@ -162,12 +207,12 @@ svg.append("text")
   .style("font-weight", "600")
   .text(titleStr);
 
-// Subtitle
+// Subtitle — moved to y=96 to clear WA circle overlap; font bumped to 14px
 svg.append("text")
   .attr("x", margin.left)
-  .attr("y", 76)
+  .attr("y", 96)
   .attr("fill", t.inkSoft)
-  .style("font-size", "13px")
+  .style("font-size", "14px")
   .text("Circle area ∝ population (2023, millions) · Color = GDP per capita (USD, 2022)");
 
 // --- Color legend ---
@@ -205,7 +250,7 @@ const cAxisG = svg.append("g")
   .attr("transform", `translate(${legX + legW}, ${legY})`)
   .call(cAxis);
 
-cAxisG.selectAll("text").attr("fill", t.inkSoft).style("font-size", "12px");
+cAxisG.selectAll("text").attr("fill", t.inkSoft).style("font-size", "13px");
 cAxisG.selectAll("line").attr("stroke", t.inkSoft).attr("stroke-opacity", 0.5);
 cAxisG.select(".domain").remove();
 
@@ -213,7 +258,7 @@ svg.append("text")
   .attr("x", legX)
   .attr("y", legY - 12)
   .attr("fill", t.ink)
-  .style("font-size", "13px")
+  .style("font-size", "14px")
   .style("font-weight", "600")
   .text("GDP / capita");
 
@@ -224,7 +269,7 @@ svg.append("text")
   .attr("x", legX)
   .attr("y", szLegY - 12)
   .attr("fill", t.ink)
-  .style("font-size", "13px")
+  .style("font-size", "14px")
   .style("font-weight", "600")
   .text("Population");
 
@@ -254,7 +299,7 @@ szVals.forEach(v => {
     .attr("x", szCx + r + 10)
     .attr("y", szY + 4)
     .attr("fill", t.inkSoft)
-    .style("font-size", "12px")
+    .style("font-size", "13px")
     .text(`${v}M`);
   szY += r + 6;
 });
