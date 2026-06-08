@@ -1,41 +1,62 @@
 library: plotly
+language: python
 specification_id: indicator-ichimoku
 created: '2026-03-12T14:16:26Z'
-updated: '2026-03-12T14:29:36Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23006287314
+updated: '2026-06-08T01:52:15Z'
+generated_by: claude-sonnet
+workflow_run: 27110947924
 issue: 4669
-python_version: 3.14.3
-library_version: 6.6.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/plotly/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 6.8.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/python/plotly/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Complete and correct Ichimoku implementation with all five indicator lines and
-    properly colored cloud segments
-  - Excellent data storytelling with Bullish TK Cross annotation creating a clear
-    focal point
-  - 'Strong visual hierarchy: bold Tenkan/Kijun lines, thin dotted Span lines, dashed
-    Chikou with intentional visual weight'
-  - Realistic stock price data with multiple trend phases showcasing all cloud features
-  - Clean well-structured code with appropriate complexity
+  - All five Ichimoku lines (Tenkan-sen, Kijun-sen, Senkou Span A/B, Chikou Span)
+    implemented with correct temporal shifts and standard 9/26/52 parameters
+  - Segmented cloud fill algorithm correctly switches green/red when Span A/B relationship
+    inverts — the `while` loop approach produces clean segment boundaries at crossover
+    points
+  - Plotly-native go.Candlestick with increasing/decreasing color tokens, rangebreaks
+    for weekend gaps, and per-trace hovertemplate is idiomatic and elegant
+  - 'Full Imprint palette compliance: BULL_COLOR=#009E73 (brand green), BEAR_COLOR=#AE3030
+    (matte red) as semantic exception for bull/bear, indicator lines use Imprint positions
+    2–4 in order'
+  - Theme-adaptive chrome is thorough — INK, INK_SOFT, GRID, ELEVATED_BG tokens propagate
+    correctly through title, axis labels, tick labels, legend, hover labels, and annotation
+    backgrounds
+  - Bullish TK Cross annotation provides concrete storytelling — arrows to the exact
+    crossover event with styled callout box
+  - Dynamic title fontsize scaling formula (max(11, round(16×67/len)) prevents overflow
+    at the long mandated title length
   weaknesses:
-  - Teal/red bull-bear color scheme could be improved for colorblind accessibility
-  - Senkou Span boundary lines are slightly thin at width 1
-  image_description: The plot displays an Ichimoku Cloud overlay on a candlestick
-    chart spanning from September 2023 to March 2024. Prices range from ~$150 to ~$192
-    on the y-axis labeled "Price (USD)" with dollar-sign tick prefixes. Green/teal
-    candlesticks represent up days, red candlesticks represent down days. The orange
-    Tenkan-sen (9) line and purple Kijun-sen (26) line are clearly visible overlaying
-    the price action. A blue dashed Chikou Span line appears shifted into the past.
-    The Kumo (cloud) is filled between Senkou Span A (teal dotted) and Senkou Span
-    B (red dotted), with light teal fill for bullish segments and light pink fill
-    for bearish segments. A "Bullish TK Cross" annotation with an arrow highlights
-    a signal where the Tenkan-sen crosses above the Kijun-sen. The title reads "Ichimoku
-    Cloud Overlay" in bold with subtitle "indicator-ichimoku · plotly · pyplots.ai"
-    in gray. A horizontal legend at the bottom-left lists all six trace types. The
-    background is clean white with subtle y-axis gridlines only.
+  - Horizontal legend with 6 entries is cramped — the legend items fit on one row
+    but at the smallest allowed fontsize. Consider switching to vertical orientation
+    (orientation='v') placed top-left or top-right to give each label more breathing
+    room.
+  - Kijun-sen (26) and Tenkan-sen (9) lines partially overlap each other and the candlestick
+    wicks in the dense December 2023–January 2024 region, making it slightly hard
+    to distinguish which line is which in that segment. A subtle increase in line
+    width (2.5–3) or dashed style for one would improve separation.
+  - Cloud opacity in dark theme is visually dominant — the bullish cloud nearly obscures
+    the candlestick price action in the dark render. Reduce CLOUD_BULL opacity in
+    dark mode to 0.15 (from 0.20) to give candlesticks more prominence against the
+    dense teal fill.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, clearly not pure white, gives the saturated palette colors room to breathe.
+      Chrome: Title "Ichimoku Cloud Overlay · indicator-ichimoku · python · plotly · anyplot.ai" is centered, readable dark text (~16px dynamic size). Axis labels "Date" (bottom) and "Price (USD)" (left) are clearly visible. Tick labels in INK_SOFT muted tone — "Oct 2023" through "Mar 2024" on x-axis and "$160"–"$190" on y-axis — all readable. Horizontal legend positioned top-left inside the plot with 6 items (Senkou Span A, Senkou Span B, OHLC, Tenkan-sen (9), Kijun-sen (26), Chikou Span) — tight but legible. "Bullish TK Cross" annotation with green arrow appears clearly labeled.
+      Data: Large green bullish Kumo cloud visible in lower-middle region with correct low opacity. Small red bearish segment at far right. Green/red candlesticks clearly distinguished. Purple Tenkan-sen and blue Kijun-sen lines overlay candlesticks. Dashed ochre Chikou Span appears shifted 26 periods into the past. Green dotted Senkou Span A and red dotted Senkou Span B outline the cloud boundaries.
+      Legibility verdict: PASS — all text elements are clearly readable against the warm off-white background. No "light-on-light" issues detected.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, clearly not pure black.
+      Chrome: Title, axis labels, tick labels, and legend text render in F0EFE8/B8B7B0 light tones — all clearly readable against the dark surface. The "Bullish TK Cross" annotation uses ELEVATED_BG (#242420) with green border — clearly visible. No dark-on-dark text failure detected.
+      Data: Green bullish cloud is more visually dense on the dark background (teal-green fill appears slightly more dominant than in light mode). Candlestick green/red coloring is identical to light render. Indicator line colors (purple, blue, ochre, brand-green, matte-red) are visually identical to light render — only the background and chrome text flipped. Dashed ochre Chikou Span clearly distinguishable.
+      Legibility verdict: PASS — all elements readable. Data colors are consistent with the light render (only chrome adapted). No text accessibility failures found.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -43,44 +64,58 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
-          18pt, legend 16pt, annotation 14pt'
+        comment: 'All font sizes explicitly set (title dynamic, axes 12px, ticks 10px,
+          legend 10px). Both themes fully readable. Minor: horizontal 6-item legend
+          is tight but legible.'
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No text collisions, horizontal legend fits well at bottom-left
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Candlesticks well-sized, indicator lines distinguishable. Senkou
-          Span dotted lines slightly thin at width 1
+        comment: No severe overlaps. Tenkan-sen and Kijun-sen partially co-incident
+          in the Dec 2023–Jan 2024 congestion zone, and legend row is dense with 6
+          items.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All indicator lines, candlesticks, and cloud fill clearly visible.
+          Cloud opacity appropriate (20/25%). Chikou Span dashes distinct from solid
+          lines.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Teal vs red for bull/bear has better contrast than pure green/red
-          but still relies on red-green distinction
+        comment: Imprint palette used. Bull/bear semantic exception is documented
+          and widely understood convention. No sole red-green reliance — linestyle
+          also differentiates traces.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills ~65% of canvas with balanced margins, no content cut
-          off
+        comment: Correct 3200x1800 canvas (width=800 height=450 scale=4). autosize=False
+          with explicit margins. No clipping. Canvas gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Price (USD) with $ tick prefix, Date axis label
+        comment: Title matches spec format with descriptive prefix. Y-axis 'Price
+          (USD)' with $ tick prefix. X-axis 'Date' with formatted month/year ticks.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: PAGE_BG correct for both themes. BULL=#009E73 (brand green, semantic),
+          BEAR=#AE3030 (matte red, semantic), Tenkan=#C475FD (pos2), Kijun=#4467A3
+          (pos3), Chikou=#BD8233 (pos4). Semantic exception valid.
     design_excellence:
       score: 14
       max: 20
@@ -90,22 +125,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette with intentional hierarchy, styled subtitle, custom
-          hoverlabels, clearly above defaults
+        comment: Custom Imprint palette, segmented cloud algorithm, annotation with
+          styled callout box. Professional and purposeful — clearly above generic
+          defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: plotly_white removes chrome, x-grid off, subtle y-grid, range slider
-          hidden, clean margins
+        comment: Y-only grid, no range slider, no top/right frame lines (Plotly default),
+          weekend rangebreaks, styled hover labels. Legend border frame adds noise
+          but is minor.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Bullish TK Cross annotation creates focal point, cloud color transitions
-          communicate trend shifts
+        comment: Bullish TK Cross annotation highlights a concrete trading signal.
+          Cloud color switching (green/red) provides at-a-glance trend reading. Multiple
+          temporal layers (past/present/future) are clearly stratified.
     spec_compliance:
       score: 15
       max: 15
@@ -115,26 +153,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Ichimoku Cloud overlay on candlestick chart
+        comment: 'Correct: candlestick price chart with Ichimoku overlay using go.Candlestick
+          + go.Scatter.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All five lines, cloud fill with color change, standard parameters
-          (9, 26, 52)
+        comment: All 5 Ichimoku lines present. Kumo cloud with bull/bear fill. Cloud
+          color changes at crossover. Candlesticks with conventional green/red. Standard
+          (9, 26, 52) parameters.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on x-axis, Price on y-axis, weekend gaps removed via rangebreaks
+        comment: X=Date, Y=Price. Spans shifted +26 (into future). Chikou shifted
+          -26 (into past). All data ranges fully visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct subtitle format, descriptive legend labels for all traces
+        comment: 'Title: ''Ichimoku Cloud Overlay · indicator-ichimoku · python ·
+          plotly · anyplot.ai''. All 5 indicator lines labeled in legend with parameter
+          periods noted.'
     data_quality:
       score: 15
       max: 15
@@ -144,21 +187,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bullish/bearish candles, cloud color transitions, TK cross, varied
-          price action with multiple trend phases
+        comment: 'Full Ichimoku system: all 5 lines, Kumo cloud, bull/bear cloud coloring,
+          TK cross annotation.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Simulated stock OHLC data with realistic daily movements and plausible
-          price range
+        comment: 200-day simulated stock prices with realistic drift patterns, ~$150–$195
+          range. Plausible equity trading context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 trading days, prices $150-$192, appropriate daily moves
+        comment: Price range appropriate for a mid-cap stock. 200 trading periods
+          sufficient for 52-period lookback + 26-period projection. After trim, ~121
+          visible periods with full cloud coverage.
     code_quality:
       score: 10
       max: 10
@@ -168,50 +213,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, compute, plot, layout, annotation, save'
+        comment: Flat script, no functions or classes. Cloud segmentation loop is
+          complex but necessary and self-contained.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at start
+        comment: np.random.seed(42) set at the top.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: numpy, pandas, plotly.graph_objects all used
+        comment: Only os, numpy, pandas, plotly.graph_objects — all actively used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Cloud segmentation loop necessary and well-implemented, appropriate
-          complexity
+        comment: Well-organized with clear section comments. No fake UI. The cloud
+          segment algorithm is appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png at 1600x900 scale=3 and plot.html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. No bare plot.png. Current
+          Plotly API.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Good use of go.Candlestick, go.Scatter with fill=toself, update_layout,
-          hovertemplate
+        comment: go.Candlestick for OHLC (the idiomatic plotly type), go.Scatter with
+          fill='toself' for cloud polygons, fig.add_annotation, fig.update_layout
+          — all canonical patterns.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Native go.Candlestick, rangebreaks for weekends, custom hovertemplate,
-          HTML export
+        comment: rangebreaks for weekend gap removal, per-trace hovertemplate with
+          OHLC formatting, HTML export, go.Candlestick's increasing/decreasing color
+          controls — strong use of Plotly-specific features.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -223,8 +272,7 @@ impl_tags:
   - data-generation
   - iteration-over-groups
   dataprep:
-  - rolling-window
   - time-series
+  - rolling-window
   styling:
   - alpha-blending
-  - grid-styling
