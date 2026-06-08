@@ -1,114 +1,137 @@
 library: highcharts
+language: python
 specification_id: indicator-ichimoku
 created: '2026-03-12T14:20:18Z'
-updated: '2026-03-12T15:04:00Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23006288223
+updated: '2026-06-08T01:51:58Z'
+generated_by: claude-sonnet
+workflow_run: 27111216926
 issue: 4669
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/highcharts/plot.html
-quality_score: 87
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/python/highcharts/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Full Ichimoku implementation with all 5 components correctly computed and shifted
-  - Colorblind-safe palette (teal/coral) with good contrast throughout
-  - Crossover signal flags add meaningful data storytelling beyond basic spec requirements
-  - Excellent code structure with clear Ichimoku computation logic
-  - Proper use of Highcharts Stock-specific features (flags, arearange, candlestick)
-  - Subtle visual refinement (dotted grid, removed spines, off-white background)
+  - Complete Ichimoku indicator implementation with all five lines (Tenkan-sen, Kijun-sen,
+    Senkou Span A/B, Chikou Span) plus cloud fills
+  - Semantic Imprint palette usage with correct financial conventions (green=bullish,
+    red=bearish)
+  - 'Uses Highstock-specific series types: candlestick, arearange for cloud zones,
+    flags for crossover signals'
+  - Theme-adaptive chrome works correctly in both light and dark renders — all text
+    readable
+  - Crossover signal detection with annotated flags adds analytical depth beyond the
+    spec minimum
+  - Near-perfect font sizing hierarchy (title 66px, axis 56px, ticks 44px, legend
+    40px) and clean layout
+  - Correct Ichimoku computation (9/26/52 params) with forward/backward displacement
+    applied accurately
   weaknesses:
-  - X-axis labels show duplicate month labels at some intervals due to step/format
-    interaction
-  - Legend could be positioned more precisely to avoid floating over chart data area
-  - Margins are slightly generous, reducing effective chart area
-  image_description: The plot displays a Highcharts Stock candlestick chart overlaid
-    with all five Ichimoku Kinko Hyo components across approximately 200 simulated
-    trading days (Jan–Nov 2024). Candlesticks use teal (#2E8B87) for bullish and coral
-    (#D94F6B) for bearish candles. The Tenkan-sen (conversion line) is drawn as a
-    blue (#306998) solid line and the Kijun-sen (base line) as an orange (#D35400)
-    solid line. Senkou Span A (teal, dotted) and Senkou Span B (coral, dotted) define
-    the Kumo cloud boundaries, with the cloud filled using translucent teal for bullish
-    zones and translucent pink for bearish zones. The Chikou Span appears as a purple
-    (#8E44AD) dashed line shifted 26 periods back. The cloud extends into the future
-    beyond the candlestick data. Crossover signal flags (▲/▼ square pins) are plotted
-    on the price series. The chart has an off-white (#FAFBFC) background, subtle dotted
-    grid lines on the y-axis, and no axis lines or tick marks. Title reads "indicator-ichimoku
-    · highcharts · pyplots.ai" with a subtitle. Y-axis shows "Price (USD)" with dollar-formatted
-    labels; x-axis shows "Date" with month/year labels. A vertical legend in the top-right
-    lists all series.
+  - 'Flags series has no explicit color assigned — Highcharts auto-assigns a non-Imprint
+    default color (appears cyan) for the Signals legend swatch; fix by adding color:
+    INK_SOFT to the flags series config'
+  - Bearish cloud (Kumo) uses rgba(174,48,48,0.20) fill — correct semantically but
+    the fill is quite faint in the light render; consider rgba(174,48,48,0.25) for
+    better visibility of bearish zones
+  - 'DE-01: design is polished but stays close to Highstock financial defaults; adding
+    a subtle horizontal reference line at a key price level or directional annotation
+    would elevate storytelling to publication level'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "indicator-ichimoku · python · highcharts · anyplot.ai" in bold dark ink, fills ~70% of width — expected and not a violation. Subtitle "Ichimoku Cloud on 200 simulated trading days — Tenkan/Kijun crossover signals marked" visible in muted ink below title. X-axis label "Date" and Y-axis label "Price (USD)" clearly readable; Y-axis positioned on right (Highstock financial convention). Tick labels ($172–$204 on Y, Feb '24–Nov '24 on X) all readable in INK_SOFT. Legend row at bottom shows all seven series items without overlap.
+      Data: Candlesticks use #009E73 (bullish/up) and #AE3030 (bearish/down) — semantic exception correctly applied for financial charts. Tenkan-sen is lavender #C475FD (solid), Kijun-sen is blue #4467A3 (solid), Chikou Span is ochre #BD8233 (dashed). Senkou Span A and B are thin dot-dot lines. Bullish Kumo is a light green semi-transparent fill growing from July to October; bearish Kumo is a faint pink fill visible around May. Small crossover signal flags (▲/▼) mark Tenkan/Kijun crossovers. First Imprint data series (#009E73) used for bullish candles and Senkou Span A — correct semantic assignment.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title and subtitle appear in light cream/off-white (INK = #F0EFE8), clearly readable. Axis labels and tick labels are light-colored (INK_SOFT = #B8B7B0) — all readable. Grid lines subtle. No dark-on-dark failures observed.
+      Data: Candlestick colors identical to light render (#009E73 bullish, #AE3030 bearish). Tenkan-sen lavender, Kijun-sen blue, Chikou Span ochre — all identical to light render. The bullish Kumo fill appears as a deeper teal-green against the dark background (same rgba 0.20 fill, darker surface makes it more vivid), bearish cloud is a dark crimson. Data colors are identical across themes — only chrome (bg, text, grid) flips. Legend readable at bottom.
+      Legibility verdict: PASS — all text clearly readable against warm near-black background, no dark-on-dark text failures.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 60px, axes 42px, ticks 32px,
-          legend 28px). Legend text slightly small but readable at full resolution.
+        comment: All font sizes explicitly set (title 66px, axis 56px, ticks 44px,
+          legend 40px). Proportional and readable in both themes.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: X-axis month labels repeat at some intervals. Legend floats over
-          data area but remains clear.
+        comment: No text overlap. Legend well-spaced. Signal flags don't obscure critical
+          labels.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Candlesticks well-sized (pointWidth=18, lineWidth=3). Cloud fill
-          at 0.22 opacity subtle but visible.
+        comment: Candlesticks, indicator lines, cloud fills and signal flags all clearly
+          visible. Line widths appropriate (3px main, 2px secondary).
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette with redundant dash-style encoding (solid/dashed/dotted)
+          for multiple lines.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Colorblind-safe palette: teal/coral instead of red/green. Blue,
-          orange, purple all distinguishable.'
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Chart fills ~60% of canvas. Margins slightly generous on left and
-          bottom.
+        comment: Canvas gate passed. Chart fills ~75% of canvas. Margins generous
+          (marginTop:90, marginBottom:210). No clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: Price (USD) with units. X-axis: Date. Both descriptive.'
+        comment: 'X-axis: ''Date'', Y-axis: ''Price (USD)'' — descriptive with units.
+          Title in correct anyplot format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette used with financial semantic exceptions (green=bullish,
+          red=bearish). Backgrounds correct in both themes. Chrome theme-adaptive.
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom colorblind-safe palette, Segoe UI font, off-white background,
-          careful typography hierarchy. Above defaults.
+        comment: 'Above default: intentional semantic color mapping, subtitle, crossover
+          flags, distinct line styles. Stops short of publication-ready — no directional
+          annotations or story emphasis.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle dotted grid (10% opacity), axis lines/ticks removed, generous
-          whitespace, crosshair styling.
+        comment: Y-axis only gridlines, no chart border, transparent legend background.
+          Good whitespace with generous margins. Some default Highstock styling remains.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Crossover flags mark signals, cloud coloring differentiates trend
-          states, z-index layering creates visual hierarchy.
+        comment: Clear visual hierarchy (candlesticks front, lines mid, cloud background).
+          Cloud color transition (bearish→bullish) tells the trend story. Crossover
+          flags create focal points.
     spec_compliance:
       score: 15
       max: 15
@@ -118,29 +141,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: candlestick chart with Ichimoku overlay using Highcharts
-          Stock.'
+        comment: 'Correct: Ichimoku Cloud overlay on candlestick chart.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All 5 Ichimoku components present plus bonus crossover signal flags.
+        comment: All five Ichimoku lines present. Cloud fills with bullish/bearish
+          color change. Standard 9/26/52 parameters. Chikou shifted -26, Senkou spans
+          +26.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=datetime, Y=price. Senkou spans shifted forward, Chikou shifted
-          back. Standard (9,26,52) parameters.
+        comment: X=date, Y=price. All series correctly positioned. Displacement applied
+          accurately.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels match all series names.
+        comment: Title 'indicator-ichimoku · python · highcharts · anyplot.ai' correct.
+          Legend labels match all series.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -148,22 +173,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bullish/bearish candles, cloud transitions, crossovers, price through
-          cloud. Comprehensive.
+        comment: Both bullish and bearish candles present. Cloud transitions from
+          bearish to bullish. Multiple crossover signals (both ▲ and ▼). 200 days
+          covers all lookback periods.
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Simulated stock data with realistic price movements ($173-$203),
-          weekday-only dates.
+        comment: Realistic simulated stock price (2024 daily OHLC, ~$180-$204 range).
+          Neutral financial context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range realistic. 200 trading days allows 52-period lookback
-          plus visible history.
+        comment: Price range plausible ($172–$204). 200 trading days ≈ 10 months (Jan–Nov
+          2024). Trend with realistic noise.
     code_quality:
       score: 10
       max: 10
@@ -173,8 +199,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data generation, Ichimoku computation, chart
-          config, HTML export.'
+        comment: 'Linear: imports → tokens → data → indicators → chart options → render.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -186,51 +212,53 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: 'All imports used: json, os, tempfile, time, urllib.request, datetime,
+          numpy, PIL, selenium.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized with clear variable names. Chart dict manipulation
-          is a minor but necessary workaround.
+        comment: Clean, Pythonic. Chart options as direct JSON dict is appropriate
+          for Highcharts. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via container.screenshot(). Current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses Highstock.stockChart()
+          — correct API for financial charts.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Uses highcharts-stock Python API (Chart.from_options, HighchartsStockOptions).
-          JSON serialization approach is functional.
+        comment: Uses Highcharts.stockChart() (correct for financial charts), properly
+          disables rangeSelector/navigator/scrollbar, camelCase JSON options, inline
+          JS embedding — all idiomatic Highstock patterns.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Flags series, arearange for cloud, candlestick type, stockChart rendering,
-          crosshair.
-  verdict: REJECTED
+        comment: 'Highstock-specific: candlestick series, flags series for signal
+          annotations, arearange for cloud zones with null-data segmentation. These
+          are distinctly Highstock capabilities.'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
+  - pillow
   techniques:
   - html-export
-  - layer-composition
-  - custom-legend
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - rolling-window
+  - time-series
   styling:
   - alpha-blending
-  - grid-styling
