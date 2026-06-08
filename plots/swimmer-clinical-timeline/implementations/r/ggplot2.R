@@ -117,7 +117,7 @@ p <- ggplot() +
   geom_point(
     data = events,
     aes(x = patient_id, y = time, shape = event_type, color = event_type),
-    size   = 2.0,
+    size   = 2.5,
     stroke = 0.9
   ) +
   # Arrows for patients still on treatment at data cutoff
@@ -156,7 +156,7 @@ p <- ggplot() +
     panel.grid.minor   = element_blank(),
     axis.title.x       = element_text(color = INK,        size = 10),
     axis.text.x        = element_text(color = INK_SOFT,   size = 8),
-    axis.text.y        = element_text(color = INK_SOFT,   size = 7),
+    axis.text.y        = element_text(color = INK_SOFT,   size = 8),
     plot.title         = element_text(color = INK,        size = 12,
                                       margin = margin(b = 8)),
     plot.caption       = element_text(color = INK_MUTED,  size = 7,
