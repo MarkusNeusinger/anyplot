@@ -1,6 +1,6 @@
-"""anyplot.ai
+""" anyplot.ai
 indicator-ichimoku: Ichimoku Cloud Technical Indicator Chart
-Library: seaborn 0.13.2 | Python 3.14.3
+Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-06-08
 """
 
