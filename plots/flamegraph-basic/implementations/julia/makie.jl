@@ -9,7 +9,7 @@ using Random
 
 Random.seed!(42)
 
-# Theme tokens
+# Theme tokens ----------------------------------------------------------------
 const THEME    = get(ENV, "ANYPLOT_THEME", "light")
 const PAGE_BG  = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
 const INK      = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
@@ -22,6 +22,39 @@ const FLAME_COLORS = [
     colorant"#BD8233",  # ochre (Imprint #4)
     colorant"#AE3030",  # matte red (Imprint #5)
 ]
+
+# In-bar label ink chosen per fill by relative luminance — dark ink on the
+# light amber / ochre bars, light ink on the matte-red bars where dark text
+# would lose contrast.
+function contrast_ink(c)
+    r, g, b = red(c), green(c), blue(c)
+    0.2126 * r + 0.7152 * g + 0.0722 * b > 0.5 ?
+        colorant"#1A1A17" : colorant"#FAF8F1"
+end
+const FLAME_LABEL_INK = [contrast_ink(c) for c in FLAME_COLORS]
+
+# Theme() hoists chrome tokens into a single declarative block — the per-Axis
+# kwargs below only need to override plot-specific knobs (title, limits, etc).
+set_theme!(Theme(
+    fontsize        = 14,
+    backgroundcolor = PAGE_BG,
+    Axis = (
+        backgroundcolor    = PAGE_BG,
+        titlecolor         = INK,
+        xlabelcolor        = INK,
+        ylabelcolor        = INK_SOFT,
+        xticklabelcolor    = INK_SOFT,
+        bottomspinecolor   = INK_SOFT,
+        xtickcolor         = INK_SOFT,
+        topspinevisible    = false,
+        rightspinevisible  = false,
+        leftspinevisible   = false,
+        yticksvisible      = false,
+        yticklabelsvisible = false,
+        xgridvisible       = false,
+        ygridvisible       = false,
+    ),
+))
 
 # Simulated CPU profile of a web request handler.
 # Each entry: (semicolon-delimited stack from root to leaf, sample count).
@@ -68,14 +101,17 @@ end
 
 # Lay out rectangles top-down from the root, children sorted alphabetically.
 # Iterative DFS keeps the implementation top-level — no recursive function.
-NodeT = NamedTuple{(:depth, :x0, :w, :name),Tuple{Int,Float64,Float64,String}}
+NodeT = NamedTuple{
+    (:depth, :x0, :w, :name, :prefix),
+    Tuple{Int,Float64,Float64,String,String},
+}
 nodes = NodeT[]
 queue = [("main", 0, 0.0)]
 while !isempty(queue)
     prefix, depth, x0 = pop!(queue)
     width = counts[(depth, prefix)] / total_samples
     name = String(split(prefix, ';')[end])
-    push!(nodes, (depth = depth, x0 = x0, w = width, name = name))
+    push!(nodes, (depth = depth, x0 = x0, w = width, name = name, prefix = prefix))
 
     kids = sort!(collect(get(children, (depth, prefix), Set{String}())))
     child_starts = Float64[]
@@ -91,6 +127,10 @@ end
 
 max_depth = maximum(n.depth for n in nodes)
 
+# Widest leaf = dominant CPU hot path; gets a focal-point accent below.
+leaves = filter(n -> !haskey(children, (n.depth, n.prefix)), nodes)
+hot = leaves[argmax([l.w for l in leaves])]
+
 # Title scaled to fit when prefixed with a descriptive subtitle.
 title_text = "CPU Profile of a Web Request Handler · flamegraph-basic · julia · makie · anyplot.ai"
 title_default = 20
@@ -98,59 +138,59 @@ title_size = length(title_text) > 67 ?
     max(round(Int, title_default * 67 / length(title_text)), 13) :
     title_default
 
-fig = Figure(
-    resolution      = (1600, 900),
-    fontsize        = 14,
-    backgroundcolor = PAGE_BG,
-)
+fig = Figure(resolution = (1600, 900))
 
 ax = Axis(
     fig[1, 1];
-    title              = title_text,
-    titlesize          = title_size,
-    titlecolor         = INK,
-    xlabel             = "Proportion of CPU samples",
-    ylabel             = "Stack depth (caller → callee)",
-    xlabelcolor        = INK,
-    ylabelcolor        = INK_SOFT,
-    xlabelsize         = 14,
-    ylabelsize         = 13,
-    xticklabelcolor    = INK_SOFT,
-    xticklabelsize     = 12,
-    backgroundcolor    = PAGE_BG,
-    topspinevisible    = false,
-    rightspinevisible  = false,
-    leftspinevisible   = false,
-    bottomspinecolor   = INK_SOFT,
-    xtickcolor         = INK_SOFT,
-    yticksvisible      = false,
-    yticklabelsvisible = false,
-    xgridvisible       = false,
-    ygridvisible       = false,
-    limits             = ((-0.002, 1.002), (-0.15, max_depth + 1.0)),
-    xticks             = (0:0.2:1.0, ["0%", "20%", "40%", "60%", "80%", "100%"]),
+    title          = title_text,
+    titlesize      = title_size,
+    xlabel         = "Proportion of CPU samples",
+    ylabel         = "Stack depth (caller → callee)",
+    xlabelsize     = 14,
+    ylabelsize     = 13,
+    xticklabelsize = 12,
+    limits         = ((-0.002, 1.002), (-0.15, max_depth + 1.75)),
+    xticks         = (0:0.2:1.0, ["0%", "20%", "40%", "60%", "80%", "100%"]),
 )
 
-# Draw flame bars: one rectangle per node, hairline page-bg stroke for separation.
+# Draw flame bars: one rectangle per node, hairline page-bg stroke between
+# adjacent siblings keeps same-color neighbours visually distinct.
 bar_height = 0.93
 rects = [Rect2f(n.x0, n.depth, n.w, bar_height) for n in nodes]
-fill_colors = [FLAME_COLORS[(abs(hash(n.name)) % length(FLAME_COLORS)) + 1] for n in nodes]
+flame_idx = [(abs(hash(n.name)) % length(FLAME_COLORS)) + 1 for n in nodes]
+fill_colors = [FLAME_COLORS[i] for i in flame_idx]
 poly!(ax, rects;
     color       = fill_colors,
     strokecolor = PAGE_BG,
     strokewidth = 1.5,
 )
 
+# Focal-point cue: a thicker INK outline on the dominant hot-path leaf, plus
+# a short label above it stating the share of CPU samples. Subtle enough to
+# preserve the flame aesthetic, explicit enough to direct the eye.
+poly!(ax, Rect2f(hot.x0, hot.depth, hot.w, bar_height);
+    color       = (:white, 0.0),
+    strokecolor = INK,
+    strokewidth = 2.5,
+)
+hot_pct = round(Int, hot.w * 100)
+text!(ax, hot.x0 + hot.w / 2, hot.depth + bar_height + 0.18;
+    text     = "▼ hot path · $(hot_pct)% of CPU samples",
+    align    = (:center, :bottom),
+    color    = INK_SOFT,
+    fontsize = 12,
+)
+
 # Function-name labels, only where the bar is wide enough to fit the text.
-# Approx 0.0058 axis units per char at fontsize 12; small left pad.
+# Label ink is chosen per fill color: dark on amber/ochre, light on red.
 label_fontsize = 12
-for n in nodes
+for (n, fc_idx) in zip(nodes, flame_idx)
     needed = length(n.name) * 0.0058 + 0.012
     if n.w >= needed
         text!(ax, n.x0 + 0.005, n.depth + bar_height / 2;
             text     = n.name,
             align    = (:left, :center),
-            color    = colorant"#1A1A17",
+            color    = FLAME_LABEL_INK[fc_idx],
             fontsize = label_fontsize,
         )
     end
