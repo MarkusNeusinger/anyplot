@@ -1,82 +1,105 @@
 library: matplotlib
+language: python
 specification_id: phase-diagram-pt
 created: '2026-03-14T14:51:21Z'
-updated: '2026-03-14T15:08:53Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23090166841
+updated: '2026-06-08T08:23:44Z'
+generated_by: claude-sonnet
+workflow_run: 27124230974
 issue: 4666
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/matplotlib/plot.png
-preview_html: null
-quality_score: 93
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
 review:
   strengths:
   - Scientifically accurate water phase diagram with real physical constants and Clausius-Clapeyron
-    approximations
-  - Excellent use of path effects for text readability over colored phase regions
-  - Cohesive pastel color palette with clear visual hierarchy guiding the viewer through
-    the phase landscape
-  - Water anomalous negative solid-liquid slope correctly modeled
-  - Supercritical fluid region adds educational completeness beyond basic spec requirements
-  weaknesses: []
-  image_description: 'The plot displays a water pressure-temperature (P-T) phase diagram
-    with a logarithmic pressure axis (Pa) and linear temperature axis (K), ranging
-    from 180-800 K and 10-5e8 Pa. Four phase regions are filled with soft pastel colors:
-    SOLID (lavender/purple, upper-left), LIQUID (light green, center-upper), GAS (light
-    blue, lower area), and SUPERCRITICAL FLUID (pale yellow, upper-right). Three dark
-    blue phase boundary curves (sublimation, vaporization, melting) converge at the
-    triple point. The triple point (273.16 K, 611.73 Pa) and critical point (647.1
-    K, 22.06 MPa) are marked with red dots with white edges and annotated with arrow-connected
-    labels showing coordinates. Dashed gray reference lines extend from the critical
-    point horizontally and vertically. Phase region labels are bold, colored text
-    with white outlines for readability. Top/right spines are removed, subtle y-axis
-    grid is present, and the title reads "phase-diagram-pt · matplotlib · pyplots.ai".'
+    equation curves
+  - Excellent semantic color mapping across all four phase regions — water=green,
+    ice=blue, atmosphere=cyan, supercritical heat=ochre — all using Imprint palette
+  - matplotlib.patheffects.withStroke used to improve phase label readability over
+    colored fill regions — a distinctive matplotlib-specific capability
+  - 'Perfect theme adaptation: all chrome elements (text, grid, annotation boxes,
+    spine colors) correctly flip between light and dark themes; data colors stay constant'
+  - 'Complete spec compliance: water anomaly (negative slope solid-liquid boundary),
+    both special points annotated with exact coordinates, log pressure scale, supercritical
+    region clearly labeled'
+  weaknesses:
+  - Annotation text at 7.5pt is borderline readable at mobile widths (~400px) — increase
+    to 8pt minimum
+  - Path-effect strokes use PAGE_BG as foreground color, making them invisible in
+    dark theme (dark stroke on dark background); use INK_MUTED instead for visible
+    outlines in both themes
+  - plt.tight_layout() slightly compresses whitespace; fig.subplots_adjust() would
+    give more deliberate margin control
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "phase-diagram-pt · python · matplotlib · anyplot.ai" in dark ink, clearly readable. Axis labels "Temperature (K)" and "Pressure (Pa)" at 10pt dark ink. Tick labels at 8pt in INK_SOFT — all readable.
+      Data: Brand green #009E73 boundary curves (solid-gas, liquid-gas, solid-liquid). Phase fills: SOLID=blue #4467A3 alpha=0.20, LIQUID=green #009E73 alpha=0.20, GAS=cyan #2ABCCD alpha=0.20, SUPERCRITICAL FLUID=ochre #BD8233 alpha=0.20. Matte red #AE3030 markers at triple and critical points. Annotation boxes with elevated warm-white #FFFDF6 backgrounds. Phase labels in respective fill colors with path-effect outlines.
+      Legibility verdict: PASS — all text readable. Annotation text at 7.5pt is borderline at mobile scale but acceptable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title, axis labels, and tick labels in light cream #F0EFE8/#B8B7B0 — all clearly readable against dark background. Annotation boxes use dark elevated background #242420 with light-gray borders and light text. No dark-on-dark failures detected.
+      Data: All Imprint data colors identical to light render — brand green #009E73 curves, same fill colors, same matte red markers. Path-effect outlines become invisible (stroke=PAGE_BG=#1A1A17 on near-black background) but fill colors have adequate luminance for label readability. Brand green #009E73 clearly visible.
+      Legibility verdict: PASS — all text readable in dark theme.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          phase labels 22pt, annotations 14pt'
+        comment: All font sizes explicitly set (title=12pt, labels=10pt, ticks=8pt).
+          Annotation text at 7.5pt is borderline at mobile scale.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: No overlapping elements. Phase labels, annotation boxes, and curves
+          are well-separated.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Boundary curves linewidth=3, markers s=250, phase fills with appropriate
-          alpha
+        comment: Boundary curves at linewidth=2.5 clearly visible. Fill regions at
+          alpha=0.20 appropriate. Scatter markers at s=120 prominent.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Purple, green, blue, yellow regions all distinguishable under colorblindness
+        comment: Imprint palette is CVD-safe. No red-green-only distinctions.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 figsize with tight_layout, plot fills canvas well
+        comment: Canvas gate passed (3200x1800px). Good margins. Annotation boxes
+          fit within canvas.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Temperature (K) and Pressure (Pa) with units
+        comment: Temperature (K) and Pressure (Pa) — descriptive with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 as primary element. Semantic Imprint palette
+          mapping for all regions. Correct backgrounds. Dark theme chrome flips correctly.'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -84,20 +107,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Cohesive pastel palette, coordinated curves, path effects for readability
+        comment: 'Strong design: semantic color mapping, path-effect text outlines,
+          elevated annotation boxes with rounded corners, marker edge colors matching
+          background.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle grid alpha=0.15, path effects, zorder layering
+        comment: Top/right spines removed. Y-axis grid at alpha=0.15. Alpha fills.
+          Log scale. Minor compression from tight_layout().
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: regions orient viewer, curves show transitions,
-          annotated key points tell story'
+        comment: Clear focal points at triple/critical points. Dashed reference lines.
+          Phase fills and bold labels guide viewer. Visual hierarchy evident.
     spec_compliance:
       score: 15
       max: 15
@@ -107,26 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct P-T phase diagram
+        comment: Correct thermodynamic P-T phase diagram with log pressure axis.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: boundaries, triple/critical points, labels,
-          log scale, supercritical region'
+        comment: All four regions labeled, both special points annotated with coordinates,
+          water anomaly shown, log pressure axis present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Temperature X, Pressure Y (log), all data visible
+        comment: Temperature on X (K), Pressure on Y (Pa). Real water constants. Clausius-Clapeyron
+          curves. Axes cover all data.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, regions labeled directly
+        comment: Title is exactly 'phase-diagram-pt · python · matplotlib · anyplot.ai'.
+          No legend needed; regions directly labeled.
     data_quality:
       score: 15
       max: 15
@@ -136,20 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All boundaries, key points, supercritical region, anomalous water
-          slope
+        comment: 'All aspects shown: three phases, supercritical region, two special
+          points, water anomaly, log scale.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Water phase diagram with real physical constants
+        comment: Real water physical constants. Clausius-Clapeyron equation. Water
+          anomaly. Neutral educational science context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Physically accurate values for water
+        comment: Temperature 180-800K, pressure 10-5e8Pa factually appropriate. All
+          physical constants match established values.
     code_quality:
       score: 10
       max: 10
@@ -159,49 +189,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no functions or classes
+        comment: 'Linear script: theme tokens → data → fills → curves → markers →
+          annotations → style → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic from Clausius-Clapeyron equations
+        comment: 'Fully deterministic: mathematical equations only, no random data.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All three imports used
+        comment: os, matplotlib.patheffects, matplotlib.pyplot, numpy — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, appropriate complexity
+        comment: Clean, Pythonic, appropriate complexity. No fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png, dpi=300, no deprecated API
+        comment: Saves as plot-{THEME}.png at dpi=400 without bbox_inches='tight'.
+          Current matplotlib API.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Exclusively uses Axes methods. Correct figsize×dpi canvas sizing.
+          fill_between, fill, annotate with arrowprops all idiomatic.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Axes methods throughout, proper figure/axes pattern, good zorder
-          usage
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: patheffects, fill_between, fill, annotate with arrowprops, custom
-          linestyle tuples
+        comment: matplotlib.patheffects.withStroke for text outlines is distinctively
+          matplotlib-specific. Combined fill_between + fill for irregular polygon
+          regions demonstrates deep API knowledge.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -210,7 +243,6 @@ impl_tags:
   - layer-composition
   patterns:
   - data-generation
-  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
