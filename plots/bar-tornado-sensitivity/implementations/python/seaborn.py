@@ -1,8 +1,10 @@
-""" pyplots.ai
-bar-tornado-sensitivity: Tornado Diagram for Sensitivity Analysis
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-07
-"""
+import os
+import sys
+
+
+# Sibling matplotlib.py in this dir would shadow the installed package — remove the dir first
+_here = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p or os.getcwd()) != _here]
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,11 +12,35 @@ import pandas as pd
 import seaborn as sns
 
 
-# Configure seaborn style and context
-sns.set_style("whitegrid", {"grid.linestyle": "--", "grid.alpha": 0.3})
-sns.set_context("talk", font_scale=1.1)
+# --- Theme ---
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Data - NPV sensitivity analysis for a capital investment project
+# Imprint palette — canonical order, first series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# --- Data: NPV sensitivity analysis for a capital investment project ---
 parameters = [
     "Discount Rate",
     "Revenue Growth",
@@ -30,40 +56,36 @@ parameters = [
 
 base_npv = 120.0  # Base case NPV in $M
 
-np.random.seed(42)
-# Some parameters have inverted relationships:
-# - Material Cost: lower cost → higher NPV (low input = positive effect)
-# - Tax Rate: lower tax → higher NPV (low input = positive effect)
+# Inverted relationships: lower Material Cost or Tax Rate → higher NPV
 low_values = base_npv + np.array([-38, -30, 22, -18, 10, -14, -10, -8, -5, -3], dtype=float)
 high_values = base_npv + np.array([32, 28, -18, 22, -8, 11, 13, 9, 6, 4], dtype=float)
 
-# Calculate ranges and sort by total impact
+# Sort by total impact range — widest bar at top (classic tornado shape)
 total_range = np.abs(high_values - low_values)
 sort_idx = np.argsort(total_range)
 parameters = [parameters[i] for i in sort_idx]
 low_values = low_values[sort_idx]
 high_values = high_values[sort_idx]
 
-# Build deltas relative to base case
 low_delta = low_values - base_npv
 high_delta = high_values - base_npv
 
-# Custom palette anchored on Python Blue
-color_low = "#D4652F"  # warm copper-orange for low scenario
-color_high = "#306998"  # Python Blue for high scenario
+# Imprint palette: #009E73 (brand green, first series) for Low Scenario
+#                  #4467A3 (blue) for High Scenario
+color_low = IMPRINT_PALETTE[0]  # #009E73
+color_high = IMPRINT_PALETTE[2]  # #4467A3
 
-# Create long-form DataFrame for seaborn barplot
-df_low = pd.DataFrame({"Parameter": parameters, "NPV ($M)": low_delta, "Scenario": "Low Scenario"})
-df_high = pd.DataFrame({"Parameter": parameters, "NPV ($M)": high_delta, "Scenario": "High Scenario"})
+df_low = pd.DataFrame({"Parameter": parameters, "NPV Delta ($M)": low_delta, "Scenario": "Low Scenario"})
+df_high = pd.DataFrame({"Parameter": parameters, "NPV Delta ($M)": high_delta, "Scenario": "High Scenario"})
 df = pd.concat([df_low, df_high], ignore_index=True)
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+# --- Canvas: 3200×1800 px (landscape 16:9) — no bbox_inches='tight' ---
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 
 sns.barplot(
     data=df,
     y="Parameter",
-    x="NPV ($M)",
+    x="NPV Delta ($M)",
     hue="Scenario",
     hue_order=["Low Scenario", "High Scenario"],
     palette=[color_low, color_high],
@@ -73,57 +95,65 @@ sns.barplot(
     edgecolor="none",
 )
 
-# Shift x-axis to show absolute NPV values
-current_ticks = ax.get_xticks()
-ax.set_xticks(current_ticks)
-ax.set_xticklabels([f"${int(t + base_npv)}" for t in current_ticks])
+# Widen view to accommodate bar-end annotations without clipping
+ax.set_xlim(low_delta.min() - 9, high_delta.max() + 9)
 
-# Base case reference line with annotation at top
-ax.axvline(x=0, color="#333333", linewidth=1.8, linestyle="--", zorder=3)
+# Relabel x-axis ticks with absolute NPV values (not deltas)
+ticks = ax.get_xticks()
+ax.set_xticks(ticks)
+ax.set_xticklabels([f"${int(t + base_npv)}" for t in ticks])
+
+# Base case reference line
+ax.axvline(x=0, color=INK_SOFT, linewidth=1.2, linestyle="--", zorder=3)
+
+# Base case annotation just above the top bar — avoids crowding at the base line
 ax.annotate(
-    f"Base Case ${int(base_npv)}M",
-    xy=(0, len(parameters) - 1),
-    xytext=(8, -20),
+    f"Base Case: ${int(base_npv)}M",
+    xy=(0, len(parameters) - 0.45),
+    xytext=(5, 0),
     textcoords="offset points",
-    fontsize=12,
+    fontsize=7.5,
     fontweight="bold",
-    color="#333333",
-    ha="left",
-    va="top",
     fontstyle="italic",
+    color=INK_SOFT,
+    ha="left",
+    va="center",
 )
 
-# Bar-end value annotations
-for i, _param in enumerate(parameters):
+# Bar-end value annotations (8pt — larger relative to canvas than previous 12pt@4800px)
+for i in range(len(parameters)):
     lv = low_values[i]
     hv = high_values[i]
     ld = low_delta[i]
     hd = high_delta[i]
-    # Position annotations at the outer end of each bar
     neg_x = min(ld, hd)
     pos_x = max(ld, hd)
-    ax.text(neg_x - 1.2, i, f"${min(lv, hv):.0f}M", va="center", ha="right", fontsize=12, color="#555555")
-    ax.text(pos_x + 1.2, i, f"${max(lv, hv):.0f}M", va="center", ha="left", fontsize=12, color="#555555")
+    ax.text(neg_x - 0.9, i, f"${min(lv, hv):.0f}M", va="center", ha="right", fontsize=8, color=INK_MUTED)
+    ax.text(pos_x + 0.9, i, f"${max(lv, hv):.0f}M", va="center", ha="left", fontsize=8, color=INK_MUTED)
 
-# Emphasize top 3 most impactful parameters with bold labels
+# Axis labels and title
+ax.set_ylabel("Input Parameter", fontsize=10, color=INK)
+ax.set_xlabel("Net Present Value ($M)", fontsize=10, color=INK)
+ax.set_title(
+    "bar-tornado-sensitivity · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", pad=12, color=INK
+)
+ax.tick_params(axis="y", labelsize=8, colors=INK_SOFT)
+ax.tick_params(axis="x", labelsize=8, colors=INK_SOFT)
+
+# Grid and spines
+sns.despine(left=True, bottom=False)
+ax.yaxis.grid(False)
+ax.xaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
+
+# Legend
+ax.legend(fontsize=8, frameon=True, facecolor=ELEVATED_BG, edgecolor=INK_SOFT, loc="upper right")
+
+# Bold top-3 most impactful parameter labels — must come after canvas draw
+fig.canvas.draw()
 ytick_labels = ax.get_yticklabels()
 for i, label in enumerate(ytick_labels):
     if i >= len(parameters) - 3:
         label.set_fontweight("bold")
-        label.set_fontsize(17)
+        label.set_fontsize(9)
 
-# Style refinements
-ax.set_ylabel("Input Parameter", fontsize=20)
-ax.set_xlabel("Net Present Value ($M)", fontsize=20)
-ax.set_title("bar-tornado-sensitivity \u00b7 seaborn \u00b7 pyplots.ai", fontsize=24, fontweight="medium", pad=20)
-ax.tick_params(axis="y", labelsize=16)
-ax.tick_params(axis="x", labelsize=16)
-sns.despine(left=True, bottom=False)
-ax.yaxis.grid(False)
-ax.xaxis.grid(True, alpha=0.2, linewidth=0.8)
-
-# Legend
-ax.legend(fontsize=15, frameon=False, loc="upper right")
-
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
