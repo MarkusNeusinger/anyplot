@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: cartogram-area-distortion
 created: '2026-06-08T03:59:03Z'
-updated: '2026-06-08T04:06:22Z'
+updated: '2026-06-08T04:22:36Z'
 generated_by: claude-sonnet
 workflow_run: 27114867727
 issue: 4671
@@ -12,54 +12,65 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cartogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/javascript/chartjs/plot-dark.html
-quality_score: 78
+quality_score: 80
 review:
   strengths:
-  - Excellent imprint_seq usage for continuous population encoding — correct gradient
-    direction (green=low, blue=high) using t.seq tokens
-  - 'Theme adaptation is complete and correct: both renders pass readability check
-    with no dark-on-dark failures'
-  - Custom gradient legend with rounded corners and alpha-blended background is polished
-    and informative
-  - Real, accurate 2023 US population data with correct geographic centroid positioning
-    for 48 contiguous states
-  - State label rendering with dynamic font sizing and white text + drop shadow is
-    clever and practical
-  - Subtitle replaces axis labels effectively for a map-style visualization
-  - Clean axis-free layout (all ticks, grid, borders hidden) is the right aesthetic
-    for geographic context
-  - Effective use of Chart.js plugin system (afterDatasetsDraw / afterDraw hooks)
-    for custom canvas rendering
+  - Correct imprint_seq (green→blue) colormap for continuous population data — palette
+    compliance is perfect
+  - 'Full theme-adaptive chrome: both light (#FAF8F1) and dark (#1A1A17) renders are
+    correct and all text is readable'
+  - Custom gradient legend with size reference circles elegantly communicates both
+    color and area encoding simultaneously
+  - Axes/grid/borders completely hidden — very clean, appropriate minimalism for a
+    geographic cartogram
+  - State abbreviation labels drawn inside bubbles using Chart.js plugin API — idiomatic
+    and effective
+  - Dual encoding (size + color both ∝ population) reinforces the key insight; large
+    states immediately stand out
+  - Real 2023 US state population data with accurate proportions — DQ is strong
   weaknesses:
-  - 'Contiguous borders missing: spec requires regions to share borders after distortion
-    (contiguous cartogram), but Chart.js can only produce a Dorling variant (isolated
-    circles) — SC-02 deduction'
-  - 'No reference map inset for comparison: spec Notes require an original region
-    outline or inset — not feasible with Chart.js bubbles'
-  - 'Northeast corridor crowding: NY, NJ, MA, CT, RI, MD, DE bubbles touch/overlap
-    — consider sorting by population ascending so larger bubbles render on top, preventing
-    small state occlusion'
-  - Minimum state radius floor of 5 CSS px (10 source px diameter) makes very low-population
-    states (VT 0.6M, WY 0.6M, ND 0.8M) difficult to identify — consider raising floor
-    to r=8 or r=10
-  - 'No depth ordering: larger bubbles should be drawn last (data sorted by population
-    ascending) so small states remain visible and are not occluded by adjacent large
-    states'
-  image_description: |-
-    Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface
-      Chrome: Title "cartogram-area-distortion · javascript · chartjs · anyplot.ai" in dark ink (t.ink), bold 32px — readable. Subtitle "US States — Dorling Cartogram: bubble area and color ∝ population (2023)" in t.inkSoft 20px — readable. No axes or tick labels shown (hidden by design). Custom gradient legend box in top-right with "Population (2023)" title, gradient bar (#009E73→#4467A3), and min/max labels (0.6M, 39.2M) in t.inkSoft — all readable.
-      Data: 48 state bubbles positioned by longitude (x) / latitude (y), sized by sqrt(pop/maxPop)*45. Sequential color from #009E73 (small states) to #4467A3 (large states). CA (39.2M) is large blue-purple. TX (30.0M) is large blue. FL (22.6M), NY (19.6M) are prominent. VT/WY are tiny green dots. State abbreviations in white with shadow inside bubbles where r>=12.
-      Legibility verdict: PASS — all text readable, first series correctly uses imprint_seq (#009E73 to #4467A3)
-
-    Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title and subtitle render in light text (t.ink = #F0EFE8 in dark mode) — fully readable. Legend box uses t.elevatedBg (#242420) with alpha-blended border in t.inkSoft — visible and readable. Min/max labels in t.inkSoft — readable against dark background. No dark-on-dark failures detected.
-      Data: Bubble colors are identical to light render — same #009E73-to-#4467A3 gradient across all 48 state bubbles. State abbreviations remain white with shadow — readable on colored bubble backgrounds. Data colors confirmed identical across themes (only chrome flips).
-      Legibility verdict: PASS — all text readable in dark theme, no dark-on-dark issues, data colors preserved
+  - Dorling bubble approach does not preserve contiguous borders between states —
+    spec requires regions to remain adjacent after distortion. A layout algorithm
+    that reduces bubble overlap while maintaining approximate neighbor relationships
+    (e.g. sorting/shifting to reduce overlaps) would better fulfill the contiguous
+    adjacency requirement.
+  - Missing reference map inset showing original state outlines for comparison — spec
+    explicitly requires 'Include original region outlines or a reference map inset
+    for comparison'. A small inset in a corner with uniform-size state outlines would
+    satisfy this.
+  - Northeast US states (NJ, CT, DE, MD, RI, NH, VT) show significant bubble overlap
+    due to geographic density — consider nudging overlapping bubbles slightly apart
+    or adding a size-floor increase for readability in this region.
+  - hexToRgba() and seqColor() helper functions at file top add structural complexity
+    — inline the color calculation or collapse to fewer helpers to better meet KISS
+    structure expectations.
+  - 'CQ-01: two plugin objects (labelPlugin, gradientLegendPlugin) plus two helper
+    functions deviate from the expected flat Imports→Data→Plot→Save structure; these
+    are necessary for Chart.js but worth noting for repair.'
+  image_description: "Light render (plot-light.png):\n  Background: Warm off-white\
+    \ (#FAF8F1) — correct anyplot light surface\n  Chrome: Title \"cartogram-area-distortion\
+    \ · javascript · chartjs · anyplot.ai\" in bold dark text at top — fully readable.\
+    \ Subtitle \"US States — Dorling Cartogram: bubble area and color ∝ population\
+    \ (2023)\" in lighter dark text below — readable. No axis labels or tick labels\
+    \ (intentionally hidden for geographic layout).\n  Data: 48 US state bubbles positioned\
+    \ by geographic coordinates. Sequential gradient from green (#009E73, small states)\
+    \ to blue (#4467A3, large states) via imprint_seq. CA, TX, FL, NY are the dominant\
+    \ large bubbles with white abbreviation labels. Small states (VT, ND, WY etc.)\
+    \ render as small circles without labels (r < 12 cutoff). \n  Legend: Top-right\
+    \ corner box with gradient bar (green→blue), min/max population labels (0.6M–39.2M),\
+    \ and three reference circles (1M, 10M, 39M).\n  Legibility verdict: PASS — all\
+    \ text elements are clearly readable against the warm off-white background.\n\n\
+    Dark render (plot-dark.png):\n  Background: Warm near-black (#1A1A17) — correct\
+    \ anyplot dark surface\n  Chrome: Title and subtitle text is light/white — clearly\
+    \ readable against dark background. Legend box uses dark elevated background (#242420)\
+    \ with light text — readable.\n  Data: Bubble colors are identical to the light\
+    \ render — the sequential green-to-blue gradient is unchanged between themes (only\
+    \ chrome flips). State abbreviation labels remain white in both renders. No dark-on-dark\
+    \ text issues detected.\n  Legibility verdict: PASS — all text elements are clearly\
+    \ readable against the dark background. No dark-on-dark failures."
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -67,58 +78,57 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout (title 32px, subtitle 20px,
-          legend 14px/13px, state labels via formula). Both renders fully readable
-          and well-proportioned.
+        comment: 'All font sizes explicitly set (title=32, subtitle=20, legend 10-14px).
+          Readable at full size in both themes. Minor: smallest legend reference labels
+          (10px) are tight but legible.'
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
         passed: true
-        comment: Bubbles in northeast corridor (NY, NJ, MA, CT, RI, MD, DE) touch
-          and partially overlap. Labels inside bubbles are readable but geographic
-          crowding causes bubble boundary overlap.
+        comment: Notable bubble overlap in dense northeast US states (NJ, CT, DE,
+          MD, RI) due to geographic proximity — inherent to Dorling approach with
+          real coords. Main content remains readable.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Most states clearly visible. Lowest-population states (VT, WY, ND,
-          SD at ~0.6–0.9M) render as ~10px diameter dots — visible but very small.
-          Area encoding is data-accurate.
+        comment: All 48 states visible. Large states well-labelled. Very small states
+          (r<12 floor) render as tiny but visible circles. Color gradient clearly
+          encodes population range.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential green-to-blue gradient is colorblind-safe. No red-green-only
-          signal. Imprint seq palette used correctly.
+        comment: imprint_seq gradient (green→blue) is CVD-safe and perceptually uniform.
+          No red-green sole-signal dependency.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good use of canvas for geographic bubble layout. Plot fills ~60%
-          of canvas; western/central US has expected whitespace from low population
-          density. Legend placement polished.
+        comment: Chart fills most of the landscape canvas with bubbles spread across
+          the geographic extent. Some empty space at bottom below FL/TX. Legend well-positioned
+          in corner.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes hidden by design (appropriate for map-style). Subtitle clearly
-          explains size and color encoding with domain context. Legend provides units
-          (M).
+        comment: Axes intentionally hidden for geographic viz. Title format correct.
+          Subtitle fully describes the encoding. Legend explains area and color.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous data uses imprint_seq (t.seq[0] to t.seq[1] = #009E73
-          to #4467A3). Light bg #FAF8F1, dark bg #1A1A17. Chrome tokens applied correctly.
-          Data colors identical across themes.'
+        comment: 'Uses imprint_seq (seq[0]=#009E73 → seq[1]=#4467A3) for continuous
+          population data — correct choice. Light bg #FAF8F1, dark bg #1A1A17. All
+          chrome tokens (ink, inkSoft, elevatedBg) theme-adaptive.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -126,25 +136,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above configured defaults: custom gradient legend with rounded corners,
-          state labels with shadow, clean axis-free layout, dual encoding. Not yet
-          FiveThirtyEight-level but clearly above library defaults.'
+        comment: 'Strong design: imprint_seq gradient, clean geographic layout, custom
+          gradient legend with size reference circles. Above configured defaults but
+          not publication-level.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Axes completely hidden (ticks, grid, border all false). Custom legend
-          box with roundRect and alpha-blended background. Subtitle used instead of
-          axis labels. Polished.
+        comment: Axes/grid/borders completely removed — very clean. Rounded legend
+          box. Alpha on bubble fills and borders. Semi-transparent legend background.
+          Well refined.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Dual encoding (bubble area + color both proportional to population)
-          creates clear visual hierarchy. CA, TX, FL, NY immediately dominate. Geographic
-          positioning preserved. Subtitle narrates the encoding.
+        comment: Dual encoding (size + color) creates clear visual hierarchy — CA,
+          TX, NY, FL immediately stand out. Geographic positioning gives spatial context.
+          Subtitle explains the cartogram concept clearly.
     spec_compliance:
       score: 11
       max: 15
@@ -154,32 +164,33 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Implements Dorling cartogram (non-contiguous circles at geographic
-          coordinates, area proportional to population). Valid cartogram variant but
-          spec describes contiguous border-preserving distortion.
+        comment: Dorling cartogram (bubbles at geographic coords sized by data) is
+          a recognized cartogram variant. However, spec describes contiguous cartograms
+          preserving adjacency/borders — the Dorling approach does not preserve contiguity.
       - id: SC-02
         name: Required Features
         score: 2
         max: 4
         passed: true
-        comment: 'Color encoding, state labels, and population legend present. Missing:
-          contiguous borders (impossible with Chart.js bubbles), reference map inset
-          (impossible), polygon geometry not used.'
+        comment: 'Present: labels on major regions, color scale, legend with area/color
+          explanation. Missing: reference map inset with original outlines (spec requires
+          it), contiguous region borders.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=longitude, Y=latitude, R=sqrt(pop/maxPop)*R_MAX, color=normalized
-          gradient. All correct and visible.
+        comment: Geographic coordinates accurately position bubbles. Bubble radius
+          ∝ sqrt(pop) (area ∝ pop). Color ∝ normalized population. All 48 contiguous
+          states included.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: cartogram-area-distortion · javascript · chartjs · anyplot.ai
-          — correct format. Gradient legend shows population scale. Tooltip configured
-          with state name and population.'
+        comment: 'Title is exact required format: ''cartogram-area-distortion · javascript
+          · chartjs · anyplot.ai''. Subtitle is descriptive. Legend correctly describes
+          population encoding.'
     data_quality:
       score: 14
       max: 15
@@ -189,23 +200,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows full range from tiny (VT 0.6M) to massive (CA 39.2M). Dual
-          encoding demonstrates both area distortion and continuous coloring. Could
-          show a second independent variable for color per spec note.
+        comment: Shows full range from tiny states (VT=0.6M, WY=0.6M) to large (CA=39.2M,
+          TX=30M). Wide variation demonstrates the cartogram distortion effect well.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real US 2023 state population data. Real geographic coordinates.
-          State abbreviations. Neutral, factual, comprehensible scenario.
+        comment: Real 2023 US state population data. Neutral geographic/demographic
+          topic. No controversial content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: CA 39.2M, TX 30.0M, FL 22.6M, NY 19.6M, WY 0.6M — all match documented
-          2023 census estimates accurately.
+        comment: Population values appear factually accurate for 2023. Proportions
+          are correct (CA ≈ 5x MT, TX ≈ 50x VT/WY).
     code_quality:
       score: 9
       max: 10
@@ -215,34 +225,36 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Two helper functions and two plugin objects. Slightly beyond flat-script
-          KISS but plugins are necessary for custom canvas rendering.
+        comment: Two helper functions (hexToRgba, seqColor) plus two plugin objects
+          add complexity beyond the expected flat structure. Necessary for Chart.js
+          plugins but deviates from KISS ideal.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded; fully deterministic.
+        comment: Fully deterministic — all data hardcoded as array literal. No randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; Chart is a global. All helper functions are used.
+        comment: No imports — Chart is a global per harness contract. All utilities
+          are inline.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic Chart.js. No fake UI elements. Plugin pattern is
-          appropriate for this use case.
+        comment: Clean, idiomatic Chart.js plugin usage. No fake UI elements. Appropriate
+          complexity for a Dorling cartogram.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Chart.js harness emits plot-{theme}.png and plot-{theme}.html. Correct
-          API usage throughout.
+        comment: 'Correct harness contract (no savefig, appends to #container). Current
+          Chart.js 4.4.7 API.'
     library_mastery:
       score: 7
       max: 10
@@ -252,31 +264,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct bubble chart with responsive/maintainAspectRatio/animation
-          flags. Plugin system used correctly for afterDatasetsDraw and afterDraw
-          hooks. Token integration is excellent.
+        comment: Correct Chart.js bubble type, proper plugin registration, responsive/maintainAspectRatio/animation
+          flags all correctly set. Good use of subtitle plugin.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Chart.js plugin system with canvas context access (ctx.createLinearGradient,
-          ctx.roundRect, shadow) for custom legend and state labels. Leverages Chart.js
-          unique canvas-drawing plugin architecture.
-  verdict: REJECTED
+        comment: Uses Chart.js plugin API (afterDatasetsDraw, afterDraw) for custom
+          canvas-2D drawing — this is a Chart.js-specific pattern. Uses roundRect,
+          createLinearGradient, and arc within the plugin hooks.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
   - annotations
-  - hover-tooltips
-  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - normalization
   styling:
   - minimal-chrome
-  - custom-colormap
   - alpha-blending
