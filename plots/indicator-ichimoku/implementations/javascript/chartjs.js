@@ -219,6 +219,7 @@ new Chart(canvas, {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
+    layout: { padding: { top: 10, right: 20, bottom: 10, left: 10 } },
     plugins: {
       title: {
         display: true,
@@ -240,11 +241,12 @@ new Chart(canvas, {
       x: {
         ticks: {
           color: t.inkSoft,
-          font: { size: 11 },
+          font: { size: 14 },
           maxTicksLimit: 12,
           maxRotation: 0,
         },
         grid: { color: t.grid },
+        border: { display: false },
         title: {
           display: true,
           text: 'Trading Date',
@@ -256,10 +258,11 @@ new Chart(canvas, {
         beginAtZero: false,
         ticks: {
           color: t.inkSoft,
-          font: { size: 11 },
+          font: { size: 14 },
           callback: (v) => '$' + v.toFixed(0),
         },
         grid: { color: t.grid },
+        border: { display: false },
         title: {
           display: true,
           text: 'Price (USD)',
