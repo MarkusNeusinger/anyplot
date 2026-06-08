@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: phase-diagram-pt
 created: '2026-03-14T14:52:32Z'
-updated: '2026-06-08T08:33:31Z'
+updated: '2026-06-08T08:42:49Z'
 generated_by: claude-sonnet
 workflow_run: 27124631842
 issue: 4666
@@ -12,100 +12,95 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-dia
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/python/altair/plot-dark.html
-quality_score: 81
+quality_score: 88
 review:
   strengths:
-  - Thermodynamically accurate water phase diagram using real Clausius-Clapeyron equations
-    with correct triple point (273.16 K / 611.73 Pa) and critical point (647.1 K /
-    22.064 MPa) values
-  - Altair-native hover interactivity via selection_point changes both line opacity
-    and strokeWidth — a genuinely Altair-idiomatic technique
-  - 'Correct Imprint palette in canonical order: #009E73 (Solid–Gas first), #C475FD
-    (Liquid–Gas second), #4467A3 (Solid–Liquid third); ochre and matte-red for special
-    points'
-  - Phase region fills with 10% opacity matching palette colors add spatial context
-    without competing with the boundary lines
-  - Logarithmic pressure axis correctly handles 9 orders of magnitude (1 Pa to 1 GPa);
-    water's anomalous negative-slope solid–liquid boundary is properly shown
+  - Physically accurate water phase diagram using Clausius-Clapeyron equations — triple
+    point (273.16 K / 611.73 Pa) and critical point (647.1 K / 22.064 MPa) use real-world
+    values
+  - All three phase boundaries correctly implemented including water's anomalous negative-slope
+    solid–liquid boundary
+  - Multi-layer Altair composition with hover-conditional opacity and strokeWidth
+    creates engaging interactive experience
+  - Phase watermark labels at 35% opacity add spatial context tastefully without competing
+    with boundary lines
+  - 'Correct Imprint palette throughout: brand green first, canonical order for remaining
+    positions, appropriate theme-adaptive chrome in both renders'
   weaknesses:
-  - Critical point annotation ('Critical Point\n647.1 K, 22.06 MPa') is partially
-    obscured by the legend box in both renders because the data point falls in the
-    upper-right corner where the orient='top-right' legend lives — change cp_label
-    to align='left' with dx=+16 so the annotation text extends leftward away from
-    the legend box, or shift the legend to orient='bottom-right'
-  - Dashed grid lines (gridDash=[3, 3]) contradict the style guide which specifies
-    solid thin lines — remove the gridDash parameter to revert to solid grid
-  - Critical point marker (square) is likely partially or fully behind the legend
-    box at (647.1 K, 22.06 MPa) — repositioning the legend to orient='bottom-right'
-    or 'top-left' would expose both the marker and the annotation
+  - configure_view(stroke=INK_SOFT) produces a full four-sided box border; style guide
+    default is to remove top/right spines (L-shaped frame) — consider stroke=None
+    for cleaner aesthetics
+  - Annotation font size at 11px is slightly below the comfortable secondary-text
+    floor of 12px — increase to 12px for better mobile readability
+  - Phase region labels at fontSize=18 create a minor size hierarchy imbalance vs.
+    the 12px axis titles and 11px annotations — reducing to 14–16px would feel more
+    proportional
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "phase-diagram-pt · python · altair · anyplot.ai" is bold dark text, readable. Subtitle "Water Pressure–Temperature Phase Diagram" in INK_SOFT, readable. Axis labels "Temperature (K)" and "Pressure (Pa)" are clearly visible with appropriate sizing. Log-scale Y tick labels (1, 10, 100, ..., 1,000,000,000) are readable. All chrome uses dark ink tokens on the light background.
-      Data: Three boundary curves clearly visible — green Solid–Gas curve rising from bottom-left, lavender Liquid–Gas arc from triple point to critical point, blue Solid–Liquid nearly-vertical line showing water's anomalous negative slope. Phase region fills at 10% opacity in matching palette colors. "SOLID", "LIQUID", "GAS" phase labels in semi-transparent text at appropriate positions. Triple Point diamond marker (ochre) at ~(273 K, 611 Pa) with readable annotation. Critical point square marker (matte-red) is in the upper-right corner where the orient="top-right" legend box is placed — the annotation text shows only "Critica" and "647.1 K, 22.0" because the legend box overlaps and partially obscures the annotation.
-      Legibility verdict: PASS for most elements; FAIL for critical point annotation (partially hidden behind legend box).
+      Background: Warm off-white #FAF8F1 — correct theme background
+      Chrome: Title "phase-diagram-pt · python · altair · anyplot.ai" in bold dark ink (16px); subtitle "Water Pressure–Temperature Phase Diagram" in ink-soft (13px); axis labels "Temperature (K)" and "Pressure (Pa)" at 12px; tick labels at 10px — all readable
+      Data: Three boundary lines — Solid–Gas (#009E73 brand green), Liquid–Gas (#C475FD lavender), Solid–Liquid (#4467A3 blue); phase region fills at 10% opacity in matching colors; watermark phase labels (SOLID/LIQUID/GAS) at 35% opacity; triple point ochre diamond (#BD8233) annotated; critical point red square (#AE3030) annotated
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title and subtitle appear in light (#F0EFE8) text on dark background — readable. Axis labels and tick labels render in INK_SOFT (#B8B7B0) — readable. No dark-on-dark failures detected for primary text elements. Legend box uses elevated dark background (#242420) with INK_SOFT border.
-      Data: All three boundary lines render in identical colors to the light render (green, lavender, blue — Imprint palette positions 1–3). Phase region fills are the same but barely visible on the dark background (10% opacity was tuned for the light surface). Triple Point annotation is readable. Critical point annotation is again partially obscured by the legend box ("Critica" and "647.1 K, 22.0").
-      Legibility verdict: PASS for most elements; FAIL for critical point annotation (same legend overlap issue as light render).
+      Background: Warm near-black #1A1A17 — correct theme background
+      Chrome: Title and subtitle switch to light #F0EFE8 and #B8B7B0 ink — fully readable; axis labels, tick labels, and legend text all appear in light tones; no dark-on-dark failures detected
+      Data: Colors identical to light render — green, lavender, blue boundary lines; ochre diamond and red square special markers; phase watermarks visible; annotations in light ink token
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout; title, axis labels, and ticks
-          readable in both themes. Critical point annotation partially obscured but
-          text sizing itself is fine.
+        comment: All font sizes explicitly set; annotation text at 11px is at the
+          lower edge of comfortable readability at mobile widths
       - id: VQ-02
         name: No Overlap
-        score: 3
-        max: 6
-        passed: false
-        comment: Legend box (orient='top-right') overlaps with critical point marker
-          and annotation at (647.1 K, 22.06 MPa) — annotation shows 'Critica' instead
-          of 'Critical Point'.
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Phase boundary lines well-visible with 3.5px stroke. Triple point
-          marker prominent. Critical point marker may be partially behind legend box.
+        comment: No text or data element overlaps detected in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Boundary lines at strokeWidth 3.5 well-sized; markers at size=300
+          clearly visible; phase region fills at opacity=0.10 appropriately subtle
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; no red-green as sole distinguishing
-          signal.
+        comment: Imprint palette is CVD-safe; boundary lines use distinct hue families;
+          marker shapes provide redundant encoding
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Plot fills canvas well. Legend placement conflicts
-          with critical point data position in upper-right corner.
+        comment: Canvas gate passed; chart fills space well with balanced margins;
+          legend well-placed at bottom-right
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Temperature (K) and Pressure (Pa) — descriptive with units.
+        comment: Temperature (K) and Pressure (Pa) with units; descriptive subtitle
+          adds context
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 correct. Imprint canonical order for three
-          boundaries. Backgrounds #FAF8F1/#1A1A17 correct. Chrome theme-adaptive in
-          both renders.'
+        comment: 'First series (Solid-Gas) = #009E73; canonical Imprint order through
+          positions 1-5; light #FAF8F1 / dark #1A1A17 backgrounds correct; all chrome
+          tokens flip correctly'
     design_excellence:
       score: 12
       max: 20
@@ -115,27 +110,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: hover-interactive boundary highlighting, phase region
-          fills with palette colors at 10% opacity, distinct markers for special points,
-          subtitle adds context.'
+        comment: Multi-layer composition, phase watermark labels at 0.35 opacity,
+          hover-highlight with conditional opacity/strokeWidth, distinct marker shapes
+          — clearly above configured defaults
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: Legend styled with rounded corners and elevated background. Phase
-          labels at 35% opacity is refined. But gridDash=[3,3] contradicts style guide
-          (solid thin lines required).
+        passed: false
+        comment: Grid opacity 0.12 and axis/legend styling fully themed, but configure_view(stroke=INK_SOFT)
+          keeps all four borders visible; style guide default is L-shaped (top/right
+          removed)
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Phase regions labeled with matching colors guide the viewer. Triple
-          and critical points highlighted as special features. Hover highlighting
-          draws attention to individual boundaries.
+        comment: 'Effective visual hierarchy: two focal points prominently marked;
+          phase regions orient the viewer; hover interaction highlights individual
+          curves; water anomaly clearly visible'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -143,55 +138,56 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct P-T phase diagram with all three phase boundaries.
+        comment: Correct P-T phase diagram with boundary lines, phase region fills,
+          and annotated special points
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Phase regions labeled, triple point annotated and marked, log pressure
-          axis, negative-slope solid-liquid boundary for water. Critical point annotation
-          partially obscured by legend.
+        comment: 'All features present: three named phase boundaries, phase region
+          labels, triple/critical points marked and annotated, logarithmic pressure
+          axis'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Temperature on X, Pressure (log) on Y, all boundaries correctly encoded.
+        comment: X=Temperature(K), Y=Pressure(Pa) log scale, color=phase boundary
+          type; appropriate data ranges
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'phase-diagram-pt · python · altair · anyplot.ai'. Legend
-          correctly labels three phase boundaries.
+        comment: Mandated title format correct; Phase Boundary legend with correct
+          labels; subtitle adds descriptive context
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All three phase boundaries, both special points, phase region labels,
-          log scale, water's anomalous negative slope. Supercritical region implied
-          but not explicitly labeled.
+        comment: All three boundaries shown; both special points marked; phase regions
+          labeled; water anomaly (negative-slope solid-liquid) correctly implemented
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real water thermodynamic data with physically accurate Clausius-Clapeyron
-          equations.
+        comment: 'Real water thermodynamic data: triple point 273.16K/611.73Pa, critical
+          point 647.1K/22.064MPa; Clausius-Clapeyron equations for boundaries; physically
+          accurate'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Triple point at 273.16 K/611.73 Pa and critical point at 647.1 K/22.064
-          MPa are factually correct. Temperature range 200–700 K and pressure range
-          1 Pa–2 GPa are appropriate.
+        comment: Temperature domain 200-700K and pressure domain 1-2e9 Pa on log scale
+          are canonical ranges for water phase diagram; all values factually correct
     code_quality:
       score: 10
       max: 10
@@ -201,38 +197,38 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports → data → chart layers → save. No functions
-          or classes.'
+        comment: No functions or classes; flat sequential structure; importlib pattern
+          is project-standard workaround
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — physics-based curve generation with no random
-          elements.
+        comment: 'Fully deterministic: all data derived from physics constants and
+          equations'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, pandas, PIL, altair (via importlib), os,
-          sys, importlib.'
+        comment: 'All imports used: numpy, pandas, PIL for canvas padding, altair
+          via importlib'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a layered phase diagram. Altair layer
-          composition is clean.
+        comment: Clean Altair idioms; hover selection is native interactive feature
+          not fake UI; canvas padding follows canonical pattern
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (with canvas padding) and plot-{THEME}.html.
-          Current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Altair 6.x
+          API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -240,25 +236,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of Altair layering, resolve_scale(color='independent', shape='independent'),
-          alt.condition for hover effects, proper encoding type annotations (:Q, :N).
+        comment: Excellent use of alt.layer(), resolve_scale(color='independent',
+          shape='independent'), alt.condition for conditional encodings, alt.selection_point
+          — well above default Altair usage
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Altair-native selection_point for hover highlighting changes both
-          opacity and strokeWidth — not easily replicated in other libraries. mark_rect
-          for region fills with x/x2/y/y2 encoding is distinctively Altair.
-  verdict: REJECTED
+        comment: mark_rect for rectangular region fills, lineBreak='\n' in mark_text,
+          alt.condition for dynamic opacity/strokeWidth on hover — meaningfully Altair-specific
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
   - layer-composition
   - hover-tooltips
-  - html-export
   - annotations
+  - html-export
   patterns:
   - data-generation
   dataprep: []
