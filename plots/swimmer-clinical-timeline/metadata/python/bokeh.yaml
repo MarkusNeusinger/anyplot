@@ -1,48 +1,52 @@
 library: bokeh
+language: python
 specification_id: swimmer-clinical-timeline
 created: '2026-03-13T22:04:33Z'
-updated: '2026-03-13T22:29:17Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23072197859
+updated: '2026-06-08T06:21:18Z'
+generated_by: claude-sonnet
+workflow_run: 27118844682
 issue: 4670
-python_version: 3.14.3
-library_version: 3.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/bokeh/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 3.9.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/python/bokeh/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Perfect spec compliance with all required features (treatment arms, event markers,
-    ongoing indicators, sorting)
-  - 'Excellent use of Bokeh-specific features: dual HoverTool, ColumnDataSource, HTML+PNG
-    dual export'
-  - Colorblind-safe palette using Wong palette colors for event markers
-  - Strong data storytelling with median reference line, duration sorting, and ongoing
-    patient markers
-  - Clean, well-organized code with KISS structure
+  - 'Full spec compliance: all required swimmer plot features implemented (sorted
+    bars, event markers with shapes, ongoing indicators, treatment arm color coding,
+    legend)'
+  - Excellent semantic color + shape redundant encoding for event markers — both CVD-safe
+    and clinically intuitive (blue=response, lime=recovery, red=progression, amber=warning)
+  - Dual HoverTool with renderer-scoped tooltips is an exemplary use of Bokeh interactive
+    capabilities
+  - Median reference line with italic label provides clinical statistical context
+  - Fully theme-adaptive chrome with all tokens correctly threaded through; both renders
+    pass readability check
   weaknesses:
-  - Y-axis patient labels at 18pt could be slightly larger for better readability
-    with 25 patients
-  - Ongoing indicator arrows (small gray triangles) could be more prominent
-  - Legend could be positioned closer to the data concentration area
-  image_description: 'The plot displays a swimmer plot for a simulated Phase II oncology
-    clinical trial with 25 patients. Horizontal bars represent individual patient
-    timelines, sorted by treatment duration with shortest at top (PT-018, ~5 weeks)
-    and longest at bottom (PT-010, ~52 weeks). Bars are color-coded by treatment arm:
-    deep steel blue (#306998) for "Arm A (Combo)" and warm terracotta (#C46B4A) for
-    "Arm B (Mono)". Event markers are overlaid on bars: green triangles for Partial
-    Response, pink/magenta stars for Complete Response, orange diamonds for Progressive
-    Disease, and yellow squares for Adverse Events. Small dark gray right-pointing
-    triangles mark ongoing patients (PT-001, PT-011, PT-019, PT-009, PT-010) at bar
-    ends. A dotted vertical reference line marks the median duration at 16.3 weeks
-    with an italic label. The x-axis reads "Time on Study (Weeks)" and the y-axis
-    reads "Patient". The title "swimmer-clinical-timeline · bokeh · pyplots.ai" appears
-    at the top left. The legend is positioned at center-right listing all treatment
-    arms and event types. Background is light gray (#f7f7f7) with subtle dashed horizontal
-    gridlines.'
+  - Tick label font sizes deviate below style-guide defaults (28pt x-axis, 24pt y-axis
+    vs recommended 34pt); y-axis reduction is justified for 25 labels but x-axis could
+    be closer to 34pt
+  - Visual refinement stops short of thinning axis spines; a thinner INK_SOFT spine
+    would add polish
+  - Legend label text at 28pt is smaller than the 34pt style-guide recommendation
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "swimmer-clinical-timeline · python · bokeh · anyplot.ai" in dark INK (#1A1A17), ~75% width — expected for long mandated format. X-axis label "Time on Study (Weeks)" and Y-axis label "Patient" in dark INK, readable. Tick labels in INK_SOFT (#4A4A44), readable at 28pt (x) and 24pt (y). Legend labels in INK_SOFT at 28pt.
+      Data: Arm A (Combo) bars in brand green #009E73, Arm B (Mono) in lavender #C475FD. Event markers: blue triangles (Partial Response), lime-green stars (Complete Response), red diamonds (Progressive Disease), amber squares (Adverse Event). Ongoing right-pointing triangles at bar ends. Median dashed vertical line visible.
+      Legibility verdict: PASS — all text readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and axis labels in light INK (#F0EFE8), clearly readable against dark background. Tick labels in INK_SOFT (#B8B7B0), readable. Legend box uses elevated dark surface #242420 with light-ink border. No dark-on-dark failures.
+      Data: All data colors identical to light render — green and lavender bars, blue/lime/red/amber event markers unchanged. Only chrome flips between themes.
+      Legibility verdict: PASS — all text readable against warm near-black background; no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -50,41 +54,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (36pt title, 28pt labels, 18-20pt ticks).
-          Y-axis labels slightly small for 25 patients.
+        comment: All font sizes explicitly set and readable in both themes. X-axis
+          major labels at 28pt and y-axis at 24pt are below the 34pt style-guide default;
+          y-axis reduction justified for 25 labels.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Patient labels spaced cleanly.
+        comment: No text or marker overlaps in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bars visible at 0.6 height. Event markers (20-28) visible but could
-          be marginally larger.
+        comment: Bars prominent; event markers 17-24pt well-adapted to low-density
+          overlay; ongoing triangles clearly visible.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette with redundant marker-shape encoding for all event
+          types; fully CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Wong colorblind-safe palette for events. Blue vs terracotta bars
-          have strong luminance contrast.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Plot area fills most of canvas. Natural data distribution leaves
-          some right-side space.
+        comment: Plot fills canvas well with generous min_border reservations; legend
+          positioned inside without crowding data; no content cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time on Study (Weeks) with units. Patient is descriptive.
+        comment: X-axis 'Time on Study (Weeks)' carries units; Y-axis 'Patient' is
+          descriptive; title follows mandated format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; second #C475FD; event markers use semantic
+          Imprint positions; backgrounds #FAF8F1/#1A1A17; all chrome theme-adaptive.'
     design_excellence:
       score: 14
       max: 20
@@ -94,22 +107,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom cohesive palette, soft background, white bar edges, intentional
-          hierarchy.
+        comment: 'Strong intentional design: semantic color per event type, redundant
+          shape+color encoding, median reference line. Professional but not FiveThirtyEight
+          level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: X-grid removed, y-grid dashed at 0.12 alpha, minor ticks removed,
-          axis lines softened.
+        comment: X-grid off, y-grid at alpha=0.15, no outline line, alpha=0.80 on
+          bars, clean legend border. Good but could improve spine refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Median reference line, duration sorting, ongoing markers create visual
-          hierarchy.
+        comment: Duration-sorted layout creates visual ranking; median line contextualizes
+          cohort; semantic event symbols guide clinical narrative. Above data-dump
+          level.
     spec_compliance:
       score: 15
       max: 15
@@ -119,26 +134,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct swimmer plot with horizontal bars per patient.
+        comment: Correct swimmer plot with horizontal bars for individual patient
+          timelines.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: bars sorted by duration, distinct event markers,
-          ongoing indicators, legend, treatment arm colors.'
+        comment: 'All spec features: sorted bars, distinct event markers with shapes,
+          ongoing indicators, legend, time-unit x-axis, patient IDs on y-axis, treatment
+          arm color coding.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = time in weeks, Y = patient IDs. All data visible.
+        comment: X=time in weeks, Y=patient IDs, all 25 patients rendered, full duration
+          range shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches format. Legend labels correctly match all categories.
+        comment: Title exactly 'swimmer-clinical-timeline · python · bokeh · anyplot.ai';
+          legend shows all seven categories.
     data_quality:
       score: 15
       max: 15
@@ -148,19 +167,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both arms, four event types, ongoing patients, wide duration range.
+        comment: 'Covers all swimmer plot features: two treatment arms, four event
+          types, ongoing vs completed patients, wide duration variation.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Clinically plausible Phase II oncology trial scenario.
+        comment: Simulated Phase II oncology trial with 25 patients, realistic IDs,
+          two treatment arms (Combo/Mono), clinically valid event types. Neutral scientific
+          domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Duration 4-52 weeks realistic for oncology. Events at plausible timepoints.
+        comment: Durations 4-52 weeks realistic for Phase II; response/progression
+          rates clinically plausible; exponential duration distribution matches real-world
+          patterns.
     code_quality:
       score: 10
       max: 10
@@ -170,7 +194,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, style, save. No functions/classes.'
+        comment: Flat script, no functions or classes, clear data->plot->save flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -182,19 +206,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used; sys.path manipulation is a legitimate workaround.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. No fake UI or over-engineering.
+        comment: Clean and Pythonic; loops over arm_colors and event_marker_config
+          avoid repetition.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png. Also exports HTML.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Bokeh 3.x API.
     library_mastery:
       score: 9
       max: 10
@@ -204,28 +229,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert Bokeh: ColumnDataSource, FactorRange, HoverTool, Legend/LegendItem,
-          Span, Label.'
+        comment: 'Exemplary Bokeh patterns: ColumnDataSource throughout, FactorRange
+          for categorical Y, HoverTool with renderer-scoped tooltips, LegendItem construction,
+          Span+Label annotations.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Dual HoverTool, HTML+PNG dual export, ColumnDataSource-driven rendering.
+        comment: Dual HoverTool instances with separate renderer lists providing distinct
+          tooltip content per element type — impossible to replicate in static libraries.
+          Interactive HTML artifact alongside static PNG.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - hover-tooltips
+  - html-export
   - custom-legend
   - annotations
-  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   - columndatasource
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
   - edge-highlighting

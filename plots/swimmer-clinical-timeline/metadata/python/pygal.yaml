@@ -1,45 +1,61 @@
 library: pygal
+language: python
 specification_id: swimmer-clinical-timeline
 created: '2026-03-13T22:05:00Z'
-updated: '2026-03-13T22:43:01Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23072198082
+updated: '2026-06-08T06:29:53Z'
+generated_by: claude-sonnet
+workflow_run: 27119051707
 issue: 4670
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/pygal/plot.html
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/python/pygal/plot-dark.html
 quality_score: 84
 review:
   strengths:
-  - Complete spec compliance with all required features (event markers, ongoing arrows,
-    treatment arms, legend)
-  - Excellent data quality with realistic clinical trial context and event sequencing
-  - Colorblind-safe palette (Tol qualitative scheme) for event markers
-  - Creative SVG post-processing approach to add markers pygal does not natively support
-  - Well-sorted data creates clear visual hierarchy (longest duration at top)
-  - Custom two-row legend is clear and comprehensive
+  - 'Full spec compliance: all required swimmer plot features implemented — horizontal
+    bars sorted by duration, distinct event markers (triangle/star/diamond/square),
+    ongoing arrows, two-row legend, treatment arm color coding'
+  - Elegant SVG marker injection approach adds event symbols (partial/complete response,
+    progressive disease, adverse event, ongoing arrows) that pygal does not natively
+    support — creative use of the render pipeline
+  - Correct theme adaptation in both renders — light (#FAF8F1) and dark (#1A1A17)
+    backgrounds with proper theme-adaptive text tokens; no dark-on-dark or light-on-light
+    failures
+  - 'Realistic clinical data: 25-patient Phase II oncology cohort with plausible exponential
+    treatment durations per arm, clinically appropriate event rates and timing, standard
+    patient ID notation (PT-XXX)'
+  - 'Imprint palette correctly applied with semantic intent: green (#009E73) for Arm
+    A, lavender (#C475FD) for Arm B, palette positions 3–6 for event types; data colors
+    identical across both themes'
   weaknesses:
-  - Partial response marker color (#4477AA) too similar to Arm A bar color (#306998),
-    reducing visibility on Arm A bars
-  - Heavy SVG manipulation (~100 lines) rather than leveraging pygal features
-  - Design could be more polished - grid lines could be subtler, title area could
-    use more breathing room
-  image_description: 'The plot shows a horizontal swimmer plot with 25 patients (PT-001
-    through PT-025) sorted by treatment duration (longest at top). Bars are colored
-    by treatment arm: teal-blue for Arm A (Combo) and lavender-purple for Arm B (Mono).
-    The x-axis displays Time on Treatment (Weeks) ranging from 0 to 60, with subtle
-    dashed vertical grid lines. Event markers are overlaid on the bars: blue triangles
-    for Partial Response, yellow 5-point stars for Complete Response, pink/magenta
-    diamonds for Progressive Disease, and orange rounded squares for Adverse Events.
-    Ongoing patients have arrow markers at the bar ends (e.g., PT-010, PT-009). A
-    two-row custom legend at the bottom shows arm colors (row 1) and event symbols
-    (row 2). The title swimmer-clinical-timeline pygal pyplots.ai appears at top center
-    in monospace font. The plot background is a very light blue-gray with white page
-    background. Bars have slightly rounded corners and good spacing between them.'
+  - Missing Y-axis title — no y_title parameter set; the patient ID tick labels are
+    present but there is no 'Patient ID' axis label, reducing VQ-06 from 2 to 1
+  - label_font_size=50 is slightly below the pygal style-guide default of 56 — axis
+    tick labels read a little small at full canvas size; raise to 56 to match the
+    guideline
+  - Design excellence is functional but not exceptional — DE-01 5/8, DE-02 3/6, DE-03
+    3/6; the chart is clean but lacks the final polish (e.g., more generous bar spacing,
+    subtle bar opacity variation between arms) that would push it toward publication-ready
+  - SVG legend coordinates (leg_y1=1725, leg_y2=1778) are hardcoded to fixed pixel
+    positions — fragile if canvas dimensions or margins change in a repair iteration
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light theme surface, not pure white
+      Chrome: Title "swimmer-clinical-timeline · python · pygal · anyplot.ai" is dark and clearly readable; X-axis label "Time on Treatment (Weeks)" is dark and descriptive; Y-axis shows patient IDs (PT-002, PT-008, PT-012, etc.) as dark tick labels; X-axis tick numbers (0, 10, 20, 30, 40, 50, 60) are readable; bottom custom legend readable with arm names and event type symbols
+      Data: Arm A (Combo) bars in brand green (#009E73); Arm B (Mono) bars in lavender (#C475FD); event markers visible in blue (partial response triangles), ochre (complete response stars), red (progressive disease diamonds), cyan (adverse event squares); ongoing arrows in arm color visible at bar ends; bars sorted longest-at-top with clear duration gradient
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title rendered in light off-white text, clearly readable; X-axis label in light text; patient ID tick labels in light text; X-axis tick numbers light and readable; bottom legend text light-colored and legible; no dark-on-dark failures observed
+      Data: Bar colors identical to light render — green (#009E73) for Arm A, lavender (#C475FD) for Arm B; event marker colors (blue, ochre, red, cyan) match light render exactly; ongoing arrows visible; Imprint palette data colors unchanged across themes as required
+      Legibility verdict: PASS — all text clearly readable against warm near-black background; theme-adaptive chrome correctly flips while data colors remain constant
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -47,46 +63,59 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=48, labels=22, major_labels=24,
-          legend=22). All text clearly readable. Minor: y-axis patient IDs slightly
-          compact.'
+        comment: All font sizes explicitly set; title, axis labels, and tick labels
+          readable in both themes; label_font_size=50 is slightly below the pygal
+          guideline of 56 but result is acceptable; no overflow or clipping
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text overlap. Patient IDs well-spaced, legend below chart, no
-          collisions.
+        comment: No significant text overlap; minor risk of event marker overlap for
+          patients with multiple closely-timed events but not severe
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Bars and most markers clearly visible. Partial response triangles
-          similar hue to Arm A bars reduces contrast.
+        comment: Bars are clearly visible; event markers (ms=18) are visible but could
+          be slightly more prominent at full canvas size given 25 patients across
+          3200px width
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
-        passed: true
-        comment: Uses Tol qualitative scheme for events. Arms use blue vs purple,
-          distinguishable for all color vision types.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Chart fills canvas well horizontally. Good bottom margin for legend.
-          Some wasted space on right for shorter bars.
-      - id: VQ-06
-        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: Time on Treatment (Weeks) with units. Y-axis: patient IDs.
-          Title in correct format.'
+        comment: Imprint palette is CVD-safe; green and lavender for treatment arms
+          are distinguishable; event marker colors from palette positions 3-6 are
+          distinct
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 landscape is correct; plot area fills the canvas
+          well; margin_bottom=230 provides adequate space for two-row custom legend;
+          balanced layout
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: X-axis has descriptive label with units 'Time on Treatment (Weeks)';
+          Y-axis missing explicit title — no y_title set, only patient ID tick labels
+          present
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint palette correctly applied; first arm color is #009E73 (brand
+          green); second arm is #C475FD (lavender, position 2); event colors from
+          positions 3-6; backgrounds #FAF8F1 (light) and #1A1A17 (dark); data colors
+          identical across themes; chrome correctly flips'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -94,22 +123,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom color palette, monospace Consolas font, rounded bars, light
-          plot background. Above defaults but not publication-level.
+        comment: 'Above configured defaults: custom Imprint palette with semantic
+          arm colors, rounded bars (rounded_bars=4), custom two-row SVG legend, event
+          markers via SVG injection; not quite publication-ready but clearly thoughtful
+          design'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtle plot background, controlled opacity, generous spacing, custom
-          margins, rounded bar corners. Good but not perfectly polished.
+        comment: Subtle grid lines via foreground_subtle token; generous margins;
+          rounded bars add polish; pygal spines not removable; overall clean but not
+          maximally refined
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Sorted by duration creates hierarchy. Color coding enables arm comparison.
-          Ongoing arrows and event markers tell clinical progression story.
+        comment: Sort by duration creates clear visual hierarchy; arm color contrast
+          guides comparison; event markers tell the clinical story; no explicit focal
+          point or annotation callout for notable insight
     spec_compliance:
       score: 15
       max: 15
@@ -119,30 +152,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal swimmer plot with event markers overlaid on patient
-          timeline bars.
+        comment: 'Correct swimmer plot: horizontal bars per patient sorted by duration'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: horizontal bars sorted by duration, distinct
-          markers per event type, ongoing arrows, legend, time axis, patient IDs,
-          color-coding by arm.'
+        comment: 'All features present: event markers with distinct shapes, ongoing
+          patient arrows, treatment arm color coding, legend, X-axis time units, Y-axis
+          patient IDs'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis maps to time in weeks, y-axis to patients, events positioned
-          proportionally along bar length.
+        comment: X=time on treatment (weeks), Y=patient IDs, bar length=duration,
+          color=treatment arm, markers=event types at correct time positions
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Custom two-row legend covers all arms and event
-          types.
+        comment: Title 'swimmer-clinical-timeline · python · pygal · anyplot.ai' matches
+          required format; custom two-row legend shows both treatment arms and all
+          5 event/status types
     data_quality:
       score: 15
       max: 15
@@ -152,24 +185,27 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all event types, ongoing status, two treatment arms with different
-          duration profiles, varied event combinations.
+        comment: 'Demonstrates all swimmer plot aspects: variation in duration between
+          arms, multiple event types per patient, ongoing patients, realistic censoring
+          pattern'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Phase II oncology trial with realistic patient IDs, treatment arms,
-          clinically plausible event sequencing.
+        comment: Simulated Phase II oncology trial with 25 patients across two arms
+          — realistic clinical research scenario with appropriate terminology (partial/complete
+          response, progressive disease, adverse event)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 25 patients appropriate for Phase II. Durations 4-60 weeks realistic.
-          Arm A longer than Arm B is clinically plausible.
+        comment: Duration 4-60 weeks is appropriate for Phase II oncology; exponential
+          distribution for treatment durations is clinically plausible; response rates
+          and event timing are realistic
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -177,64 +213,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports, data generation, chart setup, SVG render,
-          marker injection, save. No functions or classes.'
+        comment: Follows imports → data → plot → SVG inject → save; no functions or
+          classes; sys.path manipulation is justified (file named pygal.py)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set for all random data generation.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: re, xml.etree.ElementTree, cairosvg, numpy, pygal,
-          Style.'
+        comment: 'All imports used: os, re, sys, xml.etree.ElementTree, cairosvg,
+          numpy, pygal, pygal.style.Style'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Well-organized but verbose SVG manipulation (~100 lines). Necessary
-          given pygal limitations but adds complexity.
+        passed: true
+        comment: Clean and readable; SVG marker injection is the correct approach
+          for pygal's limitations; no fake UI elements
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via cairosvg. Current API usage.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current pygal API used
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Correctly uses HorizontalBar with Style, per-bar color dicts, x_labels,
-          rounded_bars. But core visualization features are raw SVG injection.
+        passed: true
+        comment: Idiomatic use of HorizontalBar, Style system with theme-adaptive
+          tokens, chart.add() with per-bar color dicts, range/rounded_bars params;
+          SVG render pipeline used appropriately
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses per-value styling dicts and rounded_bars (pygal-specific), plus
-          SVG post-processing. Most distinctive elements are hand-coded SVG.
-  verdict: REJECTED
+        passed: true
+        comment: Uses pygal's interactive HTML export (plot-{THEME}.html), rounded_bars
+          parameter, per-value color dict in chart.add(), and the SVG render/inject/convert
+          pipeline — features specific to pygal's architecture
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
   - custom-legend
-  - annotations
   - html-export
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
   - edge-highlighting
+  - alpha-blending
