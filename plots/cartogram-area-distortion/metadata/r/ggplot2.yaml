@@ -1,0 +1,262 @@
+library: ggplot2
+language: r
+specification_id: cartogram-area-distortion
+created: '2026-06-08T03:54:35Z'
+updated: '2026-06-08T04:14:46Z'
+generated_by: claude-sonnet
+workflow_run: 27114758845
+issue: 4671
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 82
+review:
+  strengths:
+  - Reference inset (equal-area dots) elegantly illustrates the cartogram distortion
+  - Dual encoding (size=population, color=GDP per capita) adds genuine data depth
+    without visual clutter
+  - Dynamic title-length-aware font scaling prevents overflow on the long mandated
+    anyplot title
+  - Full theme-adaptive chrome with all tokens consistently threaded through to every
+    plot element
+  - scale_size_area correctly encodes area proportional to data — perceptually accurate
+    bubble sizing
+  weaknesses:
+  - Dorling cartogram (circles at centroids) does not distort geographic shapes; spec
+    describes contiguous cartograms that preserve adjacency while rescaling polygon
+    shapes — minor stylistic gap
+  - Small-population states (WY, VT, ND, SD < 1M) render as very small unlabeled dots,
+    making them hard to locate
+  - Northeast cluster (NY, NJ, CT, MA, RI, DE) creates unavoidable circle overlap
+    with some label crowding at NJ; slight alpha/stroke tuning could partially mitigate
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface
+      Chrome: Title "US States by Population · cartogram-area-distortion · r · ggplot2 · anyplot.ai" in dark INK text, fully visible; axis labels "Longitude" and "Latitude" in dark INK at 10pt; tick labels in INK_SOFT at 8pt; all readable
+      Data: Circles at geographic centroids; area proportional to population; fill uses Imprint sequential gradient #009E73 (low GDP) -> #4467A3 (high GDP); first/lowest series is brand green #009E73; bold white abbreviation labels on ~24 major states; reference inset in lower-left with gray dots on elevated background
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface
+      Chrome: Title, axis labels, tick labels all rendered in light colors (INK/#F0EFE8 or INK_SOFT/#B8B7B0) on dark surface — no dark-on-dark failures detected; legend text and titles readable; reference inset uses dark elevated background (#242420) with light-gray dots
+      Data: Circle colors identical to light render — same green-to-blue gradient, same sizes; data colors correctly unchanged between themes
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 24
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Dynamic title sizing; axis labels 10pt; tick labels 8pt; circle abbreviations
+          2.2mm bold white; all readable in both themes. Reference inset title at
+          4.5pt is very small but legible at inset scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Geographic crowding in northeast (NY, NJ, MA, CT) causes circle overlap
+          inherent to Dorling cartogram. Labels on NY and MA readable; NJ label is
+          tight.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Smallest-population states (WY 0.58M, VT 0.65M, ND 0.78M) render
+          as very small unlabeled dots. scale_size_area with max_size=20 compresses
+          the low end; those dots are near-minimal size.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential green-to-blue gradient is CVD-safe. No red-green sole
+          signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good geographic proportions via coord_fixed(ratio=1.3). Title fits
+          width. Reference inset placement well-chosen. Legend stack sits close to
+          right canvas boundary but no clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Longitude and Latitude are descriptive for a geographic plot. Title
+          follows required format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Sequential gradient uses Imprint anchors (#009E73 low, #4467A3 high).
+          Both render backgrounds correct. Data colors identical across themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: reference inset adds design intent. Dual-encoding
+          with Imprint gradient effective. Dynamic title-length-aware font sizing
+          is professional.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal with panel.border removed; fine grid lines (linewidth=0.2);
+          legend boxes with elevated-background frame; alpha=0.88 on bubbles.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: CA and TX dominate by size; NY and MA lead
+          on GDP by color. Reference inset makes area-distortion effect obvious.'
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Dorling cartogram is a valid cartogram variant. One point deducted:
+          spec describes contiguous cartograms preserving geographic shapes; circles
+          used instead. Acceptable for ggplot2 without cartogram package.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Reference inset, color scale for GDP per capita, abbreviated labels
+          on major regions, legends for area and color encoding — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Size mapped to population via scale_size_area; color mapped to GDP
+          per capita via sequential gradient; geographic coordinates correctly positioned.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''US States by Population · cartogram-area-distortion · r
+          · ggplot2 · anyplot.ai'' follows required format. Population (millions)
+          and GDP per capita (USD thousands) legends both present.'
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Demonstrates area distortion, secondary color encoding, geographic
+          positioning, labeling, and reference comparison. All key cartogram aspects
+          present.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 48 contiguous US states with plausible 2023 population figures and
+          realistic GDP per capita ranges (46-95k USD). Neutral, non-controversial
+          framing.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Population in millions, GDP in USD thousands; break values on both
+          legends sensible and match data range.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script; no functions or classes defined.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42); data is hardcoded (fully deterministic).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: library(ggplot2), library(dplyr), library(scales), library(ragg)
+          — all actively used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable; no fake interactivity; dynamic title sizing is appropriate
+          complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-%s.png with THEME; uses ragg::agg_png device.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of scale_size_area for perceptually accurate area encoding;
+          coord_fixed for geographic aspect ratio; guides() with override.aes for
+          custom size legend appearance; annotation_custom for inset grob.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: ggplotGrob() embedded as annotation_custom inset is distinctively
+          ggplot2; scale_size_area vs scale_size_continuous is the idiomatic bubble-map
+          choice; guide_legend(override.aes=...) for custom legend swatch colors.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - inset-axes
+  - layer-composition
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - custom-colormap
+  - edge-highlighting
