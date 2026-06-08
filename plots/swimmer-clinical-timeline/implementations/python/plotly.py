@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 swimmer-clinical-timeline: Swimmer Plot for Clinical Trial Timelines
 Library: plotly 6.8.0 | Python 3.13.13
 Quality: 86/100 | Created: 2026-06-08
@@ -63,6 +63,8 @@ sorted_durs = [float(durations[i]) for i in sort_idx]
 sorted_ongoing = [bool(ongoing_flags[i]) for i in sort_idx]
 sorted_events = [patient_events[i] for i in sort_idx]
 
+median_dur = float(np.median(sorted_durs))
+
 # Plot
 fig = go.Figure()
 
@@ -73,7 +75,7 @@ fig.add_trace(
         x=sorted_durs,
         y=sorted_ids,
         orientation="h",
-        marker=dict(color=bar_colors, opacity=0.75, line=dict(width=0)),
+        marker={"color": bar_colors, "opacity": 0.75, "line": {"width": 0}},
         width=0.65,
         showlegend=False,
         hovertemplate="%{y}: %{x:.1f} wk<extra></extra>",
@@ -82,9 +84,9 @@ fig.add_trace(
 
 # Dummy bar traces for treatment arm legend entries
 for arm, color in ARM_COLORS.items():
-    fig.add_trace(go.Bar(x=[None], y=[None], orientation="h", name=arm, marker=dict(color=color, opacity=0.75)))
+    fig.add_trace(go.Bar(x=[None], y=[None], orientation="h", name=arm, marker={"color": color, "opacity": 0.75}))
 
-# Clinical event markers — one scatter trace per event type
+# Clinical event markers — one scatter trace per event type; size=11 reduces visual clutter
 for et_key, config in EVENT_CONFIG.items():
     ex, ey = [], []
     for j, evs in enumerate(sorted_events):
@@ -99,7 +101,7 @@ for et_key, config in EVENT_CONFIG.items():
                 y=ey,
                 mode="markers",
                 name=config["name"],
-                marker=dict(symbol=config["symbol"], size=13, color=config["color"], line=dict(color=INK, width=1.0)),
+                marker={"symbol": config["symbol"], "size": 11, "color": config["color"], "line": {"color": INK, "width": 1.0}},
                 hovertemplate=f"{config['name']}: %{{x:.1f}} wk<extra></extra>",
             )
         )
@@ -114,10 +116,23 @@ if ong_x:
             y=ong_y,
             mode="markers",
             name="Ongoing",
-            marker=dict(symbol="triangle-right", size=14, color=INK, line=dict(color=INK, width=0.5)),
+            marker={"symbol": "triangle-right", "size": 12, "color": INK, "line": {"color": INK, "width": 0.5}},
             hovertemplate="Still on study<extra></extra>",
         )
     )
+
+# Median duration reference line — data storytelling focal point
+fig.add_vline(
+    x=median_dur,
+    line={"color": INK_MUTED, "width": 1.5, "dash": "dot"},
+    annotation_text=f"Median {median_dur:.1f} wk",
+    annotation_position="top right",
+    annotation_font={"size": 9, "color": INK_MUTED},
+    annotation_bgcolor=ELEVATED_BG,
+    annotation_bordercolor=INK_MUTED,
+    annotation_borderwidth=1,
+    annotation_borderpad=3,
+)
 
 # Style
 title = "swimmer-clinical-timeline · python · plotly · anyplot.ai"
@@ -127,36 +142,40 @@ fig.update_layout(
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     barmode="overlay",
-    title=dict(text=title, font=dict(size=16, color=INK), x=0.5, xanchor="center"),
-    xaxis=dict(
-        title=dict(text="Weeks on Study", font=dict(size=12, color=INK)),
-        tickfont=dict(size=10, color=INK_SOFT),
-        gridcolor=GRID,
-        linecolor=INK_SOFT,
-        zerolinecolor=INK_SOFT,
-        showgrid=True,
-        range=[0, 57],
-    ),
-    yaxis=dict(
-        title=dict(text="Patient ID", font=dict(size=12, color=INK)),
-        tickfont=dict(size=8, color=INK_SOFT),
-        linecolor=INK_SOFT,
-        showgrid=False,
-        tickmode="array",
-        tickvals=sorted_ids,
-        ticktext=sorted_ids,
-    ),
-    legend=dict(
-        bgcolor=ELEVATED_BG,
-        bordercolor=INK_SOFT,
-        borderwidth=1,
-        font=dict(size=10, color=INK_SOFT),
-        x=1.02,
-        xanchor="left",
-        y=1.0,
-        yanchor="top",
-    ),
-    margin=dict(l=90, r=170, t=80, b=60),
+    title={"text": title, "font": {"size": 16, "color": INK}, "x": 0.5, "xanchor": "center"},
+    xaxis={
+        "title": {"text": "Weeks on Study", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
+        "showgrid": True,
+        "showline": True,
+        "mirror": False,
+        "range": [0, 57],
+    },
+    yaxis={
+        "title": {"text": "Patient ID", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "linecolor": INK_SOFT,
+        "showgrid": False,
+        "showline": True,
+        "mirror": False,
+        "tickmode": "array",
+        "tickvals": sorted_ids,
+        "ticktext": sorted_ids,
+    },
+    legend={
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
+        "font": {"size": 10, "color": INK_SOFT},
+        "x": 1.02,
+        "xanchor": "left",
+        "y": 1.0,
+        "yanchor": "top",
+    },
+    margin={"l": 90, "r": 170, "t": 80, "b": 60},
 )
 
 # Save
