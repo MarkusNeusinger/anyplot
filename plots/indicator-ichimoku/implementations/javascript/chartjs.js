@@ -1,7 +1,7 @@
 // anyplot.ai
 // indicator-ichimoku: Ichimoku Cloud Technical Indicator Chart
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-06-08
+// Library: chartjs 4.4.7 | JavaScript 22.22.3
+// Quality: 88/100 | Created: 2026-06-08
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
