@@ -1,7 +1,7 @@
 // anyplot.ai
 // phase-diagram-pt: Thermodynamic Phase Diagram (Pressure-Temperature)
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-06-08
+// Library: echarts 5.5.1 | JavaScript 22.22.3
+// Quality: 87/100 | Created: 2026-06-08
 
 //# anyplot-orientation: landscape
 
