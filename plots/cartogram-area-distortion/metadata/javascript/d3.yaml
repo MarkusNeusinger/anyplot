@@ -1,0 +1,294 @@
+library: d3
+language: javascript
+specification_id: cartogram-area-distortion
+created: '2026-06-08T04:02:52Z'
+updated: '2026-06-08T04:31:25Z'
+generated_by: claude-sonnet
+workflow_run: 27114920836
+issue: 4671
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/javascript/d3/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - Exemplary use of d3.forceSimulation + d3.geoAlbersUsa() — the Dorling cartogram
+    is implemented idiomatically with attract-X/Y anchors keeping circles near their
+    geographic centroids while forceCollide prevents overlap
+  - Imprint sequential colormap correctly applied via d3.interpolateRgbBasis(t.seq)
+    for continuous GDP-per-capita data; all chrome tokens (t.ink, t.inkSoft, t.pageBg,
+    t.grid, t.elevatedBg) used throughout
+  - 'Both renders are fully theme-correct: warm off-white (#FAF8F1) light bg and near-black
+    (#1A1A17) dark bg; all text readable in both themes'
+  - 'Title format is correct: ''US Population Cartogram · cartogram-area-distortion
+    · javascript · d3 · anyplot.ai'''
+  - d3.scaleSqrt() for perceptually correct area-proportional circle sizing is the
+    right D3 idiom
+  - Geographic reference inset (equal-size dots at geographic positions) satisfies
+    the spec requirement for comparison context
+  - Dynamic title fontsize scaling via Math.round(22 * Math.min(1, 67/titleStr.length))
+    handles the long title string correctly
+  - Real-world, factually accurate US state population and GDP data with appropriate
+    scale (CA 39M, TX 30M, etc.)
+  - Size legend with dashed outline circles and tick marks is an elegant, library-native
+    design choice
+  weaknesses:
+  - Subtitle text ('Circle area ∝ population...') at y=96 overlaps with the bottom
+    of the Washington (WA) circle (center ~y=79, r≈31px, extending down to y≈110 CSS).
+    Move subtitle to y=112 or increase top margin to y=145 to clear the WA bubble.
+  - 'Abbreviation labels use fill=t.pageBg, which on dark theme resolves to #1A1A17
+    (near-black) inside the green circles — low WCAG contrast (~3.3:1). On dark theme
+    use t.pageBg or t.ink inverted: consider fill = (window.ANYPLOT_THEME===''dark''
+    ? ''#F0EFE8'' : t.pageBg) for label text.'
+  - Dorling cartogram (circles) does not preserve region adjacency as specified ('Regions
+    should remain contiguous'); the geographic reference inset partially mitigates
+    this but the spec expects distorted polygonal shapes. For D3, this is a known
+    constraint — acceptable as the only feasible approach without TopoJSON data.
+  - 'Color differentiation is limited: most US states cluster in the green-to-mid-teal
+    range for GDP per capita; only DC and a few high-per-capita states visibly shift
+    toward blue, making the color story hard to read for the bulk of states.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface. PASS.
+      Chrome: Title "US Population Cartogram · cartogram-area-distortion · javascript · d3 · anyplot.ai" rendered in dark #1A1A17 ink, centered, ~18px — clearly readable. Subtitle "Circle area ∝ population (2023, millions) · Color = GDP per capita (USD, 2022)" at top-left in #4A4A44 (inkSoft), 14px — readable but partially overlapping with the WA state bubble (WA circle center ~y=79 CSS, r≈31px; subtitle baseline at y=96 CSS, text top ~y=82 — overlap of ~14px). Right-side GDP/capita color legend and Population size legend use inkSoft tokens correctly.
+      Data: Dorling cartogram of 51 US states/DC. Circles sized by population (scaleSqrt), colored by GDP per capita using the Imprint sequential colormap (green #009E73 → blue #4467A3 via t.seq). CA is the largest circle (left), TX and FL also prominent. Most circles appear in mid-green range; only DC (near MD, visibly purple-blue) stands out distinctly on the color scale. State abbreviation labels are cream (#FAF8F1) inside circles — readable for all labeled states. Geographic reference inset visible in bottom-right of chart area, showing equal-size dots at geographic positions. Population size legend (dashed circles: 1M, 10M, 30M) on right.
+      Legibility verdict: PASS — all text readable; minor overlap issue with WA circle and subtitle.
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct Imprint dark surface. PASS.
+      Chrome: Title in light (#F0EFE8) ink, subtitle in #B8B7B0 (inkSoft) — both clearly readable against dark bg. Legend text correctly light-colored. Same WA/subtitle overlap is present. The inset box uses elevatedBg (#242420) on dark — correctly theme-adaptive.
+      Data: All data colors identical to light render — green (#009E73) dominant tones with DC showing blue. Data colors are theme-independent (correct). State abbreviation labels use fill=t.pageBg which resolves to #1A1A17 (near-black) on dark theme — labels appear as dark text on green circles, contrast ~3.3:1. Large circles (CA, TX, FL, NY) remain readable due to bold weight; smaller circles may be marginally low-contrast.
+      Legibility verdict: PASS (with minor concern) — no dark-on-dark failure; data is readable; abbreviation labels have reduced contrast on dark theme but remain legible at the rendered sizes.
+  criteria_checklist:
+    visual_quality:
+      score: 24
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set with appropriate scaling. Title uses
+          dynamic fontsize (Math.round(22*67/83)=18px). Minor: subtitle/WA circle
+          overlap slightly reduces readability.'
+      - id: VQ-02
+        name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: Subtitle text at y=96 CSS overlaps with WA circle (center y=79, r≈31,
+          extends to y≈110). Overlap is ~14px — text partially passes through the
+          circle. Main content remains readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Most circles clearly visible. Tiny states (ND, SD, VT, RI, WY <8px
+          radius) appear as small unlabeled dots — visible but not prominent. Force
+          simulation keeps circles from overlapping.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint sequential colormap (CVD-safe green→blue). Circle strokes
+          using pageBg provide separation. Abbreviation labels slightly below WCAG
+          on dark theme but readable due to bold weight.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Good canvas utilization. Right margin neatly contains two legends.
+          Geographic reference inset in bottom-right. Minor: subtitle/WA overlap at
+          top.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Subtitle clearly states both encodings: ''Circle area ∝ population
+          (2023, millions) · Color = GDP per capita (USD, 2022)''. No traditional
+          axes needed for cartogram.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Continuous sequential data uses d3.interpolateRgbBasis(t.seq) — Imprint
+          seq colormap. Backgrounds are pageBg token (FAF8F1/1A1A17). Chrome uses
+          t.ink/inkSoft/grid tokens throughout. Both renders theme-correct.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean professional appearance. Imprint sequential colormap well-applied.
+          Circle strokes using pageBg as separators is a refined detail. Geographic
+          reference inset adds thoughtful context. Slightly above 'well-configured
+          default' level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No grid (correct for geographic viz). Careful token usage throughout.
+          Size legend with dashed circles is elegant. Geographic inset with elevatedBg
+          frame shows attention to detail.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Visual hierarchy through size is clear: CA, TX, FL, NY immediately
+          stand out. Color adds GDP per capita context though differentiation between
+          states is limited (most cluster in green range). Subtitle explains both
+          encodings.'
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: Dorling cartogram (circles sized by population) is a valid area-distortion
+          cartogram. Spec mentions contiguous cartograms preserving adjacency; Dorling
+          circles don't maintain borders but are the idiomatic D3 approach without
+          external TopoJSON.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Area∝population ✓, geographic placement via AlbersUSA ✓, color scale
+          for secondary variable (GDP per capita) ✓, state abbreviation labels ✓,
+          size+color legends ✓, geographic reference inset ✓. Missing: true region
+          contiguity.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Circle area correctly proportional to population via scaleSqrt. Colors
+          correctly map GDP per capita via sequential scale. AlbersUSA projection
+          correctly places all 50 states + DC.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''US Population Cartogram · cartogram-area-distortion · javascript
+          · d3 · anyplot.ai'' — correct format with optional descriptive prefix. GDP/capita
+          color legend and Population size legend both present and labeled.'
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows wide range of populations (0.58M WY to 39M CA), geographic
+          distribution, secondary variable (GDP per capita), and comparison reference
+          inset. Demonstrates area distortion effectively.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real US state data (2023 population, 2022 GDP). Values factually
+          accurate. Neutral, non-controversial subject matter.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: CA ~39M, TX ~30M, FL ~22.6M, NY ~19.8M, WY ~0.58M — correct relative
+          magnitudes. GDP values plausible (CA $3,890B, TX $2,355B). GDP per capita
+          ~$40k-$235k range is realistic.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flat code flow: data definition → projection → force sim
+          → SVG → circles → labels → inset → title → legends. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded. Force simulation uses deterministic projected
+          positions as anchors; no randomness in data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports — d3 is a global. All window.ANYPLOT_* globals used correctly.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean D3 idioms throughout. No fake interactivity. Appropriate complexity
+          for the visualization type.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: D3 is in INTERACTIVE_LIBRARIES — harness produces both plot-{theme}.png
+          and plot-{theme}.html. Current D3 7.9 API used throughout.
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Exemplary D3 idioms: forceSimulation with forceX/Y + forceCollide,
+          geoAlbersUsa() composite projection, scaleSqrt for area, scaleSequential
+          with interpolateRgbBasis, selectAll/data/join pattern throughout.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Force-directed Dorling cartogram layout is distinctly D3 — this combination
+          of d3.forceSimulation + d3.geoAlbersUsa() + scaleSqrt for area-proportional
+          circles is a canonical D3-specific technique not easily replicated in other
+          libraries.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - custom-legend
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - minimal-chrome
+  - edge-highlighting
