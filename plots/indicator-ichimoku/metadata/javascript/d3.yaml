@@ -1,0 +1,272 @@
+library: d3
+language: javascript
+specification_id: indicator-ichimoku
+created: '2026-06-08T01:56:53Z'
+updated: '2026-06-08T02:03:49Z'
+generated_by: claude-sonnet
+workflow_run: 27111481319
+issue: 4669
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Complete spec compliance — all five Ichimoku lines (Tenkan-sen, Kijun-sen, Chikou
+    Span, Senkou Span A/B) correctly computed and plotted with standard 9/26/52 parameters
+  - Sophisticated cloud segmentation with fractional crossover interpolation producing
+    accurate bullish/bearish cloud color transitions at segment boundaries
+  - 'Semantic Imprint palette usage: brand green for bullish candles (canonical pos
+    1), semantic red for bearish, Imprint positions 2–4 for the three indicator lines
+    — justified and readable'
+  - Deterministic LCG with seed=42 produces realistic momentum-driven OHLC price action
+    across 252 raw periods
+  - 'Idiomatic D3: d3.area() for cloud fills, d3.line() for indicator paths, SVG clip
+    path to contain candles, data joins for candlestick wicks/bodies — fully correct
+    D3 patterns'
+  - Forecast boundary dashed line with 'Forecast →' annotation clearly delineates
+    historical data from the projected cloud region
+  - Both light and dark renders are fully theme-adaptive with ANYPLOT_TOKENS for all
+    chrome elements (ink, inkSoft, grid, pageBg)
+  weaknesses:
+  - Tick labels (13px) and legend text (13px) are one pixel below the D3 guide's recommended
+    14px minimum for the 3200px canvas — increase both to 14px for full compliance
+  - With 200 candles the individual candle bodies are at the density limit (~3–4 CSS
+    px wide before 2× scaling) — acceptable for a financial chart but worth noting
+  - Design could be elevated with a subtle callout or annotation marking the most
+    prominent cloud crossover (bullish-to-bearish transition), giving the viewer an
+    immediate focal point
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1 — not pure white, no harshness.
+      Chrome: Title "indicator-ichimoku · javascript · d3 · anyplot.ai" at 22px bold, dark ink, spans ~60% of plot width. Axis labels "Trading Period" and "Price ($)" at 15px in inkSoft (medium-dark gray). Tick labels at 13px in inkSoft clearly readable. Legend to the right with 9 items, 13px text in inkSoft, all entries readable.
+      Data: 200 candlesticks with bullish candles in #009E73 (brand green) and bearish in #AE3030 (matte red) — classic financial coloring. Tenkan-sen in #C475FD (lavender), Kijun-sen in #4467A3 (blue), Chikou Span in #BD8233 (ochre). Bullish cloud region filled with #009E73 at 0.22 opacity, bearish region with #AE3030 at 0.22 opacity. Cloud clearly transitions from bullish (green) to bearish (red) mid-chart. Span A/B dashed boundary lines visible. Forecast boundary dashed vertical line at period 200 with "Forecast →" annotation. Future cloud projects 26 periods ahead.
+      Legibility verdict: PASS — all text is clearly readable against the warm off-white background. No light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis labels, and tick labels are all rendered in light-colored text (ANYPLOT_TOKENS ink/inkSoft) and clearly visible against the dark background. Legend text is light, fully readable. "Forecast →" annotation is light on dark. No dark-on-dark failures observed.
+      Data: Data colors are identical to the light render — #009E73 bullish candles/cloud, #AE3030 bearish candles/cloud, #C475FD Tenkan-sen, #4467A3 Kijun-sen, #BD8233 Chikou Span. The 0.22-opacity cloud fills are slightly more prominent on the dark background (cloud colors pop more against the dark surface) but remain accurate and non-dominant. All five indicator lines clearly distinguishable.
+      Legibility verdict: PASS — all text is clearly readable against the dark background. Chrome correctly flips from dark to light while data colors remain identical.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 22px, axis labels 15px, tick/legend
+          13px). Proportions balanced. Minor: tick/legend at 13px vs recommended 14px
+          minimum.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps in either render. Legend is cleanly separated in
+          right margin. Forecast annotation does not collide with data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Indicator lines and cloud fills clearly visible. Candlesticks at
+          200-period density are at the limit but appropriate for a financial chart;
+          individual bodies are ~3-4px CSS wide.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette with semantic assignments. Green/red used with additional
+          line-style redundancy (solid vs dashed) and luminance differentiation. CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Plot fills canvas well with generous but balanced
+          margins. Right margin accommodates 9-item legend. No elements cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct format. Y-axis 'Price ($)' has units. X-axis 'Trading
+          Period' is descriptive for this chart type.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (bullish candles) is #009E73. Bearish candles use semantic
+          red #AE3030. Indicator lines use Imprint positions 2-4. Backgrounds #FAF8F1
+          light / #1A1A17 dark. Both renders theme-correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: semantic Imprint color choices, cloud color segmentation,
+          forecast annotation add clear sophistication above defaults. Not quite publication-ready
+          but clearly intentional design.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: subtle grid via t.grid token, L-frame axes (only
+          bottom+left drawn), clip path for candle containment, generous whitespace,
+          dashed forecast divider adds polish.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Cloud color transitions create immediate visual hierarchy — viewer
+          immediately sees bullish/bearish trend regions. Forecast boundary provides
+          clear temporal context. Could go further with a crossover callout.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Ichimoku Cloud overlay on candlestick chart. All five Ichimoku
+          components present.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: Tenkan-sen, Kijun-sen, Senkou Span A/B
+          (26 periods ahead), Chikou Span (26 periods behind), Kumo cloud fill with
+          green/red color change, green/red candlesticks. Standard 9/26/52 parameters
+          used.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = trading period, Y = price in dollars. Span A/B correctly projected
+          +26 periods. Chikou Span correctly shifted -26 periods. All data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'indicator-ichimoku · javascript · d3 · anyplot.ai' matches
+          required format. Legend has 9 correctly labeled entries covering all indicator
+          components.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows both bullish and bearish candles, cloud color transitions between
+          bullish/bearish regions, all five indicator lines, future cloud projection,
+          and Chikou Span shifted backward.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Generic stock price data ($140-$170 range) with realistic momentum-driven
+          OHLC structure. Neutral context, no controversial content.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price range $144-$170 for a mid-cap stock is realistic. LCG with
+          momentum drift generates credible price action. Spread of 1-4.5 points per
+          period is plausible intra-period volatility.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow. Helper functions (lcg, pHigh, pLow) are minimal and
+          essential for Ichimoku computation — not over-engineering.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic LCG with seed=42 — no browser RNG, fully reproducible.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only d3 global used, no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, idiomatic D3. No fake interactivity. Cloud segment interpolation
+          is appropriately sophisticated for the task.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: D3 is in INTERACTIVE_LIBRARIES — harness emits plot-{theme}.png and
+          plot-{theme}.html. No manual file writes in code.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert D3 usage: d3.area() with y0/y1 for cloud fills, d3.line()
+          for indicator paths, d3.scaleLinear() for both axes, proper data joins for
+          candlestick wicks/bodies, SVG defs/clipPath for containment, d3.axisBottom/Left
+          with tickFormat.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses d3.area() generator for Kumo cloud fills with segment boundary
+          interpolation (fractional crossover calculation) — a distinctive D3 technique.
+          SVG clip path via D3 defs. Could push to 5 with additional D3-unique feature.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - rolling-window
+  styling:
+  - alpha-blending
