@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: cartogram-area-distortion
 created: '2026-03-13T21:20:30Z'
-updated: '2026-06-08T04:04:00Z'
+updated: '2026-06-08T04:18:21Z'
 generated_by: claude-sonnet
 workflow_run: 27114588734
 issue: 4671
@@ -12,49 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cartogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/python/pygal/plot-dark.html
-quality_score: 77
+quality_score: 78
 review:
   strengths:
-  - Theme-adaptive chrome correctly implemented with all pygal Style tokens (background,
-    foreground, foreground_strong, foreground_subtle)
-  - 'Imprint palette applied in canonical order; brand green #009E73 correctly leads
-    as Asia (first series)'
-  - Per-node formatter lambda is a genuine pygal distinctive feature, providing distortion
-    ratio narrative in hover tooltips
-  - SHORT_LABELS abbreviation system for small tiles and ABBREV_THRESHOLD logic is
-    thoughtful UX design
-  - Reproducible deterministic data (2024 population estimates hardcoded)
-  - 'Perfect code quality: clean imports, KISS structure, correct output filenames'
+  - 'Correct Imprint sequential palette endpoints (#009E73 → #4467A3) with log-scaled
+    normalization for perceptually balanced density gradient'
+  - 'Excellent factual data quality: real 2024 estimates for 27 countries, factually
+    accurate populations and areas'
+  - Both light and dark themes correctly implemented — title/subtitle chrome flips
+    appropriately, tile data colors stay constant
+  - Informative 4-line title+subtitle combining the required format with encoding
+    explanation
+  - Interactive HTML output with rich tooltip formatters fully leverages pygal strengths
   weaknesses:
-  - 'SC-02: Spec requires a colour scale encoding a secondary variable (e.g., population
-    density, GDP per capita) — currently colour only encodes continent grouping (categorical).
-    Add a secondary continuous colour dimension within tiles if the chart type allows,
-    or use tile-border intensity.'
-  - 'SC-02: Spec requires original region outlines or a reference map inset for geographic
-    comparison — completely absent from both static renders.'
-  - 'SC-01: Treemap does not preserve geographic contiguity or adjacency — accepted
-    limitation of pygal, but should be noted in a subtitle/caption to educate viewers.'
-  - 'VQ-01/VQ-03: Tile labels on small countries (Bangladesh, Vietnam/VN, S.Korea/KR,
-    Colombia/CO, Kenya/KE, Oceania strip) are extremely small. Consider increasing
-    value_font_size slightly or using a minimum tile-size threshold for label visibility.'
-  - 'DE-02: The Oceania tile (Australia only) is reduced to an impractically narrow
-    strip on the far right edge. Could be improved by placing Oceania as a combined
-    group note in the legend only, or aggregating with a placeholder.'
+  - Missing reference map inset — spec requires original geographic outlines or an
+    inset for comparison; no visual reference provided
+  - No formal color scale legend bar — subtitle explains encoding but no visual gradient
+    guide showing density-to-color mapping
+  - Small tile abbreviation labels (KR, CO, ZA, AU) scale to ~5px at 400px mobile
+    viewport — increase value_font_size from 46 to 56-60
+  - Treemap does not preserve geographic adjacency (acknowledged pygal limitation)
+    — fundamental spec gap
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Two-line title/subtitle in dark ink (#1A1A17), spanning ~90% of canvas width. Both lines readable. No axis labels (treemap). Bottom legend shows 5 continent swatches with text — clearly readable.
-      Data: Treemap with 5 continent series using Imprint palette in canonical order: Asia (brand green #009E73) ~60% of area, Africa (lavender #C475FD), Europe (blue #4467A3), Americas (ochre #BD8233), Oceania (matte red #AE3030, narrow right strip). Country labels printed inside tiles; large tiles (India, China, USA, Brazil) are readable; small tiles (Bangladesh, VN, KR, CO, KE) very small.
-      Legibility verdict: PASS — all title/legend text readable; tile labels on smallest countries are very small but not completely invisible.
+      Background: Warm off-white #FAF8F1 — correct theme surface.
+      Chrome: 4-line title+subtitle in dark #1A1A17 text on off-white background — all lines clearly readable. Title line: "World Population Cartogram · cartogram-area-distortion · python · pygal · anyplot.ai". Subtitle lines explain tile area and color encoding. Note line acknowledges geographic adjacency limitation.
+      Data: Treemap tiles fill ~85% of canvas vertically. India and China are the two largest tiles in medium green (~#009E73 range). Bangladesh tile is distinctly blue-purple (~#4467A3), popping as highest density. Full green-to-blue gradient visible across 27 tiles. Country labels in small dark text within tiles — large tiles (India, China) readable; small tiles (KR, CO, etc.) have tiny abbreviations.
+      Legibility verdict: PASS — all chrome text readable; tile labels on large tiles readable; small tile labels marginal at mobile scale.
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title and subtitle render in light (#F0EFE8) text — clearly readable against dark background. Bottom legend text is light-coloured and visible. No dark-on-dark failures detected.
-      Data: All 5 continent tile colours are identical to the light render (green / lavender / blue / ochre / matte-red) — correct, only chrome flips. Tile interior labels appear as light text on coloured tile backgrounds — legible for larger tiles.
-      Legibility verdict: PASS — no dark-on-dark failures; title and legend readable; data colours constant between themes.
+      Background: Warm near-black #1A1A17 — correct dark theme surface.
+      Chrome: Same 4-line title+subtitle area renders in light (#F0EFE8) text against the near-black background — all lines clearly readable. No dark-on-dark failure detected in the header area.
+      Data: Tile colors are identical to light render (data colors are theme-independent). Bangladesh blue-purple tile equally prominent. Tile labels appear in light color following pygal foreground token (#F0EFE8), contrasting against the medium-colored tile backgrounds. No dark-on-dark issue in the treemap area since tiles themselves are colored (not near-black).
+      Legibility verdict: PASS — title and subtitle readable; tile labels on light-colored tiles readable; same small-tile constraint as light render.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -62,171 +55,167 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Title and legend text clearly readable in both themes. Tile interior
-          labels on smaller countries are very small and barely readable at thumbnail
-          widths.
+        comment: Font sizes explicitly set; title/subtitle readable in both themes;
+          small tile abbreviations marginal on mobile (value_font_size=46 scales to
+          ~5px at 400px)
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Treemap layout prevents tile overlap. No text-on-text collisions.
-          Minor crowding in narrow right-side strips.
+        comment: No text overlaps; tile labels within own tiles; title area well-separated
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All 5 continent colour groups clearly visible. Oceania strip (Australia
-          only) is extremely narrow on far right — barely a sliver.
+        comment: All tiles clearly visible; gradient effective; very small tiles have
+          tiny labels
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe. 5 hues span perceptually distinct families.
+        comment: Green-to-blue gradient is CVD-safe; good luminance separation; no
+          red-green issue
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Canvas 3200x1800 confirmed. Treemap fills canvas with reasonable
-          margins. Slight deduction: extends very close to left/right canvas edges.'
+        comment: 3200x1800 confirmed; treemap fills 85% of canvas; no content cut
+          off; canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No traditional axes (N/A). Title is descriptive with all mandated
-          components.
+        comment: No axes needed for treemap; title in correct anyplot format with
+          descriptive prefix; subtitle explains encoding
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series Asia = #009E73 correct. Canonical Imprint order followed.
-          Backgrounds #FAF8F1/#1A1A17 correct. Data colours constant between renders.'
+        comment: 'DENSITY_LOW=#009E73 (brand green), DENSITY_HIGH=#4467A3 (Imprint
+          blue) — equivalent to imprint_seq; backgrounds #FAF8F1/#1A1A17 correct'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Custom Style with full Imprint palette and theme-adaptive chrome.
-          Rounded corners, descriptive subtitle, SHORT_LABELS abbreviation system
-          show intentional design thought.
+        comment: Custom Imprint-derived gradient, no legend, informative subtitle
+          — well-configured library default with deliberate palette choices
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Tile spacing 6px appropriate. Clean horizontal legend. Oceania strip
-          reduced to impractically narrow sliver.
+        comment: rounded_corners=4, spacing=6, stroke_width=2.5 beyond defaults; limited
+          further customization in pygal
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Asia population dominance immediately apparent. Continental colour
-          groupings provide geographic context. Distortion ratio only in hover tooltips,
-          reducing static storytelling.
+        comment: 'Clear hierarchy: tile size=population (India/China dominate), color=density
+          (Bangladesh blue tile pops as outlier). Subtitle maps encoding.'
     spec_compliance:
-      score: 11
+      score: 10
       max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 3
         max: 5
-        passed: false
-        comment: Treemap captures area-proportional concept but loses geographic adjacency/contiguity
-          required by spec. pygal has no geographic chart type — acknowledged in code
-          comment.
+        passed: true
+        comment: Core concept (area proportional to value) correct; treemap is not
+          a geographic cartogram — adjacency lost, no geographic shapes
       - id: SC-02
         name: Required Features
         score: 2
         max: 4
         passed: false
-        comment: 'Abbreviations present, legend present, but missing: secondary variable
-          colour encoding and reference map/region outline inset.'
+        comment: 'Area encoding ✓, density color ✓, abbreviations ✓; missing: no reference
+          map inset, no formal color scale legend'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Tile area proportional to population. Countries grouped by continent.
-          2024 estimates throughout.
+        comment: Population → tile area, density → color; all 27 countries shown
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix. Legend labels match
-          continent series names.
+        comment: Title format correct (Descriptive · spec-id · python · pygal · anyplot.ai);
+          no formal color gradient legend
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: '25 countries across 5 continents with area proportional to population.
-          Distortion ratio computed and in hover. Missing in static: secondary colour
-          variable, reference map.'
+        comment: Wide range of population (27M-1441M) and density extremes; all continents
+          covered
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 2024 population estimates are real-world data. No controversial selections.
+        comment: Real 2024 estimated data; neutral world population geography; no
+          controversial content
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Population in millions, 27M (Australia) to 1441M (India). Domain-appropriate
-          scale.
+        comment: All population and area values factually accurate and proportionally
+          correct
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No functions or classes. Flat script with single loop for series
-          construction.
+        comment: _lerp_hex helper warranted (pygal has no built-in color interpolation);
+          otherwise clean structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded, deterministic. No random values.
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, sys, pygal, pygal.style.Style imported, all used.
+        comment: 'All imports used: math, os, sys, pygal, pygal.style.Style'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Lambda formatter with closure variables is idiomatic. SHORT_LABELS
-          dict is well-organized.
+        comment: Clean Pythonic code; sys.path workaround necessary and commented;
+          lambda formatter appropriate
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current pygal API used
     library_mastery:
       score: 7
       max: 10
@@ -236,24 +225,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses pygal.Treemap, Style object, render_to_png() and render() idiomatically.
-          Legend configuration correctly used.
+        comment: Correct pygal.Treemap usage; Style object for all tokens; one-series-per-country
+          for individual tile coloring; print_labels/truncate_label options
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Per-node formatter lambda for hover tooltips is a distinctive pygal
-          feature. print_labels, legend_at_bottom_columns demonstrate pygal-specific
-          control.
+        comment: Interactive HTML export with custom tooltip formatters (distortion
+          ratio, density per km²); per-tile color via one-series-per-country pattern
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
   - html-export
   patterns:
   - iteration-over-groups
   dataprep:
   - normalization
-  styling: []
+  styling:
+  - custom-colormap
