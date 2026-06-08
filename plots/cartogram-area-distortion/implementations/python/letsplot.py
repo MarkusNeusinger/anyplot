@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 79/100 | Updated: 2026-06-08
@@ -14,6 +14,7 @@ from lets_plot import (
     element_blank,
     element_rect,
     element_text,
+    geom_path,
     geom_point,
     geom_polygon,
     geom_text,
@@ -44,7 +45,7 @@ CMAP_LOW = "#009E73"
 CMAP_HIGH = "#4467A3"
 
 # Data: 20 European countries — population (millions) and GDP per capita (thousands USD)
-# Coordinates adjusted from geographic centroids to reduce Central Europe bubble overlap
+# NL/BE positions spread further apart to reduce label crowding in Central Europe
 countries_data = {
     "country": [
         "Germany",
@@ -112,7 +113,7 @@ countries_data = {
         18.8,
         15.1,
     ],
-    # Spread Central Europe (NL/BE/CH/AT/CZ/HU) to reduce overlap
+    # Adjusted centroids: NL moved east, BE moved west/south for visual separation
     "lon": [
         10.4,
         2.2,
@@ -120,8 +121,8 @@ countries_data = {
         12.6,
         -3.7,
         19.1,
-        3.8,
-        2.8,
+        6.5,
+        2.0,
         15.0,
         14.6,
         8.5,
@@ -142,8 +143,8 @@ countries_data = {
         41.9,
         40.5,
         51.9,
-        52.5,
-        50.0,
+        53.0,
+        49.5,
         60.1,
         47.0,
         45.5,
@@ -183,7 +184,11 @@ countries_data = {
 df = pd.DataFrame(countries_data)
 df["highlight"] = (df["population"] < 15) & (df["gdp_per_capita"] > 50)
 
-# Simplified European coastline polygon for geographic reference context
+# Stars shifted +1.8° north so they sit above country abbreviation labels
+df_stars = df[df["highlight"]].copy()
+df_stars["lat"] = df_stars["lat"] + 1.8
+
+# Simplified European coastline polygon for outer geographic boundary
 europe_outline = pd.DataFrame(
     {
         "lon": [-12, -10, -5, 0, 5, 10, 15, 20, 25, 30, 32, 30, 28, 25, 28, 32, 30, 25, 20, 15, 10, 5, 0, -5, -10, -12],
@@ -192,6 +197,36 @@ europe_outline = pd.DataFrame(
     }
 )
 
+# Simplified individual country border outlines — closed polygons (last pt = first pt)
+# These show each country's approximate geographic footprint alongside its bubble
+_borders = {
+    "DE": [(5.9, 47.3), (13.5, 47.5), (15.0, 51.0), (14.3, 54.0), (8.5, 55.0), (6.1, 53.6), (5.9, 47.3)],
+    "FR": [(-4.5, 43.3), (3.2, 42.5), (7.6, 43.8), (7.6, 47.6), (2.5, 51.0), (-1.5, 47.5), (-4.5, 43.3)],
+    "GB": [(-5.7, 50.0), (1.8, 51.4), (0.5, 54.0), (-0.1, 58.7), (-3.5, 58.5), (-5.5, 55.0), (-5.7, 50.0)],
+    "IT": [(7.0, 44.0), (13.7, 44.0), (16.5, 40.0), (15.5, 37.5), (13.0, 37.5), (8.0, 38.5), (7.0, 44.0)],
+    "ES": [(-8.9, 43.7), (3.2, 43.4), (3.0, 38.0), (-1.0, 36.0), (-8.9, 36.0), (-8.9, 43.7)],
+    "PL": [(14.1, 54.4), (24.1, 54.4), (24.1, 49.0), (18.2, 49.0), (14.1, 49.5), (14.1, 54.4)],
+    "NL": [(3.4, 51.3), (7.2, 53.1), (7.2, 53.5), (4.7, 53.5), (3.4, 51.6), (3.4, 51.3)],
+    "BE": [(2.5, 49.5), (6.4, 49.5), (6.4, 50.8), (4.0, 51.5), (2.5, 50.8), (2.5, 49.5)],
+    "SE": [(11.1, 55.4), (16.0, 56.0), (18.5, 59.0), (22.5, 65.0), (17.0, 67.0), (11.9, 59.7), (11.1, 55.4)],
+    "AT": [(9.5, 46.4), (17.2, 46.4), (17.2, 49.0), (9.5, 49.0), (9.5, 46.4)],
+    "CH": [(5.9, 45.8), (10.5, 45.8), (10.5, 47.8), (5.9, 47.8), (5.9, 45.8)],
+    "NO": [(4.6, 58.0), (10.0, 57.9), (14.0, 64.0), (20.0, 67.0), (14.0, 67.0), (8.0, 63.0), (4.6, 58.0)],
+    "DK": [(8.0, 54.6), (15.2, 55.4), (12.5, 57.7), (8.0, 57.5), (8.0, 54.6)],
+    "FI": [(20.0, 59.8), (29.0, 61.0), (31.5, 65.5), (28.0, 67.0), (22.0, 67.0), (20.0, 65.0), (20.0, 59.8)],
+    "IE": [(-10.5, 51.4), (-6.0, 51.4), (-6.5, 54.5), (-10.5, 54.5), (-10.5, 51.4)],
+    "PT": [(-9.5, 36.9), (-6.8, 36.9), (-6.8, 42.1), (-9.5, 42.1), (-9.5, 36.9)],
+    "CZ": [(12.1, 48.6), (18.9, 48.6), (18.9, 51.0), (12.1, 51.0), (12.1, 48.6)],
+    "GR": [(19.4, 35.0), (28.3, 35.0), (28.3, 42.0), (22.0, 42.0), (19.4, 38.0), (19.4, 35.0)],
+    "HU": [(16.1, 45.8), (22.9, 45.8), (22.9, 48.6), (16.1, 48.6), (16.1, 45.8)],
+    "RO": [(20.3, 43.6), (29.7, 43.6), (29.7, 48.3), (22.0, 48.3), (20.3, 45.5), (20.3, 43.6)],
+}
+border_rows = []
+for abbr, pts in _borders.items():
+    for lon_v, lat_v in pts:
+        border_rows.append({"group": abbr, "lon": lon_v, "lat": lat_v})
+country_borders = pd.DataFrame(border_rows)
+
 # Title with fontsize scaled for total character count (default 16px, floor 11px)
 title = "European Population Cartogram · cartogram-area-distortion · python · letsplot · anyplot.ai"
 n = len(title)
@@ -199,10 +234,12 @@ title_size = max(11, round(16 * 67 / n))
 
 plot = (
     ggplot()
-    # Faint European coastline for geographic reference behind the bubbles
+    # Faint European coastline for outer geographic context
     + geom_polygon(
         aes(x="lon", y="lat", group="group"), data=europe_outline, fill=PAGE_BG, color=INK_MUTED, size=0.5, alpha=0.4
     )
+    # Individual country border outlines — makes area distortion legible vs actual footprints
+    + geom_path(aes(x="lon", y="lat", group="group"), data=country_borders, color=INK_MUTED, size=0.35, alpha=0.5)
     # Non-highlighted countries: bubble area ∝ population, fill color = GDP per capita
     + geom_point(
         aes(x="lon", y="lat", size="population", fill="gdp_per_capita"),
@@ -229,11 +266,11 @@ plot = (
         .line("Population|@population M")
         .line("GDP/capita|$@gdp_per_capita K"),
     )
-    # Star markers on highlighted small-but-wealthy nations
-    + geom_point(aes(x="lon", y="lat"), data=df[df["highlight"]], shape=8, size=3.0, color=INK)
+    # Stars nudged +1.8° north so they sit above abbreviation labels, not on top of them
+    + geom_point(aes(x="lon", y="lat"), data=df_stars, shape=8, size=3.0, color=INK)
     + scale_size(range=[8, 26], name="Population (M)", breaks=[5, 20, 40, 80])
     + scale_fill_gradient(low=CMAP_LOW, high=CMAP_HIGH, name="GDP/capita (USD K)")
-    # Three-tier label hierarchy: large bold, medium, small — all above size=8
+    # Three-tier label hierarchy: large bold, medium, small — all inside bubbles
     + geom_text(
         aes(x="lon", y="lat", label="abbr"), data=df[df["population"] > 30], size=12, color=INK, fontface="bold"
     )
@@ -244,10 +281,10 @@ plot = (
         color=INK,
     )
     + geom_text(aes(x="lon", y="lat", label="abbr"), data=df[df["population"] <= 10], size=8, color=INK_SOFT)
-    # Annotation: insight about small-but-wealthy nations
+    # Annotation near Atlantic/Nordic highlighted cluster (IE/NO/DK area)
     + geom_text(
         aes(x="x", y="y"),
-        data=pd.DataFrame({"x": [-14.5], "y": [65.5]}),
+        data=pd.DataFrame({"x": [-9.0], "y": [61.5]}),
         label="Small nations,\nhighest wealth",
         size=8,
         color=INK_MUTED,
