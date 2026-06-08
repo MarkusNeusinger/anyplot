@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
 Library: bokeh 3.9.1 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-06-08
 """
 
 import os
@@ -165,6 +164,30 @@ p.scatter(
     line_width=1.5,
 )
 
+# Focal emphasis: bold stroke on the 5 most populous states (CA, TX, FL, NY, PA)
+top5_states = {"CA", "TX", "FL", "NY", "PA"}
+top5_idx = [i for i, n in enumerate(names) if n in top5_states]
+top5_source = ColumnDataSource(
+    data={
+        "lon": [lons[i] for i in top5_idx],
+        "lat": [lats[i] for i in top5_idx],
+        "population": [populations[i] for i in top5_idx],
+        "size": [sizes[i] for i in top5_idx],
+        "name": [names[i] for i in top5_idx],
+        "pop_label": [f"{populations[i]:.1f}M" for i in top5_idx],
+    }
+)
+p.scatter(
+    x="lon",
+    y="lat",
+    size="size",
+    source=top5_source,
+    fill_color=transform("population", color_mapper),
+    fill_alpha=0.9,
+    line_color=INK,
+    line_width=4.5,
+)
+
 # State abbreviation labels for states with population > 6M
 label_offsets = {
     "CA": (0, 1.8),
@@ -252,7 +275,7 @@ for abbr in ("AK", "HI"):
             x=states[abbr][0],
             y=states[abbr][1] - 1.8,
             text=abbr,
-            text_font_size="22pt",
+            text_font_size="24pt",
             text_align="center",
             text_color=INK_SOFT,
         )
@@ -310,7 +333,7 @@ p.yaxis.minor_tick_line_color = None
 # Background and borders
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None
 
 # Grid — subtle
 p.xgrid.grid_line_color = INK
