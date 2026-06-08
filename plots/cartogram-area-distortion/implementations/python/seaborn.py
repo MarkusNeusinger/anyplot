@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 89/100 | Created: 2026-03-13
+Library: seaborn | Python 3.13
+Quality: pending | Created: 2026-06-08
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,11 +12,21 @@ import pandas as pd
 import seaborn as sns
 
 
-# Data: US states with population (millions) and grid positions
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — first series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Data: US states with population (millions) and approximate grid positions
 np.random.seed(42)
 
 states_data = {
-    # (row, col, population_millions, region)
     "WA": (0, 1, 7.7, "West"),
     "MT": (0, 3, 1.1, "West"),
     "ND": (0, 5, 0.8, "Midwest"),
@@ -67,35 +79,56 @@ states_data = {
     "HI": (5, 2, 1.4, "West"),
 }
 
-# Build dataframe
-rows = []
+rows_data = []
 for state, (r, c, pop, region) in states_data.items():
-    rows.append({"state": state, "row": r, "col": c, "population": pop, "region": region})
-df = pd.DataFrame(rows)
+    rows_data.append({"state": state, "row": r, "col": c, "population": pop, "region": region})
+df = pd.DataFrame(rows_data)
 
-# Set minimum marker size so smallest states remain readable
-size_min = 150
-size_max = 4200
-
-# Region ordering and seaborn colorblind palette
+# Region colors using Imprint palette (West→green, Midwest→lavender, South→blue, Northeast→ochre)
 region_order = ["West", "Midwest", "South", "Northeast"]
-region_palette = dict(zip(region_order, sns.color_palette("colorblind", n_colors=4), strict=False))
+region_palette = dict(zip(region_order, IMPRINT_PALETTE[:4], strict=False))
 
-# Setup theme using seaborn's set_theme with custom rc params
+# Apply seaborn theme with theme-adaptive tokens
 sns.set_theme(
     style="white",
-    context="talk",
-    font_scale=1.15,
-    rc={"figure.facecolor": "#f5f5f5", "axes.facecolor": "#f5f5f5", "font.family": "sans-serif"},
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
 )
 
-fig = plt.figure(figsize=(16, 9))
-gs = fig.add_gridspec(2, 2, width_ratios=[3.2, 1], height_ratios=[1, 1], wspace=0.08, hspace=0.25)
+# Canvas — exactly 3200×1800 px (landscape 16:9)
+fig = plt.figure(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+gs = fig.add_gridspec(
+    2,
+    2,
+    width_ratios=[3.0, 1.2],
+    height_ratios=[1, 1],
+    wspace=0.12,
+    hspace=0.32,
+    left=0.01,
+    right=0.99,
+    top=0.89,
+    bottom=0.04,
+)
 ax_main = fig.add_subplot(gs[:, 0])
 ax_ref = fig.add_subplot(gs[0, 1])
 ax_bar = fig.add_subplot(gs[1, 1])
 
-# Main cartogram using sns.scatterplot with size and hue encoding
+# Marker sizes calibrated for 3200×1800 canvas
+size_min = 20
+size_max = 620
+
+# Main cartogram: bubble area ∝ population, color = geographic region
 sns.scatterplot(
     data=df,
     x="col",
@@ -108,46 +141,51 @@ sns.scatterplot(
     style="region",
     style_order=region_order,
     markers=dict.fromkeys(region_order, "s"),
-    alpha=0.85,
-    edgecolor="white",
-    linewidth=1.5,
+    alpha=0.88,
+    edgecolor=PAGE_BG,
+    linewidth=0.5,
     ax=ax_main,
 )
 
-# Extract region-only handles from auto-generated legend, then reposition as compact horizontal
+# Compact region legend — keep only hue (region) handles, remove size handles
 handles, labels = ax_main.get_legend_handles_labels()
-region_handles = []
-region_labels = []
+region_handles, region_labels = [], []
+seen = set()
 for handle, lbl in zip(handles, labels, strict=False):
-    if lbl in region_order:
-        handle.set_markersize(12)
-        handle.set_markeredgecolor("white")
-        handle.set_markeredgewidth(1)
+    if lbl in region_order and lbl not in seen:
+        try:
+            handle.set_markersize(7)
+            handle.set_markeredgecolor(PAGE_BG)
+            handle.set_markeredgewidth(0.4)
+        except AttributeError:
+            pass
         region_handles.append(handle)
         region_labels.append(lbl)
+        seen.add(lbl)
 
 ax_main.get_legend().remove()
 ax_main.legend(
     handles=region_handles,
     labels=region_labels,
     loc="upper center",
-    fontsize=12,
+    fontsize=5.5,
     title="Region",
-    title_fontsize=13,
+    title_fontsize=6,
     framealpha=0.9,
-    edgecolor="#cccccc",
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
     ncol=4,
-    bbox_to_anchor=(0.45, 1.02),
-    borderpad=0.6,
-    columnspacing=1.0,
-    handletextpad=0.4,
+    bbox_to_anchor=(0.42, 1.0),
+    borderpad=0.4,
+    columnspacing=0.7,
+    handletextpad=0.3,
 )
 
-# State abbreviation labels on main cartogram
+# State abbreviation labels — size scales with population
 pop_max = df["population"].max()
 for _, row in df.iterrows():
     pop_frac = row["population"] / pop_max
-    fontsize = max(10, min(18, int(11 + pop_frac * 8)))
+    fontsize = max(4, min(7, int(4 + pop_frac * 3.5)))
     ax_main.text(
         row["col"],
         row["row"] - 0.03,
@@ -159,53 +197,49 @@ for _, row in df.iterrows():
         color="white",
         zorder=5,
     )
-    # Population label for larger states
-    if row["population"] >= 5.0:
+    if row["population"] >= 8.0:
         ax_main.text(
             row["col"],
             row["row"] + 0.22,
             f"{row['population']:.0f}M",
             ha="center",
             va="center",
-            fontsize=max(8, int(fontsize * 0.6)),
+            fontsize=max(3.5, int(fontsize * 0.65)),
             color="white",
             alpha=0.9,
             zorder=5,
         )
 
-# Style main axes
 ax_main.invert_yaxis()
-ax_main.set_aspect("equal")
 ax_main.set_xlim(-0.8, 13.5)
 ax_main.set_ylim(5.8, -0.7)
 ax_main.set_xlabel("")
 ax_main.set_ylabel("")
 ax_main.set_xticks([])
 ax_main.set_yticks([])
+ax_main.set_facecolor(PAGE_BG)
 sns.despine(ax=ax_main, left=True, bottom=True)
 
-# Title - at least 24pt per quality criteria VQ-01
-ax_main.set_title(
-    "US States by Population\ncartogram-area-distortion \u00b7 seaborn \u00b7 pyplots.ai",
-    fontsize=24,
-    fontweight="bold",
-    pad=18,
-)
+# Title — scale fontsize for long title string
+title = "US States by Population · cartogram-area-distortion · python · seaborn · anyplot.ai"
+n = len(title)
+ratio = 67 / n if n > 67 else 1.0
+title_fontsize = max(8, round(12 * ratio))
+ax_main.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=8)
 
-# Size annotation
 ax_main.text(
     0.98,
     0.02,
-    "Tile area \u221d state population",
+    "Tile area ∝ state population",
     ha="right",
     va="bottom",
-    fontsize=13,
-    color="#666666",
+    fontsize=5.5,
+    color=INK_MUTED,
     fontstyle="italic",
     transform=ax_main.transAxes,
 )
 
-# --- Reference inset: equal-size tile map using seaborn's scatterplot with hue ---
+# Reference inset — equal-area tile map for comparison
 sns.scatterplot(
     data=df,
     x="col",
@@ -216,15 +250,14 @@ sns.scatterplot(
     style="region",
     style_order=region_order,
     markers=dict.fromkeys(region_order, "s"),
-    s=120,
-    alpha=0.7,
-    edgecolor="white",
-    linewidth=0.8,
+    s=22,
+    alpha=0.72,
+    edgecolor=PAGE_BG,
+    linewidth=0.3,
     legend=False,
     ax=ax_ref,
 )
 
-# Labels on reference map - increased to 8pt for readability
 for _, row in df.iterrows():
     ax_ref.text(
         row["col"],
@@ -232,42 +265,26 @@ for _, row in df.iterrows():
         row["state"],
         ha="center",
         va="center",
-        fontsize=8,
+        fontsize=3.5,
         fontweight="bold",
         color="white",
         zorder=5,
     )
 
 ax_ref.invert_yaxis()
-ax_ref.set_aspect("equal")
 ax_ref.set_xlim(-0.5, 13.0)
 ax_ref.set_ylim(5.8, -0.5)
 ax_ref.set_xlabel("")
 ax_ref.set_ylabel("")
 ax_ref.set_xticks([])
 ax_ref.set_yticks([])
+ax_ref.set_facecolor(PAGE_BG)
 sns.despine(ax=ax_ref, left=True, bottom=True)
-ax_ref.set_title("Equal-Area\nReference", fontsize=13, fontweight="bold", pad=8)
+ax_ref.set_title("Equal-Area Reference", fontsize=7.5, fontweight="bold", color=INK, pad=4)
 
-# Subtle divider line between main and reference/bar panels
-divider_x = 0.74
-fig.add_artist(
-    plt.Line2D(
-        [divider_x, divider_x],
-        [0.05, 0.92],
-        transform=fig.transFigure,
-        color="#cccccc",
-        linewidth=1,
-        linestyle="--",
-        alpha=0.6,
-    )
-)
-
-# --- Population by region: seaborn barplot with statistical aggregation ---
-# Aggregate total population per region - leverages seaborn's categorical plotting
+# Regional population totals: horizontal bar chart
 region_totals = df.groupby("region", observed=True)["population"].sum().reset_index()
 region_totals.columns = ["region", "total_pop"]
-region_totals["total_pop"] = region_totals["total_pop"].round(1)
 
 sns.barplot(
     data=region_totals,
@@ -277,34 +294,25 @@ sns.barplot(
     hue_order=region_order,
     order=region_order,
     palette=region_palette,
-    edgecolor="white",
-    linewidth=1.2,
+    edgecolor=PAGE_BG,
+    linewidth=0.8,
     legend=False,
     ax=ax_bar,
-    saturation=0.85,
 )
 
-# Add value labels on bars
-for i, (_, rrow) in enumerate(region_totals.set_index("region").reindex(region_order).iterrows()):
-    ax_bar.text(
-        rrow["total_pop"] + 0.8,
-        i,
-        f"{rrow['total_pop']:.0f}M",
-        ha="left",
-        va="center",
-        fontsize=11,
-        fontweight="bold",
-        color="#444444",
-    )
+for i, region_name in enumerate(region_order):
+    val = region_totals.loc[region_totals["region"] == region_name, "total_pop"].values[0]
+    ax_bar.text(val + 1.0, i, f"{val:.0f}M", ha="left", va="center", fontsize=6.5, fontweight="bold", color=INK_SOFT)
 
-ax_bar.set_xlabel("Total Population (M)", fontsize=12)
-ax_bar.set_ylabel("")
-ax_bar.set_title("Regional Totals", fontsize=13, fontweight="bold", pad=8)
-ax_bar.tick_params(axis="y", labelsize=11)
-ax_bar.tick_params(axis="x", labelsize=10)
+ax_bar.set_xlabel("Total Population (M)", fontsize=7.5, color=INK)
+ax_bar.set_ylabel("", color=INK)
+ax_bar.set_title("Regional Totals", fontsize=8, fontweight="bold", color=INK, pad=4)
+ax_bar.tick_params(axis="y", labelsize=7, colors=INK_SOFT)
+ax_bar.tick_params(axis="x", labelsize=6.5, colors=INK_SOFT)
 ax_bar.set_xlim(0, region_totals["total_pop"].max() * 1.25)
+ax_bar.set_facecolor(PAGE_BG)
 sns.despine(ax=ax_bar, left=True)
-ax_bar.yaxis.grid(False)
-ax_bar.xaxis.grid(True, alpha=0.15, linewidth=0.8)
+ax_bar.xaxis.grid(True, alpha=0.15, linewidth=0.6, color=INK)
 
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+# Save — no bbox_inches='tight' per seaborn canvas rules
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
