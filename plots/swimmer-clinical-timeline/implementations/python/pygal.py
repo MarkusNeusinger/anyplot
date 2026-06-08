@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 swimmer-clinical-timeline: Swimmer Plot for Clinical Trial Timelines
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 82/100 | Updated: 2026-06-08
@@ -102,7 +102,7 @@ custom_style = Style(
     colors=IMPRINT_PALETTE,
     title_font_size=66,
     label_font_size=50,
-    major_label_font_size=36,
+    major_label_font_size=44,
     legend_font_size=40,
     value_font_size=30,
     stroke_width=2.5,
@@ -173,7 +173,7 @@ bar_rects = sorted(
 # Build SVG marker elements for events and ongoing arrows
 STROKE = PAGE_BG  # outline matches page bg for clean contrast on both themes
 marker_svgs = []
-ms = 15  # marker half-size in SVG user units
+ms = 18  # marker half-size in SVG user units
 
 if len(bar_rects) == num_patients:
     for i, bar in enumerate(bar_rects):
@@ -222,7 +222,7 @@ if len(bar_rects) == num_patients:
 
 # Two-row legend: row 1 = treatment arms, row 2 = event types
 leg_y1, leg_y2 = 1725, 1778
-font_lg = 38
+font_lg = 44
 
 arm_legend_x = [1000, 1750]
 for idx, (arm_name, arm_col) in enumerate(ARM_COLORS.items()):
