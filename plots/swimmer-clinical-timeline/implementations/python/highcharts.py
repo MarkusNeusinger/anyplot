@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 swimmer-clinical-timeline: Swimmer Plot for Clinical Trial Timelines
 Library: highcharts unknown | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-08
@@ -137,7 +137,7 @@ chart.options.subtitle = {
 chart.options.x_axis = {
     "categories": patient_ids,
     "title": {"text": None},
-    "labels": {"style": {"fontSize": "28px", "color": INK_SOFT}},
+    "labels": {"style": {"fontSize": "38px", "color": INK_SOFT}},
     "lineWidth": 0,
     "tickWidth": 0,
     "gridLineWidth": 0,
@@ -145,11 +145,11 @@ chart.options.x_axis = {
 
 chart.options.y_axis = {
     "title": {"text": "Time on Study (Weeks)", "style": {"fontSize": "44px", "color": INK}, "margin": 20},
-    "labels": {"style": {"fontSize": "34px", "color": INK_SOFT}},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
     "gridLineWidth": 1,
     "gridLineColor": GRID,
     "min": 0,
-    "max": round(float(max(durations)) * 1.06),
+    "max": round(float(max(durations)) + 1),
     "endOnTick": False,
     "lineWidth": 0,
     "plotLines": [
@@ -176,8 +176,10 @@ chart.options.y_axis = {
                 "text": f"Median {median_dur:.0f} wks",
                 "style": {"fontSize": "26px", "color": INK_MUTED, "fontWeight": "400"},
                 "align": "left",
+                "rotation": 0,
+                "verticalAlign": "bottom",
                 "x": 8,
-                "y": -8,
+                "y": -14,
             },
             "zIndex": 3,
         },
