@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: cartogram-area-distortion
 created: '2026-03-13T21:19:32Z'
-updated: '2026-06-08T03:49:56Z'
+updated: '2026-06-08T04:00:42Z'
 generated_by: claude-sonnet
 workflow_run: 27114415496
 issue: 4671
@@ -12,59 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cartogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/python/bokeh/plot-dark.html
-quality_score: 84
+quality_score: 88
 review:
   strengths:
-  - Storytelling subtitle — 'Circle area ∝ population — California (39M) dwarfs Wyoming
-    (0.6M) by 65×' immediately communicates the key insight
-  - Hand-crafted size legend with representative circles at 5M, 15M, 30M gives readers
-    an intuitive scale
-  - Dorling-style cartogram with reference dashed circles for geographic comparison
-    is a valid and informative design choice
-  - Imprint sequential colormap (green→blue) correctly applied with LinearColorMapper
-    + transform(), full color bar with units
-  - Theme-adaptive chrome fully implemented — backgrounds, text, grid, and circle
-    outlines all flip correctly between light (#FAF8F1) and dark (#1A1A17) renders
-  - All font sizes explicitly set (title 50pt, axis labels 42pt, tick labels 34pt)
-    following bokeh style-guide defaults
-  - 'Idiomatic Bokeh: ColumnDataSource, transform(), add_layout(), ColorBar, tooltips,
-    HTML+PNG dual output all correctly used'
-  - State labels for high-population states (pop > 6M) with custom offsets and NJ/MA
-    skipped to avoid northeast crowding
+  - Excellent use of Bokeh's transform() with LinearColorMapper for data-driven fill
+    colors — distinctly idiomatic Bokeh pattern
+  - 'Multi-layer approach: reference dashed circles + population circles + focal emphasis
+    on top-5 states creates clear visual hierarchy'
+  - Subtitle annotation ('California (39M) dwarfs Wyoming (0.6M) by 65×') actively
+    tells the story rather than just displaying data
+  - Size legend with proportional circles and color bar together provide dual decoding
+    guidance for readers
+  - 'Both light and dark renders are theme-correct: background, text, grid, and colorbar
+    all flip properly without any dark-on-dark failures'
+  - Imprint sequential colormap (green → blue) correctly used for continuous population
+    encoding
+  - Deterministic hardcoded data with realistic US state population figures and geographic
+    coordinates
+  - 'Font sizes all explicitly set and well-proportioned: 50pt title, 42pt axis labels,
+    34pt tick labels, 30pt colorbar ticks'
   weaknesses:
-  - 'SC-01 LOW (3/5): Implementation is a Dorling-style proportional symbol map (circles
-    at centroids), not a true contiguous area-distortion cartogram. The spec states
-    ''regions should remain contiguous (sharing borders) after distortion'' and uses
-    polygon geometry. Consider using geopandas with a simplified US states shapefile
-    and scaling polygon areas (e.g. via Dorling cartogram algorithm or scaled polygon
-    centroids with actual shape patches) to better match the spec''s intent'
-  - 'SC-02 PARTIAL (3/4): ''Original region outlines or reference map inset for comparison''
-    is required by the spec. The dashed reference circles approximate this, but actual
-    geographic outlines (or a small inset map) would fully satisfy the requirement'
-  - 'DE-01 MODERATE (5/8): While above default, the design could reach 6-7 by increasing
-    circle fill contrast or adding a more pronounced focal emphasis on the top-5 most
-    populated states (e.g. bold stroke on CA, TX, FL, NY, PA circles)'
-  - 'DE-02 MODERATE (4/6): The outer plot outline (outline_line_color=INK_SOFT) keeps
-    a box frame around the map area. Removing it (outline_line_color=None) would give
-    a cleaner, more open cartographic feel more appropriate for a geographic viz'
-  - 'Minor: AK and HI placed in the lower-left as fake-coordinate insets — their label
-    text (''AK'', ''HI'') at 22pt is smaller than the main state labels (24pt bold).
-    Consider making them the same size for consistency'
+  - Implementation is a proportional symbol / Dorling-style cartogram (circles at
+    state centroids) rather than a true contiguous cartogram that distorts polygon
+    shapes — the spec explicitly describes contiguous cartograms that preserve adjacency
+    and rough region shape while rescaling
+  - Circle overlap in the dense Northeast US corridor (CT, RI, MA, NH, VT region)
+    is noticeable; while NJ/MA labels are correctly omitted, the circles themselves
+    still visually crowd
+  - State labels at 24pt are on the small side for the 3200×1800 canvas — at mobile
+    viewport widths (~400px scaled) they may become hard to read; consider 28-30pt
+  - Subtitle at 26pt is slightly small relative to the canvas scale; 28-30pt would
+    read better
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct. No pure-white or colored background.
-      Chrome: Title "cartogram-area-distortion · python · bokeh · anyplot.ai" in dark bold text clearly readable. Italic subtitle "Circle area ∝ population — California (39M) dwarfs Wyoming (0.6M) by 65×" in INK_MUTED visible below title. Axis labels "Longitude (°W)" and "Latitude (°N)" in dark ink, 42pt — readable. Tick labels (-120, -110, … / 25, 30, …) in INK_SOFT, 34pt — readable. Color bar on right labeled "Population (millions)" with light-to-dark gradient legend (30pt ticks, 32pt title) — fully readable. Size legend in upper-left with "Population" header and three reference circles at 5M, 15M, 30M — readable. "- - = geographic area (reference)" annotation at 22pt italic — readable but smallest text.
-      Data: 50 US states as filled circles, sized by population (range 22–92px diameter). Colors run from #009E73 (brand green, small states) through teal to #4467A3 (blue, large states like CA and TX) — Imprint sequential colormap correctly applied. Dashed reference circles (uniform size) show geographic comparison. State labels in dark bold: CA, TX, FL, NY, PA, IL, OH, IN, MI, GA, NC, VA, TN, AZ, WA, MD, MO visible with offset positions to avoid circle overlap. CA (39M) and TX (30.5M) are notably large blue circles; Wyoming-scale states appear as small green circles.
-      Legibility verdict: PASS — all text readable against warm off-white background. No light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "cartogram-area-distortion · python · bokeh · anyplot.ai" bold dark text, fills ~75% of width. Italic subtitle "Circle area ∝ population — California (39M) dwarfs Wyoming (0.6M) by 65×" in muted dark below title. Y-axis "Latitude (°N)" and X-axis "Longitude (°W)" in dark ink, clearly readable. Tick labels in INK_SOFT tone visible. Color bar on right with "Population (millions)" header and tick labels at 30pt. Size legend upper-left with "Population" header and three proportional circles labeled 5M/15M/30M.
+      Data: Circles sized by population (min=22, max=92 px diameter) colored green (#009E73) for small populations through blue (#4467A3) for large. Reference dashed outline circles (size=32, uniform) visible in INK_SOFT. Bold dark stroke on CA, TX, FL, NY, PA for focal emphasis. State abbreviation labels for states >6M population.
+      Legibility verdict: PASS — all text readable, no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct. No pure-black background.
-      Chrome: Title in light #F0EFE8 text — clearly readable against dark background. Subtitle in INK_MUTED (#A8A79F) italic — visible. Axis labels in light INK (#F0EFE8) — readable. Tick labels in INK_SOFT (#B8B7B0) — readable. Color bar labels and title in light tones — readable. Size legend header and labels in INK_SOFT — readable. All state abbreviation labels appear in light INK against dark background — readable. No dark-on-dark text failures observed.
-      Data: Circle colors identical to light render — #009E73 (green, small states) through teal to #4467A3 (blue, large states). Imprint data colors are theme-independent and correctly consistent. Reference dashed circles use INK_SOFT line color which adapts to the dark theme correctly.
-      Legibility verdict: PASS — all text readable against warm near-black background. Chrome correctly flips. No dark-on-dark failures observed.
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light (#F0EFE8) text, fully visible. Subtitle in light muted italic. Y-axis and X-axis labels in light INK. Tick labels in INK_SOFT light gray. Color bar title and tick labels in light colors. State labels in light INK_SOFT. Size legend header and labels in light text. No dark-on-dark failures observed.
+      Data: Circle fill colors are identical to light render — same green-to-blue imprint_seq colormap. Reference dashed circles and focal emphasis strokes use theme-adaptive INK/INK_SOFT values.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures detected
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -72,141 +65,134 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set and readable in both themes. AK/HI
-          labels and reference annotation at 22pt are the smallest elements — readable
-          at canvas size but may be tight at mobile scale.
+        comment: All sizes explicitly set (50pt title, 42pt axis labels, 34pt ticks);
+          state labels at 24pt and subtitle at 26pt are slightly small for 3200x1800
+          canvas
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Minor crowding potential in northeast (OH/IN/PA/MD cluster) but code
-          skips NJ and MA to avoid worst cases. No severe overlaps observed.
+        comment: Minor circle crowding in dense Northeast US corridor; label offsets
+          and skip-list mitigate text overlap well
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 50 states, circle sizes 22–92px diameter. Small states have min_size=22px
-          floor keeping them visible. Reference circles at alpha=0.7 clearly visible.
+        comment: Circles visible across full size range; min_size=22 is adequate but
+          very small states are just barely prominent enough
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential colormap (green→blue) is CVD-safe. No red-green
-          sole distinction.
+        comment: Imprint sequential palette is CVD-safe; green-to-blue transition
+          provides luminance contrast for colorblind readers
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200×1800 landscape. Canvas gate passed. min_border values prevent
-          label clipping. Color bar on right uses space well. No clipping observed.
+        comment: 3200x1800 canvas fully utilized; generous min_border settings; color
+          bar and size legend well-placed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (°W) and Latitude (°N) with units. Title in correct format.
+        comment: Longitude (°W) and Latitude (°N) — both descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint sequential colormap (#009E73→#4467A3) correctly built as
-          256-stop ramp. Backgrounds #FAF8F1 light / #1A1A17 dark. All chrome theme-adaptive.'
+        comment: 'Imprint sequential colormap (green #009E73 → blue #4467A3) used
+          for continuous data; background #FAF8F1 light / #1A1A17 dark; both renders
+          theme-correct'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above default: custom Imprint sequential colormap, storytelling
-          subtitle with specific data insight, hand-crafted size legend, dual encoding
-          (size+color), background outline on circles matches PAGE_BG for clean look.
-          Not quite publication-ready but clearly above configured-defaults.'
+        comment: Multi-layer approach with reference circles, focal emphasis on top-5
+          states, Imprint colormap, subtitle annotation — clearly above library defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid (alpha=0.12), minor tick lines removed, circles outlined
-          in PAGE_BG. Plot outline box (outline_line_color=INK_SOFT) kept — removing
-          it would give a cleaner open map feel.
+        comment: Grid at 12% alpha (very subtle), outline removed, generous margins
+          via min_border; color bar with ELEVATED_BG fill
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Storytelling subtitle directly states the key insight (CA dwarfs
-          WY by 65×). Reference circles create visual comparison. Size legend anchors
-          the scale. Strong storytelling for a first attempt.
+        comment: Subtitle quantifies the key insight; bold strokes on top-5 states
+          create focal emphasis; size + color dual-encoding reinforces magnitude
     spec_compliance:
-      score: 12
+      score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Dorling-style proportional symbol map at geographic centroids — a
-          recognized form of cartogram but not a true contiguous area-distortion cartogram.
-          Spec requires polygon distortion with preserved adjacency; implementation
-          uses circles at centroids.
+        comment: Proportional symbol / Dorling-style cartogram with circles sized
+          by population — area distortion correct conceptually but not a true contiguous
+          cartogram (polygon shape distortion)
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Circle area ∝ population ✓; color scale ✓; state labels ✓; size+color
-          legend ✓. 'Original region outlines or reference map inset' is approximated
-          with dashed reference circles — valid approximation but not actual geographic
-          outlines.
+        comment: Reference circles, color scale, state labels, size legend, color
+          bar all present; true geographic contiguity not maintained
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude on X, Latitude on Y. Circle size and color both proportional
-          to population. All 50 states shown.
+        comment: Longitude x-axis, Latitude y-axis, population drives both size and
+          color — correct mapping
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'cartogram-area-distortion · python · bokeh · anyplot.ai' matches
-          required format. Size legend and color bar both labeled clearly.
+        comment: Title 'cartogram-area-distortion · python · bokeh · anyplot.ai' correct;
+          size legend + color bar provide dual legend
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows proportional area encoding, geographic positioning, reference
-          comparison, color dual-encoding, size legend with scale, storytelling annotation.
-          Strong coverage of cartogram concept.
+        comment: All 50 US states represented; full size range from Wyoming (0.6M)
+          to California (39M) showcases full area distortion spectrum
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: US states population in millions — real-world, factual, politically
-          neutral demographic data.
+        comment: Real US state populations — real-world, widely understood, neutral
+          topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Population values are accurate (CA 39M, TX ~30.5M, FL 22.6M, WY 0.6M).
-          Range and proportions match real-world data.
+        comment: Population figures are approximately correct; geographic coordinates
+          are realistic
     code_quality:
       score: 10
       max: 10
@@ -216,74 +202,68 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Script-style: Imports → sys.path fix → tokens → data → figure →
-          glyphs → labels → legend → colorbar → typography → save+screenshot. No functions
-          or classes.'
+        comment: Imports → Data → Plot → Save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — all data hardcoded, no random generation.
+        comment: Fully deterministic hardcoded data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os (env), sys (path fix), time (sleep), Path,
-          numpy, bokeh submodules, selenium.'
+        comment: All imports used; no unused dependencies
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and appropriate complexity. sys.path manipulation is a legitimate
-          workaround (clearly commented). No fake UI.
+        comment: Clean, readable code with appropriate complexity for multi-layer
+          visualization
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Bokeh API.
-          Selenium screenshot pattern per bokeh.md.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png via Selenium; current
+          Bokeh API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of ColumnDataSource, transform() with LinearColorMapper,
+          ColorBar layout, Label add_layout, Range1d, hover tooltips — idiomatic Bokeh
+          throughout
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource, LinearColorMapper + transform(), ColorBar + add_layout(),
-          Range1d, Label annotations, tooltips, min_border_*, output_file+save+Selenium
-          — all idiomatic Bokeh patterns correctly used.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: transform('population', color_mapper) for data-driven continuous
-          color on scatter is distinctively Bokeh. Interactive tooltips + HTML artifact
-          alongside PNG. ColorBar layout integration. These don't translate directly
-          to other libraries.
-  verdict: REJECTED
+        comment: 'Bokeh-specific: transform() for data-column fill colors, ColorBar
+          as layout element, HTML export + Selenium screenshot pattern, multiple ColumnDataSource
+          layers'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - colorbar
+  - annotations
   - hover-tooltips
   - html-export
-  - annotations
-  - custom-legend
   patterns:
   - columndatasource
   - iteration-over-groups
   dataprep:
   - normalization
   styling:
-  - alpha-blending
   - custom-colormap
-  - grid-styling
+  - alpha-blending
   - edge-highlighting
