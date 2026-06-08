@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 indicator-ichimoku: Ichimoku Cloud Technical Indicator Chart
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-06-08
+Quality: 89/100 | Updated: 2026-06-08
 """
 
 import os

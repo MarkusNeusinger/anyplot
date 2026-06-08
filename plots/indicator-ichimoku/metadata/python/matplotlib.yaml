@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: indicator-ichimoku
 created: '2026-03-12T14:16:28Z'
-updated: '2026-06-08T01:32:41Z'
+updated: '2026-06-08T01:41:17Z'
 generated_by: claude-sonnet
 workflow_run: 27110837279
 issue: 4669
@@ -12,51 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - All five Ichimoku components (Tenkan-sen, Kijun-sen, Senkou Span A/B, Chikou Span)
-    correctly implemented with standard parameters (9, 26, 52) and proper +26/-26
-    displacement shifts.
-  - 'Correct semantic color mapping: brand green (#009E73) for bullish and matte red
-    (#AE3030) for bearish — the finance semantic exception — plus Imprint palette
-    positions 2/3/4 for indicator lines.'
-  - Both light (#FAF8F1) and dark (#1A1A17) themes fully functional with theme-adaptive
-    chrome tokens applied to all text, grid, spines, and legend elements.
-  - TK crossover signal annotations (TK↑ / TK↓) show domain expertise and add meaningful
-    data storytelling beyond basic spec requirements.
-  - 'Idiomatic matplotlib: vlines+bar for candlestick wicks/bodies, fill_between with
-    where+interpolate=True for conditional Kumo coloring, mdates locators/formatters
-    for clean date axis.'
+  - Complete, textbook-correct Ichimoku Cloud implementation with all five components,
+    correct shifts, and proper cloud twist rendering
+  - 'Semantic palette exception applied correctly for finance: bullish=brand green
+    (#009E73), bearish=matte red (#AE3030), supporting lines use Imprint positions
+    2–4 (Tenkan-sen #C475FD, Kijun-sen #4467A3, Chikou Span #BD8233)'
+  - CVD redundant encoding on bearish candlestick bodies (dark edge outline adds shape
+    cue beyond color)
+  - Theme-adaptive chrome works correctly in both renders — no dark-on-dark or light-on-light
+    failures
+  - Generated price data tells a coherent narrative (uptrend → consolidation → breakdown
+    → recovery) that exercises all Ichimoku cloud states including cloud twist
+  - Perfect spec compliance across all four SC criteria (15/15)
+  - Clean, flat KISS code structure with seed set and all imports used
   weaknesses:
-  - 'Title is ''indicator-ichimoku · matplotlib · anyplot.ai'' — missing the required
-    ''python'' language token. Must be ''indicator-ichimoku · python · matplotlib
-    · anyplot.ai''. Fix: update the title string in the code and recalculate title_fontsize
-    from the corrected string length.'
-  - 'CVD accessibility concern: green/red encoding for up/down candles uses hue as
-    the sole distinguishing signal for colorblind users. While the finance semantic
-    exception is correctly applied, adding a redundant visual cue (e.g., slightly
-    different body opacity or a subtle edge stroke on bearish candles) would improve
-    CVD robustness.'
-  - Bearish Kumo fill (alpha=0.18) is noticeably less prominent in the dark render
-    (#1A1A17 background) compared to the light render. Consider increasing alpha slightly
-    (to ~0.22–0.25) or using a theme-adaptive alpha so the red cloud reads clearly
-    in both themes.
-  - 'Design excellence ceiling: to clear 90/100, the chart needs one more refinement
-    — e.g. removing the few remaining tick marks (keep labels, remove the short tick
-    lines), or adding a subtle price annotation at the final close to anchor the viewer.'
+  - TK crossover annotation text at fontsize=6 is very small on the 3200x1800 canvas
+    — increase to fontsize=7–8 for better readability at mobile-scaled widths
+  - LM-02 could be elevated by using BrokenBarHCollection or a custom Artist for candlestick
+    rendering instead of splitting into two ax.bar() calls — would reduce code duplication
+    and demonstrate advanced matplotlib mastery
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "indicator-ichimoku · matplotlib · anyplot.ai" in dark ink (~12pt) occupies ~55% of canvas width and is fully readable. Y-axis label "Price (USD)" and X-axis label "Date" are clear at 10pt. Tick labels ($125–$165 on Y, monthly dates on X) are readable in dark soft ink at 8pt.
-      Data: Candlesticks with green (#009E73) bullish bodies and dark-red (#AE3030) bearish bodies clearly visible. Lavender Tenkan-sen and blue Kijun-sen lines are distinct. Ochre dashed Chikou Span is readable. Bullish Kumo (light green semi-transparent fill) dominates the early chart; bearish Kumo (pinkish semi-transparent fill) dominates mid-chart. TK↓ and TK↑ crossover annotations are clearly visible. Legend row at bottom shows all five items with correct colors.
-      Legibility verdict: PASS — all text readable against light background, no light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "indicator-ichimoku · python · matplotlib · anyplot.ai" in dark ink, clearly readable. Y-axis label "Price (USD)" and X-axis label "Date" in dark ink at fontsize=10. Tick labels at fontsize=8 readable. X-axis tick labels rotated 25 degrees, well-spaced. Legend below chart with theme-adaptive elevated background (#FFFDF6) and ink-soft edge, text readable.
+      Data: Bullish candlesticks in brand green (#009E73), bearish in matte red (#AE3030) with dark edge. Ichimoku cloud: green (bullish) at start, large red (bearish) cloud through middle, thin green at end. Tenkan-sen in lavender (#C475FD), Kijun-sen in blue (#4467A3), Chikou Span in ochre dashed (#BD8233). "TK↓" annotation visible near early May 2024 in red at fontsize=6.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct dark surface, not pure black.
-      Chrome: Title, axis labels, and tick labels all appear in light-colored text (#B8B7B0 for secondary, #F0EFE8 for primary) — fully readable against the dark background. No dark-on-dark failures detected. Grid lines are subtle (light-colored alpha=0.15).
-      Data: Bullish candles green and bearish candles red are identical in hue to the light render. Tenkan-sen lavender and Kijun-sen blue lines carry through unchanged. Ochre Chikou Span dashed line visible. Bullish Kumo green fill is readable. Bearish Kumo red fill (alpha=0.18) is somewhat subdued on the dark background — visible but less prominent than in the light render. TK crossover annotations readable in their respective colors. Legend row text is light-colored and readable.
-      Legibility verdict: PASS — all text readable against dark background. Minor concern: bearish Kumo slightly less prominent at alpha=0.18 on near-black; data colors are otherwise identical to light render.
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title, axis labels, and tick labels all in light-colored ink (#B8B7B0 / #F0EFE8 range). No dark-on-dark failures detected. Legend frame uses elevated dark background (#242420) with light edge and light text. Grid lines subtle at alpha=0.15 against the dark surface.
+      Data: Data colors are identical to the light render — bullish candles green (#009E73), bearish red (#AE3030), Tenkan-sen lavender, Kijun-sen blue, Chikou Span ochre dashed. Cloud fills maintain same green/red coloring. Brand green #009E73 is clearly visible on the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 28
@@ -64,82 +53,85 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title, axis labels, tick labels all
-          readable in both light and dark renders
+        comment: 'All font sizes explicitly set (title=12, labels=10, ticks=8, legend=8).
+          Readable in both themes. Minor deduction: TK crossover annotations at fontsize=6
+          are quite small on 3200x1800 canvas.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps; TK annotations placed without collisions; legend
-          outside plot area
+        comment: No text overlaps. Rotated X-axis tick labels well-spaced. Legend
+          clearly below plot.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 'All elements visible; minor: bearish Kumo fill (alpha=0.18) is slightly
-          subdued in dark render'
+        comment: All Ichimoku lines and candlesticks visible. Candlestick bodies at
+          width=0.65 with 120 data points slightly thin but readable. Cloud fills
+          at alpha=0.18 well-balanced.
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Green/red semantic exception correctly applied for finance, but no
-          redundant encoding — CVD users rely on hue alone to distinguish bullish/bearish
+        passed: true
+        comment: 'CVD redundant encoding: bearish candles have dark edge outline in
+          addition to red fill. Chikou Span is dashed. All series have distinct hue
+          and luminance.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 landscape canvas; good proportions with subplots_adjust;
-          legend below chart keeps data area clean
+        comment: Canvas correctly 3200x1800 (figsize=(8,4.5), dpi=400). No bbox_inches='tight'.
+          subplots_adjust used correctly. No canvas gate failure.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Price (USD)' includes units; X-axis 'Date' is appropriate
+        comment: 'X: ''Date'', Y: ''Price (USD)'' with unit. Title format correct.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First categorical series #009E73 brand green; finance semantic exception
-          correctly uses #AE3030 for bearish; indicator lines use Imprint positions
-          2/3/4; backgrounds and chrome are theme-correct'
+        comment: 'Correct semantic exception for finance: bullish=#009E73, bearish=#AE3030.
+          Supporting lines use Imprint positions 2-4. Background #FAF8F1 light / #1A1A17
+          dark. Chrome fully theme-adaptive.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Strong design with intentional semantic color hierarchy, alpha-layered
-          cloud fills, and domain-appropriate TK crossover annotations — clearly above
-          library defaults
+        comment: Above well-configured default. Semantic color mapping deliberate,
+          alpha-layered cloud fills tasteful, CVD redundant encoding shows design
+          intent. Not quite publication-ready.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, y-axis-only grid at alpha=0.15, thin spine
-          widths, styled legend frame — good refinement, not fully polished
+        comment: Top/right spines removed; subtle y-only grid at alpha=0.15; theme-adaptive
+          legend frame with elevated background. Wick linewidth=0.8 shows scale awareness.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Cloud color shift signals trend change; TK crossover annotations
-          mark key market events; data narrative (uptrend to breakdown to recovery)
-          is visually clear
+        comment: 'Generated data tells clear narrative: uptrend → consolidation →
+          breakdown → recovery. Cloud color transitions signal each phase. TK crossover
+          annotations mark turning points.'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -147,29 +139,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Ichimoku Cloud overlay on candlestick chart
+        comment: Correct candlestick chart with full Ichimoku Cloud overlay.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All five Ichimoku components present; green/bullish and red/bearish
-          cloud fills; Chikou and Senkou spans correctly displaced
+        comment: All five Ichimoku components present with correct shifts. Cloud color
+          changes between bullish/bearish. Standard parameters (9, 26, 52) used.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Dates on X-axis, price on Y-axis; standard parameters 9/26/52; 120
-          visible periods with adequate history
+        comment: X=date, Y=price. Chikou Span shifted 26 periods back; Senkou Spans
+          shifted 26 periods forward.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title is 'indicator-ichimoku · matplotlib · anyplot.ai' — missing
-          required 'python' language token. Should be 'indicator-ichimoku · python
-          · matplotlib · anyplot.ai'. Legend labels are correct.
+        passed: true
+        comment: Title is exactly 'indicator-ichimoku · python · matplotlib · anyplot.ai'.
+          Legend labels match all data series.
     data_quality:
       score: 15
       max: 15
@@ -179,22 +170,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both bullish and bearish candles; all three cloud states (bullish/bearish/transition);
-          all five indicator lines; TK crossover signals
+        comment: 'Shows all Ichimoku states: bullish cloud, bearish cloud, cloud twist,
+          both bullish and bearish candles, TK crossovers, all five components active.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible daily OHLC stock data (~$125–$165 range); realistic price
-          narrative with trend/consolidation/breakdown/recovery phases
+        comment: Business-day date range, realistic starting price (~$155), plausible
+          intraday ranges. Neutral financial scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 trading days with 120 visible; OHLC relationships are consistent;
-          price range appropriate for mid-cap stock
+        comment: Price range $125–$165, percentage moves and candlestick sizes realistic
+          for mid-cap equity. Standard Ichimoku parameters factually correct.
     code_quality:
       score: 10
       max: 10
@@ -204,66 +195,71 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean script: imports → data → plot → save; no functions or classes'
+        comment: 'Clean flat structure: imports → theme config → data generation →
+          Ichimoku calculation → plot → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, mdates, mpatches, pyplot, mticker, numpy, pandas)
-          are used
+        comment: All 7 imports used (os, mdates, mpatches, plt, mticker, numpy, pandas).
+          No unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic; vectorized candlestick rendering; no fake interactivity
+        comment: Good numpy boolean indexing for bullish/bearish split. fill_between
+          with where= for conditional cloud coloring. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; no bbox_inches='tight'; current matplotlib
-          API
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. No deprecated
+          API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: date2num conversion, fill_between with where+interpolate, vlines+bar
-          for candlesticks, mdates locators — advanced idiomatic patterns beyond basic
-          usage
+        comment: Consistently uses Axes methods. mdates.date2num(), mdates formatters/locators,
+          mticker.FormatStrFormatter, mpatches.Patch for custom legend handles — all
+          idiomatic matplotlib patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: fill_between(where=, interpolate=True) for conditional Kumo fills;
-          mpatches.Patch + plt.Line2D for mixed-type custom legend; mdates.WeekdayLocator
-          for minor tick density — distinctively matplotlib
-  verdict: REJECTED
+        comment: Uses fill_between with where= for conditional cloud coloring, ax.vlines
+          for wicks, custom mpatches legend handles, mdates numeric date conversion.
+          Solid but stops short of more advanced features (BrokenBarHCollection, custom
+          Artist).
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
-  - manual-ticks
+  - patches
   patterns:
   - data-generation
   - explicit-figure
+  - iteration-over-groups
   dataprep:
-  - time-series
   - rolling-window
+  - time-series
   styling:
   - alpha-blending
+  - edge-highlighting
   - grid-styling
