@@ -49,11 +49,14 @@ const R_MAX = 45;
 const points = stateRaw.map(([abbr, lon, lat, pop]) => ({
   x: lon,
   y: lat,
-  r: Math.max(5, R_MAX * Math.sqrt(pop / maxPop)),
+  r: Math.max(8, R_MAX * Math.sqrt(pop / maxPop)),  // floor at 8 so tiny states remain identifiable
   label: abbr,
   pop,
   norm: (pop - minPop) / (maxPop - minPop),
 }));
+
+// Ascending order: small states render first, large states on top — prevents large bubbles occluding small neighbours
+const sortedPoints = [...points].sort((a, b) => a.pop - b.pop);
 
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
@@ -82,7 +85,7 @@ const labelPlugin = {
   },
 };
 
-// Gradient colour legend (top-right corner)
+// Gradient colour legend + bubble-size reference (top-right corner)
 const gradientLegendPlugin = {
   id: "gradientLegend",
   afterDraw(chart) {
@@ -96,12 +99,12 @@ const gradientLegendPlugin = {
     const lx = right - lw - 14;
     const ly = top + 14;
 
-    // Box background
+    // Box background (tall enough for gradient + size reference)
     ctx.fillStyle = hexToRgba(t.elevatedBg, 0.92);
     ctx.strokeStyle = hexToRgba(t.inkSoft, 0.35);
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.roundRect(lx - 10, ly - 6, lw + 20, 76, 7);
+    ctx.roundRect(lx - 10, ly - 6, lw + 20, 122, 7);
     ctx.fill();
     ctx.stroke();
 
@@ -126,9 +129,42 @@ const gradientLegendPlugin = {
     ctx.fillStyle = t.inkSoft;
     ctx.font = "13px sans-serif";
     ctx.textAlign = "left";
-    ctx.fillText(`${minPop.toFixed(1)}M`, lx, barY + barH + 18);
+    ctx.fillText(`${minPop.toFixed(1)}M`, lx, barY + barH + 15);
     ctx.textAlign = "right";
-    ctx.fillText(`${maxPop.toFixed(1)}M`, lx + lw, barY + barH + 18);
+    ctx.fillText(`${maxPop.toFixed(1)}M`, lx + lw, barY + barH + 15);
+
+    // Size reference header
+    ctx.fillStyle = t.inkSoft;
+    ctx.font = "11px sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("Bubble area ∝ pop:", lx, barY + barH + 34);
+
+    // Reference circles at three population benchmarks, coloured by the same gradient
+    const sizeRefs = [
+      { pop: 1,      label: "1M",                 norm: (1 - minPop) / (maxPop - minPop) },
+      { pop: 10,     label: "10M",                norm: (10 - minPop) / (maxPop - minPop) },
+      { pop: maxPop, label: `${maxPop.toFixed(0)}M`, norm: 1 },
+    ];
+    const refScale = 14; // max reference circle radius (CSS px) corresponds to maxPop
+    const sizeY = barY + barH + 54;
+
+    let refX = lx;
+    sizeRefs.forEach(({ pop, label, norm }) => {
+      const r = Math.max(4, refScale * Math.sqrt(pop / maxPop));
+      const cx = refX + 8 + r;
+      ctx.fillStyle = seqColor(norm);
+      ctx.beginPath();
+      ctx.arc(cx, sizeY, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = hexToRgba(t.inkSoft, 0.3);
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+      ctx.fillStyle = t.inkSoft;
+      ctx.font = "10px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(label, cx, sizeY + r + 9);
+      refX = cx + r;
+    });
 
     ctx.restore();
   },
@@ -140,10 +176,10 @@ new Chart(canvas, {
   data: {
     datasets: [{
       label: "Population",
-      data: points,
-      backgroundColor: points.map(p => seqColor(p.norm)),
-      borderColor: points.map(p => seqColor(p.norm)),
-      borderWidth: 0,
+      data: sortedPoints,
+      backgroundColor: sortedPoints.map(p => seqColor(p.norm)),
+      borderColor: sortedPoints.map(p => hexToRgba(t.inkSoft, 0.25)),
+      borderWidth: 0.5,
     }],
   },
   options: {
