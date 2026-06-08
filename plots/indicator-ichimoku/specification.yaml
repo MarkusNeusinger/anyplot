@@ -6,7 +6,7 @@ title: Ichimoku Cloud Technical Indicator Chart
 
 # Specification tracking
 created: 2026-03-07T20:32:08Z
-updated: null
+updated: 2026-06-08T01:19:23Z
 issue: 4669
 suggested: MarkusNeusinger
 
@@ -27,3 +27,4 @@ tags:
     - temporal
     - color-mapped
     - annotated
+    - technical-analysis
