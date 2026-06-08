@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 phase-diagram-pt: Thermodynamic Phase Diagram (Pressure-Temperature)
-Library: matplotlib | Python 3.14
-Quality: 93/100 | Created: 2026-03-14
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-06-08
 """
 
 import os
