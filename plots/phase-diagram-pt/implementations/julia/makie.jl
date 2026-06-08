@@ -73,6 +73,8 @@ ax = Axis(
     ylabelsize         = 14,
     xticklabelcolor    = INK_SOFT,
     yticklabelcolor    = INK_SOFT,
+    xtickcolor         = INK_SOFT,
+    ytickcolor         = INK_SOFT,
     xticklabelsize     = 12,
     yticklabelsize     = 12,
     backgroundcolor    = PAGE_BG,
@@ -88,6 +90,11 @@ ax = Axis(
     yminorgridvisible  = false,
 )
 
+# Supercritical fluid region: subtle shaded polygon (behind curves)
+const SC_FILL = RGBAf(Float32(INK_MUTED.r), Float32(INK_MUTED.g), Float32(INK_MUTED.b), 0.08f0)
+poly!(ax, Point2f[(T_c, P_c), (680.0, P_c), (680.0, 5.0e7), (T_c, 5.0e7)];
+    color = SC_FILL, strokewidth = 0)
+
 # Phase boundary lines
 lines!(ax, T_lg, P_lg; color = IMPRINT_PALETTE[1], linewidth = 3.0, label = "Liquid–Gas")
 lines!(ax, T_sl, P_sl; color = IMPRINT_PALETTE[2], linewidth = 3.0, label = "Solid–Liquid")
@@ -101,13 +108,13 @@ scatter!(ax, [T_c],  [P_c];  color = INK, markersize = 18, marker = :star5,  str
 text!(ax, T_tp + 5.0, P_tp * 10.0;
     text     = "Triple Point\n(273.16 K, 611.7 Pa)",
     color    = INK,
-    fontsize = 11,
+    fontsize = 13,
     align    = (:left, :bottom),
 )
 text!(ax, T_c - 5.0, P_c * 0.38;
     text     = "Critical Point\n(647.1 K, 22.1 MPa)",
     color    = INK,
-    fontsize = 11,
+    fontsize = 13,
     align    = (:right, :top),
 )
 
@@ -133,11 +140,11 @@ text!(ax, 440.0, 1.5e3;
     font     = :bold,
     align    = (:center, :center),
 )
-text!(ax, 657.0, 2.8e7;
+text!(ax, 662.0, 3.2e7;
     text     = "SUPER-\nCRITICAL\nFLUID",
     color    = INK_MUTED,
-    fontsize = 11,
-    align    = (:left, :center),
+    fontsize = 13,
+    align    = (:center, :center),
 )
 
 # Legend
