@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: swimmer-clinical-timeline
 created: '2026-03-13T22:04:24Z'
-updated: '2026-06-08T06:25:56Z'
+updated: '2026-06-08T06:37:08Z'
 generated_by: claude-sonnet
 workflow_run: 27119206055
 issue: 4670
@@ -12,47 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swimmer-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/python/letsplot/plot-dark.html
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - 'Complete spec implementation: all required swimmer plot features present (horizontal
-    bars, event markers, ongoing arrows, treatment arm colors, sorted by duration)'
-  - 'Excellent use of lets-plot''s distinctive features: interactive layer_tooltips()
-    with patient/arm/time context, arrow() in geom_segment for ongoing patients, HTML
-    export'
-  - 'Semantically appropriate color mapping: Progressive Disease uses matte red as
-    a semantic exception for bad/loss outcomes; CR highlight bands add clinical context'
-  - 'Perfect data quality: realistic Phase II oncology trial simulation, clinically
-    plausible timing and cohort size'
-  - 'Theme adaptation is clean: both light and dark renders correctly adapt chrome
-    without breaking Imprint data colors'
-  - '"Best CR" annotation + median reference line create meaningful visual hierarchy'
+  - Correct swimmer plot with horizontal bars sorted by duration
+  - Full Imprint palette compliance with semantic event color assignments (red for
+    progression, cyan for ongoing)
+  - CR highlight bands and Best CR callout add clinical storytelling
+  - Distinct event markers with shape + color redundancy for CVD safety
+  - Median reference line provides clinical context
+  - Native lets-plot tooltips and HTML export demonstrate library mastery
+  - Clean KISS code structure with reproducible seed
+  - Theme-adaptive chrome works correctly in both light and dark renders
   weaknesses:
-  - 'Ongoing arrow markers not in legend: geom_segment for ongoing patients uses IMPRINT_PALETTE[5]
-    (cyan) as a fixed color without scale mapping, so it never appears in the legend.
-    The spec requires all event symbols to be explained. Add a scale_color_manual
-    or geom_segment wrapper that includes "Ongoing" in the Clinical Event legend section.'
-  - 'Design Excellence is functional but not exceptional: panel background and chart
-    frame could benefit from additional whitespace, the "Best CR" annotation could
-    be more visually prominent (larger font, box outline), and the overall typographic
-    hierarchy could be strengthened.'
-  - Geom_text annotation sizes (size=3) produce ~8.5pt post-scale text that may be
-    borderline small at 400px mobile width; consider increasing to size=3.5-4.
+  - Y-axis patient ID labels at size=8 are somewhat small for 25 entries — consider
+    size=9 or compact spacing
+  - Panel border (all four sides) reduces visual refinement vs an L-shaped frame —
+    removing top/right borders would improve DE-02
+  - Right side of canvas has significant empty space beyond week 47 — expand x-axis
+    range slightly or reduce right expand to tighten layout
+  - 'DE-01 is good but not publication-ready: remove panel_border, soften the legend
+    border, and consider subtle annotation style improvements'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Bold title "swimmer-clinical-timeline · python · letsplot · anyplot.ai" at ~75% plot width in dark ink. X-axis label "Time on Study (Weeks)" and Y-axis label "Patient" in dark ink (12pt). Patient IDs (PT-001..PT-025) as Y-axis tick labels (8pt), X-axis tick numbers clearly readable. Legend on right with "Treatment Arm" and "Clinical Event" sections, all labels readable.
-      Data: Arm A (Combo) bars in #009E73 (brand green), Arm B (Mono) in #C475FD (lavender). Event markers: ochre triangles (#BD8233) for Partial Response, blue asterisks (#4467A3) for Complete Response, red diamonds (#AE3030) for Progressive Disease. Cyan arrows (#2ABCCD) for ongoing patients extending beyond bar end. Dashed gray median reference line at week 17. "Best CR" annotation above PT-011. "Median: 17w" small text label.
-      Legibility verdict: PASS — all text readable against warm off-white background, no light-on-light issues
+      Background: warm off-white #FAF8F1 — correct theme surface
+      Chrome: title "swimmer-clinical-timeline · python · letsplot · anyplot.ai" in dark bold ink at top; y-axis label "Patient" and x-axis label "Time on Study (Weeks)" in dark ink; tick labels in dark-soft ink; all clearly readable against light background
+      Data: 25 horizontal bars sorted by duration (longest PT-011 at top ~47 weeks, shortest PT-016 at bottom ~4 weeks); Arm A (Combo) = #009E73 green; Arm B (Mono) = #C475FD lavender; orange triangles for Partial Response, blue asterisks for Complete Response, red diamonds for Progressive Disease, cyan arrows for Ongoing; subtle green highlight bands on CR patients; dashed median line at ~17 weeks; "Best CR" callout box near PT-011
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title, axis labels, tick labels all rendered in light off-white/cream text clearly readable against dark background. Legend text adapts to light color on elevated dark background (#242420). No dark-on-dark failures — all labels visible.
-      Data: All data colors identical to light render — #009E73 green bars, #C475FD lavender bars, #BD8233 ochre triangles, #4467A3 blue asterisks, #AE3030 red diamonds, #2ABCCD cyan arrows. Only chrome elements (background, text, grid, legend frame) have flipped. Brand green #009E73 visible and well-contrasted on dark surface.
-      Legibility verdict: PASS — all text clearly readable against near-black background, no dark-on-dark failures detected
+      Background: warm near-black #1A1A17 — correct dark surface
+      Chrome: title, axis labels, and tick labels rendered in light cream ink — all readable against dark background; legend text is light-colored; no dark-on-dark failures detected
+      Data: data colors identical to light render — #009E73 green (Arm A), #C475FD lavender (Arm B), same ochre/blue/red/cyan event markers; ongoing arrows and highlight bands all visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -60,51 +55,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set. Title/axis/tick labels readable in
-          both themes. Geom_text annotations (size=3) borderline small at mobile scale.
+        comment: All font sizes explicitly set; title bold 16pt, axis titles 12pt,
+          tick labels 10/8pt. Y-axis patient IDs at size=8 are slightly small for
+          25 entries but still readable. Both themes pass.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Patient rows well-spaced. Event markers on same patient row distinct
-          but close on multi-event rows.
+        comment: No significant text overlap; event markers may crowd slightly on
+          some bars but main content is fully readable.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Bars prominent, event markers clear with distinct shapes, ongoing
-          arrows clearly visible.
+        comment: Bars visible at alpha=0.8; event markers at size=4 visible; ongoing
+          arrows clear. Markers slightly small but adequate.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Shape redundancy used alongside color for events. No red-green sole
-          signal.
+        comment: Shape redundancy (triangle/asterisk/diamond) combined with color
+          — CVD-safe. Imprint palette with adequate contrast.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Good proportions, nothing cut off,
-          legend well-positioned.
+        comment: Good layout; some excess whitespace on right side between last data
+          point and legend area.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: Time on Study (Weeks) with units. Y: Patient. Title format correct.'
+        comment: 'X-axis: ''Time on Study (Weeks)'' — descriptive with units. Y-axis:
+          ''Patient'' — clear.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Arm A = #009E73 first series. Arm B = #C475FD position 2. Progressive
-          Disease semantic red justified. Backgrounds correct.'
+        comment: 'First series #009E73 (Arm A Combo). Arm B = #C475FD (position 2).
+          Events use Imprint positions 3-6 with semantic justification. Chrome theme-adaptive
+          in both renders. Backgrounds #FAF8F1 / #1A1A17.'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -112,24 +110,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above default (4). CR highlight bands, Best CR annotation, semantic
-          color mapping show deliberate design intent.
+        comment: Custom palette, CR highlight bands, callout annotation, median reference
+          line — above default but not quite publication-ready. Panel border reduces
+          sophistication.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: X-only major grid, bars at alpha=0.8, elevated legend bg. Some refinement
-          but not exceptional.
+        passed: true
+        comment: theme_minimal base, x-only grid — good refinement. Panel border all
+          four sides is a weakness; removing top/right would improve.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Median reference + Best CR annotation + CR bands create hierarchy.
-          Focal point apparent but could be more prominent.
+        passed: true
+        comment: Duration sorting, CR highlight bands, Best CR callout, median line,
+          semantic event colors — clear clinical narrative with multiple storytelling
+          techniques.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -137,28 +137,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Horizontal swimmer plot with bars, event markers, ongoing arrows.
+        comment: 'Correct swimmer plot: horizontal bars by duration, event markers,
+          ongoing arrows, treatment arm color coding.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: horizontal sorted bars, distinct event markers,
-          ongoing arrows, arm color coding, labeled axes.'
+        comment: 'All spec features present: sorted bars, distinct symbols per event
+          type, ongoing arrows, clear legend, x-axis time units, patient IDs on y-axis,
+          color by treatment arm.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time in weeks, Y=patient IDs, fill=treatment arm, color+shape=event
-          type.
+        comment: X = time (weeks), Y = patient ID, bars = treatment duration, all
+          25 patients visible.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title format correct. Treatment Arm and Clinical Event legends complete.
-          Missing: Ongoing arrow symbol not in legend.'
+        passed: true
+        comment: 'Title: ''swimmer-clinical-timeline · python · letsplot · anyplot.ai''
+          — correct format. Legend has Treatment Arm and Clinical Event sections with
+          correct labels.'
     data_quality:
       score: 15
       max: 15
@@ -168,22 +171,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects shown: bars, arms, event types, ongoing status, median
-          reference, best-responder callout.'
+        comment: Shows all event types (PR, CR, PD, Ongoing), both treatment arms,
+          variation in duration, highlight for CR patients.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Phase II oncology trial with 25 patients, two arms (Combo/Mono),
-          clinically realistic event types, neutral context.
+        comment: Phase II oncology trial with realistic patient IDs, two treatment
+          arms (Combo vs Mono), clinically appropriate events. Neutral medical context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 25 patients within 15-60 spec range. Duration 3-48 weeks plausible.
-          Gamma distribution produces realistic right-skewed durations.
+        comment: Duration 3-48 weeks via gamma distribution — realistic for oncology
+          Phase II. Events at plausible time points. 25 patients is a typical cohort
+          size.
     code_quality:
       score: 10
       max: 10
@@ -193,34 +197,38 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Linear code with clear section comments.
+        comment: 'No functions or classes; linear structure: imports → tokens → data
+          → plot → save. Conditional blocks for optional elements are appropriate.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, pandas, lets_plot used. No unused imports.
+        comment: os, numpy, pandas, lets_plot — all used. shutil imported conditionally
+          in cleanup block.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Proper layer composition. Interactive tooltips use real lets-plot
-          API, not fake interactivity.
+        comment: Well-organized, idiomatic lets-plot usage. layer_tooltips() is a
+          native feature, not fake interactivity. Appropriate complexity for this
+          chart type.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with ggsave(). Current
+          API used.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -228,27 +236,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper ggplot grammar, geom_rect for bars, scale_*_manual, theme()
-          with element functions, ggsize()+ggsave(scale=4). High-level API throughout.
+        comment: 'Correct ggplot grammar: geom_rect, geom_point, geom_segment, geom_text,
+          geom_label, geom_vline with proper aes() mappings and scale_*_manual. theme_minimal
+          with explicit element overrides.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: layer_tooltips() with rich content, arrow() in geom_segment for ongoing
-          arrows, HTML export alongside PNG.
+        comment: layer_tooltips() with .line() formatting is a distinctive lets-plot
+          interactive feature; HTML output alongside PNG; geom_segment with arrow()
+          parameter; geom_label with label_size.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - hover-tooltips
   - html-export
   - annotations
-  - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
