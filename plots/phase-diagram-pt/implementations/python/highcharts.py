@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 phase-diagram-pt: Thermodynamic Phase Diagram (Pressure-Temperature)
 Library: highcharts unknown | Python 3.13.13
 Quality: 81/100 | Updated: 2026-06-08
@@ -44,10 +44,9 @@ L_vap = 40660  # vaporization enthalpy J/mol
 temp_lg = np.linspace(triple_t, critical_t, 100)
 pressure_lg = triple_p * np.exp((L_vap / R) * (1 / triple_t - 1 / temp_lg))
 
-# Solid-liquid (melting) boundary: water's negative dP/dT slope
-y_max = 1e9
-temp_sl_end = triple_t + (triple_p - y_max) / (-1.3e7)
-temp_sl = np.linspace(triple_t, temp_sl_end, 60)
+# Solid-liquid (melting) boundary: water's anomalous negative dP/dT slope
+# At higher pressures, melting point is LOWER — linspace from ~196 K up to triple_t
+temp_sl = np.linspace(196, triple_t, 60)
 pressure_sl = triple_p + (temp_sl - triple_t) * (-1.3e7)
 
 sg_data = [[float(t), float(p)] for t, p in zip(temp_sg, pressure_sg, strict=True)]
@@ -67,7 +66,7 @@ chart.options.chart = {
     "height": 1800,
     "backgroundColor": PAGE_BG,
     "style": {"color": INK},
-    "marginBottom": 120,
+    "marginBottom": 150,
     "spacingLeft": 80,
     "spacingRight": 80,
     "spacingTop": 40,
