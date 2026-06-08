@@ -1,0 +1,295 @@
+library: makie
+language: julia
+specification_id: alluvial-opinion-flow
+created: '2026-05-30T13:13:16Z'
+updated: '2026-05-30T13:20:50Z'
+generated_by: claude-sonnet
+workflow_run: 26684179371
+issue: 4430
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 80
+review:
+  strengths:
+  - Correct alluvial/Sankey plot type with elegant S-curve bezier flows
+  - 'Thoughtful semantic color mapping: green (positive), red (negative), muted grey
+    (neutral) creates intuitive viewer reading'
+  - All Imprint palette colors used correctly with valid semantic exception for opinion
+    polarity
+  - Full theme-adaptive chrome in both light and dark renders — no dark-on-dark failures
+  - Node count labels with white text inside colored rectangles clearly show respondent
+    totals
+  - All spines, ticks, and grid removed — appropriate minimal chrome for this diagram
+    type
+  - Semi-transparent flows (alpha=0.32) prevent overlap confusion in dense areas
+  - Custom bezier_strip function is idiomatic Makie low-level drawing — correctly
+    uses poly! for flow polygons and nodes
+  - Realistic public health policy survey data with plausible transition matrices
+    showing diagonal dominance
+  weaknesses:
+  - 'MISSING spec differentiator: spec explicitly states the variant must visually
+    distinguish stable respondents (same category across waves) from changers using
+    opacity or color intensity — all flows currently use uniform alpha=0.32 regardless
+    of whether src==dst. Diagonal (stable) flows should use higher opacity (~0.65)
+    while off-diagonal (changer) flows keep 0.25-0.30.'
+  - 'MISSING net flow highlight: spec requires highlighting net flows between categories
+    to reveal polarization trends — a simple approach is to compute net(A→B) = f_AB
+    - f_BA and draw an extra semi-transparent colored band on top of the dominant
+    direction, or annotate with net delta arrows between nodes.'
+  - 'DE-03 limited by missing storytelling: the plot displays data correctly but does
+    not guide the viewer to the insight (e.g., which categories are growing or shrinking).
+    Adding subtle text annotations at the right margin noting net change (+/- respondents)
+    per category between Wave 1 and Wave 3 would substantially raise DE-03.'
+  - 'VQ-01 minor: node count labels use fontsize=12 at px_per_unit=2, which renders
+    to effective 24px labels. For the smaller nodes (e.g., Strongly Oppose: 105, 102,
+    96) the node height is ~105 units while label height is ~12 units, making labels
+    tight. Consider fontsize=10 for improved breathing room or auto-sizing to node
+    height.'
+  - 'VQ-05 minor: legend is positioned at legend_x = WAVE_XS[end] + 0.55 = 6.55 with
+    xlims=(0.3, 7.7). The longest label text (Strongly Oppose) at fontsize=12 extends
+    to approximately x≈7.5 — functionally OK but tight against the right xlim. Add
+    0.2-0.3 to xlims upper bound for better breathing room.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot surface color, not pure white.
+      Chrome: Title "alluvial-opinion-flow · julia · makie · anyplot.ai" rendered in dark ink (#1A1A17), legible at top. Wave headers "Wave 1 (January)", "Wave 2 (April)", "Wave 3 (July)" in bold dark ink above each column. No axis labels or tick labels (appropriate for flow diagram). Legend on the right with color swatches and labels in INK_SOFT (#4A4A44).
+      Data: Five stacked nodes per wave rendered as solid colored rectangles — brand green (#009E73) for Strongly Support, cyan (#2ABCCD) for Support, grey-muted (#6B6A63) for Neutral, ochre (#BD8233) for Oppose, matte red (#AE3030) for Strongly Oppose. S-curve bezier flow bands connect corresponding nodes across waves with alpha=0.32. White/cream respondent counts inside each node.
+      Legibility verdict: PASS — all text clearly readable. Node count labels (e.g. 200, 305) visible inside colored nodes. Legend labels distinct and sized appropriately.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black.
+      Chrome: Title text flips to near-white (#F0EFE8), clearly visible against dark background. Wave headers rendered in INK token (light cream on dark). Legend labels in INK_SOFT (#B8B7B0 on dark). No dark-on-dark failures detected.
+      Data: Data colors (green, cyan, ochre, matte red) are identical to light render — palette positions unchanged as required. Neutral category nodes appear lighter grey (#A8A79F) vs darker grey in light mode — this is by design as INK_MUTED is a theme-adaptive semantic anchor. White/cream (#FFFDF6) node count labels remain readable on all colored node backgrounds in both themes.
+      Legibility verdict: PASS — all chrome text is light-colored on dark background. No elements appear dark-on-dark. Brand green #009E73 is clearly visible on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set; title, wave headers, node labels
+          readable in both themes. Minor: node count labels at fontsize=12 are tight
+          inside small nodes (e.g., 96-respondent Strongly Oppose node).'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text overlaps. Flow bands overlap each other as expected for Sankey.
+          Minor deduction for the very dense flow crossing zone between waves.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Nodes clearly visible with solid fills. Semi-transparent flows (0.32
+          alpha) preserve readability. Minor: very small flow quantities (<5 respondents)
+          produce thin bands that are barely visible.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette colors used; green/red poles distinguish positive/negative
+          but category labels provide redundant encoding. CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). Good proportions. Legend is functional
+          but positioned close to right xlim — Strongly Oppose label fits within canvas
+          but has minimal margin.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis labels appropriate for flow diagram; wave headers serve as
+          column labels. Title is correct and descriptive.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Strongly Support) = #009E73 correct. Semantic exception
+          mapping for opinion polarity (positive→green, neutral→muted, negative→red)
+          is explicitly sanctioned by style guide. Plot backgrounds #FAF8F1/#1A1A17
+          correct. Theme chrome flips correctly in both renders.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional semantic color spectrum (green→cyan→grey→ochre→red) reflects
+          opinion polarity. S-curve bezier flows are elegant. Above configured-default
+          quality, but not publication-ready (no subtle refinements, annotations,
+          or visual emphasis on key patterns).
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: All four spines removed, grid removed, no ticks — clean minimal chrome
+          appropriate for flow diagram. Semi-transparent flows prevent confusion.
+          White count labels inside colored nodes is a refined touch.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Color gradient from green to red creates intuitive reading of opinion
+          polarity. But the plot does not guide the viewer toward the key insight
+          (which categories are growing/shrinking, polarization trend). Missing stable
+          vs. changer visual distinction prevents the most important story from emerging.
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct alluvial/Sankey-style diagram with stacked nodes at each
+          wave and bezier flow bands between them.
+      - id: SC-02
+        name: Required Features
+        score: 2
+        max: 4
+        passed: false
+        comment: 'Present: flow width proportional to count, node labels with respondent
+          totals, transparency for overlapping flows, chronological wave arrangement.
+          Missing: (1) visual distinction of stable respondents (same-category diagonal
+          flows) from changers — spec explicitly calls this a differentiator; (2)
+          net flow highlighting between categories to reveal polarization.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Waves mapped left-to-right chronologically. Flow width proportional
+          to flow_count. All 5 categories visible at all 3 waves.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is 'alluvial-opinion-flow · julia · makie · anyplot.ai' — correct
+          format. Legend labels match all 5 category names.
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Shows 3 waves, 5 categories, varied transition patterns with realistic
+          diagonal dominance. Missing: the stable vs. changer visual distinction is
+          a key feature of this specific spec variant that is not shown in the data
+          visualization.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Public health policy opinion survey with 1000 respondents is a real,
+          neutral, comprehensible scenario. Opinion categories are clear and appropriate.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1000 total respondents, realistic transition matrices with diagonal
+          dominance (~75% stability), plausible opinion drift patterns across three
+          waves.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'One helper function bezier_strip is justified for complex S-curve
+          computation. Overall KISS structure: data → layout → render → save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) present; data is also manually specified so fully
+          deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: using CairoMakie, Colors, Random — all three used (colorant"", poly!,
+          text!, Random.seed!).
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI. Appropriate complexity for a manual Sankey implementation.
+          bezier_strip is clean and well-parameterized.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2. Uses size= (newer
+          Makie API replacing resolution=). Correct.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper Figure/Axis construction, poly! for polygon shapes, text!
+          for labels, colorant strings, theme tokens via Axis parameters. Correct
+          Makie patterns throughout.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom bezier strip polygon construction using Makie's low-level
+          poly! primitive is distinctive — Makie has no built-in Sankey recipe so
+          this implementation leverages the library's composable drawing primitives
+          (Point2f arrays, RGBAf colors) in a way specific to Makie's architecture.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - custom-legend
+  - annotations
+  - patches
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
