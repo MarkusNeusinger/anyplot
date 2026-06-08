@@ -1,14 +1,27 @@
-""" pyplots.ai
+""" anyplot.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 86/100 | Created: 2026-03-13
+Library: plotly 6.8.0 | Python 3.13.13
+Quality: 82/100 | Updated: 2026-06-08
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
 
-# Data - US states sized by population (2023 estimates, in millions)
+# Theme tokens (Imprint palette, theme-adaptive chrome)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint sequential colorscale for continuous density data
+imprint_seq = [[0.0, "#009E73"], [1.0, "#4467A3"]]
+
+# Data - US states sized by population (2023 Census estimates, millions)
 states = [
     "CA",
     "TX",
@@ -117,7 +130,6 @@ population = np.array(
     ]
 )
 
-# State area in sq miles (for density calculation)
 area_sq_miles = np.array(
     [
         163696,
@@ -173,7 +185,6 @@ area_sq_miles = np.array(
     ]
 )
 
-# Approximate centroids (latitude, longitude) for each state
 lats = np.array(
     [
         36.78,
@@ -286,19 +297,18 @@ lons = np.array(
 
 density = population * 1e6 / area_sq_miles
 
-# Offset NE states more aggressively to eliminate crowding
+# NE state offsets fan states into distinct positions to avoid bubble overlap
 ne_offsets = {
-    "NJ": (0.3, 2.5),
-    "CT": (-0.3, 3.2),
-    "MA": (1.2, 2.8),
-    "RI": (-1.2, 3.8),
-    "NH": (1.8, 1.8),
-    "VT": (2.2, 0.0),
-    "DE": (-1.2, 2.8),
-    "MD": (-1.8, 1.5),
-    "ME": (1.5, 2.2),
+    "NJ": (-2.0, 3.0),  # → (38.1, -71.4) over Atlantic SE of NJ
+    "CT": (0.5, 5.0),  # → (42.1, -67.8) east of Maine coast
+    "MA": (1.5, 3.0),  # → (43.9, -68.4) NE of natural position
+    "RI": (-1.5, 4.0),  # → (40.1, -67.5) well east of CT
+    "NH": (2.5, 1.5),  # → (45.7, -70.1) north-east
+    "VT": (3.0, -0.5),  # → (47.6, -73.1) far north
+    "DE": (-3.0, 3.0),  # → (35.9, -72.5) far south over Atlantic
+    "MD": (-3.0, 0.5),  # → (36.1, -76.1) far south
+    "ME": (2.5, 2.0),  # → (47.8, -67.5) far north-east
 }
-
 for i, s in enumerate(states):
     if s in ne_offsets:
         dlat, dlon = ne_offsets[s]
@@ -306,36 +316,28 @@ for i, s in enumerate(states):
         lons[i] += dlon
 
 # Scale bubble sizes: area proportional to population
-# Enforce minimum size so small states remain visible
-max_marker_size = 65
+max_marker_size = 70
 raw_sizes = np.sqrt(population / population.max()) * max_marker_size
-sizes = np.clip(raw_sizes, 10, max_marker_size)
+sizes = np.clip(raw_sizes, 12, max_marker_size)
 
-# Color values on log scale
+# Log scale for density color mapping
 log_density = np.log10(density)
 
-# Show labels on states with population >= 2M for better coverage
-label_threshold = 2.0
-label_texts = [s if p >= label_threshold else "" for s, p in zip(states, population, strict=False)]
+# Labels for states >= 2M population
+label_texts = [s if p >= 2.0 else "" for s, p in zip(states, population, strict=False)]
 
-# Custom colorscale: deep navy → teal → golden yellow (publication quality)
-custom_colorscale = [
-    [0.0, "#0d0887"],
-    [0.15, "#3a049a"],
-    [0.3, "#6a00a8"],
-    [0.45, "#900da4"],
-    [0.55, "#b73779"],
-    [0.65, "#d8576b"],
-    [0.75, "#ed7953"],
-    [0.85, "#f89540"],
-    [0.95, "#fdca26"],
-    [1.0, "#f0f921"],
-]
+# Title — mandatory format; scale fontsize to prevent overflow at this length
+title_str = "U.S. States Population Cartogram · cartogram-area-distortion · python · plotly · anyplot.ai"
+title_fontsize = max(11, round(16 * 67 / len(title_str)))
 
-# Create figure
+# Theme-adaptive geo background colors
+land_color = "#FFFDF6" if THEME == "light" else "#242420"
+lake_color = "#EDE9DF" if THEME == "light" else "#2A2A26"
+boundary_color = "rgba(74,74,68,0.4)" if THEME == "light" else "rgba(184,183,176,0.3)"
+
 fig = go.Figure()
 
-# Background: faint state boundaries for geographic reference
+# Reference layer: faint state boundary outlines for geographic context
 fig.add_trace(
     go.Choropleth(
         locationmode="USA-states",
@@ -343,12 +345,12 @@ fig.add_trace(
         z=[0] * len(states),
         colorscale=[[0, "rgba(0,0,0,0)"], [1, "rgba(0,0,0,0)"]],
         showscale=False,
-        marker={"line": {"color": "rgba(180,190,200,0.5)", "width": 0.6}},
+        marker={"line": {"color": boundary_color, "width": 0.6}},
         hoverinfo="skip",
     )
 )
 
-# Bubble cartogram layer
+# Bubble cartogram: size ∝ population, color ∝ density (Imprint sequential)
 fig.add_trace(
     go.Scattergeo(
         locationmode="USA-states",
@@ -362,31 +364,32 @@ fig.add_trace(
         marker={
             "size": sizes,
             "color": log_density,
-            "colorscale": custom_colorscale,
+            "colorscale": imprint_seq,
             "cmin": np.log10(5),
             "cmax": np.log10(6000),
             "colorbar": {
                 "title": {
                     "text": "Population Density<br>(per sq mi)",
-                    "font": {"size": 18, "family": "Arial", "color": "#333"},
+                    "font": {"size": 14, "family": "Arial", "color": INK},
                 },
-                "tickfont": {"size": 15, "color": "#555"},
+                "tickfont": {"size": 11, "color": INK_SOFT},
                 "tickvals": np.log10([10, 50, 100, 500, 1000, 5000]).tolist(),
                 "ticktext": ["10", "50", "100", "500", "1k", "5k"],
                 "len": 0.55,
-                "thickness": 22,
+                "thickness": 20,
                 "x": 0.94,
                 "outlinewidth": 0,
-                "bgcolor": "rgba(255,255,255,0.8)",
+                "bgcolor": ELEVATED_BG,
+                "tickcolor": INK_SOFT,
             },
-            "line": {"width": 1.8, "color": "rgba(255,255,255,0.9)"},
-            "opacity": 0.92,
+            "line": {"width": 1.5, "color": PAGE_BG},
+            "opacity": 0.90,
             "sizemode": "diameter",
         },
     )
 )
 
-# State abbreviation labels
+# State abbreviation labels — light color contrasts well over green/blue bubbles
 fig.add_trace(
     go.Scattergeo(
         locationmode="USA-states",
@@ -396,7 +399,7 @@ fig.add_trace(
         mode="text",
         textfont={
             "size": [max(9, min(14, int(s / 5))) if t else 1 for s, t in zip(sizes, label_texts, strict=False)],
-            "color": "white",
+            "color": "#F0EFE8",
             "family": "Arial Black",
         },
         hoverinfo="skip",
@@ -404,64 +407,57 @@ fig.add_trace(
     )
 )
 
-# Layout with refined styling
 fig.update_layout(
     title={
-        "text": (
-            "<b style='color:#1a1a2e'>U.S. States Sized by Population</b>"
-            "<br><span style='font-size:16px;color:#888;font-weight:normal'>"
-            "cartogram-area-distortion · plotly · pyplots.ai</span>"
-        ),
-        "font": {"size": 30, "family": "Arial"},
+        "text": title_str,
+        "font": {"size": title_fontsize, "family": "Arial", "color": INK},
         "x": 0.5,
         "xanchor": "center",
-        "y": 0.96,
+        "y": 0.97,
     },
     geo={
         "scope": "usa",
         "showframe": False,
         "showcoastlines": True,
-        "coastlinecolor": "rgba(180,190,200,0.4)",
+        "coastlinecolor": boundary_color,
         "coastlinewidth": 0.5,
         "showland": True,
-        "landcolor": "#fafbfc",
+        "landcolor": land_color,
         "showlakes": True,
-        "lakecolor": "#f0f4f8",
-        "bgcolor": "white",
+        "lakecolor": lake_color,
+        "bgcolor": PAGE_BG,
         "projection_type": "albers usa",
     },
-    template="plotly_white",
-    paper_bgcolor="white",
-    plot_bgcolor="white",
-    margin={"l": 20, "r": 100, "t": 90, "b": 60},
+    autosize=False,
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    margin={"l": 20, "r": 100, "t": 70, "b": 60},
     showlegend=False,
     annotations=[
-        # Footer with encoding explanation
         {
-            "text": ("<b>Area</b> proportional to population  ·  <b>Color</b> proportional to density"),
+            "text": "Dorling bubble cartogram  ·  <b>Area</b> ∝ population  ·  <b>Color</b> ∝ density",
             "xref": "paper",
             "yref": "paper",
             "x": 0.5,
             "y": -0.04,
             "showarrow": False,
-            "font": {"size": 16, "color": "#666", "family": "Arial"},
+            "font": {"size": 12, "color": INK_MUTED, "family": "Arial"},
         },
-        # Highlight annotation for storytelling
         {
-            "text": ("California (39M) has 6× more people than<br>median state, yet New Jersey is 4× denser"),
+            "text": "California (39M) has 6× more people than<br>median state, yet New Jersey is 4× denser",
             "xref": "paper",
             "yref": "paper",
             "x": 0.02,
-            "y": 0.15,
+            "y": 0.08,
             "showarrow": False,
-            "font": {"size": 13, "color": "#777", "family": "Arial"},
+            "font": {"size": 12, "color": INK_MUTED, "family": "Arial"},
             "align": "left",
-            "bgcolor": "rgba(255,255,255,0.85)",
+            "bgcolor": ELEVATED_BG,
             "borderpad": 6,
         },
     ],
 )
 
-# Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs=True, full_html=True)
+# Save — landscape 3200×1800 (width=800, height=450, scale=4)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
