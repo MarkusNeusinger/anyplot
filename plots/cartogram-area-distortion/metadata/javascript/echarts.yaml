@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: cartogram-area-distortion
 created: '2026-06-08T04:05:33Z'
-updated: '2026-06-08T04:13:53Z'
+updated: '2026-06-08T04:31:02Z'
 generated_by: claude-sonnet
 workflow_run: 27114977804
 issue: 4671
@@ -12,49 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cartogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/javascript/echarts/plot-dark.html
-quality_score: 81
+quality_score: 85
 review:
   strengths:
-  - 'Excellent dual encoding: circle area encodes total GDP, sequential Imprint color
-    encodes GDP per capita — immediately communicates both economic scale and per-capita
-    wealth'
-  - Correct use of t.seq (Imprint sequential colormap) for continuous data; all chrome
-    tokens properly applied in both themes with no dark-on-dark failures
-  - Clean flat code structure with deterministic hardcoded data; dynamic title fontsize
-    scaling is a well-implemented detail
-  - 'visualMap.dimension: 3 binding to a non-positional column is idiomatic and distinctive
-    ECharts usage'
-  - Informative subtitle provides clear encoding context; tooltip configured with
-    themed background for interactive use
+  - Dual encoding (circle area proportional to GDP + color proportional to GDP per
+    capita) is immediately readable and informative
+  - Reference inset with equal-area grey dots is a thoughtful and spec-compliant geographic
+    context layer
+  - Hand-crafted size legend with three reference circles ($500B / $2T / $4.5T) clearly
+    communicates the area encoding
+  - Full imprint_seq continuous colormap applied correctly via t.seq — green for lower,
+    blue for higher GDP per capita
+  - Both themes render correctly with proper token usage throughout; no dark-on-dark
+    failures in either render
+  - Realistic, neutral European 2023 GDP data with accurate factual proportions
   weaknesses:
-  - 'No size legend: circle area encodes total GDP but there is no reference-circle
-    legend showing what area represents. Add a custom ECharts graphic element showing
-    2-3 reference circles (e.g., $500B, $2000B, $4500B) with labels.'
-  - 'No reference map inset: spec notes require original outlines or a comparison
-    view. Consider a small inset with fixed uniform-size dots at true geographic positions
-    for comparison.'
-  - Very small circles for low-GDP countries (Portugal 255B, Greece 222B) — apply
-    a minimum symbolSize floor (Math.max(12, ...)) so smallest circles remain more
-    legible.
-  - 'Circle labels use hardcoded color: #ffffff — works visually on teal/blue circles
-    but should use a token or computed contrast color.'
-  - 'Axis lines visible on all sides with only 0.3 opacity; set axisLine: { show:
-    false } on both axes for a cleaner look.'
+  - Dorling circles don't preserve country shapes or adjacency — spec specifically
+    mentions contiguous cartograms; consider adding a subtitle note clarifying this
+    is a Dorling (non-contiguous) approximation
+  - Large empty space in upper-right of chart (latitude 56-72 degrees, longitude 25-38
+    degrees) reduces canvas utilization — could tighten axis bounds or add more Eastern
+    European/Baltic countries
+  - Bottom section (reference inset + size legend) is compressed with hardcoded pixel
+    coordinates; legBaseY=828 in a 900px CSS container leaves very little breathing
+    room near the bottom edge
+  - Country codes inside small circles (FI, SE, GR, PT) are 11px CSS (22px at 2x)
+    — borderline readable at mobile scale (~400px width); consider increasing to 12-13px
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct
-      Chrome: Title "cartogram-area-distortion · javascript · echarts · anyplot.ai" in dark ink, centered, clearly readable. Subtitle in t.inkSoft readable. Axis labels "Longitude" and "Latitude" in t.inkSoft. Tick labels (degree values) in t.inkSoft. Colorbar text "$108k"/"$20k" readable. All chrome readable.
-      Data: 18 European country circles sized by total GDP (Germany largest). Sequential Imprint colormap (t.seq: teal/green=#009E73 end → blue=#4467A3 end) used for GDP per capita. Ireland, Switzerland, Norway deepest blue. White country-code labels inside circles.
-      Legibility verdict: PASS
+      Background: Warm off-white (~#FAF8F1) — correct theme surface
+      Chrome: Title "cartogram-area-distortion · javascript · echarts · anyplot.ai" in dark ink at center-top, clearly readable. Subtitle in dark-soft tone readable. Axis labels "Latitude" (left, rotated) and "Longitude" (bottom) in dark-soft. Tick labels (lat: 34°–72°, lon: -15°–38°) in dark-soft at 11px — all readable. Colorbar labels "$108k" and "$20k" readable. Size legend labels "$500B", "$2T", "$4.5T" readable. Reference inset italic label readable.
+      Data: 18 Dorling bubbles sized by GDP (Germany largest ~80px CSS, small countries ~16px). Color gradient teal-green (#009E73) to blue (#4467A3) via imprint_seq — Ireland/Switzerland/Norway in blue (high GDP per capita $100k+), Poland/Portugal/Greece in teal-green (lower ~$20-25k). Country code labels (2-letter) in white bold inside circles. Reference inset shows small grey dots at geographic positions. Colorbar on right side.
+      Legibility verdict: PASS — all text readable against warm off-white background; no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct
-      Chrome: Title and subtitle render in light text (t.ink = #F0EFE8 on dark). Axis labels and tick marks light-colored (t.inkSoft). Colorbar labels readable in light text. No dark-on-dark failures observed.
-      Data: Circle fill colors (teal-to-blue sequential gradient) are visually identical to the light render — data colors unchanged as required. White country-code labels remain readable on the dark background.
-      Legibility verdict: PASS
+      Background: Warm near-black (~#1A1A17) — correct dark theme surface
+      Chrome: Title renders in light cream/off-white, clearly readable against dark background. Subtitle in muted light tone readable. Axis tick labels and axis name labels appear in light muted color (inkSoft token) — all readable. Colorbar text labels in light tone readable. Size legend labels and reference inset label in light muted tone readable. No dark-on-dark failures observed anywhere.
+      Data: Circle colors (teal/blue gradient) are visually identical to the light render — data colors unchanged, only chrome flipped. Brand green/teal circles (lower GDP per capita countries) clearly visible against dark background. Blue circles (higher GDP per capita) visible. White country code labels inside circles readable.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures detected; data colors identical to light render confirming correct theme-adaptive token usage.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -62,79 +60,82 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set. Readable in both themes. Tiny circles
-          (PT, GR, IE) have 11px labels at legibility floor but still pass.
+        comment: 'All font sizes explicitly set. Title 22px, axis labels 12px, tick
+          labels 11px, circle labels 11px bold. Minor: small circle labels (FI, SE,
+          GR) and reference inset text at 11px borderline at 400px mobile scale.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No text overlaps. Minor crowding in central Europe cluster (BE/NL/FR/DE)
-          and IE/GB proximity but no actual overlap.
+        comment: 'No text overlaps. Central European cluster is dense but distinct.
+          Minor: DE/FR/IT/CH region somewhat tight.'
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Good size range. Low-GDP countries (PT, GR) have small but visible
-          circles; labels fit but compact.
+        comment: 'Main circles well-sized with 16px CSS floor. Reference inset dots
+          at 7px CSS intentionally minimal. Minor: reference dots borderline at mobile
+          scale.'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential teal-to-blue is CVD-safe. White labels on colored
-          circles have good contrast.
+        comment: imprint_seq (teal-to-blue) is CVD-safe perceptually uniform. White
+          labels inside circles add redundant encoding.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed. Good canvas utilization. Colorbar well-positioned
-          on right. Balanced margins.
+        comment: No canvas gate failure. Functional layout but upper-right quadrant
+          (lat 56-72, lon 25-38) has notable empty space inherent to European data
+          distribution.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Latitude and Longitude axis labels present with degree-symbol tick
-          formatters. Descriptive subtitle.
+        comment: Latitude and Longitude with degree units. Descriptive subtitle explains
+          all encodings.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: t.seq used for continuous data (correct Imprint sequential). Transparent
-          background uses page surface. All chrome tokens applied correctly in both
-          themes.
+        comment: 't.seq (imprint_seq #009E73->#4467A3) for continuous colormap. t.ink/t.inkSoft/t.grid
+          tokens used throughout. Backgrounds correct in both themes.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Clean professional Dorling cartogram with dual encoding and informative
-          subtitle. Above generic default but not publication-ready.
+        comment: Dual encoding, reference inset, hand-crafted size legend with reference
+          circles, clean axis-free grid — clearly above defaults. Some empty space
+          and compressed bottom section prevent publication-ready rating.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Axis lines at 0.3 opacity, tick marks hidden, grid uses t.grid. Acceptable
-          for geographic context but lacks full spine removal.
+        comment: Axis lines and ticks hidden, only subtle grid remains. Bottom section
+          somewhat compressed with hardcoded pixel coordinates.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Size+color dual encoding reveals GDP scale vs. per-capita wealth
-          contrast. Germany as focal point, affluent small nations visible in blue.
-          Clear story emerges.
+        comment: Germany's dominant circle creates immediate visual anchor. Color
+          reveals Ireland/Switzerland GDP per capita story. Visual hierarchy via size
+          and color is effective.
     spec_compliance:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -142,54 +143,55 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Dorling cartogram is a valid cartogram variant with area proportional
-          to data. Doesn't preserve contiguous shapes but is feasible in ECharts.
+        comment: Dorling bubble cartogram with area proportional to GDP. Valid cartogram
+          form. Spec mentions contiguous adjacency preservation which Dorling doesn't
+          achieve — ECharts limitation.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 'Size encoding, color encoding, labels, color legend all present.
-          Missing: explicit size legend for circle area, no reference map inset.'
+        passed: true
+        comment: 'All required: region IDs, area=GDP, color=GDP per capita, reference
+          inset, country code labels, size legend, colorbar legend.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Lon/Lat correctly mapped to X/Y. symbolSize correctly encodes GDP.
-          visualMap dimension:3 correctly encodes GDP per capita.
+        comment: Lat/lon correctly position countries. GDP drives symbolSize via sqrt
+          scaling. GDP per capita drives visualMap color dimension 3.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title format correct. Color legend present via visualMap. Missing:
-          no explicit size/area legend — only described in subtitle text.'
+        passed: true
+        comment: Title matches required format. Colorbar labeled with min/max. Size
+          legend explains area encoding.
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Shows size and color variation across 18 countries. Missing reference
-          map inset for geographic distortion comparison.
+        comment: 'Demonstrates dual encoding, geographic positioning, reference inset,
+          size legend. 18 countries. Minor: GDP range slightly clustered in middle
+          tiers.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: European GDP 2023 — real, neutral, business/economics domain. No
-          controversial content.
+        comment: European GDP 2023 estimates — real, neutral economic data.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Germany $4.46T, UK/France ~$3.1T, Italy $2.1T — credible 2023 values.
-          Ireland elevated GDP per capita correctly reflects MNC distortion.
+        comment: Germany ~$4.5T, France/UK ~$3.1T — correct proportions. Ireland $108k
+          per capita reflects real economic data. Factually accurate.
     code_quality:
       score: 10
       max: 10
@@ -199,33 +201,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat: data → computations → scatterData map → init → setOption.
-          No functions/classes.'
+        comment: 'No functions or classes. Flat imperative: data -> compute -> setOption.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded, fully deterministic.
+        comment: All data hardcoded; deterministic by design.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports needed; globals injected by harness.
+        comment: ECharts is global; no imports needed.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean idiomatic JS. Dynamic fontsize formula elegant. Arrow functions
-          appropriate.
+        comment: Clean code. Loop for size legend is idiomatic. Dorling adjustment
+          commented appropriately.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct ECharts harness contract; animation:false, no explicit size/devicePixelRatio.
+        comment: Correct ECharts usage with animation:false; harness handles PNG/HTML
+          output.
     library_mastery:
       score: 7
       max: 10
@@ -235,20 +237,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: scatter with per-point symbolSize, visualMap continuous with dimension:3,
-          custom tooltip formatter, hoverLink:false — all idiomatic ECharts.
+        comment: Expert use of multiple grid indices, scatter with dynamic symbolSize,
+          visualMap continuous mode, graphic overlay component, tooltip formatter.
+          Idiomatic throughout.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: visualMap dimension binding to non-positional column and symbolSize-based
-          Dorling effect are ECharts-distinctive features used well.
-  verdict: REJECTED
+        comment: ECharts multi-grid layout for main+reference chart, graphic overlay
+          circles and text for custom legend, symbolSize function-style — distinctly
+          ECharts features.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - annotations
   - html-export
   patterns:
   - data-generation
@@ -256,3 +261,5 @@ impl_tags:
   - normalization
   styling:
   - custom-colormap
+  - alpha-blending
+  - minimal-chrome

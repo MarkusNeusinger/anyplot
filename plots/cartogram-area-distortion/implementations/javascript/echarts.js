@@ -1,7 +1,7 @@
 // anyplot.ai
 // cartogram-area-distortion: Cartogram with Area Distortion by Data Value
 // Library: echarts 5.5.1 | JavaScript 22.22.3
-// Quality: 81/100 | Created: 2026-06-08
+// Quality: 85/100 | Created: 2026-06-08
 
 const t = window.ANYPLOT_TOKENS;
 
