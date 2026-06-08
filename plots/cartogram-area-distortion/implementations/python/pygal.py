@@ -1,17 +1,44 @@
-""" pyplots.ai
+"""anyplot.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
-Library: pygal 3.1.0 | Python 3.14.3
-Quality: 79/100 | Created: 2026-03-13
+Library: pygal | Python 3.13
+Quality: pending | Updated: 2026-06-08
 """
+
+import os
+import sys
+
+
+# Remove the script's own directory from sys.path so that `import pygal` finds
+# the installed package rather than this file (which shares the package name).
+_here = os.path.abspath(os.path.dirname(os.path.abspath(__file__)))
+sys.path[:] = [p for p in sys.path if p and os.path.abspath(p) != _here]
+del _here
 
 import pygal
 from pygal.style import Style
 
 
-# Countries grouped by continent with population (millions, 2024 est.)
-# and land area (thousand km²) for computing distortion ratios.
-# Distortion ratio = (pop share) / (area share): >1 means region GROWS
-# in the cartogram vs. a geographic map, <1 means it SHRINKS.
+# Theme tokens — theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint categorical palette (hybrid-v3 order) — 5 used for 5 continent series
+IMPRINT_PALETTE = (
+    "#009E73",  # 1 brand green — Asia (first series, always)
+    "#C475FD",  # 2 lavender — Africa
+    "#4467A3",  # 3 blue — Europe
+    "#BD8233",  # 4 ochre — Americas
+    "#AE3030",  # 5 matte red — Oceania
+    "#2ABCCD",
+    "#954477",
+    "#99B314",
+)
+
+# Countries grouped by continent: (population millions, land area thousand km², 2024 est.)
+# Distortion ratio = pop_share / area_share: >1 means the region GROWS in the
+# cartogram relative to a standard geographic map, <1 means it SHRINKS.
 regions = {
     "Asia": {
         "India": (1441, 3287),
@@ -37,56 +64,41 @@ regions = {
     "Oceania": {"Australia": (27, 7692)},
 }
 
-# Colorblind-safe palette with high saturation for strong continent identity
-continent_colors = (
-    "#1a6ca3",  # Asia - Deep ocean blue
-    "#d48c0a",  # Africa - Rich golden amber
-    "#1a7a3a",  # Europe - Forest green
-    "#c22828",  # Americas - Bold vermilion
-    "#6b3fa0",  # Oceania - Deep violet
-)
-
-# Publication-quality style with refined typographic hierarchy
-custom_style = Style(
-    background="white",
-    plot_background="#fcfcfc",
-    foreground="#1a1a1a",
-    foreground_strong="#000000",
-    foreground_subtle="#e8e8e8",
-    colors=continent_colors,
-    title_font_size=68,
-    label_font_size=44,
-    legend_font_size=52,
-    major_label_font_size=44,
-    value_font_size=40,
-    tooltip_font_size=38,
-    no_data_font_size=38,
-    font_family="Helvetica Neue, Helvetica, Arial, sans-serif",
-    opacity=0.90,
-    opacity_hover=1.0,
-)
-
-# Compute totals for distortion ratio calculation
 total_pop = sum(pop for cont in regions.values() for pop, _ in cont.values())
 total_area = sum(area for cont in regions.values() for _, area in cont.values())
 
+# Title with length-adjusted font size (pygal default 66, floor 44)
+title = "World Population Cartogram · cartogram-area-distortion · python · pygal · anyplot.ai"
+title_fontsize = max(44, round(66 * 67 / len(title)))
+
+custom_style = Style(
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=IMPRINT_PALETTE,
+    title_font_size=title_fontsize,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    stroke_width=2.5,
+)
+
 # Treemap — pygal's best cartogram approximation (no geographic chart types).
-# Rectangle area = population, showing how regions expand or shrink vs a standard map.
+# Rectangle area is proportional to population; continent color encodes regional grouping.
 treemap = pygal.Treemap(
     style=custom_style,
-    width=4800,
-    height=2700,
-    title=(
-        "World Population Cartogram \u2014 Area Proportional to Population (millions)"
-        " \u00b7 cartogram-area-distortion \u00b7 pygal \u00b7 pyplots.ai"
-    ),
+    width=3200,
+    height=1800,
+    title=title,
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=5,
     legend_box_size=46,
-    print_labels=False,
-    print_values=True,
-    value_formatter=lambda x: f"{x:,.0f}M" if x else "",
+    print_labels=True,
+    print_values=False,
     margin=50,
     margin_bottom=90,
     margin_top=25,
@@ -94,13 +106,13 @@ treemap = pygal.Treemap(
     margin_right=50,
     truncate_label=-1,
     truncate_legend=-1,
-    spacing=8,
+    spacing=6,
     rounded_corners=4,
 )
 
-# Add each continent as a series. Per-node formatter (a distinctive pygal feature)
-# overrides the chart-level value_formatter to display country name, population,
-# and distortion ratio — providing geographic reference comparison context.
+# Per-node formatter (distinctive pygal feature) provides rich hover tooltips with
+# distortion ratio context. Tiles show country name only to minimise truncation on
+# smaller rectangles; the tooltip carries the full "×N.N vs map" narrative.
 for continent, countries in regions.items():
     series_data = []
     for name, (pop, area) in countries.items():
@@ -110,11 +122,13 @@ for continent, countries in regions.items():
         series_data.append(
             {
                 "value": pop,
-                "label": f"{name} ({ratio:.1f}x)",
-                "formatter": lambda x, n=name, r=ratio: f"{n} {x:,.0f}M \u00d7{r:.1f}",
+                "label": name,
+                "formatter": lambda x, n=name, r=ratio: f"{n}: {x:,.0f}M pop · ×{r:.1f} vs map",
             }
         )
     treemap.add(continent, series_data)
 
-# Save
-treemap.render_to_png("plot.png")
+# Save PNG and interactive HTML
+treemap.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(treemap.render())
