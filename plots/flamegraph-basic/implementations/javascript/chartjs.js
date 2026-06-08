@@ -3,10 +3,6 @@
 // Library: chartjs 4.4.7 | JavaScript 22.22.3
 // Quality: 85/100 | Created: 2026-06-08
 //# anyplot-orientation: landscape
-// anyplot.ai
-// flamegraph-basic: Flame Graph for Performance Profiling
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-06-08
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -16,37 +12,84 @@ const t = window.ANYPLOT_TOKENS;
 // width of its flame-graph bar. Children sit above the parent and fill it
 // left-to-right; any leftover width at depth+1 is the parent's `self` time.
 const profile = {
-  name: "main", self: 2, children: [
-    { name: "runServer", self: 6, children: [
-      { name: "handleRequest", self: 8, children: [
-        { name: "parseHeaders", self: 32, children: [] },
-        { name: "routeRequest", self: 4, children: [
-          { name: "authMiddleware", self: 18, children: [
-            { name: "verifyToken", self: 14, children: [] },
-            { name: "loadUser", self: 22, children: [] },
+  name: "main", self: 1, children: [
+    { name: "runServer", self: 2, children: [
+      { name: "handleRequest", self: 4, children: [
+        { name: "parseHeaders", self: 3, children: [
+          { name: "decodeUtf8", self: 12, children: [] },
+          { name: "lowercaseKeys", self: 8, children: [] },
+          { name: "splitCookies", self: 6, children: [] },
+        ] },
+        { name: "routeRequest", self: 2, children: [
+          { name: "authMiddleware", self: 3, children: [
+            { name: "verifyToken", self: 4, children: [
+              { name: "parseJwt", self: 8, children: [] },
+              { name: "validateSig", self: 14, children: [] },
+            ] },
+            { name: "loadUser", self: 3, children: [
+              { name: "cacheGet", self: 4, children: [] },
+              { name: "dbFetch", self: 22, children: [] },
+            ] },
           ] },
-          { name: "dispatchHandler", self: 6, children: [
-            { name: "queryDB", self: 8, children: [
-              { name: "openConn", self: 12, children: [] },
-              { name: "executeQuery", self: 78, children: [] },
-              { name: "parseRows", self: 22, children: [] },
+          { name: "rateLimitCheck", self: 2, children: [
+            { name: "bucketLookup", self: 6, children: [] },
+            { name: "bucketUpdate", self: 8, children: [] },
+          ] },
+          { name: "dispatchHandler", self: 4, children: [
+            { name: "queryDB", self: 5, children: [
+              { name: "openConn", self: 10, children: [] },
+              { name: "executeQuery", self: 92, children: [] },
+              { name: "parseRows", self: 18, children: [] },
+              { name: "closeConn", self: 6, children: [] },
             ] },
-            { name: "renderTemplate", self: 14, children: [
+            { name: "renderTemplate", self: 3, children: [
               { name: "loadTemplate", self: 10, children: [] },
-              { name: "compileTemplate", self: 32, children: [] },
+              { name: "compileTemplate", self: 28, children: [] },
               { name: "renderHTML", self: 24, children: [] },
+              { name: "escapeHTML", self: 12, children: [] },
             ] },
-            { name: "serialize", self: 28, children: [] },
+            { name: "serialize", self: 4, children: [
+              { name: "jsonStringify", self: 16, children: [] },
+              { name: "gzipCompress", self: 22, children: [] },
+            ] },
           ] },
         ] },
-        { name: "writeResponse", self: 18, children: [] },
+        { name: "writeResponse", self: 3, children: [
+          { name: "setHeaders", self: 6, children: [] },
+          { name: "flushBuffer", self: 14, children: [] },
+        ] },
       ] },
-      { name: "gcMinor", self: 20, children: [] },
+      { name: "gcMinor", self: 6, children: [
+        { name: "markRefs", self: 10, children: [] },
+        { name: "sweepHeap", self: 14, children: [] },
+      ] },
+      { name: "logRequest", self: 2, children: [
+        { name: "formatLog", self: 4, children: [] },
+        { name: "writeLog", self: 8, children: [] },
+      ] },
+    ] },
+    { name: "backgroundJobs", self: 2, children: [
+      { name: "cronTick", self: 3, children: [
+        { name: "scanJobs", self: 6, children: [] },
+        { name: "claimJob", self: 4, children: [] },
+      ] },
+      { name: "workerLoop", self: 3, children: [
+        { name: "fetchJob", self: 8, children: [] },
+        { name: "runJob", self: 4, children: [
+          { name: "emailSend", self: 18, children: [] },
+          { name: "imageResize", self: 3, children: [
+            { name: "decodeImg", self: 12, children: [] },
+            { name: "resampleImg", self: 26, children: [] },
+            { name: "encodeImg", self: 14, children: [] },
+          ] },
+          { name: "dataExport", self: 18, children: [] },
+        ] },
+      ] },
     ] },
   ],
 };
 
-// Flatten the tree into (depth, start, end, total) frames via DFS.
+// Flatten the tree into (depth, start, end, total, self) frames via DFS.
 const frames = [];
 let maxDepth = 0;
 function visit(node, depth, x) {
@@ -59,31 +102,20 @@ function visit(node, depth, x) {
     kidsTotal += ct;
   }
   const total = node.self + kidsTotal;
-  frames.push({ name: node.name, depth, start: x, end: x + total, total });
+  frames.push({ name: node.name, depth, start: x, end: x + total, total, self: node.self });
   return total;
 }
 const totalSamples = visit(profile, 0, 0);
 
-// --- Warm palette (Imprint semantic exception for flame graphs) ------------
-// The spec explicitly calls for the conventional yellows-oranges-reds aesthetic
-// invented by Brendan Gregg. Pick from Imprint's three warm anchors (amber,
-// ochre, matte red) by hashing the function name + depth, so the same call
-// site always reads the same hue across renders.
-const warmAnchors = ["#DDCC77", "#BD8233", "#AE3030"];
-function warmFor(seed) {
-  let h = 2166136261;
-  for (let i = 0; i < seed.length; i++) {
-    h ^= seed.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return warmAnchors[(h >>> 0) % warmAnchors.length];
-}
-function textOn(hex) {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return lum > 0.5 ? "#1A1A17" : "#FFFDF6";
+// --- Warm palette tiered by self-samples (hotness encoding) ----------------
+// Imprint's three warm anchors map to a self-time tier so the eye lands on
+// the actual hotspot (the matte-red frame) instead of color being decorative.
+// Dark text rides on the lighter amber/ochre tiers; light text on matte red.
+// Thresholds: low ≤10 (cool amber), medium ≤24 (ochre), high >24 (matte red).
+function colorFor(self) {
+  if (self > 24) return { fill: "#AE3030", text: "#FFFDF6" };
+  if (self > 10) return { fill: "#BD8233", text: "#1A1A17" };
+  return { fill: "#DDCC77", text: "#1A1A17" };
 }
 
 // --- Mount -----------------------------------------------------------------
@@ -116,7 +148,7 @@ const flamePlugin = {
       const top = yCenter - barH / 2;
       const w = Math.max(1, xRight - xLeft - 1);
 
-      const fill = warmFor(f.name + "·" + f.depth);
+      const { fill, text } = colorFor(f.self);
       ctx.fillStyle = fill;
       ctx.fillRect(xLeft, top, w, barH);
       // pageBg-coloured hairline separates adjacent siblings on both themes.
@@ -125,16 +157,16 @@ const flamePlugin = {
       ctx.strokeRect(xLeft + 0.5, top + 0.5, w - 1, barH - 1);
 
       if (w >= 60) {
-        ctx.fillStyle = textOn(fill);
-        let text = f.name;
+        ctx.fillStyle = text;
+        let label = f.name;
         const maxText = w - 12;
-        if (ctx.measureText(text).width > maxText) {
-          while (text.length > 2 && ctx.measureText(text + "…").width > maxText) {
-            text = text.slice(0, -1);
+        if (ctx.measureText(label).width > maxText) {
+          while (label.length > 2 && ctx.measureText(label + "…").width > maxText) {
+            label = label.slice(0, -1);
           }
-          text = text + "…";
+          label = label + "…";
         }
-        ctx.fillText(text, xLeft + 6, yCenter);
+        ctx.fillText(label, xLeft + 6, yCenter);
       }
     }
     ctx.restore();
@@ -171,7 +203,7 @@ new Chart(canvas, {
       },
       subtitle: {
         display: true,
-        text: "Simulated CPU profile · bar width = samples · horizontal order is arbitrary, not temporal",
+        text: "Simulated CPU profile · bar width = samples · color = self-time tier · horizontal order is arbitrary, not temporal",
         color: t.inkSoft,
         font: { size: 14, style: "italic" },
         padding: { bottom: 16 },
@@ -205,7 +237,9 @@ new Chart(canvas, {
           color: t.ink,
           font: { size: 14 },
         },
-        ticks: { color: t.inkSoft, font: { size: 12 } },
+        // Hide numeric tick labels — visible bar stacking + axis title already
+        // convey depth; numeric ticks would just add chrome noise.
+        ticks: { display: false },
         grid: { display: false, drawTicks: false },
         border: { color: t.grid },
       },
