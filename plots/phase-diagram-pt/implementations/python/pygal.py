@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 phase-diagram-pt: Thermodynamic Phase Diagram (Pressure-Temperature)
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-06-08
 """
 
 # Ensure we import the installed pygal package, not this file
@@ -57,16 +56,10 @@ melting_pressures = np.logspace(np.log10(triple_p), np.log10(critical_p * 5), 80
 melting_temps = triple_t - (melting_pressures - triple_p) * 7.5e-8
 
 
-def format_pressure(val):
-    if isinstance(val, (list, tuple)):
-        t, p = val
-        return f"{t:.0f} K, {format_pressure(p)}"
-    p = val
-    if p >= 1e6:
-        return f"{p / 1e6:.1f} MPa"
-    if p >= 1e3:
-        return f"{p / 1e3:.1f} kPa"
-    return f"{p:.1f} Pa"
+# Pressure formatter — handles scalar and (x, y) tuple passed by pygal's XY formatter
+def fmt_p(v):
+    p = v[1] if isinstance(v, (list, tuple)) else v
+    return f"{p / 1e6:.1f} MPa" if p >= 1e6 else (f"{p / 1e3:.1f} kPa" if p >= 1e3 else f"{p:.1f} Pa")
 
 
 # Title: 46 chars < 67 baseline → no scaling needed, use default 66
@@ -130,14 +123,14 @@ chart = pygal.XY(
     print_values=False,
     human_readable=True,
     x_value_formatter=lambda x: f"{x:.0f} K",
-    value_formatter=format_pressure,
+    value_formatter=fmt_p,
     y_labels=[1, 100, 1e4, 1e6, 1e8],
     y_label_rotation=0,
 )
 
-# Sublimation curve (Solid-Gas boundary) — Imprint position 1: brand green
+# Series 1–3: phase boundary curves — Imprint positions 1 (green), 2 (lavender), 3 (blue)
 sublimation_points = [
-    {"value": (float(t), float(p)), "label": f"Sublimation: {t:.0f} K, {format_pressure(p)}"}
+    {"value": (float(t), float(p)), "label": f"Sublimation: {t:.0f} K, {fmt_p(p)}"}
     for t, p in zip(sublimation_temps[::4], sublimation_pressures[::4], strict=True)
 ]
 chart.add(
@@ -145,12 +138,11 @@ chart.add(
     sublimation_points,
     show_dots=False,
     stroke_style={"width": 8, "linecap": "round", "linejoin": "round"},
-    formatter=format_pressure,
+    formatter=fmt_p,
 )
 
-# Vaporization curve (Liquid-Gas boundary) — Imprint position 2: lavender
 vaporization_points = [
-    {"value": (float(t), float(p)), "label": f"Vaporization: {t:.0f} K, {format_pressure(p)}"}
+    {"value": (float(t), float(p)), "label": f"Vaporization: {t:.0f} K, {fmt_p(p)}"}
     for t, p in zip(vaporization_temps[::5], vaporization_pressures[::5], strict=True)
 ]
 chart.add(
@@ -158,12 +150,11 @@ chart.add(
     vaporization_points,
     show_dots=False,
     stroke_style={"width": 8, "linecap": "round", "linejoin": "round"},
-    formatter=format_pressure,
+    formatter=fmt_p,
 )
 
-# Melting curve (Solid-Liquid boundary) — Imprint position 3: blue; water's anomalous negative slope
 melting_points = [
-    {"value": (float(t), float(p)), "label": f"Melting: {t:.2f} K, {format_pressure(p)}"}
+    {"value": (float(t), float(p)), "label": f"Melting: {t:.2f} K, {fmt_p(p)}"}
     for t, p in zip(melting_temps[::4], melting_pressures[::4], strict=True)
 ]
 chart.add(
@@ -171,46 +162,50 @@ chart.add(
     melting_points,
     show_dots=False,
     stroke_style={"width": 8, "linecap": "round", "linejoin": "round"},
-    formatter=format_pressure,
+    formatter=fmt_p,
 )
 
-# Triple point — Imprint matte red (#AE3030): distinctive thermodynamic landmark
+# Landmark points — series order controls legend swatch via palette cycling.
+# Series 4 → palette[3] = ochre #BD8233 → Critical Point (no per-point override needed)
+# Series 5 → palette[4] = matte red #AE3030 → Triple Point (no per-point override needed)
+chart.add(
+    f"Critical Point ({critical_t} K, {fmt_p(critical_p)})",
+    [
+        {
+            "value": (float(critical_t), float(critical_p)),
+            "label": f"Critical Point — liquid-gas distinction vanishes\n{critical_t} K, {fmt_p(critical_p)}",
+        }
+    ],
+    dots_size=18,
+    stroke=False,
+    formatter=fmt_p,
+)
+
 chart.add(
     f"Triple Point ({triple_t} K, {triple_p:.0f} Pa)",
     [
         {
             "value": (float(triple_t), float(triple_p)),
-            "label": "Triple Point — all three phases coexist\n273.16 K, 611.73 Pa",
-            "color": "#AE3030",
+            "label": f"Triple Point — all three phases coexist\n{triple_t} K, {triple_p:.0f} Pa",
         }
     ],
     dots_size=18,
     stroke=False,
-    formatter=format_pressure,
+    formatter=fmt_p,
 )
 
-# Critical point — Imprint ochre (#BD8233): secondary landmark
-chart.add(
-    f"Critical Point ({critical_t} K, {critical_p / 1e6:.1f} MPa)",
-    [
-        {
-            "value": (float(critical_t), float(critical_p)),
-            "label": "Critical Point — liquid-gas distinction vanishes\n647.1 K, 22.064 MPa",
-            "color": "#BD8233",
-        }
-    ],
-    dots_size=18,
-    stroke=False,
-    formatter=format_pressure,
-)
-
-# Post-process SVG to inject phase region labels
+# SVG post-processing: frame removal, phase region labels, callout annotations
 svg_string = chart.render(is_unicode=True)
 root = ET.fromstring(svg_string)
+ns = "http://www.w3.org/2000/svg"
 
-# Label positions estimated for 3200×1800 canvas with margin_left=220, margin_right=160
-# x-axis: T=180..720 K maps to SVG x=220..3040 (width=2820)
-# y-axis: log P mapped to SVG y=80..1530 (height=1450, top=high P)
+# Remove default chart frame border via CSS override
+style_elems = root.findall(f".//{{{ns}}}style")
+frame_css = "\nrect.background { stroke: none !important; stroke-width: 0 !important; }"
+if style_elems:
+    style_elems[0].text = (style_elems[0].text or "") + frame_css
+
+# Phase region labels — semi-transparent, color-coded by boundary membership
 phase_labels = [
     {"text": "SOLID", "x": "600", "y": "580", "size": "52", "color": IMPRINT_PALETTE[2], "opacity": "0.35"},
     {"text": "LIQUID", "x": "1370", "y": "400", "size": "52", "color": IMPRINT_PALETTE[1], "opacity": "0.35"},
@@ -219,21 +214,52 @@ phase_labels = [
     {"text": "FLUID", "x": "2730", "y": "193", "size": "36", "color": IMPRINT_PALETTE[3], "opacity": "0.30"},
 ]
 
-for label in phase_labels:
-    text_elem = ET.SubElement(root, "{http://www.w3.org/2000/svg}text")
-    text_elem.set("x", label["x"])
-    text_elem.set("y", label["y"])
-    text_elem.set(
+for lbl in phase_labels:
+    el = ET.SubElement(root, f"{{{ns}}}text")
+    el.set("x", lbl["x"])
+    el.set("y", lbl["y"])
+    el.set(
         "style",
-        f"font-family: DejaVu Sans, Helvetica, Arial, sans-serif; "
-        f"font-size: {label['size']}px; "
-        f"fill: {label['color']}; "
-        f"font-weight: 700; "
-        f"letter-spacing: 4px; "
-        f"opacity: {label['opacity']}; "
-        f"text-anchor: middle;",
+        f"font-family:DejaVu Sans,Helvetica,Arial,sans-serif;"
+        f"font-size:{lbl['size']}px;fill:{lbl['color']};font-weight:700;"
+        f"letter-spacing:4px;opacity:{lbl['opacity']};text-anchor:middle;",
     )
-    text_elem.text = label["text"]
+    el.text = lbl["text"]
+
+# Callout annotations for thermodynamic landmarks
+# Triple point: approx SVG (760, 1040) — callout to upper-right
+# Critical point: approx SVG (2640, 250) — callout to lower-left
+callouts = [
+    # (x_dot, y_dot, x_end, y_end, x_txt, y_txt1, y_txt2, label, sublabel, anchor)
+    (760, 1040, 860, 960, 875, 954, 994, "Triple Point", "273.16 K  ·  611.73 Pa", "start"),
+    (2640, 250, 2510, 320, 2495, 314, 354, "Critical Point", "647.1 K  ·  22.064 MPa", "end"),
+]
+for x_d, y_d, x2, y2, x_t, y_t1, y_t2, label, sublabel, anchor in callouts:
+    g = ET.SubElement(root, f"{{{ns}}}g")
+    ln = ET.SubElement(g, f"{{{ns}}}line")
+    ln.set("x1", str(x_d))
+    ln.set("y1", str(y_d))
+    ln.set("x2", str(x2))
+    ln.set("y2", str(y2))
+    ln.set("style", f"stroke:{INK_MUTED};stroke-width:2;opacity:0.7;")
+    t1 = ET.SubElement(g, f"{{{ns}}}text")
+    t1.set("x", str(x_t))
+    t1.set("y", str(y_t1))
+    t1.set(
+        "style",
+        f"font-family:DejaVu Sans,Helvetica,Arial,sans-serif;"
+        f"font-size:36px;fill:{INK};font-weight:600;text-anchor:{anchor};",
+    )
+    t1.text = label
+    t2 = ET.SubElement(g, f"{{{ns}}}text")
+    t2.set("x", str(x_t))
+    t2.set("y", str(y_t2))
+    t2.set(
+        "style",
+        f"font-family:DejaVu Sans,Helvetica,Arial,sans-serif;"
+        f"font-size:30px;fill:{INK_MUTED};font-weight:400;text-anchor:{anchor};",
+    )
+    t2.text = sublabel
 
 modified_svg = ET.tostring(root, encoding="unicode")
 
