@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
 Library: plotnine 0.15.5 | Python 3.13.13
 Quality: 81/100 | Updated: 2026-06-08
@@ -117,7 +117,7 @@ plot = (
     )
     + coord_fixed(ratio=1.0, xlim=(-7.5, 25.5), ylim=(-17.5, 14.5))
     + labs(
-        title="cartogram-area-distortion · plotnine · anyplot.ai",
+        title="cartogram-area-distortion · python · plotnine · anyplot.ai",
         subtitle=f"Area ∝ Population — {total_str}  |  Dashed outlines = original region borders",
     )
     + annotate(
