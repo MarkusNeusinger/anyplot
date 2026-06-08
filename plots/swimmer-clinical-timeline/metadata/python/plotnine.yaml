@@ -1,44 +1,55 @@
 library: plotnine
+language: python
 specification_id: swimmer-clinical-timeline
 created: '2026-03-13T22:04:14Z'
-updated: '2026-03-13T22:33:32Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23072198405
+updated: '2026-06-08T06:17:36Z'
+generated_by: claude-sonnet
+workflow_run: 27118981337
 issue: 4670
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/plotnine/plot.png
-preview_html: null
-quality_score: 90
+language_version: 3.13.13
+library_version: 0.15.5
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Excellent data storytelling with median reference lines and ORR annotation creating
-    a genuine clinical narrative
-  - Professional colorblind-safe palette with teal/amber arm distinction and blue/orange/purple
-    event markers
-  - 'Well-refined visual design: removed horizontal gridlines, subtle vertical grid,
-    clean white background, styled legend'
-  - Complete spec compliance with all required features present and properly implemented
-  - White-stroke event markers provide clean contrast against colored bars
+  - Correct swimmer plot with horizontal bars sorted longest-at-top, using geom_segment
+    layered with geom_point event markers — fully spec-compliant
+  - 'Imprint palette applied correctly with semantic assignments: #009E73 (Arm A),
+    #C475FD (Arm B), #4467A3 (PR), #BD8233 (CR), #AE3030 (PD) and INK_MUTED for Ongoing'
+  - Theme-adaptive chrome works perfectly in both renders — INK/INK_SOFT tokens thread
+    through all text, ELEVATED_BG for annotation boxes, correct PAGE_BG backgrounds
+  - 'Strong data storytelling: ORR annotation (68%), median reference lines for both
+    arms (dashed vs. dotted), monospace patient IDs, and sorted bar order create an
+    immediately readable clinical narrative'
+  - White stroke on event markers (color='white', stroke=0.5) provides definition
+    against the colored bars — thoughtful detail for readability
+  - 'Clean grammar-of-graphics composition: geom_segment + geom_point + geom_vline
+    + annotate layers compose elegantly with guide_legend override_aes for polished
+    legend'
+  - np.random.seed(42) ensures reproducibility; all font sizes explicitly set; no
+    unused imports; KISS structure throughout
   weaknesses:
-  - Minor marker crowding on shortest patient bars where multiple events overlap
-  - Y-axis text at 14pt could be slightly larger for optimal readability at full resolution
-  image_description: 'The plot displays a swimmer-style clinical trial timeline with
-    25 horizontal bars representing individual patients (PT-001 through PT-025), sorted
-    by treatment duration from longest at top to shortest at bottom. Bars are color-coded
-    by treatment arm: teal/steel blue for "Arm A (Combo)" and amber/gold for "Arm
-    B (Mono)". Clinical events are marked with distinct shaped markers with white
-    strokes: upward triangles (amber) for Partial Response, diamonds (blue) for Complete
-    Response, squares (purple) for Progressive Disease, and right-pointing arrows
-    (dark) for Ongoing patients. Two vertical reference lines indicate median durations
-    — a dashed teal line at ~17 weeks (Median A) and a dotted amber line at ~29 weeks
-    (Median B). Labeled annotations with colored backgrounds identify these medians.
-    An ORR annotation in the upper right shows "ORR: 68% (17/25)" on a light blue
-    background. The x-axis reads "Time on Study (weeks)" with breaks every 6 weeks
-    from 0 to 48. The y-axis shows "Patient ID" in monospace font. A well-styled legend
-    on the right separates Treatment Arm and Clinical Event categories. The overall
-    design is clean with a white background, subtle vertical gridlines, and no horizontal
-    gridlines.'
+  - Median annotation text (size=2.5 mm) is at the minimum of the recommended 2.5–4
+    range — slightly small at mobile width; bumping to size=3.0 would improve readability
+    without crowding
+  - LM-02 relies on grammar-of-graphics layering and guide_legend override_aes which
+    are ggplot2 idioms shared by R users — no feature that is truly plotnine-exclusive
+    beyond these cross-platform patterns
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "swimmer-clinical-timeline · python · plotnine · anyplot.ai" in bold dark ink, spans ~85% of width (expected for this length). X-axis label "Time on Study (weeks)" and Y-axis label "Patient ID" both at 10pt dark ink. Tick labels at 8-9pt in INK_SOFT (#4A4A44) — all clearly visible. Monospace font on Y-axis patient IDs is an intentional and effective typographic choice.
+      Data: 25 horizontal bars sorted longest-at-top (PT-001 ~47w at top, PT-025 ~4w at bottom). Green (#009E73) bars for Arm A (Combo), lavender (#C475FD) for Arm B (Mono). Event markers with white stroke: blue triangles (Partial Response), ochre diamonds (Complete Response), red squares (Progressive Disease), gray right-arrows (Ongoing). Dashed green and dotted purple vertical lines mark median durations. Three annotation label boxes: "Median A: 17w" (bottom area, green text), "Median B: 29w" (lower-middle, purple text), "ORR: 68% (17/25)" (upper-right, green text on ELEVATED_BG box).
+      Legibility verdict: PASS — all primary text fully readable; annotation callout text is small (size=2.5 mm) but legible at full resolution
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: All text flips to light — title, axis labels, tick labels, and legend text are all rendered in light INK_SOFT/INK tones against the dark background. No "dark-on-dark" failures observed. Legend background shows ELEVATED_BG (#242420) with light legend text. Annotation boxes use #242420 fill with colored text (green/purple/green) matching the respective treatment arms.
+      Data: Bar colors (#009E73 green, #C475FD lavender) are identical to the light render. Event marker colors (blue, ochre, red, muted gray) unchanged. Dashed/dotted median lines visible. ORR annotation box visible in upper right.
+      Legibility verdict: PASS — theme-adaptive chrome works correctly in both renders; no dark-on-dark failures
   criteria_checklist:
     visual_quality:
       score: 27
@@ -49,42 +60,59 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, axis titles 20pt, ticks
-          16pt, y-axis 14pt monospace). Y-axis at 14pt slightly small for 25 patients
-          but still readable.
+        comment: 'All font sizes explicitly set (title 12pt, axis titles 10pt, ticks
+          8-9pt, legend 8pt). Well-proportioned in both themes. Minor: annotation
+          callout text at size=2.5mm is at the minimum recommended range — small at
+          mobile scale.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Generally clean layout; minor marker crowding on shortest bars (PT-024,
-          PT-025).
+        comment: No text-on-text overlap. Inherent marker proximity in dense event
+          rows (e.g. PT-017 PD+Ongoing markers close together) but each marker remains
+          distinguishable. Legend outside plot area, no data overlap.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Thick bars (size=6) and large markers (size=5.5) with white stroke
-          provide excellent visibility.
+        comment: 'Bars at size=4 are prominent and clear. Event markers at size=3
+          with white stroke are visible against bars. Ongoing arrows clearly readable.
+          Minor: at 25 patients, the bars are moderately dense but all visible.'
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe. Green+purple arm colors are distinguishable
+          under deuteranopia. Shape encoding redundantly encodes all event types.
+          White stroke provides contrast on markers.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Teal vs amber avoids red-green confusion. Event markers use blue-orange-purple
-          palette.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good 16:9 layout. Legend on right takes moderate space.
+        comment: 3200x1800 canvas used well. 25 patient rows fill the plot height
+          appropriately. Legend positioned right, near the data. No wasted space.
+          All text within canvas bounds — no AR-09 clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time on Study (weeks) with units, Patient ID descriptive.
+        comment: 'X-axis: ''Time on Study (weeks)'' — descriptive with units. Y-axis:
+          ''Patient ID''. Title matches required format exactly.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First categorical series #009E73 (Arm A) correct. Arm B uses #C475FD
+          (position 2). Events use positions 3/4/5 with semantic assignment (red for
+          PD — appropriate bad-outcome semantic). Ongoing uses INK_MUTED (semantic
+          muted anchor). Backgrounds #FAF8F1 light / #1A1A17 dark correct. Data colors
+          identical across both renders. Chrome flips correctly.'
     design_excellence:
       score: 16
       max: 20
@@ -94,22 +122,29 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom teal/amber palette with intentional hierarchy. White-stroke
-          markers and annotation labels with colored backgrounds show deliberate design.
+        comment: 'Strong design clearly above defaults: semantic palette assignments
+          with clear rationale, white-stroke technique on markers, monospace font
+          for patient IDs, colored annotation text matching arm colors, dashed vs.
+          dotted median lines. Intentional hierarchy throughout.'
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Horizontal gridlines removed, subtle vertical grid, panel border
-          removed, styled legend, generous margins.
+        comment: theme_minimal() base + panel_border=element_blank() + y-axis grid
+          removed + subtle x-axis grid (alpha=0.12, size=0.2) + custom legend background
+          with ELEVATED_BG. Very polished refinement — only the x-axis grid presence
+          (even subtle) prevents a perfect 6.
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Median reference lines with annotations and ORR summary create a
-          clear clinical narrative.
+        comment: 'Clear clinical narrative: sorted bars show duration distribution
+          instantly, two-arm color coding reveals treatment allocation, ORR annotation
+          quantifies response rate, median lines enable arm comparison. Viewer immediately
+          identifies that ~68% responded and Arm B has longer median duration. Strong
+          storytelling.'
     spec_compliance:
       score: 15
       max: 15
@@ -119,27 +154,34 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct swimmer plot with horizontal bars.
+        comment: 'Correct swimmer plot: horizontal bars per patient with event markers,
+          sorted by duration, ongoing markers, treatment arm color coding.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: sorted bars, distinct markers, ongoing
-          arrows, legend, time axis, patient IDs, arm coloring.'
+        comment: 'All spec features present: horizontal bars sorted by duration, distinct
+          markers per event type (triangle PR, diamond CR, square PD, right-arrow
+          Ongoing), ongoing visually distinguished with arrow, legend for symbols
+          and color coding, x-axis with weeks, patient IDs on y-axis, color-coded
+          by treatment arm.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = time, Y = patient ID, correctly mapped.
+        comment: X = time on study in weeks (correct). Y = patient IDs (correct).
+          All 25 patients shown. Event markers at correct time positions. Duration
+          bars from 0 to patient's total time.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches format. Legend correctly separates Treatment Arm and
-          Clinical Event.
+        comment: 'Title: ''swimmer-clinical-timeline · python · plotnine · anyplot.ai''
+          — exact required format. Legend shows Treatment Arm (Arm A/B with color
+          swatches) and Clinical Event (4 event types with correct shapes).'
     data_quality:
       score: 15
       max: 15
@@ -149,20 +191,26 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all event types, two arms, varying durations, patients with
-          multiple and no events.
+        comment: 'Shows all swimmer plot features: varying duration bars, multiple
+          event types (PR/CR/PD/Ongoing), two treatment arms, mix of ongoing/off-study
+          patients, summary statistics (ORR, medians).'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Phase II oncology trial with plausible clinical terminology.
+        comment: Simulated Phase II oncology trial with realistic clinical terminology
+          (PT-001 patient IDs, Arm A Combo/Arm B Mono nomenclature, clinical event
+          names). Neutral medical science context. 25 patients within spec's 15-60
+          range.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Durations 4-48 weeks realistic for clinical trial.
+        comment: 'Duration 4-48 weeks plausible for Phase II oncology. ORR 68% within
+          realistic range for targeted therapies. Median durations ~17w vs. ~29w:
+          credible arm difference. Seed=42 ensures reproducibility.'
     code_quality:
       score: 10
       max: 10
@@ -172,61 +220,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save structure, no functions or classes.
+        comment: 'Clean linear structure: imports → theme tokens → data generation
+          → plot assembly → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set before all random operations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imports are used. No unused symbols imported.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, clean computed statistics for annotations.
+        comment: Clean, idiomatic plotnine code. No fake interactivity. Appropriate
+          complexity for a sophisticated swimmer plot with annotations.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, current API.
+        comment: Saves as plot-{THEME}.png with correct dpi=400, width=8, height=4.5,
+          units='in'. No deprecated API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Proper grammar of graphics with layered geoms, aes mappings, scales,
-          guides, pd.Categorical, coord_cartesian.
+        comment: 'Expertly uses plotnine grammar: geom_segment for bars, geom_point
+          with shape+fill aesthetics, geom_vline for reference lines, annotate(''label'')
+          for callout boxes, guides() with guide_legend(order, override_aes), coord_cartesian,
+          scale_*_manual — all idiomatic.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses guide_legend with override_aes, annotate('label') with label_padding,
-          scale_shape_manual with ggplot2-style codes.
+        comment: Uses grammar-of-graphics layer composition and guide_legend(override_aes)
+          which are ggplot2-paradigm features. The white-stroke technique (color='white',
+          stroke=0.5 on geom_point) is plotnine-specific. However, most patterns have
+          direct ggplot2 equivalents — nothing exclusively plotnine.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
   - custom-legend
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - grid-styling
-  - edge-highlighting
   - alpha-blending
+  - edge-highlighting
