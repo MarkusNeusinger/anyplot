@@ -1,11 +1,19 @@
-""" pyplots.ai
+""" anyplot.ai
 swimmer-clinical-timeline: Swimmer Plot for Clinical Trial Timelines
-Library: pygal 3.1.0 | Python 3.14.3
-Quality: 84/100 | Created: 2026-03-13
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-06-08
 """
 
+import os
 import re
+import sys
 import xml.etree.ElementTree as ET
+
+
+# Remove this file's directory from sys.path to prevent importing itself
+# instead of the installed pygal package (file and package share the same name).
+_here = os.path.abspath(os.path.dirname(__file__) or ".")
+sys.path = [p for p in sys.path if os.path.abspath(p or ".") != _here]
 
 import cairosvg
 import numpy as np
@@ -13,107 +21,105 @@ import pygal
 from pygal.style import Style
 
 
-# Data - Simulated Phase II oncology trial with 25 patients across two arms
-np.random.seed(42)
+# Theme tokens — Imprint palette, theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
+IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
+
+# Treatment arm colors: Imprint positions 1 (green) and 2 (lavender)
+ARM_COLORS = {"Arm A (Combo)": "#009E73", "Arm B (Mono)": "#C475FD"}
+
+# Event marker colors: Imprint positions 3–6, visually distinct from both arm colors
+EVENT_CONFIG = {
+    "partial_response": {"color": "#4467A3", "label": "Partial Response"},
+    "complete_response": {"color": "#BD8233", "label": "Complete Response"},
+    "progressive_disease": {"color": "#AE3030", "label": "Progressive Disease"},
+    "adverse_event": {"color": "#2ABCCD", "label": "Adverse Event"},
+}
+
+# Data — simulated Phase II oncology trial, 25 patients across two treatment arms
+np.random.seed(42)
 patient_ids = [f"PT-{i:03d}" for i in range(1, 26)]
 arms = ["Arm A (Combo)"] * 13 + ["Arm B (Mono)"] * 12
 
-# Generate treatment durations (weeks) - Arm A tends to have longer durations
 durations_a = np.random.exponential(scale=28, size=13) + 6
 durations_b = np.random.exponential(scale=18, size=12) + 4
-durations = np.concatenate([durations_a, durations_b])
-durations = np.clip(durations, 4, 60).round(1)
+durations = np.clip(np.concatenate([durations_a, durations_b]), 4, 60).round(1)
 
-# Event types with colorblind-safe palette (Tol's qualitative scheme)
-event_config = {
-    "partial_response": {"color": "#4477AA", "label": "Partial Response"},
-    "complete_response": {"color": "#CCBB44", "label": "Complete Response"},
-    "progressive_disease": {"color": "#AA3377", "label": "Progressive Disease"},
-    "adverse_event": {"color": "#EE7733", "label": "Adverse Event"},
-}
-
-# Generate clinical events for each patient
 events = []
 for i in range(25):
-    patient_events = []
     dur = durations[i]
+    pat_events = []
     if np.random.random() < 0.75:
         pr_time = np.random.uniform(4, min(12, dur - 1))
-        patient_events.append(("partial_response", round(pr_time, 1)))
+        pat_events.append(("partial_response", round(pr_time, 1)))
         if np.random.random() < 0.35 and dur > pr_time + 6:
             cr_time = pr_time + np.random.uniform(6, min(16, dur - pr_time - 1))
-            patient_events.append(("complete_response", round(cr_time, 1)))
+            pat_events.append(("complete_response", round(cr_time, 1)))
     if np.random.random() < 0.4:
         pd_time = np.random.uniform(max(8, dur * 0.5), dur)
-        patient_events.append(("progressive_disease", round(pd_time, 1)))
+        pat_events.append(("progressive_disease", round(pd_time, 1)))
     if np.random.random() < 0.3:
         ae_time = np.random.uniform(2, min(dur - 1, 20))
-        patient_events.append(("adverse_event", round(ae_time, 1)))
-    events.append(patient_events)
+        pat_events.append(("adverse_event", round(ae_time, 1)))
+    events.append(pat_events)
 
-# Mark ongoing patients (still on treatment at data cutoff)
-ongoing = [False] * 25
-for i in range(25):
-    has_pd = any(e[0] == "progressive_disease" for e in events[i])
-    if not has_pd and durations[i] > 30 and np.random.random() < 0.6:
-        ongoing[i] = True
+ongoing = [
+    not any(e[0] == "progressive_disease" for e in events[i]) and durations[i] > 30 and np.random.random() < 0.6
+    for i in range(25)
+]
 
-# Sort by duration (longest first for visual hierarchy)
+# Sort by duration, longest first (creates clear visual hierarchy)
 sort_idx = np.argsort(-durations)
 patient_ids = [patient_ids[i] for i in sort_idx]
 arms = [arms[i] for i in sort_idx]
 durations = durations[sort_idx]
 events = [events[i] for i in sort_idx]
 ongoing = [ongoing[i] for i in sort_idx]
-
-# Arm colors
-arm_colors = {"Arm A (Combo)": "#306998", "Arm B (Mono)": "#9370DB"}
-
-# Pygal style with refined aesthetics
-custom_style = Style(
-    background="white",
-    plot_background="#F7F9FB",
-    foreground="#333333",
-    foreground_strong="#222222",
-    foreground_subtle="#E8E8E8",
-    colors=("#306998",),
-    opacity=".82",
-    opacity_hover=".95",
-    title_font_size=48,
-    label_font_size=22,
-    major_label_font_size=24,
-    legend_font_size=22,
-    value_font_size=18,
-    title_font_family="Consolas, monospace",
-    label_font_family="Consolas, monospace",
-    legend_font_family="Consolas, monospace",
-    value_font_family="Consolas, monospace",
-)
-
 num_patients = len(patient_ids)
 max_duration = float(np.ceil(max(durations) / 10) * 10)
 
-# Create pygal HorizontalBar - reversed for longest-at-top display
-# Pygal renders bars bottom-to-top, so we reverse data
-reversed_ids = list(reversed(patient_ids))
-reversed_arms = list(reversed(arms))
-reversed_durs = list(reversed(durations))
-reversed_events = list(reversed(events))
-reversed_ongoing = list(reversed(ongoing))
+# pygal HorizontalBar renders bottom-to-top; reverse for longest-at-top display
+rev_ids = list(reversed(patient_ids))
+rev_arms = list(reversed(arms))
+rev_durs = list(reversed(durations))
+rev_events = list(reversed(events))
+rev_ongoing = list(reversed(ongoing))
+
+# Plot — canvas 3200×1800 (landscape, hard rule)
+title = "swimmer-clinical-timeline · python · pygal · anyplot.ai"
+
+custom_style = Style(
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=IMPRINT_PALETTE,
+    title_font_size=66,
+    label_font_size=50,
+    major_label_font_size=44,
+    legend_font_size=40,
+    value_font_size=30,
+    stroke_width=2.5,
+)
 
 chart = pygal.HorizontalBar(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="swimmer-clinical-timeline \u00b7 pygal \u00b7 pyplots.ai",
+    title=title,
     x_title="Time on Treatment (Weeks)",
     show_legend=False,
     print_values=False,
     show_y_guides=True,
     show_x_guides=True,
-    margin=50,
-    margin_bottom=200,
+    margin=80,
+    margin_bottom=230,
     spacing=4,
     range=(0, max_duration),
     rounded_bars=4,
@@ -121,165 +127,131 @@ chart = pygal.HorizontalBar(
     truncate_label=8,
 )
 
-chart.x_labels = reversed_ids
+chart.x_labels = rev_ids
 
-# Add data with per-bar arm colors
-bar_data = []
-for i in range(num_patients):
-    bar_data.append(
+chart.add(
+    "Duration",
+    [
         {
-            "value": float(reversed_durs[i]),
-            "color": arm_colors[reversed_arms[i]],
-            "label": f"{reversed_ids[i]}: {reversed_durs[i]:.1f} wk ({reversed_arms[i]})",
+            "value": float(rev_durs[i]),
+            "color": ARM_COLORS[rev_arms[i]],
+            "label": f"{rev_ids[i]}: {rev_durs[i]:.1f} wk ({rev_arms[i]})",
         }
-    )
-chart.add("Duration", bar_data)
+        for i in range(num_patients)
+    ],
+)
 
-# Render base SVG
+# Render SVG and extract bar positions for event marker injection
 svg_str = chart.render().decode("utf-8")
-
-# Parse SVG with XML to extract bar positions reliably (not regex)
 root = ET.fromstring(svg_str)
-ns = {"svg": "http://www.w3.org/2000/svg"}
 
-# Find plot group transform offset (bars are in local coords inside a translated group)
+# Find plot group translation offset
 tx, ty = 0.0, 0.0
 for g in root.iter("{http://www.w3.org/2000/svg}g"):
-    cls = g.get("class", "")
-    if cls == "plot":
-        transform = g.get("transform", "")
-        m = re.search(r"translate\(([^,]+),\s*([^)]+)\)", transform)
+    if g.get("class", "") == "plot":
+        m = re.search(r"translate\(([^,]+),\s*([^)]+)\)", g.get("transform", ""))
         if m:
             tx, ty = float(m.group(1)), float(m.group(2))
         break
 
-# Find all rect elements with class "rect reactive tooltip-trigger"
-bar_rects = []
-for rect in root.iter("{http://www.w3.org/2000/svg}rect"):
-    cls = rect.get("class", "")
-    if "rect reactive tooltip-trigger" in cls:
-        x = float(rect.get("x", 0)) + tx
-        y = float(rect.get("y", 0)) + ty
-        w = float(rect.get("width", 0))
-        h = float(rect.get("height", 0))
-        bar_rects.append({"x": x, "y": y, "width": w, "height": h})
+# Extract bar rects (translated to global SVG coordinates)
+bar_rects = sorted(
+    [
+        {
+            "x": float(r.get("x", 0)) + tx,
+            "y": float(r.get("y", 0)) + ty,
+            "width": float(r.get("width", 0)),
+            "height": float(r.get("height", 0)),
+        }
+        for r in root.iter("{http://www.w3.org/2000/svg}rect")
+        if "rect reactive tooltip-trigger" in r.get("class", "")
+    ],
+    key=lambda b: b["y"],
+    reverse=True,
+)
 
-# Sort bars by y descending (bottom-to-top) to match pygal rendering order
-# bar_data[0] = bottom bar (largest y), bar_data[-1] = top bar (smallest y)
-bar_rects.sort(key=lambda b: b["y"], reverse=True)
-
-# Build event marker SVG elements
-marker_elements = []
-marker_size = 28
+# Build SVG marker elements for events and ongoing arrows
+STROKE = PAGE_BG  # outline matches page bg for clean contrast on both themes
+marker_svgs = []
+ms = 18  # marker half-size in SVG user units
 
 if len(bar_rects) == num_patients:
-    for i in range(num_patients):
-        bar = bar_rects[i]
-        bar_x = bar["x"]
-        bar_w = bar["width"]
-        y_center = bar["y"] + bar["height"] / 2
-        dur = reversed_durs[i]
+    for i, bar in enumerate(bar_rects):
+        bx, bw = bar["x"], bar["width"]
+        cy = bar["y"] + bar["height"] / 2
+        dur = rev_durs[i]
 
-        # Ongoing arrow at end of bar
-        if reversed_ongoing[i]:
-            arrow_x = bar_x + bar_w
-            arrow_sz = 14
-            marker_elements.append(
-                f'<polygon points="{arrow_x:.1f},{y_center - arrow_sz:.1f} '
-                f"{arrow_x + arrow_sz * 2.2:.1f},{y_center:.1f} "
-                f'{arrow_x:.1f},{y_center + arrow_sz:.1f}" '
-                f'fill="{arm_colors[reversed_arms[i]]}" opacity="0.95"/>'
+        if rev_ongoing[i]:
+            ax = bx + bw
+            marker_svgs.append(
+                f'<polygon points="{ax:.1f},{cy - ms:.1f} '
+                f'{ax + ms * 2:.1f},{cy:.1f} {ax:.1f},{cy + ms:.1f}" '
+                f'fill="{ARM_COLORS[rev_arms[i]]}" opacity="0.9"/>'
             )
 
-        # Event markers positioned proportionally along bar
-        for event_type, event_time in reversed_events[i]:
-            cfg = event_config[event_type]
-            mx = bar_x + (event_time / dur) * bar_w
-            ms = marker_size
+        for etype, etime in rev_events[i]:
+            col = EVENT_CONFIG[etype]["color"]
+            ex = bx + (etime / dur) * bw
 
-            if event_type == "partial_response":
-                # Triangle pointing up
-                marker_elements.append(
-                    f'<polygon points="{mx:.1f},{y_center - ms:.1f} '
-                    f"{mx - ms * 0.85:.1f},{y_center + ms * 0.6:.1f} "
-                    f'{mx + ms * 0.85:.1f},{y_center + ms * 0.6:.1f}" '
-                    f'fill="{cfg["color"]}" stroke="white" stroke-width="2.5"/>'
+            if etype == "partial_response":
+                marker_svgs.append(
+                    f'<polygon points="{ex:.1f},{cy - ms:.1f} '
+                    f'{ex - ms:.1f},{cy + ms:.1f} {ex + ms:.1f},{cy + ms:.1f}" '
+                    f'fill="{col}" stroke="{STROKE}" stroke-width="2"/>'
                 )
-            elif event_type == "complete_response":
-                # 5-point star
-                pts = []
-                for j in range(10):
-                    angle = -np.pi / 2 + j * np.pi / 5
-                    r = ms if j % 2 == 0 else ms * 0.42
-                    pts.append(f"{mx + r * np.cos(angle):.1f},{y_center + r * np.sin(angle):.1f}")
-                marker_elements.append(
-                    f'<polygon points="{" ".join(pts)}" fill="{cfg["color"]}" stroke="white" stroke-width="2.5"/>'
+            elif etype == "complete_response":
+                pts = " ".join(
+                    f"{ex + (ms if j % 2 == 0 else ms * 0.42) * np.cos(-np.pi / 2 + j * np.pi / 5):.1f},"
+                    f"{cy + (ms if j % 2 == 0 else ms * 0.42) * np.sin(-np.pi / 2 + j * np.pi / 5):.1f}"
+                    for j in range(10)
                 )
-            elif event_type == "progressive_disease":
-                # Diamond
-                marker_elements.append(
-                    f'<polygon points="{mx:.1f},{y_center - ms:.1f} '
-                    f"{mx + ms * 0.85:.1f},{y_center:.1f} "
-                    f"{mx:.1f},{y_center + ms:.1f} "
-                    f'{mx - ms * 0.85:.1f},{y_center:.1f}" '
-                    f'fill="{cfg["color"]}" stroke="white" stroke-width="2.5"/>'
+                marker_svgs.append(f'<polygon points="{pts}" fill="{col}" stroke="{STROKE}" stroke-width="2"/>')
+            elif etype == "progressive_disease":
+                marker_svgs.append(
+                    f'<polygon points="{ex:.1f},{cy - ms:.1f} {ex + ms:.1f},{cy:.1f} '
+                    f'{ex:.1f},{cy + ms:.1f} {ex - ms:.1f},{cy:.1f}" '
+                    f'fill="{col}" stroke="{STROKE}" stroke-width="2"/>'
                 )
-            elif event_type == "adverse_event":
-                # Rounded square
-                half = ms * 0.7
-                marker_elements.append(
-                    f'<rect x="{mx - half:.1f}" y="{y_center - half:.1f}" '
-                    f'width="{half * 2:.1f}" height="{half * 2:.1f}" '
-                    f'fill="{cfg["color"]}" stroke="white" stroke-width="2.5" rx="4"/>'
+            elif etype == "adverse_event":
+                h = ms * 0.8
+                marker_svgs.append(
+                    f'<rect x="{ex - h:.1f}" y="{cy - h:.1f}" '
+                    f'width="{h * 2:.1f}" height="{h * 2:.1f}" '
+                    f'fill="{col}" stroke="{STROKE}" stroke-width="2" rx="3"/>'
                 )
 
-# Custom legend below chart - Row 1: Arms, Row 2: Events
-legend_base_y = 2700 - 155
-arm_legend = [("#306998", "Arm A (Combo)"), ("#9370DB", "Arm B (Mono)")]
-arm_start_x = 1800
-arm_spacing = 420
-for idx, (color, label) in enumerate(arm_legend):
-    x_pos = arm_start_x + idx * arm_spacing
-    marker_elements.append(
-        f'<rect x="{x_pos:.1f}" y="{legend_base_y - 12:.1f}" '
-        f'width="32" height="20" fill="{color}" rx="3" opacity="0.82"/>'
-    )
-    marker_elements.append(
-        f'<text x="{x_pos + 42:.1f}" y="{legend_base_y + 4:.1f}" '
-        f'font-family="Consolas, monospace" font-size="24" fill="#333">{label}</text>'
-    )
+# Two-row legend: row 1 = treatment arms, row 2 = event types
+leg_y1, leg_y2 = 1725, 1778
+font_lg = 44
 
-# Row 2: Event markers legend
-legend_y2 = legend_base_y + 48
+arm_legend_x = [1000, 1750]
+for idx, (arm_name, arm_col) in enumerate(ARM_COLORS.items()):
+    x = arm_legend_x[idx]
+    marker_svgs += [
+        f'<rect x="{x}" y="{leg_y1 - 12}" width="26" height="18" fill="{arm_col}" rx="3"/>',
+        f'<text x="{x + 36}" y="{leg_y1 + 3}" font-size="{font_lg}" fill="{INK_SOFT}">{arm_name}</text>',
+    ]
+
 event_legend = [
-    ("\u25b2", "#4477AA", "Partial Response"),
-    ("\u2605", "#CCBB44", "Complete Response"),
-    ("\u25c6", "#AA3377", "Progressive Disease"),
-    ("\u25a0", "#EE7733", "Adverse Event"),
-    ("\u25b6", "#555", "Ongoing"),
+    ("▲", "#4467A3", "Partial Response"),
+    ("★", "#BD8233", "Complete Response"),
+    ("◆", "#AE3030", "Progressive Disease"),
+    ("■", "#2ABCCD", "Adverse Event"),
+    ("▶", INK_SOFT, "Ongoing"),
 ]
-evt_spacing = 320
-evt_start_x = 1200
-for idx, (symbol, color, label) in enumerate(event_legend):
-    x_pos = evt_start_x + idx * evt_spacing
-    marker_elements.append(
-        f'<text x="{x_pos:.1f}" y="{legend_y2:.1f}" '
-        f'font-family="Consolas, monospace" font-size="30" fill="{color}" '
-        f'text-anchor="middle">{symbol}</text>'
-    )
-    marker_elements.append(
-        f'<text x="{x_pos + 22:.1f}" y="{legend_y2:.1f}" '
-        f'font-family="Consolas, monospace" font-size="22" fill="#333" '
-        f'text-anchor="start">{label}</text>'
-    )
+evt_legend_x = [230, 790, 1360, 1920, 2470]
+for idx, (sym, col, lbl) in enumerate(event_legend):
+    x = evt_legend_x[idx]
+    marker_svgs += [
+        f'<text x="{x}" y="{leg_y2 + 2}" font-size="42" fill="{col}" text-anchor="middle">{sym}</text>',
+        f'<text x="{x + 26}" y="{leg_y2 + 2}" font-size="{font_lg}" fill="{INK_SOFT}">{lbl}</text>',
+    ]
 
-# Inject markers before </svg>
-all_markers = "\n".join(marker_elements)
-svg_output = svg_str.replace("</svg>", f"{all_markers}\n</svg>")
+svg_output = svg_str.replace("</svg>", "\n".join(marker_svgs) + "\n</svg>")
 svg_output = svg_output.replace(">No data<", "><")
 
 # Save
-with open("plot.html", "w") as f:
+with open(f"plot-{THEME}.html", "w") as f:
     f.write(svg_output)
 
-cairosvg.svg2png(bytestring=svg_output.encode(), write_to="plot.png")
+cairosvg.svg2png(bytestring=svg_output.encode(), write_to=f"plot-{THEME}.png")
