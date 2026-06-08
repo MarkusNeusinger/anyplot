@@ -1,92 +1,122 @@
 library: altair
+language: python
 specification_id: indicator-ichimoku
 created: '2026-03-12T14:17:13Z'
-updated: '2026-03-12T14:45:44Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23006287343
+updated: '2026-06-08T01:51:12Z'
+generated_by: claude-sonnet
+workflow_run: 27111050657
 issue: 4669
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/altair/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 6.2.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/python/altair/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Complete Ichimoku implementation with all five components correctly calculated
-    and shifted
-  - Excellent data storytelling with annotated bullish/bearish TK crosses and engineered
-    trend phases
-  - Strong color palette with dash-pattern redundancy for colorblind accessibility
-  - Idiomatic Altair usage with interactive crosshair, tooltips, and layered composition
-  - Dual output (PNG + HTML) leverages Altair interactive capabilities
+  - 'Complete Ichimoku implementation: all 5 components (Tenkan, Kijun, Chikou, Senkou
+    A/B) correctly computed with standard (9,26,52) parameters and proper ±26-period
+    time offsets'
+  - 'Correct semantic color mapping using finance convention: #009E73 (Imprint pos
+    1) for bullish/up, #AE3030 (Imprint pos 5) for bearish/down — semantic exception
+    well-documented in code'
+  - 'Idiomatic Altair layer composition: mark_area cloud, mark_rule/mark_bar candlesticks,
+    long-format indicator lines with dual color+strokeDash encoding for auto-generated
+    legend'
+  - Interactive crosshair via alt.selection_point(nearest=True) with conditional opacity
+    — distinctive Altair feature that adds real analytical value
+  - TK crossover annotations (▲/▼) add actionable signal markers and enhance data
+    storytelling without cluttering the chart
+  - 'Polished legend: elevated background, rounded corners, custom typography (titleFontSize/labelFontSize
+    explicitly set), well-positioned inside the chart area'
+  - 'Full theme adaptation: correct #FAF8F1/#1A1A17 backgrounds, all INK tokens applied
+    to axis labels, tick labels, grid, legend; data colors identical across both renders'
+  - Smooth curves via interpolate='monotone', dash patterns for Kijun-sen differentiation,
+    resolve_scale() for independent multi-layer color/strokeDash scales
   weaknesses:
-  - Cloud opacity (0.18) is very subtle in thin regions, making cloud boundaries occasionally
-    hard to distinguish
-  - TK Cross annotations could be positioned with more clearance from surrounding
-    data elements
-  image_description: 'The plot displays an Ichimoku Kinko Hyo technical indicator
-    overlaid on a candlestick price chart spanning from approximately March 2024 to
-    November 2024. Candlesticks use green (bullish) and deep orange (bearish) coloring.
-    Five Ichimoku indicator lines are visible: a dark blue Tenkan-sen (9), an orange
-    dashed Kijun-sen (26), a purple dashed Chikou Span, a teal Senkou Span A, and
-    a brown Senkou Span B. The Kumo (cloud) is filled between Senkou Span A and B
-    with a green tint for bullish regions and a pink/red tint for bearish regions.
-    Two diamond-shaped annotations mark "Bullish TK Cross" (bottom-left, green) and
-    "Bearish TK Cross" (mid-chart, red). A legend titled "Ichimoku Components" sits
-    in the upper-right corner with a white background panel listing all five components.
-    The title reads "indicator-ichimoku · altair · pyplots.ai" with a subtitle "Ichimoku
-    Kinko Hyo (9, 26, 52) — Tenkan / Kijun / Kumo / Chikou". The Y-axis is labeled
-    "Price ($)" ranging from ~126 to 180, and the X-axis is labeled "Date" with monthly
-    tick marks. Price trends upward from ~$134 to ~$178, then declines. The cloud
-    extends into the future beyond the candlestick data, as required by the specification.'
+  - TK Cross annotation text overlaps slightly with the dense indicator line area
+    around May '24 — consider adding a small semi-transparent background rect or increasing
+    y-offset to clear the indicator lines
+  - Grid lines span both X and Y axes; for this line-dominant chart, Y-axis-only grid
+    at gridOpacity=0.10 would reduce visual noise and let the Ichimoku components
+    stand out more clearly
+  - At compressed viewport (~400px mobile), the very thin candlestick bodies (size=2.5)
+    may be hard to distinguish individually from the wicks — consider size=3.5-4.0
+    to improve mobile readability
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, visually distinct from pure white.
+      Chrome: Title "indicator-ichimoku · python · altair · anyplot.ai" in bold dark ink at ~70% canvas width — correct proportion for 49-char title. Subtitle "Ichimoku Kinko Hyo (9, 26, 52) — Tenkan / Kijun / Kumo / Chikou" in muted ink, readable. Axis labels "Date" (x) and "Price ($)" (y) in dark ink, clearly readable. Tick labels (month/year format on x, dollar values on y) in secondary ink, well-sized. Grid at very low opacity (0.12), subtle and non-competing.
+      Data: Candlestick chart from Apr '24 to Nov '24 with 148 displayed periods. Bullish candles in #009E73 (green), bearish in #AE3030 (red). Two cloud regions visible: bullish (green-tinted, ~Jun '24 and Oct '24 onward) and bearish (red-tinted, ~Apr-Jun '24 and Aug-Sep '24). Tenkan-sen (#C475FD lavender, solid), Kijun-sen (#4467A3 blue, long dashes), Chikou Span (#BD8233 ochre, short dashes), Senkou Span A (#2ABCCD cyan, solid), Senkou Span B (#954477 rose, solid). "▲ TK Cross" annotation in green at left (~Apr '24), "▼ TK Cross" annotation in red in chart (~May '24). Legend box in elevated cream bg with rounded corners, positioned top-center-right.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background. No light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black.
+      Chrome: Title and subtitle in light near-white ink, clearly readable against dark background. Axis labels and tick labels in secondary light ink (#B8B7B0 equivalent), all readable. Grid subtle and not competing. Legend box in elevated dark (#242420) with light text.
+      Data: Data colors are IDENTICAL to light render — #009E73 bullish candles, #AE3030 bearish candles, same Imprint palette line colors for all 5 Ichimoku components. Cloud regions render the same hues at the same opacity. No chrome-to-data color confusion. Bullish cloud (green tinted) visible in the same time regions as light render.
+      Legibility verdict: PASS — all text clearly readable against the dark background. No dark-on-dark failures observed. TK Cross annotations in green/red remain readable. Legend text in light ink on elevated dark box is fully legible.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout (title 28pt, axis 18/22pt, legend
-          16pt, annotations 15pt). All readable. Subtitle slightly undersized relative
-          to title.
+        comment: All font sizes explicitly set (title=16, axis=12, ticks=10, legend
+          title=12, legend labels=11). Title at ~70% canvas width — correct for 49-char
+          mandated title. Well-proportioned in both themes.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Minor overlap between TK Cross annotations and nearby candlestick
-          data. Legend has white fill preventing data occlusion.
+        comment: 'Minor: TK Cross annotation text (~May ''24) overlaps with dense
+          indicator line area. Acceptable given Ichimoku chart complexity; all text
+          remains readable.'
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Candlestick bodies visible at size=10, indicator lines clear at strokeWidth
-          2.2. Cloud opacity 0.18 is intentionally subtle but occasionally hard to
-          distinguish in thin regions.
+        comment: All 5 Ichimoku lines visible with distinct colors and dash patterns.
+          Cloud regions clearly visible at opacity=0.28. Candlestick bodies size=2.5
+          appropriate for 148 data points but marginally thin at mobile scale.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Excellent palette differentiation with dark blue, deep orange, purple,
-          teal, brown. Dash patterns provide redundant encoding beyond color.
+        comment: CVD-safe Imprint palette. Bullish/bearish pair (green/red) reinforced
+          by position (up/down candles) — not sole distinguishing signal. Dash patterns
+          add redundant encoding for line differentiation.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills canvas well at 1600x900 with scale_factor 3.0. Good margins,
-          no cut-off elements.
+        comment: Canvas gate passed. Chart fills ~70% of canvas area with balanced
+          margins. Legend well-positioned inside plot area. Title and subtitle have
+          proper whitespace.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Price ($) with unit and Date with formatted monthly ticks.
+        comment: 'X: ''Date'', Y: ''Price ($)'' — descriptive with units. Title in
+          correct format. Subtitle adds domain context.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception correctly applied (finance convention: green=bullish,
+          red=bearish using Imprint pos 1 and 5). Remaining 5 lines use Imprint pos
+          2-7. Backgrounds #FAF8F1/#1A1A17. Data colors identical across both renders.
+          Full theme-adaptive chrome.'
     design_excellence:
       score: 14
       max: 20
@@ -96,23 +126,26 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom cohesive palette starting with Python Blue, distinct dash
-          patterns, well-styled legend with rounded corners, subtitle with muted color.
-          Clearly above defaults.
+        comment: 'Strong design: multiple chart types layered with intent (cloud,
+          candlesticks, indicator lines), custom legend with elevated bg/rounded corners,
+          interactive crosshair, semantic color assignment with documentation. Clearly
+          above defaults.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid at opacity 0.12 very subtle, view stroke removed, domain/tick
-          colors light gray. Good whitespace.
+        comment: Grid at opacity=0.12 is very subtle. Smooth curves (interpolate='monotone').
+          Polished legend. Both X+Y grid lines present — Y-only grid would further
+          reduce visual noise.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Annotations highlight bullish and bearish TK crossover signals. Data
-          engineered with clear trend phases making cloud transitions meaningful.
+        comment: TK crossover annotations mark actionable signals. Cloud color flip
+          (green/red) tells the trend direction story. Engineered trend phases (uptrend→downtrend→recovery)
+          create meaningful market narrative.
     spec_compliance:
       score: 15
       max: 15
@@ -122,28 +155,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Ichimoku Cloud overlay on OHLC candlestick chart.
+        comment: Correct Ichimoku Cloud overlay on candlestick chart. All chart subtypes
+          (cloud, candles, 5 lines) present.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All five Ichimoku lines present, cloud filled with bullish/bearish
-          coloring, correct shifts applied, standard (9,26,52) parameters.
+        comment: All 5 lines present. Kumo cloud with bullish/bearish color change.
+          Senkou Spans +26 periods forward. Chikou Span -26 periods back. Standard
+          (9,26,52) parameters. Green/red candlesticks.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Y=price correctly mapped. Full data range including future
-          cloud projection.
+        comment: Date on X, Price ($) on Y. All components correctly mapped. 200 trading
+          periods used (148 visible after 52-period lookback).
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend lists all five components with descriptive
-          labels including period numbers.
+        comment: 'Title: ''indicator-ichimoku · python · altair · anyplot.ai''. Legend
+          labels: Tenkan-sen (9), Kijun-sen (26), Chikou Span, Senkou Span A, Senkou
+          Span B.'
     data_quality:
       score: 15
       max: 15
@@ -153,22 +189,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows bullish/bearish candles, bullish/bearish cloud regions, cloud
-          transitions, both TK crosses, price above and below cloud.
+        comment: Shows both bullish and bearish clouds, both up and down candles,
+          both TK crossover types, all 5 Ichimoku components including Chikou (shifted
+          back) and Senkou (projected forward).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Simulated daily stock OHLC data starting at $150 with realistic returns
-          distribution. Neutral financial context.
+        comment: Simulated stock data at realistic prices (~$128-$180), business-day
+          frequency, neutral financial context. No controversial content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range ~$126-$180 plausible for mid-cap stock. 200 business
-          days adequate for 52-period lookback.
+        comment: OHLC relationships consistent (high ≥ max(open,close), low ≤ min(open,close)).
+          Daily price ranges of $1-4 are realistic. Prices starting at $150 appropriate
+          for a mid-cap stock.
     code_quality:
       score: 10
       max: 10
@@ -178,33 +216,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports, data generation, Ichimoku calculation, chart
-          layers, save. No functions or classes.'
+        comment: 'No functions or classes. Linear: imports → theme → colors → data
+          → Ichimoku compute → chart layers → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at start.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas — all used.
+        comment: All 5 imports (os, altair, numpy, pandas, PIL.Image) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for Ichimoku indicator. Long-format conversion
-          for auto-legend is clean.
+        comment: Clean, Pythonic. Crosshair uses native Altair selection API — not
+          fake interactivity. Appropriate complexity for a multi-layer financial indicator
+          chart.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale_factor 3.0 and plot.html.
+        comment: Saves plot-{THEME}.png (with pad-to-target) and plot-{THEME}.html
+          for interactive version. Current Altair API.
     library_mastery:
       score: 9
       max: 10
@@ -214,32 +254,33 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert use of Altair declarative grammar: encoding-based API, alt.layer()
-          composition, resolve_scale for independent color scales, configure_axis/configure_view.'
+        comment: 'Expert Altair usage: alt.layer() composition, long-format data with
+          dual color+strokeDash encoding, alt.Title() with subtitle, resolve_scale(),
+          configure_view/axis/legend. All idiomatic.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses selection_point(nearest=True) for interactive crosshair with
-          alt.condition, interactive tooltips, legend with orient=none for manual
-          positioning, HTML export.
+        comment: alt.selection_point(nearest=True, on='pointerover') crosshair with
+          conditional opacity — distinctive Altair interaction pattern. resolve_scale(color='independent',
+          strokeDash='independent') for complex multi-source layer composition. add_params()
+          on crosshair rule.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
-  - annotations
   - hover-tooltips
-  - custom-legend
+  - annotations
   - html-export
+  - custom-legend
   patterns:
   - data-generation
   - wide-to-long
-  - iteration-over-groups
   dataprep:
   - rolling-window
   - time-series
   styling:
   - alpha-blending
-  - grid-styling
