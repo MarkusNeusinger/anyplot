@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 indicator-ichimoku: Ichimoku Cloud Technical Indicator Chart
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-12
+Quality: 90/100 | Updated: 2026-06-08
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,35 +15,50 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Patch, Rectangle
 
 
-# Seaborn theme and context — leverage seaborn's theming system
+# Theme tokens — Imprint palette, theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette — semantic exception: green/red for conventional financial up/down
+UP_COLOR = "#009E73"  # Imprint position 1, brand green — bullish candles and cloud
+DOWN_COLOR = "#AE3030"  # Imprint position 5, matte red — bearish candles and cloud
+TENKAN_COLOR = "#C475FD"  # Imprint position 2, lavender — Tenkan-sen
+KIJUN_COLOR = "#4467A3"  # Imprint position 3, blue — Kijun-sen
+CHIKOU_COLOR = "#BD8233"  # Imprint position 4, ochre — Chikou Span
+
 sns.set_theme(
-    style="whitegrid",
+    style="ticks",
     rc={
-        "axes.facecolor": "#f8f9fa",
-        "figure.facecolor": "white",
-        "grid.color": "#dee2e6",
-        "text.color": "#212529",
-        "axes.labelcolor": "#495057",
-        "xtick.color": "#495057",
-        "ytick.color": "#495057",
-        "font.family": "sans-serif",
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
     },
 )
-sns.set_context("talk", font_scale=1.2)
 
-# Data — 200 trading days of synthetic stock data with trending behavior
-np.random.seed(42)
-n_days = 200
+# Data — 220 trading days, seed 777
+np.random.seed(777)
+n_days = 220
 dates = pd.date_range("2024-01-02", periods=n_days, freq="B")
 
-price = 150.0
+price = 145.0
 drift = np.concatenate(
     [
-        np.linspace(0.2, 0.7, 55),
-        np.linspace(0.7, -0.1, 35),
-        np.linspace(-0.1, -0.6, 35),
-        np.linspace(-0.6, 0.4, 40),
-        np.linspace(0.4, 0.8, 35),
+        np.linspace(0.3, 0.8, 60),
+        np.linspace(0.8, -0.2, 40),
+        np.linspace(-0.2, -0.7, 40),
+        np.linspace(-0.7, 0.5, 45),
+        np.linspace(0.5, 0.9, 35),
     ]
 )
 opens, highs, lows, closes = [], [], [], []
@@ -62,7 +79,7 @@ df = pd.DataFrame({"date": dates, "open": opens, "high": highs, "low": lows, "cl
 df["bullish"] = df["close"] >= df["open"]
 df["x"] = range(n_days)
 
-# Ichimoku calculations (standard parameters: 9, 26, 52)
+# Ichimoku calculations — standard parameters (9, 26, 52)
 tenkan_period, kijun_period, senkou_b_period, displacement = 9, 26, 52, 26
 
 df["tenkan_sen"] = (df["high"].rolling(window=tenkan_period).max() + df["low"].rolling(window=tenkan_period).min()) / 2
@@ -77,32 +94,17 @@ df["senkou_span_b"] = (
 
 df["chikou_span"] = df["close"].shift(-displacement)
 
-# Trim to visible window (skip early NaN period, keep enough for cloud display)
+# Trim to visible window — skip early NaN period
 visible_start = 80
 df_vis = df.iloc[visible_start:].copy()
 df_vis["x"] = range(len(df_vis))
 
-# Palette derived via seaborn palette tools — conventional green/red per spec
-# Colorblind safety maintained through filled vs hollow candle shapes
-base_palette = sns.color_palette("colorblind", n_colors=8)
-up_color = "#2a9d3e"  # green for bullish (spec-conventional)
-down_color = "#d63a3a"  # red for bearish (spec-conventional)
-up_edge = sns.dark_palette(up_color, n_colors=4)[2]
-down_edge = sns.dark_palette(down_color, n_colors=4)[2]
-tenkan_color = "#306998"  # Python blue for Tenkan-sen
-kijun_color = base_palette[1]  # orange from colorblind palette for Kijun-sen
-chikou_color = base_palette[4]  # purple from colorblind palette
-
-# Cloud fill colors — green/red tints per spec via seaborn light_palette
-cloud_bull_tint = sns.light_palette(up_color, n_colors=6)[2]
-cloud_bear_tint = sns.light_palette(down_color, n_colors=6)[2]
-cloud_bull_edge = sns.dark_palette(up_color, n_colors=4)[1]
-cloud_bear_edge = sns.dark_palette(down_color, n_colors=4)[1]
-
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Cloud (Kumo) fill with seaborn-derived tints
+# Cloud (Kumo) fill — subtle alpha so candles remain readable
+CLOUD_ALPHA = 0.18
 span_a = df_vis["senkou_span_a"].values
 span_b = df_vis["senkou_span_b"].values
 x_vals = df_vis["x"].values
@@ -112,13 +114,13 @@ sa_cloud = span_a[mask_valid]
 sb_cloud = span_b[mask_valid]
 
 ax.fill_between(
-    x_cloud, sa_cloud, sb_cloud, where=sa_cloud >= sb_cloud, color=cloud_bull_tint, alpha=0.55, interpolate=True
+    x_cloud, sa_cloud, sb_cloud, where=sa_cloud >= sb_cloud, color=UP_COLOR, alpha=CLOUD_ALPHA, interpolate=True
 )
 ax.fill_between(
-    x_cloud, sa_cloud, sb_cloud, where=sa_cloud < sb_cloud, color=cloud_bear_tint, alpha=0.55, interpolate=True
+    x_cloud, sa_cloud, sb_cloud, where=sa_cloud < sb_cloud, color=DOWN_COLOR, alpha=CLOUD_ALPHA, interpolate=True
 )
 
-# Senkou Span boundary lines via sns.lineplot for consistent style
+# Senkou Span boundary lines via seaborn lineplot
 span_df = pd.DataFrame(
     {
         "x": np.tile(x_cloud, 2),
@@ -131,41 +133,36 @@ sns.lineplot(
     x="x",
     y="value",
     hue="span",
-    palette={"Senkou A": cloud_bull_edge, "Senkou B": cloud_bear_edge},
-    linewidth=1.0,
-    alpha=0.5,
+    palette={"Senkou A": UP_COLOR, "Senkou B": DOWN_COLOR},
+    linewidth=0.8,
+    alpha=0.4,
     ax=ax,
     legend=False,
 )
 
-# Candlestick wicks — colorblind-safe colors
-wick_colors = [up_edge if b else down_edge for b in df_vis["bullish"]]
-ax.vlines(df_vis["x"], df_vis["low"], df_vis["high"], colors=wick_colors, linewidth=1.0)
+# Candlestick wicks
+wick_colors = [UP_COLOR if b else DOWN_COLOR for b in df_vis["bullish"]]
+ax.vlines(df_vis["x"], df_vis["low"], df_vis["high"], colors=wick_colors, linewidth=0.7)
 
-# Candle bodies — bullish: filled, bearish: hollow (edge only) for colorblind differentiation
+# Candle bodies — bullish: filled, bearish: hollow (shape redundancy for colorblind safety)
 body_width = 0.5
-bull_rects, bull_fcolors, bull_ecolors = [], [], []
-bear_rects, bear_ecolors = [], []
+bull_rects, bear_rects = [], []
 for _, row in df_vis.iterrows():
+    body_h = abs(row["close"] - row["open"])
     bottom = min(row["open"], row["close"])
-    height = max(abs(row["close"] - row["open"]), 0.12)
-    if abs(row["close"] - row["open"]) < 0.12:
+    height = max(body_h, 0.12)
+    if body_h < 0.12:
         bottom = (row["open"] + row["close"]) / 2 - 0.06
     rect = Rectangle((row["x"] - body_width / 2, bottom), body_width, height)
     if row["bullish"]:
         bull_rects.append(rect)
-        bull_fcolors.append(up_color)
-        bull_ecolors.append(up_edge)
     else:
         bear_rects.append(rect)
-        bear_ecolors.append(down_edge)
 
 if bull_rects:
-    bull_bodies = PatchCollection(bull_rects, facecolors=bull_fcolors, edgecolors=bull_ecolors, linewidths=0.6)
-    ax.add_collection(bull_bodies)
+    ax.add_collection(PatchCollection(bull_rects, facecolors=UP_COLOR, edgecolors=UP_COLOR, linewidths=0.4))
 if bear_rects:
-    bear_bodies = PatchCollection(bear_rects, facecolors="none", edgecolors=bear_ecolors, linewidths=1.4)
-    ax.add_collection(bear_bodies)
+    ax.add_collection(PatchCollection(bear_rects, facecolors="none", edgecolors=DOWN_COLOR, linewidths=1.0))
 
 # Ichimoku indicator lines in long format for seaborn hue-based rendering
 tenkan_df = df_vis[["x", "tenkan_sen"]].dropna().rename(columns={"tenkan_sen": "value"})
@@ -176,8 +173,8 @@ chikou_df = df_vis[["x", "chikou_span"]].dropna().rename(columns={"chikou_span":
 chikou_df["indicator"] = "Chikou Span"
 
 indicator_df = pd.concat([tenkan_df, kijun_df, chikou_df], ignore_index=True)
-indicator_palette = {"Tenkan-sen (9)": tenkan_color, "Kijun-sen (26)": kijun_color, "Chikou Span": chikou_color}
-indicator_sizes = {"Tenkan-sen (9)": 1.8, "Kijun-sen (26)": 1.8, "Chikou Span": 1.2}
+indicator_palette = {"Tenkan-sen (9)": TENKAN_COLOR, "Kijun-sen (26)": KIJUN_COLOR, "Chikou Span": CHIKOU_COLOR}
+indicator_sizes = {"Tenkan-sen (9)": 1.4, "Kijun-sen (26)": 1.6, "Chikou Span": 1.0}
 
 sns.lineplot(
     data=indicator_df,
@@ -192,109 +189,84 @@ sns.lineplot(
     legend=False,
 )
 
-# Price distribution on y-axis via sns.rugplot — seaborn-distinctive density visualization
-sns.rugplot(data=df_vis, y="close", height=0.015, color="#495057", alpha=0.12, ax=ax)
-
-# Data storytelling: find and annotate TK crossover signals
+# TK crossover signals via seaborn scatterplot — triangles for directional clarity
 tenkan_vals = df_vis["tenkan_sen"].values
 kijun_vals = df_vis["kijun_sen"].values
-cross_indices = []
+cross_data = []
 for i in range(1, len(tenkan_vals)):
-    if np.isnan(tenkan_vals[i]) or np.isnan(kijun_vals[i]):
-        continue
-    if np.isnan(tenkan_vals[i - 1]) or np.isnan(kijun_vals[i - 1]):
+    if any(np.isnan(v) for v in [tenkan_vals[i], kijun_vals[i], tenkan_vals[i - 1], kijun_vals[i - 1]]):
         continue
     prev_diff = tenkan_vals[i - 1] - kijun_vals[i - 1]
     curr_diff = tenkan_vals[i] - kijun_vals[i]
     if prev_diff <= 0 < curr_diff:
-        cross_indices.append((i, "bullish"))
+        cross_data.append({"x": df_vis["x"].iloc[i], "y": tenkan_vals[i], "signal": "Bullish TK Cross"})
     elif prev_diff >= 0 > curr_diff:
-        cross_indices.append((i, "bearish"))
+        cross_data.append({"x": df_vis["x"].iloc[i], "y": tenkan_vals[i], "signal": "Bearish TK Cross"})
 
-# Highlight crossover signals using sns.scatterplot for seaborn-native point rendering
-if cross_indices:
-    cross_data = []
-    for idx, ctype in cross_indices:
-        cross_data.append(
-            {
-                "x": df_vis["x"].iloc[idx],
-                "y": tenkan_vals[idx],
-                "signal": f"{'Bullish' if ctype == 'bullish' else 'Bearish'} TK Cross",
-            }
-        )
+if cross_data:
     cross_df = pd.DataFrame(cross_data)
-
-    # Use seaborn blend_palette for signal-type color coding (matching green/red scheme)
-    signal_colors = {
-        "Bullish TK Cross": sns.blend_palette([up_color, "#2ecc71"], n_colors=3)[1],
-        "Bearish TK Cross": sns.blend_palette([down_color, "#e74c3c"], n_colors=3)[1],
-    }
     sns.scatterplot(
         data=cross_df,
         x="x",
         y="y",
         hue="signal",
-        palette=signal_colors,
+        palette={"Bullish TK Cross": UP_COLOR, "Bearish TK Cross": DOWN_COLOR},
         style="signal",
-        markers={"Bullish TK Cross": "o", "Bearish TK Cross": "X"},
-        s=120,
-        edgecolor="#333333",
-        linewidth=1.5,
+        markers={"Bullish TK Cross": "^", "Bearish TK Cross": "v"},
+        s=55,
+        edgecolor=INK_SOFT,
+        linewidth=0.7,
         zorder=10,
         ax=ax,
         legend=False,
     )
 
-    # Annotate the first bullish crossover
-    bullish_crosses = cross_df[cross_df["signal"].str.contains("Bullish")]
-    if not bullish_crosses.empty:
-        first = bullish_crosses.iloc[0]
-        ax.annotate(
-            "Bullish TK Cross",
-            xy=(first["x"], first["y"]),
-            xytext=(first["x"] + 8, first["y"] + 4),
-            fontsize=13,
-            fontweight="bold",
-            color="#333333",
-            arrowprops={"arrowstyle": "->", "color": "#555555", "lw": 1.5},
-            bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "#aaaaaa", "alpha": 0.9},
-            zorder=10,
-        )
-
 # X-axis date labels
 tick_step = max(1, len(df_vis) // 8)
-tick_idx = range(0, len(df_vis), tick_step)
-ax.set_xticks(list(tick_idx))
-ax.set_xticklabels([df_vis.iloc[i]["date"].strftime("%b %d") for i in tick_idx], rotation=30, ha="right")
+tick_idx = list(range(0, len(df_vis), tick_step))
+ax.set_xticks(tick_idx)
+ax.set_xticklabels(
+    [df_vis.iloc[i]["date"].strftime("%b %d") for i in tick_idx], rotation=30, ha="right", fontsize=8, color=INK_SOFT
+)
 
 # Style
-ax.set_xlabel("Date", fontsize=20)
-ax.set_ylabel("Price ($)", fontsize=20)
-ax.set_title("indicator-ichimoku · seaborn · pyplots.ai", fontsize=24, fontweight="medium", pad=16)
-ax.tick_params(axis="both", labelsize=16, length=0)
+ax.set_xlabel("Date", fontsize=10, color=INK)
+ax.set_ylabel("Price ($)", fontsize=10, color=INK)
+ax.set_title("indicator-ichimoku · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=8)
+ax.tick_params(axis="y", labelsize=8, colors=INK_SOFT, length=0)
+ax.tick_params(axis="x", length=0)
 sns.despine(ax=ax)
-ax.yaxis.grid(True, alpha=0.15, linewidth=0.8)
+ax.spines["left"].set_color(INK_SOFT)
+ax.spines["bottom"].set_color(INK_SOFT)
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.6, color=INK)
 ax.xaxis.grid(False)
 ax.set_axisbelow(True)
-
-# Legend with colorblind-safe entries
-legend_handles = [
-    Patch(facecolor=up_color, edgecolor=up_edge, label="Bullish (filled)"),
-    Patch(facecolor="none", edgecolor=down_edge, linewidth=1.4, label="Bearish (hollow)"),
-    Line2D([0], [0], color=tenkan_color, linewidth=2.0, label="Tenkan-sen (9)"),
-    Line2D([0], [0], color=kijun_color, linewidth=1.8, label="Kijun-sen (26)"),
-    Line2D([0], [0], color=chikou_color, linewidth=1.2, alpha=0.6, label="Chikou Span"),
-    Patch(facecolor=cloud_bull_tint, alpha=0.55, label="Bullish Cloud"),
-    Patch(facecolor=cloud_bear_tint, alpha=0.55, label="Bearish Cloud"),
-]
-ax.legend(
-    handles=legend_handles, fontsize=12, loc="lower left", framealpha=0.95, edgecolor="#dee2e6", ncol=2, fancybox=True
-)
 
 # Axis limits
 ax.set_xlim(-1, len(df_vis) + 0.5)
 y_pad = (df_vis["high"].max() - df_vis["low"].min()) * 0.08
 ax.set_ylim(df_vis["low"].min() - y_pad, df_vis["high"].max() + y_pad * 2)
 
+# Legend
+legend_handles = [
+    Patch(facecolor=UP_COLOR, edgecolor=UP_COLOR, label="Bullish (filled)"),
+    Patch(facecolor="none", edgecolor=DOWN_COLOR, linewidth=1.0, label="Bearish (hollow)"),
+    Line2D([0], [0], color=TENKAN_COLOR, linewidth=1.4, label="Tenkan-sen (9)"),
+    Line2D([0], [0], color=KIJUN_COLOR, linewidth=1.6, label="Kijun-sen (26)"),
+    Line2D([0], [0], color=CHIKOU_COLOR, linewidth=1.0, alpha=0.85, label="Chikou Span"),
+    Patch(facecolor=UP_COLOR, alpha=CLOUD_ALPHA, edgecolor="none", label="Bullish Cloud"),
+    Patch(facecolor=DOWN_COLOR, alpha=CLOUD_ALPHA, edgecolor="none", label="Bearish Cloud"),
+]
+ax.legend(
+    handles=legend_handles,
+    fontsize=8,
+    loc="lower left",
+    framealpha=0.95,
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
+    ncol=2,
+    fancybox=False,
+)
+
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
