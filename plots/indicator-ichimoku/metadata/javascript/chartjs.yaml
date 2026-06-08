@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: indicator-ichimoku
 created: '2026-06-08T01:59:05Z'
-updated: '2026-06-08T02:06:37Z'
+updated: '2026-06-08T02:17:55Z'
 generated_by: claude-sonnet
 workflow_run: 27111428349
 issue: 4669
@@ -15,89 +15,106 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator
 quality_score: 88
 review:
   strengths:
-  - All five Ichimoku components correctly computed and positioned (9/26/52 parameters,
-    26-period lead/lag shifts)
-  - 'Clever use of Chart.js fill: {target, above, below} for a dynamically colour-changing
-    Kumo cloud'
-  - Finance semantic colours (bullish green / bearish red) correctly applied as Imprint
-    semantic exceptions
-  - Full theme-adaptive chrome via t.pageBg, t.ink, t.inkSoft, t.grid — both renders
-    pass legibility checks
-  - Legend filter cleanly hides internal _wick dataset; seeded LCG ensures reproducibility
+  - Correct implementation of all five Ichimoku components (Tenkan-sen, Kijun-sen,
+    Senkou Span A/B, Chikou Span) with proper period offsets (26 forward, 26 back)
+  - Clever candlestick simulation via Chart.js floating bars (wicks + bodies), elegantly
+    filtered from legend
+  - Dynamic Kumo cloud coloring using Chart.js fill target with above/below alpha
+    — bullish green when Span A > Span B, bearish red when reversed
+  - Seeded LCG ensures fully deterministic, reproducible data generation without server-side
+    RNG
+  - All Imprint palette colors, theme-adaptive chrome (ink, inkSoft, grid, pageBg
+    tokens wired to every visual element), correct backgrounds in both renders
+  - 'Expert use of dataset `order` for z-layering: cloud at order 10 (behind), signal
+    lines at order 1 (in front)'
+  - bgFill plugin correctly paints the pageBg surface so the chart background matches
+    the theme token, not a white default
   weaknesses:
-  - Tick label font size is 11px CSS (22 source pixels), below the style-guide recommendation
-    of 14px — increase to 14 for better mobile legibility
-  - 'Chart border (all-four-sides frame) is not removed — set scales.x.border.display:
-    false and scales.y.border.display: false (Chart.js 4.x API) to approach the preferred
-    borderless frame'
-  - 'Padding inside the chart area is moderately tight — add layout: { padding: {
-    top: 10, right: 20, bottom: 10, left: 10 } } for more breathing room'
+  - 'Palette canonical order partially violated: first dataset in the array is Senkou
+    Span B (palette[3] ochre) rather than palette[0] brand green — Tenkan-sen is added
+    later in the dataset list. Reorder datasets so Tenkan-sen (palette[0]) is the
+    first non-background dataset, or restructure to ensure the legend-first visible
+    series uses #009E73.'
+  - Candlestick body barThickness:5 becomes visually thin on the right side of the
+    chart where price drops occur and bars cluster — consider increasing to 6-7 px
+    for better body legibility at high density.
+  - 'DE-01/DE-02: Design is strong but not quite publication-ready — consider removing
+    top/right axis borders explicitly (border: {display: false} is set on scale border,
+    but Chart.js default still shows bounding box lines on some versions); add a subtle
+    padding increase to let the cloud breathe more from the price action.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — correct light theme surface.
-      Chrome: Title "indicator-ichimoku · javascript · chartjs · anyplot.ai" in dark ink, clearly readable. Y-axis label "Price (USD)" and X-axis label "Trading Date" in dark ink, readable. Tick labels ($110–$170 on Y, Jan–Jul dates on X) in muted dark ink, readable but slightly small (11px CSS).
-      Data: Bullish candlesticks in #009E73 (brand green), bearish in #AE3030 (matte red). Tenkan-sen solid green line, Kijun-sen solid lavender, Chikou Span dashed cyan shifted left. Kumo cloud: bullish (green semi-transparent fill) in mid-chart region, bearish (red semi-transparent fill) in later region. Both Senkou Span boundary lines shown as dashed.
-      Legibility verdict: PASS — all text readable against light background; no light-on-light failures.
+      Background: Warm off-white (#FAF8F1) — correct, clearly not pure white
+      Chrome: Title "indicator-ichimoku · javascript · chartjs · anyplot.ai" at ~22px, dark text, fills ~65% of width — readable and well-proportioned. Axis labels "Trading Date" (x) and "Price (USD)" (y) dark and clear. Tick labels in inkSoft token ($110–$170 on y; Jan 3–Jul 20 on x) — all readable.
+      Data: Candlestick OHLC chart (Jan–Jul 2023) showing a general downtrend from ~$155 to ~$120. Tenkan-sen (#009E73 teal green, solid), Kijun-sen (#C475FD lavender, solid), Chikou Span (#2ABCCD cyan, dashed). Kumo cloud visible with green bullish fill (Span A > Span B) in Mar-Apr region and pink/red bearish fill (Span B > Span A) in May-Jul region — cloud color transition clearly visible. Senkou Span B (#BD8233 ochre dashed) and Span A (#99B314 lime dashed) visible as cloud boundaries. Bullish candles in green, bearish in muted red.
+      Legibility verdict: PASS — all text elements clearly readable against the light background; no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17) — correct dark theme surface.
-      Chrome: Title in near-white ink, clearly readable. Axis labels and tick labels in muted near-white, readable. Grid lines are subtle. No dark-on-dark text failures observed.
-      Data: Colors identical to light render — green bullish candles, red bearish candles, green Tenkan-sen, lavender Kijun-sen, cyan dashed Chikou Span, green/red cloud fills. Only chrome flips between themes.
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures.
+      Background: Warm near-black (#1A1A17) — correct, clearly not pure black
+      Chrome: Title and all axis labels render in light text (#F0EFE8 range) — clearly readable against the dark surface. Tick labels in inkSoft token (lighter gray) — readable. Grid lines visible as subtle lighter lines. Legend entries all legible.
+      Data: All data colors (Tenkan-sen teal green, Kijun-sen lavender, Chikou Span cyan, cloud fills, candlestick green/red) are visually identical to the light render — only chrome (background, text, grid) has flipped. No dark-on-dark failures detected. Brand green #009E73 remains clearly visible on the dark surface.
+      Legibility verdict: PASS — both themes fully readable with correct theme-adaptive chrome; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All sizes explicitly set; tick labels at 11px CSS (22 source px)
-          are readable but below the 14px style-guide recommendation
+        comment: 'All font sizes explicitly set (title dynamic at max(14, round(22*67/len)),
+          legend 14px, ticks 14px, axis titles 13px). Readable in both themes. Minor
+          deduction: tick labels may be a touch small on mobile scaling.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; legend fits in a single row; dense candlestick
-          area well-managed
+        comment: No text overlaps detected in either render. Legend, axis labels,
+          tick labels all clear.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Candlestick bodies at barThickness 5 appropriate for 180 data points;
-          lines at 1.5-2px clearly distinguishable
+        comment: Lines, cloud, and wicks all visible. Candlestick bodies at barThickness:5
+          are slightly thin at high density on right portion of chart — minor deduction.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used; finance semantic exception (bullish green /
-          bearish red) correct and CVD-safe
+        comment: Imprint palette used throughout. Green/red candlestick convention
+          is a required finance semantic exception per spec. Ichimoku lines use CVD-safe
+          palette positions.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Plot fills 3200x1800 well with balanced margins
+        comment: Canvas gate passed (no /tmp/anyplot-canvas-gate.txt). Good layout
+          proportions, balanced margins, plot uses appropriate canvas area.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: Trading Date; Y: Price (USD) with currency unit'
+        comment: 'X: ''Trading Date'', Y: ''Price (USD)'' — descriptive with units.
+          Title in correct format.'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: First series uses t.palette[0] (#009E73); finance semantic colours
-          applied correctly; backgrounds use t.pageBg; full chrome token wiring
+        passed: false
+        comment: 'Imprint palette used throughout and backgrounds correct (#FAF8F1
+          light / #1A1A17 dark). However, first dataset in array is Senkou Span B
+          using palette[3] (ochre) rather than palette[0] (#009E73). Canonical order
+          is partially violated — Tenkan-sen (palette[0]) is added later in the dataset
+          list. Data colors identical across both renders.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -105,22 +122,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above generic default: deliberate dashed/solid hierarchy, semantic
-          colour exceptions, bgFill plugin. Not FiveThirtyEight-level yet.'
+        comment: 'Strong design: floating bar candlestick simulation, dynamic cloud
+          coloring with above/below fill target, LCG seeded data, clear visual hierarchy
+          through dataset ordering. Above generic defaults but not FiveThirtyEight-level
+          polish.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Custom bgFill plugin and full theme-token wiring positive. Chart.js
-          box border not removed; whitespace moderately tight.
+        passed: true
+        comment: 'Good refinement: border:false on both scales removes spines, t.grid
+          for subtle grid, layout padding set, bgFill plugin, cloud at alpha 0.22.
+          Clearly above library defaults.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Cloud colour change from bullish-green to bearish-red as trend deteriorates
-          tells an immediate at-a-glance story.
+        comment: 'Good visual hierarchy: cloud rendered behind signal lines, cloud
+          color semantically encodes trend direction (green=bullish, red=bearish),
+          downtrend narrative visible. Viewer can read the market story at a glance.'
     spec_compliance:
       score: 15
       max: 15
@@ -130,28 +151,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Candlestick chart with full Ichimoku cloud overlay using floating-bar
-          technique
+        comment: Correct Ichimoku Cloud chart with all five components plus candlestick
+          price chart.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All five Ichimoku lines, Kumo cloud with green/red colour change,
-          correct 26-period shifts, standard 9/26/52 parameters
+        comment: 'All spec features present: 5 Ichimoku lines, cloud fill with bullish/bearish
+          color, correct period offsets (26 forward for spans, 26 back for Chikou),
+          standard 9/26/52 parameters, green/red candlesticks.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Trading Date on X, Price (USD) on Y, 180 periods within 120-300 range
+        comment: X=Trading Date, Y=Price(USD). All OHLC and indicator data correctly
+          mapped and visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend labels match all Ichimoku components;
-          _wick filtered from legend
+        comment: 'Title: ''indicator-ichimoku · javascript · chartjs · anyplot.ai''
+          matches required format. Legend shows all named series; _wick correctly
+          filtered.'
     data_quality:
       score: 15
       max: 15
@@ -161,61 +185,61 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both bullish/bearish candles, both bullish/bearish cloud regions,
-          all five Ichimoku components shown
+        comment: 'Shows all Ichimoku features: cloud color transitions (bullish/bearish),
+          all five indicator lines, Chikou plotted 26 periods back, Spans plotted
+          26 periods forward, both bullish and bearish candlesticks.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Simulated equity price series $110-$170 with realistic drift; calendar
-          dates from 2023-01-03; neutral finance scenario
+        comment: Simulated equity OHLC starting at ~$150 from 2023-01-03. Neutral
+          finance scenario, plausible price dynamics.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: OHLC values logically consistent; price range and daily drift plausible
-          for a mid-cap equity
+        comment: $110–$170 range over ~7 months with realistic daily volatility. Standard
+          Ichimoku parameters (9/26/52) correctly applied.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Helper functions rng(), randn(), hiN(), loN() present but minimal
-          and justified for Ichimoku rolling-window calculations
+        comment: Helper functions (rng, randn, hiN, loN) are utility functions for
+          data generation, not structural complexity. Clean data→chart flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Seeded LCG: let seed = 42 — fully deterministic'
+        comment: Seeded LCG (seed=42) ensures fully deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; Chart.js is a global. Only globals actually used.
+        comment: No unnecessary imports. Chart is a browser global, correctly used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean structure; floating-bar candlestick technique is appropriate;
-          no fake UI elements
+        comment: Clean organization, good section comments, bgFill plugin cleanly
+          implemented, legend filter elegant. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Follows Chart.js harness contract: responsive, maintainAspectRatio:
-          false, animation: false'
+        comment: Correct Chart.js 4.x API. Harness produces plot-{theme}.png and plot-{theme}.html.
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -223,25 +247,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent: mixed chart type, floating-bar candlesticks, differential
-          fill, custom plugin, legend filter callback — all idiomatic Chart.js patterns'
+        comment: 'Expert usage: mixed chart type (bar+line), floating bars for candlesticks,
+          fill target with above/below for dynamic cloud, order property for z-layering,
+          spanGaps:false, animation:false, maintainAspectRatio:false. All Chart.js
+          recommended patterns.'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: 'Differential cloud fill (fill: {target, above, below}) and floating-bar
-          candlestick technique are Chart.js-specific capabilities'
-  verdict: REJECTED
+        comment: 'Uses Chart.js-specific features: floating bar arrays [low,high]
+          for wicks, fill:{target, above, below} for conditional cloud coloring, custom
+          plugin for bgFill, dataset order for render layering. Distinctive approach,
+          though a native candlestick library would handle this more simply.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
+  - layer-composition
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - rolling-window
   - time-series
   styling:
   - alpha-blending
+  - gradient-fill
