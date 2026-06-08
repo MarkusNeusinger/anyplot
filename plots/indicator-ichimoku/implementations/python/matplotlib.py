@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 indicator-ichimoku: Ichimoku Cloud Technical Indicator Chart
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-08
@@ -81,18 +81,31 @@ width = 0.65
 # Candlestick wicks
 ax.vlines(date_nums, df_plot["low"], df_plot["high"], colors=candle_colors, linewidth=0.8, zorder=3)
 
-# Candlestick bodies
+# Candlestick bodies — split bullish/bearish for CVD redundant encoding
 body_bottoms = np.where(bullish, df_plot["open"], df_plot["close"])
 body_heights = np.abs(df_plot["close"] - df_plot["open"])
 body_heights = np.where(body_heights < 0.01, 0.01, body_heights)
+bullish_idx = bullish.values
+# Bullish: solid fill, no special edge
 ax.bar(
-    date_nums,
-    body_heights,
-    bottom=body_bottoms,
+    date_nums[bullish_idx],
+    body_heights[bullish_idx],
+    bottom=body_bottoms[bullish_idx],
     width=width,
-    color=candle_colors,
-    edgecolor=candle_colors,
+    color=COLOR_UP,
+    edgecolor=COLOR_UP,
     linewidth=0.4,
+    zorder=4,
+)
+# Bearish: dark edge stroke provides shape-based CVD cue beyond color
+ax.bar(
+    date_nums[~bullish_idx],
+    body_heights[~bullish_idx],
+    bottom=body_bottoms[~bullish_idx],
+    width=width,
+    color=COLOR_DOWN,
+    edgecolor=INK,
+    linewidth=0.9,
     zorder=4,
 )
 
@@ -194,7 +207,7 @@ ax.xaxis.set_minor_locator(mdates.WeekdayLocator(byweekday=mdates.MO))
 ax.tick_params(axis="x", rotation=25)
 
 # Chrome — theme-adaptive
-title = "indicator-ichimoku · matplotlib · anyplot.ai"
+title = "indicator-ichimoku · python · matplotlib · anyplot.ai"
 title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
 ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=8)
 ax.set_xlabel("Date", fontsize=10, color=INK)
