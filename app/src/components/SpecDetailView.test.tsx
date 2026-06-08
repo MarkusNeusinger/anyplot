@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, userEvent } from '../test-utils';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen, userEvent, waitFor } from '../test-utils';
 import { SpecDetailView } from './SpecDetailView';
 import { ThemeContext, type ThemeContextValue } from '../hooks/useLayoutContext';
 import type { Implementation } from '../types';
@@ -49,6 +49,10 @@ const defaultProps = {
 };
 
 describe('SpecDetailView', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    localStorage.clear();
+  });
   it('renders image with correct alt text', () => {
     render(<SpecDetailView {...defaultProps} />);
     const img = screen.getByRole('img');
@@ -179,6 +183,47 @@ describe('SpecDetailView', () => {
     );
     const darkBtn = screen.getByRole('button', { name: /download png/i });
     expect(darkBtn).toHaveStyle({ backgroundColor: 'rgba(36,36,32,0.9)' });
+  });
+
+  it('renders the quick thumbs up / down vote buttons over the plot', () => {
+    render(<SpecDetailView {...defaultProps} />);
+    expect(screen.getByRole('button', { name: /thumbs up/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /thumbs down/i })).toBeInTheDocument();
+  });
+
+  it('does not render a report action over the plot (handled by the footer)', () => {
+    render(<SpecDetailView {...defaultProps} />);
+    expect(screen.queryByRole('link', { name: /report issue/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /report issue/i })).not.toBeInTheDocument();
+  });
+
+  it('submits a thumbs_up reaction and marks the button as pressed', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ status: 'ok' }), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+    const user = userEvent.setup();
+    render(<SpecDetailView {...defaultProps} />);
+
+    const up = screen.getByRole('button', { name: /thumbs up/i });
+    await user.click(up);
+
+    // Optimistic highlight is applied immediately.
+    expect(up).toHaveAttribute('aria-pressed', 'true');
+
+    await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(1));
+    const body = JSON.parse((fetchSpy.mock.calls[0][1] as RequestInit).body as string);
+    expect(body.reaction).toBe('thumbs_up');
+    expect(body.message).toBeNull();
+  });
+
+  it('rolls back the highlight when the submit fails', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 500 }));
+    const user = userEvent.setup();
+    render(<SpecDetailView {...defaultProps} />);
+
+    const down = screen.getByRole('button', { name: /thumbs down/i });
+    await user.click(down);
+    await waitFor(() => expect(down).toHaveAttribute('aria-pressed', 'false'));
   });
 
   it('renders nothing special when currentImpl is null', () => {

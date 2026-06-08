@@ -43,3 +43,14 @@ export function langFromPath(pathname: string): string | undefined {
   if (RESERVED_TOP_LEVEL.has(segments[0])) return undefined;
   return segments[1];
 }
+
+/**
+ * Parse the spec id from a pathname, returns undefined when there is no path
+ * segment or the first segment is a reserved top-level route.
+ */
+export function specIdFromPath(pathname: string): string | undefined {
+  const segments = pathname.split('/').filter(Boolean);
+  if (segments.length === 0) return undefined;
+  if (RESERVED_TOP_LEVEL.has(segments[0])) return undefined;
+  return segments[0];
+}

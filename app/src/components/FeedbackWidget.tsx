@@ -17,10 +17,10 @@ import CloseIcon from '@mui/icons-material/Close';
 import { API_URL } from '../constants';
 import { useAnalytics } from '../hooks';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { RESERVED_TOP_LEVEL } from '../utils/paths';
+import { specIdFromPath } from '../utils/paths';
+import { FEEDBACK_SESSION_KEY, newFeedbackSessionId } from '../utils/feedback';
 
 const MAX_MESSAGE_LENGTH = 500;
-const SESSION_KEY = 'anyplot_feedback_session';
 const THANKS_TIMEOUT_MS = 1200;
 
 // Floating quick-action buttons sit on the page background so they read as
@@ -43,28 +43,6 @@ const REACTIONS = [
 
 type Reaction = (typeof REACTIONS)[number]['value'];
 type Mode = 'closed' | 'quick' | 'full';
-
-function specIdFromPath(pathname: string): string | undefined {
-  const segments = pathname.split('/').filter(Boolean);
-  if (segments.length === 0) return undefined;
-  if (RESERVED_TOP_LEVEL.has(segments[0])) return undefined;
-  return segments[0];
-}
-
-function newSessionId(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  }
-  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
-    const bytes = new Uint8Array(16);
-    crypto.getRandomValues(bytes);
-    return `s-${Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')}`;
-  }
-  // Browser without Web Crypto support (e.g. very old, or insecure context). The
-  // session id is an opaque correlation handle, not a credential — a coarse
-  // timestamp-derived id is acceptable here, but we never use Math.random().
-  return `s-${Date.now().toString(36)}`;
-}
 
 /**
  * Floating quick-feedback widget (issue #5662). The FAB opens a small
@@ -137,11 +115,11 @@ export function FeedbackWidget() {
   const liftTransform =
     lift > FAB_CENTER_FROM_BOTTOM_XS ? `translateY(-${lift - FAB_CENTER_FROM_BOTTOM_XS}px)` : 'none';
 
-  const [sessionId, setSessionId] = useLocalStorage<string>(SESSION_KEY, '');
+  const [sessionId, setSessionId] = useLocalStorage<string>(FEEDBACK_SESSION_KEY, '');
 
   const ensureSessionId = (): string => {
     if (sessionId) return sessionId;
-    const fresh = newSessionId();
+    const fresh = newFeedbackSessionId();
     setSessionId(fresh);
     return fresh;
   };
