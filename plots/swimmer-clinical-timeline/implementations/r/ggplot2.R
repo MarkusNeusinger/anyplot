@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' swimmer-clinical-timeline: Swimmer Plot for Clinical Trial Timelines
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 89/100 | Created: 2026-06-08
+#' Quality: 87/100 | Created: 2026-06-08
 
 library(ggplot2)
 library(dplyr)
