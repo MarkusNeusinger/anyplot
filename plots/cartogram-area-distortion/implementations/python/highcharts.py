@@ -1,8 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
 Library: highcharts unknown | Python 3.13.13
-Quality: 88/100 | Updated: 2026-06-08
-Repair: attempt 1 — add radial gradients for depth, refine legend, improve storytelling
+Quality: 82/100 | Updated: 2026-06-08
 """
 
 import json
