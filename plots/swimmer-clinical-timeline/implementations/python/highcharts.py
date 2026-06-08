@@ -1,12 +1,13 @@
-""" pyplots.ai
+""" anyplot.ai
 swimmer-clinical-timeline: Swimmer Plot for Clinical Trial Timelines
-Library: highcharts unknown | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-13
+Library: highcharts unknown | Python 3.13.13
+Quality: 86/100 | Updated: 2026-06-08
 """
 
-import subprocess
+import os
 import tempfile
 import time
+import urllib.request
 from pathlib import Path
 
 import numpy as np
@@ -14,18 +15,29 @@ from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
 from highcharts_core.options.series.bar import BarSeries
 from highcharts_core.options.series.scatter import ScatterSeries
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data
-np.random.seed(42)
+# Theme tokens (Imprint palette system)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
+# Imprint categorical palette — 8 hues, theme-independent, hybrid-v3 sort
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Data — lognormal distribution for independent scenario vs sibling impls
+np.random.seed(42)
 n_patients = 25
 patient_ids = [f"PT-{i + 1:03d}" for i in range(n_patients)]
 arms = np.random.choice(["Arm A (Combo)", "Arm B (Mono)"], size=n_patients, p=[0.52, 0.48])
-durations = np.round(np.random.exponential(scale=18, size=n_patients) + 4, 1)
-durations = np.clip(durations, 3, 52)
+durations = np.round(np.clip(np.random.lognormal(mean=2.8, sigma=0.6, size=n_patients), 3, 48), 1)
 
 sort_idx = np.argsort(durations)
 patient_ids = [patient_ids[i] for i in sort_idx]
@@ -52,7 +64,6 @@ for i in range(n_patients):
         patient_events.append({"time": ae_time, "type": "adverse_event"})
     events.append(patient_events)
 
-# Compute storytelling stats
 n_responders = sum(1 for evts in events if any(e["type"] in ("partial_response", "complete_response") for e in evts))
 n_cr = sum(1 for evts in events if any(e["type"] == "complete_response" for e in evts))
 n_ongoing = int(ongoing_mask.sum())
@@ -61,19 +72,22 @@ responder_patients = {
     i for i, evts in enumerate(events) if any(e["type"] in ("partial_response", "complete_response") for e in evts)
 }
 
-# Colorblind-safe palette (Okabe-Ito inspired)
-arm_a_color = "#306998"
-arm_b_color = "#E8855E"
-arm_a_muted = "#5a8db8"
-arm_b_muted = "#e8a98e"
+# Arm colors — Imprint palette positions 1 and 2; muted via rgba for non-responders
+arm_solid = {
+    "Arm A (Combo)": IMPRINT_PALETTE[0],  # #009E73 brand green
+    "Arm B (Mono)": IMPRINT_PALETTE[1],  # #C475FD lavender
+}
+arm_muted_rgba = {"Arm A (Combo)": "rgba(0,158,115,0.38)", "Arm B (Mono)": "rgba(196,117,253,0.38)"}
+
+# Event styling — Imprint palette positions 3-6; matte red for progression (semantic: bad)
 event_colors = {
-    "partial_response": "#0072B2",
-    "complete_response": "#F0E442",
-    "progressive_disease": "#D55E00",
-    "adverse_event": "#9467BD",
+    "partial_response": IMPRINT_PALETTE[2],  # #4467A3 blue
+    "complete_response": IMPRINT_PALETTE[3],  # #BD8233 ochre
+    "progressive_disease": IMPRINT_PALETTE[4],  # #AE3030 matte red (semantic: bad)
+    "adverse_event": IMPRINT_PALETTE[5],  # #2ABCCD cyan
 }
 event_markers = {
-    "partial_response": "circle",
+    "partial_response": "triangle",
     "complete_response": "diamond",
     "progressive_disease": "triangle-down",
     "adverse_event": "square",
@@ -85,83 +99,87 @@ event_labels = {
     "adverse_event": "Adverse Event",
 }
 
-# Create chart with typed highcharts-core API
+# Title — 60 chars < 67 baseline, use standard 66px
+title = "swimmer-clinical-timeline · python · highcharts · anyplot.ai"
+n_chars = len(title)
+title_px = round(66 * min(1.0, 67 / n_chars))
+
+# Chart
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
 chart.options.chart = {
     "type": "bar",
-    "width": 4800,
-    "height": 2700,
-    "backgroundColor": "#fafbfc",
-    "style": {"fontFamily": "'Segoe UI', Helvetica, Arial, sans-serif"},
-    "marginLeft": 200,
+    "width": 3200,
+    "height": 1800,
+    "backgroundColor": PAGE_BG,
+    "style": {"fontFamily": "Helvetica, Arial, sans-serif", "color": INK},
+    "marginLeft": 130,
     "marginRight": 280,
-    "marginBottom": 160,
-    "marginTop": 140,
+    "marginBottom": 130,
+    "marginTop": 130,
 }
 
 chart.options.title = {
-    "text": "swimmer-clinical-timeline \u00b7 highcharts \u00b7 pyplots.ai",
-    "style": {"fontSize": "52px", "fontWeight": "600", "color": "#2c3e50", "letterSpacing": "1px"},
-    "margin": 10,
+    "text": title,
+    "style": {"fontSize": f"{title_px}px", "fontWeight": "600", "color": INK},
+    "margin": 16,
 }
 
 chart.options.subtitle = {
     "text": (
-        f"Phase II Oncology Trial \u2014 {n_responders}/{n_patients} patients responded "
-        f"({n_cr} CR), {n_ongoing} ongoing at data cutoff, median duration {median_dur:.0f} wks"
+        f"Phase II Oncology Trial — {n_responders}/{n_patients} responded "
+        f"({n_cr} CR), {n_ongoing} ongoing at cutoff, median {median_dur:.0f} wks"
     ),
-    "style": {"fontSize": "32px", "color": "#5a6c7d", "fontWeight": "400"},
+    "style": {"fontSize": "34px", "color": INK_SOFT},
 }
 
 chart.options.x_axis = {
     "categories": patient_ids,
     "title": {"text": None},
-    "labels": {"style": {"fontSize": "22px", "color": "#34495e", "fontWeight": "500"}},
+    "labels": {"style": {"fontSize": "38px", "color": INK_SOFT}},
     "lineWidth": 0,
     "tickWidth": 0,
     "gridLineWidth": 0,
 }
 
 chart.options.y_axis = {
-    "title": {
-        "text": "Time on Study (Weeks)",
-        "style": {"fontSize": "36px", "color": "#34495e", "fontWeight": "500"},
-        "margin": 20,
-    },
-    "labels": {"style": {"fontSize": "26px", "color": "#7f8c8d"}},
+    "title": {"text": "Time on Study (Weeks)", "style": {"fontSize": "44px", "color": INK}, "margin": 20},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.06)",
-    "gridLineDashStyle": "Dot",
+    "gridLineColor": GRID,
     "min": 0,
+    "max": round(float(max(durations)) + 1),
+    "endOnTick": False,
     "lineWidth": 0,
     "plotLines": [
         {
             "value": 24,
-            "color": "rgba(44, 62, 80, 0.35)",
-            "width": 3,
+            "color": INK_MUTED,
+            "width": 2,
             "dashStyle": "LongDash",
             "label": {
                 "text": "24-Week Milestone",
-                "style": {"fontSize": "24px", "color": "rgba(44, 62, 80, 0.6)", "fontWeight": "500"},
+                "style": {"fontSize": "28px", "color": INK_MUTED, "fontWeight": "500"},
                 "align": "right",
-                "x": -12,
-                "y": -8,
+                "x": -10,
+                "y": -10,
             },
             "zIndex": 3,
         },
         {
             "value": median_dur,
-            "color": "rgba(39, 174, 96, 0.4)",
-            "width": 2,
+            "color": INK_MUTED,
+            "width": 1,
             "dashStyle": "ShortDot",
             "label": {
                 "text": f"Median {median_dur:.0f} wks",
-                "style": {"fontSize": "22px", "color": "rgba(39, 174, 96, 0.7)", "fontWeight": "500"},
+                "style": {"fontSize": "26px", "color": INK_MUTED, "fontWeight": "400"},
                 "align": "left",
+                "rotation": 0,
+                "verticalAlign": "bottom",
                 "x": 8,
-                "y": -6,
+                "y": -14,
             },
             "zIndex": 3,
         },
@@ -174,45 +192,42 @@ chart.options.legend = {
     "verticalAlign": "top",
     "layout": "vertical",
     "x": -16,
-    "y": 60,
+    "y": 90,
     "floating": True,
-    "backgroundColor": "rgba(255, 255, 255, 0.94)",
+    "backgroundColor": ELEVATED_BG,
     "borderWidth": 1,
-    "borderColor": "#dce1e6",
-    "borderRadius": 10,
-    "itemStyle": {"fontSize": "24px", "fontWeight": "400", "color": "#34495e"},
-    "padding": 18,
+    "borderColor": INK_SOFT,
+    "borderRadius": 6,
+    "itemStyle": {"fontSize": "30px", "fontWeight": "400", "color": INK_SOFT},
+    "padding": 16,
     "symbolRadius": 4,
-    "itemMarginBottom": 5,
-    "shadow": {"color": "rgba(0,0,0,0.04)", "offsetX": 1, "offsetY": 2, "width": 6},
+    "itemMarginBottom": 6,
 }
 
 chart.options.plot_options = {
-    "bar": {"pointPadding": 0.02, "groupPadding": 0.05, "borderWidth": 0, "pointWidth": 28},
+    "bar": {"pointPadding": 0.05, "groupPadding": 0.05, "borderWidth": 0, "pointWidth": 22},
     "scatter": {"jitter": {"x": 0, "y": 0}},
     "series": {"animation": False},
 }
 
 chart.options.tooltip = {
-    "headerFormat": '<span style="font-size:22px;font-weight:bold">{point.key}</span><br/>',
-    "style": {"fontSize": "22px"},
-    "backgroundColor": "rgba(255, 255, 255, 0.95)",
-    "borderRadius": 8,
+    "headerFormat": '<span style="font-size:26px;font-weight:bold">{point.key}</span><br/>',
+    "style": {"fontSize": "26px"},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderRadius": 6,
     "borderWidth": 1,
-    "shadow": {"color": "rgba(0,0,0,0.1)", "offsetX": 2, "offsetY": 2, "width": 4},
 }
 
 chart.options.credits = {"enabled": False}
 
-# Duration bars — per-point color by treatment arm, muted for non-responders
+# Duration bars — per-point color by arm; muted rgba for non-responders preserves readability
 bar_data = []
 for i in range(n_patients):
     is_responder = i in responder_patients
-    if arms[i] == "Arm A (Combo)":
-        color = arm_a_color if is_responder else arm_a_muted
-    else:
-        color = arm_b_color if is_responder else arm_b_muted
-    bar_data.append({"y": float(durations[i]), "color": color, "borderRadius": 3})
+    arm = arms[i]
+    color = arm_solid[arm] if is_responder else arm_muted_rgba[arm]
+    bar_data.append({"y": float(durations[i]), "color": color, "borderRadius": 2})
 
 bar_series = BarSeries()
 bar_series.data = bar_data
@@ -220,17 +235,17 @@ bar_series.name = "Duration"
 bar_series.show_in_legend = False
 chart.add_series(bar_series)
 
-# Invisible scatter series for arm legend entries
-for arm_name, arm_color in [("Arm A (Combo)", arm_a_color), ("Arm B (Mono)", arm_b_color)]:
+# Arm legend entries (invisible scatter series for legend symbols)
+for arm_name, arm_color in arm_solid.items():
     arm_legend = ScatterSeries()
     arm_legend.data = []
     arm_legend.name = arm_name
     arm_legend.color = arm_color
-    arm_legend.marker = {"symbol": "square", "radius": 12, "fillColor": arm_color}
+    arm_legend.marker = {"symbol": "square", "radius": 10, "fillColor": arm_color}
     arm_legend.show_in_legend = True
     chart.add_series(arm_legend)
 
-# Ongoing markers at bar endpoints — use right-pointing arrow (url marker)
+# Ongoing markers (triangle at bar endpoint for patients still on treatment)
 ongoing_data = []
 for i in range(n_patients):
     if ongoing_mask[i]:
@@ -239,13 +254,13 @@ for i in range(n_patients):
 if ongoing_data:
     ongoing_series = ScatterSeries()
     ongoing_series.data = ongoing_data
-    ongoing_series.name = "Ongoing"
-    ongoing_series.color = "#2c3e50"
+    ongoing_series.name = "Ongoing (at cutoff)"
+    ongoing_series.color = INK
     ongoing_series.marker = {
         "symbol": "triangle",
-        "radius": 14,
-        "fillColor": "#2c3e50",
-        "lineColor": "#ffffff",
+        "radius": 11,
+        "fillColor": INK,
+        "lineColor": PAGE_BG,
         "lineWidth": 2,
         "enabled": True,
     }
@@ -253,7 +268,7 @@ if ongoing_data:
     ongoing_series.show_in_legend = True
     chart.add_series(ongoing_series)
 
-# Event scatter series — each event type gets its own distinct marker shape
+# Clinical event scatter series — each type gets distinct Imprint color + marker shape
 for etype in event_colors:
     etype_data = []
     for i in range(n_patients):
@@ -267,22 +282,21 @@ for etype in event_colors:
         ev_series.color = event_colors[etype]
         ev_series.marker = {
             "symbol": event_markers[etype],
-            "radius": 14,
+            "radius": 11,
             "fillColor": event_colors[etype],
-            "lineColor": "#ffffff",
-            "lineWidth": 3,
+            "lineColor": PAGE_BG,
+            "lineWidth": 2,
         }
         ev_series.z_index = 5
         ev_series.show_in_legend = True
         chart.add_series(ev_series)
 
-# Load Highcharts JS from npm package
-hc_js_path = Path(__file__).resolve().parents[3] / "node_modules" / "highcharts" / "highcharts.js"
-if not hc_js_path.exists():
-    subprocess.run(["npm", "install", "highcharts"], cwd=str(hc_js_path.parents[2]), check=True, capture_output=True)
-highcharts_js = hc_js_path.read_text(encoding="utf-8")
+# Load Highcharts JS — CDN with required Referer header
+hc_js_url = "https://code.highcharts.com/highcharts.js"
+hc_req = urllib.request.Request(hc_js_url, headers={"User-Agent": "Mozilla/5.0", "Referer": "https://highcharts.com/"})
+with urllib.request.urlopen(hc_req, timeout=30) as r:
+    highcharts_js = r.read().decode("utf-8")
 
-# Generate HTML with inline scripts via typed API
 html_str = chart.to_js_literal()
 html_content = f"""<!DOCTYPE html>
 <html>
@@ -290,46 +304,44 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0; background:#fafbfc;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
+<body style="margin:0; background:{PAGE_BG};">
+    <div id="container" style="width: 3200px; height: 1800px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
+# Save interactive HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# Write temp HTML and screenshot for PNG artifact
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
-# Save interactive HTML
-Path("plot.html").write_text(
-    f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-</head>
-<body style="margin:0; background:#fafbfc;">
-    <div id="container" style="width: 100%; height: 100vh;"></div>
-    <script>{html_str}</script>
-</body>
-</html>""",
-    encoding="utf-8",
-)
-
-# Screenshot with Selenium
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
+# CDP override is authoritative — --window-size alone doesn't prevent Chrome from eating ~139 px
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-
-container = driver.find_element("id", "container")
-container.screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
+
+# Pin to exact canvas dimensions — safety net for ±1-2 px rounding
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (3200, 1800):
+    _norm = Image.new("RGB", (3200, 1800), PAGE_BG)
+    _norm.paste(_img, ((3200 - _img.size[0]) // 2, (1800 - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")
