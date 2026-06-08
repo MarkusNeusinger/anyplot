@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 flamegraph-basic: Flame Graph for Performance Profiling
 Library: bokeh 3.9.1 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-08
@@ -105,6 +105,15 @@ for stack_str, samples in stack_data:
 
 max_depth = max(n["depth"] for n in nodes.values())
 
+# Dominant hot-path chain — gets an INK outline to point readers at the bottleneck.
+HOT_PATH = {
+    "main",
+    "main;handle_request",
+    "main;handle_request;process_query",
+    "main;handle_request;process_query;execute",
+    "main;handle_request;process_query;execute;fetch_rows",
+}
+
 # Layout — iterative DFS placing each child proportional to its sample share.
 # Sibling order is alphabetical (flame-graph convention; x-axis is not temporal).
 rects = []
@@ -116,6 +125,7 @@ while work_stack:
     pct = node["samples"] / total_samples * 100
     # Subtle parity-based alpha gives adjacent frames a faint banding cue
     fill_alpha = 0.94 if node["depth"] % 2 == 0 else 0.86
+    is_hot = stack_key in HOT_PATH
     rects.append(
         {
             "name": node["name"],
@@ -125,6 +135,8 @@ while work_stack:
             "width": rect_w,
             "color": BRANCH_COLOR[node["branch"]],
             "fill_alpha": fill_alpha,
+            "line_color": INK if is_hot else PAGE_BG,
+            "line_width": 4.0 if is_hot else 1.5,
             "samples": node["samples"],
             "pct": f"{pct:.1f}%",
             "stack": stack_key,
@@ -145,6 +157,8 @@ source = ColumnDataSource(
         "height": [0.94] * len(rects),
         "color": [r["color"] for r in rects],
         "fill_alpha": [r["fill_alpha"] for r in rects],
+        "line_color": [r["line_color"] for r in rects],
+        "line_width": [r["line_width"] for r in rects],
         "name": [r["name"] for r in rects],
         "samples": [r["samples"] for r in rects],
         "pct": [r["pct"] for r in rects],
@@ -176,8 +190,8 @@ bars = p.rect(
     source=source,
     fill_color="color",
     fill_alpha="fill_alpha",
-    line_color=PAGE_BG,
-    line_width=2.5,
+    line_color="line_color",
+    line_width="line_width",
 )
 
 # HoverTool — bokeh's distinctive interactive feature, surfaces the full call stack
@@ -188,9 +202,10 @@ hover = HoverTool(
 )
 p.add_tools(hover)
 
-# Function-name labels drawn inside bars wide enough to fit them
+# Function-name labels drawn inside bars wide enough to fit them.
+# Narrower frames fall back to the HoverTool — keeps adjacent labels from touching.
 for r in rects:
-    if r["width"] <= 3:
+    if r["width"] <= 5:
         continue
     if r["width"] > 25:
         font_size = "22pt"
