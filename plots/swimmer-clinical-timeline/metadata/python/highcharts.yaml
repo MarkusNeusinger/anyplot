@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: swimmer-clinical-timeline
 created: '2026-03-13T22:08:12Z'
-updated: '2026-06-08T06:21:24Z'
+updated: '2026-06-08T06:33:19Z'
 generated_by: claude-sonnet
 workflow_run: 27119127629
 issue: 4670
@@ -12,106 +12,103 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swimmer-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/python/highcharts/plot-dark.html
-quality_score: 89
+quality_score: 86
 review:
   strengths:
-  - 'Excellent spec compliance — all required features present: horizontal bars sorted
-    by duration, distinct event markers per type, ongoing marker (triangle at bar
-    endpoint), color-coded by treatment arm, clear legend, and labeled time axis'
-  - 'Strong data storytelling: muted rgba bars for non-responders vs solid bars for
-    responders creates immediate visual hierarchy; sorted by duration reveals the
-    study timeline narrative at a glance'
-  - Clinical reference lines (24-Week Milestone and Median) with inline labels add
-    meaningful analytical context matching clinical trial standards
-  - 'Correct Imprint palette usage throughout: #009E73 for Arm A, #C475FD for Arm
-    B, semantic colors for events (matte red #AE3030 for Progressive Disease), theme-adaptive
-    chrome fully implemented'
-  - 'Perfect code quality: seed set, KISS flat structure, clean imports, correct dual-theme
-    output (HTML + PNG)'
+  - Muted RGBA colors for non-responders vs solid Imprint colors for responders —
+    clinically meaningful design choice that creates immediate visual hierarchy
+  - Reference lines for 24-week milestone and median duration with custom labels add
+    genuine clinical context
+  - Per-point bar coloring via Highcharts point objects is the idiomatic approach
+    — avoids separate series per arm
+  - Invisible ScatterSeries as legend proxies for treatment arms is a clever Highcharts-specific
+    pattern
+  - Comprehensive legend covering all 6 event categories plus treatment arms and ongoing
+    status
+  - Full INK/PAGE_BG/ELEVATED_BG token coverage across all chart elements — both themes
+    render correctly with no dark-on-dark failures
+  - CDP setDeviceMetricsOverride + PIL canvas pin ensures exact 3200×1800 dimensions
   weaknesses:
-  - Patient ID tick labels set at 28px and time axis tick labels at 34px — both below
-    the 44px standard for highcharts tick labels. With 25 patients, some reduction
-    is needed for density, but 36-40px would be a better tradeoff for readability
-    at smaller display sizes.
-  - The 'Median 18 wks' plotLine label renders as vertical text overlapping with horizontal
-    bars at the top of the chart (near PT-024, PT-017, PT-011 rows). Reposition using
-    a non-overlapping y offset or use rotation=0 to horizontally place the label above
-    the plot area.
-  - X-axis tick range extends to 51 weeks but maximum data value is ~48 weeks, leaving
-    a few empty tick marks on the right side and slightly wasted horizontal space.
+  - Y-axis patient ID labels truncated to 'PT-...' — marginLeft=130 is insufficient
+    for 'PT-001' at 38px CSS font (approx 120-130px text width + padding). Increase
+    marginLeft to 160-180px to prevent Highcharts from applying ellipsis truncation.
+    Patient IDs are a core spec requirement and must be fully visible.
+  - Legend itemStyle fontSize 30px is significantly below the recommended 44px — text
+    is too small at thumbnail sizes (scales to ~3.75px at 400px viewport). Increase
+    to 44px to match the style guide.
+  - Y-axis title 'Time on Study (Weeks)' at 44px is below the recommended 56px for
+    axis titles in highcharts. Increase to 56px.
+  - X-axis (category) tick labels at 38px are below the recommended 44px. Increase
+    to 44px for balance with the y-axis tick labels.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct per style guide
-      Chrome: Title "swimmer-clinical-timeline · python · highcharts · anyplot.ai" in bold dark text, large and fully readable. Subtitle with trial statistics in smaller dark text. "Time on Study (Weeks)" X-axis label clearly visible. Patient ID (PT-001 to PT-025) category labels on the left at 28px — readable in the full image but smaller than the 44px standard. Time axis tick labels (0–51) at 34px, slightly below standard.
-      Data: Green (#009E73) bars for Arm A (Combo) and lavender (#C475FD) bars for Arm B (Mono). Solid bars for responders, muted rgba (0.38 opacity) for non-responders — creating excellent visual hierarchy. Event markers visible: blue triangles (Partial Response), ochre diamonds (Complete Response), red downward triangles (Progressive Disease), cyan squares (Adverse Event). Dark triangles mark ongoing patients at bar endpoints. Vertical reference lines at x=18 (median, dotted) and x=24 (milestone, dashed) visible. The "Median 18 wks" plotLine label appears as rotated vertical text overlapping the top bars (PT-024, PT-017 rows).
-      Legibility verdict: PASS — all text readable against light background, no light-on-light failures.
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface, not pure white.
+      Chrome: Title "swimmer-clinical-timeline · python · highcharts · anyplot.ai" rendered in dark INK (#1A1A17), clearly readable. Subtitle "Phase II Oncology Trial — 19/25 responded (6 CR), 7 ongoing at cutoff, median 18 wks" in INK_SOFT, readable. X-axis "Time on Study (Weeks)" label visible. Y-axis patient ID labels ISSUE: all truncated to "PT-..." — the 130px left margin is too narrow for "PT-001" through "PT-025" at 38px font, causing Highcharts to apply ellipsis. Legend text at 30px is below recommended 44px but legible at full resolution.
+      Data: 25 horizontal bars colored by treatment arm — Arm A uses solid #009E73 (brand green) for responders and rgba(0,158,115,0.38) muted for non-responders; Arm B uses solid #C475FD (lavender) and rgba(196,117,253,0.38) muted. Event markers overlaid: blue triangles (partial response), ochre diamonds (complete response), red inverted triangles (progressive disease), cyan squares (adverse event). Black triangles mark ongoing patients at bar endpoint. Two reference lines: 24-week milestone (dashed) and median 18-wks (dotted). Floating legend top-right with elevated background and border.
+      Legibility verdict: PASS (all text readable against light background, though patient IDs are truncated and legend text is undersized)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct per style guide
-      Chrome: Title and subtitle in light text (#F0EFE8) on dark background — fully readable. Axis label "Time on Study (Weeks)" in light text. Patient ID labels in secondary light text (#B8B7B0). Grid lines are subtle on dark background. Legend box uses elevated dark (#242420) with border, light text for all items.
-      Data: Data colors identical to light render — green (#009E73) for Arm A, lavender (#C475FD) for Arm B, same event marker colors. No data color shift between themes — only chrome flips. Reference lines visible with muted styling.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures detected.
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface, not pure black.
+      Chrome: Title, subtitle, axis labels, and tick labels all rendered in light INK (#F0EFE8) and INK_SOFT (#B8B7B0) — clearly readable against the dark background. No dark-on-dark failures observed. Legend has elevated dark background (#242420) with light text and border. Ongoing markers use INK (#F0EFE8) which is near-white — correctly visible on dark bg. Same patient ID truncation as light render.
+      Data: Data colors identical to light render — #009E73 green for Arm A responders, #C475FD lavender for Arm B, same muted RGBA variants for non-responders, same event marker colors (blue, ochre, red, cyan). Brand green #009E73 clearly visible against dark surface.
+      Legibility verdict: PASS (all text readable, no dark-on-dark issues, data colors unchanged between themes)
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout. Title 66px good. Subtitle 34px
-          readable. Y-axis title 44px. But patient ID tick labels 28px and time axis
-          tick labels 34px both below the 44px standard — adequate at full resolution
-          but below recommended size.
+        comment: Sizes explicitly set throughout; patient ID labels truncated to PT-...
+          (marginLeft=130 too small at 38px font); legend 30px well below recommended
+          44px; y-axis title 44px below recommended 56px; category tick labels 38px
+          below recommended 44px
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Minor overlap: the ''Median 18 wks'' plotLine label renders as vertical
-          rotated text that overlaps with the top bars (PT-024, PT-017 rows). Not
-          severe — bars still distinguishable — but creates visual noise.'
+        comment: No visible overlap between bars, markers, or text
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Event markers at radius=11 well-sized for sparse events. Bar pointWidth=22
-          appropriate for 25 patients. Muted bars readable even at 0.38 opacity.
+        comment: Bars clearly visible; event markers at radius=11 are prominent; ongoing
+          triangles at radius=11 are clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette, CVD-safe. Muted rgba bars maintain hue distinction.
-          No red-green sole signal issue.
+        comment: 'Redundant encoding: color + distinct marker shapes for all event
+          types; CVD-safe Imprint palette; muted vs solid provides additional encoding'
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 'Canvas well-utilized, generous 130px margins on all sides. Minor
-          issue: x-axis tick range extends to 51 weeks but max data is ~48 weeks,
-          leaving a few empty ticks on the right.'
+        comment: Canvas well utilized; chart fills ~70% of canvas; right margin accommodates
+          legend; left margin slightly tight causing label truncation
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis title 'Time on Study (Weeks)' with units. Patient IDs self-explanatory
-          as category labels. Title format correct.
+        comment: Y-axis title 'Time on Study (Weeks)' is descriptive with units; title
+          matches required format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 correct. Arm B uses #C475FD (lavender, position
-          2). Event colors use positions 3-6 with semantic red for Progressive Disease.
-          Backgrounds #FAF8F1 light / #1A1A17 dark. Chrome fully theme-adaptive.'
+        comment: 'First series #009E73; multi-series uses Imprint palette positions
+          1-6; backgrounds #FAF8F1/#1A1A17; all chrome theme-adaptive in both renders'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -119,27 +116,28 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong clinical design: muted/solid responder distinction is a thoughtful
-          design decision, reference lines with labels add professional context, subtitle
-          with trial statistics. Clearly above defaults.'
+        comment: 'Strong design: muted RGBA for non-responders vs solid for responders
+          is a clinically meaningful design choice above library defaults; reference
+          lines add professional clinical context; subtitle with summary statistics;
+          floating bordered legend'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Clean axes (lineWidth=0, tickWidth=0 on category axis), subtle grid
-          (0.15 opacity), styled legend with border radius. Good but not exceptional
-          refinement.
+        comment: Axis lines removed (lineWidth:0), ticks removed (tickWidth:0), subtle
+          grid with rgba(0.15) opacity, borderless bars, generous margins; clearly
+          above minimal defaults
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 'Very good storytelling: muted non-responders vs solid responders
-          creates visual hierarchy, duration sorting reveals the trial timeline, clinical
-          reference lines add analytical context, subtitle summarizes key outcomes.'
+        comment: Muted vs solid color creates visual hierarchy highlighting responders;
+          reference lines contextualize clinical milestones; subtitle provides summary
+          statistics — guides viewer to key findings
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -147,30 +145,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct swimmer plot: horizontal bars per patient, sorted by duration,
-          overlaid event markers.'
+        comment: Correct swimmer plot with horizontal bars per patient, sorted by
+          duration
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All features present: sorted horizontal bars, 4 event types with
-          distinct markers, ongoing marker (triangle at endpoint), treatment arm color
-          coding, legend, labeled time axis, patient IDs on Y-axis.'
+        comment: 'All features present: sorted bars, distinct event markers, ongoing
+          distinction, legend, time axis, treatment arm color coding. Minor: patient
+          IDs on y-axis are truncated to ''PT-...'' losing the identifying number'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: time in weeks. Y-axis: patient IDs. All 25 patients shown
-          and sorted by duration.'
+        comment: Time on x-axis (correctly displayed as y-axis values in bar chart),
+          patient IDs on y-axis categories, events at correct time positions, groups
+          color-coded
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Legend has all 7 series correctly
-          labeled.
+        comment: Title 'swimmer-clinical-timeline · python · highcharts · anyplot.ai'
+          matches required format; legend covers all 6 legend categories
     data_quality:
       score: 15
       max: 15
@@ -180,22 +179,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Comprehensive: both arms, all 4 event types, ongoing patients, responders
-          vs non-responders, varied durations.'
+        comment: 'Shows all aspects: treatment duration bars, 4 event types (PR, CR,
+          PD, AE), ongoing patients, two treatment arms, reference lines'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Phase II oncology trial with 25 patients, realistic clinical event
-          types, plausible duration ranges (3-48 weeks), appropriate patient IDs.
+        comment: Realistic Phase II oncology trial with 25 patients, two treatment
+          arms, clinically realistic event timing and prevalence
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Duration range and distribution realistic for Phase II trial. Event
-          timing relative to total duration is clinically plausible.
+        comment: 3-48 week treatment durations realistic for oncology trial; lognormal
+          distribution appropriate; event timing within treatment window
     code_quality:
       score: 10
       max: 10
@@ -205,64 +204,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports → data generation → chart configuration → export.
-          No functions or classes.'
+        comment: 'Linear structure: data setup, chart config, series construction,
+          export'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, tempfile, time, urllib, Path, numpy, highcharts_core
-          (Chart, HighchartsOptions, BarSeries, ScatterSeries), PIL, selenium.'
+        comment: All imports (os, tempfile, time, urllib.request, Path, numpy, highcharts_core,
+          PIL, selenium) are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. Per-point color loop and iteration over event
-          types are clean patterns. No over-engineering.
+        comment: Clean, well-organized code with clear section comments; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Highcharts
-          API. PIL canvas normalization included.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Idiomatic BarSeries + ScatterSeries combination for swimmer overlay.
-          Correct use of plotLines for reference markers. Proper to_js_literal() HTML
-          generation with inline JS embedding.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Uses several Highcharts-distinctive features: per-point color objects
-          in BarSeries data, plotLines with inline labels, invisible ScatterSeries
-          for legend-only entries, mixed series type composition. Well above generic
-          usage.'
-  verdict: REJECTED
+        comment: Correct use of BarSeries + ScatterSeries combination, Chart.add_series(),
+          per-point data objects, plotOptions configuration; follows all patterns
+          from library guide including CDP override
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses Highcharts-distinctive features: plotLines with custom styled
+          labels (milestone annotations), per-point bar coloring via data objects,
+          invisible ScatterSeries as legend proxies for treatment arms'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   - pillow
   techniques:
-  - html-export
   - custom-legend
+  - html-export
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
