@@ -1,0 +1,293 @@
+library: chartjs
+language: javascript
+specification_id: flamegraph-basic
+created: '2026-06-08T20:53:22Z'
+updated: '2026-06-08T21:11:24Z'
+generated_by: claude-opus
+workflow_run: 27165720177
+issue: 4665
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/javascript/chartjs/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Color now meaningfully encodes self-time hotness via three Imprint warm anchors
+    (#DDCC77 amber ≤10, #BD8233 ochre ≤24, #AE3030 matte red >24), so the actual CPU
+    hotspots — executeQuery (92), compileTemplate (28), resampleImg (26), renderHTML
+    (24) — pop out as red focal points instead of being hashed at random.'
+  - 'Y-axis numeric tick labels are now hidden (`ticks: { display: false }`); the
+    rotated y-title ''Call stack depth (root → leaf)'' carries the meaning and the
+    bar stacking shows depth visually, eliminating the redundant chrome flagged in
+    attempt 1.'
+  - Call-stack tree now contains 54 unique frames (main → backgroundJobs/runServer
+    with auth, DB, render, gc, image-resize subtrees), comfortably inside the spec's
+    50–500 range and demonstrating the density a flame graph is built for.
+  - 'Helper-function surface is reduced to just two: `visit` (necessary recursive
+    DFS for tree → frames) and `colorFor` (3-line tier threshold) — the FNV hash and
+    luminance threshold from attempt 1 are gone, keeping the snippet KISS.'
+  - 'Per-tier text contrast is explicit and correct: `#1A1A17` ink on the amber/ochre
+    bars, `#FFFDF6` on the matte-red bars — readable in both light and dark themes
+    without relying on a luminance heuristic.'
+  - Custom `afterDatasetsDraw` plugin idiomatically extends Chart.js with `scale.getPixelForValue`
+    and `chartArea` for coordinate transforms — the canonical escape hatch when Chart.js
+    has no native chart type for the spec.
+  - Data colors are identical between light and dark renders; only chrome (background,
+    title, ticks, grid, separator hairlines via `t.pageBg`) flips — theme adaptation
+    correct.
+  - Subtitle explicitly states `bar width = samples · color = self-time tier · horizontal
+    order is arbitrary, not temporal`, preventing the most common misreading of flame
+    graphs and now also documenting the new color encoding.
+  - Canvas is exactly 3200×1800 landscape; title spans ~70% width as expected for
+    the mandated long format; no clipping or overflow on either render.
+  weaknesses:
+  - 'DE-01 minor: The three-tier color encoding is a clear upgrade over hashing, but
+    the boundaries (≤10, ≤24, >24) are coarse — frames at 22 samples (gzipCompress)
+    and 28 (compileTemplate) land in different tiers despite being similarly hot.
+    A continuous warm gradient (e.g. `t.seq` or interpolated across the three anchors)
+    would let the eye rank hotness more precisely instead of bucketing.'
+  - 'LM-01 minor: Most actual flame-graph geometry is drawn in raw `ctx.fillRect`
+    / `ctx.fillText` inside the plugin; Chart.js really only contributes title/subtitle/axes/grid
+    chrome. This is the right approach for a non-native chart type, but it means the
+    implementation does not exercise Chart.js''s higher-level dataset/scale features
+    deeply — closer to a canvas-on-Chart.js scaffold than full Chart.js mastery.'
+  - 'DE-02 minor: The single dataset has a placeholder `data: depthLabels.map(() =>
+    0)` plus invisible fill/border colors purely to keep Chart.js''s bar pipeline
+    happy. Functional and well-commented, but a slight hack — a non-deduction since
+    there''s no cleaner option in Chart.js core for this case.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white around #FAF8F1 — the correct Imprint light surface, not pure white.
+      Chrome: Title "flamegraph-basic · javascript · chartjs · anyplot.ai" is bold dark ink, clearly readable.
+        Subtitle "Simulated CPU profile · bar width = samples · color = self-time tier · horizontal order is arbitrary, not temporal" is in muted ink-soft italic, fully readable.
+        Y-axis title "Call stack depth (root → leaf)" rotated 90° on the left in dark ink, readable. Numeric y-tick labels are correctly hidden (the attempt-1 weakness was fixed).
+        X-axis title "Samples" centered below the plot in dark ink. X-axis tick labels (0, 100, 200, 300, 400, 500, 554) are dark and readable.
+        Subtle vertical grid hairlines in the Imprint grid token color — visible but not dominant.
+      Data: Stacked horizontal bars layered bottom-up — depth 0 "main" full width (554 samples, amber), depth 1 splits "runServer" + "backgroundJobs", up through "handleRequest", "parseHeaders/routeRequest/writeResponse" etc. to leaves at depth 6/7. Colors map to self-time tiers: amber #DDCC77 for low (≤10), ochre #BD8233 for medium (≤24), matte red #AE3030 for the actual hotspots (executeQuery at 92, compileTemplate at 28, resampleImg at 26). Function names sit inside any bar wide enough (≥60 px); narrower bars truncate with an ellipsis ("dbFe…", "compil…", "rende…", "gzip…", "resam…", "parseH…", "write…") — readable, no overlap. No #009E73 brand green — documented warm-palette semantic exception for the conventional flame-graph aesthetic.
+      Legibility verdict: PASS — all chrome and bar-internal text is clearly visible against the warm off-white background; dark ink on amber/ochre bars is readable, light ink on matte-red bars is readable, no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black around #1A1A17 — the correct Imprint dark surface, not pure black.
+      Chrome: Title is rendered in light Imprint ink against the dark background, clearly readable.
+        Subtitle is light ink-soft italic, readable.
+        Y-axis title "Call stack depth (root → leaf)" in light ink, readable. Numeric y-ticks hidden (as in light). X-axis title "Samples" and X-axis tick labels in light ink, readable.
+        Subtle grid hairlines visible against the warm dark surface; pageBg-coloured hairlines between sibling bars are dark and tidy.
+      Data: Bar fill colors are IDENTICAL to the light render — same warm Imprint anchors at the same positions (main = amber, executeQuery = matte red, compileTemplate = matte red, resampleImg = matte red, etc.). Only the chrome flipped. Inside-bar text contrast preserved: dark #1A1A17 on amber/ochre bars (still readable because amber is light enough), white #FFFDF6 on the matte-red bars (e.g. white "executeQuery", "compil…", "rende…", "resam…").
+      Legibility verdict: PASS — no dark-on-dark failures; title, axis title, ticks, and every visible bar-internal label are readable; the warm bar colors remain clearly distinguishable from the warm near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All chrome and bar-internal text readable in both themes. Explicit
+          dark-on-amber and light-on-red contrast assignments replace the attempt-1
+          luminance heuristic, removing the previous minor contrast concern.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: 1 px pageBg hairlines separate sibling bars cleanly. Labels truncate
+          with ellipsis when bars are narrow and are suppressed entirely below 60
+          px width. No text/data collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars and labels clearly visible. Tiny frames (depth 6/7) are wisely
+          left unlabeled rather than being squashed into illegible text.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Warm CVD-safe palette (amber, ochre, matte red). No red-green encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas exactly 3200×1800 landscape. Title ~70% width (expected for
+          mandated long title). Balanced axis labels, no clipping or overflow.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive: ''Call stack depth (root → leaf)'' and ''Samples''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Uses Imprint warm anchors (#DDCC77/#BD8233/#AE3030) per the documented
+          semantic exception for conventional flame-graph aesthetic. Backgrounds #FAF8F1
+          / #1A1A17 correct on both renders.'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Color now meaningfully encodes self-time hotness (3 tiers) rather
+          than being decorative, drawing the eye to executeQuery and other real hotspots.
+          Slight room for a continuous gradient over discrete tiers.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Y-tick labels hidden (attempt-1 fix), subtle x-grid, hairline separators,
+          no top/right spines, generous padding.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Vertical root-at-bottom hierarchy reads clearly; subtitle calls out
+          'color = self-time tier'; matte-red executeQuery sits as the visual focal
+          point — the actual hottest frame.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct flame graph: horizontal bars per stack frame, bottom-up
+          depth layering, width proportional to samples.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Stack depth on y, sample width on x, function-name labels inside
+          wide bars (with ellipsis truncation), adjacent siblings with minimal hairline
+          gaps.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Depth → y category, total samples → x linear extent. X axis spans
+          full data range (0–554).
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'flamegraph-basic · javascript · chartjs · anyplot.ai'.
+          Legend correctly hidden (labels are in-bar).
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Tree now has 54 unique stack frames (was ~20 in attempt 1) — comfortably
+          inside spec''s 50–500 range. Multiple deep branches: auth, DB query, template
+          render, image resize, GC, logging, background workers.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Web API request handler with auth middleware, rate limit, DB query/template
+          render/serialize stages, plus background jobs (cron, worker loop, image
+          resize) — realistic and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Per-frame self samples 1–92, total 554 — plausible for a sampled
+          CPU profile.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Only two helpers (visit DFS + 3-line colorFor) plus the flamegraph
+          plugin object. The FNV hash and luminance threshold from attempt 1 are gone.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded profile tree; no RNG needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports — Chart is the harness-provided global per the Chart.js
+          mount-node contract.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Custom afterDatasetsDraw plugin is the right Chart.js escape hatch
+          for a non-native chart type. Comments document why (no fake interactivity,
+          no plugin imports).
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: No savefig — harness owns plot-light.png/plot-dark.png and the HTML
+          twin.
+    library_features:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Chart.js scales, options, registered title/subtitle plugins,
+          and the afterDatasetsDraw hook idiomatically. Most rendering is in raw ctx
+          calls inside the plugin (necessary for a non-native type), so slightly less
+          reliance on Chart.js's higher-level dataset/scale plumbing.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Leverages scale.getPixelForValue and chart.chartArea to position
+          custom rectangles in scale space — distinctive Chart.js plugin-author technique.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  - custom-plugin
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - edge-highlighting
