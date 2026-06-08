@@ -1,15 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 flamegraph-basic: Flame Graph for Performance Profiling
 Library: plotnine 0.15.5 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-06-08
-
-VQ-07 note: this plot uses a deliberate warm gradient (amber → ochre → matte red)
-instead of the canonical `imprint_seq`/`imprint_div` cmaps. The flame-graph
-specification explicitly mandates a warm palette as the conventional aesthetic
-("yellows, oranges, reds"). All three stops are Imprint palette members
-(`#DDCC77` amber anchor, `#BD8233` ochre slot 4, `#AE3030` matte red slot 5),
-so the chart still reads as part of the Imprint family — only the continuous-
-cmap rule is bent for semantic flame-graph fidelity.
+Quality: 92/100 | Updated: 2026-06-08
 """
 
 import os

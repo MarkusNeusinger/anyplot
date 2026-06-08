@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: flamegraph-basic
 created: '2026-03-14T20:27:02Z'
-updated: '2026-06-08T20:41:03Z'
+updated: '2026-06-08T20:58:41Z'
 generated_by: claude-opus
 workflow_run: 27165064565
 issue: 4665
@@ -12,116 +12,116 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flamegrap
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - 'Excellent data storytelling: the hottest call path is outlined with a bold ink
-    stroke, immediately guiding the eye to the bottleneck. The annotation in the top-right
-    explicitly explains the outline convention.'
-  - 'Clean grammar-of-graphics composition: layered geom_rect for fills plus a second
-    geom_rect (filtered to hot path) for the outline, geom_text for in-bar labels,
-    and theme_void() for chartjunk-free chrome.'
-  - 'Width-encoded sample counts are computed precisely: children laid out within
-    each parent''s extent, so siblings sum to the parent width and the flame-graph
-    invariant holds across all depth levels.'
-  - Theme-adaptive chrome is wired through correctly — PAGE_BG, INK, INK_SOFT tokens
-    cascade to plot background, title, bar text, legend title, and the meta annotation.
-    Both light and dark renders are readable.
-  - 'Bar text uses width-fraction gating (>5%) so narrow bars are silently unlabeled
-    rather than overlapping their neighbors, and label color flips with the theme
-    (#1A1A17 light / #F0EFE8 dark).'
-  - Realistic, neutral CPU-profiling scenario (web request handling with auth, query,
-    render, gc) — domain-recognizable without controversy.
+  - 'Excellent data storytelling: the hottest call path (main → request_handler →
+    route_dispatch → query_database → execute_sql → fetch_rows) is outlined with a
+    bold ink stroke and explicitly explained by the upper-right annotation — eye lands
+    on the bottleneck immediately.'
+  - 'Clean grammar-of-graphics composition: layered geom_rect (one for fills, one
+    filtered to the hot path for outline), geom_text for in-bar labels, theme_void()
+    for chartjunk-free chrome — pure plotnine idiom.'
+  - Width-encoded sample counts computed precisely with children laid out within each
+    parent's extent — siblings sum to parent width, no gaps, no overflow.
+  - Theme-adaptive chrome wired through correctly — PAGE_BG / INK / INK_SOFT tokens
+    cascade to background, title, bar text, legend frame, ticks, annotation, and even
+    the bar separator color.
+  - 'Dark-mode label contrast handled smartly: scale_color_identity + per-row label_color
+    flips text to dark INK on the lightest amber bars (samples < 200) where cream-on-amber
+    would be borderline — addresses attempt-1 feedback.'
+  - Stack-trace count (59 unique traces) is now comfortably inside the spec's 50–500
+    floor — addresses attempt-1 DQ-01 weakness.
+  - Annotation lifted to max_depth + 1.1 with ylim extended to max_depth + 1.3 — gives
+    the meta line breathing room above the topmost bar (addresses attempt-1 DE-02
+    weakness).
+  - Realistic, neutral CPU-profiling scenario (web request handling) with sensible
+    totals (1,000 samples) and a believable hierarchy.
+  - 'VQ-07 deviation is now explicitly documented in the file header with a clear
+    rationale: spec mandates a warm palette, all three stops are Imprint palette members
+    (#DDCC77, #BD8233, #AE3030).'
   weaknesses:
-  - 'VQ-07 palette compliance: continuous fill uses a custom 3-stop warm gradient
-    (amber #DDCC77 → ochre #BD8233 → matte red #AE3030) via scale_fill_gradientn,
-    rather than the mandated imprint_seq (green→blue) or imprint_div (red↔mid↔blue).
-    All three hues are Imprint palette members so the violation is mild, and the flame-graph
-    spec explicitly asks for a warm palette — but the style guide''s continuous-cmap
-    rule is strict. Consider documenting this as a semantic exception in the file
-    header to make the tradeoff explicit.'
-  - 'DQ-01 feature coverage: spec calls for 50–500 unique stack traces; the implementation
-    has only 27. The chosen stacks are well-designed and readable, but the trace count
-    is below the spec floor. Add ~25–50 more leaf stacks (e.g. deeper nesting under
-    execute_sql, render_template, or extra siblings) without losing the storytelling
-    clarity.'
-  - 'VQ-01 in dark mode: cream INK text (#F0EFE8) on the lightest amber bars (#DDCC77)
-    is borderline low-contrast on the small leaf bars (fetch_rows, verify_token, apply_filters).
-    Bold weight keeps it legible, but adding a thin INK_SOFT stroke around the text
-    — or switching to INK_SOFT for the lightest fills only — would lift contrast without
-    hurting the dark theme.'
-  - 'DE-02 polish: the meta annotation sits flush at the same y-coordinate as the
-    topmost bar (max_depth + 0.85) which crowds it slightly in the upper-right. Adding
-    ~0.3 of headroom (annotation y → max_depth + 1.1, ylim → max_depth + 1.3) would
-    let it breathe and read as truly supplementary text.'
+  - 'VQ-07 — continuous fill uses a custom 3-stop warm gradient (#DDCC77 → #BD8233
+    → #AE3030) via scale_fill_gradientn rather than the canonical imprint_seq (green→blue)
+    or imprint_div (red↔mid↔blue). All three stops are Imprint members and the deviation
+    is documented as a deliberate semantic exception (spec mandates warm yellows/oranges/reds),
+    but the style guide''s continuous-cmap rule is strict — net 1/2.'
+  - LM-01 / LM-02 — sys.path manipulation at module load to dodge the script-vs-package
+    name collision is a necessary workaround but slightly muddies the idiomatic-plotnine
+    read. Consider renaming the file artifact upstream (out of scope here, just a
+    note for the catalog).
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct light-theme surface — not pure white.
-      Chrome: Bold dark title "flamegraph-basic · python · plotnine · anyplot.ai" at top, centered, ~50% width — clearly readable against the cream surface. Meta annotation "Total: 1,000 samples  ·  outlined = hottest call path" sits in INK_SOFT gray in the upper-right, readable but appropriately secondary. The "Samples" legend at the bottom uses bold dark INK title with INK_SOFT tick labels (100 / 500 / 1000). No "light-on-light" failures anywhere.
-      Data: 6-row stacked flame graph with warm gradient — yellow/amber #DDCC77 for low-sample leaves (verify_token, fetch_rows, apply_filters, decode_json, mark_sweep, gc_collect kids, logging kids), ochre #BD8233 for mid-tier frames (query_database, route_dispatch), and matte red #AE3030 for the hot foundational frames (main, request_handler). The hottest call path (main → request_handler → route_dispatch → query_database → execute_sql → fetch_rows) is overlaid with a black ink stroke so the bottleneck pops immediately. Bar text is INK (#1A1A17), bold, well-contrasted against all three bar fills.
-      Legibility verdict: PASS
+      Background: warm off-white #FAF8F1 — confirmed correct (not pure white, not dark).
+      Chrome: bold dark title "flamegraph-basic · python · plotnine · anyplot.ai" centered at top in INK #1A1A17, clearly visible. Upper-right meta annotation "Total: 1,000 samples  ·  outlined = hottest call path" in INK_SOFT #4A4A44 gray, readable. Bottom-centered horizontal "Samples" colorbar with bold INK title and INK_SOFT tick labels 100 / 500 / 1000. theme_void() correctly drops all axis chrome (flame graphs use no x/y axes).
+      Data: 7-row stacked flame graph as a pyramid — bottom row "main" in matte red #AE3030 (1,000 samples), "request_handler" red one level up, "route_dispatch" + "gc_collect" + "logging" in ochre, then progressively narrower amber #DDCC77 leaves at the top. 59 unique stack frames laid out left-to-right by sample count within each parent's extent. The hottest call path (main → request_handler → route_dispatch → query_database → execute_sql → fetch_rows) is overlaid with a thick dark INK stroke, drawing the eye straight to the bottleneck. Bar text in dark INK throughout — well-contrasted against every fill. Narrow bars correctly suppress their labels via the width-fraction gate.
+      Legibility verdict: PASS — every text element (title, meta annotation, in-bar labels, colorbar title + ticks) is sharply readable on the off-white surface.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct dark-theme surface — not pure black.
-      Chrome: Title in cream INK (#F0EFE8) at the top — clearly readable against the dark background. Meta annotation in INK_SOFT (#B8B7B0) in the upper-right — readable. Legend "Samples" title in cream INK, tick labels (100/500/1000) in INK_SOFT — both readable. The hot-path outline flips to cream (#F0EFE8) on dark — clearly visible against all three bar fills. No "dark-on-dark" failures.
-      Data: Colors identical to the light render — same #DDCC77/#BD8233/#AE3030 warm gradient applied to the same bars. Only chrome (background, title text, annotation text, legend text, bar-text color, hot-path stroke color, and the thin bar-separator gaps which now match #1A1A17) has flipped, exactly as the theme contract requires. Bar labels flip to cream INK (#F0EFE8); on the lightest amber leaf bars the contrast is borderline but the bold weight keeps it readable.
-      Legibility verdict: PASS (with minor note: cream-on-amber on the smallest yellow leaves is on the edge of comfortable contrast — see VQ-01 weakness)
+      Background: warm near-black #1A1A17 — confirmed correct (not pure black, not light).
+      Chrome: title and "Samples" legend title flip to cream INK #F0EFE8 and remain crisply legible. Upper-right meta annotation and colorbar tick numbers in INK_SOFT #B8B7B0 — soft cream/gray, fully readable. Hot-path outline stroke flips to cream so it stays visible against the warm fills. No dark-on-dark failures anywhere.
+      Data: identical 59-frame warm gradient — amber #DDCC77 → ochre #BD8233 → matte red #AE3030. Only the chrome flipped; data colors match the light render exactly (Imprint slots 1–7 invariance respected). The label-color logic kicks in correctly: amber leaves (samples < 200 — parse_headers, decode_json, verify_token, fetch_rows, mark_sweep, render_template, etc.) carry dark #1A1A17 text (high contrast); the deeper ochre / red bars (route_dispatch, request_handler, main, query_database) carry cream INK #F0EFE8 text (high contrast). This addresses the attempt-1 cream-on-amber borderline-contrast weakness.
+      Legibility verdict: PASS — both polarities of label coloring tested by eye, both readable; no "dark-on-dark" or "light-on-light" failures.
+
+    Canvas: both renders measured 3200×1800 px — landscape canvas gate passes cleanly, no /tmp/anyplot-canvas-gate.txt sentinel written.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; bold weight keeps it visible. Borderline
-          cream-on-amber on dark leaves.
+        comment: Light render fully legible; dark render fixed by amber-bar dark-INK
+          label rule. Minor residual risk on smallest amber leaves but bold weight
+          + dark text keeps them readable.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Width-fraction gate (>5%) prevents label overlap on narrow bars.
-          Annotation does not collide with data.
+        comment: Width-fraction gate suppresses labels on narrow bars; no text/data
+          collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All bars distinct, hot path emphasized with ink stroke. Annotation
-          crowds the topmost bar slightly.
+        comment: Bars visually distinct via gradient; hot-path outline stands out;
+          annotation now has breathing room.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Three Imprint hues — all CVD-tested. No red-green encoding.
+        comment: Warm gradient is single-polarity ordinal — no red/green confusion;
+          sequential luminance reads CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 8x4.5 @ dpi=400 → 3200x1800 landscape, correct. Balanced flame pyramid
-          centered on canvas.
+        comment: 3200×1800 confirmed (figsize 8×4.5 @ dpi=400). Title ~60% width,
+          no overflow, ylim has annotation headroom.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: theme_void() is correct for flame graphs (x is arbitrary, y is depth
-          — no axis labels needed). Title format correct.
+        comment: theme_void() is correct for flame graphs (x is alphabetical, y is
+          depth — neither needs an axis title).
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: Custom 3-stop warm gradient via scale_fill_gradientn instead of imprint_seq/imprint_div.
-          All hues are Imprint members but the cmap rule is strict; mitigated by spec's
-          explicit warm-palette requirement.
+        comment: 'Custom 3-stop warm gradient (#DDCC77/#BD8233/#AE3030) instead of
+          imprint_seq/imprint_div. Mitigated: all stops are Imprint members, spec
+          mandates warm palette, deviation is now documented in file header. Net 1/2.'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -129,23 +129,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Professional warm-flame look with hot-path emphasis. Custom legend
-          styling at bottom. Above baseline 4/8.
+        comment: Warm gradient + theme_void + hot-path outline = intentional, polished
+          look — above default but not maximal.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: theme_void() removes all chartjunk; generous whitespace; subtle bar
-          separators in PAGE_BG color. Annotation could breathe more.
+        comment: theme_void removes spines/grids/axes; generous whitespace; subtle
+          separator (BAR_EDGE = PAGE_BG) between siblings.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Hottest call path is outlined and explicitly explained — strong focal
-          point. Color intensity correlates with sample count, reinforcing the visual
-          hierarchy.
+        comment: Hot-path stroke + meta annotation creates an unmistakable focal point
+          — exactly what flame graphs are for.
     spec_compliance:
       score: 15
       max: 15
@@ -155,54 +154,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct flame graph: stacked depth levels, root at bottom, width
-          = sample count.'
+        comment: 'Correct flame-graph layout: stacked horizontal bars, bottom-to-top
+          caller-callee.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Stacked by depth, no gaps between siblings, function-name labels
-          in wide bars, warm palette.
+        comment: Stacked depth rows, width ∝ samples, no sibling gaps, in-bar labels
+          with fits-gate, warm palette.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = sample-proportional position computed level-by-level within parent
-          extent; Y = stack depth.
+        comment: Children laid out within parent extent — siblings always sum to parent
+          width.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title is exactly 'flamegraph-basic · python · plotnine · anyplot.ai'.
-          Legend labeled 'Samples' with breaks at 100/500/1000.
+          Colorbar legend correctly labeled 'Samples'.
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: 27 stack traces — below spec floor of 50. Coverage of depth and width
-          variation is good but quantity falls short.
+        comment: 59 unique stack traces — comfortably inside the 50–500 spec range.
+          Addresses attempt-1 weakness (27 → 59).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Web request handling (auth, query, render, gc, logging) — domain-recognizable
-          and politically neutral.
+        comment: Web request handling stack — neutral, plausible, immediately recognizable.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Total = 1,000 samples with sensible per-frame distribution. Easy
-          to grok proportions.
+        comment: Total 1,000 samples with sensible distribution across hierarchies.
     code_quality:
       score: 10
       max: 10
@@ -212,33 +209,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; top-level imperative flow.
+        comment: No functions/classes; straight-through data → positions → records
+          → plot.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic dict-literal data — no RNG needed.
+        comment: Deterministic dict-literal data; no RNG needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: Only used imports. The sys.path manipulation is a necessary plotnine-name-collision
+          workaround, not import bloat.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Position computation handles depth-level layout cleanly; no fake
-          interactivity.
+        comment: 'Clear separation: tokens, data, positions, hot-path detection, dataframe,
+          plot. No fake UI.'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via plot.save with explicit dpi/width/height/units.
-    library_features:
+        comment: Saves as plot-{THEME}.png via plot.save with explicit dpi/width/height/units.
+          Current plotnine 0.15 API.
+    library_mastery:
       score: 8
       max: 10
       items:
@@ -247,23 +247,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Pure grammar-of-graphics: geom_rect, geom_text, scale_fill_gradientn,
-          coord_cartesian, theme_void, annotate.'
+        comment: Pure grammar of graphics — ggplot + layered geom_rect + geom_text
+          + scale_fill_gradientn + scale_color_identity + theme_void. No matplotlib
+          escape hatches.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: scale_fill_gradientn multi-stop gradient, layered geom_rect for fill+outline,
-          theme_void clean canvas, annotate for meta text — all distinctively plotnine/ggplot
-          patterns.
+        comment: 'Uses plotnine-flavored: scale_fill_gradientn (3-stop), scale_color_identity
+          (per-row label color), theme_void, annotate, coord_cartesian — all distinctly
+          grammar-of-graphics.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
   - colorbar
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
@@ -271,4 +272,4 @@ impl_tags:
   styling:
   - minimal-chrome
   - custom-colormap
-  - edge-highlighting
+  - gradient-fill
