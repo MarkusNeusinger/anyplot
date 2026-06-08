@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
 Library: altair 6.2.1 | Python 3.13.13
 Quality: 78/100 | Updated: 2026-06-08
@@ -93,7 +93,6 @@ states = states.sort_values("pop", ascending=False).reset_index(drop=True)
 states["rank"] = states.index + 1
 states["pop_label"] = states["pop"].apply(lambda x: f"{x:.1f}M")
 top5 = states.head(5)
-other = states.iloc[5:]
 labeled_states = states[states["pop"] >= 4.0].copy()
 
 # Reference map - faint state outlines for geographic context
@@ -104,16 +103,19 @@ background = (
     alt.Chart(us_states_topo).mark_geoshape(fill=REF_FILL, stroke=REF_STROKE, strokeWidth=0.4).project(type="albersUsa")
 )
 
-# Dorling cartogram — non-top-5 states
-circles_main = (
-    alt.Chart(other)
-    .mark_circle(opacity=0.82, stroke=PAGE_BG, strokeWidth=1.2)
+# Dorling cartogram — single layer with alt.condition to highlight top-5 states
+top5_names = ["California", "Texas", "Florida", "New York", "Pennsylvania"]
+is_top5 = alt.FieldOneOfPredicate(field="name", oneOf=top5_names)
+
+circles = (
+    alt.Chart(states)
+    .mark_circle()
     .encode(
         longitude="lon:Q",
         latitude="lat:Q",
         size=alt.Size(
             "pop:Q",
-            scale=alt.Scale(domain=[0.5, 40], range=[60, 2800]),
+            scale=alt.Scale(domain=[0.5, 40], range=[40, 1800]),
             legend=alt.Legend(
                 title="Population (millions)",
                 titleFontSize=10,
@@ -136,24 +138,9 @@ circles_main = (
                 offset=15,
             ),
         ),
-        tooltip=[
-            alt.Tooltip("name:N", title="State"),
-            alt.Tooltip("pop:Q", title="Population (M)", format=".1f"),
-            alt.Tooltip("region:N", title="Region"),
-        ],
-    )
-    .project(type="albersUsa")
-)
-
-# Top 5 states with emphasized ink-colored outlines
-circles_top5 = (
-    alt.Chart(top5)
-    .mark_circle(opacity=0.90, stroke=INK, strokeWidth=2.0)
-    .encode(
-        longitude="lon:Q",
-        latitude="lat:Q",
-        size=alt.Size("pop:Q", scale=alt.Scale(domain=[0.5, 40], range=[60, 2800]), legend=None),
-        color=alt.Color("region:N", scale=alt.Scale(domain=region_order, range=region_colors), legend=None),
+        opacity=alt.condition(is_top5, alt.value(0.90), alt.value(0.82)),
+        stroke=alt.condition(is_top5, alt.value(INK), alt.value(PAGE_BG)),
+        strokeWidth=alt.condition(is_top5, alt.value(2.0), alt.value(1.2)),
         tooltip=[
             alt.Tooltip("name:N", title="State"),
             alt.Tooltip("pop:Q", title="Population (M)", format=".1f"),
@@ -196,13 +183,13 @@ title_fontsize = max(11, round(16 * ratio))
 
 # Combine all layers
 chart = (
-    (background + circles_main + circles_top5 + labels + pop_labels + annotation)
+    (background + circles + labels + pop_labels + annotation)
     .properties(
         width=620,
         height=320,
         title=alt.Title(
             text=title_str,
-            subtitle="Circle area proportional to state population — bold outlines mark the five most populous states",
+            subtitle="Dorling cartogram: circle area ∝ state population — bold outlines mark the 5 most populous states",
             fontSize=title_fontsize,
             subtitleFontSize=10,
             subtitleColor=INK_SOFT,
