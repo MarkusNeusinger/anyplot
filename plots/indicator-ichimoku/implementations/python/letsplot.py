@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 indicator-ichimoku: Ichimoku Cloud Technical Indicator Chart
-Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-12
+Library: letsplot | Python 3.13
+Quality: pending | Created: 2026-06-08
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -11,7 +13,22 @@ from lets_plot import *  # noqa: F403, F405
 
 LetsPlot.setup_html()  # noqa: F405
 
-# Data - 200 trading days of simulated stock OHLC with Ichimoku components
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette — semantic exception: profit/loss maps to green/red
+BULL_COLOR = "#009E73"  # Imprint green — bullish candles
+BEAR_COLOR = "#AE3030"  # Imprint matte red — bearish candles
+TENKAN_COLOR = "#C475FD"  # Imprint lavender (position 2) — Tenkan-sen
+KIJUN_COLOR = "#4467A3"  # Imprint blue (position 3) — Kijun-sen
+CHIKOU_COLOR = "#BD8233"  # Imprint ochre (position 4) — Chikou Span
+SIGNAL_COLOR = "#DDCC77"  # Imprint amber — TK Crossover signal marker
+
+# Data — 200 trading days of simulated OHLC with Ichimoku components
 np.random.seed(42)
 n_days = 200
 
@@ -34,7 +51,7 @@ for _ in range(n_days):
 
 df = pd.DataFrame({"date": dates, "open": opens, "high": highs, "low": lows, "close": closes})
 
-# Compute Ichimoku components (9, 26, 52 standard parameters)
+# Compute Ichimoku components (standard parameters: 9, 26, 52)
 high_s = df["high"]
 low_s = df["low"]
 
@@ -50,56 +67,45 @@ df["senkou_span_a"] = senkou_span_a
 df["senkou_span_b"] = senkou_span_b
 df["chikou_span"] = chikou_span
 
-# Use numeric x-axis for clean positioning
+# Numeric x-axis for precise candlestick positioning
 df["x"] = range(len(df))
 
-# Candlestick columns
+# Candlestick geometry columns
 df["direction"] = np.where(df["close"] >= df["open"], "Bullish", "Bearish")
 df["body_low"] = df[["open", "close"]].min(axis=1)
 df["body_high"] = df[["open", "close"]].max(axis=1)
 df["xmin"] = df["x"] - 0.35
 df["xmax"] = df["x"] + 0.35
 
-# Trim to visible range (skip first 52 rows for lookback, keep rest)
+# Visible range (skip first 52 rows for full lookback)
 visible_start = 52
 df_visible = df.iloc[visible_start:].copy()
 
-# Cloud data - split into bullish and bearish segments for fill coloring
+# Cloud data — split by bullish/bearish polarity for color-coded fill
 df_cloud = df_visible.dropna(subset=["senkou_span_a", "senkou_span_b"]).copy()
 df_cloud_bull = df_cloud[df_cloud["senkou_span_a"] >= df_cloud["senkou_span_b"]].copy()
 df_cloud_bear = df_cloud[df_cloud["senkou_span_a"] < df_cloud["senkou_span_b"]].copy()
 
-# Lines data
+# Indicator line data (dropped NaN for clean line rendering)
 df_tenkan = df_visible.dropna(subset=["tenkan_sen"]).copy()
 df_kijun = df_visible.dropna(subset=["kijun_sen"]).copy()
 df_chikou = df_visible.dropna(subset=["chikou_span"]).copy()
 
-
-# Colors - colorblind-safe palette (teal/amber instead of pure red/green)
-bull_color = "#0077BB"  # Blue for bullish candles (colorblind-safe)
-bear_color = "#CC6633"  # Orange for bearish candles (colorblind-safe)
-tenkan_color = "#306998"
-kijun_color = "#B5446E"
-chikou_color = "#7B8794"
-cloud_bull_color = "#0077BB"
-cloud_bear_color = "#CC6633"
-
-# X-axis tick positions (every 20 trading days from visible start)
+# X-axis ticks (every 20 trading days)
 tick_pos = list(range(visible_start, len(df), 20))
 tick_labels = [dates[i].strftime("%b %d") for i in tick_pos if i < len(dates)]
 tick_pos = tick_pos[: len(tick_labels)]
 
-# Tooltip for candlesticks with rich formatting
+# Tooltip columns
 df_visible["date_str"] = df_visible["date"].dt.strftime("%b %d, %Y")
+df_visible["change_pct"] = ((df_visible["close"] - df_visible["open"]) / df_visible["open"] * 100).round(2)
 
-# Identify key Ichimoku signals for visual emphasis
-# Find Tenkan/Kijun crossover points
+# Tenkan/Kijun crossover signal points
 df_visible["tk_cross"] = (df_visible["tenkan_sen"] > df_visible["kijun_sen"]) != (
     df_visible["tenkan_sen"].shift(1) > df_visible["kijun_sen"].shift(1)
 )
 df_crossovers = df_visible[df_visible["tk_cross"] & df_visible["tenkan_sen"].notna()].copy()
-df_visible["change"] = df_visible["close"] - df_visible["open"]
-df_visible["change_pct"] = ((df_visible["close"] - df_visible["open"]) / df_visible["open"] * 100).round(2)
+
 tip_fmt = (
     layer_tooltips()  # noqa: F405
     .title("@date_str")
@@ -114,7 +120,6 @@ tip_fmt = (
     .format("close", ".2f")
 )
 
-# Tooltip for indicator lines
 tenkan_tip = (
     layer_tooltips()  # noqa: F405
     .title("Tenkan-sen")
@@ -128,39 +133,43 @@ kijun_tip = (
     .format("kijun_sen", ".2f")
 )
 
+# Title (51 chars — under 67 baseline, default size=16)
+title = "indicator-ichimoku · python · letsplot · anyplot.ai"
+subtitle = "Ichimoku Kinko Hyo — Kumo shifts green→red as trend reverses mid-year; amber diamonds mark TK crossovers"
+
 # Plot
 plot = (
     ggplot()  # noqa: F405
-    # Kumo cloud - bullish (green/blue fill)
+    # Kumo cloud — bullish segment (green)
     + geom_ribbon(  # noqa: F405
         aes(x="x", ymin="senkou_span_b", ymax="senkou_span_a"),  # noqa: F405
         data=df_cloud_bull,
-        fill=cloud_bull_color,
-        alpha=0.2,
+        fill=BULL_COLOR,
+        alpha=0.15,
         tooltips="none",
     )
-    # Kumo cloud - bearish (red/orange fill)
+    # Kumo cloud — bearish segment (red)
     + geom_ribbon(  # noqa: F405
         aes(x="x", ymin="senkou_span_a", ymax="senkou_span_b"),  # noqa: F405
         data=df_cloud_bear,
-        fill=cloud_bear_color,
-        alpha=0.2,
+        fill=BEAR_COLOR,
+        alpha=0.15,
         tooltips="none",
     )
-    # Senkou Span A line
+    # Senkou Span A boundary line
     + geom_line(  # noqa: F405
         aes(x="x", y="senkou_span_a"),  # noqa: F405
         data=df_cloud,
-        color=cloud_bull_color,
+        color=BULL_COLOR,
         size=0.6,
         alpha=0.5,
         tooltips="none",
     )
-    # Senkou Span B line
+    # Senkou Span B boundary line
     + geom_line(  # noqa: F405
         aes(x="x", y="senkou_span_b"),  # noqa: F405
         data=df_cloud,
-        color=cloud_bear_color,
+        color=BEAR_COLOR,
         size=0.6,
         alpha=0.5,
         tooltips="none",
@@ -174,48 +183,46 @@ plot = (
     )
     # Candlestick bodies
     + geom_rect(  # noqa: F405
-        aes(  # noqa: F405
-            xmin="xmin", xmax="xmax", ymin="body_low", ymax="body_high", fill="direction", color="direction"
-        ),
+        aes(xmin="xmin", xmax="xmax", ymin="body_low", ymax="body_high", fill="direction", color="direction"),  # noqa: F405
         data=df_visible,
         size=0.4,
         tooltips=tip_fmt,
     )
-    # Tenkan-sen (conversion line) with legend key
+    # Tenkan-sen (conversion line)
     + geom_line(  # noqa: F405
         aes(x="x", y="tenkan_sen"),  # noqa: F405
         data=df_tenkan,
-        color=tenkan_color,
+        color=TENKAN_COLOR,
         size=1.2,
         tooltips=tenkan_tip,
         manual_key=layer_key("Tenkan-sen"),  # noqa: F405
     )
-    # Kijun-sen (base line) with legend key
+    # Kijun-sen (base line)
     + geom_line(  # noqa: F405
         aes(x="x", y="kijun_sen"),  # noqa: F405
         data=df_kijun,
-        color=kijun_color,
+        color=KIJUN_COLOR,
         size=1.2,
         tooltips=kijun_tip,
         manual_key=layer_key("Kijun-sen"),  # noqa: F405
     )
-    # Chikou Span (lagging line) with legend key
+    # Chikou Span (lagging line — shifted 26 bars back)
     + geom_line(  # noqa: F405
         aes(x="x", y="chikou_span"),  # noqa: F405
         data=df_chikou,
-        color=chikou_color,
-        size=0.9,
-        alpha=0.6,
+        color=CHIKOU_COLOR,
+        size=1.0,
+        alpha=0.85,
         linetype="dashed",
         tooltips="none",
         manual_key=layer_key("Chikou Span"),  # noqa: F405
     )
-    # Crossover signal markers
+    # TK Crossover signal markers
     + geom_point(  # noqa: F405
         aes(x="x", y="tenkan_sen"),  # noqa: F405
         data=df_crossovers,
-        color="#FFD700",
-        fill="#FFD700",
+        color=SIGNAL_COLOR,
+        fill=SIGNAL_COLOR,
         size=5,
         shape=23,
         stroke=1.5,
@@ -223,42 +230,32 @@ plot = (
         manual_key=layer_key("TK Crossover"),  # noqa: F405
     )
     # Scales
-    + scale_fill_manual(  # noqa: F405
-        values={"Bullish": bull_color, "Bearish": bear_color}
-    )
-    + scale_color_manual(  # noqa: F405
-        values={"Bullish": bull_color, "Bearish": bear_color}
-    )
+    + scale_fill_manual(values={"Bullish": BULL_COLOR, "Bearish": BEAR_COLOR})  # noqa: F405
+    + scale_color_manual(values={"Bullish": BULL_COLOR, "Bearish": BEAR_COLOR})  # noqa: F405
     + scale_x_continuous(breaks=tick_pos, labels=tick_labels, expand=[0.02, 0])  # noqa: F405
-    + labs(  # noqa: F405
-        x="Trading Day (2024)",
-        y="Price ($)",
-        title="indicator-ichimoku \u00b7 letsplot \u00b7 pyplots.ai",
-        subtitle=(
-            "Ichimoku Kinko Hyo \u2014 Cloud shifts from bullish (blue) to bearish (orange) as trend reverses mid-year"
-        ),
-    )
+    + labs(x="Trading Day (2024)", y="Price ($)", title=title, subtitle=subtitle)  # noqa: F405
     + guides(fill="none", color="none")  # noqa: F405
     + theme_minimal()  # noqa: F405
     + theme(  # noqa: F405
-        axis_title=element_text(size=20, color="#333333"),  # noqa: F405
-        axis_text=element_text(size=16, color="#555555"),  # noqa: F405
-        plot_title=element_text(size=24, color="#1a1a1a", face="bold"),  # noqa: F405
-        plot_subtitle=element_text(size=16, color="#666666", face="italic"),  # noqa: F405
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),  # noqa: F405
+        panel_background=element_rect(fill=PAGE_BG),  # noqa: F405
+        axis_title=element_text(size=12, color=INK),  # noqa: F405
+        axis_text=element_text(size=10, color=INK_SOFT),  # noqa: F405
+        plot_title=element_text(size=16, color=INK, face="bold"),  # noqa: F405
+        plot_subtitle=element_text(size=11, color=INK_SOFT, face="italic"),  # noqa: F405
         panel_grid_major_x=element_blank(),  # noqa: F405
-        panel_grid_major_y=element_line(color="#e0e0e0", size=0.4),  # noqa: F405
+        panel_grid_major_y=element_line(color=INK, size=0.3),  # noqa: F405
         panel_grid_minor=element_blank(),  # noqa: F405
         axis_ticks=element_blank(),  # noqa: F405
-        plot_background=element_rect(fill="white", color="white"),  # noqa: F405
-        legend_position=[0.88, 0.95],
-        legend_justification=[0.5, 1.0],
-        legend_title=element_text(size=15, face="bold", color="#333333"),  # noqa: F405
-        legend_text=element_text(size=13, color="#555555"),  # noqa: F405
-        legend_background=element_rect(fill="white", color="#cccccc", size=0.5),  # noqa: F405
+        legend_position=[0.05, 0.95],
+        legend_justification=[0.0, 1.0],
+        legend_title=element_text(size=10, face="bold", color=INK),  # noqa: F405
+        legend_text=element_text(size=10, color=INK_SOFT),  # noqa: F405
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.5),  # noqa: F405
     )
-    + ggsize(1600, 900)  # noqa: F405
+    + ggsize(800, 450)  # noqa: F405
 )
 
 # Save
-ggsave(plot, "plot.png", path=".", scale=3)  # noqa: F405
-ggsave(plot, "plot.html", path=".")  # noqa: F405
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)  # noqa: F405
+ggsave(plot, f"plot-{THEME}.html", path=".")  # noqa: F405
