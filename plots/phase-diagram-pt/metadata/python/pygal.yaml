@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: phase-diagram-pt
 created: '2026-03-14T14:51:24Z'
-updated: '2026-06-08T08:41:34Z'
+updated: '2026-06-08T08:56:52Z'
 generated_by: claude-sonnet
 workflow_run: 27124834555
 issue: 4666
@@ -12,133 +12,136 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-dia
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/python/pygal/plot-dark.html
-quality_score: 86
+quality_score: 90
 review:
   strengths:
-  - Physically accurate water phase diagram with correct constants (triple point 273.16
-    K/611.73 Pa, critical point 647.1 K/22.064 MPa, sublimation enthalpy 51059 J/mol,
-    vaporization enthalpy 40700 J/mol) and water's anomalous negative melting slope
-  - Phase-region labels (SOLID, LIQUID, GAS, SUPERCRITICAL FLUID) at tasteful low
-    opacity guide the reader without overwhelming the data
-  - Logarithmic y-axis correctly implemented via logarithmic=True; human_readable=True
-    auto-formats tick labels (1.0 Pa to 10.0 kPa to 1.0 MPa)
-  - Cubic spline interpolation (interpolate='cubic') makes phase boundaries smooth
-    and scientifically credible
-  - All font sizes explicitly set via Style object; both themes fully readable with
-    no dark-on-dark or light-on-light failures
+  - Physically accurate water phase diagram using Clausius-Clapeyron equation — triple
+    point (273.16 K, 611.73 Pa) and critical point (647.1 K, 22.064 MPa) match real-world
+    water constants exactly
+  - SVG post-processing via xml.etree.ElementTree injects phase region labels (SOLID,
+    LIQUID, GAS, SUPERCRITICAL FLUID) and callout annotation lines — a sophisticated
+    technique demonstrating deep pygal mastery
+  - 'Correct Imprint palette order: Sublimation=green (#009E73), Vaporization=lavender
+    (#C475FD), Melting=blue (#4467A3), Critical Point=ochre (#BD8233), Triple Point=matte-red
+    (#AE3030)'
+  - 'Full theme adaptation: PAGE_BG, INK, and INK_MUTED tokens wired through Style
+    object and SVG callout text — dark render passes the dark-on-dark check cleanly'
+  - Logarithmic Y-axis with y_labels=[1,100,1e4,1e6,1e8] plus smart value_formatter
+    showing Pa/kPa/MPa — covers the full 8-decade pressure range of water phase behavior
+  - Cubic interpolation (interpolate=\"cubic\", interpolation_precision=200) produces
+    smooth phase boundary curves with no visible polygon artifacts
   weaknesses:
-  - 'Legend color mismatch for landmark points (SC-04): pygal applies palette-cycle
-    colors to legend swatches (#BD8233 ochre for series 4, #AE3030 red for series
-    5) independently of per-point ''color'' overrides. Triple-point dot renders red
-    but its legend swatch is ochre; critical-point dot renders ochre but its legend
-    swatch is red. Fix: remove per-point ''color'' keys and use explicit palette assignments
-    at the series level so legend swatches match rendered dots.'
-  - 'Design Excellence ceiling (DE-01/DE-02): No spine removal (top/right frame still
-    present); typography hierarchy is functional but not refined; chart reads as a
-    solid pygal default rather than publication-ready. Add annotation callout labels
-    for triple/critical points and remove top/right frame spines via SVG post-processing.'
-  - 'Minor KISS deviation (CQ-01): format_pressure utility function defined at module
-    level; the formatting logic could be inlined or replaced with a lambda.'
+  - Callout sublabel text (\"273.16 K · 611.73 Pa\", \"647.1 K · 22.064 MPa\") is
+    set to 30px — below the recommended minimum of ~36px for a 3200×1800 canvas. Increase
+    to 34–36px for better mobile readability.
+  - Phase region labels rendered at opacity 0.35 / 0.30 — intentionally subtle, but
+    may be too faint when rendered at mobile thumbnail widths (~400px). Consider raising
+    to 0.50–0.55 to improve legibility at small sizes.
+  - No redundant encoding on the three phase boundary curves — all three are lines
+    of similar weight, distinguishable by color only. Adding distinct linestyles (solid
+    / dashed / dotted) would improve CVD accessibility for the 3-series line group.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 — correct theme surface
-      Chrome: title "phase-diagram-pt · python · pygal · anyplot.ai" centered in dark ink ~60% width; x-axis label "Temperature (K)" and y-axis label "Pressure (Pa)" in dark ink; tick labels (200 K, 300 K … 600 K; 1.0 Pa, 100.0 Pa, 10.0 kPa, 1.0 MPa) in dark ink — all readable
-      Data: three boundary curves — brand green (#009E73) sublimation curve, lavender (#C475FD) vaporization curve, blue (#4467A3) melting curve; large dark-red dot at triple point (273.16 K, 611 Pa); large ochre dot at critical point (647.1 K, 22.1 MPa); phase region labels SOLID/LIQUID/GAS/SUPERCRITICAL FLUID at 0.30–0.35 opacity
-      Legend color inconsistency: Triple Point swatch shows ochre (#BD8233) but dot is red (#AE3030); Critical Point swatch shows red but dot is ochre — per-point color override does not propagate to pygal legend swatches
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) as required — not pure white.
+      Chrome: Title "phase-diagram-pt · python · pygal · anyplot.ai" rendered in dark ink, occupies ~55% of canvas width, fully readable. X-axis label "Temperature (K)" and Y-axis label "Pressure (Pa)" are dark and proportionate. Tick labels ("200 K"…"600 K" on X; "1.0 Pa"…"1.0 MPa" on Y) are dark and clearly legible. Legend at bottom with five labeled entries is readable. Callout labels "Triple Point" and "Critical Point" in bold dark ink are readable; sublabels ("273.16 K · 611.73 Pa" / "647.1 K · 22.064 MPa") at 30px are slightly small but still legible.
+      Data: Three phase boundary curves in Imprint palette order — Sublimation in brand green (#009E73), Vaporization in lavender (#C475FD), Melting in blue (#4467A3). Critical Point dot in ochre (#BD8233) and Triple Point dot in matte-red (#AE3030), both large (dots_size=18). Phase region watermarks SOLID / LIQUID / GAS / SUPERCRITICAL FLUID visible at 0.35–0.30 opacity in their palette colors.
+      Legibility verdict: PASS — all critical text is readable; callout sublabels are small but within acceptable range.
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 — correct dark theme surface
-      Chrome: title, axis labels, tick labels all rendered in light off-white ink — fully readable against dark background; no dark-on-dark failure detected; dashed grid lines subtly visible
-      Data: identical colors to light render — green sublimation, lavender vaporization, blue melting, red triple point dot, ochre critical point dot; phase region labels same colors and opacity
-      Legend color inconsistency persists (ochre swatch for triple point, red swatch for critical point)
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) as required — not pure black.
+      Chrome: Title, axis labels, and tick labels all render in light text (#F0EFE8 / theme-adaptive INK) against the dark background — no dark-on-dark failures. Callout label text uses INK (light) for the dark theme. Legend entries are clearly visible in light text. Grid dashes are visible but subtle.
+      Data: All five data series (three curves + two landmark dots) render in identical Imprint palette colors to the light render — only chrome flips. Brand green sublimation curve, lavender vaporization curve, blue melting curve, ochre critical point, matte-red triple point all confirmed unchanged.
+      Legibility verdict: PASS — theme adaptation is complete; no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set via Style object; title at ~60% width;
-          axis labels and ticks well-proportioned; readable in both themes
+        comment: All font sizes explicitly set; title, axis labels, tick labels, legend
+          all readable in both themes. Callout sublabels at 30px slightly below recommended
+          36px minimum for mobile readability.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions; boundary curve convergence at triple point
-          is visually clean
+        comment: No text overlaps with data or other text elements. Phase region labels,
+          callout annotations, and data curves are well-separated.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Curves clearly visible with stroke_width=8; triple/critical point
-          dots prominent at dots_size=18; phase region labels intentionally semi-transparent
+        comment: Phase boundary curves at stroke_style width=8 are prominent; landmark
+          point dots at dots_size=18 are clearly visible; all elements well-adapted
+          to data density.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; three curves use perceptually distinct
-          hues
+        comment: Imprint palette provides CVD-safe color separation; curves are distinguishable
+          by color; landmark points use distinct palette positions.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization; legend at bottom with proper spacing; no
-          content cut off; correct 3200x1800
+        comment: Canvas gate passed (3200x1800). Plot fills canvas well with generous
+          but balanced margins. No content overflow or clipping observed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Temperature (K) and Pressure (Pa) with units; correct mandated title
-          format
+        comment: 'X: ''Temperature (K)'', Y: ''Pressure (Pa)'' — both descriptive
+          with units. Title in correct spec format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (sublimation) is brand green #009E73; Imprint canonical
-          order for series 1-3; landmark points use Imprint palette members; backgrounds
-          are #FAF8F1 / #1A1A17'
+        comment: 'First series (Sublimation) = #009E73 brand green. Subsequent series
+          follow Imprint order: #C475FD, #4467A3, #BD8233, #AE3030. Backgrounds: #FAF8F1
+          light / #1A1A17 dark. Both renders theme-correct.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: 'Well-configured above defaults: Imprint palette, phase-region labels
-          at tasteful opacity, cubic-interpolated smooth curves, physically-accurate
-          logarithmic scale. Not publication-ready — lacks spine removal and further
-          typographic hierarchy.'
+        passed: true
+        comment: SVG post-processing for phase region labels and callout annotation
+          lines goes clearly above pygal defaults. Semi-transparent phase labels color-coded
+          to their respective boundaries are a thoughtful design choice. Not FiveThirtyEight-level,
+          but solidly above default.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Dashed guide lines and explicit margins are deliberate refinements;
-          legend without bounding frame. Pygal's default chart frame retained; minimal
-          further polishing.
+        passed: true
+        comment: CSS override removes frame border; cubic interpolation produces smooth
+          curves; show_dots=False on boundary curves eliminates point clutter; legend
+          positioned at bottom. Some refinement visible, though no explicit top/right
+          spine removal.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Phase-region labels guide the reader; landmark dots at triple/critical
-          points create clear focal points; water's anomalous negative melting slope
-          shown. Good visual hierarchy.
+        passed: true
+        comment: Phase region labels create clear spatial zones; callout annotations
+          with connecting lines guide viewer to landmark points; supercritical fluid
+          region explicitly labeled; logarithmic scale reveals full phase structure.
+          Visual hierarchy guides the reader effectively.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -146,31 +149,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct P-T phase diagram with three boundary curves and logarithmic
-          pressure axis
+        comment: Correct XY line chart with logarithmic Y-axis for P-T phase diagram.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: three boundaries, triple point, critical
-          point, phase region labels, log pressure axis, supercritical region labeled'
+        comment: 'All required features present: three phase boundaries (solid-gas,
+          liquid-gas, solid-liquid), triple point marked and annotated, critical point
+          marked and annotated, logarithmic pressure axis, all four phase regions
+          labeled.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Temperature on x-axis, pressure (log) on y-axis; physically accurate
-          water constants; all curves correctly positioned
+        comment: X=Temperature(K), Y=Pressure(Pa) on log scale. Full range from 200K
+          to 720K, 1Pa to ~100MPa covered.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title format correct. Legend color swatches for Triple Point and
-          Critical Point are swapped: pygal cycles palette colors into legend swatches
-          independently of per-point color overrides, making the legend misleading
-          for the landmark markers.'
+        passed: true
+        comment: Title 'phase-diagram-pt · python · pygal · anyplot.ai' matches required
+          format exactly. Legend entries match series names.
     data_quality:
       score: 15
       max: 15
@@ -180,63 +182,64 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All phase diagram aspects present: three boundaries, triple point,
-          critical point, supercritical fluid region, water''s anomalous negative
-          melting slope'
+        comment: 'All aspects shown: all three boundary types, both thermodynamic
+          landmark points, all four phase regions, supercritical fluid region.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Physically accurate water phase diagram; real substance with documented
-          constants; appropriate scientific context
+        comment: 'Real water phase diagram with physically accurate constants: triple
+          point 273.16 K / 611.73 Pa, critical point 647.1 K / 22.064 MPa, Clausius-Clapeyron
+          equation for curves. Neutral scientific topic.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Triple point 273.16 K/611.73 Pa, critical point 647.1 K/22.064 MPa,
-          sublimation enthalpy 51059 J/mol, vaporization enthalpy 40700 J/mol — all
-          factually correct
+        comment: Physical constants are factually correct for water. Pressure range
+          (1 Pa to ~100 MPa, log scale) appropriately spans the data. Temperature
+          range (180-720 K) covers all relevant phase boundaries.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Follows imports→data→plot→save but defines a format_pressure utility
-          function, technically deviating from no-functions criterion
+        passed: true
+        comment: Linear script structure. fmt_p is a simple formatter utility (not
+          a class or complex function). importlib workaround is the standard project
+          pattern.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data generated deterministically from physical constants; no
-          random state needed
+        comment: Fully deterministic — physical constants, no random data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports actively used; standard library modules serve clear roles
+        comment: 'All imports used: importlib.util (import workaround), os, sys, ET
+          (SVG post-processing), cairosvg (PNG render), numpy (curve computation).'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and purposeful; SVG post-processing via xml.etree is standard
-          pygal approach; importlib.util pattern is idiomatic
+        comment: Appropriate complexity. SVG post-processing is well-structured using
+          list-of-dicts iteration. No fake UI, no over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current pygal API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current pygal API used.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -244,28 +247,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Strong idiomatic usage: Style object for all theme tokens, logarithmic=True,
-          interpolate=''cubic'', explicit_size=True, value_formatter/x_value_formatter,
-          human_readable=True, SVG post-processing via cairosvg'
+        comment: Correct use of pygal.XY with logarithmic=True, explicit_size=True,
+          per-series stroke_style, value_formatter, x_value_formatter, y_labels, interpolate='cubic'.
+          Strong idiomatic usage beyond the basics.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Cubic spline interpolation, SVG XML manipulation for phase labels,
-          human_readable auto-unit formatting, interactive HTML output as native format
-          — several distinctive pygal features used
-  verdict: REJECTED
+        passed: true
+        comment: SVG post-processing via xml.etree.ElementTree — injects custom phase
+          region text elements and callout lines directly into pygal's SVG output.
+          CSS override for frame removal. cairosvg for final PNG. This is a distinctly
+          pygal-specific pattern not replicable in most other charting libraries.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
+  - annotations
   - html-export
   - manual-ticks
-  - annotations
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling

@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 phase-diagram-pt: Thermodynamic Phase Diagram (Pressure-Temperature)
 Library: pygal 3.1.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-08
 """
 
 # Ensure we import the installed pygal package, not this file
