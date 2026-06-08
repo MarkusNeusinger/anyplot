@@ -1,45 +1,59 @@
 library: seaborn
+language: python
 specification_id: phase-diagram-pt
 created: '2026-03-14T14:51:41Z'
-updated: '2026-03-14T15:10:04Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23090166831
+updated: '2026-06-08T08:36:49Z'
+generated_by: claude-sonnet
+workflow_run: 27124330418
 issue: 4666
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/seaborn/plot.png
-preview_html: null
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 90
 review:
   strengths:
-  - Excellent use of real water phase diagram data with Clausius-Clapeyron physics
-  - Water anomalous negative melting curve slope correctly modeled
-  - Color-coordinated phase labels matching boundary curve colors create visual coherence
-  - Distinct line styles (solid/dashed/dotted) provide redundant encoding beyond color
-  - Triple and critical point annotations are clear and well-positioned
-  - Clean, well-commented code structure
+  - Scientifically accurate water phase diagram with real-world data (triple point
+    273.16 K/611.73 Pa, critical point 647.1 K/22.064 MPa via Clausius-Clapeyron approximation)
+  - 'Complete spec coverage: three boundary curves (sublimation, vaporization, melting),
+    triple point, critical point, phase region labels (SOLID/GAS/LIQUID/SUPERCRITICAL
+    FLUID), log-scale Y-axis, and correct anomalous negative slope for water melting'
+  - Color-coordinated phase region labels matching boundary curve colors create strong
+    visual hierarchy without extra annotations
+  - Both themes fully functional — theme-adaptive chrome correctly applied via sns.set_theme()
+    RC params, warm backgrounds and legible text in both light (#FAF8F1) and dark
+    (#1A1A17) renders
+  - Redundant encoding via both color and line style (solid/dashed/dotted) provides
+    excellent CVD accessibility for the three boundary curves
+  - Subtle phase region fills (alpha=0.06) add spatial context without visual noise
   weaknesses:
-  - Library mastery could be higher - most visual customization uses matplotlib rather
-    than seaborn-specific features
-  - Design could reach publication-quality with more refinement (e.g., custom font
-    family, more polished annotation styling)
-  image_description: 'The plot displays a water pressure-temperature phase diagram
-    with a logarithmic y-axis (Pressure in Pa, from 10^1 to 10^9) and linear x-axis
-    (Temperature in K, from 200 to 750). Three phase boundary curves are shown: a
-    blue solid sublimation curve (lower left), an orange dashed vaporization curve
-    (center, rising from triple point to critical point), and a green dotted melting
-    curve (nearly vertical, rising from the triple point). The triple point is marked
-    with a large red circle at (273.16 K, 611.7 Pa) with an annotated label and arrow.
-    The critical point is marked with a purple diamond at (647.1 K, 22.1 MPa) with
-    a similar annotation. Four phase region labels appear in large, semi-transparent
-    text matching the boundary colors: SOLID (blue, upper left), GAS (orange, lower
-    center), LIQUID (green, center-right), and SUPERCRITICAL FLUID (purple, upper
-    right). The legend is positioned in the lower right. Top and right spines are
-    removed, and the grid is very subtle. The title reads "phase-diagram-pt · seaborn
-    · pyplots.ai".'
+  - Special point markers (s=80) are slightly small relative to the composition —
+    increase to s=120-150 so the triple and critical points anchor the diagram more
+    prominently
+  - 'DE-02: Visual refinement is good but not maximal — the remaining bottom spine
+    could be removed for a cleaner look; grid alpha=0.15 is fine but explicit grid.color
+    RC key is not set in sns.set_theme (only post-hoc via ax.yaxis.grid), so the grid
+    color doesn''t respond to theme through the RC layer'
+  - 'LM-02: Implementation does not leverage seaborn''s statistical features (e.g.,
+    sns.kdeplot for density, statistical fitting) — inherent to the scientific plot
+    type but limits library distinctiveness score'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — matches spec, not pure white
+      Chrome: Title "phase-diagram-pt · python · seaborn · anyplot.ai" at fontsize=12 occupies ~70% of plot width — expected and correct. Axis labels "Temperature (K)" and "Pressure (Pa)" at fontsize=10 visible and proportional. Tick labels at fontsize=8 clearly readable against the warm off-white background. Y-axis log ticks (1e1 to 1e9) all visible. Grid is subtle (alpha=0.15, y-axis only). Top/right spines removed. Legend in lower right: Sublimation/Vaporization/Melting with line style samples.
+      Data: Three phase boundary curves — Sublimation in #009E73 green (solid), Vaporization in #C475FD lavender (dashed), Melting in #4467A3 blue (dotted). Subtle colored region fills (green for SOLID, lavender for GAS, blue-gray for LIQUID, neutral muted for SUPERCRITICAL FLUID). Triple point marked with ochre circle (at ~273K, 612Pa) with arrow annotation. Critical point marked with red diamond (at 647K, 22.1MPa) with arrow annotation. Phase region labels (SOLID, GAS, LIQUID, SUPERCRITICAL FLUID) color-coordinated with boundary curves.
+      Legibility verdict: PASS — all text clearly readable; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — matches spec, not pure black
+      Chrome: Title, axis labels, tick labels all rendered in light color (#F0EFE8 or #B8B7B0 range) against the dark background — fully readable. No dark-on-dark failures. Grid lines visible as subtle lighter lines. Legend box uses ELEVATED_BG (#242420) with lighter edge color. Annotations (Triple Point, Critical Point) text in ochre and red — still clearly readable against dark background.
+      Data: Boundary curve colors are IDENTICAL to light render — #009E73 green Sublimation, #C475FD lavender Vaporization, #4467A3 blue Melting. Only chrome (background, text, grid, legend box) flipped for dark theme. Phase region fills and special point markers visible and consistent.
+      Legibility verdict: PASS — all text clearly readable; no dark-on-dark issues detected
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -47,42 +61,53 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          annotations 15pt, phase labels 28/18pt'
+        comment: All font sizes explicitly set (title=12, axis=10, ticks=8). Title
+          fits at ~70% width. Readable in both themes at full and mobile scale.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; phase labels, annotations, and legend
-          well-separated
+        comment: No overlapping text. Annotations for triple/critical points positioned
+          with arrows away from data. Phase labels spaced well.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Lines thick (linewidth=3), markers large (s=250), distinct line styles
-          differentiate boundaries
+        comment: Boundary curves clearly visible at linewidth=2.5. Special point markers
+          (s=80) slightly small — visible but could be more prominent for key diagram
+          features.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/orange/green colorblind-safe palette with redundant line style
-          encoding
+        comment: Redundant encoding via color + linestyle (solid/dashed/dotted). CVD-safe
+          through line style differentiation.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 aspect, plot fills ~65% of canvas, balanced margins, nothing
-          cut off
+        comment: Plot fills canvas well. Legend in lower right. SUPERCRITICAL FLUID
+          label in upper right within canvas bounds. Balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Temperature (K) and Pressure (Pa) - descriptive with units
+        comment: Temperature (K) and Pressure (Pa) — both with units. Title in correct
+          format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (Sublimation). Multi-series uses Imprint positions
+          1-3 in canonical order. Special points use ochre (#BD8233) and matte red
+          (#AE3030) as semantic anchors. Backgrounds #FAF8F1 / #1A1A17 correct. Both
+          themes chrome-compliant.'
     design_excellence:
       score: 14
       max: 20
@@ -92,21 +117,26 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, color-coordinated phase labels, distinct line styles,
-          thoughtful marker choices
+        comment: 'Strong design: Imprint palette with color-coordinated phase region
+          labels, subtle region fills, intentional hierarchy through color + annotation.
+          Clearly above library defaults.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle whitegrid (alpha=0.15), generous whitespace
+        comment: sns.despine removes top/right spines. Subtle y-axis grid (alpha=0.15).
+          Legend styled with framealpha=0.9. Good refinement but not every detail
+          polished (grid.color not in RC, bottom spine retained).
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Triple and critical points emphasized with distinct markers and annotations;
-          phase regions labeled with matching colors
+        comment: 'Visual hierarchy guides the reader: color-coded phase labels, annotation
+          arrows pointing to scientifically significant triple and critical points,
+          supercritical fluid region highlighted. Clear narrative about water phase
+          behavior.'
     spec_compliance:
       score: 15
       max: 15
@@ -116,27 +146,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct P-T phase diagram with boundary curves on logarithmic pressure
-          axis
+        comment: Correct P-T phase diagram with all three boundaries, phase regions,
+          triple point, and critical point.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: three boundaries, triple point, critical point,
-          phase labels, supercritical region, log axis'
+        comment: Phase region labels, triple/critical point markers with annotations,
+          log pressure axis, water representative data, anomalous negative slope for
+          melting — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Temperature on x-axis, pressure on y-axis (log scale), all data visible
+        comment: Temperature (K) on X, Pressure (Pa) on Y. Log scale Y. All data in
+          view.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match boundary curve names
+        comment: 'Title: ''phase-diagram-pt · python · seaborn · anyplot.ai''. Legend
+          labels match data: Sublimation, Vaporization, Melting.'
     data_quality:
       score: 15
       max: 15
@@ -146,21 +179,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All three boundaries, triple point, critical point, supercritical
-          region, anomalous negative melting slope
+        comment: 'Shows all features: three distinct boundary types, triple point,
+          critical point, supercritical fluid region, log scale spanning 1e1-1e9 Pa.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real water data using Clausius-Clapeyron approximation with physical
-          constants
+        comment: Real water phase diagram with scientifically accurate triple point
+          (273.16 K, 611.73 Pa) and critical point (647.1 K, 22.064 MPa). Clausius-Clapeyron
+          approximation used for realistic curves.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic values matching published water data
+        comment: 'Factually correct: anomalous negative slope for water melting curve,
+          pressure range covers 1e1-1e9 Pa, temperature range 190-760 K. All physically
+          correct.'
     code_quality:
       score: 10
       max: 10
@@ -170,33 +206,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, DataFrame, plot, style, save'
+        comment: 'Clean linear flow: imports → tokens → data → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data from physical equations
+        comment: Fully deterministic — uses mathematical formulas (Clausius-Clapeyron),
+          no random generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imports used
+        comment: 'All imports used: os, matplotlib.pyplot, numpy, pandas, seaborn.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: Clean Pythonic code. No fake interactivity. Annotations and fills
+          well-organized.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, no deprecated API
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. Current seaborn
+          API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -204,26 +244,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of sns.lineplot with DataFrame/hue/style, set_context, set_style,
-          despine, color_palette
+        comment: Uses sns.lineplot and sns.scatterplot with hue+style+palette for
+          multi-series. sns.set_theme for global RC. sns.despine for spine removal.
+          High-level DataFrame-native API used correctly.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Seaborn theming and lineplot grouping used, but annotations and markers
-          rely on matplotlib
+        passed: true
+        comment: Uses seaborn-distinctive hue+style combination for automatic multi-series
+          legend, markers dict in scatterplot for per-class marker shapes. Seaborn-specific
+          patterns used but scientific diagram limits statistical feature usage.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - log-scale
   patterns:
   - data-generation
-  - explicit-figure
   dataprep: []
   styling:
-  - edge-highlighting
   - alpha-blending
   - grid-styling
