@@ -1,0 +1,255 @@
+library: echarts
+language: javascript
+specification_id: indicator-ichimoku
+created: '2026-06-08T02:06:43Z'
+updated: '2026-06-08T02:26:27Z'
+generated_by: claude-sonnet
+workflow_run: 27111532735
+issue: 4669
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/javascript/echarts/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Complete Ichimoku overlay with all 5 components correctly displaced (Chikou -26,
+    Senkou +26)
+  - 'Differential stacking cloud technique elegantly handles bull/bear fill transitions
+    using ECharts native stack + connectNulls: false'
+  - Semantic Imprint palette assignment follows financial convention while staying
+    within the Imprint palette
+  - Three distinct line styles (solid/dashed/dotted) for Tenkan/Kijun/Chikou provide
+    CVD-safe redundant encoding
+  - Custom legend cloud patch icons with itemStyle border accent show polished legend
+    design
+  - Fully deterministic LCG data generation — no external fetch needed
+  - 'Both themes correctly wired: backgrounds, ink, grid tokens all flip properly'
+  weaknesses:
+  - Tick labels and legend text at fontSize 12-13 CSS px render to ~24-26 source pixels
+    at 2x device scale — roughly half the ~44 source-px target; increasing to 18-20
+    would improve mobile legibility
+  - No explicit yAxis.name (e.g., Price (USD)) or xAxis.name — axis context relies
+    entirely on tick values; a short axis label would complete VQ-06
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "indicator-ichimoku · javascript · echarts · anyplot.ai" centered, readable in dark ink. Legend row (OHLC, Tenkan-sen, Kijun-sen, Chikou Span, Kumo (Bull), Kumo (Bear)) with custom icons in dark ink — readable. X-axis tick labels rotated 30 deg, dates 2023-01-02 to 2023-10-12 — readable. Y-axis tick labels (140-190) — readable.
+      Data: Candlesticks green up / red down. Tenkan-sen rose/purple solid. Kijun-sen blue dashed. Chikou Span ochre dotted. Kumo (Bull) green semi-transparent fill from mid-2023 onward. Kumo (Bear) pink semi-transparent fill in early 2023. First series (#009E73) is the brand green for up candles and bull cloud.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title in light ink — readable. Legend in light ink — readable. X-axis tick labels in lighter ink — readable. Y-axis tick labels in lighter ink — readable. No dark-on-dark failures.
+      Data: Candlestick colors identical to light render (green up / red down). All Ichimoku line colors unchanged (Tenkan rose, Kijun blue, Chikou ochre). Kumo cloud fills same rgba values — bullish cloud appears richer/deeper on dark surface (expected). Brand green #009E73 clearly visible.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set but tick/legend fonts (CSS px 12-13)
+          render to ~24-26 source px at 2x scale, slightly below the ~44 source-px
+          target
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps; rotated x-axis labels and legend spacing well-managed
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Candlesticks, all three Ichimoku lines, and both cloud bands clearly
+          distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Bull/bear distinction uses green/red (financial convention semantic
+          exception) with legend labels; Ichimoku lines use distinct hues + different
+          line styles for CVD safety
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; balanced margins; good canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: true
+        comment: No explicit axis title labels (no yAxis.name or xAxis.name); context
+          clear from tick values but lacks formal units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Background #FAF8F1/#1A1A17 correct; BULL_GREEN = palette[0] (#009E73);
+          BEAR_RED = palette[4] semantic exception; all Ichimoku colors from Imprint
+          palette; chrome flips correctly'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Clearly above defaults: semantic color assignment, three distinct
+          line styles, semi-transparent cloud fills, intentional z-ordering. Not publication-ready
+          but well-considered.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis grid only, subtle grid token, generous margins. Clean but
+          axis lines could be removed for further polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Coherent 2023 uptrend narrative with Kumo transitioning from bearish
+          to bullish; visual hierarchy via z-ordering and transparency guides viewer.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Candlestick chart with complete Ichimoku Cloud overlay; all 5 components
+          present
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features satisfied: Kumo fill with color change, Tenkan/Kijun
+          lines, Chikou -26, Senkou +26, 9/26/52 params, green/red candlesticks'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: dates, Y: price; cloud and Chikou displacements correctly implemented'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: indicator-ichimoku · javascript · echarts · anyplot.ai; legend
+          labels correct with custom cloud patch icons'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both bull and bear candles; both Kumo zones; all 5 Ichimoku lines
+          with correct displacements; 200 trading days
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Daily equity OHLC 2023, ~$148 start, ~28% gain over 10 months, weekends
+          filtered, neutral topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: LCG with realistic daily volatility (±3.8 + wick); plausible US equity
+          scale
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Two small helpers (lcg, periodHL) justified in JS but technically
+          violate no-functions rule
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: LCG with fixed seed 42 — fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; all globals used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized; differential stacking is elegant; no fake
+          UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Harness generates plot-{theme}.png + .html; ECharts 5.5.1 API correct;
+          animation: false; no explicit size/dPR passed to init'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Native candlestick series; area fill stacking for cloud; theme tokens
+          wired to chrome; animation: false. Minor: boundaryGap: true is default and
+          could be omitted.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Differential stacking technique (transparent base + colored diff
+          + connectNulls: false) is a genuine ECharts-specific pattern for bounded
+          fills between unsorted lines; custom legend icons via itemStyle'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - rolling-window
+  - time-series
+  styling:
+  - alpha-blending
