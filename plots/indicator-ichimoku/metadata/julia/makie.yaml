@@ -1,0 +1,253 @@
+library: makie
+language: julia
+specification_id: indicator-ichimoku
+created: '2026-06-08T01:57:51Z'
+updated: '2026-06-08T02:17:07Z'
+generated_by: claude-sonnet
+workflow_run: 27111371003
+issue: 4669
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - 'Complete and accurate Ichimoku implementation: all five lines, dual-color cloud,
+    correct ±26-period displacements, standard 9/26/52 parameters'
+  - Semantic color assignment for candlesticks and cloud matches domain convention
+    and Imprint palette (green=bullish, red=bearish) correctly
+  - 'Excellent Makie primitive usage: band! for cloud, linesegments! for wicks, poly!/Rect2f
+    for candle bodies — idiomatic and efficient'
+  - Theme-adaptive chrome correctly applied in both renders; no dark-on-dark failures
+  - Trend reversal annotation and vertical rule add meaningful data storytelling
+  weaknesses:
+  - Senkou Span A and B dashed boundary lines at linewidth=1.0 are too thin at 180-candle
+    density — increase to 1.3–1.5
+  - Trend reversal annotation text at fontsize=9 is borderline small — increase to
+    10–11 or add a semi-transparent background rectangle
+  - Cloud fills at alpha=0.22 are correct but wicks at alpha=0.55 overlap the cloud
+    zone and add mild visual noise — consider reducing wick alpha to 0.40
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "indicator-ichimoku · julia · makie · anyplot.ai" in dark ink at top — fully readable. Axis labels "Period (days)" and "Price (USD)" in dark INK color — readable. Tick labels in INK_SOFT (dark grey) at fontsize=10 — readable.
+      Data: Up-candles in brand green (#009E73), down-candles in matte red (#AE3030). Kumo cloud: green-tinted fill (alpha=0.22) during bullish phase, red-tinted fill during bearish phase. Tenkan-sen lavender (#C475FD) solid, Kijun-sen blue (#4467A3) solid, Chikou span ochre (#BD8233) dotted. Span A/B dashed boundary lines at linewidth=1.0.
+      Legibility verdict: PASS — all text readable; "Trend reversal" annotation at fontsize=9 is small but legible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in near-white (#F0EFE8) — fully readable. Axis labels in light INK color — readable. Tick labels in INK_SOFT (#B8B7B0) — readable. No dark-on-dark failures observed.
+      Data: Colors are identical to light render — brand green candles, matte red candles, lavender Tenkan-sen, blue Kijun-sen, ochre Chikou span, green/red cloud fills all match. Brand green #009E73 clearly visible on dark surface.
+      Legibility verdict: PASS — all text readable in dark theme; chrome tokens correctly flipped
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Title, axis labels, ticks all sized explicitly and readable in both
+          themes. Minor deduction: Trend reversal annotation at fontsize=9 (18px source)
+          is at lower readability threshold.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text-on-text collisions. Annotation near period 120 grazes data
+          cloud slightly but remains readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 'All Ichimoku elements visible. Minor deduction: Span A/B boundary
+          dashed lines at linewidth=1.0 are thin in 180-candle chart; Chikou span
+          dotted at 1.5 is subtle.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/red candlestick encoding is mandated domain convention (spec-required).
+          Imprint palette used elsewhere; CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 confirmed. Legend in right column with colsize! Relative(0.82).
+          No clipping or overflow.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Period (days) and Price (USD) with units. Title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green first, semantic red for down-candles and bearish cloud.
+          Imprint palette positions 2-4 for indicator lines. Backgrounds #FAF8F1 light
+          / #1A1A17 dark. Chrome tokens adapt correctly.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Multiple layered geoms with intentional z-order, semi-transparent
+          cloud fills (alpha=0.22), custom legend handles. Above generic defaults
+          but annotation lacks callout background and cloud boundary lines are barely
+          perceptible.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Top/right spines removed, tick marks hidden, y-grid only at 12% opacity,
+          frameless legend. Solid but wicks at alpha=0.55 bleed into cloud fills slightly.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Explicit trend reversal annotation with vertical dashed line. Cloud
+          color change communicates bull/bear phase. Good visual layering hierarchy.
+          Could add TK/KB crossover emphasis.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Ichimoku Cloud overlay on candlestick chart. All five lines present.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Cloud filled with bull/bear tint. Tenkan-sen and Kijun-sen as distinct
+          lines. Chikou Span -26 periods. Span A/B +26 periods. Standard 9/26/52 params.
+          Green/red candles.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct X/Y mapping, 180 periods shown, displacements applied correctly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches spec-id · julia · makie · anyplot.ai format. Legend
+          covers all 5 series (3 lines + 2 cloud types).
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full OHLC candlesticks plus all five Ichimoku components plus cloud
+          coloring.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Synthetic daily stock price starting ~100 USD, realistic volatility,
+          two-phase trend narrative.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 180 periods (sufficient for 52-period lookback), price range ~80-120
+          USD, sensible intraday ranges.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat sequential script, no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized with clear section comments, NaN masking for split
+          cloud bands is idiomatic.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2).
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper Makie layout system (fig[1,1], fig[1,2], colsize!), RGBAf
+          for alpha-transparent colors, correct Figure/Axis API.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: band! for Kumo cloud fills, linesegments! for efficient wick rendering,
+          poly! with Rect2f for candlestick bodies, custom Legend with LineElement/PolyElement
+          handles — all distinctively Makie.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - rolling-window
+  styling:
+  - alpha-blending
+  - grid-styling
