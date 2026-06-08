@@ -1,14 +1,16 @@
-""" anyplot.ai
+"""anyplot.ai
 flamegraph-basic: Flame Graph for Performance Profiling
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-08
 """
 
+import hashlib
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+from matplotlib.patches import Rectangle
 
 
 # Theme-adaptive chrome tokens
@@ -147,15 +149,23 @@ for depth in sorted(frames):
 max_depth = max(frames)
 n_rows = max_depth + 1
 
-# Build a 2D grid as the heatmap substrate. Each column = 1 sample; cell value
-# encodes the bar's flame-cmap position. Empty regions stay NaN and get masked.
-grid = np.full((n_rows, total_samples), np.nan)
+# Build a 2D grid as the heatmap substrate. Each sample → RES columns so adjacent
+# bars share cell edges with no antialiased seam. Empty regions stay NaN + masked.
+RES = 4
+n_cols = total_samples * RES
+
+
+def color_for(name):
+    # hashlib so colors stay identical across PYTHONHASHSEED-randomised processes.
+    h = int(hashlib.md5(name.encode()).hexdigest(), 16) & 0xFFFF
+    return 0.18 + (h / 0xFFFF) * 0.78
+
+
+grid = np.full((n_rows, n_cols), np.nan)
 for stack_path, (x_pos, width) in positions.items():
     depth = stack_path.count(";")
     func_name = stack_path.split(";")[-1]
-    # Deterministic hash-based variation so adjacent bars contrast.
-    color_val = 0.18 + ((hash(func_name) & 0xFFFF) / 0xFFFF) * 0.78
-    grid[depth, int(x_pos) : int(x_pos + width)] = color_val
+    grid[depth, int(x_pos * RES) : int((x_pos + width) * RES)] = color_for(func_name)
 
 # Flip rows so depth 0 (root) renders at the bottom of the heatmap.
 grid_display = grid[::-1]
@@ -178,31 +188,30 @@ sns.heatmap(
     rasterized=True,
 )
 
-# In-bar function-name labels. Sized to the new 3200-px canvas.
+# In-bar function-name labels. Bars below 0.045 fraction skip labels — at 400px
+# web preview their truncated 5pt text was borderline and didn't add value.
 for stack_path, (x_pos, width) in positions.items():
     fraction = width / total_samples
-    if fraction <= 0.022:
+    if fraction <= 0.045:
         continue
 
     func_name = stack_path.split(";")[-1]
     pct = fraction * 100
     label = f"{func_name} ({pct:.0f}%)" if fraction > 0.07 else func_name
 
-    # samples_per_char calibrated for the heatmap-column layout at this canvas.
-    fs = 7 if fraction > 0.09 else (6 if fraction > 0.045 else 5)
-    samples_per_char = {7: 9.0, 6: 7.6, 5: 6.4}[fs]
+    fs = 7 if fraction > 0.09 else 6
+    samples_per_char = {7: 9.0, 6: 7.6}[fs]
     max_chars = max(3, int(width / samples_per_char))
     if len(label) > max_chars:
         label = label[: max(3, max_chars - 1)] + "…"
 
     depth = stack_path.count(";")
-    color_val = 0.18 + ((hash(func_name) & 0xFFFF) / 0xFFFF) * 0.78
-    r, g, b = flame_cmap(color_val)[:3]
+    r, g, b = flame_cmap(color_for(func_name))[:3]
     luminance = 0.299 * r + 0.587 * g + 0.114 * b
     text_color = INK if luminance > 0.55 else "#FAF8F1"
 
     ax.text(
-        x_pos + width / 2,
+        (x_pos + width / 2) * RES,
         (max_depth - depth) + 0.5,
         label,
         ha="center",
@@ -211,6 +220,39 @@ for stack_path, (x_pos, width) in positions.items():
         fontweight="semibold" if fraction > 0.12 else "regular",
         color=text_color,
         clip_on=True,
+        zorder=5,
+    )
+
+# Brand-green outline on the hot path (greatest-width child from root to leaf) —
+# gives the eye an obvious bottleneck focal point at a glance.
+HOT_GREEN = "#009E73"
+hot_path = ["main"]
+current = "main"
+while True:
+    candidates = [
+        (p, w)
+        for p, (_, w) in positions.items()
+        if p.startswith(current + ";") and p.count(";") == current.count(";") + 1
+    ]
+    if not candidates:
+        break
+    current = max(candidates, key=lambda c: c[1])[0]
+    hot_path.append(current)
+
+for stack_path in hot_path:
+    x_pos, width = positions[stack_path]
+    depth = stack_path.count(";")
+    ax.add_patch(
+        Rectangle(
+            (x_pos * RES, max_depth - depth),
+            width * RES,
+            1,
+            fill=False,
+            edgecolor=HOT_GREEN,
+            linewidth=1.5,
+            zorder=4,
+            clip_on=True,
+        )
     )
 
 # Axes
@@ -223,7 +265,7 @@ ax.set_yticks([i + 0.5 for i in range(n_rows)])
 ax.set_yticklabels([f"D{d}" for d in range(max_depth, -1, -1)])
 
 xtick_positions = np.arange(0, total_samples + 1, 200)
-ax.set_xticks(xtick_positions)
+ax.set_xticks(xtick_positions * RES)
 ax.set_xticklabels([str(int(x)) for x in xtick_positions])
 
 # Heatmap forces all spines on; remove top & right per default style.
