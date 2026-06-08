@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 indicator-ichimoku: Ichimoku Cloud Technical Indicator Chart
-Library: bokeh 3.9.0 | Python 3.14.3
-Quality: 92/100 | Updated: 2026-06-08
+Library: bokeh 3.9.1 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-06-08
 """
 
 import os
