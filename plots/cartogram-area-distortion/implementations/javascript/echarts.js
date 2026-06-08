@@ -32,16 +32,80 @@ const maxGdp   = Math.max(...countries.map(c => c[2]));
 const gdppcMin = Math.min(...countries.map(c => c[3]));
 const gdppcMax = Math.max(...countries.map(c => c[3]));
 
-// value: [lon, lat, gdp_B, gdppc_k, code, name]  — visualMap maps dimension 3 (gdppc_k)
+// Dorling scatter: area ∝ GDP, minimum size floor for legibility
 const scatterData = countries.map(c => ({
   value: [c[0], c[1], c[2], c[3], c[4], c[5]],
-  symbolSize: Math.sqrt(c[2] / maxGdp) * 80,
+  symbolSize: Math.max(16, Math.sqrt(c[2] / maxGdp) * 80),
+}));
+
+// Reference inset: true geographic positions, uniform dot size for comparison
+const refData = countries.map(c => ({
+  value: [c[0], c[1], c[2], c[3], c[4], c[5]],
+  symbolSize: 7,
+  itemStyle: { color: t.inkSoft, opacity: 0.75 },
 }));
 
 const chart = echarts.init(document.getElementById("container"));
 
 const titleStr = "cartogram-area-distortion · javascript · echarts · anyplot.ai";
 const titleFontSize = Math.round(22 * Math.min(1, 67 / titleStr.length));
+
+// Size legend: reference circles at 55% scale for display in legend area
+// radii ≈ [6.5, 13.1, 22.0]
+const legGdps = [500, 2000, 4456];
+const legLabels = ["$500B", "$2T", "$4.5T"];
+const legR = legGdps.map(g => (Math.max(16, Math.sqrt(g / maxGdp) * 80) * 0.55) / 2);
+
+const legBaseY = 828;  // y-baseline (bottom of circles)
+const legTitleX = 395;
+const graphicEls = [
+  // Reference inset label (above secondary grid)
+  {
+    type: "text",
+    left: 78,
+    top: 695,
+    style: {
+      text: "Geographic reference (equal area)",
+      fill: t.inkSoft,
+      fontSize: 11,
+      fontStyle: "italic",
+    },
+  },
+  // Size legend title
+  {
+    type: "text",
+    left: legTitleX,
+    top: 695,
+    style: {
+      text: "Circle area ∝ GDP",
+      fill: t.inkSoft,
+      fontSize: 12,
+      fontWeight: "bold",
+    },
+  },
+];
+
+// Build size legend circles and labels
+let circCx = 420;
+legGdps.forEach((gdp, i) => {
+  const r = legR[i];
+  graphicEls.push(
+    {
+      type: "circle",
+      shape: { cx: circCx, cy: legBaseY - r, r },
+      style: { fill: "none", stroke: t.inkSoft, lineWidth: 1.5 },
+    },
+    {
+      type: "text",
+      left: circCx - 18,
+      top: legBaseY + 5,
+      style: { text: legLabels[i], fill: t.inkSoft, fontSize: 11 },
+    }
+  );
+  if (i < legGdps.length - 1) {
+    circCx += r + 20 + legR[i + 1];
+  }
+});
 
 chart.setOption({
   animation: false,
@@ -64,6 +128,7 @@ chart.setOption({
     padding: [8, 12],
     textStyle: { color: t.ink, fontSize: 13 },
     formatter: (params) => {
+      if (params.seriesIndex !== 0) return undefined;
       const v = params.value;
       return (
         `<b>${v[5]} (${v[4]})</b><br/>` +
@@ -87,43 +152,69 @@ chart.setOption({
     top: "middle",
     orient: "vertical",
     hoverLink: false,
+    seriesIndex: 0,
   },
 
-  grid: { left: 72, right: 160, top: 100, bottom: 64 },
+  grid: [
+    { left: 72, right: 180, top: 100, bottom: 240 },
+    { left: 78, top: 715, width: 228, height: 108 },
+  ],
 
-  xAxis: {
-    type: "value",
-    name: "Longitude",
-    nameLocation: "middle",
-    nameGap: 36,
-    nameTextStyle: { color: t.inkSoft, fontSize: 12 },
-    min: -15,
-    max: 38,
-    interval: 10,
-    axisLabel: { color: t.inkSoft, fontSize: 11, formatter: (v) => `${v}\xb0` },
-    axisLine: { show: true, lineStyle: { color: t.inkSoft, opacity: 0.3 } },
-    axisTick: { show: false },
-    splitLine: { lineStyle: { color: t.grid } },
-  },
+  xAxis: [
+    {
+      gridIndex: 0,
+      type: "value",
+      name: "Longitude",
+      nameLocation: "middle",
+      nameGap: 36,
+      nameTextStyle: { color: t.inkSoft, fontSize: 12 },
+      min: -15,
+      max: 38,
+      interval: 10,
+      axisLabel: { color: t.inkSoft, fontSize: 11, formatter: (v) => `${v}\xb0` },
+      axisLine: { show: false },
+      axisTick: { show: false },
+      splitLine: { lineStyle: { color: t.grid } },
+    },
+    {
+      gridIndex: 1,
+      type: "value",
+      min: -15,
+      max: 38,
+      show: false,
+    },
+  ],
 
-  yAxis: {
-    type: "value",
-    name: "Latitude",
-    nameLocation: "middle",
-    nameGap: 44,
-    nameTextStyle: { color: t.inkSoft, fontSize: 12 },
-    min: 34,
-    max: 72,
-    interval: 10,
-    axisLabel: { color: t.inkSoft, fontSize: 11, formatter: (v) => `${v}\xb0` },
-    axisLine: { show: true, lineStyle: { color: t.inkSoft, opacity: 0.3 } },
-    axisTick: { show: false },
-    splitLine: { lineStyle: { color: t.grid } },
-  },
+  yAxis: [
+    {
+      gridIndex: 0,
+      type: "value",
+      name: "Latitude",
+      nameLocation: "middle",
+      nameGap: 44,
+      nameTextStyle: { color: t.inkSoft, fontSize: 12 },
+      min: 34,
+      max: 72,
+      interval: 10,
+      axisLabel: { color: t.inkSoft, fontSize: 11, formatter: (v) => `${v}\xb0` },
+      axisLine: { show: false },
+      axisTick: { show: false },
+      splitLine: { lineStyle: { color: t.grid } },
+    },
+    {
+      gridIndex: 1,
+      type: "value",
+      min: 34,
+      max: 72,
+      show: false,
+    },
+  ],
 
   series: [
     {
       type: "scatter",
+      xAxisIndex: 0,
+      yAxisIndex: 0,
       data: scatterData,
       label: {
         show: true,
@@ -132,10 +223,17 @@ chart.setOption({
         fontWeight: "bold",
         color: "#ffffff",
       },
-      emphasis: {
-        focus: "self",
-        scale: true,
-      },
+      emphasis: { focus: "self", scale: true },
+    },
+    {
+      type: "scatter",
+      xAxisIndex: 1,
+      yAxisIndex: 1,
+      data: refData,
+      label: { show: false },
+      emphasis: { disabled: true },
     },
   ],
+
+  graphic: graphicEls,
 });
