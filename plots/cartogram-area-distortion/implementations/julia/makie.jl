@@ -14,17 +14,16 @@ const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 const INK_MUTED   = THEME == "light" ? colorant"#6B6A63" : colorant"#A8A79F"
 
-# Imprint palette — first 4 positions for 4 US census regions
+# Imprint palette — positions 1–4 for four US census regions
 const REGION_COLORS = [
-    colorant"#009E73",  # Northeast — Imprint position 1 (brand green)
-    colorant"#C475FD",  # South     — Imprint position 2 (lavender)
-    colorant"#4467A3",  # Midwest   — Imprint position 3 (blue)
-    colorant"#BD8233",  # West      — Imprint position 4 (ochre)
+    colorant"#009E73",  # Northeast — brand green
+    colorant"#C475FD",  # South     — lavender
+    colorant"#4467A3",  # Midwest   — blue
+    colorant"#BD8233",  # West      — ochre
 ]
 
 # US states: (abbreviation, longitude, latitude, population_millions, region_index)
-# region_index: 1=Northeast, 2=South, 3=Midwest, 4=West
-# Alaska and Hawaii repositioned to lower-left inset area
+# Alaska and Hawaii repositioned to lower-left corner for display
 const STATE_DATA = [
     ("AL", -86.7,  32.7, 5.03,  2),
     ("AK", -127.0, 26.5, 0.73,  4),
@@ -78,15 +77,33 @@ const STATE_DATA = [
     ("WY", -107.6, 43.0, 0.58,  4),
 ]
 
-abbrevs      = [s[1] for s in STATE_DATA]
-lons         = Float64[s[2] for s in STATE_DATA]
-lats         = Float64[s[3] for s in STATE_DATA]
-pops         = Float64[s[4] for s in STATE_DATA]
-region_idxs  = Int[s[5] for s in STATE_DATA]
+abbrevs     = [s[1] for s in STATE_DATA]
+lons        = Float64[s[2] for s in STATE_DATA]
+lats        = Float64[s[3] for s in STATE_DATA]
+pops        = Float64[s[4] for s in STATE_DATA]
+region_idxs = Int[s[5] for s in STATE_DATA]
+colors      = [REGION_COLORS[r] for r in region_idxs]
 
-colors        = [REGION_COLORS[r] for r in region_idxs]
-size_scale    = 52.0 / sqrt(maximum(pops))
-marker_sizes  = [sqrt(p) * size_scale for p in pops]
+# Dorling layout jitter — offset crowded NE states to reduce circle/label overlap
+const NE_JITTER = Dict(
+    "CT" => (-0.5, -0.4),
+    "RI" => ( 0.7,  0.0),
+    "VT" => (-0.5,  0.5),
+    "NH" => ( 0.6,  0.4),
+    "DE" => ( 0.5, -0.4),
+)
+disp_lons = copy(lons)
+disp_lats = copy(lats)
+for (i, abbr) in enumerate(abbrevs)
+    if haskey(NE_JITTER, abbr)
+        disp_lons[i] += NE_JITTER[abbr][1]
+        disp_lats[i] += NE_JITTER[abbr][2]
+    end
+end
+
+# Marker sizes: area ∝ population; minimum enforced so tiny states remain visible
+size_scale   = 44.0 / sqrt(maximum(pops))
+marker_sizes = [max(sqrt(p) * size_scale, 8.0) for p in pops]
 
 # Figure
 fig = Figure(
@@ -95,6 +112,7 @@ fig = Figure(
     backgroundcolor = PAGE_BG,
 )
 
+# Main Dorling cartogram axis
 ax = Axis(
     fig[1, 1];
     title              = "cartogram-area-distortion · julia · makie · anyplot.ai",
@@ -119,30 +137,64 @@ ax = Axis(
     ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
 )
 
-# Draw state circles — Dorling cartogram: size ∝ sqrt(population), color by region
-scatter!(ax, lons, lats;
+scatter!(ax, disp_lons, disp_lats;
     color       = colors,
     markersize  = marker_sizes,
     strokecolor = PAGE_BG,
     strokewidth = 1.5,
 )
 
-# State abbreviation labels
 for i in eachindex(abbrevs)
-    text!(ax, lons[i], lats[i];
-        text    = abbrevs[i],
-        align   = (:center, :center),
+    text!(ax, disp_lons[i], disp_lats[i];
+        text     = abbrevs[i],
+        align    = (:center, :center),
         fontsize = 10,
-        color   = INK,
+        color    = INK,
     )
 end
 
-# Region legend
-region_names = ["Northeast", "South", "Midwest", "West"]
+xlims!(ax, -131.0, -64.0)
+ylims!(ax, 22.5, 50.5)
+
+# Right panel — reference map and census region legend
+right_grid = fig[1, 2] = GridLayout()
+
+# Reference map: equal-size dots at geographic centers for comparison with cartogram
+ref_ax = Axis(
+    right_grid[1, 1];
+    title              = "Reference Map",
+    titlesize          = 11,
+    titlecolor         = INK,
+    backgroundcolor    = PAGE_BG,
+    topspinevisible    = true,
+    rightspinevisible  = true,
+    leftspinevisible   = true,
+    bottomspinevisible = true,
+    topspinecolor      = INK_MUTED,
+    rightspinecolor    = INK_MUTED,
+    leftspinecolor     = INK_MUTED,
+    bottomspinecolor   = INK_MUTED,
+    xticksvisible      = false,
+    yticksvisible      = false,
+    xticklabelsvisible = false,
+    yticklabelsvisible = false,
+    xgridvisible       = false,
+    ygridvisible       = false,
+)
+scatter!(ref_ax, lons, lats;
+    color       = colors,
+    markersize  = 5.0,
+    strokecolor = PAGE_BG,
+    strokewidth = 0.8,
+)
+xlims!(ref_ax, -131.0, -64.0)
+ylims!(ref_ax, 22.5, 50.5)
+
+# Census region legend
 Legend(
-    fig[1, 2],
+    right_grid[2, 1],
     [MarkerElement(color = REGION_COLORS[i], marker = :circle, markersize = 18) for i in 1:4],
-    region_names;
+    ["Northeast", "South", "Midwest", "West"];
     title           = "Census Region",
     titlesize       = 13,
     titlecolor      = INK,
@@ -155,21 +207,18 @@ Legend(
     rowgap          = 8,
 )
 
-# Caption label
+# Caption
 Label(
     fig[2, 1:2];
-    text    = "Dorling cartogram — circle area ∝ state population (2020 US Census). Alaska and Hawaii repositioned.",
+    text    = "Dorling cartogram — circle area ∝ state population (2020 US Census). Reference map shows equal-size geographic layout. AK/HI repositioned.",
     fontsize = 10,
     color   = INK_MUTED,
     halign  = :left,
 )
 
 # Layout proportions
-colsize!(fig.layout, 1, Relative(0.83))
+colsize!(fig.layout, 1, Relative(0.78))
 rowsize!(fig.layout, 1, Relative(0.92))
-
-# Axis extent: full continental US + inset corners for AK/HI
-xlims!(ax, -131.0, -64.0)
-ylims!(ax, 22.5, 50.5)
+rowsize!(right_grid, 1, Fixed(140))
 
 save("plot-$(THEME).png", fig; px_per_unit = 2)
