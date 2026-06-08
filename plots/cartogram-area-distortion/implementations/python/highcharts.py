@@ -1,10 +1,11 @@
-""" pyplots.ai
+""" anyplot.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
-Library: highcharts unknown | Python 3.14.3
-Quality: 82/100 | Created: 2026-03-13
+Library: highcharts unknown | Python 3.13.13
+Quality: 82/100 | Updated: 2026-06-08
 """
 
 import json
+import os
 import tempfile
 import time
 import urllib.request
@@ -12,12 +13,39 @@ from pathlib import Path
 
 from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - US states population (2020 Census, in thousands)
-# Each tuple: (abbreviation, full_name, population_thousands, region)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint categorical palette — positions 1-4 for four US Census regions
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+
+def make_bubble_gradient(hex_color):
+    """Radial gradient: soft white highlight at center → solid hue at edge."""
+    return {
+        "radialGradient": {"cx": 0.4, "cy": 0.3, "r": 0.7},
+        "stops": [[0, "rgba(255,255,255,0.48)"], [0.55, hex_color], [1, hex_color]],
+    }
+
+
+region_colors = {
+    "Midwest": IMPRINT_PALETTE[0],  # #009E73 brand green — ALWAYS first series
+    "West": IMPRINT_PALETTE[1],  # #C475FD lavender
+    "Northeast": IMPRINT_PALETTE[2],  # #4467A3 blue
+    "South": IMPRINT_PALETTE[3],  # #BD8233 ochre
+}
+
+# US states population (2020 Census, thousands)
 states_data = [
     ("CA", "California", 39538, "West"),
     ("TX", "Texas", 29146, "South"),
@@ -71,8 +99,7 @@ states_data = [
     ("WY", "Wyoming", 577, "West"),
 ]
 
-# Dorling cartogram: circles positioned geographically, area proportional to value
-# Northeast states spread further to reduce label crowding
+# Dorling cartogram: geographic positions for bubble centers
 geo_positions = {
     "AK": (-114, 30),
     "HI": (-109, 27),
@@ -126,19 +153,7 @@ geo_positions = {
     "ME": (-65, 48),
 }
 
-# Base region colors - colorblind-friendly palette
-region_base_colors = {
-    "Northeast": {"r": 58, "g": 109, "b": 181},
-    "South": {"r": 217, "g": 121, "b": 65},
-    "Midwest": {"r": 73, "g": 135, "b": 58},
-    "West": {"r": 123, "g": 87, "b": 160},
-}
-
-region_hex = {"Northeast": "#3A6DB5", "South": "#D97941", "Midwest": "#49873A", "West": "#7B57A0"}
-
-# Population range for color intensity mapping
-pop_values = [s[2] for s in states_data]
-pop_min, pop_max = min(pop_values), max(pop_values)
+top5_states = {"CA", "TX", "FL", "NY", "PA"}
 
 # Simplified US continental outline for geographic reference
 us_outline = [
@@ -185,28 +200,11 @@ us_outline = [
     [-124.7, 48.4],
 ]
 
-# Top 5 most populous states get highlighted borders
-top5_states = {"CA", "TX", "FL", "NY", "PA"}
-
-
-def intensity_color(base_rgb, population):
-    """Shade region color by population: higher pop = more saturated/darker."""
-    t = (population - pop_min) / (pop_max - pop_min)
-    factor = 0.55 + 0.45 * t
-    r = int(base_rgb["r"] * factor)
-    g = int(base_rgb["g"] * factor)
-    b = int(base_rgb["b"] * factor)
-    return f"rgb({min(r, 255)},{min(g, 255)},{min(b, 255)})"
-
-
-# Build data per region with color intensity and highlight styling
-data_by_region = {r: [] for r in region_hex}
+# Build per-region data points (label size inlined by population tier)
+data_by_region = {r: [] for r in region_colors}
 for abbr, name, pop, region in states_data:
     lon, lat = geo_positions[abbr]
-    label_size = "24px" if pop > 5000 else "20px" if pop > 2000 else "17px"
-    base_rgb = region_base_colors[region]
-    point_color = intensity_color(base_rgb, pop)
-    is_top5 = abbr in top5_states
+    label_size = "26px" if pop > 5000 else "22px" if pop > 2000 else "18px"
     point = {
         "name": name,
         "code": abbr,
@@ -214,40 +212,34 @@ for abbr, name, pop, region in states_data:
         "y": lat,
         "z": pop,
         "region": region,
-        "color": point_color,
         "dataLabels": {"style": {"fontSize": label_size}},
     }
-    if is_top5:
-        point["marker"] = {"lineWidth": 4, "lineColor": "#1a1a2e"}
+    if abbr in top5_states:
+        point["marker"] = {"lineWidth": 4, "lineColor": INK}
     data_by_region[region].append(point)
 
-# Use highcharts-core to validate and build chart options
+# Title: 60 chars — within 67-char baseline, no fontsize scaling needed
+title = "cartogram-area-distortion · python · highcharts · anyplot.ai"
+
+# Build chart options via highcharts-core
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
 chart.options.chart = {
     "type": "bubble",
-    "width": 4800,
-    "height": 2700,
-    "backgroundColor": "#fafbfc",
+    "width": 3200,
+    "height": 1800,
+    "backgroundColor": PAGE_BG,
     "plotBackgroundColor": "transparent",
     "spacing": [80, 40, 80, 40],
     "style": {"fontFamily": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif"},
 }
 
-chart.options.title = {
-    "text": "cartogram-area-distortion \u00b7 highcharts \u00b7 pyplots.ai",
-    "style": {"fontSize": "52px", "fontWeight": "600", "color": "#1a1a2e"},
-    "y": 45,
-}
+chart.options.title = {"text": title, "style": {"fontSize": "66px", "fontWeight": "600", "color": INK}, "y": 48}
 
 chart.options.subtitle = {
-    "text": (
-        "Dorling Cartogram \u2014 Circle area proportional to state population "
-        "(2020 U.S. Census, thousands) \u2022 Color intensity encodes population magnitude"
-    ),
-    "style": {"fontSize": "32px", "color": "#5a5a6e", "fontWeight": "300"},
-    "y": 92,
+    "text": ("Dorling Cartogram — Circle area proportional to state population (2020 U.S. Census, thousands)"),
+    "style": {"fontSize": "36px", "color": INK_MUTED},
 }
 
 chart.options.x_axis = {"visible": False, "min": -128, "max": -60}
@@ -258,14 +250,16 @@ chart.options.legend = {
     "layout": "horizontal",
     "align": "center",
     "verticalAlign": "bottom",
-    "floating": False,
-    "itemStyle": {"fontSize": "30px", "fontWeight": "normal", "color": "#333333"},
-    "symbolRadius": 14,
-    "symbolHeight": 24,
-    "symbolWidth": 24,
-    "itemDistance": 70,
-    "y": -15,
-    "title": {"text": "Region:  ", "style": {"fontSize": "30px", "fontWeight": "bold", "color": "#333333"}},
+    "itemStyle": {"fontSize": "34px", "fontWeight": "normal", "color": INK_SOFT},
+    "backgroundColor": ELEVATED_BG,
+    "borderWidth": 0,
+    "borderRadius": 8,
+    "symbolRadius": 10,
+    "symbolHeight": 18,
+    "symbolWidth": 18,
+    "itemDistance": 60,
+    "padding": 20,
+    "title": {"text": "Region", "style": {"fontSize": "34px", "fontWeight": "bold", "color": INK}},
 }
 
 chart.options.credits = {"enabled": False}
@@ -274,16 +268,15 @@ chart.options.tooltip = {
     "style": {"fontSize": "28px"},
     "headerFormat": "",
     "pointFormat": ("<b>{point.name}</b> ({point.code})<br/>Population: {point.z:,.0f}k<br/>Region: {point.region}"),
-    "backgroundColor": "rgba(255,255,255,0.96)",
-    "borderColor": "#aaaaaa",
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
     "borderRadius": 8,
-    "shadow": {"color": "rgba(0,0,0,0.15)", "offsetX": 2, "offsetY": 2, "width": 4},
 }
 
 chart.options.plot_options = {
     "bubble": {
-        "minSize": 40,
-        "maxSize": 185,
+        "minSize": 28,
+        "maxSize": 155,
         "sizeBy": "area",
         "zMin": 0,
         "zMax": 42000,
@@ -292,72 +285,80 @@ chart.options.plot_options = {
             "enabled": True,
             "format": "{point.code}",
             "style": {
-                "fontSize": "22px",
+                "fontSize": "20px",
                 "fontWeight": "700",
                 "color": "#ffffff",
-                "textOutline": "2.5px rgba(0,0,0,0.5)",
+                "textOutline": "2px rgba(0,0,0,0.55)",
             },
             "allowOverlap": True,
         },
-        "opacity": 0.92,
-        "borderWidth": 2,
-        "borderColor": "rgba(255,255,255,0.85)",
+        "opacity": 0.88,
+        "borderWidth": 1.5,
+        "borderColor": PAGE_BG,
     }
 }
 
-# Convert validated options to dict, then add series with custom data properties
+# Convert validated options to dict, then append series with custom point fields
 options_dict = json.loads(chart.options.to_json())
 
-# Build series: reference outline + one bubble series per region
 series_list = []
 
-# Faint US continental outline as geographic reference
+# Faint US outline for geographic context
 series_list.append(
     {
         "type": "line",
         "name": "U.S. Outline",
-        "data": [[lon, lat] for lon, lat in us_outline],
-        "color": "rgba(180,180,190,0.3)",
-        "lineWidth": 2,
+        "data": us_outline,
+        "color": INK_MUTED,
+        "lineWidth": 1.5,
         "enableMouseTracking": False,
         "showInLegend": False,
         "marker": {"enabled": False},
         "zIndex": 0,
         "dashStyle": "Dot",
+        "opacity": 0.45,
     }
 )
 
-# One bubble series per region for legend grouping
-for region_name, hex_color in region_hex.items():
-    points = data_by_region[region_name]
-    points.sort(key=lambda p: -p["z"])
-    series_list.append({"type": "bubble", "name": region_name, "color": hex_color, "data": points, "zIndex": 1})
+# One bubble series per region for categorical legend; gradient gives 3D depth
+for region_name, hex_color in region_colors.items():
+    points = sorted(data_by_region[region_name], key=lambda p: -p["z"])
+    series_list.append(
+        {
+            "type": "bubble",
+            "name": region_name,
+            "color": make_bubble_gradient(hex_color),
+            "legendSymbolColor": hex_color,
+            "data": points,
+            "zIndex": 1,
+        }
+    )
 
 options_dict["series"] = series_list
 
-# Annotations: explanation box + top-5 callout
+# Annotation box: area encoding key + population concentration story
 options_dict["annotations"] = [
     {
         "draggable": "",
         "labels": [
             {
-                "point": {"x": -66, "y": 28, "xAxis": 0, "yAxis": 0},
+                "point": {"x": -66, "y": 27.5, "xAxis": 0, "yAxis": 0},
                 "text": (
-                    '<b style="font-size:28px">Circle area = Population</b><br/>'
-                    '<span style="color:#666;font-size:24px">'
-                    "Largest: California 39,538k<br/>"
-                    "Smallest: Wyoming 577k<br/><br/>"
-                    "</span>"
-                    '<span style="font-size:24px">'
-                    "\u25cf Dark border = Top 5 states"
-                    "</span>"
+                    f'<b style="font-size:28px;color:{INK}">Circle area ∝ Population</b><br/>'
+                    f'<span style="color:{INK_SOFT};font-size:24px;line-height:1.55">'
+                    "#1 California · 39,538k<br/>"
+                    "#2 Texas · 29,146k<br/>"
+                    "#50 Wyoming · 577k<br/>"
+                    f'<span style="color:{INK_MUTED};font-size:22px">'
+                    "Top 5 states hold 38% of U.S. pop."
+                    "</span></span>"
                 ),
-                "backgroundColor": "rgba(255,255,255,0.96)",
-                "borderColor": "#b0b0b8",
-                "borderRadius": 12,
-                "borderWidth": 1.5,
-                "style": {"fontSize": "26px", "color": "#333333", "lineHeight": "36px"},
-                "padding": 20,
+                "backgroundColor": ELEVATED_BG,
+                "borderColor": INK_SOFT,
+                "borderRadius": 10,
+                "borderWidth": 0,
+                "style": {"fontSize": "24px", "color": INK, "lineHeight": "36px"},
+                "padding": 22,
                 "shape": "rect",
             }
         ],
@@ -366,26 +367,21 @@ options_dict["annotations"] = [
 
 chart_json = json.dumps(options_dict)
 
-# Download Highcharts JS libraries for inline embedding
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-more_url = "https://code.highcharts.com/highcharts-more.js"
-annotations_url = "https://code.highcharts.com/modules/annotations.js"
-
+# Download Highcharts JS libraries for inline embedding (headless Chrome blocks CDN)
 headers = {"User-Agent": "Mozilla/5.0", "Accept": "*/*", "Referer": "https://www.highcharts.com/"}
 
-req = urllib.request.Request(highcharts_url, headers=headers)
-with urllib.request.urlopen(req, timeout=60) as response:
-    highcharts_js = response.read().decode("utf-8")
+req = urllib.request.Request("https://code.highcharts.com/highcharts.js", headers=headers)
+with urllib.request.urlopen(req, timeout=60) as resp:
+    highcharts_js = resp.read().decode("utf-8")
 
-req = urllib.request.Request(more_url, headers=headers)
-with urllib.request.urlopen(req, timeout=60) as response:
-    more_js = response.read().decode("utf-8")
+req = urllib.request.Request("https://code.highcharts.com/highcharts-more.js", headers=headers)
+with urllib.request.urlopen(req, timeout=60) as resp:
+    more_js = resp.read().decode("utf-8")
 
-req = urllib.request.Request(annotations_url, headers=headers)
-with urllib.request.urlopen(req, timeout=60) as response:
-    annotations_js = response.read().decode("utf-8")
+req = urllib.request.Request("https://code.highcharts.com/modules/annotations.js", headers=headers)
+with urllib.request.urlopen(req, timeout=60) as resp:
+    annotations_js = resp.read().decode("utf-8")
 
-# Generate HTML with inline scripts for headless Chrome rendering
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -394,8 +390,8 @@ html_content = f"""<!DOCTYPE html>
     <script>{more_js}</script>
     <script>{annotations_js}</script>
 </head>
-<body style="margin:0; background:#fafbfc;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
+<body style="margin:0; background:{PAGE_BG};">
+    <div id="container" style="width: 3200px; height: 1800px;"></div>
     <script>
         var chartConfig = {chart_json};
         Highcharts.chart('container', chartConfig);
@@ -403,45 +399,37 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
-# Save interactive HTML version (CDN for portability)
-standalone_html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/highcharts-more.js"></script>
-    <script src="https://code.highcharts.com/modules/annotations.js"></script>
-</head>
-<body style="margin:0; background:#fafbfc;">
-    <div id="container" style="width: 100%; height: 100vh;"></div>
-    <script>
-        var chartConfig = {chart_json};
-        chartConfig.chart.width = null;
-        chartConfig.chart.height = null;
-        Highcharts.chart('container', chartConfig);
-    </script>
-</body>
-</html>"""
+# Save interactive HTML artifact (theme-suffixed)
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
 
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(standalone_html)
-
-# Write temp HTML and take screenshot with headless Chrome
+# Screenshot via headless Chrome with authoritative CDP viewport
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2800")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
+# CDP override is authoritative — --window-size alone loses ~139 px to Chrome chrome
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
-time.sleep(6)
-driver.save_screenshot("plot.png")
+time.sleep(5)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
-
 Path(temp_path).unlink()
+
+# PIL canvas normalization — Step 0 safety net for ±1–2 px rounding
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (3200, 1800):
+    _norm = Image.new("RGB", (3200, 1800), PAGE_BG)
+    _norm.paste(_img, ((3200 - _img.size[0]) // 2, (1800 - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")

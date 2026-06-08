@@ -1,51 +1,63 @@
 library: altair
+language: python
 specification_id: cartogram-area-distortion
 created: '2026-03-13T21:22:48Z'
-updated: '2026-03-13T21:54:37Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23070855356
+updated: '2026-06-08T04:03:04Z'
+generated_by: claude-sonnet
+workflow_run: 27114477689
 issue: 4671
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/altair/plot.html
-quality_score: 87
+language_version: 3.13.13
+library_version: 6.2.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/python/altair/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent Dorling cartogram approach with well-chosen regional color palette (blue,
-    gold, orange, green)
-  - Strong data storytelling with top 5 state emphasis (darker outlines, population
-    callouts, summary annotation)
-  - Expert Altair usage with geographic projection, TopoJSON reference map, and layered
-    composition
-  - Clean deterministic code with proper title format and dual PNG/HTML output
-  - Subtle reference map provides geographic context without overwhelming the data
+  - Correct use of Imprint palette (Northeast=#009E73 first) with all four region
+    colors in canonical order
+  - 'Expert Altair geographic API: albersUsa projection, alt.topo_feature, alt.condition/FieldOneOfPredicate
+    for conditional top-5 highlighting'
+  - Theme-adaptive chrome fully wired (PAGE_BG, ELEVATED_BG, INK, INK_SOFT, INK_MUTED)
+    across both renders
+  - All font sizes explicitly set, including computed title scaling formula for the
+    long mandated title string
+  - Real 2023 US state population data — factually correct and neutral
+  - Reference background map provides geographic context as spec requires
+  - 'Key annotation adds data storytelling: ''Top 5 states hold 37% of US population'''
+  - Canvas padding correctly implemented via PIL to hit exact 3200×1800 target
+  - HTML export saved alongside PNG for interactivity
+  - Clean KISS code structure with no functions/classes
   weaknesses:
-  - Northeast corridor has circle overlap due to geographic clustering of small high-population
+  - Northeast US is geometrically dense (NY, NJ, MA, CT, RI, PA, MD all close together)
+    — circles overlap significantly and state abbreviation labels collide, reducing
+    readability of that region (VQ-02)
+  - Dorling cartogram (circles at centroids) diverges from the spec's description
+    of a contiguous cartogram that distorts actual region shapes — acceptable approximation
+    but not the canonical form
+  - 'DE-01 could reach higher: the conditional top-5 highlighting is a good touch
+    but overall aesthetic remains within ''well-configured Altair default'' territory
+    — reducing spines/decorative chrome further and adding more intentional whitespace
+    around the map would help'
+  - Labels on very small states (WY, VT, AK, ND, SD, MT, WV, RI) are often invisible
+    or appear only as faint text on tiny circles — no labeling strategy for small
     states
-  - Dorling cartogram (circles) rather than contiguous cartogram (distorted boundaries)
-    as spec prefers
-  - Population value labels (13pt) are on the smaller side relative to other text
-    elements
-  image_description: 'The plot displays a Dorling cartogram of the contiguous United
-    States (plus Alaska and Hawaii repositioned in the bottom-left). Each state is
-    represented by a circle positioned at its geographic centroid, with circle area
-    proportional to state population. A very faint reference map of US state outlines
-    in light gray provides geographic context beneath the circles. Circles are colored
-    by US Census region: dark blue for Northeast, gold for Midwest, burnt orange for
-    South, and forest green for West. The five most populous states (California, Texas,
-    Florida, New York, Pennsylvania) are visually emphasized with darker outlines
-    and higher opacity. White bold state abbreviation labels appear on circles for
-    states with population >= 4M, and italic population values appear below labels
-    for the top 5 states. A Region legend with colored symbols sits in the bottom-left,
-    and a Population size legend is in the bottom-right. An annotation in the lower
-    portion reads "Top 5 states hold 37% of the US population." The title reads "US
-    States by Population · cartogram-area-distortion · altair · pyplots.ai" with a
-    subtitle explaining the circle sizing and top-5 emphasis. The background is a
-    warm off-white.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct Imprint surface, no pure white
+      Chrome: Title "US States by Population · cartogram-area-distortion · python · altair · anyplot.ai" in dark ink, readable. Subtitle in INK_SOFT. No axis labels (geographic map). Annotation "Top 5 states hold 37% of US population" in INK_MUTED at lower map area — legible.
+      Data: 50 circles sized by population, colored by Census region: Northeast=#009E73 (brand green), Midwest=#C475FD (lavender), South=#4467A3 (blue), West=#BD8233 (ochre). All four Imprint canonical positions 1–4. Top-5 states (CA, TX, FL, NY, PA) have bold dark outlines and white state abbreviation + population labels. Reference background map shows US state boundaries in REF_FILL/REF_STROKE. Region legend (bottom-left) and Population legend (bottom-right) styled with ELEVATED_BG boxes.
+      Legibility verdict: PASS — all title/subtitle/annotation text readable; legend labels and state abbreviations on large circles readable; northeast region has some circle and label crowding (NY, NJ, PA, MA area) but main content remains discernible.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface, no pure black
+      Chrome: Title and subtitle rendered in light ink (F0EFE8 / B8B7B0) — clearly readable against dark background. Annotation in INK_MUTED (A8A79F) is visible. Legend boxes use ELEVATED_BG (#242420) with INK_SOFT stroke — appropriate dark-theme elevated surfaces.
+      Data: Circle colors are identical to light render — Northeast=#009E73, Midwest=#C475FD, South=#4467A3, West=#BD8233 — Imprint data colors unchanged between themes as required. Top-5 state labels (white text on colored circles) remain readable. Reference map uses dark REF_FILL (#252521) / REF_STROKE (#3A3A36) — subtle but visible.
+      Legibility verdict: PASS — no dark-on-dark failures detected. Title, subtitle, annotation, legend labels all render in light-colored text. Brand green #009E73 clearly visible. No black text on dark background detected.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 24
       max: 30
       items:
       - id: VQ-01
@@ -53,71 +65,83 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set throughout: title=28pt, subtitle=17pt,
-          legend titles=18pt, labels=16-17pt. Population labels at 13pt slightly small.'
+        comment: All font sizes explicitly set (title scaling formula, fontSize=11/10/9
+          for labels/pop/annotation, legendFontSize=10). Readable in both themes.
+          Northeast crowding slightly reduces overall score.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Northeast corridor has circle clustering: NY, PA, NJ, MA, CT overlap
-          at geographic centroids. White strokes help but NE is crowded.'
+        comment: Significant circle and label overlap in Northeast US (NY, NJ, MA,
+          CT, RI, PA cluster). Main content readable but this region is visually noisy.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Good size range [200, 6000] with clear differentiation. Smallest
-          states (WY, VT) are very small dots but visible. Opacity 0.82 appropriate.
+        comment: Circle sizes well-scaled (range=[40,1800]) — CA large, TX/FL prominent,
+          small states visible as tiny dots. Very small states (VT, WY, AK) barely
+          visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Four-color regional palette (blue, gold, orange, green) is colorblind-safe
-          with good luminance differentiation.
+        comment: Imprint palette positions 1-4 used; CVD-safe hue families (green/purple/blue/ochre).
+          White label text on colored circles provides contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good 16:9 proportions, map fills most of canvas. Alaska/Hawaii repositioned.
-          Some vertical space for title/subtitle.
+        comment: Map fills good portion of canvas. Legends well-positioned. Some wasted
+          space around map edges and northeast density reduces layout quality.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Proper title with spec-id format and descriptive subtitle. No traditional
-          axes needed for map.
+        comment: Population legend has 'Population (millions)' — descriptive with
+          units. Region legend labeled. Title descriptive.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Northeast) = #009E73. Next three: #C475FD, #4467A3,
+          #BD8233 in canonical Imprint order. Background #FAF8F1 light / #1A1A17 dark.
+          Legend elevated bg correct. Chrome fully theme-adaptive.'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom 4-color palette, Helvetica Neue typography, warm off-white
-          background, white circle strokes, dark outlines for emphasis. Clearly above
-          defaults.
+        comment: 'Clearly above defaults: conditional top-5 highlighting with bold
+          outlines, opacity variation, reference background map, annotation with insight.
+          Not yet FiveThirtyEight-level polish.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: View strokes removed, subtle reference map, custom background color,
-          generous whitespace, good layering detail.
+        comment: No axes/spines (appropriate for geographic map). Legend boxes styled
+          with fillColor/strokeColor. View stroke removed. Opacity applied to circles.
+          Some refinement evident.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Top 5 states emphasized with darker strokes and population callouts.
-          Annotation provides key insight. Visual hierarchy through size.
+        comment: Bold outlines + population labels emphasize top-5 states. Annotation
+          'Top 5 states hold 37% of US population' provides explicit insight. Size
+          variation itself tells the population story.
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -125,53 +149,57 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Valid Dorling cartogram (proportional circles at centroids) rather
-          than contiguous cartogram. Widely accepted variant.
+        comment: Dorling cartogram — circle area proportional to population value.
+          Valid cartogram variant but not the contiguous (shape-distortion) type described
+          in spec. Core area-distortion concept correctly implemented.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Color encoding, labels, legends, reference map all present. Missing
-          contiguous boundary distortion (Dorling approach instead).
+        comment: 'All spec requirements present: geographic regions sized by data
+          value, reference map for context, color for secondary variable (region),
+          labels for major states, legends explaining area and color.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Population to size, region to color, lat/lon to position via Albers
-          USA projection. All correct.
+        comment: Longitude/latitude correctly mapped to geographic position. Circle
+          size correctly encodes population. Color correctly encodes region.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact format title, both Region and Population legends present with
-          proper formatting.
+        comment: 'Title format: ''US States by Population · cartogram-area-distortion
+          · python · altair · anyplot.ai'' — correct with descriptive prefix. Region
+          and Population legends both correct.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All 50 states, wide population range (0.6M-38.9M), four regions.
-          Good variety in sizes.
+        comment: All 50 states represented. Population range 0.6M–38.9M shows dramatic
+          variation. Regional color adds second dimension. Full feature coverage.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real US state population data with approximate 2023 estimates. Neutral
-          and factual.
+        comment: Real 2023 US state population estimates. Neutral topic. Real-world
+          comprehensible scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Population values closely match actual Census data.
+        comment: Values match 2023 US Census estimates. CA 38.9M, TX 30.5M, FL 22.6M,
+          NY 19.6M — factually correct proportions.
     code_quality:
       score: 10
       max: 10
@@ -181,33 +209,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, layers, combine, save. No functions
+        comment: 'Flat script: imports → data → chart layers → save. No functions
           or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded state data.
+        comment: Fully deterministic hardcoded data — no random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair and pandas imported, both utilized.
+        comment: os, sys, altair, pandas, PIL.Image — all imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized with clear layer separation. Appropriate complexity.
+        comment: Clean and readable. Title scaling formula is elegant. No over-engineering,
+          no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png (scale_factor=3.0) and plot.html. Current Altair
-          API.
+        comment: Saves plot-{THEME}.png (with PIL padding) and plot-{THEME}.html.
+          Correct format.
     library_mastery:
       score: 9
       max: 10
@@ -217,27 +246,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert declarative grammar: mark_circle, encode, type annotations,
-          Scale/Legend, layer composition, geographic projection, topo_feature.'
+        comment: 'Expert use of Altair geographic API: .project(type=''albersUsa''),
+          alt.topo_feature for topojson, proper Q/N encoding types for geo coordinates,
+          configure_view/configure_legend/configure_title.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses alt.topo_feature(), albersUsa projection, declarative layer
-          composition, native tooltips, HTML export. Leverages Vega-Lite foundation.
-  verdict: REJECTED
+        comment: alt.condition with alt.FieldOneOfPredicate for conditional encoding
+          (opacity/stroke/strokeWidth per group) — a sophisticated Altair pattern.
+          Layer composition of 5 chart objects. alt.topo_feature for TopoJSON. These
+          are distinctively Altair.
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - layer-composition
-  - annotations
   - hover-tooltips
   - html-export
-  patterns:
-  - data-generation
+  - layer-composition
+  - annotations
+  patterns: []
   dataprep: []
   styling:
-  - minimal-chrome
-  - edge-highlighting
   - alpha-blending
+  - edge-highlighting
