@@ -67,12 +67,12 @@ chart.setOption({
     text: "swimmer-clinical-timeline · javascript · echarts · anyplot.ai",
     left: "center",
     top: 22,
-    textStyle: { color: t.ink, fontSize: 22, fontWeight: "bold" }
+    textStyle: { color: t.ink, fontSize: 27, fontWeight: "bold" }
   },
   legend: {
     bottom: 16,
     left: "center",
-    textStyle: { color: t.inkSoft, fontSize: 13 },
+    textStyle: { color: t.inkSoft, fontSize: 14 },
     itemGap: 22,
     itemWidth: 20,
     itemHeight: 12,
@@ -88,8 +88,8 @@ chart.setOption({
   grid: {
     left: 16,
     right: 50,
-    top: 86,
-    bottom: 90,
+    top: 100,
+    bottom: 100,
     containLabel: true
   },
   xAxis: {
@@ -100,8 +100,8 @@ chart.setOption({
     name: "Time on Study (Weeks)",
     nameLocation: "middle",
     nameGap: 44,
-    nameTextStyle: { color: t.inkSoft, fontSize: 15 },
-    axisLabel: { color: t.inkSoft, fontSize: 13 },
+    nameTextStyle: { color: t.inkSoft, fontSize: 19 },
+    axisLabel: { color: t.inkSoft, fontSize: 15 },
     axisLine: { lineStyle: { color: t.inkSoft } },
     axisTick: { lineStyle: { color: t.inkSoft } },
     splitLine: { lineStyle: { color: t.grid } }
@@ -110,7 +110,11 @@ chart.setOption({
     type: "category",
     data: patientIds,
     inverse: true,
-    axisLabel: { color: t.inkSoft, fontSize: 12 },
+    name: "Patient",
+    nameLocation: "end",
+    nameGap: 10,
+    nameTextStyle: { color: t.inkSoft, fontSize: 15 },
+    axisLabel: { color: t.inkSoft, fontSize: 14 },
     axisLine: { lineStyle: { color: t.inkSoft } },
     axisTick: { show: false },
     splitLine: { show: false }
