@@ -43,7 +43,7 @@ for (let i = 0; i <= 40; i++) {
 
 const chart = echarts.init(document.getElementById("container"));
 
-// Title length: "CO2 Phase Diagram · phase-diagram-pt · javascript · echarts · anyplot.ai" ~ 72 chars
+// Title length: "CO₂ Phase Diagram · phase-diagram-pt · javascript · echarts · anyplot.ai" ~ 72 chars
 // titleFontSize = round(22 * 67 / 72) = 20
 chart.setOption({
   animation: false,
@@ -82,8 +82,8 @@ chart.setOption({
     max: 360,
     interval: 20,
     axisLabel: { color: t.inkSoft, fontSize: 14 },
-    axisLine: { show: true, lineStyle: { color: t.inkSoft } },
-    axisTick: { show: true, lineStyle: { color: t.inkSoft } },
+    axisLine: { show: false },
+    axisTick: { show: false },
     splitLine: { show: true, lineStyle: { color: t.grid } },
   },
 
@@ -97,12 +97,54 @@ chart.setOption({
     min: 0.01,
     max: 2000,
     axisLabel: { color: t.inkSoft, fontSize: 14 },
-    axisLine: { show: true, lineStyle: { color: t.inkSoft } },
-    axisTick: { show: true, lineStyle: { color: t.inkSoft } },
+    axisLine: { show: false },
+    axisTick: { show: false },
     splitLine: { show: true, lineStyle: { color: t.grid } },
   },
 
   series: [
+    // Phase-region shading (markArea only, no visible data points)
+    {
+      type: "line",
+      name: "_gas",
+      data: [],
+      markArea: {
+        silent: true,
+        itemStyle: { color: t.palette[0], opacity: 0.08 },
+        data: [[{ xAxis: 140, yAxis: 0.01 }, { xAxis: 360, yAxis: 4.5 }]],
+      },
+    },
+    {
+      type: "line",
+      name: "_liquid",
+      data: [],
+      markArea: {
+        silent: true,
+        itemStyle: { color: t.palette[1], opacity: 0.08 },
+        data: [[{ xAxis: 216.5, yAxis: 5.0 }, { xAxis: 305, yAxis: 100 }]],
+      },
+    },
+    {
+      type: "line",
+      name: "_solid",
+      data: [],
+      markArea: {
+        silent: true,
+        itemStyle: { color: t.palette[2], opacity: 0.08 },
+        data: [[{ xAxis: 140, yAxis: 4.8 }, { xAxis: 217, yAxis: 2000 }]],
+      },
+    },
+    {
+      type: "line",
+      name: "_supercritical",
+      data: [],
+      markArea: {
+        silent: true,
+        itemStyle: { color: t.palette[5], opacity: 0.08 },
+        data: [[{ xAxis: 303, yAxis: 70 }, { xAxis: 360, yAxis: 2000 }]],
+      },
+    },
+    // Phase boundary curves
     {
       name: "Solid–Gas (Sublimation)",
       type: "line",
@@ -124,6 +166,7 @@ chart.setOption({
       symbol: "none",
       lineStyle: { color: t.palette[2], width: 5 },
     },
+    // Special points
     {
       name: "Triple Point",
       type: "scatter",
@@ -134,9 +177,9 @@ chart.setOption({
       label: {
         show: true,
         formatter: "Triple Point\n216.55 K, 5.19 atm",
-        position: "right",
+        position: "bottom",
         color: t.inkSoft,
-        fontSize: 13,
+        fontSize: 14,
         fontWeight: "bold",
       },
       emphasis: { disabled: true },
@@ -153,7 +196,7 @@ chart.setOption({
         formatter: "Critical Point\n304.13 K, 72.8 atm",
         position: "top",
         color: t.inkSoft,
-        fontSize: 13,
+        fontSize: 14,
         fontWeight: "bold",
       },
       emphasis: { disabled: true },
