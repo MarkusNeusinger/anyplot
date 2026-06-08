@@ -1,52 +1,71 @@
 library: highcharts
+language: python
 specification_id: phase-diagram-pt
 created: '2026-03-14T14:55:37Z'
-updated: '2026-03-14T15:31:13Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23090166823
+updated: '2026-06-08T08:50:40Z'
+generated_by: claude-sonnet
+workflow_run: 27124934193
 issue: 4666
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/highcharts/plot.html
-quality_score: 89
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/python/highcharts/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent scientific accuracy with real water phase diagram data using Clausius-Clapeyron
-    equations
-  - Colorblind-safe palette (blue/orange/purple) with distinct dash styles - improved
-    from previous attempt
-  - Rich visual design with styled annotation boxes, area fills, plot bands, and text
-    outlines
-  - All spec requirements fully met including supercritical fluid region
-  - Clean, deterministic code with appropriate complexity
+  - Scientifically accurate water phase diagram using Clausius-Clapeyron equations
+    with real physical constants (triple point 273.16 K / 611.73 Pa, critical point
+    647.1 K / 22.064 MPa) — all data verifiable against literature
+  - Three boundary curves use distinct dash styles (ShortDash / LongDash / DashDot)
+    in addition to Imprint palette colors, providing redundant encoding that aids
+    colorblind readability
+  - HTML dataLabels for triple point and critical point annotations are styled with
+    matching palette-color backgrounds, creating visual coherence between marker and
+    label
+  - Logarithmic Y-axis correctly spans 10 Pa to 1 GPa to accommodate water's extreme
+    pressure range
+  - Phase region shading (translucent green for gas, translucent blue for liquid)
+    plus bold region labels (SOLID / LIQUID / GAS / SUPERCRITICAL FLUID) give viewers
+    immediate spatial orientation
+  - Water's anomalous negative dP/dT melting slope is correctly represented — ice
+    melts under pressure, a physically accurate detail not often seen in synthetic
+    data
+  - 'Theme-adaptive chrome is fully wired: PAGE_BG, INK, INK_SOFT, GRID, ELEVATED_BG
+    all branch on ANYPLOT_THEME; both renders pass legibility checks'
   weaknesses:
-  - X-axis title Temperature (K) is cut off at the bottom edge due to chart height
-    vs viewport mismatch
-  - Melting curve is very short and nearly vertical, making it slightly hard to spot
-    among other visual elements
-  image_description: 'The plot displays a water pressure-temperature phase diagram
-    on a light gray (#fafafa) background. The x-axis shows Temperature (K) from ~180
-    to 750 with tick labels at 50K intervals. The y-axis shows Pressure (Pa) on a
-    logarithmic scale from 10 to 1G with labeled tick marks. Three phase boundary
-    curves are plotted: a blue short-dashed sublimation curve (low-temperature, rising
-    from bottom-left to the triple point), an orange long-dashed vaporization curve
-    (sweeping from the triple point up to the critical point), and a purple dash-dot
-    melting curve (nearly vertical, rising from the triple point upward). Phase regions
-    are labeled in large bold text: "SOLID" (upper-left, blue), "LIQUID" (center,
-    blue), "GAS" (lower-right, green), and "SUPERCRITICAL FLUID" (far right, orange).
-    The triple point is marked with a purple circle at 273.16 K / 611.7 Pa with a
-    styled purple annotation box, and the critical point is marked with an orange
-    diamond at 647.1 K / 22.06 MPa with a styled orange annotation box. Subtle area
-    fills shade the gas region (light green) and liquid region (light blue). Plot
-    bands highlight the solid region (left blue tint) and supercritical region (right
-    orange tint). A custom HTML legend in the lower-right shows the three curve line
-    styles. The title reads "Water Phase Diagram · phase-diagram-pt · highcharts ·
-    pyplots.ai". The x-axis title "Temperature (K)" appears cut off at the bottom
-    edge of the rendered image.'
+  - 'DE-02: No explicit spine/axis-frame removal — Highcharts retains the default
+    rectangular chart border; removing or muting the top and right axis lines (lineWidth:0
+    on chart.options.x_axis.opposite and y_axis opposite) would tighten the L-shaped
+    frame aesthetic'
+  - 'DE-03: The custom HTML legend in the lower right is useful but sits isolated
+    in empty whitespace below the critical-point region; repositioning it closer to
+    the Vaporization curve terminus or inside the GAS region would strengthen the
+    storytelling integration'
+  - 'LM-01: All series are added as raw dict literals rather than typed series objects
+    (LineSeries, ScatterSeries, AreaSeries) — the highcharts_core library provides
+    typed classes that offer better IDE support and are the idiomatic pattern shown
+    in the library guide'
+  - 'VQ-01 minor: Annotation box font sizes (28px / 24px for triple/critical point
+    text) are slightly small relative to the 44px tick label baseline; bumping to
+    32px / 28px would improve readability when the image is displayed at smaller viewport
+    widths'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "Water Phase Diagram · phase-diagram-pt · python · highcharts · anyplot.ai" is dark (#1A1A17), clearly readable at the top. Axis labels "Temperature (K)" and "Pressure (Pa)" are dark and readable. Y-axis tick labels (1G, 400M … 10) and X-axis tick labels (200–750) are rendered in INK_SOFT (#4A4A44) — readable against the warm off-white background. Subtle dotted grid lines on Y-axis (GRID token, ~15% opacity) are visible but unobtrusive.
+      Data: Sublimation curve in #009E73 (ShortDash), Vaporization curve in #C475FD (LongDash), Melting curve in #4467A3 (DashDot). Triple point marker is an orange circle (#BD8233) at (273.16 K, 611.73 Pa) with a styled annotation box. Critical point marker is a red diamond (#AE3030) at (647.1 K, 22.064 MPa) with a styled annotation box. Phase region labels SOLID, LIQUID, GAS, SUPERCRITICAL FLUID in matching Imprint palette colors. Translucent green fill for gas region, translucent blue fill for liquid region. Custom HTML legend box in lower right with Imprint colors for each curve.
+      Legibility verdict: PASS — all text is clearly readable against the warm off-white background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title and axis labels are rendered in #F0EFE8 (INK token for dark theme) — clearly readable against the dark background. Tick labels are in #B8B7B0 (INK_SOFT for dark theme) — readable. Grid lines remain subtle (GRID rgba(240,239,232,0.15)). The legend box uses ELEVATED_BG (#242420) with an INK_SOFT border — looks correct. No dark-on-dark failures observed.
+      Data: All data colors are identical to the light render — Sublimation #009E73, Vaporization #C475FD, Melting #4467A3, Triple point #BD8233, Critical point #AE3030. Phase fill colors are the same semi-transparent fills. Only chrome (background, text, legend box, grid) has flipped appropriately.
+      Legibility verdict: PASS — all text is clearly readable against the near-black background; theme adaptation is complete and correct.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -54,41 +73,58 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 42px, axis titles 32px, tick
-          labels 24px, phase labels 44px, annotations 26px'
+        comment: All font sizes explicitly set (title scaled by length formula, axis
+          labels 56px, ticks 44px, phase labels 52px/40px). Both themes fully readable
+          at 3200x1800. Title occupies ~72% of width — expected for a 73-char mandated
+          title.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text fully readable with no collisions
+        comment: No text overlaps observed in either render. SUPERCRITICAL FLUID label
+          and Critical Point annotation are close but not overlapping. Triple Point
+          annotation clear of curves.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Lines 6px wide, markers radius 20, all visible; melting curve nearly
-          vertical and short, slightly hard to spot
+        comment: Boundary curves at lineWidth 6-7px clearly visible. Triple/critical
+          point markers at radius 18 are prominent. Phase region labels at 52px legible.
+          Legend box clearly shows dash styles.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint palette is colorblind-safe by design. Redundant encoding:
+          different dash styles for each boundary curve. Distinct marker shapes (circle
+          vs diamond) for triple vs critical point.'
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Colorblind-safe palette: blue (#306998), amber/orange (#D4760A),
-          purple (#8B5CF6) — no red-green pairing'
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 2
-        max: 4
-        passed: false
-        comment: Good canvas utilization overall but x-axis title cut off at bottom
-          (image 4800x2561 vs chart 4800x2700)
+        comment: Canvas gate passed (no /tmp/anyplot-canvas-gate.txt). Plot fills
+          canvas well with generous margins (marginBottom 150, spacingLeft/Right 80).
+          Data area appropriately proportioned.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Both axes labeled with units: Temperature (K) and Pressure (Pa)'
+        comment: 'X-axis: ''Temperature (K)'' with units. Y-axis: ''Pressure (Pa)''
+          with units. Both descriptive and informative.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First boundary curve (Sublimation) uses IMPRINT_PALETTE[0]=#009E73.
+          Subsequent curves use palette positions 2-3. Triple/critical point use positions
+          4-5. Backgrounds #FAF8F1 (light) / #1A1A17 (dark). All chrome tokens theme-adaptive.
+          Data colors identical across both renders.'
     design_excellence:
       score: 14
       max: 20
@@ -98,23 +134,29 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom off-white background, colorblind-safe palette, styled HTML
-          annotations with shadows, area fills, plot bands, text outlines, distinct
-          dash styles
+        comment: 'Strong design: Imprint palette, phase region shading with translucent
+          fills, styled annotation boxes with matching palette-color backgrounds and
+          rounded corners, different dash styles for curve distinction. Clearly above
+          library defaults.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: X-axis grid removed, subtle dotted y-axis grid (6% opacity), tick
-          marks removed, generous spacing; polish diminished by x-axis title cutoff
+        comment: Y-axis dotted grid (GRID token, ~15% opacity), no X-axis grid, generous
+          margins, styled legend box with ELEVATED_BG and border, axis lines use INK_SOFT.
+          Partial points off for retaining the default Highcharts rectangular chart
+          border — L-shaped frame would be more refined.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear visual hierarchy with large phase labels, annotated special
-          points, region shading guides viewer through water's phase behavior
+        comment: 'Clear visual hierarchy: boundary curves are primary focal elements,
+          phase region labels give spatial context, triple/critical point callouts
+          draw the eye to key physical landmarks. Color-coded labels reinforce identity.
+          Custom HTML legend integrates curve-style guidance. Viewer immediately understands
+          phase regions and critical junctures.'
     spec_compliance:
       score: 15
       max: 15
@@ -124,28 +166,35 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct P-T phase diagram with boundary curves on logarithmic pressure
-          axis
+        comment: Correct P-T phase diagram with all three boundary curves (sublimation,
+          vaporization, melting), logarithmic pressure axis, triple point, and critical
+          point.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: three boundaries, triple/critical points,
-          phase labels, supercritical region, log pressure axis'
+        comment: Phase regions labeled (SOLID, LIQUID, GAS, SUPERCRITICAL FLUID).
+          Triple point marked and annotated with coordinates. Critical point marked
+          and annotated. Liquid-gas boundary terminates at critical point. Logarithmic
+          Y-axis. Water's anomalous negative melting slope correctly implemented.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Temperature on x-axis, pressure on y-axis (log scale), all data visible
+        comment: 'X-axis: Temperature (K) from 180-750. Y-axis: Pressure (Pa) logarithmic
+          from 10-1e9. Triple point at correct (273.16 K, 611.73 Pa). Critical point
+          at correct (647.1 K, 2.2064e7 Pa).'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows required format; custom HTML legend shows curve types
-          with matching colors and dash styles
+        comment: Title 'Water Phase Diagram · phase-diagram-pt · python · highcharts
+          · anyplot.ai' — correct format with optional descriptive prefix. Custom
+          HTML legend box in lower right correctly labels all three curves with their
+          dash styles in matching Imprint colors.
     data_quality:
       score: 15
       max: 15
@@ -155,21 +204,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects shown: three boundaries, both special points, supercritical
-          region, water''s negative melting slope'
+        comment: 'All phase diagram features present: three boundary curves, two special
+          points, four phase regions including supercritical fluid, correct logarithmic
+          pressure range.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real water phase diagram with accurate triple/critical point values,
-          Clausius-Clapeyron approximation
+        comment: Real water data using Clausius-Clapeyron equations with actual enthalpies
+          (L_sub=51059 J/mol, L_vap=40660 J/mol). Scientific, neutral context — water
+          phase behavior is universally taught.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values match known water properties; pressure range spans full diagram
+        comment: 'All values factually correct: triple point 273.16 K / 611.73 Pa,
+          critical point 647.1 K / 22.064 MPa, pressure range 10 Pa–1 GPa. Water''s
+          anomalous melting slope (negative dP/dT) correctly implemented.'
     code_quality:
       score: 10
       max: 10
@@ -179,31 +232,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data generation, chart config, series, export'
+        comment: 'Linear structure: imports → constants → data generation → chart
+          configuration → series → export. No functions or classes defined.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with mathematical formulas, no random data
+        comment: 'Fully deterministic: Clausius-Clapeyron equations with fixed physical
+          constants. No random elements.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: os, tempfile, time, urllib.request, Path, numpy,
+          highcharts_core, PIL, selenium.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized; loop for phase labels reduces duplication
+        comment: Clean and idiomatic. Loop over phase_labels avoids repetition. zip(...,
+          strict=True) is good Python practice. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via Selenium screenshot
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html (correct for interactive
+          Highcharts library). No deprecated API usage.
     library_mastery:
       score: 8
       max: 10
@@ -213,29 +271,34 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good use of Highcharts patterns: Chart with HighchartsOptions, add_series
-          with dict config, logarithmic axis, plotOptions'
+        comment: 'Chart(container=''container'') correctly used. Selenium+CDP viewport
+          override for exact dimensions. PIL normalization safety net. Minor: all
+          series added as raw dicts rather than typed series objects (LineSeries,
+          ScatterSeries, AreaSeries) which are the more idiomatic highcharts_core
+          pattern.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Leverages plotBands, useHTML data labels, area series with threshold,
-          hover states, custom tooltip formatting
-  verdict: REJECTED
+        comment: 'Uses several Highcharts-distinctive capabilities: HTML-in-dataLabels
+          for richly styled annotation boxes (not easily replicable in static libraries),
+          X-axis plotBands for region highlighting, interactive tooltips with custom
+          point format, mixed series types (area+line+scatter) in a single chart.'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
+  - pillow
   techniques:
   - annotations
   - html-export
   - hover-tooltips
   - custom-legend
-  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
+  - publication-ready
