@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 flamegraph-basic: Flame Graph for Performance Profiling
 Library: plotly 6.8.0 | Python 3.13.13
 Quality: 82/100 | Updated: 2026-06-08
@@ -141,10 +141,13 @@ for x_start, width, depth, func_name, samples, stack in bars:
     groups[key].append((x_start, width, depth, func_name, samples, stack))
 
 color_for = {"hot": HOT_COLOR, "ochre": OCHRE, "amber": AMBER}
-legend_label = {"hot": "Hot path (widest at depth)", "ochre": "Other frames (ochre)", "amber": "Other frames (amber)"}
+legend_label = {"hot": "Hot path (widest at depth)", "ochre": "", "amber": ""}
 
-bar_height = 0.84
+bar_height = 0.98  # flame-graph convention: depth rows touch; BAR_EDGE provides hairline separation
 fig = go.Figure()
+
+# Only "Hot path" appears in legend — ochre/amber alternation is decorative, not semantic
+show_in_legend = {"hot": True, "ochre": False, "amber": False}
 
 for key in ("ochre", "amber", "hot"):
     group = groups[key]
@@ -165,20 +168,29 @@ for key in ("ochre", "amber", "hot"):
             marker={"color": color_for[key], "line": {"color": BAR_EDGE, "width": 0.6}},
             width=bar_height,
             name=legend_label[key],
-            showlegend=True,
+            showlegend=show_in_legend[key],
             hovertemplate=hover_texts,
         )
     )
 
-# Function-name labels inside bars that are wide enough
+# Function-name labels — strict pixel-fit gate so labels never overflow bar bounds.
+# Logical canvas = 800 px × scale 4 = 3200 px. Inner plot width = 800 - margin.l - margin.r.
+# At 13 px monospace, each glyph is ~7.8 logical px; drop the label if even a 3-char + ellipsis
+# truncation would not fit — the hover tooltip already carries the full function name.
+INNER_PLOT_PX = 800 - 80 - 40
+PX_PER_CHAR = 7.8
+MIN_FIT_CHARS = 4
+
 for x_start, width, depth, func_name, _samples, stack in bars:
-    if width < 0.04:
+    bar_px = INNER_PLOT_PX * width
+    max_chars = int(bar_px / PX_PER_CHAR)
+    if max_chars < MIN_FIT_CHARS:
         continue
+    if len(func_name) <= max_chars:
+        display_text = func_name
+    else:
+        display_text = func_name[: max_chars - 1] + "…"
     is_hot = stack in hot_path_stacks
-    display_text = func_name
-    if width < 0.10:
-        max_chars = max(3, int(width * 110))
-        display_text = func_name[:max_chars] + "…" if len(func_name) > max_chars else func_name
     font_color = "#F0EFE8" if is_hot else INK
     fig.add_annotation(
         x=x_start + width / 2,
@@ -197,6 +209,13 @@ fig.update_layout(
     title={"text": title_text, "font": {"size": 16, "color": INK}, "x": 0.5, "xanchor": "center"},
     barmode="overlay",
     bargap=0,
+    hovermode="closest",
+    hoverlabel={
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "font": {"family": "Consolas, Monaco, monospace", "size": 12, "color": INK},
+        "align": "left",
+    },
     xaxis={
         "title": {"text": "Proportion of Total Samples", "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
@@ -216,17 +235,19 @@ fig.update_layout(
         "linecolor": INK_SOFT,
     },
     legend={
-        "bgcolor": ELEVATED_BG,
-        "bordercolor": INK_SOFT,
-        "borderwidth": 1,
+        "bgcolor": "rgba(0,0,0,0)",
+        "bordercolor": "rgba(0,0,0,0)",
+        "borderwidth": 0,
         "font": {"size": 10, "color": INK_SOFT},
         "orientation": "h",
-        "x": 0.5,
-        "xanchor": "center",
-        "y": 1.06,
+        "x": 0.99,
+        "xanchor": "right",
+        "y": 1.02,
         "yanchor": "bottom",
+        "itemclick": False,
+        "itemdoubleclick": False,
     },
-    margin={"l": 80, "r": 40, "t": 110, "b": 60},
+    margin={"l": 80, "r": 40, "t": 90, "b": 60},
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
@@ -234,4 +255,13 @@ fig.update_layout(
 
 # Save — hard target 3200×1800 (landscape): width=800, height=450, scale=4
 fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
-fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
+# Interactive HTML: cleaner Plotly modebar — drop selection tools that don't apply to flame graphs
+fig.write_html(
+    f"plot-{THEME}.html",
+    include_plotlyjs="cdn",
+    config={
+        "displaylogo": False,
+        "modeBarButtonsToRemove": ["select2d", "lasso2d", "autoScale2d"],
+        "toImageButtonOptions": {"format": "png", "filename": "flamegraph-basic", "scale": 4},
+    },
+)
