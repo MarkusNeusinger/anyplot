@@ -1,14 +1,32 @@
-""" pyplots.ai
+""" anyplot.ai
 flamegraph-basic: Flame Graph for Performance Profiling
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-14
+Library: plotly 6.8.0 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-06-08
 """
+
+import os
 
 import plotly.graph_objects as go
 
 
-# Data - Simulated CPU profiling data with hierarchical call stacks
-# Format: (stack_path, self_samples)
+# Theme tokens (Imprint palette + theme-adaptive chrome)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint warm trio (semantic exception: flame graphs conventionally use warm colors).
+# Hot path uses matte red as the "alert / bottleneck" semantic anchor; non-hot bars
+# alternate ochre and amber for high-contrast neighbour differentiation.
+HOT_COLOR = "#AE3030"  # Imprint matte red — semantic anchor for bottleneck
+OCHRE = "#BD8233"  # Imprint ochre
+AMBER = "#DDCC77"  # Imprint amber semantic anchor (warning)
+BAR_EDGE = PAGE_BG  # subtle inter-bar separation against page surface
+
+# Data — simulated CPU profiling: web request handler stack samples
+# Format: (semicolon_stack_path, self_samples)
 raw_stacks = [
     ("main", 0),
     ("main;process_request", 0),
@@ -41,17 +59,16 @@ raw_stacks = [
     ("main;log_metrics;serialize", 15),
 ]
 
-# Build lookup of self samples
 stack_self = dict(raw_stacks)
 
-# Collect all unique stacks including intermediates
+# Collect all stacks (including intermediate ancestors that may have no self samples)
 all_stacks = set()
 for stack, _ in raw_stacks:
     parts = stack.split(";")
     for i in range(len(parts)):
         all_stacks.add(";".join(parts[: i + 1]))
 
-# Calculate inclusive values (self + all descendants)
+# Inclusive samples = self + sum of all descendants
 inclusive = {}
 for stack in all_stacks:
     total = stack_self.get(stack, 0)
@@ -63,7 +80,7 @@ for stack in all_stacks:
 
 total_samples = inclusive["main"]
 
-# Build children map and sort alphabetically
+# Build children map and sort siblings alphabetically (flame graph convention)
 children_map = {}
 for stack in all_stacks:
     parts = stack.split(";")
@@ -74,7 +91,7 @@ for stack in all_stacks:
 for parent in children_map:
     children_map[parent].sort(key=lambda s: s.split(";")[-1])
 
-# Assign x positions iteratively using a stack (no recursion)
+# Assign x positions iteratively (DFS via worklist)
 bars = []
 work_stack = [("main", 0.0)]
 while work_stack:
@@ -90,7 +107,7 @@ while work_stack:
             work_stack.append((child, child_x))
             child_x += child_width
 
-# Identify the hot path (widest bar at each depth)
+# Identify hot path: widest bar at each depth
 hot_path_stacks = set()
 depth_bars = {}
 for _, _, depth, _, samples, stack in bars:
@@ -99,138 +116,152 @@ for _, _, depth, _, samples, stack in bars:
 for stack, _ in depth_bars.values():
     hot_path_stacks.add(stack)
 
-# Color palette: warm tones with varied saturation/lightness for differentiation
-# Hot path: deep reds; others: distinct warm shades across the yellow-orange-peach spectrum
-hot_colors = ["#D32F2F", "#C62828", "#B71C1C", "#E53935", "#EF5350", "#F44336", "#D50000", "#FF1744"]
-warm_colors = [
-    "#FFB74D",  # medium orange
-    "#FFF59D",  # pale yellow
-    "#FFAB91",  # salmon peach
-    "#FFD54F",  # amber gold
-    "#E6B566",  # dark gold
-    "#F5DEB3",  # wheat
-    "#FFCC80",  # light orange
-    "#FFE082",  # warm yellow
-    "#D4A76A",  # tan
-    "#FFDAB9",  # peach puff
-    "#F0C987",  # sand
-    "#FFE4B5",  # moccasin
-    "#E8B87E",  # caramel
-    "#FFC599",  # melon
-    "#FFF3E0",  # cream
-]
-
-color_map = {}
-for bar in bars:
-    func = bar[3]
-    stack = bar[5]
-    if func not in color_map:
-        if stack in hot_path_stacks:
-            idx = hash(func) % len(hot_colors)
-            color_map[func] = hot_colors[idx]
-        else:
-            idx = hash(func) % len(warm_colors)
-            color_map[func] = warm_colors[idx]
-
 max_depth = max(b[2] for b in bars)
 
-# Group bars by (depth, is_hot) for batched traces — idiomatic Plotly
-bar_height = 0.82
-depth_hot_groups = {}
-for x_start, width, depth, func_name, samples, stack in bars:
-    is_hot = stack in hot_path_stacks
-    key = (depth, is_hot)
-    depth_hot_groups.setdefault(key, []).append((x_start, width, func_name, samples, stack))
+# Color assignment: hot path -> matte red; others alternate ochre/amber so neighbours
+# at the same depth never share a color (deterministic by sibling x-position rank).
+sibling_rank = {}
+by_depth = {}
+for x_start, _w, depth, _f, _s, stack in bars:
+    by_depth.setdefault(depth, []).append((x_start, stack))
+for items in by_depth.values():
+    items.sort()
+    for rank, (_x, stack) in enumerate(items):
+        sibling_rank[stack] = rank
 
-# Plot - one trace per (depth, is_hot) group using array parameters
+# Plot — group bars by color into batched horizontal-bar traces (idiomatic Plotly)
+groups = {"hot": [], "ochre": [], "amber": []}
+for x_start, width, depth, func_name, samples, stack in bars:
+    if stack in hot_path_stacks:
+        key = "hot"
+    elif sibling_rank[stack] % 2 == 0:
+        key = "ochre"
+    else:
+        key = "amber"
+    groups[key].append((x_start, width, depth, func_name, samples, stack))
+
+color_for = {"hot": HOT_COLOR, "ochre": OCHRE, "amber": AMBER}
+legend_label = {"hot": "Hot path (widest at depth)", "ochre": "", "amber": ""}
+
+bar_height = 0.98  # flame-graph convention: depth rows touch; BAR_EDGE provides hairline separation
 fig = go.Figure()
 
-for (depth, is_hot), group in sorted(depth_hot_groups.items()):
+# Only "Hot path" appears in legend — ochre/amber alternation is decorative, not semantic
+show_in_legend = {"hot": True, "ochre": False, "amber": False}
+
+for key in ("ochre", "amber", "hot"):
+    group = groups[key]
+    if not group:
+        continue
     widths = [g[1] for g in group]
     bases = [g[0] for g in group]
-    colors = [color_map[g[2]] for g in group]
-    border_color = "#B71C1C" if is_hot else "rgba(255,255,255,0.8)"
-    border_width = 1.5 if is_hot else 0.5
+    depths = [g[2] for g in group]
     hover_texts = [
-        f"<b>{g[2]}</b><br>Stack: {g[4]}<br>Samples: {g[3]} ({g[1] * 100:.1f}%)<extra></extra>" for g in group
+        f"<b>{g[3]}</b><br>Stack: {g[5]}<br>Samples: {g[4]} ({g[1] * 100:.1f}%)<extra></extra>" for g in group
     ]
-
     fig.add_trace(
         go.Bar(
             x=widths,
-            y=[depth] * len(group),
+            y=depths,
             base=bases,
             orientation="h",
-            marker={"color": colors, "line": {"color": border_color, "width": border_width}},
+            marker={"color": color_for[key], "line": {"color": BAR_EDGE, "width": 0.6}},
             width=bar_height,
-            showlegend=False,
+            name=legend_label[key],
+            showlegend=show_in_legend[key],
             hovertemplate=hover_texts,
         )
     )
 
-# Add function name labels
+# Function-name labels — strict pixel-fit gate so labels never overflow bar bounds.
+# Logical canvas = 800 px × scale 4 = 3200 px. Inner plot width = 800 - margin.l - margin.r.
+# At 13 px monospace, each glyph is ~7.8 logical px; drop the label if even a 3-char + ellipsis
+# truncation would not fit — the hover tooltip already carries the full function name.
+INNER_PLOT_PX = 800 - 80 - 40
+PX_PER_CHAR = 7.8
+MIN_FIT_CHARS = 4
+
 for x_start, width, depth, func_name, _samples, stack in bars:
-    is_hot = stack in hot_path_stacks
-    if width > 0.05:
+    bar_px = INNER_PLOT_PX * width
+    max_chars = int(bar_px / PX_PER_CHAR)
+    if max_chars < MIN_FIT_CHARS:
+        continue
+    if len(func_name) <= max_chars:
         display_text = func_name
-        if width < 0.10:
-            max_chars = max(3, int(width * 120))
-            display_text = func_name[:max_chars] + "…" if len(func_name) > max_chars else func_name
-
-        font_color = "#FFFFFF" if is_hot else "#2E2E2E"
-
-        fig.add_annotation(
-            x=x_start + width / 2,
-            y=depth,
-            text=f"<b>{display_text}</b>" if is_hot else display_text,
-            showarrow=False,
-            font={"size": 16, "color": font_color, "family": "Consolas, Monaco, monospace"},
-            xanchor="center",
-            yanchor="middle",
-        )
-
-# Add hot path indicator annotation
-fig.add_annotation(
-    x=0.99,
-    y=max_depth + 0.35,
-    text="<b>■</b> Hot path (most samples)",
-    showarrow=False,
-    font={"size": 14, "color": "#B71C1C", "family": "Consolas, Monaco, monospace"},
-    xanchor="right",
-    yanchor="bottom",
-)
+    else:
+        display_text = func_name[: max_chars - 1] + "…"
+    is_hot = stack in hot_path_stacks
+    font_color = "#F0EFE8" if is_hot else INK
+    fig.add_annotation(
+        x=x_start + width / 2,
+        y=depth,
+        text=f"<b>{display_text}</b>" if is_hot else display_text,
+        showarrow=False,
+        font={"size": 13, "color": font_color, "family": "Consolas, Monaco, monospace"},
+        xanchor="center",
+        yanchor="middle",
+    )
 
 # Style
+title_text = "flamegraph-basic · python · plotly · anyplot.ai"
 fig.update_layout(
-    title={
-        "text": "flamegraph-basic · plotly · pyplots.ai",
-        "font": {"size": 28, "family": "Consolas, Monaco, monospace", "color": "#333333"},
-        "x": 0.5,
-        "xanchor": "center",
-    },
-    template="plotly_white",
+    autosize=False,
+    title={"text": title_text, "font": {"size": 16, "color": INK}, "x": 0.5, "xanchor": "center"},
     barmode="overlay",
+    bargap=0,
+    hovermode="closest",
+    hoverlabel={
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "font": {"family": "Consolas, Monaco, monospace", "size": 12, "color": INK},
+        "align": "left",
+    },
     xaxis={
-        "title": {"text": "Proportion of Total Samples", "font": {"size": 22}},
-        "tickfont": {"size": 16},
+        "title": {"text": "Proportion of Total Samples", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "range": [0, 1],
         "tickformat": ".0%",
         "showgrid": False,
         "zeroline": False,
+        "linecolor": INK_SOFT,
     },
     yaxis={
-        "title": {"text": "Stack Depth", "font": {"size": 22}},
-        "tickfont": {"size": 16},
+        "title": {"text": "Stack Depth (root → leaf)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "dtick": 1,
-        "range": [-0.5, max_depth + 0.7],
+        "range": [-0.6, max_depth + 0.6],
         "showgrid": False,
         "zeroline": False,
+        "linecolor": INK_SOFT,
     },
-    margin={"t": 100, "l": 80, "r": 50, "b": 80},
-    plot_bgcolor="#FAFAFA",
-    paper_bgcolor="white",
+    legend={
+        "bgcolor": "rgba(0,0,0,0)",
+        "bordercolor": "rgba(0,0,0,0)",
+        "borderwidth": 0,
+        "font": {"size": 10, "color": INK_SOFT},
+        "orientation": "h",
+        "x": 0.99,
+        "xanchor": "right",
+        "y": 1.02,
+        "yanchor": "bottom",
+        "itemclick": False,
+        "itemdoubleclick": False,
+    },
+    margin={"l": 80, "r": 40, "t": 90, "b": 60},
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
 )
 
-# Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save — hard target 3200×1800 (landscape): width=800, height=450, scale=4
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+# Interactive HTML: cleaner Plotly modebar — drop selection tools that don't apply to flame graphs
+fig.write_html(
+    f"plot-{THEME}.html",
+    include_plotlyjs="cdn",
+    config={
+        "displaylogo": False,
+        "modeBarButtonsToRemove": ["select2d", "lasso2d", "autoScale2d"],
+        "toImageButtonOptions": {"format": "png", "filename": "flamegraph-basic", "scale": 4},
+    },
+)
