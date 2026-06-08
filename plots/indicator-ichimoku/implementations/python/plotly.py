@@ -1,15 +1,34 @@
-""" pyplots.ai
+"""anyplot.ai
 indicator-ichimoku: Ichimoku Cloud Technical Indicator Chart
-Library: plotly 6.6.0 | Python 3.14.3
+Library: plotly | Python 3.13
 Quality: 90/100 | Created: 2026-03-12
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
 
-# Data - 200 trading days of simulated stock prices
+# Theme tokens — Imprint palette, theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint palette — semantic bull/bear anchor, Imprint positions 2–4 for indicator lines
+BULL_COLOR = "#009E73"  # Imprint brand green — bullish/gain (semantic exception)
+BEAR_COLOR = "#AE3030"  # Imprint matte red  — bearish/loss (semantic exception)
+TENKAN_COLOR = "#C475FD"  # Imprint lavender (pos 2)
+KIJUN_COLOR = "#4467A3"  # Imprint blue     (pos 3)
+CHIKOU_COLOR = "#BD8233"  # Imprint ochre    (pos 4)
+CLOUD_BULL = "rgba(0,158,115,0.20)"  # BULL at 20% opacity
+CLOUD_BEAR = "rgba(174,48,48,0.20)"  # BEAR at 20% opacity
+
+# Data — 200 trading days of simulated stock prices
 np.random.seed(42)
 n_days = 200
 dates = pd.date_range(start="2023-06-01", periods=n_days, freq="B")
@@ -57,19 +76,13 @@ senkou_span_a = senkou_span_a.iloc[start_idx:].reset_index(drop=True)
 senkou_span_b = senkou_span_b.iloc[start_idx:].reset_index(drop=True)
 chikou_span = chikou_span.iloc[start_idx:].reset_index(drop=True)
 
-# Colors
-BULL_COLOR = "#26A69A"
-BEAR_COLOR = "#EF5350"
-TENKAN_COLOR = "#E67E22"
-KIJUN_COLOR = "#8E44AD"
-CHIKOU_COLOR = "#306998"
-CLOUD_BULL = "rgba(38, 166, 154, 0.25)"
-CLOUD_BEAR = "rgba(239, 83, 80, 0.25)"
+# Convert dates to strings — kaleido cannot JSON-serialize pandas Timestamps
+df["date"] = df["date"].dt.strftime("%Y-%m-%d")
 
 # Plot
 fig = go.Figure()
 
-# Kumo (cloud) - fill between Senkou Span A and B
+# Kumo (cloud) — fill between Senkou Span A and B, colored by trend direction
 span_a_vals = senkou_span_a.values
 span_b_vals = senkou_span_b.values
 date_vals = df["date"].values
@@ -79,7 +92,6 @@ valid_dates = date_vals[valid_mask]
 valid_a = span_a_vals[valid_mask]
 valid_b = span_b_vals[valid_mask]
 
-# Split cloud into bullish and bearish segments for coloring
 i = 0
 while i < len(valid_dates):
     bullish = valid_a[i] >= valid_b[i]
@@ -88,18 +100,15 @@ while i < len(valid_dates):
         j += 1
     if j < len(valid_dates):
         j += 1
-
     seg_dates = valid_dates[i:j]
     seg_a = valid_a[i:j]
     seg_b = valid_b[i:j]
-    fill_color = CLOUD_BULL if bullish else CLOUD_BEAR
-
     fig.add_trace(
         go.Scatter(
             x=np.concatenate([seg_dates, seg_dates[::-1]]),
             y=np.concatenate([seg_a, seg_b[::-1]]),
             fill="toself",
-            fillcolor=fill_color,
+            fillcolor=CLOUD_BULL if bullish else CLOUD_BEAR,
             line={"width": 0},
             showlegend=False,
             hoverinfo="skip",
@@ -113,7 +122,7 @@ fig.add_trace(
         x=df["date"],
         y=senkou_span_a,
         mode="lines",
-        line={"color": BULL_COLOR, "width": 1, "dash": "dot"},
+        line={"color": BULL_COLOR, "width": 1.5, "dash": "dot"},
         name="Senkou Span A",
         hovertemplate="Span A: $%{y:.2f}<extra></extra>",
     )
@@ -125,7 +134,7 @@ fig.add_trace(
         x=df["date"],
         y=senkou_span_b,
         mode="lines",
-        line={"color": BEAR_COLOR, "width": 1, "dash": "dot"},
+        line={"color": BEAR_COLOR, "width": 1.5, "dash": "dot"},
         name="Senkou Span B",
         hovertemplate="Span B: $%{y:.2f}<extra></extra>",
     )
@@ -172,7 +181,7 @@ fig.add_trace(
     )
 )
 
-# Chikou Span (lagging line)
+# Chikou Span (lagging line, shifted 26 periods into the past)
 fig.add_trace(
     go.Scatter(
         x=df["date"],
@@ -184,43 +193,41 @@ fig.add_trace(
     )
 )
 
-# Layout
+# Title — scale font size for total length
+title_text = "Ichimoku Cloud Overlay · indicator-ichimoku · python · plotly · anyplot.ai"
+title_fontsize = max(11, round(16 * 67 / len(title_text)))
+
 fig.update_layout(
-    title={
-        "text": (
-            "<b>Ichimoku Cloud Overlay</b>"
-            "<br><span style='color:#777;font-size:15px;font-weight:normal'>"
-            "indicator-ichimoku · plotly · pyplots.ai</span>"
-        ),
-        "font": {"size": 28, "color": "#222", "family": "Arial"},
-        "x": 0.5,
-        "xanchor": "center",
-        "y": 0.95,
-    },
+    autosize=False,
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
+    title={"text": title_text, "font": {"size": title_fontsize, "color": INK}, "x": 0.5, "xanchor": "center"},
     xaxis={
-        "title": {"text": "Date", "font": {"size": 22, "color": "#444", "family": "Arial"}},
-        "tickfont": {"size": 18, "color": "#555", "family": "Arial"},
+        "title": {"text": "Date", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "tickformat": "%b %Y",
         "rangeslider": {"visible": False},
         "rangebreaks": [{"bounds": ["sat", "mon"]}],
         "showgrid": False,
-        "linecolor": "#ccc",
+        "linecolor": INK_SOFT,
         "linewidth": 1,
+        "zeroline": False,
     },
     yaxis={
-        "title": {"text": "Price (USD)", "font": {"size": 22, "color": "#444", "family": "Arial"}},
-        "tickfont": {"size": 18, "color": "#555", "family": "Arial"},
+        "title": {"text": "Price (USD)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "tickprefix": "$",
-        "gridcolor": "rgba(180, 180, 180, 0.2)",
+        "gridcolor": GRID,
         "gridwidth": 1,
         "zeroline": False,
-        "linecolor": "#ccc",
+        "linecolor": INK_SOFT,
         "linewidth": 1,
     },
     legend={
-        "font": {"size": 16, "family": "Arial"},
-        "bgcolor": "rgba(255,255,255,0.85)",
-        "bordercolor": "#ddd",
+        "font": {"size": 10, "color": INK_SOFT},
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
         "borderwidth": 1,
         "x": 0.01,
         "y": 0.01,
@@ -228,39 +235,33 @@ fig.update_layout(
         "yanchor": "bottom",
         "orientation": "h",
     },
-    template="plotly_white",
-    plot_bgcolor="#FAFAFA",
-    paper_bgcolor="white",
-    margin={"l": 90, "r": 50, "t": 110, "b": 80},
-    hoverlabel={"bgcolor": "white", "font_size": 14, "bordercolor": "#ccc"},
-    font={"family": "Arial"},
+    margin={"l": 80, "r": 40, "t": 80, "b": 60},
+    hoverlabel={"bgcolor": ELEVATED_BG, "font_size": 10, "bordercolor": INK_SOFT},
 )
 
-# Highlight key TK cross signal (Tenkan crosses above Kijun = bullish signal)
+# Annotate the first bullish TK Cross (Tenkan crosses above Kijun)
 tk_diff = tenkan_sen - kijun_sen
 for idx in range(1, len(tk_diff)):
     if pd.notna(tk_diff.iloc[idx]) and pd.notna(tk_diff.iloc[idx - 1]):
         if tk_diff.iloc[idx - 1] < 0 and tk_diff.iloc[idx] >= 0:
-            cross_date = df["date"].iloc[idx]
-            cross_price = tenkan_sen.iloc[idx]
             fig.add_annotation(
-                x=cross_date,
-                y=cross_price,
+                x=df["date"].iloc[idx],
+                y=tenkan_sen.iloc[idx],
                 text="<b>Bullish TK Cross</b>",
                 showarrow=True,
                 arrowhead=2,
                 arrowsize=1.2,
-                arrowcolor="#26A69A",
+                arrowcolor=BULL_COLOR,
                 ax=0,
                 ay=-50,
-                font={"size": 14, "color": "#26A69A", "family": "Arial"},
-                bgcolor="rgba(255,255,255,0.9)",
-                bordercolor="#26A69A",
+                font={"size": 10, "color": BULL_COLOR},
+                bgcolor=ELEVATED_BG,
+                bordercolor=BULL_COLOR,
                 borderwidth=1.5,
                 borderpad=4,
             )
             break
 
 # Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs=True, full_html=True)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
