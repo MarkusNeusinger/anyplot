@@ -101,9 +101,6 @@ const tenkanData = tenkan.map((v, i) => [i, v]);
 const kijunData  = kijun.map((v, i) => [i, v]);
 // Chikou span: close plotted 26 periods in the past (index i - 26, skip first 26)
 const chikouData = closes.map((v, i) => [i - 26, v]).filter(d => d[0] >= 0);
-// SpanA/B line outlines (displaced +26)
-const spanALine  = spanA.map((v, i) => [i + 26, v]);
-const spanBLine  = spanB.map((v, i) => [i + 26, v]);
 
 // --- Colors -----------------------------------------------------------------
 const BULL_GREEN   = t.palette[0]; // #009E73 — up candles, bullish cloud
@@ -145,8 +142,8 @@ chart.setOption({
       { name: "Tenkan-sen" },
       { name: "Kijun-sen" },
       { name: "Chikou Span" },
-      { name: "Kumo (Bull)", icon: "rect" },
-      { name: "Kumo (Bear)", icon: "rect" }
+      { name: "Kumo (Bull)", icon: "rect", itemStyle: { color: CLOUD_BULL_FILL, borderColor: BULL_GREEN, borderWidth: 1 } },
+      { name: "Kumo (Bear)", icon: "rect", itemStyle: { color: CLOUD_BEAR_FILL, borderColor: BEAR_RED, borderWidth: 1 } }
     ]
   },
 
