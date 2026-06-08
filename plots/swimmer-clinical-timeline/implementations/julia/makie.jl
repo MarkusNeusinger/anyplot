@@ -6,7 +6,6 @@
 using CairoMakie
 using Colors
 using Random
-using Statistics
 
 Random.seed!(42)
 
@@ -103,7 +102,7 @@ ax = Axis(
     xlabelsize         = 13,
     xlabelcolor        = INK,
     xticklabelsize     = 11,
-    yticklabelsize     = 9,
+    yticklabelsize     = 10,
     xticklabelcolor    = INK_SOFT,
     yticklabelcolor    = INK_SOFT,
     xtickcolor         = INK_SOFT,
@@ -165,6 +164,10 @@ for evt_type in ("partial_response", "complete_response", "progressive_disease",
         strokecolor = PAGE_BG,
     )
 end
+
+# Vertical reference line at week 24 — common Phase II landmark assessment
+vlines!(ax, [24.0]; color = (INK_MUTED, 0.45), linestyle = :dash, linewidth = 1.5)
+text!(ax, 24.4, n_patients + 0.55; text = "Wk 24", fontsize = 9, color = INK_MUTED, align = (:left, :top))
 
 max_dur = maximum(durations)
 xlims!(ax, -0.8, max_dur + 7.0)
