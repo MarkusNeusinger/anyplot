@@ -1,12 +1,8 @@
 // anyplot.ai
 // flamegraph-basic: Flame Graph for Performance Profiling
-// Library: echarts 5.5.1 | JavaScript 22.22.3
-// Quality: 81/100 | Created: 2026-06-08
-//# anyplot-orientation: landscape
-// anyplot.ai
-// flamegraph-basic: Flame Graph for Performance Profiling
 // Library: echarts 5.5.1 | JavaScript 22
 // Quality: pending | Created: 2026-06-08
+//# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -122,12 +118,12 @@ layout(profile, 0, 0);
 const totalSamples = profile.total;
 const maxDepth = Math.max.apply(null, rectangles.map((r) => r.depth));
 
-// Warm Imprint subset for flame graph aesthetic — ochre, matte red, amber,
-// lavender — keyed deterministically off the function name so repeat frames
-// keep their identity. Brand green (#009E73, Imprint position 1) anchors the
-// root frame, satisfying the "first categorical series" rule while preserving
-// the conventional warm flame palette for stacked frames above.
-const warmColors = ["#BD8233", "#AE3030", "#DDCC77", "#C475FD"];
+// Warm Imprint subset for flame graph aesthetic — ochre, matte red, amber —
+// keyed deterministically off the function name so repeat frames keep their
+// identity. Brand green (#009E73, Imprint position 1) anchors the root frame,
+// satisfying the "first categorical series" rule while preserving the
+// conventional warm flame palette for stacked frames above.
+const warmColors = ["#BD8233", "#AE3030", "#DDCC77"];
 function colorFor(rect) {
   if (rect.depth === 0) return t.palette[0];
   let h = 0;
@@ -135,11 +131,27 @@ function colorFor(rect) {
   return warmColors[h % warmColors.length];
 }
 
-// Encode each rectangle as [x0, x1, depth, name].
-const data = rectangles.map((r) => ({
-  value: [r.x0, r.x1, r.depth, r.name],
-  itemStyle: { color: colorFor(r) },
-}));
+// WCAG relative luminance — pick label ink from per-bar fill luminance so
+// labels keep contrast regardless of theme (dark text on light fills, light
+// text on dark fills).
+function labelInkFor(hex) {
+  const h = hex.replace("#", "");
+  const channels = [0, 2, 4].map((i) => {
+    const c = parseInt(h.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  });
+  const lum = 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+  return lum > 0.5 ? "#1A1A17" : "#FAF8F1";
+}
+
+// Encode each rectangle as [x0, x1, depth, name]. Pre-compute fill + label ink.
+const data = rectangles.map((r) => {
+  const fill = colorFor(r);
+  return {
+    value: [r.x0, r.x1, r.depth, r.name, fill, labelInkFor(fill)],
+    itemStyle: { color: fill },
+  };
+});
 
 const chart = echarts.init(document.getElementById("container"));
 
@@ -191,8 +203,12 @@ chart.setOption({
       const width = Math.max(0, x1 - x0);
       const height = Math.max(0, yBottom - yTop);
       const name = api.value(3);
-      const showLabel = width > 70;
-      const fill = api.style().fill;
+      const fill = api.value(4);
+      const labelInk = api.value(5);
+      // Only label when the function name + left inset + right safety gap
+      // genuinely fits — keeps adjacent in-bar labels from butting at depth 3.
+      const estTextWidth = String(name).length * 7.2;
+      const showLabel = width > estTextWidth + 28;
       return {
         type: "rect",
         shape: { x: x0, y: yTop, width: Math.max(0, width - 2), height: Math.max(0, height - 2) },
@@ -201,13 +217,13 @@ chart.setOption({
           type: "text",
           style: {
             text: name,
-            fill: t.ink,
+            fill: labelInk,
             font: '13px -apple-system, "Segoe UI", Roboto, sans-serif',
             textAlign: "left",
             textVerticalAlign: "middle",
           },
         } : undefined,
-        textConfig: showLabel ? { position: "insideLeft", inside: true, distance: 8 } : undefined,
+        textConfig: showLabel ? { position: "insideLeft", inside: true, distance: 12 } : undefined,
       };
     },
     data,
