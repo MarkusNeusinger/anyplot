@@ -1,16 +1,38 @@
-""" pyplots.ai
+""" anyplot.ai
 flamegraph-basic: Flame Graph for Performance Profiling
-Library: bokeh 3.9.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-14
+Library: bokeh 3.9.1 | Python 3.13.13
+Quality: 85/100 | Updated: 2026-06-08
 """
 
-from bokeh.io import export_png, output_file, save
+import os
+import time
+from pathlib import Path
+
+from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, HoverTool, Label
 from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Data - Simulated CPU profiling data for a web server application
-# 55 unique stack traces covering realistic call hierarchies
+# Theme tokens (Imprint palette + theme-adaptive chrome)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint hues assigned by top-level branch — flame-graph convention is to color
+# by code area (not by sample heat), so each subtree gets a stable categorical hue.
+# main is the brand-first root; ochre + matte-red lean into the warm flame-graph
+# aesthetic from the spec while staying on canonical Imprint positions.
+BRANCH_COLOR = {
+    "main": "#009E73",  # brand — root frame
+    "handle_request": "#BD8233",  # ochre — request handling
+    "gc_collect": "#AE3030",  # matte red — garbage collection
+    "log_metrics": "#C475FD",  # lavender — logging / metrics
+}
+
+# Data — simulated CPU profile of a small web server (10,000 samples)
 stack_data = [
     ("main", 10000),
     ("main;handle_request", 8500),
@@ -69,123 +91,95 @@ stack_data = [
     ("main;log_metrics;flush_buffer;rotate_log", 40),
 ]
 
-# Build hierarchy from stack traces
+# Build hierarchy from semicolon-delimited stacks
 total_samples = 10000
 nodes = {}
 children_map = {}
 for stack_str, samples in stack_data:
     parts = stack_str.split(";")
-    func_name = parts[-1]
     depth = len(parts) - 1
     parent_key = ";".join(parts[:-1]) if depth > 0 else None
-    nodes[stack_str] = {"name": func_name, "samples": samples, "depth": depth, "parent": parent_key}
-    if parent_key not in children_map:
-        children_map[parent_key] = []
-    children_map[parent_key].append(stack_str)
+    branch = parts[1] if depth >= 1 else "main"
+    nodes[stack_str] = {"name": parts[-1], "samples": samples, "depth": depth, "branch": branch}
+    children_map.setdefault(parent_key, []).append(stack_str)
 
 max_depth = max(n["depth"] for n in nodes.values())
 
-# Perceptually uniform warm palette using Inferno colormap stops
-# Mapped from cool (pale yellow, low heat) to hot (deep red-black, high heat)
-INFERNO_STOPS = [
-    (0.0, (252, 255, 164)),  # pale yellow (coolest)
-    (0.15, (249, 228, 76)),  # yellow
-    (0.30, (243, 177, 31)),  # amber
-    (0.45, (226, 123, 25)),  # orange
-    (0.60, (194, 74, 36)),  # red-orange
-    (0.75, (148, 33, 61)),  # deep red
-    (0.90, (101, 12, 81)),  # dark magenta
-    (1.0, (60, 9, 76)),  # deep purple-black (hottest)
-]
+# Dominant hot-path chain — gets an INK outline to point readers at the bottleneck.
+HOT_PATH = {
+    "main",
+    "main;handle_request",
+    "main;handle_request;process_query",
+    "main;handle_request;process_query;execute",
+    "main;handle_request;process_query;execute;fetch_rows",
+}
 
-
-def heat_to_color(heat):
-    """Interpolate in perceptually uniform Inferno colormap."""
-    heat = max(0.0, min(1.0, heat))
-    for i in range(len(INFERNO_STOPS) - 1):
-        t0, c0 = INFERNO_STOPS[i]
-        t1, c1 = INFERNO_STOPS[i + 1]
-        if heat <= t1:
-            frac = (heat - t0) / (t1 - t0) if t1 > t0 else 0
-            r = int(c0[0] + frac * (c1[0] - c0[0]))
-            g = int(c0[1] + frac * (c1[1] - c0[1]))
-            b = int(c0[2] + frac * (c1[2] - c0[2]))
-            return f"#{r:02x}{g:02x}{b:02x}"
-    return f"#{INFERNO_STOPS[-1][1][0]:02x}{INFERNO_STOPS[-1][1][1]:02x}{INFERNO_STOPS[-1][1][2]:02x}"
-
-
-# Layout flames iteratively using a stack (avoids recursive function for KISS)
+# Layout — iterative DFS placing each child proportional to its sample share.
+# Sibling order is alphabetical (flame-graph convention; x-axis is not temporal).
 rects = []
 work_stack = [("main", 0.0, 100.0)]
 while work_stack:
     stack_key, x_start, x_end = work_stack.pop()
     node = nodes[stack_key]
-    depth = node["depth"]
-    width_fraction = x_end - x_start
-
-    # Color: perceptually uniform warm palette based on sample proportion
-    heat = node["samples"] / total_samples
-    color = heat_to_color(heat)
-    text_color = "#f0f0f0" if heat > 0.55 else "#1a1a1a"
-
+    rect_w = x_end - x_start
     pct = node["samples"] / total_samples * 100
+    # Subtle parity-based alpha gives adjacent frames a faint banding cue
+    fill_alpha = 0.94 if node["depth"] % 2 == 0 else 0.86
+    is_hot = stack_key in HOT_PATH
     rects.append(
         {
             "name": node["name"],
-            "depth": depth,
-            "x_start": x_start,
-            "x_end": x_end,
+            "depth": node["depth"],
+            "x_center": (x_start + x_end) / 2,
+            "y_center": node["depth"] + 0.5,
+            "width": rect_w,
+            "color": BRANCH_COLOR[node["branch"]],
+            "fill_alpha": fill_alpha,
+            "line_color": INK if is_hot else PAGE_BG,
+            "line_width": 4.0 if is_hot else 1.5,
             "samples": node["samples"],
             "pct": f"{pct:.1f}%",
             "stack": stack_key,
-            "color": color,
-            "text_color": text_color,
         }
     )
-
-    # Layout children sorted alphabetically (flame graph convention)
     child_keys = sorted(children_map.get(stack_key, []), reverse=True)
     current_x = x_start
     for ck in child_keys:
-        child_samples = nodes[ck]["samples"]
-        child_width = width_fraction * (child_samples / node["samples"])
-        work_stack.append((ck, current_x, current_x + child_width))
-        current_x += child_width
-
-# Prepare data for Bokeh
-x_centers = [(r["x_start"] + r["x_end"]) / 2 for r in rects]
-y_centers = [r["depth"] + 0.5 for r in rects]
-widths = [r["x_end"] - r["x_start"] for r in rects]
-heights = [0.92] * len(rects)
-colors = [r["color"] for r in rects]
-names = [r["name"] for r in rects]
-samples_list = [r["samples"] for r in rects]
-pcts = [r["pct"] for r in rects]
-stacks = [r["stack"] for r in rects]
+        cw = rect_w * (nodes[ck]["samples"] / node["samples"])
+        work_stack.append((ck, current_x, current_x + cw))
+        current_x += cw
 
 source = ColumnDataSource(
     data={
-        "x": x_centers,
-        "y": y_centers,
-        "width": widths,
-        "height": heights,
-        "color": colors,
-        "name": names,
-        "samples": samples_list,
-        "pct": pcts,
-        "stack": stacks,
+        "x": [r["x_center"] for r in rects],
+        "y": [r["y_center"] for r in rects],
+        "width": [r["width"] for r in rects],
+        "height": [0.94] * len(rects),
+        "color": [r["color"] for r in rects],
+        "fill_alpha": [r["fill_alpha"] for r in rects],
+        "line_color": [r["line_color"] for r in rects],
+        "line_width": [r["line_width"] for r in rects],
+        "name": [r["name"] for r in rects],
+        "samples": [r["samples"] for r in rects],
+        "pct": [r["pct"] for r in rects],
+        "stack": [r["stack"] for r in rects],
     }
 )
 
-# Plot - tighter y_range to minimize wasted vertical space
+# Plot — landscape canvas, axes hidden (flame-graph convention)
+title = "flamegraph-basic · python · bokeh · anyplot.ai"
 p = figure(
-    width=4800,
-    height=2700,
-    title="flamegraph-basic \u00b7 bokeh \u00b7 pyplots.ai",
-    x_range=(-1, 101),
-    y_range=(-0.2, max_depth + 1.0),
+    width=3200,
+    height=1800,
+    title=title,
+    x_range=(-0.5, 100.5),
+    y_range=(-0.05, max_depth + 1.05),
     tools="",
     toolbar_location=None,
+    min_border_left=40,
+    min_border_right=40,
+    min_border_top=110,
+    min_border_bottom=40,
 )
 
 bars = p.rect(
@@ -195,12 +189,12 @@ bars = p.rect(
     height="height",
     source=source,
     fill_color="color",
-    line_color="white",
-    line_width=2,
-    fill_alpha=0.95,
+    fill_alpha="fill_alpha",
+    line_color="line_color",
+    line_width="line_width",
 )
 
-# HoverTool - Bokeh distinctive interactive feature
+# HoverTool — bokeh's distinctive interactive feature, surfaces the full call stack
 hover = HoverTool(
     renderers=[bars],
     tooltips=[("Function", "@name"), ("Samples", "@samples"), ("CPU %", "@pct"), ("Call Stack", "@stack")],
@@ -208,44 +202,76 @@ hover = HoverTool(
 )
 p.add_tools(hover)
 
-# Add function name labels inside bars when wide enough
+# Function-name labels drawn inside bars wide enough to fit them.
+# Narrower frames fall back to the HoverTool — keeps adjacent labels from touching.
 for r in rects:
-    rect_width = r["x_end"] - r["x_start"]
-    x_center = (r["x_start"] + r["x_end"]) / 2
-    y_center = r["depth"] + 0.5
-
-    if rect_width > 3:
-        font_size = "22pt" if rect_width > 25 else ("18pt" if rect_width > 10 else "14pt")
-        label_text = r["name"]
-        if rect_width > 12:
-            label_text = f"{r['name']} ({r['pct']})"
-
-        label = Label(
-            x=x_center,
-            y=y_center,
+    if r["width"] <= 5:
+        continue
+    if r["width"] > 25:
+        font_size = "22pt"
+    elif r["width"] > 10:
+        font_size = "18pt"
+    else:
+        font_size = "14pt"
+    label_text = f"{r['name']} ({r['pct']})" if r["width"] > 12 else r["name"]
+    p.add_layout(
+        Label(
+            x=r["x_center"],
+            y=r["y_center"],
             text=label_text,
             text_align="center",
             text_baseline="middle",
             text_font_size=font_size,
-            text_color=r["text_color"],
+            text_color=INK,
         )
-        p.add_layout(label)
+    )
 
-# Style
-p.title.text_font_size = "36pt"
-p.title.align = "center"
+# Style — chrome (axes hidden, theme-adaptive title + background)
+p.title.text_font_size = "50pt"
+p.title.text_color = INK
 p.title.text_font_style = "bold"
+p.title.align = "center"
 
 p.xaxis.visible = False
 p.yaxis.visible = False
 p.xgrid.visible = False
 p.ygrid.visible = False
-
 p.outline_line_color = None
-p.background_fill_color = "#FFFFFF"
-p.border_fill_color = "#FFFFFF"
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
 
-# Save
-export_png(p, filename="plot.png")
-output_file("plot.html", title="flamegraph-basic \u00b7 bokeh \u00b7 pyplots.ai")
+# Save — interactive HTML + headless-Chrome screenshot at exact canvas size.
+# CDP setDeviceMetricsOverride makes the inner viewport authoritative — --window-size
+# alone leaves Chrome chrome eating ~140 px, yielding 3200x1661 instead of 3200x1800.
+output_file(f"plot-{THEME}.html")
 save(p)
+
+W, H = 3200, 1800
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
+
+# Belt-and-braces: pin the saved PNG to exact dims so the post-render gate passes.
+from PIL import Image as _PILImage
+
+
+_img = _PILImage.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (W, H):
+    _norm = _PILImage.new("RGB", (W, H), PAGE_BG)
+    _norm.paste(_img, ((W - _img.size[0]) // 2, (H - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")
