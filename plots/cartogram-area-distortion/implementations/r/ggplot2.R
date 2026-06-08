@@ -1,6 +1,7 @@
 #' anyplot.ai
 #' cartogram-area-distortion: Cartogram with Area Distortion by Data Value
 #' Library: ggplot2 3.5.1 | R 4.4.1
+#' Quality: 82/100 | Created: 2026-06-08
 
 library(ggplot2)
 library(dplyr)
