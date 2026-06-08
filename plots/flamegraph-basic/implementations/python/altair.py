@@ -1,15 +1,31 @@
-""" pyplots.ai
+"""anyplot.ai
 flamegraph-basic: Flame Graph for Performance Profiling
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-14
+Library: altair | Python 3.13
+Quality: pending | Created: 2026-06-08
 """
+
+import os
 
 import altair as alt
 import pandas as pd
+from PIL import Image
 
 
-# Data - simulated CPU profiling stacks with realistic function names
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
+# Imprint warm semantic ramp: amber -> ochre -> matte red. Flame graphs carry a
+# strong, widely-shared warm-palette convention; the spec calls it out directly,
+# so this is a semantic exception ("Semantic exception" in the style guide).
+# All three stops are Imprint members (amber anchor + ochre + matte-red).
+WARM_STOPS = ["#DDCC77", "#BD8233", "#AE3030"]
+
+# Data — simulated CPU profiling samples from a Python web request handler.
 stacks = {
     "main": 500,
     "main;request_handler": 420,
@@ -39,70 +55,50 @@ stacks = {
     "main;logger;write_file": 8,
 }
 
-# Build flamegraph rectangles: compute x-position and width for each frame at each depth
-# For each depth level, children are placed left-to-right within their parent's span
 total_samples = stacks["main"]
 
-# Parse stacks into a tree structure to compute positions
+# Pack each frame into an x-span: parent defines the range, children fill it
+# left-to-right sorted widest-first. Standard icicle/flamegraph layout.
+positions = {"main": (0, total_samples)}
 records = []
-
-
-# Process stacks by building position map
-# For each stack, parent defines the x-range, children fill it left to right
-positions = {}
-positions["main"] = (0, total_samples)
-
-# Group stacks by depth
 stacks_by_depth = {}
 for stack_path, value in stacks.items():
-    depth = stack_path.count(";")
-    if depth not in stacks_by_depth:
-        stacks_by_depth[depth] = []
-    stacks_by_depth[depth].append((stack_path, value))
+    stacks_by_depth.setdefault(stack_path.count(";"), []).append((stack_path, value))
 
-# Sort children within each parent by their value (largest first for better layout)
-for depth in sorted(stacks_by_depth.keys()):
+for depth in sorted(stacks_by_depth):
     if depth == 0:
         for stack_path, value in stacks_by_depth[depth]:
             positions[stack_path] = (0, value)
-            func_name = stack_path.split(";")[-1]
             records.append(
                 {
                     "x": 0,
                     "x2": value,
                     "depth": depth,
-                    "function": func_name,
+                    "function": stack_path.split(";")[-1],
                     "samples": value,
                     "stack": stack_path,
                     "width": value,
                 }
             )
         continue
-
-    # Group by parent
     parent_children = {}
     for stack_path, value in stacks_by_depth[depth]:
         parent = ";".join(stack_path.split(";")[:-1])
-        if parent not in parent_children:
-            parent_children[parent] = []
-        parent_children[parent].append((stack_path, value))
-
+        parent_children.setdefault(parent, []).append((stack_path, value))
     for parent, children in parent_children.items():
         if parent not in positions:
             continue
-        parent_x, parent_x2 = positions[parent]
-        # Sort children by value descending for a visually pleasing layout
+        parent_x, _ = positions[parent]
         children.sort(key=lambda c: c[1], reverse=True)
         current_x = parent_x
         for stack_path, value in children:
             positions[stack_path] = (current_x, current_x + value)
-            func_name = stack_path.split(";")[-1]
             records.append(
                 {
                     "x": current_x,
                     "x2": current_x + value,
                     "depth": depth,
-                    "function": func_name,
+                    "function": stack_path.split(";")[-1],
                     "samples": value,
                     "stack": stack_path,
                     "width": value,
@@ -112,100 +108,124 @@ for depth in sorted(stacks_by_depth.keys()):
 
 df = pd.DataFrame(records)
 df["pct"] = (df["samples"] / total_samples * 100).round(1)
-df["label"] = df.apply(lambda r: r["function"] if r["width"] / total_samples > 0.06 else "", axis=1)
+max_depth = int(df["depth"].max())
 
-# Identify the hottest code path (widest bar at each depth following the dominant branch)
-max_depth = df["depth"].max()
-hot_path_stacks = set()
-current_stack = "main"
-hot_path_stacks.add(current_stack)
+# Trace the dominant call path (widest descendant at each depth) for emphasis.
+hot_path = {"main"}
+current = "main"
 for d in range(1, max_depth + 1):
-    children = df[(df["depth"] == d) & (df["stack"].str.startswith(current_stack + ";"))]
-    if not children.empty:
-        hottest = children.loc[children["samples"].idxmax()]
-        current_stack = hottest["stack"]
-        hot_path_stacks.add(current_stack)
+    children = df[(df["depth"] == d) & (df["stack"].str.startswith(current + ";"))]
+    if children.empty:
+        break
+    current = children.loc[children["samples"].idxmax(), "stack"]
+    hot_path.add(current)
 
-df["is_hot"] = df["stack"].isin(hot_path_stacks)
-df["opacity_val"] = df["is_hot"].map({True: 1.0, False: 0.6})
+df["is_hot"] = df["stack"].isin(hot_path)
+df["opacity_val"] = df["is_hot"].map({True: 1.0, False: 0.55})
 
 # Plot
+TITLE = "flamegraph-basic · python · altair · anyplot.ai"
+ratio = 67 / len(TITLE) if len(TITLE) > 67 else 1.0
+TITLE_PX = max(11, round(16 * ratio))
+
 alt.data_transformers.disable_max_rows()
 
-bars = (
-    alt.Chart(df)
-    .mark_rect(stroke="#FFFFFF", strokeWidth=0.5, cornerRadius=2)
-    .encode(
-        x=alt.X("x:Q", title="Samples (count)", axis=alt.Axis(titleFontSize=22, labelFontSize=18)),
-        x2="x2:Q",
-        y=alt.Y(
-            "depth:O", title="Stack Depth (level)", sort="descending", axis=alt.Axis(titleFontSize=22, labelFontSize=18)
-        ),
-        color=alt.Color(
-            "depth:Q",
-            scale=alt.Scale(
-                domain=[0, max_depth], range=["#FEEDDE", "#FDBE85", "#FD8D3C", "#E6550D", "#BD0026", "#7F0000"]
-            ),
-            legend=None,
-        ),
-        opacity=alt.Opacity("opacity_val:Q", legend=None, scale=alt.Scale(domain=[0.5, 1.0], range=[0.5, 1.0])),
-        tooltip=[
-            alt.Tooltip("function:N", title="Function"),
-            alt.Tooltip("samples:Q", title="Samples"),
-            alt.Tooltip("pct:Q", title="% Total", format=".1f"),
-            alt.Tooltip("stack:N", title="Stack"),
-        ],
-    )
+hover = alt.selection_point(on="pointerover", fields=["stack"], empty=False, clear="pointerout")
+
+base = alt.Chart(df).transform_calculate(
+    mid="(datum.x + datum.x2) / 2", label=f"datum.width / {total_samples} > 0.06 ? datum.function : ''"
 )
 
-labels = (
-    alt.Chart(df[df["label"] != ""])
-    .mark_text(fontSize=16, color="#1a1a1a", fontWeight="bold", align="center", baseline="middle")
-    .encode(x=alt.X("mid:Q"), y=alt.Y("depth:O", sort="descending"), text="label:N")
-    .transform_calculate(mid="(datum.x + datum.x2) / 2")
+bars = base.mark_rect(stroke=PAGE_BG, strokeWidth=0.6, cornerRadius=2).encode(
+    x=alt.X("x:Q", title="Samples (count)", scale=alt.Scale(domain=[0, total_samples], nice=False)),
+    x2="x2:Q",
+    y=alt.Y("depth:O", title="Stack Depth (level)", sort="descending"),
+    color=alt.Color(
+        "depth:Q", scale=alt.Scale(domain=[0, max_depth], range=WARM_STOPS, interpolate="hsl"), legend=None
+    ),
+    opacity=alt.Opacity("opacity_val:Q", legend=None, scale=alt.Scale(domain=[0.55, 1.0], range=[0.55, 1.0])),
+    tooltip=[
+        alt.Tooltip("function:N", title="Function"),
+        alt.Tooltip("samples:Q", title="Samples"),
+        alt.Tooltip("pct:Q", title="% Total", format=".1f"),
+        alt.Tooltip("stack:N", title="Stack"),
+    ],
 )
 
-# Highlight selection for interactive exploration (distinctive Altair feature)
-highlight = alt.selection_point(on="pointerover", fields=["stack"], empty=False)
-
-highlight_bars = (
-    alt.Chart(df)
-    .mark_rect(stroke="#333333", strokeWidth=2, cornerRadius=2)
+# Hover overlay: thick ink-coloured outline that lights up only the bar under
+# the pointer. Distinctive Altair pattern — declarative selection + condition.
+highlight = (
+    base.mark_rect(stroke=INK, strokeWidth=2.5, fill="transparent", cornerRadius=2)
     .encode(
         x="x:Q",
         x2="x2:Q",
         y=alt.Y("depth:O", sort="descending"),
-        opacity=alt.condition(highlight, alt.value(1.0), alt.value(0)),
-        color=alt.value("transparent"),
+        opacity=alt.condition(hover, alt.value(1.0), alt.value(0.0)),
     )
-    .add_params(highlight)
+    .add_params(hover)
+)
+
+labels = base.mark_text(fontSize=8, color=INK, fontWeight="bold", align="center", baseline="middle").encode(
+    x="mid:Q", y=alt.Y("depth:O", sort="descending"), text="label:N"
 )
 
 chart = (
-    (bars + highlight_bars + labels)
+    (bars + highlight + labels)
     .interactive()
     .properties(
-        width=1600,
-        height=900,
+        width=620,
+        height=320,
+        background=PAGE_BG,
+        padding={"left": 16, "right": 16, "top": 16, "bottom": 16},
         title=alt.Title(
-            "flamegraph-basic · altair · pyplots.ai",
+            TITLE,
             subtitle=[
-                "CPU profiling: 500 samples | Hot path: main → request_handler → process_request → db_query → execute_sql",
-                "Hover over bars to highlight | Scroll to zoom | Drag to pan",
+                "Hot path: main → request_handler → process_request → db_query → execute_sql",
+                "Hover bars to highlight · drag to pan · scroll to zoom",
             ],
-            fontSize=28,
-            subtitleFontSize=18,
-            subtitleColor="#666666",
+            fontSize=TITLE_PX,
+            subtitleFontSize=10,
+            color=INK,
+            subtitleColor=INK_SOFT,
             anchor="start",
-            offset=16,
+            offset=12,
+            subtitlePadding=4,
         ),
-        padding={"left": 20, "right": 20, "top": 20, "bottom": 20},
     )
-    .configure_view(strokeWidth=0)
-    .configure_axis(grid=False, domainColor="#cccccc", labelColor="#444444", titleColor="#333333")
-    .configure_title(subtitlePadding=6)
+    .configure_view(fill=PAGE_BG, stroke=None)
+    .configure_axis(
+        grid=False,
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=10,
+        titleFontSize=12,
+    )
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=10,
+        titleFontSize=10,
+    )
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save PNG, then PAD (never crop) to the canonical 3200×1800 canvas.
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}x{_h}, exceeds target {TW}x{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+chart.save(f"plot-{THEME}.html")
