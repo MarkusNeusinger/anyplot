@@ -1,7 +1,6 @@
 #' anyplot.ai
 #' cartogram-area-distortion: Cartogram with Area Distortion by Data Value
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 80/100 | Created: 2026-06-08
 
 library(ggplot2)
 library(dplyr)
@@ -62,8 +61,8 @@ states <- tibble::tibble(
   )
 )
 
-# Label the 13 most populous states (>= 7.5M)
-labeled_states <- states %>% filter(population >= 7.5)
+# Label ~24 most populous states (population >= 5M) for better geographic coverage
+labeled_states <- states %>% filter(population >= 5)
 
 # Title with length-aware font scaling (baseline 67 chars at 12pt)
 plot_title <- paste0(
@@ -72,8 +71,32 @@ plot_title <- paste0(
 )
 title_size <- max(8L, round(12 * 67 / nchar(plot_title)))
 
+# Reference inset — equal-area dots at geographic centroids (no population distortion)
+# Provides visual comparison: all states equal size vs. cartogram where size = population
+ref_map_plot <- ggplot(states, aes(x = lon, y = lat)) +
+  geom_point(
+    fill = INK_MUTED, color = PAGE_BG,
+    shape = 21, size = 1.8, stroke = 0.3, alpha = 0.85
+  ) +
+  coord_fixed(ratio = 1.3) +
+  labs(title = "Reference:\nequal-area") +
+  theme_void(base_size = 5) +
+  theme(
+    plot.background  = element_rect(fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.4),
+    panel.background = element_rect(fill = ELEVATED_BG, color = NA),
+    plot.title       = element_text(color = INK_SOFT, size = 4.5, hjust = 0.5,
+                                    margin = margin(t = 2, b = 1)),
+    plot.margin      = margin(2, 3, 3, 3, "pt")
+  )
+ref_grob <- ggplotGrob(ref_map_plot)
+
 # Dorling-style cartogram: circles at geographic centroids, area proportional to population
+# annotation_custom placed first so data circles render on top of the inset
 p <- ggplot(states, aes(x = lon, y = lat)) +
+  annotation_custom(
+    grob = ref_grob,
+    xmin = -130, xmax = -111, ymin = 22, ymax = 32
+  ) +
   geom_point(
     aes(size = population, fill = gdp_pc),
     shape  = 21,
@@ -85,12 +108,12 @@ p <- ggplot(states, aes(x = lon, y = lat)) +
     data     = labeled_states,
     aes(label = abbr),
     color    = "white",
-    size     = 2.4,
+    size     = 2.2,
     fontface = "bold"
   ) +
   scale_size_area(
     name     = "Population\n(millions)",
-    max_size = 24,
+    max_size = 20,
     breaks   = c(2, 5, 10, 20, 40),
     labels   = c("2", "5", "10", "20", "40")
   ) +
@@ -101,7 +124,12 @@ p <- ggplot(states, aes(x = lon, y = lat)) +
     breaks = c(50, 60, 70, 80, 95),
     labels = scales::label_number(suffix = "k")
   ) +
-  coord_fixed(ratio = 1.3) +
+  guides(
+    size = guide_legend(
+      override.aes = list(fill = INK_MUTED, color = PAGE_BG, alpha = 0.9)
+    )
+  ) +
+  coord_fixed(ratio = 1.3, xlim = c(-130, -64), ylim = c(22, 51)) +
   labs(
     title = plot_title,
     x     = "Longitude",
