@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 swimmer-clinical-timeline: Swimmer Plot for Clinical Trial Timelines
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 84/100 | Created: 2026-06-08
@@ -109,39 +109,38 @@ for idx, (dur, arm, ongoing) in enumerate(zip(sorted_dur, sorted_arms, sorted_on
             zorder=3,
         )
 
-# Event markers
+# Event markers — sns.scatterplot for seaborn idiomatic usage
 for etype, style in EVENT_STYLES.items():
     mask = events_df["event_type"] == etype
     if mask.sum() > 0:
-        sub = events_df[mask]
-        ax.scatter(
-            sub["time"],
-            sub["patient_idx"],
+        sns.scatterplot(
+            data=events_df[mask],
+            x="time",
+            y="patient_idx",
+            ax=ax,
             marker=style["marker"],
             color=style["color"],
             s=style["size"],
             zorder=5,
-            edgecolors=PAGE_BG,
-            linewidths=0.5,
-            clip_on=True,
+            edgecolor=PAGE_BG,
+            linewidth=0.5,
+            legend=False,
         )
 
 # Axes styling
 ax.set_yticks(range(n_patients))
 ax.set_yticklabels(sorted_ids)
 ax.set_xlabel("Time on Study (months)", fontsize=10, color=INK)
+ax.set_ylabel("")
 ax.set_xlim(0, sorted_dur.max() + 2.8)
 ax.set_ylim(-0.65, n_patients - 0.35)
 
 ax.tick_params(axis="x", which="both", length=0, labelsize=8, colors=INK_SOFT)
-ax.tick_params(axis="y", which="both", length=0, labelsize=6.5, colors=INK_SOFT)
+ax.tick_params(axis="y", which="both", length=0, labelsize=7.5, colors=INK_SOFT)
 
-# Title — 57 chars < 67 baseline, no scaling needed
+# Title
 title = "swimmer-clinical-timeline · python · seaborn · anyplot.ai"
-n_chars = len(title)
-ratio = 67 / n_chars if n_chars > 67 else 1.0
-title_fs = max(8, round(12 * ratio))
-ax.set_title(title, fontsize=title_fs, fontweight="medium", color=INK, pad=8)
+ax.set_title(title, fontsize=12, fontweight="medium", color=INK, pad=8)
 
 # Spines
 ax.spines["top"].set_visible(False)
@@ -152,6 +151,21 @@ ax.spines["bottom"].set_color(INK_SOFT)
 # Vertical grid only (x-axis), behind bars
 ax.xaxis.grid(True, alpha=0.15, linewidth=0.6, color=INK, zorder=0)
 ax.set_axisbelow(True)
+
+# Storytelling annotation — median duration comparison between arms
+arm_a_med = np.median([sorted_dur[i] for i, arm in enumerate(sorted_arms) if "Arm A" in arm])
+arm_b_med = np.median([sorted_dur[i] for i, arm in enumerate(sorted_arms) if "Arm B" in arm])
+ax.text(
+    0.98,
+    0.97,
+    f"Median duration — Arm A: {arm_a_med:.1f} mo  |  Arm B: {arm_b_med:.1f} mo",
+    transform=ax.transAxes,
+    fontsize=7,
+    color=INK_MUTED,
+    ha="right",
+    va="top",
+    style="italic",
+)
 
 # Legend — treatment arms + event types + ongoing indicator
 arm_handles = [mpatches.Patch(color=ARM_COLORS[arm], alpha=0.82, label=arm) for arm in ARM_COLORS]
