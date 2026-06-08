@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 phase-diagram-pt: Thermodynamic Phase Diagram (Pressure-Temperature)
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-06-08
@@ -191,7 +191,10 @@ plot = (
     + scale_y_log10()
     + scale_x_continuous(breaks=[200, 300, 400, 500, 600, 700])
     + labs(
-        x="Temperature (K)", y="Pressure (Pa)", title="phase-diagram-pt · letsplot · pyplots.ai", color="Phase Boundary"
+        x="Temperature (K)",
+        y="Pressure (Pa)",
+        title="phase-diagram-pt · python · letsplot · anyplot.ai",
+        color="Phase Boundary",
     )
     + theme_minimal()
     + (flavor_high_contrast_light() if THEME == "light" else flavor_high_contrast_dark())
