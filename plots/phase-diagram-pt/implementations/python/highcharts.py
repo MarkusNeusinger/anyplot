@@ -1,101 +1,112 @@
-""" pyplots.ai
+"""anyplot.ai
 phase-diagram-pt: Thermodynamic Phase Diagram (Pressure-Temperature)
-Library: highcharts unknown | Python 3.14.3
-Quality: 89/100 | Created: 2026-03-14
+Library: highcharts | Python 3.14
+Quality: pending | Created: 2026-06-08
 """
 
-import glob as _glob
-import subprocess
+import os
 import tempfile
 import time
+import urllib.request
 from pathlib import Path
 
 import numpy as np
 from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - Water phase diagram (realistic)
-# Triple point: 273.16 K, 611.73 Pa (0.00604 atm)
-# Critical point: 647.1 K, 2.2064e7 Pa (217.7 atm)
-triple_t, triple_p = 273.16, 611.73
-critical_t, critical_p = 647.1, 2.2064e7
+# Theme tokens — Imprint palette + theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Solid-gas boundary (sublimation curve) - Clausius-Clapeyron approximation
-temp_sg = np.linspace(190, 273.16, 80)
-L_sub = 51059  # J/mol sublimation enthalpy
-R = 8.314
+# Imprint categorical palette — position 1 ALWAYS first series
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Data — Water phase diagram, Clausius-Clapeyron approximations
+triple_t, triple_p = 273.16, 611.73  # triple point: 273.16 K, 611.73 Pa
+critical_t, critical_p = 647.1, 2.2064e7  # critical point: 647.1 K, 22.064 MPa
+R = 8.314  # gas constant J/(mol·K)
+
+# Solid-gas (sublimation) boundary
+L_sub = 51059  # sublimation enthalpy J/mol
+temp_sg = np.linspace(190, triple_t, 80)
 pressure_sg = triple_p * np.exp((L_sub / R) * (1 / triple_t - 1 / temp_sg))
 
-# Liquid-gas boundary (vaporization curve) - from triple point to critical point
-temp_lg = np.linspace(273.16, 647.1, 100)
-L_vap = 40660  # J/mol vaporization enthalpy
+# Liquid-gas (vaporization) boundary: triple point to critical point
+L_vap = 40660  # vaporization enthalpy J/mol
+temp_lg = np.linspace(triple_t, critical_t, 100)
 pressure_lg = triple_p * np.exp((L_vap / R) * (1 / triple_t - 1 / temp_lg))
 
-# Solid-liquid boundary (melting curve) - water has negative slope, cap at y_max
+# Solid-liquid (melting) boundary: water's negative dP/dT slope
 y_max = 1e9
 temp_sl_end = triple_t + (triple_p - y_max) / (-1.3e7)
 temp_sl = np.linspace(triple_t, temp_sl_end, 60)
 pressure_sl = triple_p + (temp_sl - triple_t) * (-1.3e7)
 
-# Colorblind-safe palette (no red-green pairing)
-color_sublimation = "#306998"  # Python blue
-color_vaporization = "#D4760A"  # Amber/orange
-color_melting = "#8B5CF6"  # Purple
+sg_data = [[float(t), float(p)] for t, p in zip(temp_sg, pressure_sg, strict=True)]
+lg_data = [[float(t), float(p)] for t, p in zip(temp_lg, pressure_lg, strict=True)]
+sl_data = [[float(t), float(p)] for t, p in zip(temp_sl, pressure_sl, strict=True)]
 
 # Chart
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
+title_str = "Water Phase Diagram · phase-diagram-pt · python · highcharts · anyplot.ai"
+n = len(title_str)
+title_fontsize = f"{max(44, round(66 * 67 / n))}px"
+
 chart.options.chart = {
-    "width": 4800,
-    "height": 2700,
-    "backgroundColor": "#fafafa",
-    "style": {"fontFamily": "'Segoe UI', Arial, Helvetica, sans-serif"},
+    "width": 3200,
+    "height": 1800,
+    "backgroundColor": PAGE_BG,
+    "style": {"color": INK},
+    "marginBottom": 120,
     "spacingLeft": 80,
     "spacingRight": 80,
-    "spacingBottom": 60,
-    "marginBottom": 220,
     "spacingTop": 40,
 }
 
 chart.options.title = {
-    "text": "Water Phase Diagram · phase-diagram-pt · highcharts · pyplots.ai",
-    "style": {"fontSize": "42px", "fontWeight": "600", "color": "#2c3e50"},
-    "margin": 40,
+    "text": title_str,
+    "style": {"fontSize": title_fontsize, "fontWeight": "600", "color": INK},
+    "margin": 30,
 }
 
 chart.options.subtitle = {"text": None}
 
 chart.options.x_axis = {
-    "title": {"text": "Temperature (K)", "style": {"fontSize": "32px", "color": "#4a5568"}, "margin": 20},
-    "labels": {"style": {"fontSize": "24px", "color": "#4a5568"}},
+    "title": {"text": "Temperature (K)", "style": {"fontSize": "56px", "color": INK}, "margin": 20},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
     "tickInterval": 50,
     "min": 180,
     "max": 750,
     "gridLineWidth": 0,
-    "lineColor": "#cbd5e0",
+    "lineColor": INK_SOFT,
     "lineWidth": 2,
     "tickWidth": 0,
     "plotBands": [
-        {"from": 180, "to": 273.16, "color": "rgba(48, 105, 152, 0.06)"},
-        {"from": 647.1, "to": 750, "color": "rgba(230, 126, 34, 0.06)"},
+        {"from": 180, "to": triple_t, "color": "rgba(0,158,115,0.06)"},
+        {"from": critical_t, "to": 750, "color": "rgba(189,130,51,0.07)"},
     ],
 }
 
 chart.options.y_axis = {
     "type": "logarithmic",
-    "title": {"text": "Pressure (Pa)", "style": {"fontSize": "32px", "color": "#4a5568"}, "margin": 20},
-    "labels": {"style": {"fontSize": "24px", "color": "#4a5568"}},
+    "title": {"text": "Pressure (Pa)", "style": {"fontSize": "56px", "color": INK}, "margin": 20},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
     "min": 10,
     "max": 1e9,
-    "tickPositions": [1, 2, 3, 4, 5, 6, 7, 8, 9],
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0,0,0,0.06)",
+    "gridLineColor": GRID,
     "gridLineDashStyle": "Dot",
-    "lineColor": "#cbd5e0",
+    "lineColor": INK_SOFT,
     "lineWidth": 2,
 }
 
@@ -106,27 +117,20 @@ chart.options.tooltip = {
     "enabled": True,
     "headerFormat": "",
     "pointFormat": "<b>{series.name}</b><br>T: {point.x:.1f} K<br>P: {point.y:.2e} Pa",
-    "style": {"fontSize": "22px"},
-    "backgroundColor": "rgba(255,255,255,0.95)",
-    "borderColor": "#cbd5e0",
+    "style": {"fontSize": "36px"},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
     "borderRadius": 8,
-    "shadow": {"color": "rgba(0,0,0,0.1)", "offsetX": 2, "offsetY": 2, "width": 6},
 }
 
-# Series data
-sg_data = [[float(t), float(p)] for t, p in zip(temp_sg, pressure_sg, strict=True)]
-lg_data = [[float(t), float(p)] for t, p in zip(temp_lg, pressure_lg, strict=True)]
-sl_data = [[float(t), float(p)] for t, p in zip(temp_sl, pressure_sl, strict=True)]
-
-# Gas region shading - area fill below sublimation + vaporization curves
-gas_boundary_data = sg_data + lg_data
+# Area fills for phase regions
 chart.add_series(
     {
         "type": "area",
         "name": "Gas Region",
-        "data": gas_boundary_data,
+        "data": sg_data + lg_data,
         "threshold": 10,
-        "fillColor": "rgba(46, 204, 113, 0.08)",
+        "fillColor": "rgba(0,158,115,0.07)",
         "lineWidth": 0,
         "marker": {"enabled": False},
         "enableMouseTracking": False,
@@ -134,15 +138,13 @@ chart.add_series(
     }
 )
 
-# Liquid region shading - area fill above vaporization curve (approximate)
-liquid_fill_data = [[float(t), float(p)] for t, p in zip(temp_lg, pressure_lg, strict=True)]
 chart.add_series(
     {
         "type": "area",
         "name": "Liquid Region",
-        "data": liquid_fill_data,
+        "data": lg_data,
         "threshold": 1e9,
-        "fillColor": "rgba(52, 152, 219, 0.07)",
+        "fillColor": "rgba(68,103,163,0.07)",
         "lineWidth": 0,
         "marker": {"enabled": False},
         "enableMouseTracking": False,
@@ -150,18 +152,16 @@ chart.add_series(
     }
 )
 
-# Boundary curves with distinct colors
+# Boundary curves — Imprint positions 1, 2, 3
 chart.add_series(
     {
         "type": "line",
         "name": "Sublimation Curve",
         "data": sg_data,
-        "color": color_sublimation,
+        "color": IMPRINT_PALETTE[0],
         "lineWidth": 6,
         "dashStyle": "ShortDash",
         "marker": {"enabled": False},
-        "enableMouseTracking": True,
-        "states": {"hover": {"lineWidth": 8}},
         "showInLegend": False,
         "zIndex": 5,
     }
@@ -172,12 +172,10 @@ chart.add_series(
         "type": "line",
         "name": "Vaporization Curve",
         "data": lg_data,
-        "color": color_vaporization,
+        "color": IMPRINT_PALETTE[1],
         "lineWidth": 6,
         "dashStyle": "LongDash",
         "marker": {"enabled": False},
-        "enableMouseTracking": True,
-        "states": {"hover": {"lineWidth": 8}},
         "showInLegend": False,
         "zIndex": 5,
     }
@@ -188,99 +186,107 @@ chart.add_series(
         "type": "line",
         "name": "Melting Curve",
         "data": sl_data,
-        "color": color_melting,
-        "lineWidth": 6,
+        "color": IMPRINT_PALETTE[2],
+        "lineWidth": 7,
         "dashStyle": "DashDot",
         "marker": {"enabled": False},
-        "enableMouseTracking": True,
-        "states": {"hover": {"lineWidth": 8}},
         "showInLegend": False,
         "zIndex": 5,
     }
 )
 
-# Triple point with annotation
+# Triple point marker and annotation
 chart.add_series(
     {
         "type": "scatter",
         "name": "Triple Point",
         "data": [[float(triple_t), float(triple_p)]],
-        "color": "#8e44ad",
-        "marker": {"symbol": "circle", "radius": 20, "lineColor": "#ffffff", "lineWidth": 4, "fillColor": "#8e44ad"},
+        "color": IMPRINT_PALETTE[3],
+        "marker": {
+            "symbol": "circle",
+            "radius": 18,
+            "lineColor": PAGE_BG,
+            "lineWidth": 4,
+            "fillColor": IMPRINT_PALETTE[3],
+        },
         "dataLabels": {
             "enabled": True,
             "useHTML": True,
             "format": (
-                '<div style="background:rgba(142,68,173,0.9);color:#fff;padding:10px 18px;'
-                "border-radius:8px;font-size:26px;font-weight:600;line-height:1.4;"
+                f'<div style="background:{IMPRINT_PALETTE[3]};color:{PAGE_BG};padding:10px 18px;'
+                "border-radius:8px;font-size:28px;font-weight:600;line-height:1.4;"
                 'box-shadow:0 3px 12px rgba(0,0,0,0.15);">'
                 "Triple Point<br>"
-                '<span style="font-weight:400;font-size:22px;">273.16 K, 611.7 Pa</span>'
+                '<span style="font-weight:400;font-size:24px;">273.16 K, 611.7 Pa</span>'
                 "</div>"
             ),
             "align": "left",
-            "x": 35,
+            "x": 30,
             "y": -10,
         },
-        "enableMouseTracking": True,
         "showInLegend": False,
         "zIndex": 10,
     }
 )
 
-# Critical point with annotation
+# Critical point marker and annotation
 chart.add_series(
     {
         "type": "scatter",
         "name": "Critical Point",
         "data": [[float(critical_t), float(critical_p)]],
-        "color": "#e67e22",
-        "marker": {"symbol": "diamond", "radius": 20, "lineColor": "#ffffff", "lineWidth": 4, "fillColor": "#e67e22"},
+        "color": IMPRINT_PALETTE[4],
+        "marker": {
+            "symbol": "diamond",
+            "radius": 18,
+            "lineColor": PAGE_BG,
+            "lineWidth": 4,
+            "fillColor": IMPRINT_PALETTE[4],
+        },
         "dataLabels": {
             "enabled": True,
             "useHTML": True,
             "format": (
-                '<div style="background:rgba(230,126,34,0.9);color:#fff;padding:10px 18px;'
-                "border-radius:8px;font-size:26px;font-weight:600;line-height:1.4;"
+                f'<div style="background:{IMPRINT_PALETTE[4]};color:{PAGE_BG};padding:10px 18px;'
+                "border-radius:8px;font-size:28px;font-weight:600;line-height:1.4;"
                 'box-shadow:0 3px 12px rgba(0,0,0,0.15);">'
                 "Critical Point<br>"
-                '<span style="font-weight:400;font-size:22px;">647.1 K, 22.06 MPa</span>'
+                '<span style="font-weight:400;font-size:24px;">647.1 K, 22.06 MPa</span>'
                 "</div>"
             ),
             "align": "right",
-            "x": -35,
+            "x": -30,
             "y": -20,
         },
-        "enableMouseTracking": True,
         "showInLegend": False,
         "zIndex": 10,
     }
 )
 
-# Phase region labels with distinct colors matching their regions
+# Phase region labels — semantic color associations from Imprint palette
 phase_labels = [
-    ("SOLID", [215, 3e7], "#306998", "700"),
-    ("LIQUID", [400, 2e7], "#2980b9", "700"),
-    ("GAS", [500, 30], "#2D936C", "700"),
-    ("SUPERCRITICAL<br>FLUID", [700, 2e8], "#e67e22", "600"),
+    ("SOLID", [215, 3e7], IMPRINT_PALETTE[2], "700", "52px"),
+    ("LIQUID", [400, 2e7], IMPRINT_PALETTE[2], "700", "52px"),
+    ("GAS", [500, 30], IMPRINT_PALETTE[0], "700", "52px"),
+    ("SUPERCRITICAL FLUID", [690, 2e8], IMPRINT_PALETTE[3], "600", "40px"),
 ]
 
-for label_text, pos, color, weight in phase_labels:
+for label_text, pos, color, weight, font_size in phase_labels:
     chart.add_series(
         {
             "type": "scatter",
-            "name": label_text.replace("<br>", " "),
-            "data": [[pos[0], pos[1]]],
+            "name": label_text,
+            "data": [[float(pos[0]), float(pos[1])]],
             "color": "transparent",
             "marker": {"enabled": False},
             "dataLabels": {
                 "enabled": True,
                 "format": label_text,
                 "style": {
-                    "fontSize": "44px",
+                    "fontSize": font_size,
                     "fontWeight": weight,
                     "color": color,
-                    "textOutline": "3px rgba(250,250,250,0.8)",
+                    "textOutline": f"2px {PAGE_BG}",
                     "letterSpacing": "3px",
                 },
                 "align": "center",
@@ -291,7 +297,8 @@ for label_text, pos, color, weight in phase_labels:
         }
     )
 
-# Curve legend in bottom-right using HTML annotations
+# Curve legend (HTML annotation, lower-right)
+c0, c1, c2 = IMPRINT_PALETTE[0], IMPRINT_PALETTE[1], IMPRINT_PALETTE[2]
 chart.add_series(
     {
         "type": "scatter",
@@ -303,10 +310,12 @@ chart.add_series(
             "enabled": True,
             "useHTML": True,
             "format": (
-                '<div style="font-size:22px;line-height:2.0;color:#4a5568;">'
-                f'<span style="color:{color_sublimation};font-weight:700;">── ──</span> Sublimation<br>'
-                f'<span style="color:{color_vaporization};font-weight:700;">─ ─ ─</span> Vaporization<br>'
-                f'<span style="color:{color_melting};font-weight:700;">─·─·─</span> Melting'
+                f'<div style="font-size:26px;line-height:2.2;color:{INK_SOFT};'
+                f"background:{ELEVATED_BG};padding:12px 20px;border-radius:8px;"
+                f'border:1px solid {INK_SOFT};">'
+                f'<span style="color:{c0};font-weight:700;">── ──</span> Sublimation<br>'
+                f'<span style="color:{c1};font-weight:700;">─ ─ ─</span> Vaporization<br>'
+                f'<span style="color:{c2};font-weight:700;">─·─·─</span> Melting'
                 "</div>"
             ),
             "align": "left",
@@ -322,15 +331,13 @@ chart.options.plot_options = {
     "area": {"marker": {"enabled": False}},
 }
 
-# Save interactive HTML
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(chart.to_js_literal())
-
-# PNG export via Selenium - download Highcharts JS from npm
-subprocess.run(["npm", "pack", "highcharts", "--pack-destination", "/tmp"], capture_output=True, check=True)
-hc_tarball = sorted(_glob.glob("/tmp/highcharts-*.tgz"))[-1]
-subprocess.run(["tar", "-xzf", hc_tarball, "-C", "/tmp"], capture_output=True, check=True)
-highcharts_js = Path("/tmp/package/highcharts.js").read_text(encoding="utf-8")
+# Download Highcharts JS for inline embedding (CDN blocked from file:// URLs)
+req = urllib.request.Request(
+    "https://code.highcharts.com/highcharts.js",
+    headers={"User-Agent": "Mozilla/5.0", "Referer": "https://www.highcharts.com/"},
+)
+with urllib.request.urlopen(req, timeout=30) as response:
+    highcharts_js = response.read().decode("utf-8")
 
 html_str = chart.to_js_literal()
 html_content = f"""<!DOCTYPE html>
@@ -339,27 +346,44 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
+<body style="margin:0; background:{PAGE_BG};">
+    <div id="container" style="width: 3200px; height: 1800px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
+# Save interactive HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# PNG export via Selenium headless Chrome
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
+# CDP override makes viewport authoritative — --window-size alone is not reliable
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
+
+# Normalize to exact 3200×1800 — guards against ±1–2 px rounding from CDP
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (3200, 1800):
+    _norm = Image.new("RGB", (3200, 1800), PAGE_BG)
+    _norm.paste(_img, ((3200 - _img.size[0]) // 2, (1800 - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")
