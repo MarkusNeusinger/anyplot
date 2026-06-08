@@ -1,3 +1,7 @@
+// anyplot.ai
+// flamegraph-basic: Flame Graph for Performance Profiling
+// Library: chartjs 4.4.7 | JavaScript 22.22.3
+// Quality: 85/100 | Created: 2026-06-08
 //# anyplot-orientation: landscape
 // anyplot.ai
 // flamegraph-basic: Flame Graph for Performance Profiling
