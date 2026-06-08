@@ -1,8 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
-Library: plotnine
-African countries — area proportional to population, color = urbanization rate
-Imprint palette sequential colormap (#009E73 → #4467A3)
+Library: plotnine 0.15.5 | Python 3.13.13
+Quality: 81/100 | Updated: 2026-06-08
 """
 
 import os
