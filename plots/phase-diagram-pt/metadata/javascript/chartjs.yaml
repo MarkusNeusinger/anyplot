@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: phase-diagram-pt
 created: '2026-06-08T08:52:03Z'
-updated: '2026-06-08T08:58:05Z'
+updated: '2026-06-08T09:12:01Z'
 generated_by: claude-sonnet
 workflow_run: 27125335258
 issue: 4666
@@ -12,47 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-dia
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/javascript/chartjs/plot-dark.html
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - Custom afterDraw canvas plugin for phase region labels is elegant and idiomatic
-    Chart.js — avoids hacky DOM overlays
-  - Physically accurate CO2 phase diagram using Clausius-Clapeyron equations with
-    real thermodynamic constants (triple point 216.55 K / 5.18 atm, critical point
-    304.13 K / 72.8 atm)
-  - Logarithmic Y-axis with clean power-of-10 tick formatting via callback — excellent
-    log-scale handling for 5-order-of-magnitude pressure range
-  - Dynamic title fontsize calculation (22 * 67 / title.length) prevents overflow
-    on long descriptive title prefix
-  - Complete Imprint palette compliance and full token-based theme adaptation (ink,
-    inkSoft, grid, pageBg) throughout both light and dark renders
+  - Real CO₂ data with physically accurate triple and critical point constants (216.55
+    K / 5.18 atm and 304.13 K / 72.8 atm) — a genuine scientific reference chart
+  - Custom regionPlugin draws phase-region labels directly at thermodynamically correct
+    positions using afterDraw canvas API
+  - Custom lFramePlugin produces a clean L-shaped frame matching the anyplot style
+    guide
+  - Dynamic title font sizing scales correctly for the long mandated title
+  - Logarithmic y-axis with custom tick callback displays clean decade labels (0.01,
+    0.1, 1, 10, 100)
+  - Imprint palette applied perfectly; data colors identical across both themes
   weaknesses:
-  - Default Chart.js 4-sided box border retained — removing top and right border lines
-    would produce a cleaner scientific diagram aesthetic; use Chart.js v4 border color/display
-    settings to achieve L-shaped frame
-  - SUPER-CRITICAL region label split as two lines with orphaned hyphen ("SUPER-"
-    / "CRITICAL") — change regionPlugin lines array to ["SUPER", "CRITICAL"] without
-    hyphen
-  - 'Triple point star marker fill color (#BD8233 ochre, palette[3]) visually dominated
-    by large ink-colored border (borderWidth: 2) — reduce borderWidth to 1 on star
-    and diamond markers so backgroundColor shows through more clearly'
-  - Legend font size (15px) slightly larger than tick label font size (14px) — unify
-    to 14px for consistent secondary text balance
+  - Phase region labels at globalAlpha=0.5 on inkSoft are slightly faint at mobile
+    scale; consider increasing alpha to 0.65–0.7 or using t.ink at 0.55 to improve
+    small-size legibility
+  - No background fill/shading for phase regions — adding subtle translucent fills
+    using t.palette[i] at 0.06–0.08 alpha drawn in beforeDraw would elevate the aesthetic
+    from functional to publication-ready (DE-01 improvement)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "CO2 Phase Diagram · phase-diagram-pt · javascript · chartjs · anyplot.ai" centered in dark ink (~20pt dynamic size, fully readable). Axis labels "Temperature (K)" and "Pressure (atm)" in dark ink at 18pt. Tick labels in inkSoft at 14pt. Phase region labels (SOLID, LIQUID, GAS, SUPER-CRITICAL) at 50% opacity in inkSoft, all readable.
-      Data: Three boundary curves — sublimation in #009E73 (brand green), vaporization in #C475FD (lavender), fusion in #4467A3 (blue). Triple point star marker at 216.55 K / 5.18 atm with ochre fill and ink border. Critical point diamond at 304.13 K / 72.8 atm in matte red #AE3030. First series = #009E73 confirmed.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background
+      Background: Warm off-white (#FAF8F1) — correct theme surface.
+      Chrome: Title "CO₂ Phase Diagram · phase-diagram-pt · javascript · chartjs · anyplot.ai" in dark ink, ~65-70% of plot width. Axis labels "Temperature (K)" and "Pressure (atm)" in dark ink with units. Tick labels in inkSoft — all clearly readable. Phase region labels ("SOLID", "LIQUID", "GAS", "SUPER / CRITICAL") in inkSoft at 0.5 alpha — readable but deliberately understated.
+      Data: Three boundary curves — sublimation in #009E73 (brand green), vaporization in #C475FD (lavender), fusion in #4467A3 (blue). Triple point marked with star marker at (216.55 K, 5.18 atm); critical point with rectRot (diamond) marker at (304.13 K, 72.8 atm). All elements clearly distinguishable.
+      Legibility verdict: PASS — all text readable against the warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title, axis labels, tick labels all rendered in light ink (#F0EFE8 range) — clearly readable against dark background. Phase region labels at 50% opacity readable as lighter text on dark. No dark-on-dark failures detected. Legend text light-colored and legible.
-      Data: Colors identical to light render — sublimation green, vaporization lavender, fusion blue, triple point star, critical point red diamond. Brand green #009E73 clearly visible on dark background.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues
+      Background: Warm near-black (#1A1A17) — correct theme surface.
+      Chrome: Title and all axis/tick labels rendered in light text — clearly readable against the dark surface. Phase region labels appear in lighter muted tone — still legible. No dark-on-dark failures detected. Legend at bottom fully readable.
+      Data: Colors are identical to light render — green sublimation, lavender vaporization, blue fusion, same special markers. Only chrome (background, text, grid lines) has flipped between themes.
+      Legibility verdict: PASS — no dark-on-dark failures; all text readable against the warm near-black background.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -60,52 +54,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set. Readable in both themes. Minor: legend
-          at 15px vs ticks at 14px creates slight imbalance'
+        comment: 'All font sizes explicitly set; proportions excellent. Minor deduction:
+          phase region labels at globalAlpha=0.5 on inkSoft may be slightly faint
+          when scaled to mobile width.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Phase labels well-spaced. Minor: three curves converge at triple
-          point creating slight visual clutter'
+        comment: No overlapping text or data elements.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Curves and markers clearly visible. Minor: triple point star fill
-          (ochre) dominated by large ink border'
+        comment: Line width 3.5px; triple/critical point markers at radius 13 are
+          prominent and well-sized.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used. Marker shapes redundantly encode triple/critical
-          points
+        comment: Imprint palette is CVD-safe; no red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Landscape 3200x1800. Good margins. No clipping
-          or overflow
+        comment: Canvas gate passed; L-frame plugin creates clean boundary; plot fills
+          canvas well with balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Temperature (K) and Pressure (atm) descriptive with units. Title
-          format correct with descriptive prefix
+        comment: Temperature (K) and Pressure (atm) with correct units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series = #009E73. Imprint palette in canonical order. Backgrounds
-          #FAF8F1 light / #1A1A17 dark. Data colors identical across themes'
+        comment: 'First series is #009E73; multi-series follows Imprint order (palette[0-4]);
+          backgrounds are #FAF8F1 / #1A1A17; data colors identical across themes.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -113,22 +105,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom afterDraw plugin for region labels is sophisticated. Multiple
-          marker styles. Above default but not exceptional
+        comment: 'Clearly above well-configured default: custom canvas plugins for
+          phase-region labels and L-frame border show real design thought; dynamic
+          title font sizing. Missing background region fills that would push to publication-ready.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Token-based theming applied. 50% alpha region labels add polish.
-          Default 4-sided box border retained — L-shaped frame would be cleaner
+        comment: L-frame plugin removes top/right spines; border display:false on
+          axes; subtle grid via t.grid; region labels at 0.5 alpha for restraint;
+          usePointStyle in legend for consistency.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Phase labels guide viewer through state-space. Convergence at triple
-          point and termination at critical point effectively narrate CO2 phase story
+        comment: Phase regions labeled in situ; triple point with star (semantically
+          meaningful); critical point with diamond; logarithmic y-axis conveys wide
+          pressure range; supercritical region explicitly named.
     spec_compliance:
       score: 15
       max: 15
@@ -138,28 +133,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter-with-lines phase diagram
+        comment: Correct pressure-temperature phase diagram with logarithmic y-axis.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Triple point marked, critical point marked, log pressure axis, phase
-          regions labeled, vaporization terminates at critical point
+        comment: 'All required features present: triple point, critical point, phase
+          region labels, all three boundary curves.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: CO2 data with correct triple/critical point coordinates. Clausius-Clapeyron
-          equations. Positive fusion slope correct for CO2
+        comment: Temperature (K) on x-axis, Pressure (atm, log scale) on y-axis; all
+          curves and special points correctly placed.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format CO2 Phase Diagram · phase-diagram-pt · javascript ·
-          chartjs · anyplot.ai matches spec. Legend labels correct with coordinates
+        comment: 'Title uses optional descriptive prefix: CO₂ Phase Diagram · phase-diagram-pt
+          · javascript · chartjs · anyplot.ai. Legend labels correctly describe all
+          5 datasets including coordinates for special points.'
     data_quality:
       score: 15
       max: 15
@@ -169,22 +165,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All three phase boundaries, triple point, critical point, supercritical
-          region shown
+        comment: 'All features of the phase diagram type shown: three boundary curves,
+          triple point, critical point, phase region labels, supercritical region.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: CO2 is real neutral scientific substance. Clausius-Clapeyron with
-          real thermodynamic constants
+        comment: 'Real CO₂ phase diagram data with physically accurate constants:
+          triple point at 216.55 K / 5.18 atm and critical point at 304.13 K / 72.8
+          atm.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature 140-340 K, pressure 0.005-700 atm matches CO2 phase behavior.
-          Log axis accommodates 5-order range
+        comment: Logarithmic pressure range (0.005-700 atm) correctly accommodates
+          CO₂ phase diagram; temperature range 140-340 K covers relevant transitions.
     code_quality:
       score: 10
       max: 10
@@ -194,63 +191,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Inline literals. Region plugin is minimal
-          and appropriately structured
+        comment: No functions or classes; clean constants -> data generation -> mount
+          -> chart flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic. Mathematical formulas with fixed constants
+        comment: All data generated from fixed physical constants; fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports. Only window.ANYPLOT_TOKENS used
+        comment: No imports; Chart and window.ANYPLOT_TOKENS used as globals per harness
+          contract.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean idiomatic Chart.js. Plugin follows Chart.js API correctly.
-          Meaningful constant names
+        comment: Clean, well-organized; plugins are compact and purposeful; no over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: new Chart(canvas, config) pattern. Landscape default. Chart.js generates
-          HTML output via harness
+        comment: No savefig call (correct for Chart.js); uses current Chart.js 4.x
+          API.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert usage: scatter type with showLine for curves, afterDraw plugin
+          lifecycle hook, logarithmic scale with custom tick callback, pointStyle
+          star/rectRot for special markers.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Scatter with showLine: true, animation: false, maintainAspectRatio:
-          false per spec. Log scale type. Custom tick callback'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Custom afterDraw plugin is Chart.js-specific. Mixed pointStyle (star,
-          rectRot). usePointStyle in legend. Could use more Chart.js-specific interaction
-          config
+        comment: Custom Chart.js plugins (regionPlugin, lFramePlugin) using afterDraw
+          hook and direct canvas 2D API are distinctive to Chart.js plugin architecture;
+          pointStyle star and rectRot are Chart.js-specific marker types.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - manual-ticks
+  - annotations
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
+  - minimal-chrome
