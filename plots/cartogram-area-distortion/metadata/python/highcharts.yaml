@@ -1,49 +1,55 @@
 library: highcharts
+language: python
 specification_id: cartogram-area-distortion
 created: '2026-03-13T21:24:40Z'
-updated: '2026-03-13T22:06:00Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23070855388
+updated: '2026-06-08T04:08:13Z'
+generated_by: claude-sonnet
+workflow_run: 27114643231
 issue: 4671
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/highcharts/plot.html
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/python/highcharts/plot-dark.html
 quality_score: 82
 review:
   strengths:
-  - Effective Dorling cartogram using bubble chart with geographic positioning and
-    area-proportional sizing
-  - Strong design with custom region palette, population-based color intensity, and
-    top-5 state highlighting
-  - Real 2020 Census data with all 50 states provides authentic context
-  - Good storytelling through annotation box, subtitle, and visual hierarchy
-  - Faint US outline reference provides geographic context without visual clutter
-  - Interactive HTML version included alongside PNG export
+  - Radial-gradient bubbles with soft 3D highlight add visual depth that is distinctive
+    and polished
+  - 'All Imprint palette rules followed: Midwest (#009E73) first, canonical order,
+    both theme backgrounds correct, all chrome tokens applied'
+  - Annotation box tells a clear data story (top/bottom states + concentration fact)
+    with correct dark/light theme adaptation
+  - All 50 states with accurate 2020 Census data; four Census regions correctly assigned
+  - CDP viewport override + PIL canvas normalization correctly guards against dimension
+    drift
+  - Tiered data-label font sizes (26/22/18px by population tier) is a thoughtful density-responsive
+    choice
+  - Top-5 border ring creates useful visual emphasis without adding clutter
   weaknesses:
-  - Northeast states pushed far from natural positions to reduce crowding, creating
-    slight geographic distortion
-  - Some smallest state circles and labels are quite tiny (VT, WY, RI at 17px)
-  - Mixes highcharts-core high-level API with manual dict manipulation instead of
-    using Series classes throughout
-  - 'allowOverlap: true on data labels risks label collisions on very small bubbles'
-  image_description: 'The plot displays a Dorling cartogram of US states where circle
-    area is proportional to state population (2020 U.S. Census, in thousands). States
-    are positioned roughly according to their geographic locations on a light gray
-    (#fafbfc) background. Four US Census regions are color-coded: Northeast (blue/slate),
-    South (tan/orange), Midwest (green), and West (purple/lavender). Color intensity
-    within each region darkens with higher population. California is the largest circle
-    (West, purple), followed by Texas (South, orange) and Florida (South, orange).
-    A faint dotted US continental outline provides geographic reference. Each state
-    is labeled with its two-letter abbreviation in white bold text with dark text-outline.
-    Top 5 most populous states (CA, TX, FL, NY, PA) have dark borders. An annotation
-    box in the lower right explains the encoding: "Circle area = Population" with
-    largest/smallest callouts and top-5 indicator. The legend at the bottom center
-    shows four region categories. Title reads "cartogram-area-distortion · highcharts
-    · pyplots.ai" with a descriptive subtitle.'
+  - Dense Northeast cluster (CT, RI, NH, VT, ME, MA, NJ) shows bubble and label overlap;
+    suppress labels for states with z < 1500k to reduce VQ-02 issue
+  - No continuous color scale for a secondary variable; spec requests 'a color scale
+    to encode a secondary variable or to reinforce the size variable' — consider a
+    colorAxis with imprint_seq gradient mapping to population density
+  - Helper function make_bubble_gradient slightly violates the KISS no-functions rule;
+    could be inlined
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "cartogram-area-distortion · python · highcharts · anyplot.ai" at 66px in dark ink, clearly readable. Subtitle in muted secondary text. Annotation box in dark elevated background with light text.
+      Data: Four Imprint palette regions — Midwest=#009E73 (brand green first ✓), West=#C475FD (lavender), Northeast=#4467A3 (blue), South=#BD8233 (ochre). Radial gradient adds 3D depth to each bubble. State abbreviations in white bold with text-outline. Top-5 states have dark border ring.
+      Legibility verdict: PASS — all text readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and subtitle in light ink (#F0EFE8 / #B8B7B0), clearly legible. Annotation box in elevated dark (#242420) with light text — no dark-on-dark failure. Legend text is light and readable.
+      Data: All four bubble region colors identical to light render (green/lavender/blue/ochre) — only chrome flips. State abbreviation labels remain white with outline and are legible on dark background. Brand green #009E73 clearly visible.
+      Legibility verdict: PASS — no dark-on-dark failures, all elements readable
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -51,45 +57,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout (title 52px, subtitle 32px,
-          labels 17-24px, legend 30px). Most text clearly readable. Some smallest
-          state labels slightly small at 17px but legible with text-outline.
+        comment: All font sizes explicitly set; tiered data-label sizing (26/22/18px
+          by population). 18px tier for small states is borderline at mobile.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Northeast states deliberately spread out. Minor overlap possible
-          among tiny northeastern circles but labels remain readable. allowOverlap
-          is true which risks minor collisions.
+        comment: Dense Northeast cluster (CT, RI, NH, VT, ME, MA, NJ) shows bubble
+          and label overlap due to allowOverlap:True on data labels.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Bubble sizes scale well from Wyoming to California. Smallest states
-          are tiny but visible. Size differentiation clearly communicates population.
+        comment: Bubble sizes well-adapted (minSize=28, maxSize=155, sizeBy=area).
+          Smallest states visible but tiny.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue, orange, green, purple palette is colorblind-friendly. Color
-          intensity variation adds secondary encoding.
+        comment: Imprint palette positions 1-4, CVD-safe, radial gradient adds luminance
+          variation.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good geographic layout. Some empty space in corners natural for US
-          map. Northeast pushed far right creates slight imbalance.
+        comment: Canvas gate passed. Map fills canvas well. Northeast region slightly
+          cramped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes correctly hidden for cartogram. Title follows format. Subtitle
-          provides context with units.
+        comment: Axes correctly hidden for map type; subtitle provides full context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Midwest first series = #009E73 correct. Imprint positions 1-4 in
+          canonical order. Both backgrounds #FAF8F1/#1A1A17. All chrome tokens theme-adaptive.'
     design_excellence:
       score: 14
       max: 20
@@ -99,22 +109,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: custom region palette, population-based color intensity,
-          top-5 highlighting, professional typography, clean background.'
+        comment: Radial-gradient bubbles with white highlight, tiered label sizes,
+          top-5 ring borders, US outline, annotation box — strong design above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axes hidden, faint dotted US outline, subtle white borders on bubbles,
-          generous spacing, clean annotation box.
+        comment: Axes hidden, no grid, dotted-transparent US outline (opacity 0.45),
+          borderless legend with rounded corners, bubble borders using PAGE_BG.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Good visual hierarchy: size communicates population, color intensity
-          reinforces, top-5 highlighting draws attention, annotation guides interpretation.'
+        comment: 'Annotation box names top/bottom states and population concentration
+          stat. Top-5 ring borders add visual hierarchy. Clear focal point: CA/TX
+          vs. WY.'
     spec_compliance:
       score: 13
       max: 15
@@ -124,27 +135,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Dorling cartogram is valid cartogram variant with area distortion.
-          Circles rather than distorted polygons.
+        comment: Dorling cartogram (bubbles at geographic positions, area proportional
+          to data) is a valid cartogram variant. Does not preserve adjacency/contiguity
+          as spec mentions.
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Reference outline present, color reinforces size, all states labeled,
-          legend present. Missing contiguous shapes and inset comparison.
+        comment: 'Geographic positioning, area proportional to population, labels,
+          US outline reference, legend, annotation all present. Missing: continuous
+          color scale for secondary variable.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Geographic coords to x/y, population to bubble area via sizeBy area.
+        comment: Longitude→X, latitude→Y, population→bubble area. Correct and complete
+          for all 50 states.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. Legend shows four region categories correctly.
+        comment: Title exactly 'cartogram-area-distortion · python · highcharts ·
+          anyplot.ai'. Legend titled 'Region' with four named swatches.
     data_quality:
       score: 14
       max: 15
@@ -154,20 +169,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: All 50 states with wide population range (577k-39,538k). Four census
-          regions provide grouping variety.
+        comment: 'All 50 states, full population range (577k-39538k), four Census
+          regions, geographic spread. Minor gap: no secondary continuous variable.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real 2020 US Census population data. Neutral demographic context.
+        comment: Actual 2020 US Census data. Demographic population is neutral and
+          not politically sensitive.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Actual census values in thousands. All correct and realistic.
+        comment: All populations are accurate 2020 Census figures. Regional assignments
+          match US Census Bureau definitions.
     code_quality:
       score: 9
       max: 10
@@ -177,34 +194,37 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Mostly flat structure. One helper function (intensity_color) adds
-          minor structure but justified.
+        comment: Generally linear but includes helper function make_bubble_gradient
+          — minor violation of no-functions KISS rule.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded. No random elements.
+        comment: Fully deterministic; all data is hard-coded.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports (json, os, tempfile, time, urllib.request, Path, Chart,
+          HighchartsOptions, Image, webdriver, Options) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, clean data structures. Appropriate complexity.
+        comment: Appropriate complexity. JSON-dict workaround for custom point fields
+          is pragmatic given highcharts-core constraints. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png via Selenium. Creates plot.html. Current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. CDP override + PIL
+          normalization correctly implemented.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -212,28 +232,32 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses highcharts-core for validation but converts to dict and manually
-          adds series as dicts. Mixes high-level API with manual manipulation.
+        comment: Proper Chart/HighchartsOptions/container setup and CDP override.
+          Sidesteps highcharts-core object model by converting to JSON dict to add
+          series and annotations — a workaround rather than idiomatic chart.add_series()
+          usage.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Bubble chart with sizeBy area, annotations module, HTML tooltip formatting,
-          series grouping for legend, interactive HTML export.
-  verdict: REJECTED
+        comment: Uses bubble series (highcharts-more.js), annotations module (annotations.js),
+          radial gradient objects, legendSymbolColor, sizeBy:area — genuinely Highcharts-specific
+          capabilities.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
+  - pillow
   techniques:
-  - annotations
-  - hover-tooltips
   - html-export
+  - annotations
   - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - edge-highlighting
+  - gradient-fill
   - alpha-blending
+  - edge-highlighting
