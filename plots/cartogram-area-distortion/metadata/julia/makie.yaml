@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: cartogram-area-distortion
 created: '2026-06-08T03:57:26Z'
-updated: '2026-06-08T04:20:01Z'
+updated: '2026-06-08T04:39:19Z'
 generated_by: claude-sonnet
 workflow_run: 27114815125
 issue: 4671
@@ -12,109 +12,104 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cartogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 78
+quality_score: 86
 review:
   strengths:
-  - 'Correct Imprint palette (positions 1–4: brand green / lavender / blue / ochre)
-    applied to four census regions with Northeast always first'
-  - Well-structured two-panel layout — Dorling cartogram + reference map inset + census
-    region legend in a single figure
-  - 'Thorough theme adaptation: all axis properties (titlecolor, xlabelcolor, ylabelcolor,
-    xticklabelcolor, yticklabelcolor, spinecolor, gridcolor) threaded through INK/INK_SOFT
-    tokens'
-  - Reference map inset provides meaningful visual comparison between equal-area and
-    population-scaled layouts
-  - Caption at bottom provides clear data provenance and methodology note
+  - Correct Imprint palette in canonical region order (Northeast=green, South=lavender,
+    Midwest=blue, West=ochre)
+  - Reference map inset provides excellent side-by-side comparison with equal-size
+    geographic layout
+  - Leader lines for the dense Northeast cluster elegantly resolve label overlap
+  - Full theme-adaptive chrome with all chrome tokens (INK, INK_SOFT, INK_MUTED, ELEVATED_BG,
+    PAGE_BG) correctly applied in both renders
+  - KISS code structure with deterministic hardcoded census data and clean import
+    set
+  - Accurate 2020 US Census population data for all 50 states with correct relative
+    proportions
   weaknesses:
-  - 'Northeast cluster overlap: MA, NJ, CT, RI, NH, VT abbreviation labels overlap
-    each other and with surrounding circle edges — jitter dict only displaces 5 states,
-    several still collide. Consider expanding jitter offsets or using a leader-line
-    annotation style for the dense northeast cluster.'
-  - Dorling cartogram (proportional circles at geographic centroids) does not preserve
-    contiguity or adjacency as the spec explicitly requires ("Regions should remain
-    contiguous (sharing borders) after distortion"). A true contiguous cartogram distorts
-    polygon shapes rather than using uniform circles.
-  - Large unused whitespace in bottom-left quadrant (AK/HI repositioning + Pacific
-    gap) reduces layout efficiency — consider scaling the x-axis extent or placing
-    AK/HI within a bracketed inset region to tighten the main cartogram view.
-  - Reference map panel (Fixed(140) height) is quite small and its internal dots are
-    ~3 px — hard to see individual state positions for comparison. Consider a slightly
-    taller panel or larger dot size in the ref map.
+  - Continuous color scale for a secondary variable is absent — spec recommends encoding
+    a secondary numeric variable via color gradient (imprint_seq); the current categorical
+    region coloring is valid but a continuous fill for e.g. population density or
+    per-capita GDP would better satisfy the spec
+  - Reference map dots are small (6px circles at geographic positions) but no actual
+    state boundary outlines are shown — adding thin polygon outlines would fulfill
+    the spec more literally
+  - State abbreviation labels at fontsize=10 (20px in output) become quite small at
+    mobile scale (~400px width) — consider increasing to 11-12pt or limiting labels
+    to the most populous states
+  - Some visual crowding in the Midwest cluster (OH, IN, IL, MO at similar latitudes)
+    where medium-sized circles and labels are densely packed without leader-line relief
+  - Right-panel vertical space is inefficiently used — the legend floats in the lower
+    portion of a 78% column leaving noticeable empty space between legend and bottom
+    margin
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct Imprint light surface.
-      Chrome: Title "cartogram-area-distortion · julia · makie · anyplot.ai" in dark INK, clearly readable. Axis labels "Longitude" and "Latitude" in dark INK at moderate size. Tick labels in INK_SOFT (dark gray), readable. Two left+bottom spines in INK_SOFT, top/right removed. Caption line at bottom in INK_MUTED, small but legible.
-      Data: US states as proportional circles. CA (ochre, large ~37 px) dominates western region. TX (lavender, large) and FL (lavender, medium) prominent in the south. NY (green, large) and NJ/PA/MA (green, medium) form the dense northeast cluster. Midwest states (OH, IL, MI) in blue. Grid lines are subtle at 15% opacity. State abbreviations labeled inside/near each circle in INK (dark). Northeast cluster shows label crowding with MA, NJ, CT, RI, VT, NH abbreviations overlapping.
-      Reference map: Top-right inset with small equal-size dots in same census-region colors. Legend panel shows four Imprint colors correctly labeled.
-      Legibility verdict: PASS — all chrome text is readable. Minor label crowding in NE cluster degrades readability of individual state abbreviations but is not a legibility failure.
+      Background: Warm off-white #FAF8F1 surface — correct anyplot light theme background
+      Chrome: Title "cartogram-area-distortion · julia · makie · anyplot.ai" at fontsize 20 in dark ink (#1A1A17), clearly readable and fills ~60% of the main panel width. Axis labels "Longitude" and "Latitude" in dark ink, tick labels in INK_SOFT — all legible. Bottom caption in INK_MUTED at fontsize 10 (very small but readable at full resolution). Grid lines are subtle (15% opacity), top/right spines removed.
+      Data: 50 circles (US states) sized proportionally to population. CA (39.54M, ochre) dominates the West; TX (29.15M, lavender/purple) and FL (21.54M, purple) are the largest South circles; NY (20.20M, green) is the largest Northeast circle; IL/OH/MI (blue) anchor the Midwest. Small states (WY, VT, AK) appear as minimum-size dots. Leader lines in semi-transparent INK_MUTED connect NE cluster circles to offset labels (VT, NH, RI, CT, MA, NJ, DE). Reference map inset top-right shows equal-size dots at geographic centers for comparison. Census region legend (4 entries) is on the right side.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light failures detected.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct Imprint dark surface.
-      Chrome: Title in light INK (#F0EFE8) clearly visible against dark background. Axis labels, tick labels rendered in light INK/INK_SOFT tokens — fully readable. Spine lines visible in muted tone. No dark-on-dark failures.
-      Data: Data colors identical to light render — CA in ochre, TX/FL in lavender, NY/PA/MA in green (#009E73), Midwest states in blue (#4467A3). Stroke around circles (PAGE_BG = dark background) provides separation. Grid lines at 15% opacity of light INK are subtle but visible.
-      Legend: Has elevated dark background (#242420) with light text for category labels and title. Frame visible in INK_SOFT. Colors matching light render exactly.
-      Legibility verdict: PASS — no dark-on-dark issues. All axis elements clearly light-on-dark. Brand green #009E73 (Northeast) clearly visible on the dark surface.
+      Background: Warm near-black #1A1A17 — correct anyplot dark theme background
+      Chrome: Title in light ink (#F0EFE8), axis labels in light ink, tick labels in INK_SOFT (#B8B7B0) — all clearly readable against dark background. Grid lines subtle (15% opacity from INK light token). Legend background uses ELEVATED_BG (#242420). No dark-on-dark failures detected.
+      Data: Circle colors are identical to light render — green (#009E73) Northeast, lavender (#C475FD) South, blue (#4467A3) Midwest, ochre (#BD8233) West. The same population hierarchy is preserved (CA, TX, FL, NY largest). Leader lines remain visible as semi-transparent connectors. Reference map inset shows same colored dots on dark background.
+      Legibility verdict: PASS — text is light-colored on dark background throughout; no dark-on-dark failures; data colors identical between themes.
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, and tick labels all readable in both themes.
-          State abbreviations legible in larger circles; very small states (AK, HI,
-          WY) have labels that are small but still readable. Caption is small (10pt)
-          but readable.
+        comment: All font sizes explicitly set; title/axis labels/ticks fully legible
+          in both themes; state abbreviation labels at 10pt (20px output) are slightly
+          small at mobile scale
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Moderate label overlap in the Northeast cluster. MA, NJ, CT, RI,
-          NH, VT abbreviations crowd the longitude -71 to -75 band. The NE_JITTER
-          dict only offsets 5 states and the offsets are not large enough to prevent
-          collisions.
+        passed: true
+        comment: Leader lines for NE cluster elegantly separate labels; minor crowding
+          in Midwest band (OH/IN/IL at similar latitudes) but all text readable
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Circles sized proportionally with a minimum enforced (max(sqrt(p)*scale,
-          8.0)). All states visible. Major population centers (CA, TX, FL, NY) are
-          prominently sized. Stroke separates overlapping circles.
+        comment: Circle sizes well-adapted; minimum enforced (8pt) keeps tiny states
+          visible; largest circles (CA, TX, FL, NY) prominently visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Four Imprint palette colors are perceptually distinct and CVD-safe
-          (green/purple/blue/ochre hue families). No red-green sole signal.
+        comment: Imprint palette positions 1-4 are CVD-safe with distinct hue families;
+          white stroke on circles adds contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Two-panel layout well composed. Large
-          bottom-left void (Pacific gap after AK/HI repositioning) wastes ~25% of
-          the main axis area. Reference map panel at Fixed(140) is small but functional.
+        comment: Good two-panel layout (78/22 split); minor inefficiency — right panel
+          has empty space below legend; reference map could be larger
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format. Axes labeled 'Longitude' and 'Latitude'.
-          Caption explains methodology.
+        comment: Title correct format; Longitude and Latitude are descriptive (units
+          implied for geographic coordinates)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Northeast = #009E73 (brand green, position 1). South = #C475FD (lavender,
-          pos 2). Midwest = #4467A3 (blue, pos 3). West = #BD8233 (ochre, pos 4).
-          Backgrounds #FAF8F1/#1A1A17 correct. Both renders theme-correct.'
+        comment: 'Imprint positions 1-4 in canonical order; first series (Northeast)
+          = #009E73; theme-adaptive chrome correct in both renders; backgrounds #FAF8F1
+          / #1A1A17'
     design_excellence:
       score: 13
       max: 20
@@ -124,90 +119,86 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Two-panel layout with reference map inset, census region legend,
-          and footnote caption shows clear design intention beyond defaults. Jitter
-          dict for NE states shows attention to detail. Some wasted space in lower-left
-          reduces polish.
+        comment: 'Above defaults: reference map inset, leader line system for NE cluster,
+          custom legend with MarkerElement, caption in muted color — strong design
+          thinking'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed on main axis. Subtle grid at 15% opacity.
-          Stroke on circles (strokecolor=PAGE_BG) creates breathing room. Elevated
-          background on legend. Reference map has clean box frame.
+        comment: Spine removal, subtle grid (15% opacity), ELEVATED_BG for legend,
+          muted caption, white stroke on circles for definition, semi-transparent
+          leader lines — good refinement
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Cartogram effectively shows population size disparity — CA and TX
-          large, small plains states tiny. Reference map comparison helps viewer understand
-          the distortion concept. Census region coloring adds secondary analytical
-          layer.
+        comment: Cartogram + reference map comparison effectively conveys the distortion
+          story; size hierarchy clearly shows CA/TX/FL/NY dominance; census region
+          color adds geographic structure
     spec_compliance:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Dorling cartogram (proportional circles at geographic centroids)
-          is a valid cartogram type that encodes data via area. However the spec explicitly
-          describes contiguous cartograms that preserve adjacency and shape — Dorling
-          uses uniform circles without boundary adjacency.
+        comment: Dorling cartogram with circles sized by population — correct interpretation
+          of area distortion by data value for a static library
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: 'Circle area proportional to population ✓. Color encoding of secondary
-          variable (census region) ✓. Abbreviation labels on all regions ✓. Reference
-          map inset ✓. Missing: true polygon distortion that preserves contiguity
-          per spec note.'
+        comment: 'Circle area ∝ population ✓; reference map inset ✓; abbreviation
+          labels for all states ✓; census region legend ✓; missing: continuous color
+          scale for secondary variable (uses categorical region instead), no state
+          boundary outlines'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=longitude, Y=latitude geographic coords. Size=population. Color=census
-          region. All 50 states represented. Alaska and Hawaii repositioned.
+        comment: Longitude/Latitude correctly mapped; circle area encodes population;
+          all 50 states present; AK/HI repositioned and noted in caption
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'cartogram-area-distortion · julia · makie · anyplot.ai'.
-          Census region legend labels Northeast/South/Midwest/West correctly.
+        comment: 'Title: cartogram-area-distortion · julia · makie · anyplot.ai —
+          correct format; census region legend with 4 correct entries'
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: 'Shows size encoding, geographic layout, regional color grouping,
-          reference comparison, and caption. Missing: true polygon boundary distortion,
-          original outline overlay for distortion comparison.'
+        comment: All 50 states with full population range (WY 0.58M to CA 39.54M);
+          all 4 census regions; reference map comparison; variation in circle sizes
+          demonstrates the distortion concept fully
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: US states with 2020 Census population data. Accurate geographic coordinates.
-          Real-world, neutral, plausible.
+        comment: 2020 US Census population data — real, comprehensible, neutral; no
+          controversial content; census regions are standard geographic groupings
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Population in millions (0.58 WY to 39.54 CA). Geographic coordinates
-          accurate. Circle sizing via sqrt(pop) correctly follows equal-area-circle
-          convention.
+        comment: Population values match known 2020 Census data (CA 39.54M, TX 29.15M,
+          FL 21.54M, NY 20.20M as top 4; WY 0.58M, VT 0.64M as smallest) — factually
+          accurate
     code_quality:
       score: 10
       max: 10
@@ -217,57 +208,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes. Constant definitions at top,
-          then data extraction, then layout, then save.
+        comment: 'Linear: imports → theme tokens → palette → data → leader offsets
+          → size computation → figure → plot elements → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is hardcoded constants — no randomness, fully deterministic.
-          No seed needed.
+        comment: Fully deterministic — hardcoded census data, no random elements needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only CairoMakie and Colors imported, both used (CairoMakie for plot,
-          Colors for colorant literals).
+        comment: Only CairoMakie and Colors imported; both used (Colors for colorant
+          string macros)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI. NE_JITTER dict is a clean approach. List comprehensions
-          for extracting state fields. RGBAf for grid alpha.
+        comment: Clean Julialic code; leader line approach is appropriately sophisticated
+          without over-engineering; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-$(THEME).png with px_per_unit=2. No bare plot.png.
+        comment: save("plot-$(THEME).png", fig; px_per_unit = 2) — correct naming,
+          current Makie API (size= not resolution=)
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Uses Figure/Axis/GridLayout compositing idiomatically. scatter!,
-          text!, Legend, Label all correct Makie primitives. Theme tokens correctly
-          mapped to all Axis properties including spine colors, grid colors, label
-          colors.
+        comment: Expert use of Makie layout system (GridLayout, colsize!, rowsize!,
+          Fixed, Relative); proper use of scatter!, lines!, text!, Legend with MarkerElement,
+          Label — all idiomatic high-level Makie API
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Makie-specific GridLayout with colsize!/rowsize!/Fixed/Relative,
-          MarkerElement for custom legend construction, RGBAf for alpha grid colors.
-          Could have used Makie's Observable pattern or recipe system for more Makie-native
-          cartogram abstraction.
+        comment: Multi-panel GridLayout with precise size control (colsize!/rowsize!/Fixed/Relative)
+          is distinctively Makie; RGBAf for transparent colors; MarkerElement in Legend;
+          these features distinguish Makie from matplotlib-style plotting
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -282,3 +271,4 @@ impl_tags:
   - normalization
   styling:
   - edge-highlighting
+  - alpha-blending

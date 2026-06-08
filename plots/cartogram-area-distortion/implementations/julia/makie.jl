@@ -1,7 +1,7 @@
 # anyplot.ai
 # cartogram-area-distortion: Cartogram with Area Distortion by Data Value
 # Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 78/100 | Created: 2026-06-08
+# Quality: 86/100 | Created: 2026-06-08
 
 using CairoMakie
 using Colors
