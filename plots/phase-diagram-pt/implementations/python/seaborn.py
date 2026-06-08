@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 phase-diagram-pt: Thermodynamic Phase Diagram (Pressure-Temperature)
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-08
@@ -34,8 +34,6 @@ sns.set_theme(
         "text.color": INK,
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
-        "grid.color": INK,
-        "grid.alpha": 0.12,
         "legend.facecolor": ELEVATED_BG,
         "legend.edgecolor": INK_SOFT,
     },
@@ -81,9 +79,39 @@ sns.lineplot(
     ax=ax,
 )
 
-# Mark triple point (ochre) and critical point (matte red) — distinct from boundary colors
-ax.scatter([triple_T], [triple_P], color="#BD8233", s=80, zorder=5, edgecolors=PAGE_BG, linewidth=1.2)
-ax.scatter([critical_T], [critical_P], color="#AE3030", s=80, zorder=5, edgecolors=PAGE_BG, linewidth=1.2, marker="D")
+# Subtle phase-region fills to visually separate regions
+T_solid_ext = np.concatenate([[190], T_sub])
+P_solid_ext = np.concatenate([[P_sub[0]], P_sub])
+ax.fill_between(T_solid_ext, P_solid_ext, 1e9, color=IMPRINT_PALETTE[0], alpha=0.06, zorder=0)
+gas_T = np.concatenate([T_sub, T_vap[1:]])
+gas_P = np.concatenate([P_sub, P_vap[1:]])
+ax.fill_between(gas_T, 1e1, gas_P, color=IMPRINT_PALETTE[1], alpha=0.06, zorder=0)
+ax.fill_between(T_vap, P_vap, critical_P, color=IMPRINT_PALETTE[2], alpha=0.06, zorder=0)
+ax.fill_between([critical_T, 760], critical_P, 1e9, color=INK_MUTED, alpha=0.05, zorder=0)
+
+# Mark triple point (ochre) and critical point (matte red) — seaborn scatter for LM-02
+special_df = pd.DataFrame(
+    {
+        "Temperature (K)": [triple_T, critical_T],
+        "Pressure (Pa)": [triple_P, critical_P],
+        "Marker": ["Triple Point", "Critical Point"],
+    }
+)
+sns.scatterplot(
+    data=special_df,
+    x="Temperature (K)",
+    y="Pressure (Pa)",
+    hue="Marker",
+    style="Marker",
+    palette={"Triple Point": "#BD8233", "Critical Point": "#AE3030"},
+    markers={"Triple Point": "o", "Critical Point": "D"},
+    s=80,
+    zorder=5,
+    ax=ax,
+    legend=False,
+    edgecolors=PAGE_BG,
+    linewidths=1.2,
+)
 
 ax.annotate(
     "Triple Point\n(273 K, 612 Pa)",
@@ -105,9 +133,9 @@ ax.annotate(
 )
 
 # Phase region labels — color-coordinated with boundary curves
-ax.text(225, 2e5, "SOLID", fontsize=10, fontweight="bold", color=IMPRINT_PALETTE[0], alpha=0.5, ha="center")
-ax.text(390, 1.5e2, "GAS", fontsize=10, fontweight="bold", color=IMPRINT_PALETTE[1], alpha=0.5, ha="center")
-ax.text(490, 3e6, "LIQUID", fontsize=10, fontweight="bold", color=IMPRINT_PALETTE[2], alpha=0.5, ha="center")
+ax.text(225, 2e5, "SOLID", fontsize=10, fontweight="bold", color=IMPRINT_PALETTE[0], ha="center")
+ax.text(390, 1.5e2, "GAS", fontsize=10, fontweight="bold", color=IMPRINT_PALETTE[1], ha="center")
+ax.text(490, 3e6, "LIQUID", fontsize=10, fontweight="bold", color=IMPRINT_PALETTE[2], ha="center")
 ax.text(
     685,
     critical_P * 10,
@@ -131,6 +159,7 @@ ax.set_title(title, fontsize=12, fontweight="medium", color=INK)
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
 sns.despine(ax=ax)
+ax.yaxis.grid(True, color=INK, alpha=0.15, linewidth=0.6)
 ax.legend(fontsize=8, loc="lower right", framealpha=0.9, facecolor=ELEVATED_BG, edgecolor=INK_SOFT)
 
 # Save
