@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 swimmer-clinical-timeline: Swimmer Plot for Clinical Trial Timelines
 Library: bokeh 3.9.1 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-08
@@ -118,7 +118,7 @@ p = figure(
     y_range=FactorRange(*sorted_patient_ids),
     width=W,
     height=H,
-    title="swimmer-clinical-timeline · bokeh · anyplot.ai",
+    title="swimmer-clinical-timeline · python · bokeh · anyplot.ai",
     x_axis_label="Time on Study (Weeks)",
     toolbar_location=None,  # must be None — toolbar adds ~30-50px, causing canvas size drift
     min_border_bottom=160,  # room for 28pt x-tick labels + 42pt x-axis label
@@ -283,7 +283,7 @@ p.xaxis.minor_tick_line_color = None
 p.yaxis.axis_label = "Patient"
 p.yaxis.axis_label_text_font_size = "42pt"
 p.yaxis.axis_label_text_color = INK
-p.yaxis.major_label_text_font_size = "20pt"  # smaller to avoid crowding 25 labels
+p.yaxis.major_label_text_font_size = "24pt"  # smaller to avoid crowding 25 labels
 p.yaxis.major_label_text_color = INK_SOFT
 p.yaxis.axis_line_color = INK_SOFT
 p.yaxis.major_tick_line_color = INK_SOFT
@@ -298,7 +298,7 @@ p.ygrid.grid_line_dash = "solid"
 
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None
 
 # Legend
 legend_items = [
