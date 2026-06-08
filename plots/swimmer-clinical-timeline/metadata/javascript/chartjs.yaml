@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: swimmer-clinical-timeline
 created: '2026-06-08T06:28:59Z'
-updated: '2026-06-08T06:37:03Z'
+updated: '2026-06-08T06:50:03Z'
 generated_by: claude-sonnet
 workflow_run: 27119440391
 issue: 4670
@@ -12,99 +12,97 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swimmer-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/javascript/chartjs/plot-dark.html
-quality_score: 89
+quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance: all required swimmer plot features implemented (event
-    markers with distinct shapes, arm color coding, ongoing markers, legend, unit-labeled
-    axes)'
-  - Clever hidden y2 axis technique for precisely aligning scatter event markers to
-    categorical bar rows — a non-trivial Chart.js pattern executed cleanly
-  - Full Imprint palette compliance with correct theme-adaptive chrome tokens; bgfill
-    plugin guarantees correct background color in both renders
-  - Realistic, comprehensive oncology dataset with varied patient timelines across
-    both arms
-  - Elegant code with no over-engineering
+  - Correct swimmer plot with horizontal bars sorted by duration longest-to-shortest
+  - Clever hidden y2 linear axis technique to align scatter event markers with categorical
+    bar rows
+  - Imprint palette applied correctly across all 6 categorical series (arms + event
+    types in canonical order)
+  - Redundant shape encoding (triangle/star/diamond/circle/right-arrow) for event
+    types — CVD-safe at 6 colors
+  - Semi-transparent bar fills (hex+99) with solid palette-colored borders — polished
+    and professional
+  - 'Complete spec implementation: all clinical event types, ongoing markers, treatment
+    arm coding, and correct legend'
   weaknesses:
-  - Y-axis tick font size (11px CSS = 22 source px) is below the 14px recommendation;
-    with 25 patients the smaller size is a reasonable compromise, but increasing to
-    12-13px would better serve mobile viewports
-  - 'Complete Response star markers (pointRadius 9, #BD8233 ochre) have low visual
-    salience — they render but are harder to spot among the other event markers; increase
-    pointRadius to 11-12 for CR stars to give them more prominence'
-  - 'Design Excellence can be pushed higher: the chart looks professional but not
-    yet publication-quality; consider slightly reducing legend font (12px) to balance
-    with the 11px y-tick labels, and ensuring the x-axis border color uses t.grid
-    rather than the default for full theme-consistency'
+  - Legend font size 12pt is slightly small for a 3200x1800 canvas — increase to 14pt
+    for better readability at full resolution
+  - With 25 patients in landscape, bars are quite narrow (barPercentage=0.55 + categoryPercentage=0.9
+    gives ~50% row height); consider reducing categoryPercentage to 0.8 for slightly
+    thicker bars
+  - CR star markers (pointRadius=12) are hard to distinguish from PD diamond markers
+    at this chart density — increase star radius to 14-15 to make the distinction
+    clearer
+  - 'Missing explicit //# anyplot-orientation: landscape directive in file header
+    — add for explicitness per library guide convention'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface
-      Chrome: Title "swimmer-clinical-timeline · javascript · chartjs · anyplot.ai" in dark ink, clearly readable. Y-axis label "Patient ID" and X-axis label "Time on Study (Weeks)" both in dark ink, readable. Tick labels (PT-01 to PT-25 on Y, 0/10/20/30/40/50/60 on X) in inkSoft, readable. 7-item bottom legend in inkSoft, all entries readable.
-      Data: Green (#009E73) semi-transparent bars for Arm A; lavender (#C475FD) semi-transparent bars for Arm B. Event markers: blue triangles (PR), ochre stars (CR), red diamonds (PD), cyan circles (AE), dark right-pointing triangles (Ongoing). First series is #009E73 brand green — correct.
-      Legibility verdict: PASS — all text readable; CR stars are the weakest element (low salience but visible)
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "swimmer-clinical-timeline · javascript · chartjs · anyplot.ai" in dark text (readable). X-axis label "Time on Study (Weeks)" and Y-axis label "Patient ID" both readable in dark ink. Tick labels (patient IDs on Y, week numbers on X) readable in muted dark tone. Seven-item legend at bottom legible.
+      Data: 25 horizontal bars sorted by duration longest-to-shortest. Arm A (green #009E73) and Arm B (lavender #C475FD) bars with semi-transparent fills and solid palette-colored borders. Event markers: blue (#4467A3) upward triangles (PR), ochre (#BD8233) stars (CR), matte-red (#AE3030) rotated diamonds (PD), cyan (#2ABCCD) circles (AE). Ongoing markers as dark right-pointing triangles at bar endpoints for PT-01, PT-03, PT-13, PT-14.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface
-      Chrome: Title, axis labels, tick labels, and legend all render in light ink (#F0EFE8 / #B8B7B0 range) — fully readable against dark background. No dark-on-dark failures detected. Ongoing markers use t.ink (light on dark) — correct.
-      Data: Bar and event marker colors are identical to light render (#009E73 green, #C475FD lavender, blue triangles, ochre stars, red diamonds, cyan circles) — only chrome flips between themes.
-      Legibility verdict: PASS — all elements readable in dark theme; no dark-on-dark issues
+      Background: Near-black (#1A1A17) — correct dark surface
+      Chrome: Title and all axis labels in light cream text, clearly readable. Tick labels in slightly muted light tone. Legend text in muted light tone, all legible. No dark-on-dark failures observed.
+      Data: Data colors identical to light render — Arm A green (#009E73), Arm B lavender (#C475FD), same event marker colors (blue/ochre/red/cyan). Ongoing markers in light ink token. The contrast of colored markers against the dark background is excellent.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis titles 15px, x-ticks
-          13px, y-ticks 11px, legend 13px). Y-tick at 11px CSS slightly below 14px
-          recommendation for 25-entry Y-axis; both renders readable.
+        comment: All font sizes explicitly set (title 22, axis 15, ticks 13, legend
+          12). Readable in both themes. Legend at 12pt is slightly small for 3200x1800.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions; 7-item bottom legend
-          fits in one row.
+        comment: No text or marker overlap. 25 patients in landscape is moderately
+          dense but all labels legible.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Bars and most event markers clearly visible. CR stars (#BD8233, pointRadius
-          9) are somewhat hard to distinguish among other markers — render but with
-          low salience.
+        comment: Bars clearly visible with semi-transparent fill and solid borders.
+          Event markers sized appropriately. CR stars (r=12) hard to distinguish from
+          PD diamonds at this density.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used throughout; CVD-safe. Distinct marker shapes
-          provide redundant encoding.
+        comment: Redundant shape encoding for all event types — CVD-safe for 6 concurrent
+          categories.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas well-utilized for 25 patients; generous right padding (50px)
-          for ongoing markers; bottom legend appropriately placed.
+        comment: Canvas gate passed. Title ~70% width expected for this title length.
+          25-row layout somewhat tight but readable.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis 'Time on Study (Weeks)' has units; Y-axis 'Patient ID' is
-          descriptive.
+        comment: Time on Study (Weeks) and Patient ID are descriptive with units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Arm A uses palette[0] (#009E73); Arm B uses palette[1] (#C475FD);
-          events use positions 2-5. Light bg #FAF8F1, dark bg #1A1A17. Chrome tokens
-          theme-adapt correctly. bgfill plugin ensures correct canvas background.'
+        comment: 'Imprint palette correctly applied: palette[0-5] for 6 series, pageBg
+          token for backgrounds, both renders theme-correct.'
     design_excellence:
       score: 13
       max: 20
@@ -114,24 +112,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: rounded bar corners (borderRadius 4), semi-transparent
-          bars with matching borders, distinct pointStyle shapes per event, pageBg
-          border on markers. Not yet publication-quality.'
+        comment: Semi-transparent bar fills with solid borders, borderRadius=4, custom
+          point styles. Above default of 4.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Y-grid disabled, X-grid with subtle t.grid color, bgfill plugin.
-          Some polish available: x-axis border color consistency, legend spacing.'
+        comment: Y-axis grid disabled, X-axis subtle vertical grid only, Y-axis border
+          disabled, borderRadius on bars. Above default of 2.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Arm comparison through color, event progression via overlaid markers,
-          ongoing patients clearly indicated, duration-sorted rows create natural
-          visual hierarchy.
+        comment: Bars sorted by duration (proper convention), color split between
+          arms, ongoing arrows mark active patients clearly. Above default of 2.
     spec_compliance:
       score: 15
       max: 15
@@ -141,30 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct swimmer plot with horizontal bars and overlaid event markers
-          using Chart.js mixed chart.
+        comment: Correct horizontal bar swimmer plot with event marker overlays.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: bars sorted by duration, distinct event markers
-          (PR triangle, CR star, PD diamond, AE circle), ongoing arrow, legend, unit-labeled
-          X-axis, patient IDs on Y-axis, arm color coding.'
+        comment: Bars horizontal+sorted, distinct event symbols, ongoing arrows, clear
+          legend, time units on x, patient IDs on y, color-coded by arm.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = time on study (weeks), Y = patient ID. Hidden y2 linear axis
-          precisely aligns scatter events to categorical bar rows.
+        comment: All 25 patients rendered, events at correct week positions, axes
+          span full data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'swimmer-clinical-timeline · javascript · chartjs · anyplot.ai'
-          matches exact format. All 7 legend entries labeled with symbol names.
+        comment: Title matches required format. Legend covers all 7 series (2 arms
+          + 5 event types) correctly.
     data_quality:
       score: 15
       max: 15
@@ -174,24 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both arms, all event types (PR, CR, PD, AE), ongoing and completed
-          patients, multi-event timelines, wide duration range.
+        comment: Both treatment arms, all four clinical event types (PR/CR/PD/AE),
+          ongoing status, duration variation.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Simulated Phase II oncology trial with 25 patients across two arms;
-          clinically realistic and neutral. Standard patient ID format and event type
-          nomenclature.
+        comment: Simulated Phase II oncology trial, 25 patients, plausible event sequences,
+          neutral non-controversial clinical data.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Duration range 6-52 weeks plausible for Phase II trial; events within
-          treatment durations; Arm A slightly longer average duration consistent with
-          experimental narrative.
+        comment: Duration range 6-52 weeks realistic for Phase II. Event timings within
+          patient durations. Week units appropriate.
     code_quality:
       score: 10
       max: 10
@@ -201,32 +193,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear Data -> Mount -> Chart flow; no functions or classes.
+        comment: Flat script, no functions or classes, minimal loops.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hard-coded; fully deterministic.
+        comment: Fully deterministic hard-coded data array, no RNG.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports needed; Chart.js and tokens are pre-loaded globals.
+        comment: No imports; uses browser globals (Chart, window.ANYPLOT_TOKENS).
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic Chart.js. y2-axis alignment formula well-commented.
-          Event categorization via forEach is concise.
+        comment: Clean structure. Hidden y2 axis alignment formula is well-commented
+          and correct.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Chart.js generates HTML output via harness; correct API usage throughout.
+        comment: Browser-rendered via harness; Chart.js 4.4.7 API used correctly.
     library_mastery:
       score: 9
       max: 10
@@ -236,21 +228,21 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of Chart.js mixed chart; correct indexAxis 'y' for horizontal
-          bars; dataset-level type overrides; custom plugin registration.
+        comment: Mixed chart (bar+scatter), indexAxis y, hidden secondary linear axis,
+          bgfill plugin, usePointStyle legend — all idiomatic Chart.js 4.x.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Hidden linear y2 axis aligned to categorical y-axis for scatter overlay;
-          custom bgfill beforeDraw plugin; rotation:90 on triangle for directional
-          ongoing markers; pageBg border for marker definition.
-  verdict: REJECTED
+        comment: Hidden y2 axis with mathematical alignment formula, custom pointStyle
+          variants (triangle/star/rectRot/circle/rotated-triangle), semi-transparent
+          hex suffix pattern, bgfill plugin.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - html-export
+  - twin-axes
   patterns:
   - data-generation
   - iteration-over-groups
