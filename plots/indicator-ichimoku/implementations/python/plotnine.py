@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 indicator-ichimoku: Ichimoku Cloud Technical Indicator Chart
 Library: plotnine 0.15.5 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-06-08
@@ -106,14 +106,14 @@ cloud_df["cloud_bottom"] = np.minimum(cloud_df["span_a"], cloud_df["span_b"])
 visible_start = 52
 df_vis = df[df["day"] >= visible_start].copy()
 
-# Indicator lines in long format — Imprint palette, no green reuse with candlesticks
-# Tenkan-sen → Imprint #3 (blue), Kijun-sen → Imprint #2 (lavender)
+# Indicator lines in long format — Imprint palette assignments
+# Tenkan-sen → Imprint #1 (brand green), Kijun-sen → Imprint #2 (lavender)
 # Chikou Span → Imprint #7 (rose), Senkou A → Imprint #4 (ochre), Senkou B → Imprint #5 (red)
 indicator_colors = {
-    "Tenkan-sen": IMPRINT_PALETTE[2],  # #4467A3 blue
+    "Tenkan-sen": IMPRINT_PALETTE[0],  # #009E73 brand green
     "Kijun-sen": IMPRINT_PALETTE[1],  # #C475FD lavender
     "Chikou Span": IMPRINT_PALETTE[6],  # #954477 rose
-    "Senkou Span A": IMPRINT_PALETTE[3],  # #BD8233 ochre — avoids green reuse with bullish candles
+    "Senkou Span A": IMPRINT_PALETTE[3],  # #BD8233 ochre
     "Senkou Span B": IMPRINT_PALETTE[4],  # #AE3030 matte red
 }
 
@@ -167,14 +167,14 @@ plot = (
         aes(x="day", ymin="cloud_bottom", ymax="cloud_top"),
         data=cloud_vis[cloud_vis["span_a"] >= cloud_vis["span_b"]],
         fill=BULL_COLOR,
-        alpha=0.30,
+        alpha=0.38,
     )
     # Kumo cloud — bearish (Span B > Span A): red tint
     + geom_ribbon(
         aes(x="day", ymin="cloud_bottom", ymax="cloud_top"),
         data=cloud_vis[cloud_vis["span_a"] < cloud_vis["span_b"]],
         fill=BEAR_COLOR,
-        alpha=0.30,
+        alpha=0.38,
     )
     # Candlestick wicks
     + geom_segment(
@@ -213,13 +213,13 @@ plot = (
         stroke=0.5,
     )
     # Indicator lines with legend
-    + geom_line(aes(x="day", y="value", color="indicator"), data=lines_long, size=0.9)
+    + geom_line(aes(x="day", y="value", color="indicator"), data=lines_long, size=1.1)
     + scale_fill_identity()
     + scale_color_manual(values=indicator_colors, name="Ichimoku Indicators", breaks=list(indicator_colors.keys()))
     + guides(color=guide_legend(override_aes={"size": 2.5}))
     + scale_x_continuous(breaks=tick_indices, labels=tick_labels, expand=(0.01, 0))
     + scale_y_continuous(labels=lambda vals: [f"${v:,.0f}" for v in vals])
-    + labs(x="", y="Price ($)", title="indicator-ichimoku · plotnine · anyplot.ai")
+    + labs(x="", y="Price ($)", title="indicator-ichimoku · python · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
         figure_size=(8, 4.5),
