@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 flamegraph-basic: Flame Graph for Performance Profiling
-Library: letsplot | Python 3.13
-Quality: pending | Updated: 2026-06-08
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-08
 """
 
 import os
