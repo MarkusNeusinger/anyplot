@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 indicator-ichimoku: Ichimoku Cloud Technical Indicator Chart
-Library: plotly | Python 3.13
-Quality: 90/100 | Created: 2026-03-12
+Library: plotly 6.8.0 | Python 3.13.13
+Quality: 85/100 | Updated: 2026-06-08
 """
 
 import os
