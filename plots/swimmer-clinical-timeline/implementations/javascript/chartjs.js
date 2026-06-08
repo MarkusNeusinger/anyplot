@@ -1,7 +1,7 @@
 // anyplot.ai
 // swimmer-clinical-timeline: Swimmer Plot for Clinical Trial Timelines
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-06-08
+// Library: chartjs 4.4.7 | JavaScript 22.22.3
+// Quality: 89/100 | Created: 2026-06-08
 
 const t = window.ANYPLOT_TOKENS;
 
