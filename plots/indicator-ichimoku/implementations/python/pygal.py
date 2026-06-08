@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 indicator-ichimoku: Ichimoku Cloud Technical Indicator Chart
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-08
@@ -142,7 +142,18 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=(BULL_CLR, BEAR_CLR, BULL_CLR, BEAR_CLR, TENKAN_CLR, KIJUN_CLR, SPAN_A_CLR, SPAN_B_CLR, CHIKOU_CLR),
+    colors=(
+        BULL_CLR,
+        BEAR_CLR,
+        BULL_CLR,
+        BEAR_CLR,
+        TENKAN_CLR,
+        KIJUN_CLR,
+        SPAN_A_CLR,
+        SPAN_B_CLR,
+        CHIKOU_CLR,
+        INK_MUTED,
+    ),
     stroke_width=2.5,
     title_font_size=66,
     label_font_size=56,
@@ -167,8 +178,8 @@ chart = pygal.XY(
     allow_interruptions=True,
     range=(p_min - p_pad, p_max + p_pad),
     xrange=(0, total_x + 1),
-    legend_box_size=26,
-    margin=60,
+    legend_box_size=22,
+    margin=80,
     spacing=20,
     tooltip_border_radius=8,
     truncate_legend=-1,
@@ -176,10 +187,10 @@ chart = pygal.XY(
     legend_at_bottom=True,
 )
 
-chart.x_labels = list(range(1, total_x + 1, 12))
+chart.x_labels = list(range(1, total_x + 1, 20))
 chart.x_value_formatter = lambda x: date_map[int(round(x))].strftime("%b %d") if int(round(x)) in date_map else ""
 
-WICK_W, BODY_W, LINE_W, CHIKOU_W = 12, 36, 5, 5
+WICK_W, BODY_W, LINE_W, CHIKOU_W, REF_W = 12, 24, 5, 6, 2
 
 # Wicks — title=None hides from legend; series still rendered as serie-0 / serie-1
 chart.add(None, bull_wicks, stroke=True, show_dots=False, stroke_style={"width": WICK_W, "linecap": "butt"})
@@ -208,6 +219,16 @@ chart.add(
     stroke_style={"width": CHIKOU_W, "linecap": "round", "dasharray": "12,6"},
 )
 
+# Reference line: close price at start of view window — focal point for price progress
+ref_price = ohlc[VIEW_START]["close"]
+chart.add(
+    f"Ref. Close (${ref_price:.0f})",
+    [(1, ref_price), (total_x, ref_price)],
+    stroke=True,
+    show_dots=False,
+    stroke_style={"width": REF_W, "linecap": "butt", "dasharray": "6,8"},
+)
+
 # Render SVG; post-process stroke widths (cairosvg ignores pygal's JS-based styling)
 svg = chart.render(is_unicode=True)
 
@@ -221,6 +242,7 @@ stroke_specs = [
     (3, "round"),
     (3, "round"),  # series 6-7: span a, span b
     (CHIKOU_W, "round"),  # series 8: chikou
+    (REF_W, "butt"),  # series 9: reference line
 ]
 for sid, (w, cap) in enumerate(stroke_specs):
     svg = re.sub(
