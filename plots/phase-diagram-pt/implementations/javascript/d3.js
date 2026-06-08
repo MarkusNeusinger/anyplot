@@ -122,20 +122,20 @@ addMarker(x(T_CRIT),   y(P_CRIT),   t.palette[3]);  // ochre #BD8233
 // --- Point annotations ---
 const tpX = x(T_TRIPLE), tpY = y(P_TRIPLE);
 g.append("text").attr("x", tpX + 14).attr("y", tpY - 12)
-  .attr("fill", t.ink).style("font-size", "13px").style("font-weight", "600")
+  .attr("fill", t.ink).style("font-size", "14px").style("font-weight", "600")
   .text("Triple point");
-g.append("text").attr("x", tpX + 14).attr("y", tpY + 4)
-  .attr("fill", t.inkSoft).style("font-size", "11px")
+g.append("text").attr("x", tpX + 14).attr("y", tpY + 6)
+  .attr("fill", t.inkSoft).style("font-size", "14px")
   .text("273.16 K · 612 Pa");
 
 const cpX = x(T_CRIT), cpY = y(P_CRIT);
 g.append("text").attr("x", cpX - 14).attr("y", cpY - 12)
   .attr("text-anchor", "end").attr("fill", t.ink)
-  .style("font-size", "13px").style("font-weight", "600")
+  .style("font-size", "14px").style("font-weight", "600")
   .text("Critical point");
-g.append("text").attr("x", cpX - 14).attr("y", cpY + 3)
+g.append("text").attr("x", cpX - 14).attr("y", cpY + 6)
   .attr("text-anchor", "end").attr("fill", t.inkSoft)
-  .style("font-size", "11px")
+  .style("font-size", "14px")
   .text("647.1 K · 22.1 MPa");
 
 // --- Phase region labels ---
@@ -144,8 +144,6 @@ g.append("text").attr("x", cpX - 14).attr("y", cpY + 3)
   { T: 225,  P: 5e5,  anchor: "middle", text: "SOLID"          },
   { T: 390,  P: 3e5,  anchor: "middle", text: "LIQUID"         },
   { T: 490,  P: 200,  anchor: "middle", text: "GAS"            },
-  { T: 676,  P: 2e8,  anchor: "middle", text: "SUPERCRITICAL"  },
-  { T: 676,  P: 8e7,  anchor: "middle", text: "FLUID"          },
 ].forEach(r => {
   g.append("text")
     .attr("x", x(r.T)).attr("y", y(r.P))
@@ -155,6 +153,15 @@ g.append("text").attr("x", cpX - 14).attr("y", cpY + 3)
     .style("font-style", "italic").style("opacity", "0.85")
     .text(r.text);
 });
+
+// Supercritical fluid label as two tspan lines (combined to avoid disconnect)
+const scfX = x(676), scfY = y(1.3e8);
+const scfEl = g.append("text")
+  .attr("text-anchor", "middle").attr("fill", t.inkSoft)
+  .style("font-size", "16px").style("font-weight", "700")
+  .style("font-style", "italic").style("opacity", "0.85");
+scfEl.append("tspan").attr("x", scfX).attr("y", scfY).text("SUPERCRITICAL");
+scfEl.append("tspan").attr("x", scfX).attr("dy", "1.3em").text("FLUID");
 
 // --- Legend (placed in open gas region, lower right) ---
 const lx = iw - 20;
@@ -173,7 +180,7 @@ legCurves.forEach((d, i) => {
   if (d.dash) seg.attr("stroke-dasharray", d.dash);
   g.append("text").attr("x", lx - 34).attr("y", ly + 5)
     .attr("text-anchor", "end").attr("fill", t.inkSoft)
-    .style("font-size", "13px").text(d.label);
+    .style("font-size", "14px").text(d.label);
 });
 
 const legPoints = [
@@ -186,7 +193,7 @@ legPoints.forEach((d, i) => {
     .attr("fill", d.fill).attr("stroke", t.pageBg).attr("stroke-width", 2);
   g.append("text").attr("x", lx - 24).attr("y", ly + 5)
     .attr("text-anchor", "end").attr("fill", t.inkSoft)
-    .style("font-size", "13px").text(d.label);
+    .style("font-size", "14px").text(d.label);
 });
 
 // --- Axis labels ---
