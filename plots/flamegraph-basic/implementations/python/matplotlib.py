@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 flamegraph-basic: Flame Graph for Performance Profiling
-Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 92/100 | Created: 2026-03-14
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-08
 """
+
+import os
 
 import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
@@ -11,27 +13,83 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-# Data - simulated CPU profiling stacks with sample counts
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Warm flame palette built from Imprint anchors (amber → ochre → matte red).
+# Spec calls for the conventional warm flame-graph aesthetic; these three
+# stops are the Imprint palette members that map onto that convention.
+WARM_AMBER = "#DDCC77"  # Imprint amber anchor (cool / low-sample)
+WARM_OCHRE = "#BD8233"  # Imprint position 4 (warm midtone)
+WARM_RED = "#AE3030"  # Imprint position 5 (hot / high-sample)
+
+# Data — simulated CPU profiling stacks with sample counts.
+# Depth-first ordering so each parent is inserted before its children
+# (the layout loop below relies on dict insertion order).
 stacks = {
     "main": 950,
     "main;process_request": 800,
     "main;process_request;parse_input": 180,
-    "main;process_request;parse_input;tokenize": 120,
-    "main;process_request;parse_input;validate": 50,
+    "main;process_request;parse_input;tokenize": 95,
+    "main;process_request;parse_input;tokenize;split_lines": 50,
+    "main;process_request;parse_input;tokenize;split_lines;find_newline": 30,
+    "main;process_request;parse_input;tokenize;regex_match": 35,
+    "main;process_request;parse_input;tokenize;regex_match;nfa_run": 22,
+    "main;process_request;parse_input;validate": 45,
+    "main;process_request;parse_input;validate;check_schema": 25,
+    "main;process_request;parse_input;validate;check_schema;lookup_field": 15,
+    "main;process_request;parse_input;validate;check_types": 15,
+    "main;process_request;parse_input;normalize_keys": 30,
+    "main;process_request;parse_input;normalize_keys;lowercase": 18,
     "main;process_request;compute": 450,
     "main;process_request;compute;matrix_multiply": 280,
-    "main;process_request;compute;matrix_multiply;dot_product": 200,
-    "main;process_request;compute;matrix_multiply;allocate_buffer": 60,
-    "main;process_request;compute;transform": 130,
-    "main;process_request;compute;transform;normalize": 80,
-    "main;process_request;compute;transform;scale": 40,
+    "main;process_request;compute;matrix_multiply;dot_product": 180,
+    "main;process_request;compute;matrix_multiply;dot_product;simd_loop": 110,
+    "main;process_request;compute;matrix_multiply;dot_product;accumulate": 55,
+    "main;process_request;compute;matrix_multiply;allocate_buffer": 50,
+    "main;process_request;compute;matrix_multiply;allocate_buffer;malloc": 30,
+    "main;process_request;compute;matrix_multiply;allocate_buffer;zero_memory": 15,
+    "main;process_request;compute;matrix_multiply;prefetch_data": 30,
+    "main;process_request;compute;matrix_multiply;prefetch_data;cache_warm": 20,
+    "main;process_request;compute;transform": 100,
+    "main;process_request;compute;transform;normalize": 55,
+    "main;process_request;compute;transform;normalize;compute_mean": 30,
+    "main;process_request;compute;transform;normalize;subtract_mean": 18,
+    "main;process_request;compute;transform;scale": 30,
+    "main;process_request;compute;aggregate": 50,
+    "main;process_request;compute;aggregate;group_by": 28,
+    "main;process_request;compute;aggregate;group_by;hash_keys": 18,
+    "main;process_request;compute;aggregate;reduce": 15,
     "main;process_request;send_response": 120,
     "main;process_request;send_response;serialize": 70,
-    "main;process_request;send_response;write_socket": 40,
+    "main;process_request;send_response;serialize;to_json": 40,
+    "main;process_request;send_response;serialize;to_json;format_value": 25,
+    "main;process_request;send_response;serialize;escape_strings": 20,
+    "main;process_request;send_response;compress": 25,
+    "main;process_request;send_response;compress;gzip_encode": 18,
+    "main;process_request;send_response;write_socket": 20,
+    "main;process_request;send_response;write_socket;syscall_write": 15,
+    "main;process_request;log_request": 30,
     "main;initialize": 100,
     "main;initialize;load_config": 55,
-    "main;initialize;setup_logging": 35,
+    "main;initialize;load_config;read_file": 30,
+    "main;initialize;load_config;read_file;open_fd": 15,
+    "main;initialize;load_config;parse_yaml": 20,
+    "main;initialize;load_config;parse_yaml;tokenize_yaml": 12,
+    "main;initialize;setup_logging": 25,
+    "main;initialize;setup_logging;open_handlers": 15,
+    "main;initialize;setup_logging;open_handlers;create_socket": 8,
+    "main;initialize;register_handlers": 15,
     "main;gc_collect": 40,
+    "main;gc_collect;mark_phase": 25,
+    "main;gc_collect;mark_phase;scan_roots": 15,
+    "main;gc_collect;mark_phase;scan_roots;walk_stack": 10,
+    "main;gc_collect;sweep_phase": 12,
 }
 
 total_samples = stacks["main"]
@@ -74,64 +132,74 @@ for stack_path, samples in stacks.items():
     parent_offsets[parent] = x_start + samples
     rects.append((depth, func_name, x_start, samples, is_hot))
 
-# Warm color palette with more dramatic range for hot vs cold distinction
-warm_colors = ["#FEF9E7", "#FDE68A", "#FBBF24", "#F59E0B", "#EF6C00", "#D32F2F", "#B71C1C"]
-cmap = mcolors.LinearSegmentedColormap.from_list("flame", warm_colors, N=256)
+# Warm sequential cmap built from Imprint palette members
+flame_cmap = mcolors.LinearSegmentedColormap.from_list("flame_imprint", [WARM_AMBER, WARM_OCHRE, WARM_RED], N=256)
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9))
-fig.set_facecolor("#FAFAFA")
-ax.set_facecolor("#FAFAFA")
+# Plot — canvas 3200x1800 (figsize 8x4.5 @ dpi 400)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-bar_height = 0.88
+bar_height = 0.92
 max_depth = max(r[0] for r in rects)
+
+# Heuristic for whether a label fits inside its bar width (in data units).
+# Axes width ≈ 82% of figsize width; x-axis spans `total_samples + 25`.
+# A character at fontsize N occupies ~N * 0.55 / 72 inches horizontally.
+samples_per_inch = (total_samples + 25) / (8 * 0.82)
 
 for depth, func_name, x_start, width, _is_hot in rects:
     proportion = width / total_samples
-    # More dramatic color mapping: cubic curve for stronger hot/cold contrast
-    color_val = np.clip(proportion**0.6 * 1.8, 0.03, 1.0)
-    color = cmap(color_val)
+    color_val = np.clip(proportion**0.6 * 1.8, 0.05, 1.0)
+    color = flame_cmap(color_val)
 
-    rect = mpatches.FancyBboxPatch(
+    rect = mpatches.Rectangle(
         (x_start, depth - bar_height / 2),
         width,
         bar_height,
-        boxstyle=mpatches.BoxStyle.Round(pad=0, rounding_size=3),
         facecolor=color,
-        edgecolor="white",
-        linewidth=0.8,
+        edgecolor=PAGE_BG,
+        linewidth=0.6,
         zorder=2,
     )
     ax.add_patch(rect)
 
-    # Add function name label if bar is wide enough
     bar_fraction = width / total_samples
-    if bar_fraction > 0.05:
-        label = func_name
-        if bar_fraction > 0.12:
-            label = f"{func_name} ({bar_fraction:.0%})"
-            fontsize = 15
-            fontweight = "bold"
-        else:
-            fontsize = 14
-            fontweight = "medium"
+    if bar_fraction < 0.04:
+        continue
 
-        text_color = "#1a1a1a" if color_val < 0.55 else "#FFFFFF"
-        # Path effects for text readability on colored backgrounds
-        path_effects = [pe.withStroke(linewidth=2.5, foreground="white" if color_val < 0.55 else "#00000044")]
-        ax.text(
-            x_start + width / 2,
-            depth,
-            label,
-            ha="center",
-            va="center",
-            fontsize=fontsize,
-            fontweight=fontweight,
-            color=text_color,
-            clip_on=True,
-            path_effects=path_effects,
-            zorder=5,
-        )
+    fontsize = 9 if bar_fraction > 0.18 else 7.5
+    fontweight = "bold" if bar_fraction > 0.18 else "medium"
+    char_w_samples = fontsize * 0.55 / 72 * samples_per_inch
+
+    # Try name + percentage first; fall back to name only; skip if neither fits.
+    candidate = f"{func_name} ({bar_fraction:.0%})"
+    if len(candidate) * char_w_samples > width * 0.92:
+        candidate = func_name
+    if len(candidate) * char_w_samples > width * 0.92:
+        continue
+    label = candidate
+
+    # Light text on the darker (red) end of the cmap, dark text on the
+    # lighter (amber/ochre) end — data colors are theme-independent so
+    # this decision uses color_val, not THEME.
+    light_bar = color_val < 0.6
+    text_color = "#1A1A17" if light_bar else "#FBEFE2"
+    stroke_color = "#FAF8F1AA" if light_bar else "#00000055"
+    path_effects = [pe.withStroke(linewidth=1.4, foreground=stroke_color)]
+
+    ax.text(
+        x_start + width / 2,
+        depth,
+        label,
+        ha="center",
+        va="center",
+        fontsize=fontsize,
+        fontweight=fontweight,
+        color=text_color,
+        clip_on=True,
+        path_effects=path_effects,
+        zorder=5,
+    )
 
 # Hot path annotation pointing to the deepest hot path bar
 hot_leaf = max((r for r in rects if r[4]), key=lambda r: r[0])
@@ -139,30 +207,36 @@ leaf_cx = hot_leaf[2] + hot_leaf[3] / 2
 ax.annotate(
     "  Hot path (CPU bottleneck)  ",
     xy=(leaf_cx, hot_leaf[0] + bar_height / 2 + 0.02),
-    xytext=(leaf_cx + 250, hot_leaf[0] + 1.15),
-    fontsize=13,
+    xytext=(leaf_cx + 260, hot_leaf[0] + 1.25),
+    fontsize=8,
     fontweight="semibold",
-    color="#B71C1C",
+    color=INK,
     ha="center",
-    arrowprops={"arrowstyle": "-|>", "color": "#C62828", "lw": 1.5, "connectionstyle": "arc3,rad=0.25"},
-    bbox={"boxstyle": "round,pad=0.35", "facecolor": "#FFF3E0", "edgecolor": "#E65100", "alpha": 0.92, "linewidth": 1.0},
+    arrowprops={"arrowstyle": "-|>", "color": INK_SOFT, "lw": 1.0, "connectionstyle": "arc3,rad=0.25"},
+    bbox={
+        "boxstyle": "round,pad=0.4",
+        "facecolor": ELEVATED_BG,
+        "edgecolor": INK_SOFT,
+        "alpha": 0.95,
+        "linewidth": 0.6,
+    },
     zorder=10,
 )
 
 # Style
 ax.set_xlim(-10, total_samples + 15)
-ax.set_ylim(-0.6, max_depth + 1.6)
-ax.set_xlabel("CPU Samples", fontsize=20, labelpad=10)
-ax.set_ylabel("Stack Depth", fontsize=20, labelpad=10)
-ax.set_title("flamegraph-basic · matplotlib · pyplots.ai", fontsize=24, fontweight="medium", pad=16, color="#333333")
-ax.tick_params(axis="both", labelsize=16, colors="#555555")
+ax.set_ylim(-0.6, max_depth + 1.7)
+ax.set_xlabel("CPU Samples", fontsize=10, color=INK, labelpad=6)
+ax.set_ylabel("Stack Depth", fontsize=10, color=INK, labelpad=6)
+ax.set_title("flamegraph-basic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", pad=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 ax.set_yticks(range(max_depth + 1))
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
-ax.spines["left"].set_linewidth(0.6)
-ax.spines["bottom"].set_linewidth(0.6)
-ax.spines["left"].set_color("#888888")
-ax.spines["bottom"].set_color("#888888")
+for s in ("left", "bottom"):
+    ax.spines[s].set_linewidth(0.6)
+    ax.spines[s].set_color(INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor=fig.get_facecolor())
+# Do NOT use bbox_inches="tight" — it would shave the canvas off-target.
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
