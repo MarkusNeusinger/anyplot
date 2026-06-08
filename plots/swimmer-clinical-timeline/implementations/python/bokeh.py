@@ -1,5 +1,7 @@
-"""anyplot.ai — swimmer-clinical-timeline
-Swimmer Plot for Clinical Trial Timelines | bokeh | python
+""" anyplot.ai
+swimmer-clinical-timeline: Swimmer Plot for Clinical Trial Timelines
+Library: bokeh 3.9.1 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-06-08
 """
 
 import os
