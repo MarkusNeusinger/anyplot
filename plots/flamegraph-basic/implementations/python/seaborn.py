@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 flamegraph-basic: Flame Graph for Performance Profiling
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 82/100 | Updated: 2026-06-08
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-06-08
 """
 
 import os
