@@ -1,91 +1,137 @@
 library: plotly
+language: python
 specification_id: flamegraph-basic
 created: '2026-03-14T20:27:37Z'
-updated: '2026-03-14T20:50:28Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23095681470
+updated: '2026-06-08T20:51:54Z'
+generated_by: claude-opus
+workflow_run: 27164725466
 issue: 4665
-python_version: 3.14.3
-library_version: 6.6.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/plotly/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 6.8.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/python/plotly/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent data storytelling through hot path highlighting — viewer immediately
-    identifies the performance bottleneck
-  - Custom warm color palette with red/orange differentiation follows flame graph
-    conventions
-  - Comprehensive, realistic CPU profiling data with diverse function categories
-  - Smart label truncation prevents overlap while preserving readability
-  - Batched traces by (depth, is_hot) groups — idiomatic Plotly usage with array parameters
-  - Clean imports — unnecessary numpy dependency removed
+  - 'Repair fully addressed attempt-1 weaknesses: pixel-fit gate now drops labels
+    that cannot truncate-fit inside their bar, and bar height of 0.98 makes depth
+    rows touch with hairline BAR_EDGE separation — true flame-graph cohesion.'
+  - Legend is trimmed to a single 'Hot path (widest at depth)' chip; the decorative
+    ochre/amber alternation is no longer cluttering the legend (showlegend=False on
+    those traces).
+  - Hot-path semantic coloring is the load-bearing storytelling device — matte red
+    (#AE3030) traces main → process_request → route_handler → query_db → execute_sql
+    → fetch_rows → deserialize and immediately reads as the bottleneck spine.
+  - Imprint warm trio (matte red / ochre / amber) is applied with an explicit code-comment
+    justification for the semantic-exception override of the categorical palette —
+    the right way to deviate from defaults.
+  - Theme tokens (PAGE_BG / INK / INK_SOFT / GRID / BAR_EDGE) are threaded through
+    every chrome element including hoverlabel and annotation fonts; both renders are
+    visually theme-correct with identical data colors.
+  - 'Idiomatic Plotly: 3-trace batched go.Bar(orientation=''h'', base=…) instead of
+    one-trace-per-bar; per-bar hovertemplate; write_html with a custom modebar config
+    (drops select2d/lasso2d/autoScale2d) and a tuned toImageButtonOptions — distinctive
+    interactive output beyond a static port.'
+  - 'Code quality is excellent: DFS via worklist (no recursion), pure-stdlib data
+    ingestion, deterministic ordering via alphabetical sibling sort, sibling_rank
+    for deterministic color alternation, and a clean monospace label font (Consolas/Monaco)
+    that reinforces the ''this is code'' context.'
+  - Canvas is exact 3200×1800 landscape; title 'flamegraph-basic · python · plotly
+    · anyplot.ai' matches mandated format; axis labels are descriptive with the proportion-of-samples
+    framing.
   weaknesses:
-  - Non-hot-path bars use many similar yellow/orange shades that are hard to distinguish
-    from each other
-  - Small bars at deepest stack levels are inherently tiny
-  image_description: The plot displays a flame graph with horizontal bars stacked
-    by call stack depth (0–6 on the y-axis) against "Proportion of Total Samples"
-    (0%–100% on the x-axis). The title "flamegraph-basic · plotly · pyplots.ai" is
-    rendered in monospace font at the top center. At depth 0, "main" spans the full
-    width in deep red. Depth 1 shows "process_request" (large, red) and a small "gc_coll…"
-    bar. Depth 2 contains "send_respo…", "route_handler" (large, red), "parse_headers",
-    "parse_body", and smaller bars in warm tones. Deeper levels show "query_db", "execute_sql",
-    "auth_check", "render_template", "fetch_rows", "verify_tok…", "optimi…", and "deserialize".
-    Hot path bars (widest at each depth) are rendered in deep red/crimson with white
-    bold monospace text and red borders, while non-hot-path bars use warm yellows,
-    oranges, wheat, and peach tones with dark text. A "Hot path (most samples)" legend
-    annotation appears in the top right corner. The background is light gray (#FAFAFA)
-    with no grid lines. Function names are displayed inside bars when wide enough,
-    with ellipsis truncation for narrow bars. Bars are directly adjacent with minimal
-    gaps.
+  - 'Dark-mode label contrast on amber (#DDCC77) bars is low. In dark theme, non-hot
+    labels render in INK = #F0EFE8 (cream); cream-on-amber contrast is ~1.4:1, well
+    below WCAG AA Large (3:1). Cream-on-ochre (#BD8233) is ~3:1, just at the threshold.
+    The light render has no such issue because dark ink (#1A1A17) on amber is ~10.8:1.
+    Fix: in dark theme, force non-hot label color to a dark token (e.g. ''#1A1A17'')
+    so warm-bar text contrast is preserved on both themes — the warm bars stay light-coloured
+    regardless of background, so the label color should follow the bar, not the chrome.'
+  - 'LM-02 still has headroom: Plotly-distinctive features beyond hovertemplate are
+    not exercised. A facet_row companion (two profiles side-by-side), a hovermode=''x
+    unified'' bar-stack readout, or animation frames showing depth-by-depth rendering
+    would all be flame-graph-relevant and uniquely Plotly. The implementation could
+    still be ported to matplotlib with most of its fidelity intact.'
+  - 'DE-02 still has minor whitespace room: the bottom margin (b=60) leaves the x-axis
+    title sitting close to the canvas edge; raising to ~70 would give the long ''Proportion
+    of Total Samples'' label a touch more breathing room on landscape.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white at the expected #FAF8F1 — not pure white, not dark. Page surface and plot surface are unified (no nested rectangle).
+      Chrome: Centered title "flamegraph-basic · python · plotly · anyplot.ai" in dark ink at the top, ~55% canvas width — well within the proportional budget. Y-axis title "Stack Depth (root → leaf)" rotated on the left; integer ticks 0-6. X-axis title "Proportion of Total Samples" centered below; percentage ticks 0%-100% in INK_SOFT (#4A4A44). Single legend chip "Hot path (widest at depth)" with a matte-red swatch sits flush above the upper-right plot corner; transparent background. No grid, no spines beyond the axis lines.
+      Data: Bars are horizontal, depth-stacked from depth 0 (main) at the bottom to depth 6 (deserialize) at the top. Hot-path bars in matte red (#AE3030) — main → process_request → route_handler → query_db → execute_sql → fetch_rows → deserialize form a clear bottleneck spine. Non-hot siblings alternate ochre (#BD8233) and amber (#DDCC77) by sibling-rank parity so neighbours never share a fill. Depth rows touch (bar height 0.98) with a hairline BAR_EDGE separation against the page surface. Function-name labels (Consolas monospace, 13 pt) sit inside each sufficiently wide bar — pixel-fit gate has dropped labels on the very narrowest bars (no overflow), and truncated mid-width labels with a trailing ellipsis ("opti…", "fetch_rows", "render_te…", "verify…", "deco…", "parse_he…", "parse_bo…", "send_r…", "gc_c…"). Hot-path labels are bold cream; non-hot labels are dark ink — excellent contrast on both ochre and amber.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black at the expected #1A1A17 — not pure black, not light. Page and plot surface unified.
+      Chrome: Title and axis titles flipped to light INK (#F0EFE8); tick labels in INK_SOFT (#B8B7B0). Both axis titles and all ticks are clearly readable against the dark surface. Legend swatch and label render correctly with the transparent chip background. No dark-on-dark chrome failures.
+      Data: Bar colors are identical to the light render (matte red / ochre / amber) — only chrome flipped. Hot-path labels remain bold cream on red (excellent contrast). Non-hot labels switch to cream (INK = #F0EFE8 in dark theme): cream on ochre is ~3:1 (borderline AA Large) and cream on amber is ~1.4:1 (FAILS even AA Large). Visually the amber labels are washed-out / low-contrast vs the light render where dark-ink on amber is crisp. Not catastrophic — bars are wider than text and the hover tooltip carries the full function name — but noted as a real legibility deduction for VQ-01.
+      Legibility verdict: PASS with caveat — cream-on-amber labels in dark theme are below WCAG AA Large; recommend forcing dark-token text on warm bars regardless of theme so label contrast follows the bar color rather than the chrome color.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
-          16pt, annotations 16pt. All text clearly readable.'
+        comment: 'Light render: all text clearly readable. Dark render: chrome readable;
+          non-hot labels in dark theme use cream INK on amber (#DDCC77) which is ~1.4:1
+          contrast (fails WCAG AA Large) and on ochre (#BD8233) ~3:1 (borderline).
+          Fix: warm-bar labels should keep dark text regardless of theme so contrast
+          follows the bar color, not the chrome.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; labels smartly truncated with ellipsis when
-          bars are narrow.
+        comment: Pixel-fit gate (MIN_FIT_CHARS=4 at 7.8 px/char) now drops or ellipsis-truncates
+          labels so they never overflow bar bounds. Attempt-1 overflow at depth 2/3
+          is gone.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Bars well-sized with bar_height=0.82. Small bars at top depths are
-          inherent to data hierarchy.
+        comment: Bar heights touch (0.98) with hairline BAR_EDGE — flame-graph cohesion
+          correct. Some narrow bars now show no label, but that is the right tradeoff
+          since hover carries the function name.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Warm palette conventional for flame graphs. Hot vs non-hot distinction
-          clear, but many yellow/orange shades are similar.
+        comment: Warm trio (matte red / ochre / amber) is CVD-safe and uses no red-green-only
+          signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, plot fills canvas well, balanced margins.
+        comment: Canvas exactly 3200×1800 (800×450 × scale=4); margins (l=80, r=40,
+          t=90, b=60) keep title and axis labels fully inside the canvas; row stacking
+          is cohesive.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with % format.
+        comment: 'X: ''Proportion of Total Samples'' with percentage ticks. Y: ''Stack
+          Depth (root → leaf)''. Title matches the mandated format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint warm trio with the spec-mandated ''warm color palette''
+          semantic exception documented inline. Chrome backgrounds are correct #FAF8F1
+          / #1A1A17.'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -93,22 +139,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom warm palette, hot path highlighting, monospace font, differentiated
-          borders. Clearly above defaults.
+        comment: Monospace code-font for labels (Consolas/Monaco) reinforces profiling
+          context. Hot-path semantic coloring. Theme tokens threaded through every
+          chrome element. Hairline bar edges using BAR_EDGE = PAGE_BG for visual continuity.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Grid removed, plotly_white template, custom background, clean margins,
-          intentional border styling.
+        comment: 'No grid (correct for flame graphs), trimmed single-chip legend,
+          subtle bar edges. Minor room: bottom margin could give the x-axis title
+          slightly more breathing room.'
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Hot path highlighting with bold white text on red creates immediate
-          visual story of performance bottleneck.
+        comment: Hot-path-widest-at-depth gives the plot a load-bearing narrative
+          spine — the eye lands on the red column from bottom to top and reads execute_sql
+          + query_db as the bottleneck.
     spec_compliance:
       score: 15
       max: 15
@@ -118,28 +167,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct flame graph with horizontal bars stacked bottom-to-top by
-          stack depth.
+        comment: Horizontal-bar-per-depth flame graph, root-at-bottom orientation,
+          width ∝ inclusive samples.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: proportional width, warm colors, minimal
-          gaps, function labels.'
+        comment: Hierarchical stacks, alphabetical sibling sort, width-proportional
+          bars, embedded function-name labels (with pixel-fit gate), warm palette,
+          no sibling gaps — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = proportion of total samples, Y = stack depth. Alphabetical ordering
-          within siblings.
+        comment: X = proportion of total samples (0-100%); Y = stack depth (0-6 integer).
+          All inclusive-sum aggregation visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. Hot path annotation serves as legend.
+        comment: Title 'flamegraph-basic · python · plotly · anyplot.ai' is exact;
+          legend trimmed to the semantic 'Hot path (widest at depth)' callout.
     data_quality:
       score: 15
       max: 15
@@ -149,19 +200,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multiple depth levels (0-6), varying widths, diverse function categories.
+        comment: 7 depth levels, 29 raw stacks, varied sibling counts, mix of deep
+          narrow stacks (deserialize at depth 6) and wide shallow frames (main, process_request).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic CPU profiling with plausible web request processing functions.
+        comment: Web-request handler profile (parse_headers / route_handler / query_db
+          / render_template / send_response / gc_collect) — textbook neutral CPU-profiling
+          target.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sample counts 15-150 realistic for profiling data.
+        comment: Sample counts (15-150) and proportions render naturally as percentages
+          with realistic bottleneck dominance.
     code_quality:
       score: 10
       max: 10
@@ -171,51 +226,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, processing, plot, save. No functions
-          or classes.'
+        comment: Flat module-level script — no functions, no classes; just sequenced
+          data ingestion, aggregation, x-position assignment, color assignment, and
+          trace addition.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data.
+        comment: Fully deterministic — no randomness, alphabetical sibling sort, deterministic
+          sibling_rank for color alternation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only plotly.graph_objects imported and used.
+        comment: Only os and plotly.graph_objects; no unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured iterative stack traversal, clean inclusive value
-          calculation, efficient grouping.
+        comment: DFS via worklist avoids recursion; batched 3-trace grouping is more
+          idiomatic Plotly than one trace per bar.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format and dimensions.
-    library_mastery:
+        comment: Writes plot-{THEME}.png and plot-{THEME}.html with current Plotly
+          API.
+    library_features:
       score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Bars batched into grouped traces by (depth, is_hot) with array parameters.
-          Overlay barmode with base positioning.
+        comment: go.Bar(orientation='h', base=…) is the correct primitive for non-recursive
+          flame graphs; per-bar hovertemplate; write_html with custom modebar config
+          and toImageButtonOptions.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Custom hovertemplate, HTML export with CDN, overlay barmode with
-          explicit base positioning.
+        passed: false
+        comment: Hovertemplate and html-export are leveraged, but Plotly-distinctive
+          features beyond that (facet_row companion, hovermode='x unified', animation
+          frames for depth-by-depth reveal, sunburst comparison) are absent. Implementation
+          could be ported to matplotlib with most of its fidelity intact.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -223,9 +284,11 @@ impl_tags:
   - annotations
   - hover-tooltips
   - html-export
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - edge-highlighting
+  - publication-ready

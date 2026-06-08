@@ -1,39 +1,62 @@
 library: matplotlib
+language: python
 specification_id: flamegraph-basic
 created: '2026-03-14T20:28:17Z'
-updated: '2026-03-14T20:51:32Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23095681411
+updated: '2026-06-08T20:45:44Z'
+generated_by: claude-opus
+workflow_run: 27164501738
 issue: 4665
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 92
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent data storytelling with hot path annotation and percentage labels creating
-    immediate insight
-  - Professional warm color palette with custom 7-stop LinearSegmentedColormap following
-    flame graph conventions
-  - Clean rectangle layout algorithm with proper parent offset tracking
-  - Smart text visibility with path effects and width-based label filtering
-  - Rounded corners via FancyBboxPatch add visual polish
+  - Theme-adaptive chrome correctly threaded through every element (background, ink,
+    spines, annotation box) — both renders fully readable with no dark-on-dark or
+    light-on-light failures
+  - 'Custom warm flame colormap built from Imprint palette anchors (#DDCC77, #BD8233,
+    #AE3030) — honors the spec''s ''warm flame aesthetic'' requirement as a semantic
+    exception while staying in palette'
+  - Programmatic hot-path detection (widest child at each depth) called out with a
+    curved-arrow annotation in an elevated rounded box — strong data storytelling
+    and clear focal point
+  - 'Smart label-fit heuristic: tries ''name (XX%)'' first, falls back to name only,
+    skips when neither fits — narrow-bar overflow from attempt 1 is fixed'
+  - Trace count expanded to 57 stacks across 6 depth levels — now sits inside the
+    spec's 50-500 range and produces a dense, realistic CPU profile
+  - Switched from FancyBboxPatch to mpatches.Rectangle — siblings now sit directly
+    adjacent with only a thin PAGE_BG edge separator, matching spec note about minimal
+    gaps
+  - Path-effect strokes (pe.withStroke) on in-bar labels keep text readable across
+    the full amber→ochre→red color range; text-color flip uses the data-color value,
+    not the theme (correct)
+  - Correct canvas (3200×1800), no bbox_inches='tight', deterministic data, clean
+    linear KISS structure with no functions or classes
   weaknesses:
-  - 'Minor: warm palette could be slightly refined for colorblind accessibility, though
-    width is the primary data channel'
-  image_description: The plot displays a flame graph visualization of CPU profiling
-    data. Horizontal bars are stacked bottom-to-top representing call stack depth
-    (0-4). The bottom bar "main (100%)" spans the full width in deep red. Above it,
-    "process_request (84%)" dominates in dark red, with smaller "initialize" and "gc_collect"
-    bars to the right in yellow/gold tones. At depth 2, "compute (47%)" is the widest
-    bar in deep red, flanked by "parse_input (19%)" and "send_response (13%)" in orange.
-    Deeper levels show functions like "matrix_multiply (29%)", "dot_product (21%)",
-    "tokenize (13%)", "transform (14%)", etc. A warm color palette (yellow to orange
-    to red) is used, with deeper reds for hotter (wider) bars. A styled annotation
-    with an arrow reads "Hot path (CPU bottleneck)" pointing to the dot_product bar.
-    Top/right spines are removed. Background is light gray (#FAFAFA). Title reads
-    "flamegraph-basic · matplotlib · pyplots.ai".
+  - The annotation 'Hot path (CPU bottleneck)' box at xytext y=hot_leaf[0]+1.25 floats
+    above the topmost bar and into negative-data-space; it reads fine here but the
+    magic offset (260 samples horizontally, 1.25 depth units vertically) would break
+    if the hot path landed near the right edge of the canvas — consider clamping xytext
+    to ax.get_xlim() so future repairs do not push the box past the canvas right edge
+  - LM-02 is solid but not exceptional — uses path_effects + LinearSegmentedColormap
+    + annotate-with-bbox, all standard matplotlib idioms; a hex-tile or treemap-style
+    sub-block could showcase more distinctive features but is not required by spec
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1) — correct PAGE_BG for light theme, not pure white.
+      Chrome: Title 'flamegraph-basic · python · matplotlib · anyplot.ai' in dark ink (#1A1A17) at top, fully readable. Y-axis 'Stack Depth' (0-5) and x-axis 'CPU Samples' (0-800) labels in dark ink, tick labels in INK_SOFT (#4A4A44), all readable. Top/right spines hidden; left/bottom spines in INK_SOFT at 0.6 linewidth.
+      Data: Warm Imprint-derived flame palette — amber #DDCC77 (cool/low-sample), ochre #BD8233 (midtone), matte red #AE3030 (hot). Six rows of stacked bars bottom-to-top: depth 0 'main (100%)' full-width in deep red; depth 1 'process_request (84%)' + 'initialize' (small amber); depth 2 'parse_input' / 'compute (47%)' / etc; up to depth 5 with 'simd_loop' and many narrow amber bars. In-bar labels show name + percentage for wide bars, name only for medium bars, omitted entirely for narrow bars (<4% width). Text color flips between dark #1A1A17 on amber/ochre bars and light #FBEFE2 on red bars based on color_val, with pe.withStroke for legibility. 'Hot path (CPU bottleneck)' annotation in elevated rounded box (#FFFDF6 facecolor, INK_SOFT edge) with curved arrow pointing to the simd_loop bar at depth 5.
+      Legibility verdict: PASS — all chrome text readable, in-bar labels readable, no overflow into neighbors. Title sits well above the bar area, no clipping at any canvas edge.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17) — correct PAGE_BG for dark theme, not pure black.
+      Chrome: Title in light ink (#F0EFE8) at top, clearly readable. Axis labels and tick labels in soft light ink (#B8B7B0), all readable against the dark background. Hot-path annotation box uses dark ELEVATED_BG (#242420) fill with INK_SOFT edge and light ink text — fully readable, no dark-on-dark failure.
+      Data: Identical warm flame palette to the light render (#DDCC77 / #BD8233 / #AE3030) — only the chrome flipped, as required. Same bar layout, same in-bar labels, same hot-path annotation pointing to simd_loop. The dark amber bars retain enough lightness against the near-black background to be clearly distinguishable from the matte red.
+      Legibility verdict: PASS — no dark-on-dark failures; theme tokens correctly threaded through every element (title, labels, ticks, spines, annotation box). Edge separators between sibling bars use PAGE_BG so the boundary between adjacent bars is visible without dominating the chart.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -41,69 +64,91 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          bar labels 14-15pt with path effects'
+        comment: 'All chrome and in-bar labels readable in both themes. Path-effect
+          stroke on bar labels keeps them readable across the warm color range. Minor:
+          bar labels at smallest sizes (~7.5pt) are at the lower edge of comfortable
+          mobile readability when scaled to 400px.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Labels only shown when bar_fraction > 0.05, annotation positioned
-          cleanly
+        comment: Smart label-fit heuristic prevents bar labels from overflowing into
+          neighbors. Hot path annotation sits above the bar area without colliding
+          with data. Sibling bars adjacent with only a thin PAGE_BG separator.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars clearly visible with good height, white edges separate adjacent
-          bars
+        comment: Wide bars are prominent, narrow bars (5-50 samples) remain visible.
+          Hot-path annotation is the clear focal point. Adaptive font sizing keeps
+          the visual hierarchy intact.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Warm palette is conventional for flame graphs; width is primary data
-          channel but gradient may challenge some colorblind users
+        comment: Warm amber→ochre→red palette is CVD-safe (no red/green discrimination
+          required). Color encodes the same quantity as bar width so it is redundant,
+          not the sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well horizontally and vertically with tight_layout
+        comment: Canvas verified 3200×1800 (gate file absent). No bbox_inches='tight'.
+          Title fills ~70-80% of width as expected for mandated title length. No overflow
+          at any edge.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: CPU Samples and Stack Depth are descriptive and domain-appropriate
+        comment: '''Stack Depth'' and ''CPU Samples'' are clear, domain-correct labels.
+          Title format is exact: ''flamegraph-basic · python · matplotlib · anyplot.ai''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Warm flame palette is a valid semantic exception — spec explicitly
+          calls for ''warm color palette (yellows, oranges, reds)''. All three stops
+          (#DDCC77 amber, #BD8233 position 4, #AE3030 position 5) are Imprint palette
+          members. Backgrounds #FAF8F1 / #1A1A17 correct in both themes.'
     design_excellence:
-      score: 16
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom 7-stop colormap, FancyBboxPatch with rounded corners, path
-          effects, styled annotation. Above defaults.
+        comment: Custom warm sequential cmap with non-linear color scaling (proportion**0.6
+          * 1.8 clip) creates intentional hierarchy; programmatic hot-path detection
+          and annotation; adaptive fontweight tiers (bold for wide bars, medium for
+          narrow). Above-default polish but not exceptional.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Spines removed, subtle colors, custom background, white edge lines
-          between bars
+        comment: Top/right spines hidden, left/bottom in subtle INK_SOFT at 0.6 linewidth.
+          No grid (correct choice — flame graphs do not benefit from grids). Bar edge
+          linewidth 0.6 in PAGE_BG color creates clean separation.
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Hot path annotation with arrow, percentage labels, color intensity
-          hierarchy guides viewer to bottleneck
+        comment: 'Clear focal point: hot path annotation + color intensity gradient
+          both direct the eye to the CPU bottleneck. Hierarchy: red anchors the dominant
+          call paths, amber recedes for low-sample frames. Strong narrative for a
+          profiling chart.'
     spec_compliance:
       score: 15
       max: 15
@@ -113,27 +158,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct flame graph with horizontal bars stacked bottom-to-top
+        comment: Correct flame graph — horizontal bars stacked bottom-to-top, width
+          proportional to samples, caller-to-callee depth ordering.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec requirements met: root at bottom, width proportional, warm
-          colors, adjacent bars, labels when wide enough'
+        comment: 'Spec features present: warm palette, bars directly adjacent at each
+          depth (Rectangle, not Fancy), in-bar function name labels when bar wide
+          enough, hierarchical call stack from main downward.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shows CPU samples, Y-axis shows stack depth, correct parent-child
-          positioning
+        comment: X-axis = sample width (cumulative from parent), Y-axis = stack depth.
+          All 57 stack traces represented.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format, no legend needed for this plot type
+        comment: Title exact match. No legend needed (color encoding is identical
+          to width encoding, made obvious by visual).
     data_quality:
       score: 15
       max: 15
@@ -143,21 +191,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 5 depth levels, branching trees, varying widths, clear hot path vs
-          cold paths
+        comment: 57 stack traces across 6 depth levels covers branches/leaves, hot
+          path, GC, init, request handling, compute kernels. Spec range 50-500 satisfied.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: CPU profiling with realistic function names, neutral technical domain
+        comment: 'Plausible server-style CPU profile: main → process_request → {parse_input,
+          compute, send_response, log_request} + initialize + gc_collect. Neutral,
+          no controversial domain.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 950 total samples with hierarchical values correctly summing within
-          parents
+        comment: Total 950 samples, with leaf frames in the 8-30 range and hot frames
+          in the 100-280 range — realistic CPU profile distribution.
     code_quality:
       score: 10
       max: 10
@@ -167,33 +217,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, processing, plotting, styling, save'
+        comment: No functions, no classes — pure linear script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded data dictionary
+        comment: Deterministic — fixed dict literal, no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: mcolors, mpatches, pe, plt, np'
+        comment: 'All imports used: os, mcolors, mpatches, pe, plt, np.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-structured, appropriate algorithm for flame graph layout
+        comment: Hot-path detection loop and label-fit heuristic are appropriately
+          complex for the task. No fake UI — annotation is a legitimate matplotlib
+          annotate call, not a simulated tooltip.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, bbox_inches=tight
+        comment: Saves as plot-{THEME}.png, dpi=400, facecolor=PAGE_BG, no bbox_inches='tight'
+          (comment explicitly notes why).
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -201,14 +254,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ax methods, FancyBboxPatch, annotate with arrowprops and bbox
+        comment: Uses mpatches.Rectangle, LinearSegmentedColormap.from_list, pe.withStroke,
+          ax.annotate with arrowprops + bbox + connectionstyle, ax.add_patch — all
+          canonical matplotlib idioms applied correctly.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: FancyBboxPatch with BoxStyle.Round, PathEffects, LinearSegmentedColormap
-          are matplotlib-specific
+        comment: patheffects, LinearSegmentedColormap, and arc3-connection annotation
+          are matplotlib distinctive features but baseline. Does not reach for advanced
+          features like transforms, blended axes, or path manipulation.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -217,8 +273,10 @@ impl_tags:
   - patches
   - manual-ticks
   patterns:
+  - explicit-figure
   - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
   - edge-highlighting
+  - publication-ready

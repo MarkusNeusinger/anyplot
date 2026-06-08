@@ -1,0 +1,277 @@
+library: d3
+language: javascript
+specification_id: flamegraph-basic
+created: '2026-06-08T20:53:33Z'
+updated: '2026-06-08T21:01:23Z'
+generated_by: claude-opus
+workflow_run: 27165827282
+issue: 4665
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/javascript/d3/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Uses d3.hierarchy + d3.partition idiomatically — the canonical d3 pattern for
+    flame-graph layout that would require manual work in almost any other JS library.
+  - 'Perfect Imprint palette compliance: top module (http_handler) gets #009E73, the
+    next two modules (worker, runtime_gc) follow canonical palette order, and the
+    ''main'' root is rendered with a theme-adaptive muted anchor so the categorical
+    pool stays clean.'
+  - 'Theme chrome is correctly threaded through tokens — light render is on #FAF8F1
+    with dark ink, dark render is on #1A1A17 with light ink; data colors are identical
+    across themes as required.'
+  - Thoughtful per-fill text-color picker (FILL_TO_TEXT map) ensures function labels
+    stay readable on every palette swatch instead of using a single luminance heuristic
+    that misclassifies ochre and cyan.
+  - Function-name labels truncate cleanly with an ellipsis when the bar is too narrow,
+    with a hard cutoff at <3 chars so narrow bars don't get illegible stubs.
+  - 'Title is exactly the required format: ''flamegraph-basic · javascript · d3 ·
+    anyplot.ai'', and the subtitle explains that bar width ∝ time in stack — strong
+    data storytelling cue.'
+  - Canvas is 3200×1800 (landscape, exact target) and svg is sized from window.ANYPLOT_SIZE
+    — no hard-coded pixel dimensions.
+  weaknesses:
+  - Stack-trace count (32 unique stacks) is below the spec's stated range of 50–500.
+    Add ~20 more synthetic stacks (e.g. extra worker job paths or a second http endpoint
+    cluster) so the data sits inside the spec's lower bound.
+  - Title fontsize 22px renders the mandated long title at roughly ~30% of the 3200px
+    width — visually small relative to the canvas. Consider bumping to 26–30px so
+    the title comfortably occupies ~50–70% of plot width per the proportional-sizing
+    guidance.
+  - 'Design Excellence is solid but not exceptional: the bars themselves are flat
+    fills with only a 1px page-bg stroke separating siblings. Consider a subtle hierarchy
+    cue (e.g. slightly darker shade for deeper frames, or a soft inner shadow on the
+    root) to lift DE-01 beyond ''well-configured defaults''.'
+  - buildTree includes an IIFE-based post-processing strip() pass over the tree that's
+    slightly more cleverness than KISS calls for; inlining the cleanup into the build
+    loop would shorten the data-prep block.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1), no pure white anywhere — matches the Imprint light surface.
+      Chrome: Title "flamegraph-basic · javascript · d3 · anyplot.ai" rendered in dark ink at top center, easily readable.
+        Legend below the title shows three module swatches (http_handler in #009E73, worker in #C475FD, runtime_gc in #4467A3) with dark labels.
+        X-axis along the bottom shows cumulative-sample tick labels 0..1,000 in soft ink (#6B6A63-ish) and a one-line caption "Cumulative CPU samples (1,015 total) — bar width ∝ time in stack" centered beneath the axis. All chrome is readable.
+      Data: 7 horizontal rows of bars stacked bottom-to-top. Bottom row is a single full-width "main" bar in muted gray (the theme's soft anchor, outside the categorical pool). Above it, the categorical layer is split into http_handler (green, dominant), worker (lavender), and runtime_gc (blue) — first series is correctly #009E73. Function-name labels are baked into wide-enough bars (e.g. dispatch, get_user, db_query, db_transaction, execute, deserialize_rows, process_job, aggregate_m…, mark_ph…); narrow bars use a "…" ellipsis or omit text entirely. Text color is picked per-fill for contrast (light text on green/blue/lavender-rose, dark text where the swatch is light).
+      Legibility verdict: PASS — every chrome element and every label inside a wide bar reads cleanly against the warm-off-white surface.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (~#1A1A17), no pure black — matches the Imprint dark surface.
+      Chrome: Title at top is rendered in light ink, legend swatches identical to the light render with light labels, X-axis ticks and caption all in light soft-ink. No dark-on-dark text anywhere — title, legend labels, tick labels, and subtitle are all clearly readable against the dark surface.
+      Data: Colors are pixel-identical to the light render — http_handler stays #009E73, worker stays #C475FD, runtime_gc stays #4467A3, and the "main" root bar uses the dark-theme muted anchor (light gray). Only the chrome flipped; the data palette did not. Brand green #009E73 remains highly visible against the dark surface.
+      Legibility verdict: PASS — no dark-on-dark failures, all text reads.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Font sizes explicitly set (title 22px, ticks 14px, legend 16px,
+          labels 15px mono) and all text readable in both themes. -1: title at 22px
+          occupies only ~30% of the 3200px canvas width — below the proportional-sizing
+          comfort range.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps anywhere; bar labels are clipped with ellipsis before
+          they could collide with neighbors.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bar rows are tall and clearly distinct; sibling bars separated by
+          a 1px page-bg stroke.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; per-fill text color picker keeps in-bar
+          labels readable on every swatch.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas exactly 3200x1800, bars fill the plotting area, no overflow,
+          margins balanced.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis caption includes units ('CPU samples') and explains the encoding.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First categorical series = #009E73; next two follow canonical Imprint
+          order (#C475FD, #4467A3); ''main'' root uses muted anchor; backgrounds #FAF8F1
+          / #1A1A17 in light/dark.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Above generic defaults: thoughtful per-fill text color, muted anchor
+          for the root, monospace family for function names. Could go further with
+          shading or hierarchy cues to read as truly publication-grade.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Minimal chrome — no extraneous spines, generous whitespace, subtle
+          1px gap between siblings. Could tighten further (e.g. lighter axis domain
+          stroke).
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Modules sorted by total samples so the biggest gets #009E73, immediately
+          telling the viewer where CPU time goes. Subtitle reinforces the encoding.'
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct flame graph: root at bottom, callees stacked above, width
+          proportional to cumulative samples.'
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'All structural features present (hierarchy, width encoding, in-bar
+          labels, adjacent siblings, function names). -1: 32 unique stacks is below
+          the spec''s stated 50–500 size range.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Depth correctly maps to row (root at bottom); cumulative samples
+          correctly map to x extent.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is exactly 'flamegraph-basic · javascript · d3 · anyplot.ai';
+          legend labels match module names.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows depth variation, multiple modules, varying bar widths, parent
+          self-time gaps. Slightly limited by the low stack count.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible web-service CPU profile (HTTP handler, worker, GC) with
+          realistic function names and a neutral, business-appropriate domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sample counts (8–112 per leaf, 1,015 total) are sensible for a profiling
+          snapshot; module-level totals reflect realistic proportions.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly linear — data, build tree, layout, draw. The IIFE-based strip()
+          pass and two helper functions push it just past minimal.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded data, fully deterministic across renders.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports/requires — uses the d3 global and ANYPLOT_TOKENS as the
+          contract dictates.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Readable, commented at the right level, no fake interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Browser-render harness produces plot-light.png/.html and plot-dark.png/.html;
+          no bare plot.png.
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses d3.hierarchy, d3.partition, d3.scaleOrdinal, d3.scaleLinear,
+          d3.axisBottom, d3.format, and selection.join — exactly the high-level d3
+          patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: d3.partition + d3.hierarchy is the canonical d3 layout for flame
+          graphs; replicating this in Chart.js / ECharts / Plotly would require hand-rolling
+          the partition math.
+    score_caps_applied: []
+    total: 90
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
