@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: flamegraph-basic
 created: '2026-03-14T20:27:08Z'
-updated: '2026-06-08T20:42:06Z'
+updated: '2026-06-08T20:52:34Z'
 generated_by: claude-opus
 workflow_run: 27164840702
 issue: 4665
@@ -12,61 +12,89 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flamegrap
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/python/bokeh/plot-dark.html
-quality_score: 86
+quality_score: 85
 review:
   strengths:
-  - HoverTool with rich call-stack tooltip (Function, Samples, CPU %, Call Stack)
-    — bokeh's distinctive interactive feature surfaced cleanly and exported alongside
-    the static PNG
-  - 'Branch-by-branch coloring uses canonical Imprint palette positions (brand green
-    #009E73 root, ochre #BD8233 + matte red #AE3030 for the warm flame mass, lavender
-    #C475FD for the log_metrics tail) — palette-compliant and visually intentional'
-  - Theme-adaptive Label.text_color is wired through INK so function-name labels flip
-    dark→light between renders — both themes are fully readable with no dark-on-dark
-    or light-on-light failures
-  - Subtle parity-based fill_alpha (0.94/0.86) gives a faint banding cue between adjacent
-    depths without competing with the data
-  - Canvas is pinned to exactly 3200x1800 via CDP setDeviceMetricsOverride + PIL belt-and-braces
-    resize — passes the canvas dimension gate cleanly
-  - Iterative DFS layout with sibling-proportional sample widths is clean, deterministic,
-    and KISS — no helper functions, no recursion stack risk
-  - Width-scaled label tiers (22/18/14pt) with appended '(pct%)' on wide bars give
-    immediate visual readout of the hot path
-  - Hidden axes + outline + grid follows flame-graph convention and removes visual
-    noise (minimal-chrome)
+  - 'Theme adaptation is solid in both renders: warm off-white #FAF8F1 chrome in light,
+    warm near-black #1A1A17 in dark, with identical data colors and only chrome flipping
+    as required.'
+  - 'Imprint palette positions used semantically by top-level branch (brand-green
+    #009E73 for the main root, ochre #BD8233 for handle_request, lavender #C475FD
+    for log_metrics, matte-red #AE3030 for gc_collect) — far more informative than
+    the conventional random flame-graph coloring while staying on canonical positions.'
+  - 'Hot-path emphasis: handle_request → process_query → execute → fetch_rows chain
+    gets an INK 4 px outline, drawing the reader''s eye to the bottleneck — genuine
+    data storytelling beyond a plain flame graph.'
+  - Bokeh's distinctive HoverTool surfaces full call-stack tooltips (function, samples,
+    CPU %, stack path), exercising a library-unique interactive feature.
+  - Canvas dimensions are exact 3200x1800 (gate passed). Selenium CDP setDeviceMetricsOverride
+    + a Pillow normalisation pin defends against the May 2026 bokeh shrink-to-1661
+    failure mode mentioned in prompts/library/bokeh.md.
+  - '55-row simulated CPU profile (web-server: parse_headers → authenticate → process_query
+    → send_response, plus gc_collect and log_metrics) is realistic, neutral, and exercises
+    6 stack depths.'
+  - In-bar labels include both function name AND percentage for wide bars (>12% width),
+    name-only for medium bars (>5%), HoverTool fallback for narrower bars — clean
+    width-aware rule that prevents collisions.
   weaknesses:
-  - 'Label overlap on narrow adjacent bars: in the upper-depth clusters (most visibly
-    around verify_signature + base64_decode at the rightmost authenticate branch,
-    and the small siblings around compare_values/check_null), function-name labels
-    on bars ~1.5-3 wide visually touch and read as one merged string like ''verify_signaturebase64_decode''.
-    Fix: raise the existing `if r["width"] <= 3: continue` cutoff to ~5, OR shrink
-    the smallest-bar font tier from 14pt to ~10pt, OR drop the label entirely on the
-    narrowest bars and rely on the hover tooltip for those frames.'
-  - 'DE-01 stops at ''clean flame graph'' rather than reaching publication-grade design
-    polish. Consider one storytelling lift: a thin INK outline (1-1.5px) on the dominant
-    hot-path chain (handle_request → process_query → execute → fetch_rows) to emphasise
-    the bottleneck, OR a small italic annotation under the title naming the dominant
-    stack (''process_query dominates at 40% of CPU''). The plot tells the story implicitly
-    but does not point at it.'
-  - Bar separators use a 2.5px PAGE_BG stroke which slightly thickens the apparent
-    gap between siblings at small widths — the spec asks for 'minimal or no gaps between
-    siblings'. Consider line_width=1.5 instead, so narrow bars don't lose visible
-    fill area to the separator stroke.
+  - 'Spec asks for a warm palette (yellows / oranges / reds) following Brendan Gregg''s
+    flame-graph aesthetic; the implementation deviates by using brand-green for the
+    main root and lavender for log_metrics. The Imprint mandate justifies keeping
+    canonical positions, but the result loses the ''warm wash'' the spec calls for.
+    Consider keeping #009E73 only for the root frame and remapping log_metrics to
+    ochre or amber so the canopy reads as warm yellows/oranges/reds with green as
+    a single anchor.'
+  - Adjacent sibling bars are separated by 1.5 px PAGE_BG-colored strokes. The spec
+    asks for 'minimal or no gaps between siblings at the same stack depth'; in both
+    renders the result is visible separator lines between every frame, which slightly
+    fights the dense-tile aesthetic of a flame graph. Either drop line_width to 0.5
+    (or use the same fill color for the stroke) so adjacent frames feel directly adjacent.
+  - 'In light render, the in-bar labels on the matte-red gc_collect frames (e.g. gc_collect,
+    mark_phase, sweep_phase, trace_refs) sit at a lower contrast than on the ochre
+    handle_request frames — INK on #AE3030 is readable but lacks the snap of INK on
+    #BD8233. A small fontweight bump or switching label_color to PAGE_BG specifically
+    on the red frames would even out legibility across branches.'
+  - Label fontsize ramp (14/18/22pt) keeps mid-width labels at 18pt, which on a 3200-px
+    canvas is visibly smaller than the 50pt title; the gap between title and the largest
+    in-bar label (22pt) feels wide. Bumping the upper bin to 26-28pt would give the
+    dominant frames (process_query, handle_request, execute) more visual weight to
+    match their data weight.
   image_description: |-
-    Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white, not dark.
-      Chrome: Bold dark title "flamegraph-basic · python · bokeh · anyplot.ai" at top, ~55% canvas width, fully readable. Axes are hidden by design (flame-graph convention) so there are no tick labels or axis titles to evaluate.
-      Data: Brand green #009E73 root bar "main (100.0%)" spans the full bottom. Ochre #BD8233 handle_request subtree dominates the middle (handle_request 85%, process_query 40%, execute 24%, fetch_rows 15%, parse_headers 20%, authenticate 14%, etc.) with depth up to 6. Matte red #AE3030 gc_collect cluster sits on the right (gc_collect with sweep_phase, mark_phase, trace_refs). Lavender #C475FD log_metrics column on the far left. Function names render in dark INK on bars wider than ~3 units, with "(pct%)" appended on bars wider than 12.
-      Legibility verdict: PASS — all text comfortably readable against the warm off-white surface; first series is confirmed #009E73; only minor issue is adjacent narrow-bar labels touching in a few depth-4/5 clusters (counted under VQ-02).
+    Light render (plot-light.png, 3200x1800):
+      Background: Warm off-white (#FAF8F1) covers the full canvas including the
+        border/title area — correctly theme-tokenised, no pure white.
+      Chrome: Bold dark title "flamegraph-basic · python · bokeh · anyplot.ai"
+        centered at top, takes ~55% of canvas width, fully visible (no clipping at
+        top edge). Axes are hidden by design (flame-graph convention). No grid,
+        no spines, no outline — clean.
+      Data: Seven stack-depth rows from depth 0 (root) to depth 6. Root frame
+        (main, 100%) is brand-green #009E73 spanning the full width at the bottom.
+        Depth 1 splits into log_metrics (lavender #C475FD, far left), handle_request
+        (ochre #BD8233, dominant ~85% middle), and gc_collect (matte-red #AE3030,
+        right). Children inherit branch color. The handle_request → process_query →
+        execute → fetch_rows hot path carries a thicker INK outline. In-bar labels
+        (function name + percentage on wide bars, name-only on medium bars) are
+        rendered in INK (#1A1A17). On ochre frames the contrast is comfortable;
+        on the matte-red gc_collect frames it is acceptable but lower-contrast.
+      Legibility verdict: PASS
 
-    Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black, not light.
-      Chrome: Bold light-cream #F0EFE8 title — readable against dark surface. Same axes-hidden flame-graph convention.
-      Data: Colors are pixel-identical to the light render — brand green root, ochre middle, matte red gc_collect, lavender log_metrics — confirming the data palette is theme-independent as required. Function-name labels switch to light cream (INK on dark theme = #F0EFE8) so they remain readable on every coloured bar.
-      Legibility verdict: PASS — no dark-on-dark failure detected. Title, in-bar labels, and percentages all readable; the theme tokens (PAGE_BG, INK) thread correctly through to every chrome element. Same minor narrow-bar label overlap as the light render.
+    Dark render (plot-dark.png, 3200x1800):
+      Background: Warm near-black (#1A1A17) covers the full canvas — correctly
+        theme-tokenised, no pure black.
+      Chrome: Bold light-cream title in #F0EFE8 reads crisply against the dark
+        background, fully visible at top. Axes hidden, no grid, no spines.
+      Data: All bar colors are IDENTICAL to the light render (brand-green root,
+        ochre handle_request, lavender log_metrics, matte-red gc_collect) — only
+        chrome flipped, as required. In-bar labels are now light cream (#F0EFE8)
+        and remain readable on every branch color. No dark-on-dark failure: title,
+        bar labels, and percentages are all light text on the saturated bar fills.
+        Hot-path INK outline is the same dark INK color, which on the dark page
+        background becomes slightly less prominent than in the light render, but
+        still distinguishes the hot frames against their ochre fill.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -74,57 +102,55 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Title 50pt bold and width-scaled label tiers (22/18/14pt) explicitly
-          set; readable in both themes. Loses 2 pts because the smallest tier on the
-          narrowest bars produces visually cramped labels (see VQ-02).
+        comment: Title large and crisp in both themes. In-bar labels readable across
+          all branches but contrast on matte-red gc_collect frames is lower than on
+          ochre handle_request; mid-bin 18pt feels small next to 50pt title.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Adjacent narrow-bar labels visually touch in upper-depth clusters
-          (verify_signature/base64_decode area especially). Most labels are clear;
-          the overlap is localised, not severe.
+        comment: Width-aware label rule (skip <5%, name-only 5-12%, name+pct >12%)
+          prevents collisions. No overlap between labels, no overlap with title.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Bars are well-proportioned to data density; narrow leaf frames stay
-          visible thanks to colour and parity-alpha banding.
+        comment: Narrow log_metrics children at left and gc_collect children at right
+          are visible but small; bar fills are saturated enough that even unlabeled
+          frames are distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Four CVD-safe Imprint hues with strong perceptual separation; INK
-          labels give adequate contrast on all four bar colours in both themes.
+        comment: Imprint palette is CVD-safe. No red-green sole signal — branches
+          are distinguished by hue family and spatial position.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Plot fills the canvas, title and
-          stack share the space, no overflow or wasted whitespace.
+        comment: Exact 3200x1800 (canvas gate passed). Title ~55% of width, no overflow,
+          nothing clipped. min_border reservations work.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches the mandated `{spec-id} · {language} · {library} ·
-          anyplot.ai` format; axes are intentionally hidden per flame-graph convention,
-          no axis-label deduction applies.
+        comment: Title matches mandated format exactly. No axis labels needed (flame-graph
+          convention hides axes).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73 brand green; secondary hues are canonical
-          Imprint positions (ochre #BD8233, matte red #AE3030, lavender #C475FD);
-          backgrounds are #FAF8F1 / #1A1A17; chrome flips correctly. Data colours
-          are identical between light and dark renders.'
+        comment: 'First series #009E73 brand green. All four branch colors are canonical
+          Imprint positions. Backgrounds correct (#FAF8F1 / #1A1A17). Both renders
+          theme-correct.'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -132,28 +158,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: thoughtful branch-by-branch palette assignment with
-          semantic Imprint positions, theme-adaptive label colour, parity-alpha banding.
-          Stops short of publication-grade — no explicit emphasis on the hot path.'
+        comment: Semantic branch coloring, hot-path INK outline, parity-based alpha
+          banding for subtle rhythm. Solid intentional choices but not exceptionally
+          polished — separator strokes and label fontsize ramp leave room to improve.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Axes, outline, grid all suppressed cleanly. PAGE_BG stroke between
-          siblings creates clear separation. Slight refinement opportunity: separator
-          stroke is a touch heavy on narrow bars.'
+        comment: Axes hidden, no grid, no figure outline — clean. PAGE_BG-colored
+          separators between sibling bars are a refinement but produce visible gaps
+          that the spec asks to avoid.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Brand-green root + warm-ochre dominant stack + cool-red gc + cool-lavender
-          logging is genuine visual hierarchy; percentages on wide bars give immediate
-          readout. Falls short of 6 because the dominant chain (handle_request → process_query
-          → execute → fetch_rows) is not actively pointed at.
+        comment: Hot-path INK outline draws the eye to the bottleneck chain; percentages
+          inside dominant frames anchor the reading. Could go further with a focal-frame
+          emphasis or annotation.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -161,30 +186,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct flame graph: bottom-up stack rows, width proportional to
-          samples, alphabetical sibling ordering.'
+        comment: Correct flame graph — stack-depth rows, width proportional to samples,
+          root at bottom, layered bottom-to-top.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Function-name labels inside wide bars ✓; warm flame mass (ochre +
-          matte red) ✓; bottom-to-top depth layering ✓; sibling adjacency with minimal
-          separator ✓.
+        comment: Hierarchy, proportional widths, in-bar labels, alphabetical sibling
+          order all present. Warm-palette aesthetic from the spec only partially honored
+          — green and lavender break the yellows/oranges/reds wash, though the choice
+          is defensible against the Imprint mandate.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = horizontal proportional position, Y = stack depth; every node
-          in the hierarchy is rendered.
+        comment: Stack depth → y, sample share → bar width, function name → in-bar
+          label. All 55 stack frames represented.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format. No legend needed (branch colour mapping
-          is self-evident in context).
+        comment: Title is exactly 'flamegraph-basic · python · bokeh · anyplot.ai'.
+          No legend needed (branch colors are intrinsic to flame graph).
     data_quality:
       score: 15
       max: 15
@@ -194,24 +220,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Covers all flame-graph features: multiple depth levels (up to 6),
-          multiple sibling subtrees (handle_request, gc_collect, log_metrics), a clear
-          dominant hot path, and small marginal frames.'
+        comment: '55 stack frames across 7 depth levels exercise every facet of a
+          flame graph: deep nesting (decode_jwt → base64_decode), broad branching
+          (handle_request fans into 4 children), narrow tails (log_metrics chain),
+          and a bottleneck path (process_query::execute::fetch_rows).'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Simulated CPU profile of a small web server — recognisably realistic
-          function names (parse_headers, authenticate, process_query, gc_collect),
-          fully neutral domain.
+        comment: Simulated web-server CPU profile — handle_request, authenticate,
+          process_query, gc_collect, log_metrics. Plausible, neutral, no controversy.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sample counts add up correctly (children ≤ parent at every node);
-          10000-sample total is conventional for a CPU profile snapshot.
+        comment: 10,000 total samples, sample counts decrease sensibly from root to
+          leaves, percentages add up to 100% at each depth.
     code_quality:
       score: 10
       max: 10
@@ -221,64 +247,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → constants → data → layout → plot → save. No functions,
-          no classes.
+        comment: No functions, no classes. Iterative DFS with a work_stack.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — hardcoded stack_data table, no RNG.
+        comment: Stack data is hardcoded — fully deterministic, no RNG needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import is used (selenium and PIL for the headless screenshot
-          + dimension pin).
+        comment: All imports used. PIL imported late for the size-pin step which is
+          appropriate.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Iterative DFS work-stack with running x cursor is the right abstraction
-          level for the task.
+        comment: Iterative DFS with x_start/x_end intervals is the natural flame-graph
+          layout. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html — both required artefacts
-          for an interactive library.
-    library_features:
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png. No bare plot.png.
+    library_mastery:
       score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: ColumnDataSource + figure(width, height, min_border_*) + p.rect()
-          + add_tools(HoverTool) is the canonical bokeh pattern.
+        comment: ColumnDataSource for vectorised glyph properties, p.rect for batch
+          rendering, HoverTool, Label models for in-bar text. Idiomatic high-level
+          bokeh.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: HoverTool with point_policy='follow_mouse' and full call-stack tooltip
-          is a feature you cannot get from matplotlib/seaborn/plotnine PNGs — it ships
-          in the plot-{THEME}.html artefact alongside the static render.
-  verdict: REJECTED
+        comment: 'Bokeh-unique features used: HoverTool with point_policy=''follow_mouse'',
+          interactive HTML output, per-glyph data-driven line_color and fill_alpha.
+          Could push further with linked tap callbacks or zoom tools for true exploratory
+          interaction.'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   - pillow
   techniques:
   - hover-tooltips
-  - html-export
   - annotations
+  - html-export
   patterns:
+  - data-generation
   - columndatasource
   - iteration-over-groups
   dataprep: []

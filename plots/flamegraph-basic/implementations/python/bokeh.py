@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 flamegraph-basic: Flame Graph for Performance Profiling
 Library: bokeh 3.9.1 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-06-08
+Quality: 85/100 | Updated: 2026-06-08
 """
 
 import os
