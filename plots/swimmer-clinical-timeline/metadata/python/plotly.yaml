@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: swimmer-clinical-timeline
 created: '2026-06-08T06:05:51Z'
-updated: '2026-06-08T06:13:33Z'
+updated: '2026-06-08T06:29:05Z'
 generated_by: claude-sonnet
 workflow_run: 27118777002
 issue: 4670
@@ -12,124 +12,122 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swimmer-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/python/plotly/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance: all required swimmer plot features implemented correctly
-    (sorted bars, four event types with distinct symbols, ongoing arrows, treatment
-    arm color-coding, proper legend)'
-  - 'Excellent palette compliance: Arm A = #009E73 first series; Arm B = second Imprint
-    position; semantic anchors correctly applied (matte red for progressive disease,
-    amber for adverse events, neutral for ongoing)'
-  - 'Full theme adaptation: both renders pass legibility checks with no dark-on-dark
-    or light-on-light failures; chrome tokens correctly applied throughout'
-  - 'Perfect code quality: reproducible, clean imports, KISS structure, correct output
-    files'
-  - 'Thoughtful multi-encoding: each event type has a unique color + shape combination
-    for CVD safety'
+  - Correct and complete swimmer plot with all spec-required features (4 event types,
+    ongoing markers, sorted bars, arm color-coding, legend)
+  - Both themes correctly implemented with full chrome token propagation — no dark-on-dark
+    or light-on-light failures
+  - 'Imprint palette applied with clinical semantic intent: red for progressive disease,
+    amber for adverse events'
+  - Median reference line adds a clear analytical focal point
+  - Reproducible synthetic data with realistic Phase II oncology context
+  - Clean code structure with dummy trace pattern for multi-trace legends — idiomatic
+    plotly
   weaknesses:
-  - Y-axis patient ID tick labels set to size=8 (32 source pixels) — below the recommended
-    10px default; increase to 10 to match style-guide baseline
-  - Top/right spines not explicitly removed — add showline=True, mirror=False to both
-    xaxis and yaxis dicts to explicitly lock in L-frame
-  - No data storytelling element beyond duration sort — add a median-duration reference
-    line via fig.add_vline with annotation to create a focal point
-  - Event markers cluster slightly in lower-left region for short-duration patients
-    with multiple early events — consider jitter offset (±0.15 on y) or reduce marker
-    size to 11 for dense rows
-  - Design excellence below Attempt 1 approval threshold (≥90); visual sophistication
-    and storytelling need targeted improvements
+  - Y-axis tick labels (25 patient labels) will be very small at mobile viewing scale
+    (~400 px wide); consider reducing patient count to 20 or increasing y-axis tick
+    font to 11px
+  - Event markers can cluster visually in the short-duration rows (x < 10 wk) where
+    multiple event types occur at similar positions; slight jitter or reduced marker
+    size (9px) could improve
+  - 'DE-02 could be pushed further: Y-axis spine (showline=True on Y) and tick marks
+    add visual noise; removing the Y-axis line (showline=False on yaxis) and tick
+    marks (ticks=\u0022\u0022) would clean up the left edge'
+  - 'DE-03: arm separation storytelling could be reinforced by adding a subtle annotation
+    showing median difference between arms or grouping patients by arm with a shaded
+    band'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "swimmer-clinical-timeline · python · plotly · anyplot.ai" centered in dark ink, clearly readable. X-axis label "Weeks on Study" and Y-axis label "Patient ID" both dark and readable. Y-axis patient ID tick labels at size=8 are small but legible. X-axis tick labels at size=10 are clear.
-      Data: 25 horizontal bars — Arm A in brand green (#009E73), Arm B in lavender (#C475FD), 75% opacity. Event markers overlay bars: cyan upward-triangles (Partial Response, #2ABCCD), blue stars (Complete Response, #4467A3), red diamonds (Progressive Disease, #AE3030), amber circles (Adverse Events, #DDCC77). Ongoing patients marked by black right-pointing triangles (INK neutral token). Legend on right side shows all 6 entry types with correct labels.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "swimmer-clinical-timeline · python · plotly · anyplot.ai" centered in dark ink, clearly readable. X-axis label "Weeks on Study" and Y-axis label "Patient ID" in dark ink at 12px. 25 patient tick labels on Y-axis at 10px in INK_SOFT (#4A4A44). Median annotation box in ELEVATED_BG (#FFFDF6) with muted text.
+      Data: Arm A bars in #009E73 (brand green), Arm B bars in #C475FD (lavender), both at 75% opacity. Event markers: cyan triangles (Partial Response, #2ABCCD), blue stars (Complete Response, #4467A3), red diamonds (Progressive Disease, #AE3030), amber circles (Adverse Event, #DDCC77). Ongoing right-pointing triangles in dark ink.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
-      Chrome: Title, axis labels, tick labels, and legend text all render in light-colored ink against the dark background. No dark-on-dark failures. Legend box uses elevated dark background (#242420) with border.
-      Data: All data colors identical to light render — same green, lavender, cyan, blue, red, amber. Ongoing markers shift to white/light triangles due to theme-adaptive INK token — correct and distinguishable on dark background. Data color identity confirmed across both themes.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light cream (#F0EFE8), axis labels in light cream. Y-axis tick labels in light gray (#B8B7B0 = INK_SOFT dark token). Median annotation box in elevated dark surface (#242420) with muted light text. Legend box with dark elevated background and light text. No dark-on-dark failures observed.
+      Data: Bar colors identical to light render — #009E73 green for Arm A, #C475FD lavender for Arm B. All event marker colors (cyan, blue, red, amber) are identical to light render. Only chrome flips between themes.
+      Legibility verdict: PASS — all text clearly readable against warm near-black background, no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set; y-tick labels at size=8 (32 source
-          px) slightly below recommended 10px default but readable
+        comment: 'All font sizes explicitly set; readable at full resolution in both
+          themes. Minor concern: 25 Y-axis labels are dense for mobile-scale viewing.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Slight clustering of event markers in lower-left for short-duration
-          patients; all distinguishable due to shape+color redundancy
+        comment: No text overlap. Event markers at similar time positions can visually
+          cluster in short-duration rows but remain readable due to distinct shapes.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars at 75% opacity well-proportioned; event markers size 13-14 appropriate
-          for 25 patients; ongoing triangles clearly visible
+        comment: All bars, event markers (size=11), and ongoing triangles (size=12)
+          clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Redundant shape+color encoding for all event types; CVD-safe via
-          shape redundancy
+        comment: CVD-safe Imprint palette with redundant shape encoding for events.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas; margins give legend room; no text overflow
-          in either render
+        comment: Canvas gate passed. Margins properly accommodate external legend.
+          Good canvas utilization.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Weeks on Study (with units), Patient ID (descriptive); title matches
-          mandated format exactly
+        comment: 'X: Weeks on Study, Y: Patient ID — both descriptive.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Arm A=#009E73 first series, Arm B=#C475FD second Imprint position;
-          semantic anchors correctly applied; theme-correct backgrounds
+        comment: 'Arm A = #009E73 first series. Imprint palette throughout. Semantic
+          anchors correctly used (red for progression, amber for adverse). Backgrounds
+          #FAF8F1/#1A1A17. Both themes correct.'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Above default (4); multi-encoding design with 5 element types shows
-          intentionality; 0.75 opacity and marker edges add polish; not publication-ready
+        comment: 'Thoughtful design above defaults: semantic color assignments, multi-encoding,
+          median focal point. Not quite publication-ready.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Above default (2); x-axis grid only at 15% opacity; legend with elevated
-          background; top/right spines not explicitly removed
+        comment: L-shaped frame, X-only grid, elevated legend box. Y-axis spine and
+          tick marks could still be removed for more polish.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Above default (2); duration-sorted cascade creates narrative; no
-          additional focal point or emphasis technique
+        comment: Duration sort, median reference line, arm color-coding guide the
+          viewer. Arm comparison storytelling could be stronger.
     spec_compliance:
       score: 15
       max: 15
@@ -139,27 +137,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct swimmer plot with horizontal bars
+        comment: Correct horizontal swimmer plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features: sorted bars, distinct event symbols, ongoing
-          arrows, legend, time units, patient IDs, arm color-coding'
+        comment: 'All features: sorted bars, 4 event types with distinct symbols,
+          ongoing indicator, legend'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Duration on x-axis, patient IDs on y-axis, events at correct time
-          points
+        comment: X=weeks, Y=patient IDs, color=treatment arm
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels match data
+        comment: Correct title format, legend labels match event types
     data_quality:
       score: 15
       max: 15
@@ -169,22 +166,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: duration bars, four event types, ongoing indicators,
-          two treatment arms'
+        comment: 'All swimmer plot aspects: duration variability, 4 event types, ongoing
+          vs completed, two arms, reference line'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Simulated Phase II oncology trial, 25 patients across two arms; clinically
-          realistic and neutral
+        comment: Simulated Phase II oncology trial, realistic clinical scenario, neutral
+          anonymous data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 4-52 week duration range appropriate for Phase II trial; 1-3 events
-          per patient at plausible time points
+        comment: 25 patients, 4-52 week range, two balanced arms (12 vs 13)
     code_quality:
       score: 10
       max: 10
@@ -194,26 +190,26 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports -> data -> plot -> save; no functions or classes'
+        comment: Clean Imports→Data→Plot→Save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, plotly.graph_objects — all used
+        comment: Only os, numpy, plotly.graph_objects — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; dummy traces for legend is correct plotly
-          pattern; no fake UI
+        comment: Clean, well-organized; dummy Bar traces for legend entries is idiomatic
+          plotly pattern
       - id: CQ-05
         name: Output & API
         score: 1
@@ -229,25 +225,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Bar with mixed-color list, go.Scatter for markers,
-          hovertemplate, orientation='h', barmode='overlay'; dummy traces for legend
-          is correct pattern
+        comment: Mixed Bar+Scatter overlay, explicit tickvals/ticktext, vline with
+          annotation, hovertemplate on all traces
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses hovertemplate with <extra></extra> suppression, write_html for
-          HTML export, named marker symbols; no especially unique plotly capability
-          leveraged
-  verdict: REJECTED
+        comment: Interactive hovertemplates, HTML export, add_vline with annotation,
+          mixed trace overlay — plotly-specific features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - hover-tooltips
   - html-export
-  - custom-legend
+  - annotations
   - manual-ticks
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups

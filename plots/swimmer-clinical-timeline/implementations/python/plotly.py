@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 swimmer-clinical-timeline: Swimmer Plot for Clinical Trial Timelines
 Library: plotly 6.8.0 | Python 3.13.13
-Quality: 86/100 | Created: 2026-06-08
+Quality: 88/100 | Created: 2026-06-08
 """
 
 import os
