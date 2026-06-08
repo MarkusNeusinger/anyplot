@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 swimmer-clinical-timeline: Swimmer Plot for Clinical Trial Timelines
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-06-08
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 82/100 | Updated: 2026-06-08
 """
 
 import os
