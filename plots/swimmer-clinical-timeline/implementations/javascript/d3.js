@@ -36,7 +36,7 @@ patients.sort((a, b) => b.duration - a.duration);
 // Event display config — Imprint palette positions + amber semantic anchor
 const eventColors = {
   pr: t.palette[2],  // #4467A3 blue   — Partial Response
-  cr: t.palette[5],  // #2ABCCD cyan   — Complete Response (bright / positive)
+  cr: t.palette[3],  // #BD8233 ochre  — Complete Response (next ordinal after PR)
   pd: t.palette[4],  // #AE3030 red    — Progressive Disease (semantic: bad)
   ae: t.amber,       // #DDCC77 amber  — Adverse Event (semantic: warning)
 };
@@ -86,6 +86,24 @@ x.ticks(8).forEach(v => {
     .attr("stroke-width", 1);
 });
 
+// --- Median reference line ---
+// Durations sorted: 28,26,24,22,20,20,18,16,16,14,13,12,10,10,8,8,6,5,4,3 → median=(14+13)/2=13.5
+const medianDuration = 13.5;
+g.append("line")
+  .attr("x1", x(medianDuration)).attr("x2", x(medianDuration))
+  .attr("y1", -18).attr("y2", ih)
+  .attr("stroke", t.ink)
+  .attr("stroke-width", 1.5)
+  .attr("stroke-dasharray", "6,4")
+  .attr("opacity", 0.55);
+g.append("text")
+  .attr("x", x(medianDuration) + 6)
+  .attr("y", -4)
+  .attr("fill", t.ink)
+  .style("font-size", "12px")
+  .style("font-style", "italic")
+  .text("Median: 13.5 mo");
+
 // --- Horizontal bars (treatment duration) ---
 g.selectAll(".bar")
   .data(patients)
@@ -128,7 +146,7 @@ const xAxis = g.append("g")
 
 xAxis.selectAll("text").attr("fill", t.inkSoft).style("font-size", "13px");
 xAxis.selectAll(".tick line").attr("stroke", t.inkSoft);
-xAxis.select(".domain").attr("stroke", t.inkSoft);
+xAxis.select(".domain").attr("stroke", "none");
 
 // --- Y-axis (patient IDs) ---
 const yAxis = g.append("g")
@@ -153,10 +171,20 @@ svg.append("text")
 const lx = margin.left + iw + 28;
 let ly = margin.top + 12;
 
+// helper: draw a filled callout pill behind a legend section header
+function legendHeader(svgEl, x, y, label) {
+  svgEl.append("rect")
+    .attr("x", x - 4).attr("y", y - 13)
+    .attr("width", 110).attr("height", 18).attr("rx", 3)
+    .attr("fill", t.elevatedBg || (window.ANYPLOT_THEME === "dark" ? "#242420" : "#FFFDF6"))
+    .attr("opacity", 0.9);
+  svgEl.append("text").attr("x", x).attr("y", y)
+    .attr("fill", t.ink).style("font-size", "13px").style("font-weight", "600")
+    .text(label);
+}
+
 // Treatment arms
-svg.append("text").attr("x", lx).attr("y", ly)
-  .attr("fill", t.ink).style("font-size", "13px").style("font-weight", "600")
-  .text("Treatment Arm");
+legendHeader(svg, lx, ly, "Treatment Arm");
 
 [{ label: "Arm A", c: t.palette[0] }, { label: "Arm B", c: t.palette[1] }].forEach(arm => {
   ly += 22;
@@ -170,9 +198,7 @@ svg.append("text").attr("x", lx).attr("y", ly)
 
 // Status (ongoing indicator)
 ly += 30;
-svg.append("text").attr("x", lx).attr("y", ly)
-  .attr("fill", t.ink).style("font-size", "13px").style("font-weight", "600")
-  .text("Status");
+legendHeader(svg, lx, ly, "Status");
 
 ly += 22;
 const arH = 8;
@@ -184,9 +210,7 @@ svg.append("text").attr("x", lx + 22).attr("y", ly + 4)
 
 // Events
 ly += 30;
-svg.append("text").attr("x", lx).attr("y", ly)
-  .attr("fill", t.ink).style("font-size", "13px").style("font-weight", "600")
-  .text("Events");
+legendHeader(svg, lx, ly, "Events");
 
 ["pr", "cr", "pd", "ae"].forEach(type => {
   ly += 22;
