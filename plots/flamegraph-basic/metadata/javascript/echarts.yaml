@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: flamegraph-basic
 created: '2026-06-08T20:52:09Z'
-updated: '2026-06-08T20:57:52Z'
+updated: '2026-06-08T21:06:47Z'
 generated_by: claude-opus
 workflow_run: 27165929887
 issue: 4665
@@ -12,117 +12,130 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flamegrap
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/javascript/echarts/plot-dark.html
-quality_score: 81
+quality_score: 82
 review:
   strengths:
-  - 'Idiomatic ECharts approach: uses the `custom` series with a `renderItem` callback
-    to draw the flame graph rectangles — the right mechanism for a chart type ECharts
-    has no native series for.'
-  - Brand green (#009E73, Imprint position 1) anchors the root `main` frame, satisfying
-    the first-categorical-series rule while preserving the warm flame palette above
-    and creating a clear visual focal point.
-  - 'Both renders are theme-correct: warm off-white #FAF8F1 background in light, warm
-    near-black #1A1A17 in dark, with chrome (title/axis/ticks) flipping cleanly while
-    data colors remain identical between themes.'
-  - Function-name labels rendered inside bars when width > 70 px, with narrow bars
-    left unlabelled — sensible truncation strategy that keeps the plot readable at
-    full resolution.
-  - 'Realistic, neutral synthetic profile: a plausible web-service call tree (`main`
-    → `init_database`/`process_requests`/`render_template`/...) with ~58 unique stack
-    traces, totals folded up so bar width encodes self + descendant time.'
-  - 'Deterministic and self-contained: no fetch, no RNG — the profile tree is hard-coded
-    and the layout is a pure function of it, so renders are bit-stable across runs.'
+  - 'Clean idiomatic ECharts custom-series implementation: a single chart.setOption
+    with a renderItem callback computes per-rectangle coordinates from a value-encoded
+    data array — exactly the recommended pattern for non-built-in chart types like
+    flame graphs.'
+  - 'Smart palette anchoring: depth-0 root frame uses Imprint brand green (#009E73)
+    to satisfy the ''first categorical series'' rule, while depths 1+ pick from a
+    warm flame subset (ochre #BD8233, matte red #AE3030, amber #DDCC77) so the conventional
+    flame-graph aesthetic survives without diluting palette compliance.'
+  - Per-bar label ink is computed from WCAG relative luminance of the fill, so 'main'
+    gets light-on-green text and amber/ochre/red bars get appropriate dark/light text
+    regardless of theme — no dark-on-dark or light-on-light failures.
+  - Hash-based color assignment keyed off function name keeps repeated frames identically
+    colored across the chart (e.g. the 'parse_request' frames), aiding visual identification.
+  - Theme tokens (t.ink, t.inkSoft, t.pageBg) thread correctly through title, axis
+    names, tick labels, and bar strokes — chrome flips cleanly between themes while
+    data colors stay identical.
+  - 'Conservative in-bar labeling: estTextWidth gate (width > nameLen*7.2 + 28) only
+    labels bars that actually fit the text, avoiding the classic flame-graph overflow
+    problem.'
+  - Deterministic in-memory data tree (no fetch, no RNG) with bottom-up total folding
+    via a recursive computeTotals — meets reproducibility requirements without seeded
+    RNG.
   weaknesses:
-  - 'Dark-mode ''light-on-light'' contrast on the pale bars: function-name labels
-    use `fill: t.ink` (a light off-white in dark mode) on top of #DDCC77 (sandy yellow)
-    and #C475FD (lavender) fills, which are both already light. Labels like ''seed_data'',
-    ''create_pool'', ''parse_request'', ''interpolate_values'' read with noticeably
-    reduced contrast in `plot-dark.png` versus `plot-light.png`. Pick the label color
-    per-bar from the fill''s luminance (dark text on light fills, light text on dark
-    fills) instead of blindly inheriting the theme''s ink token.'
-  - 'Palette includes lavender #C475FD, which contradicts the spec''s ''warm color
-    palette (yellows, oranges, reds) following the conventional flame graph aesthetic''.
-    The implementation comment acknowledges the trade-off, but lavender reads as cool/purple
-    and breaks the warm-flame visual convention. Consider replacing it with the Imprint
-    amber token (`t.amber`) or a second ochre/red shade so all non-root frames stay
-    warm.'
-  - Adjacent in-bar labels visually butt against each other at depth 3 around x≈460–560
-    ('serialize_response' and 'transform_result' look almost merged because each label
-    is anchored insideLeft with distance=8 but the rectangles abut). Increase the
-    left-inset distance, or hide the label when the next rectangle's text would start
-    within ~4 px of the current label's right edge.
-  - Bar count is at the low end of the spec's 50–500 unique stack traces (~58). Not
-    a failure, but enlarging the tree (deeper or wider sibling fan-out) would showcase
-    the flame-graph's strength at visualising long tails of small frames.
+  - 'The 1px stroke set to t.pageBg around every rectangle reads as a visible seam
+    between adjacent siblings — on the dark render the stroke is near-black (#1A1A17)
+    which actually creates a clear gutter pattern that looks more like a packed treemap
+    than the gap-free flame graph the spec calls for (''directly adjacent with minimal
+    or no gaps between siblings''). Consider stroke: ''none'' or a thinner lineWidth,
+    or use a theme-neutral hairline only between non-sibling neighbors.'
+  - 'Y-axis is treated as a continuous numeric axis (type: ''value'' with interval
+    1, tick label formatter hides non-integers), which is a workaround that achieves
+    the right look but produces a tick at 6 on top of the empty row above the deepest
+    frame — the axis runs 0..maxDepth+1 leaving a labeled ''6'' on an empty strip.
+    A category axis or capping max at maxDepth (and shifting depth → row mapping)
+    would cleanly show only the depths that exist.'
+  - 'DE-03 (visual hierarchy): every depth-0 cell is uniform green and every upper
+    frame is one of three warm hues with no encoding of ''hot path'' (largest self-time
+    or deepest stack) — the conventional flame-graph reading ''tallest narrow tower
+    = bottleneck'' is preserved, but there is no extra emphasis on the dominant call
+    path (sql_execute, scan_index) that would turn the chart from a faithful flame
+    graph into a story-telling one. A subtle luminance bump or outline on the top-N
+    hottest frames would lift DE-03.'
+  - The seam/stroke is also why several narrow bars at the right edge (e.g. the four
+    depth-4 rectangles between samples ~600–636) read as nearly empty strokes only
+    — the bar fills are so thin that the 1px page-bg stroke consumes most of the rectangle.
+    At those widths the stroke effectively erases the bar.
+  - Hard-coded warmColors[] (BD8233 / AE3030 / DDCC77) duplicates palette values inline
+    rather than pulling them from t.palette by index — a minor maintainability nit;
+    if the Imprint palette ever shifts hues, this implementation will drift from the
+    rest of the catalog.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, no pure-white surface anywhere. Canvas reads landscape 3200×1800.
-      Chrome: Title "flamegraph-basic · javascript · echarts · anyplot.ai" at top center in dark ink, clearly readable. X-axis title "Samples (proportional CPU time)" and Y-axis title "Call stack depth" both in dark ink. Tick labels (0, 100, 200, 300, 400, 500, 636 on X; 0-6 on Y) in soft dark gray, clearly readable. No spines or gridlines — clean.
-      Data: Root bar `main` at depth 0 spans the full width in brand green #009E73 (Imprint position 1). Stacked frames above use the warm Imprint subset — ochre #BD8233, matte red #AE3030, sandy yellow #DDCC77, lavender #C475FD — keyed deterministically off function name. 1 px page-bg-colored strokes separate adjacent rectangles. In-bar function labels ("init_database", "process_requests", "create_pool", "route_handler", "sql_execute", "decode_json", "query_users", etc.) appear in dark ink only where bar width > 70 px.
-      Legibility verdict: PASS — all chrome text is clearly readable against the warm off-white background; in-bar dark labels contrast well against every warm fill.
+      Background: Warm off-white surface consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "flamegraph-basic · javascript · echarts · anyplot.ai" rendered in dark ink, comfortably centered at the top. Axis names "Samples (proportional CPU time)" (bottom) and "Call stack depth" (rotated, left) plus tick labels (0, 100, 200, ..., 636 on x; 0..6 on y) all clearly readable in dark text against the warm background. All chrome PASS.
+      Data: Bottom row at depth 0 is a single wide bar in brand green (#009E73) labeled "main" — first categorical color is correct. Depths 1–6 are filled from a warm three-color flame subset: ochre (#BD8233), matte red (#AE3030), amber/yellow (#DDCC77). Function name labels (init_database, process_requests, route_handler, query_users, transform_result, sql_execute, seed_data, create_pool, run_migrations, parse_request) appear inside bars wide enough to fit the text, with per-bar label ink chosen for contrast (light text on ochre/red, dark text on amber). A subtle 1px stroke in page-bg color separates each rectangle.
+      Legibility verdict: PASS — all text readable, no overlaps, no clipping.
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17, no pure-black anywhere. Same landscape canvas.
-      Chrome: Title, axis titles, and tick labels now use light ink against the dark background, all clearly readable. Theme tokens are threaded through correctly.
-      Data: All bar fill colors are identical to the light render (root green, ochre, matte red, sandy yellow, lavender) — only chrome flipped, as required. In-bar labels are now light ink.
-      Legibility verdict: FAIL (mild) — labels on dark-red and ochre fills are fine, but light ink labels on the pale lavender #C475FD bars ("create_pool", "parse_request", "interpolate_values") and on the sandy yellow #DDCC77 bars ("seed_data", "init_database") read as light-on-light with noticeably reduced contrast versus light mode. Still legible at 3200×1800 but not at smaller mobile sizes. This is the symmetric counterpart of the dark-on-dark failure mode in §5c and should be fixed by picking label color per-bar from fill luminance instead of inheriting the theme's ink token.
+      Background: Warm near-black surface consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, axis names, and tick labels all render in a light ink against the dark background and are clearly readable. No dark-on-dark failures. All chrome PASS.
+      Data: Identical color assignments to the light render — brand green main bar at depth 0, same ochre/red/amber subset at higher depths, same per-bar labels with luminance-driven ink. Only the inter-rectangle stroke (page-bg color, now near-black) flips with the theme, which is correct theme adaptation but produces a more visible seam between adjacent siblings than on the light render.
+      Legibility verdict: PASS — all text readable, data colors stable across themes, chrome flipped correctly.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: 'Chrome readable in both renders. Dark-mode labels on lavender #C475FD
-          and yellow #DDCC77 bars read light-on-light with reduced contrast.'
+        comment: Title 22pt, axis names 16pt, ticks/in-bar labels 13-14pt — all readable
+          in both themes; per-bar label ink computed from fill luminance avoids dark-on-dark/light-on-light.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No data/text collisions, but in-bar labels at depth 3 (serialize_response
-          / transform_result) visually butt against each other due to tight insideLeft
-          inset on abutting rectangles.
+        comment: estTextWidth gate suppresses labels in bars too narrow to fit text;
+          no overlapping text observed.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Narrow bars correctly omit labels; rectangles all visible with 1
-          px page-bg separators.
+        comment: 1px page-bg stroke around every rect creates a visible seam, especially
+          in the dark render where it reads as a near-black gutter — narrow right-edge
+          bars (~600-636 range, depths 3-4) lose visual mass to the stroke.
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Dark-mode label contrast on light fills is below WCAG AA. Warm palette
-          is otherwise distinguishable but the ochre/red shades sit close in CVD space.
+        comment: Warm flame subset (ochre/red/amber) plus brand green for root — CVD-safe
+          enough since depth encodes the structure; no red-green dual signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 3200×1800 landscape, balanced axis labels, no overflow, title fits
-          comfortably.
+        comment: '3200x1800 landscape; nothing clipped; title centered; small nit:
+          y-axis runs to maxDepth+1 leaving a labeled ''6'' tick on an empty top strip.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Samples (proportional CPU time)'' and ''Call stack depth'' descriptive;
-          title matches mandated format.'
+        comment: X='Samples (proportional CPU time)', Y='Call stack depth' — descriptive
+          with unit semantics; title in mandated format.
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds #FAF8F1/#1A1A17; data colors
-          stable across themes.'
+        comment: 'First categorical (root frame) = #009E73 brand green via t.palette[0];
+          warm flame subset is hard-coded (#BD8233, #AE3030, #DDCC77) instead of indexing
+          t.palette — values match Imprint hues but the implementation duplicates
+          them inline.'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -130,21 +143,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom warm palette, brand-green anchor for root, page-bg-colored
-          hairline gaps between bars — beyond defaults.
+        comment: Custom flame palette + luminance-driven label ink + hash-stable color-per-name
+          show real thought; spines/grid absent (good for flame graph); falls short
+          of true editorial polish.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: No spines, no gridlines, hidden ticks, generous top/bottom margins.
+        comment: No grid, no top/right spines, transparent bg, page-bg color through
+          — clean. Loses points to the visible inter-bar stroke that reads as a gutter.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Green root anchors the eye and creates depth hierarchy; no further
-          focal-point emphasis (e.g., highlighting the hot path).
+        comment: Brand-green base anchors the eye; depth-encoded warm cycle reads
+          as flame; no extra emphasis on the actual hot path (sql_execute / scan_index
+          tower) to elevate it from faithful to story-telling.
     spec_compliance:
       score: 15
       max: 15
@@ -154,30 +170,33 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct flame graph: stacked horizontal rectangles, width ∝ samples,
-          depth on Y.'
+        comment: Genuine bottom-up flame graph with proportional widths, stacked depths,
+          and per-stack folding — correct chart type.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Warm palette, adjacent siblings, function labels inside wide bars,
-          root at bottom.
+        comment: Warm palette, adjacent siblings, in-bar function labels when bar
+          fits, width encodes total samples, depth = call-stack row — all spec features
+          present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = samples (0-636), Y = call stack depth (0-6).
+        comment: x=[x0,x1] samples (0..636), y=depth (0..6); recursive layout with
+          alphabetical sibling order matches spec note 'x-axis ordering is alphabetical
+          or arbitrary'.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'flamegraph-basic · javascript · echarts · anyplot.ai';
-          no legend needed.
+        comment: Title is exactly 'flamegraph-basic · javascript · echarts · anyplot.ai'.
+          No legend needed (color is decorative/structural, not categorical).
     data_quality:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -185,89 +204,96 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows hierarchy, time proportion, function names; ~58 traces is just
-          above spec minimum.
+        comment: Tree spans 7 depths, ~60 frames including realistic call chains (init_database
+          -> create_pool -> open_socket, process_requests -> route_handler -> query_users
+          -> sql_execute -> scan_index). Spec asks for 50-500 unique traces; this
+          sits at the low end.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible web-service profile (config load, DB init, request handling,
-          templating, metrics).
+        comment: Server-side request handling profile (load_config, init_database,
+          process_requests, render_template, send_metrics, network_io) is realistic
+          and neutral.
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Sample counts (4–30 per frame, ~636 total) are realistic for a profiling
-          snapshot.
+        comment: Total 636 samples spread across reasonable per-frame counts (4-30);
+          roughly matches what a real flame graph at this depth would show, though
+          individual self counts are uniform-looking.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Three small helpers (computeTotals, layout, colorFor) — justifiable
-          for tree recursion but technically more than the KISS ideal of zero functions.
+        comment: Two small helpers (computeTotals, layout, colorFor, labelInkFor)
+          — all genuinely needed for a flame layout; no class/object orchestration.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded tree; no RNG.
+        comment: Hard-coded profile tree, deterministic recursive layout — no RNG.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; uses only the `echarts` and `window.ANYPLOT_TOKENS` globals
-          as the harness expects.
+        comment: No imports/requires (per harness contract); echarts is global.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Tight code, no fake UI, clear separation between data, layout, and
-          option.
+        comment: renderItem callback is concise; encode/value pattern is idiomatic
+          ECharts custom-series.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness writes plot-{theme}.png and plot-{theme}.html; snippet writes
-          nothing — correct.
+        comment: Harness writes plot-{theme}.png + plot-{theme}.html; window.__anyplotReady
+          = true sentinel set; no bare plot.png writes.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: '`custom` series with `renderItem` is the canonical ECharts pattern
-          for a chart type with no native series; uses `api.coord()` and `api.value()`
-          correctly.'
+        comment: 'Uses ECharts'' custom series with renderItem + encode + value-array
+          — the canonical pattern for chart types not natively supported. animation:
+          false set per harness rules; init called with no explicit size/DPR.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ECharts custom-render textContent/textConfig for in-bar labels,
-          encode mapping, and transparent background — features that distinguish ECharts
-          from D3.
+        comment: Demonstrates ECharts' renderItem API for genuinely custom layouts
+          (a real ECharts strength); doesn't lean on more advanced features like data-driven
+          graphics or transitions, but those would be wasted on a static screenshot.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
-  - custom-render
+  - custom-series
+  - render-item
+  - recursive-layout
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep: []
+  - tree-traversal
+  dataprep:
+  - hierarchy-flattening
   styling:
-  - publication-ready
+  - theme-tokens
+  - luminance-contrast
+  - warm-palette
