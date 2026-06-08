@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 phase-diagram-pt: Thermodynamic Phase Diagram (Pressure-Temperature)
-Library: highcharts | Python 3.14
-Quality: pending | Created: 2026-06-08
+Library: highcharts unknown | Python 3.13.13
+Quality: 81/100 | Updated: 2026-06-08
 """
 
 import os
