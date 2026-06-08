@@ -1,7 +1,8 @@
-""" anyplot.ai
+"""anyplot.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
 Library: highcharts unknown | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-08
+Repair: attempt 1 — add radial gradients for depth, refine legend, improve storytelling
 """
 
 import json
@@ -28,6 +29,15 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Imprint categorical palette — positions 1-4 for four US Census regions
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+
+def make_bubble_gradient(hex_color):
+    """Radial gradient: soft white highlight at center → solid hue at edge."""
+    return {
+        "radialGradient": {"cx": 0.4, "cy": 0.3, "r": 0.7},
+        "stops": [[0, "rgba(255,255,255,0.48)"], [0.55, hex_color], [1, hex_color]],
+    }
+
 
 region_colors = {
     "Midwest": IMPRINT_PALETTE[0],  # #009E73 brand green — ALWAYS first series
@@ -243,12 +253,13 @@ chart.options.legend = {
     "verticalAlign": "bottom",
     "itemStyle": {"fontSize": "34px", "fontWeight": "normal", "color": INK_SOFT},
     "backgroundColor": ELEVATED_BG,
-    "borderColor": INK_SOFT,
-    "borderWidth": 1,
-    "symbolRadius": 12,
-    "symbolHeight": 22,
-    "symbolWidth": 22,
+    "borderWidth": 0,
+    "borderRadius": 8,
+    "symbolRadius": 10,
+    "symbolHeight": 18,
+    "symbolWidth": 18,
     "itemDistance": 60,
+    "padding": 20,
     "title": {"text": "Region", "style": {"fontSize": "34px", "fontWeight": "bold", "color": INK}},
 }
 
@@ -310,33 +321,45 @@ series_list.append(
     }
 )
 
-# One bubble series per region for categorical legend
+# One bubble series per region for categorical legend; gradient gives 3D depth
 for region_name, hex_color in region_colors.items():
     points = sorted(data_by_region[region_name], key=lambda p: -p["z"])
-    series_list.append({"type": "bubble", "name": region_name, "color": hex_color, "data": points, "zIndex": 1})
+    series_list.append(
+        {
+            "type": "bubble",
+            "name": region_name,
+            "color": make_bubble_gradient(hex_color),
+            "legendSymbolColor": hex_color,
+            "data": points,
+            "zIndex": 1,
+        }
+    )
 
 options_dict["series"] = series_list
 
-# Annotation box explaining the area encoding
+# Annotation box: area encoding key + population concentration story
 options_dict["annotations"] = [
     {
         "draggable": "",
         "labels": [
             {
-                "point": {"x": -66, "y": 28, "xAxis": 0, "yAxis": 0},
+                "point": {"x": -66, "y": 27.5, "xAxis": 0, "yAxis": 0},
                 "text": (
-                    f'<b style="font-size:28px">Circle area = Population</b><br/>'
-                    f'<span style="color:{INK_SOFT};font-size:24px">'
-                    "Largest: California 39,538k<br/>"
-                    "Smallest: Wyoming 577k"
-                    "</span>"
+                    f'<b style="font-size:28px;color:{INK}">Circle area ∝ Population</b><br/>'
+                    f'<span style="color:{INK_SOFT};font-size:24px;line-height:1.55">'
+                    "#1 California · 39,538k<br/>"
+                    "#2 Texas · 29,146k<br/>"
+                    "#50 Wyoming · 577k<br/>"
+                    f'<span style="color:{INK_MUTED};font-size:22px">'
+                    "Top 5 states hold 38% of U.S. pop."
+                    "</span></span>"
                 ),
                 "backgroundColor": ELEVATED_BG,
                 "borderColor": INK_SOFT,
                 "borderRadius": 10,
-                "borderWidth": 1,
-                "style": {"fontSize": "24px", "color": INK, "lineHeight": "34px"},
-                "padding": 18,
+                "borderWidth": 0,
+                "style": {"fontSize": "24px", "color": INK, "lineHeight": "36px"},
+                "padding": 22,
                 "shape": "rect",
             }
         ],
