@@ -118,8 +118,8 @@ new Chart(canvas, {
         borderColor: t.pageBg,
         borderWidth: 1.5,
         pointStyle: "star",
-        pointRadius: 9,
-        pointHoverRadius: 11,
+        pointRadius: 12,
+        pointHoverRadius: 14,
       },
       {
         type: "scatter",
@@ -181,8 +181,8 @@ new Chart(canvas, {
         position: "bottom",
         labels: {
           color: t.inkSoft,
-          font: { size: 13 },
-          padding: 20,
+          font: { size: 12 },
+          padding: 22,
           usePointStyle: true,
           pointStyleWidth: 16,
         },
@@ -223,7 +223,7 @@ new Chart(canvas, {
         },
         ticks: {
           color: t.inkSoft,
-          font: { size: 11 },
+          font: { size: 13 },
         },
         grid: { display: false },
         border: { display: false },
