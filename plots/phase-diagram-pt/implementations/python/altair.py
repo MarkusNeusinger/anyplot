@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 phase-diagram-pt: Thermodynamic Phase Diagram (Pressure-Temperature)
 Library: altair 6.2.1 | Python 3.13.13
 Quality: 81/100 | Updated: 2026-06-08
@@ -205,7 +205,6 @@ chart = (
         labelFontSize=10,
         titleFontSize=12,
         gridOpacity=0.12,
-        gridDash=[3, 3],
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
         labelColor=INK_SOFT,
@@ -218,7 +217,7 @@ chart = (
         symbolSize=150,
         titleLimit=300,
         labelLimit=300,
-        orient="top-right",
+        orient="bottom-right",
         padding=8,
         cornerRadius=4,
         fillColor=ELEVATED_BG,
