@@ -1,49 +1,63 @@
 library: bokeh
+language: python
 specification_id: indicator-ichimoku
 created: '2026-03-12T14:18:02Z'
-updated: '2026-03-12T14:30:13Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23006287357
+updated: '2026-06-08T01:47:17Z'
+generated_by: claude-sonnet
+workflow_run: 27110999204
 issue: 4669
-python_version: 3.14.3
-library_version: 3.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/bokeh/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 3.9.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/python/bokeh/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Complete and correct Ichimoku implementation with all five components properly
-    computed using standard parameters (9, 26, 52)
-  - Colorblind-safe blue/orange palette for candlesticks addresses previous review
-    feedback
-  - TK Cross BoxAnnotation creates an effective focal point for data storytelling
-  - Strong Bokeh idioms with ColumnDataSource, HoverTool (HTML tooltips), and dual
-    PNG/HTML output
-  - 'Comprehensive visual refinement: subtle dashed grid, removed ticks, muted axis
-    colors, warm background'
+  - Semantically correct Imprint palette assignments (green=bullish, red=bearish,
+    lavender=Tenkan, blue=Kijun, ochre=Chikou) with proper semantic exceptions
+  - All five Ichimoku components correctly computed and rendered (Tenkan, Kijun, Senkou
+    A/B, Chikou) with correct 9/26/52 parameters and proper period shifts
+  - Kumo cloud correctly split into bullish/bearish regions with varea fill; cloud
+    boundary lines reinforce the signal
+  - TK Cross BoxAnnotation adds storytelling focal point and demonstrates Bokeh layout-annotation
+    API
+  - NumeralTickFormatter for dollar-formatted y-axis ticks and HoverTool with rich
+    HTML tooltip leverage Bokeh-exclusive features
+  - Theme-adaptive chrome fully applied — INK, INK_SOFT, PAGE_BG, ELEVATED_BG all
+    variant-correct in both renders
+  - Future cloud projection (26 periods) visible at right edge, showing correct Ichimoku
+    shift logic
+  - Legend placed in dedicated right panel (add_layout right) with elevated background
+    — no data overlap
+  - Reproducible data with np.random.seed(42) and structured multi-phase price simulation
+    for realistic Ichimoku analysis
+  - Viewport height compensation for headless Chrome correctly handles inner-height
+    offset
   weaknesses:
-  - Chikou Span as a dashed line can be slightly difficult to follow in dense candlestick
-    areas
-  - Cloud fill at 0.22 alpha is appropriately subtle but could be marginally more
-    visible in thin cloud regions
-  image_description: The plot displays an Ichimoku Cloud chart overlaid on candlestick
-    price data spanning approximately April 2024 to November 2024, with prices ranging
-    from ~$140 to $200. Blue (bullish) and orange (bearish) candlesticks are clearly
-    distinguishable throughout the chart. The Tenkan-sen appears as a teal line and
-    the Kijun-sen as a dark magenta/pink line, both tracking price action closely.
-    The Chikou Span is rendered as a dashed purple line shifted into the past. The
-    Kumo (cloud) is filled between Senkou Span A and B — light teal/cyan for bullish
-    zones and light peach/orange for bearish zones. Solid boundary lines for Span
-    A (teal) and Span B (orange) are clearly visible. The cloud extends approximately
-    26 periods beyond the last candlestick into the future, showing projected support/resistance.
-    A "TK Cross" annotation with a highlighted box annotation marks a bullish crossover
-    zone around April 2024. A legend on the right side identifies all seven components.
-    The title reads "indicator-ichimoku · bokeh · pyplots.ai", the y-axis shows "Price
-    ($)" with dollar formatting, and the x-axis shows "Date". The background is a
-    warm off-white with subtle dashed y-axis grid lines only.
+  - 'DE-02: All four spines retained; for this financial chart that is defensible,
+    but removing the top and right spines would lift polish'
+  - 'DE-01/DE-03: Annotation text font style is Bokeh italic default — a minor polish
+    gap; using text_font_style=normal on the Label would match the title'
+  - 'LM-02: The implementation does not use Bokeh Ranges or callbacks that would showcase
+    the interactive server capability unique to Bokeh, though for static catalog PNG
+    output this is expected'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface.
+      Chrome: Title "indicator-ichimoku · python · bokeh · anyplot.ai" at ~60% canvas width, dark INK text, fully readable. Y-axis label "Price ($)" and X-axis label "Date" both in dark INK, readable. Tick labels ($140–$200 on Y, month dates on X) in INK_SOFT, readable. Y-axis grid subtle dashed lines at 15% opacity. Legend in right panel with elevated FFFDF6 background, INK_SOFT text — 7 entries fully readable.
+      Data: Bullish candlesticks in #009E73 (brand green), bearish in #AE3030 (matte red). Tenkan-sen in #C475FD (lavender), Kijun-sen in #4467A3 (blue), Chikou Span dashed in #BD8233 (ochre). Senkou A line green, Senkou B line red. Bearish Kumo filled rose-red at 28% alpha, bullish Kumo filled green at 28% alpha. TK Cross BoxAnnotation (lavender semi-transparent rectangle ~May 2024) with "TK Cross" label. Future cloud projection visible at right edge.
+      Legibility verdict: PASS — all text is clearly readable against warm off-white background; no light-on-light failure.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface.
+      Chrome: Title, axis labels, and tick labels all rendered in light F0EFE8 / B8B7B0 INK tokens — clearly visible against near-black background. Legend in elevated #242420 background with light INK_SOFT text, fully readable. Y-axis grid subtle dashed light lines at 15% opacity.
+      Data: Data colors are identical to light render — #009E73 green bullish candles, #AE3030 red bearish candles, #C475FD Tenkan, #4467A3 Kijun, #BD8233 Chikou (dashed), green Senkou A, red Senkou B, bullish/bearish Kumo fills. TK Cross annotation box in lavender, "TK Cross" label in lavender — visible. No dark-on-dark failures detected.
+      Legibility verdict: PASS — all chrome text uses theme-correct light tokens; data colors are identical to light render; no readability issues on dark surface.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -51,43 +65,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 36pt, axis labels 28pt, tick
-          labels 22pt, legend 22pt'
+        comment: All font sizes explicitly set (50pt title, 42pt axis labels, 34pt
+          ticks, 28pt legend). Both renders readable. Title ~60% width, balanced axes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap. Legend on right side, TK Cross label clear
+        comment: No text-on-text overlap. TK Cross label is clear of other text elements.
+          Legend in separate panel.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Candlesticks and lines well-sized. Chikou dashed line slightly hard
-          to follow in dense areas
+        comment: Candlesticks well-sized; Ichimoku lines at 3.5pt weight clearly visible;
+          cloud alpha 0.28 appropriate — overlaid indicators remain distinguishable.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Colorblind-safe blue/orange candlesticks. Distinct teal/magenta/purple
-          indicator lines
+        comment: Green/red candle coding is standard finance semantic convention with
+          Imprint CVD-tolerant shades; candlestick shape provides redundant encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills canvas well with future cloud projection. Legend near
-          plot
+        comment: Plot fills ~75% of canvas. Balanced min_border margins. Legend right-panel
+          properly sized. No overflow.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Price ($) with units, Date descriptive, dollar tick formatting
+        comment: Y-axis 'Price ($)' with units; X-axis 'Date'; title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint palette with correct semantic exceptions. Background #FAF8F1
+          (light) / #1A1A17 (dark). All chrome theme-adaptive. Data colors identical
+          across themes.'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -95,22 +118,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom colorblind-safe palette, warm background, intentional typography
-          hierarchy
+        comment: 'Strong design: semantic color assignments, TK Cross BoxAnnotation,
+          theme-adaptive chrome, cloud split, right-panel legend. Clearly above library
+          defaults.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: X-grid removed, subtle dashed y-grid, ticks removed, outline removed,
-          muted axis lines
+        comment: 'Good: Y-axis only grid (dashed, 15% alpha), elevated legend background,
+          generous min_border whitespace. Four spines retained (acceptable for financial
+          chart context).'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: TK Cross BoxAnnotation focal point, trending phases, cloud extending
-          into future
+        comment: 'Good: TK Cross annotation creates focal point; cloud color transitions
+          narrate trend; future cloud projection shows outlook; multi-phase price
+          simulation provides analytical context.'
     spec_compliance:
       score: 15
       max: 15
@@ -120,25 +146,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Ichimoku Cloud overlay on candlestick chart
+        comment: 'Correct: candlestick OHLC chart with all Ichimoku overlay components.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All five Ichimoku components with correct shifts and cloud fill
+        comment: All five Ichimoku lines present; Kumo with bullish/bearish color
+          coding; correct 9/26/52 parameters; Senkou Spans +26 future; Chikou -26
+          past.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Y=price, all data visible
+        comment: Datetime X-axis, price Y-axis with dollar formatting. All data visible
+          and correctly scaled.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, descriptive legend labels with period parameters
+        comment: 'Title ''indicator-ichimoku · python · bokeh · anyplot.ai'' correct.
+          Legend: Tenkan-sen (9), Kijun-sen (26), Chikou Span, Senkou A, Senkou B,
+          Kumo (bullish), Kumo (bearish) — all descriptive.'
     data_quality:
       score: 15
       max: 15
@@ -148,20 +179,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bullish/bearish candles, cloud transitions, crossovers, multiple
-          trending phases
+        comment: Shows both bullish and bearish candles; bearish-to-bullish cloud
+          transitions; TK crossover; future cloud projection; Chikou offset; multiple
+          market phases.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic stock price data ($140-$200), 200 business days
+        comment: Plausible daily stock OHLC for Jan-Oct 2024, neutral financial data,
+          no controversial content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range and time span appropriate for Ichimoku analysis
+        comment: $140–$200 price range for a ~$180 starting stock; realistic daily
+          returns (1.4% sigma); 200 trading days appropriate for 52-period Ichimoku
+          lookback.
     code_quality:
       score: 10
       max: 10
@@ -171,64 +206,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data gen, computation, plotting, save'
+        comment: 'Flat structure: imports → data → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used. sys.path fix necessary for direct invocation.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-structured, appropriate complexity
+        comment: No fake UI, no over-engineering. Viewport compensation code is a
+          necessary Selenium workaround.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html, current Bokeh 3.9 API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current API.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Strong Bokeh idioms: ColumnDataSource, varea, segment, vbar, line,
-          Legend, NumeralTickFormatter'
+        comment: 'Expert Bokeh usage: ColumnDataSource, varea, vbar, segment, BoxAnnotation,
+          Label, NumeralTickFormatter, HoverTool, add_layout with right panel.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: HoverTool with HTML tooltips and vline mode, HTML export, BoxAnnotation,
-          Legend as layout
+        comment: BoxAnnotation for TK Cross highlight, NumeralTickFormatter for price
+          display, HoverTool with HTML tooltip, varea for cloud fills, right-panel
+          legend layout — all Bokeh-specific.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
-  - hover-tooltips
-  - custom-legend
-  - html-export
   - annotations
+  - hover-tooltips
+  - html-export
+  - custom-legend
   patterns:
   - data-generation
   - columndatasource
-  - iteration-over-groups
   dataprep:
-  - time-series
   - rolling-window
+  - time-series
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling
