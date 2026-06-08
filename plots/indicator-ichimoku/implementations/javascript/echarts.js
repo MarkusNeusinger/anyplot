@@ -1,7 +1,7 @@
 // anyplot.ai
 // indicator-ichimoku: Ichimoku Cloud Technical Indicator Chart
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-06-08
+// Library: echarts 5.5.1 | JavaScript 22.22.3
+// Quality: 83/100 | Created: 2026-06-08
 
 const t = window.ANYPLOT_TOKENS;
 
