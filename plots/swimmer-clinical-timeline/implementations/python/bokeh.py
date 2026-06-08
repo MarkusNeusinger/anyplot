@@ -1,17 +1,52 @@
-""" pyplots.ai
+""" anyplot.ai
 swimmer-clinical-timeline: Swimmer Plot for Clinical Trial Timelines
-Library: bokeh 3.9.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-13
+Library: bokeh 3.9.1 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-06-08
 """
 
+import os
+import sys
+import time
+from pathlib import Path
+
+
+# Prevent this script (bokeh.py) from shadowing the installed bokeh package when
+# Python adds its own directory to sys.path[0] on direct invocation.
+sys.path = [p for p in sys.path if os.path.abspath(p or os.getcwd()) != os.path.dirname(os.path.abspath(__file__))]
+
 import numpy as np
-from bokeh.io import export_png, save
+from bokeh.io import save
 from bokeh.models import ColumnDataSource, FactorRange, HoverTool, Label, Legend, LegendItem, Range1d, Span
 from bokeh.plotting import figure
 from bokeh.resources import CDN
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Data - Simulated Phase II oncology trial with 25 patients across two treatment arms
+# --- Theme ---
+THEME = os.getenv("ANYPLOT_THEME", "light")
+
+# Theme-adaptive chrome tokens (Imprint palette)
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint categorical palette — 8 hues, theme-independent, hybrid-v3 sort
+IMPRINT_PALETTE = [
+    "#009E73",  # 1: brand green  — ALWAYS first series
+    "#C475FD",  # 2: lavender
+    "#4467A3",  # 3: blue
+    "#BD8233",  # 4: ochre
+    "#AE3030",  # 5: matte red   — semantic anchor: bad / loss / error
+    "#2ABCCD",  # 6: cyan
+    "#954477",  # 7: rose
+    "#99B314",  # 8: lime green  — growth / recovery
+]
+ANYPLOT_AMBER = "#DDCC77"  # warning / caution semantic anchor
+
+# --- Data: Simulated Phase II oncology trial, 25 patients, two treatment arms ---
 np.random.seed(42)
 
 n_patients = 25
@@ -20,19 +55,18 @@ arms = np.random.choice(["Arm A (Combo)", "Arm B (Mono)"], size=n_patients, p=[0
 durations = np.round(np.random.exponential(scale=18, size=n_patients) + 4, 1)
 durations = np.clip(durations, 4, 52)
 
-# Generate clinical events for each patient
-events_time = []
-events_type = []
-events_patient = []
-events_label = []
-ongoing_patients = set()
-
-event_labels = {
+event_labels_map = {
     "partial_response": "Partial Response",
     "complete_response": "Complete Response",
     "progressive_disease": "Progressive Disease",
     "adverse_event": "Adverse Event",
 }
+
+events_time = []
+events_type = []
+events_patient = []
+events_label = []
+ongoing_patients = set()
 
 for i in range(n_patients):
     dur = durations[i]
@@ -61,7 +95,7 @@ for i in range(n_patients):
         events_time.append(t)
         events_type.append(etype)
         events_patient.append(patient_ids[i])
-        events_label.append(event_labels[etype])
+        events_label.append(event_labels_map[etype])
 
 # Sort patients by duration (longest at top)
 sort_idx = np.argsort(durations)[::-1]
@@ -69,23 +103,32 @@ sorted_patient_ids = [patient_ids[i] for i in sort_idx]
 sorted_durations = [durations[i] for i in sort_idx]
 sorted_arms = [arms[i] for i in sort_idx]
 
-# Muted, cohesive palette: deep teal for Arm A, warm terracotta for Arm B
-arm_colors = {"Arm A (Combo)": "#306998", "Arm B (Mono)": "#C46B4A"}
+# Arm colors: Imprint palette positions 1 and 2 (first series always #009E73)
+arm_colors = {
+    "Arm A (Combo)": IMPRINT_PALETTE[0],  # #009E73 brand green
+    "Arm B (Mono)": IMPRINT_PALETTE[1],  # #C475FD lavender
+}
 
-# Compute median duration for reference line
 median_duration = float(np.median(durations))
 
-# Plot
+# --- Plot ---
+W, H = 3200, 1800
+
 p = figure(
     y_range=FactorRange(*sorted_patient_ids),
-    width=4800,
-    height=2700,
-    title="swimmer-clinical-timeline · bokeh · pyplots.ai",
+    width=W,
+    height=H,
+    title="swimmer-clinical-timeline · python · bokeh · anyplot.ai",
     x_axis_label="Time on Study (Weeks)",
-    toolbar_location="above",
+    toolbar_location=None,  # must be None — toolbar adds ~30-50px, causing canvas size drift
+    min_border_bottom=160,  # room for 28pt x-tick labels + 42pt x-axis label
+    min_border_left=200,  # room for 20pt y-tick labels + 42pt y-axis label
+    min_border_top=110,  # room for 50pt title
+    min_border_right=60,
 )
 
-# Horizontal bars per treatment arm with hover data
+# Horizontal bars per treatment arm
+bars_a = bars_b = None
 for arm_name, arm_color in arm_colors.items():
     idx = [i for i, a in enumerate(sorted_arms) if a == arm_name]
     source = ColumnDataSource(
@@ -101,20 +144,19 @@ for arm_name, arm_color in arm_colors.items():
         y="y",
         right="right",
         left=0,
-        height=0.6,
+        height=0.65,
         color=arm_color,
-        alpha=0.88,
-        line_color="#ffffff",
-        line_width=1,
+        alpha=0.80,
+        line_color=PAGE_BG,
+        line_width=1.5,
         source=source,
     )
-    # Store renderers for legend
     if arm_name == "Arm A (Combo)":
         bars_a = renderer
     else:
         bars_b = renderer
 
-# Add HoverTool for bars (Bokeh-specific interactivity)
+# HoverTool for bars (Bokeh-specific interactivity)
 bar_hover = HoverTool(
     renderers=[bars_a, bars_b],
     tooltips=[("Patient", "@y"), ("Treatment", "@arm"), ("Duration", "@dur_str"), ("Status", "@status")],
@@ -122,15 +164,32 @@ bar_hover = HoverTool(
 )
 p.add_tools(bar_hover)
 
-# Colorblind-safe event marker palette (blue/orange/purple/teal — no red/green)
+# Event marker config — Imprint palette with semantic alignment
+# Partial response (positive): blue; Complete response (recovery): lime-green;
+# Progressive disease (bad outcome): matte red; Adverse event (caution): amber
 event_marker_config = {
-    "partial_response": {"marker": "triangle", "color": "#009E73", "size": 24},
-    "complete_response": {"marker": "star", "color": "#CC79A7", "size": 28},
-    "progressive_disease": {"marker": "diamond", "color": "#D55E00", "size": 24},
-    "adverse_event": {"marker": "square", "color": "#F0E442", "size": 20},
+    "partial_response": {
+        "marker": "triangle",
+        "color": IMPRINT_PALETTE[2],  # #4467A3 blue — cool positive
+        "size": 20,
+    },
+    "complete_response": {
+        "marker": "star",
+        "color": IMPRINT_PALETTE[7],  # #99B314 lime-green — growth / recovery
+        "size": 24,
+    },
+    "progressive_disease": {
+        "marker": "diamond",
+        "color": IMPRINT_PALETTE[4],  # #AE3030 matte red — bad / decline
+        "size": 20,
+    },
+    "adverse_event": {
+        "marker": "square",
+        "color": ANYPLOT_AMBER,  # #DDCC77 amber — warning / caution
+        "size": 17,
+    },
 }
 
-# Plot event markers using scatter() with marker parameter
 event_renderers = {}
 for etype, config in event_marker_config.items():
     mask = [j for j in range(len(events_type)) if events_type[j] == etype]
@@ -151,8 +210,8 @@ for etype, config in event_marker_config.items():
         marker=config["marker"],
         size=config["size"],
         color=config["color"],
-        line_color="#222222",
-        line_width=2.5,
+        line_color=INK,
+        line_width=1.5,
     )
     event_renderers[etype] = r
 
@@ -164,73 +223,81 @@ evt_hover = HoverTool(
 )
 p.add_tools(evt_hover)
 
-# Ongoing indicators (right-pointing triangles at bar ends)
+# Ongoing indicators — right-pointing triangles at bar ends (more prominent)
 ongoing_idx_sorted = [i for i in range(n_patients) if sort_idx[i] in ongoing_patients]
 ongoing_r = None
 if ongoing_idx_sorted:
-    arrow_x = [sorted_durations[i] + 1.0 for i in ongoing_idx_sorted]
-    arrow_y = [sorted_patient_ids[i] for i in ongoing_idx_sorted]
-    arrow_source = ColumnDataSource(data={"x": arrow_x, "y": arrow_y})
+    arrow_source = ColumnDataSource(
+        data={
+            "x": [sorted_durations[i] + 1.5 for i in ongoing_idx_sorted],
+            "y": [sorted_patient_ids[i] for i in ongoing_idx_sorted],
+        }
+    )
     ongoing_r = p.scatter(
         x="x",
         y="y",
         source=arrow_source,
         marker="triangle",
         size=24,
-        color="#555555",
-        angle=np.pi / 2 * 3,
-        line_color="#555555",
+        angle=3 * np.pi / 2,  # 270° CCW from up = pointing right
+        color=INK_SOFT,
+        line_color=INK,
+        line_width=1.5,
     )
 
 # Median duration reference line for visual storytelling
 median_span = Span(
     location=median_duration,
     dimension="height",
-    line_color="#888888",
-    line_dash="dotted",
-    line_width=2.5,
-    line_alpha=0.7,
+    line_color=INK_MUTED,
+    line_dash="dashed",
+    line_width=2.0,
+    line_alpha=0.65,
 )
 p.add_layout(median_span)
 
-# Label for median line
 median_label = Label(
     x=median_duration,
-    y=2350,
+    y=1560,
     y_units="screen",
     text=f"Median: {median_duration:.1f} wk",
-    text_font_size="20pt",
-    text_color="#555555",
+    text_font_size="22pt",
+    text_color=INK_MUTED,
     text_font_style="italic",
-    x_offset=10,
+    x_offset=12,
 )
 p.add_layout(median_label)
 
-# Style
-p.title.text_font_size = "36pt"
-p.title.text_color = "#2B2B2B"
+# --- Theme-adaptive chrome ---
+p.title.text_font_size = "50pt"
+p.title.text_color = INK
 
-p.xaxis.axis_label_text_font_size = "28pt"
-p.xaxis.major_label_text_font_size = "20pt"
-p.xaxis.axis_label_text_color = "#444444"
-p.x_range = Range1d(-0.5, max(sorted_durations) + 4)
+p.xaxis.axis_label_text_font_size = "42pt"
+p.xaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_font_size = "28pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.xaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.xaxis.minor_tick_line_color = None
 
 p.yaxis.axis_label = "Patient"
-p.yaxis.axis_label_text_font_size = "28pt"
-p.yaxis.major_label_text_font_size = "18pt"
-p.yaxis.axis_label_text_color = "#444444"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_color = INK
+p.yaxis.major_label_text_font_size = "24pt"  # smaller to avoid crowding 25 labels
+p.yaxis.major_label_text_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+p.yaxis.minor_tick_line_color = None
+
+p.x_range = Range1d(-0.5, max(sorted_durations) + 5)
 
 p.xgrid.grid_line_color = None
-p.ygrid.grid_line_alpha = 0.12
-p.ygrid.grid_line_dash = "dashed"
-p.ygrid.grid_line_color = "#cccccc"
+p.ygrid.grid_line_color = INK
+p.ygrid.grid_line_alpha = 0.15
+p.ygrid.grid_line_dash = "solid"
 
-p.axis.axis_line_color = "#bbbbbb"
-p.axis.major_tick_line_color = "#bbbbbb"
-p.axis.minor_tick_line_color = None
-
-p.background_fill_color = "#f7f7f7"
-p.border_fill_color = "#ffffff"
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
 p.outline_line_color = None
 
 # Legend
@@ -251,17 +318,43 @@ if ongoing_r is not None:
     legend_items.append(LegendItem(label="Ongoing", renderers=[ongoing_r]))
 
 legend = Legend(items=legend_items, location="center_right", orientation="vertical")
-legend.label_text_font_size = "22pt"
-legend.glyph_height = 35
-legend.glyph_width = 35
-legend.spacing = 14
-legend.padding = 30
-legend.background_fill_alpha = 0.85
-legend.background_fill_color = "#ffffff"
-legend.border_line_color = "#dddddd"
+legend.label_text_font_size = "28pt"
+legend.label_text_color = INK_SOFT
+legend.glyph_height = 30
+legend.glyph_width = 30
+legend.spacing = 10
+legend.padding = 20
+legend.background_fill_color = ELEVATED_BG
+legend.background_fill_alpha = 0.92
+legend.border_line_color = INK_SOFT
 legend.border_line_width = 1
 p.add_layout(legend)
 
-# Save
-export_png(p, filename="plot.png")
-save(p, filename="plot.html", resources=CDN, title="Swimmer Clinical Timeline")
+# --- Save ---
+# Interactive HTML artifact (catalog requirement)
+save(p, filename=f"plot-{THEME}.html", resources=CDN, title="Swimmer Clinical Timeline")
+
+# Static PNG via headless Chrome (Selenium — avoids broken chromedriver snap path)
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+
+# Chrome headless has ~139px of browser chrome overhead; resize so the viewport
+# (window.innerHeight) is exactly H, not H minus that overhead.
+vh = driver.execute_script("return window.innerHeight")
+if vh != H:
+    driver.set_window_size(W, H + (H - vh))
+
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
