@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 77/100 | Updated: 2026-06-08
@@ -36,6 +36,22 @@ IMPRINT_PALETTE = (
     "#99B314",
 )
 
+# 2-letter display labels for small-tile countries to stay legible at thumbnail widths
+SHORT_LABELS = {
+    "S. Korea": "KR",
+    "Colombia": "CO",
+    "Australia": "AU",
+    "Vietnam": "VN",
+    "Kenya": "KE",
+    "S. Africa": "ZA",
+    "Italy": "IT",
+    "UK": "GB",
+    "Germany": "DE",
+    "France": "FR",
+    "Japan": "JP",
+}
+ABBREV_THRESHOLD = 100  # million — tiles smaller than this get 2-letter codes
+
 # Countries grouped by continent: (population millions, land area thousand km², 2024 est.)
 # Distortion ratio = pop_share / area_share: >1 means the region GROWS in the
 # cartogram relative to a standard geographic map, <1 means it SHRINKS.
@@ -69,7 +85,8 @@ total_area = sum(area for cont in regions.values() for _, area in cont.values())
 
 # Title with length-adjusted font size (pygal default 66, floor 44)
 title = "World Population Cartogram · cartogram-area-distortion · python · pygal · anyplot.ai"
-title_fontsize = max(44, round(66 * 67 / len(title)))
+subtitle = "Tile area ~ population (2024 est.) · hover tiles for distortion ratio vs geographic map"
+title_fontsize = max(44, round(66 * 67 / len(title)))  # sized on main title, not full string
 
 custom_style = Style(
     background=PAGE_BG,
@@ -82,7 +99,7 @@ custom_style = Style(
     label_font_size=56,
     major_label_font_size=44,
     legend_font_size=44,
-    value_font_size=36,
+    value_font_size=46,
     stroke_width=2.5,
 )
 
@@ -92,7 +109,7 @@ treemap = pygal.Treemap(
     style=custom_style,
     width=3200,
     height=1800,
-    title=title,
+    title=f"{title}\n{subtitle}",
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=5,
@@ -111,18 +128,19 @@ treemap = pygal.Treemap(
 )
 
 # Per-node formatter (distinctive pygal feature) provides rich hover tooltips with
-# distortion ratio context. Tiles show country name only to minimise truncation on
-# smaller rectangles; the tooltip carries the full "×N.N vs map" narrative.
+# distortion ratio context. Small tiles use 2-letter codes for legibility; the
+# tooltip always carries the full country name and "×N.N vs map" narrative.
 for continent, countries in regions.items():
     series_data = []
     for name, (pop, area) in countries.items():
         pop_share = pop / total_pop
         area_share = area / total_area
         ratio = pop_share / area_share
+        label = SHORT_LABELS.get(name, name) if pop < ABBREV_THRESHOLD else name
         series_data.append(
             {
                 "value": pop,
-                "label": name,
+                "label": label,
                 "formatter": lambda x, n=name, r=ratio: f"{n}: {x:,.0f}M pop · ×{r:.1f} vs map",
             }
         )
