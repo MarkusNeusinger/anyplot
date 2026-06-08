@@ -65,6 +65,15 @@ df_special <- tibble(
 title_str <- "CO2 Phase Diagram · phase-diagram-pt · r · ggplot2 · anyplot.ai"
 
 p <- ggplot() +
+  # Phase region fills (semi-transparent, drawn first so lines appear on top)
+  annotate("rect", xmin = 130, xmax = 219, ymin = 5,     ymax = 2000,
+           fill = IMPRINT_PALETTE[3], alpha = 0.05) +
+  annotate("rect", xmin = 215, xmax = 305, ymin = 5,     ymax = 75,
+           fill = IMPRINT_PALETTE[2], alpha = 0.05) +
+  annotate("rect", xmin = 140, xmax = 415, ymin = 0.001, ymax = 73,
+           fill = IMPRINT_PALETTE[1], alpha = 0.05) +
+  annotate("rect", xmin = 303, xmax = 415, ymin = 72,    ymax = 2000,
+           fill = IMPRINT_PALETTE[4], alpha = 0.05) +
   geom_line(
     data = df_boundaries,
     aes(x = temperature, y = pressure, color = boundary, linetype = boundary),
@@ -83,15 +92,15 @@ p <- ggplot() +
            color = INK_MUTED, size = 4.0, fontface = "bold") +
   annotate("text", x = 300, y = 0.45, label = "GAS",
            color = INK_MUTED, size = 4.0, fontface = "bold") +
-  annotate("text", x = 352, y = 500,  label = "SUPERCRITICAL\nFLUID",
+  annotate("text", x = 370, y = 600,  label = "SUPERCRITICAL\nFLUID",
            color = INK_MUTED, size = 3.5, fontface = "bold", lineheight = 0.9) +
   # Special point annotations
   annotate("text", x = 221, y = 12,
            label = "Triple Point\n(216.6 K, 5.2 atm)",
-           color = INK_SOFT, size = 2.8, hjust = 0, lineheight = 0.9) +
-  annotate("text", x = 308, y = 145,
+           color = INK_SOFT, size = 3.2, hjust = 0, lineheight = 0.9) +
+  annotate("text", x = 308, y = 120,
            label = "Critical Point\n(304.1 K, 72.8 atm)",
-           color = INK_SOFT, size = 2.8, hjust = 0, lineheight = 0.9) +
+           color = INK_SOFT, size = 3.2, hjust = 0, lineheight = 0.9) +
   scale_y_log10(
     name   = "Pressure (atm)",
     limits = c(0.001, 2000),
@@ -126,7 +135,8 @@ p <- ggplot() +
     panel.background  = element_rect(fill = PAGE_BG,    color = NA),
     panel.grid.major  = element_line(color = GRID_COLOR, linewidth = 0.4),
     panel.grid.minor  = element_line(color = GRID_COLOR, linewidth = 0.2),
-    panel.border      = element_rect(color = INK_SOFT,  fill = NA, linewidth = 0.5),
+    panel.border      = element_blank(),
+    axis.line         = element_line(color = INK_SOFT,  linewidth = 0.5),
     axis.title        = element_text(color = INK,       size = 10),
     axis.text         = element_text(color = INK_SOFT,  size = 8),
     plot.title        = element_text(color = INK,       size = 12, face = "bold",
