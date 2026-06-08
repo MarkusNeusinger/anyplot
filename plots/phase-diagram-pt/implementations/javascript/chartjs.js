@@ -46,7 +46,7 @@ const regionPlugin = {
       { lines: ["SOLID"],                T: 176,  P: 100   },
       { lines: ["LIQUID"],               T: 248,  P: 32    },
       { lines: ["GAS"],                  T: 278,  P: 0.05  },
-      { lines: ["SUPER-", "CRITICAL"],   T: 322,  P: 260   },
+      { lines: ["SUPER", "CRITICAL"],     T: 322,  P: 260   },
     ];
     ctx.save();
     ctx.font = "bold 20px sans-serif";
@@ -65,12 +65,28 @@ const regionPlugin = {
   },
 };
 
+// Plugin: draw only bottom + left border lines (L-shape)
+const lFramePlugin = {
+  id: "lFrame",
+  afterDraw({ ctx, chartArea: { top, right, bottom, left } }) {
+    ctx.save();
+    ctx.strokeStyle = t.inkSoft;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(left, top);
+    ctx.lineTo(left, bottom);
+    ctx.lineTo(right, bottom);
+    ctx.stroke();
+    ctx.restore();
+  },
+};
+
 const title = "CO₂ Phase Diagram · phase-diagram-pt · javascript · chartjs · anyplot.ai";
 const titleSize = Math.max(16, Math.round(22 * 67 / title.length));
 
 new Chart(canvas, {
   type: "scatter",
-  plugins: [regionPlugin],
+  plugins: [regionPlugin, lFramePlugin],
   data: {
     datasets: [
       {
@@ -105,7 +121,7 @@ new Chart(canvas, {
         data: [{ x: T_tp, y: P_tp }],
         backgroundColor: t.palette[3],
         borderColor: t.ink,
-        borderWidth: 2,
+        borderWidth: 1,
         pointRadius: 13,
         pointHoverRadius: 15,
         pointStyle: "star",
@@ -116,7 +132,7 @@ new Chart(canvas, {
         data: [{ x: T_cp, y: P_cp }],
         backgroundColor: t.palette[4],
         borderColor: t.ink,
-        borderWidth: 2,
+        borderWidth: 1,
         pointRadius: 13,
         pointHoverRadius: 15,
         pointStyle: "rectRot",
@@ -141,7 +157,7 @@ new Chart(canvas, {
         position: "bottom",
         labels: {
           color: t.inkSoft,
-          font: { size: 15 },
+          font: { size: 14 },
           usePointStyle: true,
           padding: 24,
           boxWidth: 20,
@@ -166,7 +182,7 @@ new Chart(canvas, {
           stepSize: 20,
         },
         grid: { color: t.grid },
-        border: { color: t.inkSoft },
+        border: { display: false },
       },
       y: {
         type: "logarithmic",
@@ -192,7 +208,7 @@ new Chart(canvas, {
           },
         },
         grid: { color: t.grid },
-        border: { color: t.inkSoft },
+        border: { display: false },
       },
     },
   },
