@@ -84,22 +84,19 @@ pops        = Float64[s[4] for s in STATE_DATA]
 region_idxs = Int[s[5] for s in STATE_DATA]
 colors      = [REGION_COLORS[r] for r in region_idxs]
 
-# Dorling layout jitter — offset crowded NE states to reduce circle/label overlap
-const NE_JITTER = Dict(
-    "CT" => (-0.5, -0.4),
-    "RI" => ( 0.7,  0.0),
-    "VT" => (-0.5,  0.5),
-    "NH" => ( 0.6,  0.4),
-    "DE" => ( 0.5, -0.4),
+# Leader-line offsets for the dense Northeast cluster — (dx, dy) from circle center to label.
+# Circles stay at geographic positions; only the text is displaced, with a thin connector line.
+const NE_LEADERS = Dict(
+    "VT" => (-2.8,  2.2),   # circle -72.7,44.0 → label -75.5,46.2 (upper-left)
+    "NH" => ( 3.0,  0.0),   # circle -71.6,43.7 → label -68.6,43.7 (right)
+    "RI" => ( 2.0, -2.0),   # circle -71.4,41.7 → label -69.4,39.7 (lower-right)
+    "CT" => (-3.5, -2.0),   # circle -72.7,41.6 → label -76.2,39.6 (lower-left)
+    "MA" => ( 3.5,  0.5),   # circle -71.5,42.2 → label -68.0,42.7 (right)
+    "NJ" => ( 3.0, -2.0),   # circle -74.4,40.0 → label -71.4,38.0 (lower-right)
+    "DE" => (-1.0, -2.5),   # circle -75.5,39.0 → label -76.5,36.5 (lower-left)
 )
-disp_lons = copy(lons)
-disp_lats = copy(lats)
-for (i, abbr) in enumerate(abbrevs)
-    if haskey(NE_JITTER, abbr)
-        disp_lons[i] += NE_JITTER[abbr][1]
-        disp_lats[i] += NE_JITTER[abbr][2]
-    end
-end
+
+const LEADER_COLOR = RGBAf(INK_MUTED.r, INK_MUTED.g, INK_MUTED.b, 0.7f0)
 
 # Marker sizes: area ∝ population; minimum enforced so tiny states remain visible
 size_scale   = 44.0 / sqrt(maximum(pops))
@@ -137,20 +134,42 @@ ax = Axis(
     ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
 )
 
-scatter!(ax, disp_lons, disp_lats;
+# Draw leader lines first so circles render on top, covering the inner segment
+for i in eachindex(abbrevs)
+    abbr = abbrevs[i]
+    if haskey(NE_LEADERS, abbr)
+        dx, dy = NE_LEADERS[abbr]
+        lines!(ax, [lons[i], lons[i] + dx], [lats[i], lats[i] + dy];
+            color = LEADER_COLOR, linewidth = 0.8)
+    end
+end
+
+scatter!(ax, lons, lats;
     color       = colors,
     markersize  = marker_sizes,
     strokecolor = PAGE_BG,
     strokewidth = 1.5,
 )
 
+# Labels: offset for NE cluster states (placed at leader endpoint), centered for all others
 for i in eachindex(abbrevs)
-    text!(ax, disp_lons[i], disp_lats[i];
-        text     = abbrevs[i],
-        align    = (:center, :center),
-        fontsize = 10,
-        color    = INK,
-    )
+    abbr = abbrevs[i]
+    if haskey(NE_LEADERS, abbr)
+        dx, dy = NE_LEADERS[abbr]
+        text!(ax, lons[i] + dx, lats[i] + dy;
+            text     = abbr,
+            align    = (:center, :center),
+            fontsize = 10,
+            color    = INK,
+        )
+    else
+        text!(ax, lons[i], lats[i];
+            text     = abbr,
+            align    = (:center, :center),
+            fontsize = 10,
+            color    = INK,
+        )
+    end
 end
 
 xlims!(ax, -131.0, -64.0)
@@ -183,7 +202,7 @@ ref_ax = Axis(
 )
 scatter!(ref_ax, lons, lats;
     color       = colors,
-    markersize  = 5.0,
+    markersize  = 6.0,
     strokecolor = PAGE_BG,
     strokewidth = 0.8,
 )
@@ -210,10 +229,10 @@ Legend(
 # Caption
 Label(
     fig[2, 1:2];
-    text    = "Dorling cartogram — circle area ∝ state population (2020 US Census). Reference map shows equal-size geographic layout. AK/HI repositioned.",
+    text     = "Dorling cartogram — circle area ∝ state population (2020 US Census). Reference map shows equal-size geographic layout. AK/HI repositioned.",
     fontsize = 10,
-    color   = INK_MUTED,
-    halign  = :left,
+    color    = INK_MUTED,
+    halign   = :left,
 )
 
 # Layout proportions
