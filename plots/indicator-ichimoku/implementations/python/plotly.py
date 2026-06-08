@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 indicator-ichimoku: Ichimoku Cloud Technical Indicator Chart
 Library: plotly 6.8.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-06-08
@@ -26,7 +26,7 @@ TENKAN_COLOR = "#C475FD"  # Imprint lavender (pos 2)
 KIJUN_COLOR = "#4467A3"  # Imprint blue     (pos 3)
 CHIKOU_COLOR = "#BD8233"  # Imprint ochre    (pos 4)
 CLOUD_BULL = "rgba(0,158,115,0.20)"  # BULL at 20% opacity
-CLOUD_BEAR = "rgba(174,48,48,0.20)"  # BEAR at 20% opacity
+CLOUD_BEAR = "rgba(174,48,48,0.25)"  # BEAR at 25% opacity — improved dark-theme visibility
 
 # Data — 200 trading days of simulated stock prices
 np.random.seed(42)
@@ -67,8 +67,8 @@ senkou_span_a = ((tenkan_sen + kijun_sen) / 2).shift(26)
 senkou_span_b = ((period_52_high + period_52_low) / 2).shift(26)
 chikou_span = df["close"].shift(-26)
 
-# Trim to valid data range (after 52-period lookback + 26-period shift)
-start_idx = 78
+# Trim to valid data range (after 52-period lookback + 26-period shift); extra row removes isolated start dot
+start_idx = 79
 df = df.iloc[start_idx:].reset_index(drop=True)
 tenkan_sen = tenkan_sen.iloc[start_idx:].reset_index(drop=True)
 kijun_sen = kijun_sen.iloc[start_idx:].reset_index(drop=True)
@@ -213,6 +213,7 @@ fig.update_layout(
         "linecolor": INK_SOFT,
         "linewidth": 1,
         "zeroline": False,
+        "mirror": False,
     },
     yaxis={
         "title": {"text": "Price (USD)", "font": {"size": 12, "color": INK}},
@@ -223,6 +224,7 @@ fig.update_layout(
         "zeroline": False,
         "linecolor": INK_SOFT,
         "linewidth": 1,
+        "mirror": False,
     },
     legend={
         "font": {"size": 10, "color": INK_SOFT},
@@ -230,9 +232,9 @@ fig.update_layout(
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
         "x": 0.01,
-        "y": 0.01,
+        "y": 0.99,
         "xanchor": "left",
-        "yanchor": "bottom",
+        "yanchor": "top",
         "orientation": "h",
     },
     margin={"l": 80, "r": 40, "t": 80, "b": 60},
