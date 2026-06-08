@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 swimmer-clinical-timeline: Swimmer Plot for Clinical Trial Timelines
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-06-08
@@ -92,6 +92,7 @@ best_responder = cr_bar.iloc[0] if len(cr_bar) > 0 else None
 ongoing_pids = set(events_df[events_df["event_type"] == "Ongoing"]["patient_id"])
 ongoing_df = bar_df[bar_df["patient_id"].isin(ongoing_pids)][["y_pos", "duration"]].copy()
 ongoing_df["x_end"] = ongoing_df["duration"] + 2.5
+ongoing_df["event_type"] = "Ongoing"
 
 # Non-ongoing events for point markers
 point_events_df = events_df[events_df["event_type"] != "Ongoing"].copy()
@@ -131,18 +132,19 @@ plot = (
         tooltips=layer_tooltips().line("@patient_id").line("@event_type").line("Week @time"),
     )
     # Median label annotation
-    + geom_text(aes(x="x", y="y", label="label"), data=median_label_df, size=3, hjust=0, color=INK_MUTED)
+    + geom_text(aes(x="x", y="y", label="label"), data=median_label_df, size=3.5, hjust=0, color=INK_MUTED)
     # Arm fill scale — Imprint positions 1 & 2 (first series always #009E73)
     + scale_fill_manual(
         name="Treatment Arm", values={"Arm A (Combo)": IMPRINT_PALETTE[0], "Arm B (Mono)": IMPRINT_PALETTE[1]}
     )
-    # Event color scale — semantic mapping: red for progression (bad outcome)
+    # Event color scale — semantic mapping: red for progression (bad outcome), cyan for ongoing
     + scale_color_manual(
         name="Clinical Event",
         values={
             "Partial Response": IMPRINT_PALETTE[3],
             "Complete Response": IMPRINT_PALETTE[2],
             "Progressive Disease": IMPRINT_PALETTE[4],
+            "Ongoing": IMPRINT_PALETTE[5],
         },
     )
     + scale_shape_manual(
@@ -163,39 +165,41 @@ plot = (
         legend_text=element_text(size=10, color=INK_SOFT),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         legend_position="right",
-        panel_grid_major_x=element_line(color=INK_SOFT, size=0.3),
+        panel_grid_major_x=element_line(color=INK_SOFT, size=0.25),
         panel_grid_major_y=element_blank(),
         panel_grid_minor=element_blank(),
         axis_line=element_line(color=INK_SOFT),
+        panel_border=element_rect(color=INK_SOFT, size=0.4),
     )
     + ggsize(800, 450)
 )
 
-# Ongoing patient arrows — spec requires arrow to indicate still on treatment at cutoff
+# Ongoing patient arrows — mapped via color="event_type" so "Ongoing" appears in the legend
 if len(ongoing_df) > 0:
     plot = plot + geom_segment(
-        aes(x="duration", xend="x_end", y="y_pos", yend="y_pos"),
+        aes(x="duration", xend="x_end", y="y_pos", yend="y_pos", color="event_type"),
         data=ongoing_df,
-        color=IMPRINT_PALETTE[5],
         size=1.5,
         arrow=arrow(type="closed", angle=20, length=6),
     )
 
-# Best CR annotation
+# Best CR annotation — geom_label gives a boxed callout for visual prominence
 if best_responder is not None:
-    plot = plot + geom_text(
+    plot = plot + geom_label(
         aes(x="x", y="y", label="label"),
         data=pd.DataFrame(
             {
                 "x": [float(best_responder["duration"]) * 0.5],
-                "y": [float(best_responder["y_pos"]) + 0.55],
+                "y": [float(best_responder["y_pos"]) + 0.6],
                 "label": ["Best CR"],
             }
         ),
-        size=3,
+        size=4,
         hjust=0.5,
         color=IMPRINT_PALETTE[2],
+        fill=ELEVATED_BG,
         fontface="bold",
+        label_size=0.5,
     )
 
 # Save — theme-suffixed as required by pipeline; path="." writes to current dir
