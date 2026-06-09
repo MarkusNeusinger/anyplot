@@ -1,18 +1,42 @@
-""" pyplots.ai
-scatter-connected-temporal: Connected Scatter Plot with Temporal Path
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-13
-"""
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib.collections import LineCollection
+from matplotlib.colors import LinearSegmentedColormap
 
 
-# Data - Unemployment vs inflation (Phillips curve dynamics, 1990-2023)
-np.random.seed(42)
+# Theme-adaptive chrome tokens (Imprint palette)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint sequential colormap: brand green (early) → blue (recent)
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
+
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# U.S. unemployment vs. inflation 1990–2023 (Phillips curve dynamics)
 years = np.arange(1990, 2024)
 n = len(years)
 
@@ -96,90 +120,86 @@ inflation = np.array(
 
 df = pd.DataFrame({"Unemployment Rate (%)": unemployment, "Inflation Rate (%)": inflation, "Year": years})
 
-# Plot setup with seaborn theme
-sns.set_theme(style="ticks", rc={"axes.facecolor": "#f0f0f0", "figure.facecolor": "white", "font.family": "sans-serif"})
-fig, ax = plt.subplots(figsize=(16, 9))
+# Canvas: landscape 16:9 → exactly 3200×1800 px
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
+fig.subplots_adjust(left=0.11, bottom=0.13, right=0.88, top=0.82)
 
-# Temporal color palette using seaborn's blend palette - darker start for better contrast
-palette = sns.color_palette("blend:#5b8db8,#0d1f3c", n_colors=n)
-cmap = sns.color_palette("blend:#5b8db8,#0d1f3c", as_cmap=True)
-
-# Connected path using LineCollection for smooth color gradient per segment
+# Temporal path: LineCollection with Imprint sequential gradient
+norm = plt.Normalize(years[0], years[-1])
 points = np.column_stack([unemployment, inflation])
 segments = np.array([[points[i], points[i + 1]] for i in range(n - 1)])
-norm = plt.Normalize(years[0], years[-1])
-lc = LineCollection(segments, cmap=cmap, norm=norm, linewidths=2.8, zorder=2)
+lc = LineCollection(segments, cmap=imprint_seq, norm=norm, linewidths=1.8, zorder=2, alpha=0.85)
 lc.set_array(years[:-1].astype(float))
 ax.add_collection(lc)
 
-# Scatter markers using seaborn scatterplot with temporal hue
+# Scatter markers with temporal hue encoding via seaborn
 sns.scatterplot(
     data=df,
     x="Unemployment Rate (%)",
     y="Inflation Rate (%)",
     hue="Year",
-    palette="blend:#5b8db8,#0d1f3c",
-    s=180,
-    edgecolor="white",
-    linewidth=1.8,
+    hue_norm=(years[0], years[-1]),
+    palette=imprint_seq,
+    s=60,
+    edgecolor=PAGE_BG,
+    linewidth=0.6,
     legend=False,
     zorder=3,
     ax=ax,
 )
 
-# Annotate key economic turning points with well-separated positions
+# Key economic turning-point annotations
 key_points = {
-    0: (-25, 20),  # 1990 - start, high inflation era
-    10: (18, 14),  # 2000 - dot-com boom, low unemployment
-    19: (18, -22),  # 2009 - Great Recession peak unemployment
-    22: (-40, -22),  # 2012 - recovery midpoint
-    29: (-50, -18),  # 2019 - pre-pandemic low unemployment
-    n - 1: (20, 14),  # 2023 - post-pandemic normalization
+    0: (-22, 18),  # 1990
+    10: (14, 12),  # 2000
+    19: (14, -18),  # 2009
+    22: (-38, -18),  # 2012
+    29: (-44, -16),  # 2019
+    n - 1: (16, 12),  # 2023
 }
-
 for idx, offset in key_points.items():
-    color = palette[idx]
     ax.annotate(
         str(years[idx]),
         (unemployment[idx], inflation[idx]),
         textcoords="offset points",
         xytext=offset,
-        fontsize=14,
+        fontsize=7,
         fontweight="bold",
-        color=color,
-        arrowprops={"arrowstyle": "->", "color": color, "lw": 1.3, "connectionstyle": "arc3,rad=0.2"},
+        color=INK,
+        arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 0.9, "connectionstyle": "arc3,rad=0.2"},
     )
 
-# Narrative subtitle for data storytelling
+# Narrative subtitle
 ax.text(
     0.5,
-    1.02,
-    "U.S. Phillips Curve Dynamics: Tracing Unemployment vs. Inflation (1990\u20132023)",
+    1.03,
+    "U.S. Phillips Curve Dynamics: Tracing Unemployment vs. Inflation (1990–2023)",
     transform=ax.transAxes,
-    fontsize=14,
-    color="#555555",
+    fontsize=7,
+    color=INK_SOFT,
     ha="center",
     va="bottom",
     style="italic",
 )
 
-# Axis styling - y-only grid for cleaner look
-ax.set_xlabel("Unemployment Rate (%)", fontsize=20)
-ax.set_ylabel("Inflation Rate (%)", fontsize=20)
-ax.set_title("scatter-connected-temporal \u00b7 seaborn \u00b7 pyplots.ai", fontsize=24, fontweight="medium", pad=28)
-ax.tick_params(axis="both", labelsize=16)
+ax.set_xlabel("Unemployment Rate (%)", fontsize=10)
+ax.set_ylabel("Inflation Rate (%)", fontsize=10)
+ax.set_title(
+    "scatter-connected-temporal · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", pad=22, color=INK
+)
+ax.tick_params(axis="both", labelsize=8)
 sns.despine(ax=ax)
-ax.yaxis.grid(True, alpha=0.2, linewidth=0.8)
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.6, color=INK)
 
 ax.set_xlim(unemployment.min() - 0.8, unemployment.max() + 0.8)
 ax.set_ylim(inflation.min() - 1.2, inflation.max() + 1.2)
 
-# Colorbar for temporal encoding
-sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+# Colorbar for temporal scale
+sm = plt.cm.ScalarMappable(cmap=imprint_seq, norm=norm)
 sm.set_array([])
-cbar = plt.colorbar(sm, ax=ax, pad=0.02, aspect=30, shrink=0.85)
-cbar.set_label("Year", fontsize=16)
-cbar.ax.tick_params(labelsize=14)
+cbar = fig.colorbar(sm, ax=ax, pad=0.02, aspect=30, shrink=0.85)
+cbar.set_label("Year", fontsize=8, color=INK)
+cbar.ax.tick_params(labelsize=7, colors=INK_SOFT)
+cbar.outline.set_edgecolor(INK_SOFT)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
