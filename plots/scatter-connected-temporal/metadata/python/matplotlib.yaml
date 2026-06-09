@@ -1,110 +1,130 @@
 library: matplotlib
+language: python
 specification_id: scatter-connected-temporal
 created: '2026-03-13T15:25:06Z'
-updated: '2026-03-13T15:37:16Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23057665411
+updated: '2026-06-09T23:31:35Z'
+generated_by: claude-sonnet
+workflow_run: 27241537960
 issue: 4675
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/matplotlib/plot.png
-preview_html: null
-quality_score: 90
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent custom colormap (indigo to teal to amber) that is both distinctive and
-    colorblind-friendly
-  - Directional arrows at regular intervals clearly communicate temporal flow
-  - Key year annotations (1994, 2003, 2013, 2023) provide temporal context without
-    cluttering
-  - 'Professional visual refinement: thinned grey spines, subtle grid, off-white background,
-    white edge highlighting'
-  - Phillips curve data is an ideal real-world example matching the spec suggestions
+  - Temporal color gradient via imprint_seq correctly applied and invariant between
+    light/dark themes
+  - FancyArrowPatch directional arrows integrated with matching colormap colors at
+    each path segment position
+  - Year annotation text uses matching gradient color creating strong visual coherence
+    across the whole chart
+  - Canvas correctly sized (figsize=(8,4.5), dpi=400, no bbox_inches=tight); subplots_adjust
+    reserves exact space for colorbar
+  - All theme-adaptive chrome tokens (PAGE_BG, ELEVATED_BG, INK, INK_SOFT) applied
+    consistently across every element
   weaknesses:
-  - Year annotations 2013 and 2023 are spatially close together in the lower-left
-    region causing minor crowding
-  image_description: 'The plot displays a connected scatter plot on a light grey (#FAFAFA)
-    background showing Unemployment Rate (%) on the x-axis (range ~5.0-8.5%) vs Inflation
-    Rate (%) on the y-axis (range ~1.4-2.9%). Data points are connected by line segments
-    in temporal order, forming a wandering path. A custom colormap transitions from
-    deep indigo (1994) through teal and green to amber/yellow (2023), encoding temporal
-    progression. Each data point is rendered as a filled circle with white edge highlighting.
-    Directional arrows appear at intervals along the path. Four key years are annotated:
-    "1994" (top-center, dark indigo), "2003" (top-left, teal), "2013" (lower-center,
-    olive), and "2023" (lower-left, yellow). A vertical colorbar on the right maps
-    color to year (1995-2020). Top and right spines are removed; remaining spines
-    are thin and grey. Subtle grid lines appear on both axes. Title reads "scatter-connected-temporal
-    · matplotlib · pyplots.ai" in the correct format.'
+  - 'Year annotation text color uses imprint_seq gradient color (color=imprint_seq(norm(idx))).
+    For later-year annotations (~2013, ~2023) the blue end (#4467A3) on dark background
+    #1A1A17 yields ~2.2:1 contrast — below WCAG AA (4.5:1) for small text. Fix: replace
+    annotation text color with INK or INK_SOFT token while keeping the arrowprops
+    leader lines in the gradient color.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "scatter-connected-temporal · python · matplotlib · anyplot.ai" in dark INK (#1A1A17) at fontsize=12, readable. Axis labels "Unemployment Rate (%)" and "Inflation Rate (%)" in dark INK at fontsize=10, readable. Tick labels in INK_SOFT (#4A4A44) at fontsize=8, readable. Colorbar label "Year" and tick labels in INK/INK_SOFT, readable.
+      Data: Connected scatter with imprint_seq colormap (green #009E73 → blue #4467A3). Early points (1994) are brand green, later points (2023) are blue. 30 data points with s=130 markers. Directional arrows in matching gradient colors. Year annotations (1994, 2003, 2013, 2023) with gradient-colored text and leader lines. "Unemployment peak · 1998" callout box with ELEVATED_BG fill.
+      Legibility verdict: PASS — minor note: later-year annotation text in blue (#4467A3 end) on cream has ~4.98:1 contrast (WCAG AA compliant for light mode)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title in light INK (#F0EFE8), readable. Axis labels in light INK, readable. Tick labels in INK_SOFT (#B8B7B0), readable against dark background. Colorbar ticks in INK_SOFT, readable. No dark-on-dark failures observed. "Unemployment peak · 1998" callout box uses ELEVATED_BG (#242420) with light INK text — distinguishable.
+      Data: Identical data colors to light render (imprint_seq green→blue unchanged). Markers, lines, and arrows use same gradient colors. Only chrome elements flip.
+      Legibility verdict: PASS with caveat — year annotation text using the blue end of imprint_seq (~#4467A3) on dark background #1A1A17 yields approximately 2.2:1 contrast ratio, below WCAG AA (4.5:1) for small text (9pt bold). Text remains perceptually visible in practice but is the weakest legibility point in the dark render.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, ticks
-          16pt, annotations 16pt, colorbar label 18pt'
+        comment: Title/axis/tick labels all correctly sized and readable in both themes;
+          blue-end annotation text (~#4467A3) at 9pt on dark bg yields ~2.2:1 contrast
+          — below WCAG AA for small text, perceptually visible but not ideal
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: 2013 and 2023 annotations slightly close together but readable
+        comment: Year labels well-offset; dense 1994–2003 region creates visual complexity
+          with criss-crossing lines but all text remains distinct
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 30 points with s=200, linewidth=2.5, white edge highlighting; well-adapted
-          to density
+        comment: 30-point sparse dataset correctly uses large markers (s=130); lines
+          at linewidth=2.0 prominent; directional arrows visible; gradient distinguishes
+          temporal progression
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Custom sequential colormap is perceptually uniform and colorblind-friendly
+        comment: imprint_seq (green→blue) is CVD-safe; no red-green sole-signal pattern
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 figure with tight_layout, colorbar properly positioned, good
-          canvas utilization
+        comment: Canvas gate passed; 3200x1800 confirmed; subplots_adjust reserves
+          colorbar space; nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Unemployment Rate (%), Inflation
-          Rate (%)'
+        comment: Unemployment Rate (%) and Inflation Rate (%) both descriptive with
+          units; title correctly formatted
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq built from [#009E73, #4467A3]; PAGE_BG #FAF8F1 light
+          / #1A1A17 dark; chrome flips correctly; data colors theme-invariant'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom 6-stop colormap, refined spine colors, white edge highlighting,
-          off-white background
+        comment: 'Above default: coherent color scheme across all elements using imprint_seq;
+          FancyArrowPatch arrows at matching gradient colors; callout box for unemployment
+          peak with correct ELEVATED_BG styling'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed/thinned, subtle grid alpha=0.15, colorbar outline
-          hidden, generous whitespace
+        comment: Top/right spines removed; colorbar outline invisible; subtle grid
+          at alpha=0.15; rounded annotation boxes with low alpha; spines at 0.6 linewidth
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Key year annotations, directional arrows, and color gradient create
-          temporal narrative
+        comment: Directional arrows guide eye chronologically; four year labels at
+          meaningful milestones; unemployment-peak callout adds narrative anchor;
+          color gradient makes temporal direction immediately legible
     spec_compliance:
       score: 15
       max: 15
@@ -114,49 +134,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct connected scatter plot with temporal path
+        comment: Connected scatter with temporal path, precisely as specified
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: connected points, annotations, arrows,
-          markers, color gradient'
+        comment: Points connected chronologically; key time points annotated; directional
+          arrows; color gradient; visible markers
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=unemployment, Y=inflation, connected by temporal order
+        comment: x=unemployment, y=inflation; all 30 years displayed
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, colorbar serves as temporal legend
+        comment: Title matches required format; colorbar labeled Year serves as temporal
+          legend
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows cyclical patterns, crossing paths, temporal progression; could
-          show more dramatic regime changes
+        comment: Connected path, colormap gradient, directional arrows, year annotations,
+          significant-event callout all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Phillips curve is a classic neutral economics example
+        comment: Phillips curve is a canonical economic relationship; 1994–2023 neutral
+          modern timeframe; no controversial framing
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Unemployment 5-8.5%, inflation 1.4-2.9% are realistic ranges
+        comment: Unemployment 5.0–8.5%, inflation 1.4–2.9%; consistent with post-1990s
+          era; 30 points within spec range
     code_quality:
       score: 10
       max: 10
@@ -166,34 +189,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, colormap, plot, style, save'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All five imports actively used; no dead imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic, segment-by-segment drawing appropriate for color
-          gradient
+        comment: Clear segment loop for gradient path; vectorized scatter; strict=True
+          zip; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, bbox_inches=tight, no deprecated API
+        comment: Saves as plot-{THEME}.png; bbox_inches explicitly omitted; dpi=400
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -201,21 +224,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good axes methods, ScalarMappable for colorbar; could use LineCollection
-          for efficiency
+        comment: Primarily uses Axes methods; fig.colorbar with ScalarMappable is
+          standard matplotlib pattern; subplots_adjust for precise padding
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: FancyArrowPatch, LinearSegmentedColormap.from_list, ScalarMappable
-          are distinctly matplotlib
+        comment: FancyArrowPatch for directional arrows; segment-by-segment gradient
+          line loop; LinearSegmentedColormap.from_list; normalized scatter with cmap+norm;
+          ScalarMappable for detached colorbar
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - colorbar
   - annotations
+  - colorbar
   - patches
   patterns:
   - data-generation
@@ -223,5 +247,5 @@ impl_tags:
   dataprep: []
   styling:
   - custom-colormap
+  - alpha-blending
   - edge-highlighting
-  - grid-styling
