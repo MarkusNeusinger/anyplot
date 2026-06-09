@@ -28,6 +28,13 @@ EXPECTED_BASE_PROMPTS = [
     "default-style-guide.md",
 ]
 
+# Library prompts checked for the Python-style structure (## Import / ## Save /
+# ## Colors). The JavaScript libraries (chartjs, d3, echarts, highcharts, and the
+# React MUI X entry `muix`) follow a different convention — a mount-node / harness
+# contract, "## Output Files", and (for muix) a default-exported React component —
+# so they are intentionally excluded here, the same way the Phase-1 JS prompts
+# are. highcharts moved Python → JavaScript in Phase 2; muix is the first React
+# (.tsx) entry.
 EXPECTED_LIBRARY_PROMPTS = [
     "matplotlib.md",
     "seaborn.md",
@@ -36,7 +43,6 @@ EXPECTED_LIBRARY_PROMPTS = [
     "altair.md",
     "plotnine.md",
     "pygal.md",
-    "highcharts.md",
     "letsplot.md",
 ]
 

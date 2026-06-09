@@ -1,0 +1,265 @@
+library: makie
+language: julia
+specification_id: flamegraph-basic
+created: '2026-06-08T20:48:13Z'
+updated: '2026-06-08T21:07:36Z'
+generated_by: claude-opus
+workflow_run: 27165613659
+issue: 4665
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Theme tokens (PAGE_BG, INK, INK_SOFT) hoisted into a single Theme() block — idiomatic
+    CairoMakie and the chrome flips cleanly between light and dark renders with no
+    element left behind.
+  - 'Hot-path focal point is genuinely effective: the dominant db.fetch_rows leaf
+    gets a thick INK outline plus a ''hot path · 19% of CPU samples'' caption, directing
+    the eye while preserving the flame aesthetic.'
+  - 'Warm flame-graph palette uses Imprint members only — amber anchor #DDCC77, ochre
+    #BD8233 (Imprint #4), matte red #AE3030 (Imprint #5) — and the code explicitly
+    documents this as a semantic exception driven by the spec''s ''yellow → orange
+    → red'' note.'
+  - Luminance-based label ink chosen per fill (dark on amber/ochre, light on matte
+    red) keeps function-name labels readable on every bar color.
+  - Hairline PAGE_BG stroke between sibling rectangles solves the same-color-adjacency
+    problem without using a heavy ink border that would compete with the data.
+  - Title-length adaptive sizing (round(20 × 67 / len(title))) prevents the long descriptive-prefix
+    title from overflowing on the landscape canvas.
+  - Canvas hits the canonical 3200×1800 landscape via resolution=(1600, 900) × px_per_unit=2
+    — no gate failure.
+  weaknesses:
+  - Profile contains only 20 unique stack traces but the spec asks for 50-500 — well
+    below the lower bound. Extend the synthetic profile so the flame graph shows a
+    richer call-tree (more siblings at depths 3-5, more leaves) and the chart density
+    better matches the spec's intended scale.
+  - The `contrast_ink(c)` helper is the only top-level function in the script and
+    slightly bends CQ-01 KISS. Consider inlining the luminance check as a comprehension
+    since FLAME_COLORS has only 3 entries — e.g., FLAME_LABEL_INK = [colorant"#1A1A17",
+    colorant"#1A1A17", colorant"#FAF8F1"] hardcoded alongside FLAME_COLORS.
+  - 'LM-02 distinctive-features ceiling: the implementation uses Makie''s vectorized
+    poly! with a Rect2f array and the Theme() block, which is idiomatic but not a
+    strong showcase. Consider Makie-distinctive touches such as a Colorbar tied to
+    value, or annotation! arrows that lock to data coordinates, to push library-mastery
+    higher.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1) — confirmed, not pure white.
+      Chrome: title "CPU Profile of a Web Request Handler · flamegraph-basic · julia · makie · anyplot.ai" in dark INK at top, x-axis label "Proportion of CPU samples" and rotated y-axis label "Stack depth (caller → callee)" both in dark INK along the bottom and left edges. X-axis tick labels (0%, 20%, 40%, 60%, 80%, 100%) in INK_SOFT mid-gray. Bottom spine in INK_SOFT; top, right and left spines hidden; no grid. All chrome cleanly readable.
+      Data: stacked flame bars in warm Imprint palette — amber #DDCC77, ochre #BD8233 (Imprint #4), matte red #AE3030 (Imprint #5). First categorical series is NOT brand green #009E73 — this is the documented semantic exception per the spec's "warm yellow/orange/red flame aesthetic" note. Bottom row "main" spans the full width in amber; "server.handle_request" / "runtime.gc" sit one row up; "app.route" / "user_handler" / "product_handler" higher; the dominant "db.fetch_rows" leaf (right side of row 5) carries a thick black INK outline plus a "▼ hot path · 19% of CPU samples" annotation in INK_SOFT — the focal point. In-bar function-name labels are dark on amber/ochre, light on matte-red, all legible.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17) — confirmed, not pure black.
+      Chrome: same title now in light INK (#F0EFE8), same x-axis label and rotated y-axis label in light INK, x-tick labels in INK_SOFT light gray. Bottom spine in INK_SOFT. No dark-on-dark failures — every text element clearly visible against the dark surface.
+      Data: identical amber / ochre / matte-red fills to the light render (Imprint identity preserved across themes). Hot-path outline correctly flipped to light INK so it reads on the dark surface. Bar geometry and "hot path · 19%" caption identical to light.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title fontsize adaptively scaled for long descriptive prefix; all
+          chrome readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps; hot-path annotation sits above the highlighted
+          leaf with adequate clearance.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Narrow bars still visible; hairline PAGE_BG stroke separates same-color
+          siblings without competing with the data.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Warm yellow→ochre→red ramp is CVD-distinguishable and matches the
+          conventional flame-graph idiom.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas hits 3200×1800; no overflow; title proportion comfortable
+          for a landscape canvas.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title with descriptive prefix; both axes labelled; x-axis
+          ticks formatted as percentages.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint members only (amber anchor + ochre #4 + matte red #5); brand-green
+          opt-out properly justified via the spec''s warm-aesthetic note; PAGE_BG
+          and INK tokens correct on both themes.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Theme tokens hoisted, luminance-driven label ink, focal-point cue
+          — polished but not extraordinary.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right/left spines hidden, no grid, y-ticks suppressed — appropriate
+          for flame graphs.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Hot-path outline + caption gives the reader a clear focal point without
+          breaking the flame aesthetic.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correctly stacks bars bottom-to-top with width proportional to samples
+          — textbook flame graph.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: All visual features present; data size (20 traces) falls short of
+          spec's 50-500 range.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = proportion of CPU samples 0-100%, Y = stack depth ascending.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches descriptive-prefix + canonical-suffix format; no legend
+          required for single-encoding flame graph.
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 4
+        max: 6
+        passed: true
+        comment: Shows hierarchy, samples, depth, hot path — but only 20 traces vs
+          spec's 50-500, limiting visual richness.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible web-request profile (server.handle_request → app.route
+          → user_handler → db.query → ...); neutral, non-controversial.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sample counts 5-86 are sensible for a profile snapshot.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: One `contrast_ink` helper function slightly bends KISS for a 3-element
+          FLAME_COLORS array — could be inlined.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie + Colors + Random — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Iterative DFS layout avoids recursion; aggregation + child-set bookkeeping
+          is clean.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png; px_per_unit=2 hits the canonical canvas.
+    library_features:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Theme() block, Axis kwargs, vectorized poly!(rects; color=array)
+          — clean Makie idioms.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Vectorized poly! with Rect2f array is efficient; Theme() block hoisting
+          is idiomatic — but no stand-out Makie-only feature.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
+  - edge-highlighting

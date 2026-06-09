@@ -45,9 +45,10 @@ export function PlotOfTheDayTerminal({
   // File extension + runner command follow the implementation language:
   // - ggplot2 (R) ships as .R + Rscript
   // - makie (Julia) ships as .jl + `julia --project=.`
-  // - chartjs/d3/echarts (JavaScript) ship as .js + node (browser render harness)
+  // - chartjs/d3/echarts/highcharts (JavaScript) ship as .js + node (browser render harness)
+  // - muix (React/MUI X) is the .tsx exception within JavaScript, still + node
   // - every Python library as .py + python
-  const ext = potd.language === 'r' ? '.R' : potd.language === 'julia' ? '.jl' : potd.language === 'javascript' ? '.js' : '.py';
+  const ext = potd.library_id === 'muix' ? '.tsx' : potd.language === 'r' ? '.R' : potd.language === 'julia' ? '.jl' : potd.language === 'javascript' ? '.js' : '.py';
   const runner = potd.language === 'r' ? 'Rscript' : potd.language === 'julia' ? 'julia --project=.' : potd.language === 'javascript' ? 'node' : 'python';
   const displayFilename = `plots/${potd.spec_id}/${potd.library_id}${ext}`;
   const implPath = specPath(potd.spec_id, potd.language, potd.library_id);

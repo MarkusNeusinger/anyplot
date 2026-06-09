@@ -6,7 +6,7 @@ export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 // sent with fetch. Falls back to API_URL locally where there's no Worker.
 export const DEBUG_API_URL = import.meta.env.VITE_DEBUG_API_URL || API_URL;
 export const GITHUB_URL = 'https://github.com/MarkusNeusinger/anyplot';
-export const LIBRARIES = ['altair', 'bokeh', 'chartjs', 'd3', 'echarts', 'ggplot2', 'highcharts', 'letsplot', 'makie', 'matplotlib', 'plotly', 'plotnine', 'pygal', 'seaborn'];
+export const LIBRARIES = ['altair', 'bokeh', 'chartjs', 'd3', 'echarts', 'ggplot2', 'highcharts', 'letsplot', 'makie', 'matplotlib', 'muix', 'plotly', 'plotnine', 'pygal', 'seaborn'];
 export const BATCH_SIZE = 36;
 
 // Image size: 'normal' or 'compact' (half size)
@@ -28,6 +28,7 @@ export const LIB_ABBREV: Record<string, string> = {
   chartjs: 'cjs',
   d3: 'd3',
   echarts: 'ec',
+  muix: 'mui',
 };
 
 // Static library → language map, mirroring core/constants.py LIBRARIES_METADATA.
@@ -43,14 +44,39 @@ export const LIB_TO_LANG: Record<string, string> = {
   d3: 'javascript',
   echarts: 'javascript',
   ggplot2: 'r',
-  highcharts: 'python',
+  highcharts: 'javascript',
   letsplot: 'python',
   makie: 'julia',
   matplotlib: 'python',
+  muix: 'javascript',
   plotly: 'python',
   plotnine: 'python',
   pygal: 'python',
   seaborn: 'python',
+};
+
+// Static library → UI-framework map, mirroring core/constants.py
+// LIBRARIES_METADATA `framework`. 'none' = framework-agnostic; 'react' = needs
+// React (e.g. MUI X). Powers the generic "React-compatible" libraries filter so
+// future Recharts / Vue / Svelte entries slot in by adding a row here — no
+// schema or component change. The API also returns `framework` per library, but
+// this static map keeps the filter deterministic and testable without a fetch.
+export const LIB_TO_FRAMEWORK: Record<string, string> = {
+  altair: 'none',
+  bokeh: 'none',
+  chartjs: 'none',
+  d3: 'none',
+  echarts: 'none',
+  ggplot2: 'none',
+  highcharts: 'none',
+  letsplot: 'none',
+  makie: 'none',
+  matplotlib: 'none',
+  muix: 'react',
+  plotly: 'none',
+  plotnine: 'none',
+  pygal: 'none',
+  seaborn: 'none',
 };
 
 // Display label for a language id (e.g. used in titles, breadcrumbs, chips).
@@ -71,3 +97,18 @@ export const LANG_EXT: Record<string, string> = {
   julia: 'jl',
   javascript: 'js',
 };
+
+// Per-library file-extension override (display suffix), mirroring
+// core/constants.py LIBRARY_FILE_EXTENSION_OVERRIDES. Most libraries inherit
+// their language default (LANG_EXT); MUI X diverges — it is authored as React
+// `.tsx`, not plain `.js`. Currently the only override.
+export const LIB_EXT_OVERRIDE: Record<string, string> = {
+  muix: 'tsx',
+};
+
+// Display/file-suffix extension for a (library, language) pair: the library's
+// override when it declares one, else the language default. Used for the
+// compact-card suffix ("mui.tsx" vs "mpl.py") and other display contexts.
+export function libExt(library: string, language: string): string {
+  return LIB_EXT_OVERRIDE[library] ?? LANG_EXT[language] ?? '';
+}

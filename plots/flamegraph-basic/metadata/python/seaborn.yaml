@@ -1,46 +1,71 @@
 library: seaborn
+language: python
 specification_id: flamegraph-basic
 created: '2026-03-14T20:27:34Z'
-updated: '2026-03-14T21:13:46Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23095681413
+updated: '2026-06-08T20:43:23Z'
+generated_by: claude-opus
+workflow_run: 27164611384
 issue: 4665
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/seaborn/plot.png
-preview_html: null
-quality_score: 82
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - 'Excellent data quality: realistic CPU profiling scenario with ~65 stack traces
-    across 7 depth levels showing clear performance bottleneck patterns'
-  - 'Smart text handling: luminance-based contrast, truncation with ellipsis, bold
-    for large bars, percentage labels for wider bars'
-  - Custom warm flame palette using sns.blend_palette follows established flame graph
-    domain conventions
-  - 'Full spec compliance: all flame graph requirements implemented correctly (hierarchy,
-    proportional widths, warm colors, labels, adjacent bars)'
-  - Clean deterministic code with linear KISS structure
+  - Theme-adaptive chrome correctly threaded through sns.set_theme rc params — both
+    light (#FAF8F1) and dark (#1A1A17) backgrounds render with appropriate ink colors,
+    no dark-on-dark or light-on-light failures.
+  - Imprint warm palette via sns.blend_palette([AMBER, OCHRE, RED]) — stays inside
+    the Imprint identity while honoring the flame-graph warm-palette convention from
+    the spec.
+  - 'Hot path highlighted with brand-green #009E73 outline (main → process_request
+    → handle_route → query_database → execute → send_query) creates an unmistakable
+    focal point and elevates DE-03 storytelling beyond a generic flame graph.'
+  - 'Luminance-based per-bar text color (INK on light bars, #FAF8F1 on dark bars)
+    keeps in-bar labels readable across the entire warm gradient.'
+  - 'Smart label sizing/truncation: bars >9% get 7pt, >4.5% get 6pt, narrow bars skip
+    labels entirely — avoids the tiny-truncated-5pt clutter that was flagged in attempt
+    1.'
+  - RES=4 column expansion of the heatmap substrate eliminates the antialiased seams
+    between sibling bars at the same depth, giving the directly-adjacent look the
+    spec requires.
+  - hashlib.md5 instead of Python hash() — deterministic colors across PYTHONHASHSEED-randomised
+    processes, so light/dark renders match exactly.
+  - Realistic and neutral CPU-profiling dataset (web service request handler with
+    auth, DB query, serialization, logging) — domain-plausible and free of controversial
+    content.
+  - Title exactly matches mandated format 'flamegraph-basic · python · seaborn · anyplot.ai'.
+    Canvas at figsize=(8, 4.5)·dpi=400 hits 3200×1800 cleanly (no canvas gate failure).
   weaknesses:
-  - 'Library mastery is limited: seaborn heatmap used as rendering layer but most
-    logic is manual matplotlib'
-  - Minor text clipping at left and right edges for some labels
-  - Upper depth levels have sparse content creating visual imbalance
-  image_description: 'The plot displays a flame graph for CPU performance profiling.
-    The bottom layer (Depth 0) shows a full-width red "main (100%)" bar spanning all
-    950 samples. Depth 1 reveals four main branches: cleanup (8%), init_config, log_metrics
-    (19%), and process_request (63%) rendered in warm orange/red tones. Higher depths
-    progressively decompose into sub-functions: handle_route (37%), query_database
-    (21%), authenticate (13%), serialize_response (9%), execute (13%), etc. The color
-    palette uses warm flame colors (yellows, oranges, reds) via a custom seaborn blend_palette.
-    Function names with percentage labels appear inside bars when wide enough, with
-    bold text for the largest bars and luminance-based text contrast (white on dark,
-    dark on light). The x-axis shows "Samples" (0-800+), y-axis shows "Stack Depth"
-    (Depth 0-6). Title reads "flamegraph-basic · seaborn · pyplots.ai". Top and right
-    spines are removed with subtle vertical grid lines at alpha=0.15.'
+  - The continuous warm colormap is built from Imprint warm anchors via sns.blend_palette
+    rather than from imprint_seq/imprint_div. This is a justified deviation (spec
+    explicitly mandates a warm flame palette), but a future reviewer should note that
+    the canonical Imprint continuous cmaps are not used.
+  - color_for() helper function adds a small abstraction that bumps the implementation
+    slightly off pure KISS — it's reused twice (grid fill + label luminance), so the
+    abstraction is warranted, but a stricter reading docks 1 pt on CQ-01.
+  - The brand-green hot-path outline overlaps with the warm red-tones for any viewer
+    with red-green CVD — semantic context (focal-point outline, not categorical encoding)
+    keeps this acceptable, but a CVD-strict pass would prefer a non-green emphasis
+    (e.g., heavier black outline + label callout).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white at #FAF8F1 — correct, not pure white, not dark.
+      Chrome: title "flamegraph-basic · python · seaborn · anyplot.ai" rendered in dark INK and clearly readable at the top of the canvas. Axis labels "Samples" (x) and "Stack depth" (y) in dark INK, readable. Tick labels D0–D6 (y) and 0/200/400/600/800 (x) in INK_SOFT — visible and subtle. Subtle vertical grid lines at alpha=0.12 visible without dominating.
+      Data: warm flame palette (amber #DDCC77 → ochre #BD8233 → red #AE3030) blended via seaborn.blend_palette. First series role (focal hot path) uses brand green #009E73 as outline only. In-bar labels use dark INK on light amber bars and near-white #FAF8F1 on dark red bars (luminance-gated), all readable. Stacked layout with D0 main(100%) at bottom, ascending through process_request → handle_route → query_database → execute → send_query.
+      Legibility verdict: PASS — every text element clearly visible against the off-white surface, no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black at #1A1A17 — correct, not pure black.
+      Chrome: same title in light INK (#F0EFE8), clearly readable. Axis labels and tick labels in INK_SOFT (#B8B7B0), readable. Vertical grid hint visible at the same alpha — chrome flipped to light tones.
+      Data: identical warm flame palette to the light render — confirmed amber/ochre/red bars in the same positions with the same hash-derived shading. Brand-green #009E73 hot-path outline identical and equally visible against the warm bars. In-bar labels keep the same luminance-gated dark/light text color (the bar fill colors are theme-invariant, so the per-bar text colors don't flip either — correct behavior).
+      Legibility verdict: PASS — no dark-on-dark text failures, ticks/labels/title all sit in light INK against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -48,66 +73,82 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt).
-          In-bar labels 9-11pt appropriate for flame graph.
+        comment: Title, axes, ticks, and in-bar labels readable in both themes. Luminance-gated
+          per-bar text color keeps in-bar labels legible across the warm gradient.
+          Narrow bars (<4.5% fraction) intentionally skip labels.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Text truncation with ellipsis well-handled. Minor clipping at left
-          and right edges.
+        comment: No overlapping text. Bars are directly adjacent (RES=4 grid expansion)
+          with no antialiased seams. In-bar labels truncate with ellipsis when too
+          long for their bar width.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bars clearly visible with distinct warm colors. Thin bars at higher
-          depths still discernible.
+        comment: 'All ~63 stack frames visible across 7 depth levels. Hot path stands
+          out via #009E73 outline. Bar heights consistent.'
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Warm palette follows flame graph convention. Hash-based color variety.
-          Not colorblind-optimized.
+        comment: Warm palette has good contrast. Green outline overlaps with red-tones
+          for CVD viewers but used semantically as a focal-point outline, not as categorical
+          encoding.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions. Upper depths sparse creating some visual imbalance.
-          Minor edge clipping.
+        comment: Canvas gate file does not exist — 3200×1800 dimensions met. Title
+          ~35% width, axis labels balanced, no overflow. fig.subplots_adjust used
+          (not bbox_inches='tight').
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Samples and Stack Depth are descriptive and domain-appropriate.
+        comment: '''Samples'' and ''Stack depth'' are descriptive; samples is implicitly
+          the count unit.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Warm cmap built from Imprint warm anchors (#DDCC77, #BD8233, #AE3030)
+          via sns.blend_palette. Hot path uses brand green #009E73. Backgrounds correct
+          on both themes. Justified deviation from imprint_seq because spec explicitly
+          mandates warm flame palette.'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Custom blend_palette, luminance-based text contrast, bold weights,
-          percentage labels. Above defaults.
+        comment: Above default. Custom blend_palette, theme-adaptive chrome, hot-path
+          emphasis, luminance-based text color, smart label sizing — multiple intentional
+          design choices.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle grid at alpha=0.15, clean white background.
+        comment: Spines removed via sns.despine, subtle vertical-only grid at alpha=0.12,
+          generous whitespace via subplots_adjust.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Hierarchy naturally shows bottleneck chain. Percentage labels and
-          bold text emphasize hot paths.
+        comment: Brand-green hot-path outline creates a clear focal point. Bold semibold
+          weight + percentages on larger bars establishes visual hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -117,26 +158,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct flame graph with stacked horizontal bars at depth levels.
+        comment: Correctly rendered as a flame graph with stacked bars layered bottom-to-top
+          (D0 root at bottom).
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec requirements met: hierarchy, proportional widths, warm
-          colors, labels, adjacent bars.'
+        comment: Warm palette ✓, layered rows ✓, adjacent bars with no gaps (RES=4
+          expansion) ✓, in-bar function-name labels with percentage ✓.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=samples, Y=depth. Children correctly within parent spans.
+        comment: X-axis is sample count, Y-axis is stack depth, bar width proportional
+          to samples in that frame.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No legend needed.
+        comment: Title exactly 'flamegraph-basic · python · seaborn · anyplot.ai'.
+          Legend correctly omitted (no categorical series to label).
     data_quality:
       score: 15
       max: 15
@@ -146,82 +190,92 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: ~65 stack traces across 7 depth levels with varying widths and multiple
-          branches.
+        comment: 63 stack traces across 7 depth levels — demonstrates hierarchy, varied
+          widths, deep nesting, and clear hot path.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: CPU profiling of web request handler with realistic function names.
-          Neutral technical domain.
+        comment: Web service request handler (auth, DB query, serialization, logging,
+          cleanup) — plausible and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 950 samples with realistic proportions for CPU profiling.
+        comment: Sample counts from 8 to 950 (main). main(950) > process_request(600)
+          > handle_route(350) > query_database(200) > execute(120) follows realistic
+          profiling proportions.
     code_quality:
       score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, processing, plot, save. No functions/classes.'
+        comment: One helper (color_for) — justified by reuse for grid fill + label
+          luminance, but adds a small abstraction over pure procedural style.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded data and hash-based colors.
+        comment: hashlib.md5 keeps colors deterministic across PYTHONHASHSEED-randomised
+          processes.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All three imports actively used.
+        comment: hashlib, os, matplotlib.pyplot, numpy, seaborn, matplotlib.patches.Rectangle
+          — all used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Grid construction somewhat verbose but necessary for heatmap approach.
+        comment: Complexity is intrinsic to the flame-graph layout problem. No fake
+          interactivity (AR-08 clean).
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, bbox_inches=tight. Current API.
+        comment: Saves as plot-{THEME}.png. bbox_inches stays default. facecolor=PAGE_BG.
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Uses sns.heatmap, set_theme, despine, blend_palette but bulk of work
-          is manual matplotlib.
+        passed: true
+        comment: sns.set_theme with rc dict, sns.heatmap as the substrate with mask,
+          sns.blend_palette for the warm cmap, sns.despine — all idiomatic seaborn
+          patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: blend_palette and heatmap with mask are seaborn-specific. Creative
-          but mostly matplotlib underneath.
+        passed: true
+        comment: sns.blend_palette for perceptually smooth multi-stop interpolation
+          is a seaborn-distinctive feature (vs matplotlib's LinearSegmentedColormap).
+          Mask-aware heatmap also seaborn-flavored.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - patches
   - manual-ticks
   patterns:
   - data-generation
   - matrix-construction
+  - explicit-figure
   - iteration-over-groups
   dataprep: []
   styling:

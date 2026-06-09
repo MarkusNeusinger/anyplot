@@ -51,7 +51,7 @@ export function AboutPage() {
         <title>about | anyplot.ai</title>
         <meta
           name="description"
-          content="a catalogue of plotting examples across eleven libraries in python, r, and julia. plot ideas come from humans; ai drafts the spec, generates code for every library, and reviews each implementation."
+          content="a catalogue of plotting examples across fifteen libraries in python, r, julia, and javascript. plot ideas come from humans; ai drafts the spec, generates code for every library, and reviews each implementation."
         />
         <meta property="og:title" content="about | anyplot.ai" />
         <meta
@@ -67,7 +67,7 @@ export function AboutPage() {
           <SectionHeader prompt="❯" title={<em>about</em>} />
           <Box sx={proseColumnSx}>
             <Box sx={{ ...textStyle, fontSize: '18px', color: 'var(--ink)', fontWeight: 300 }}>
-              a catalogue of plotting examples across nine python libraries. plot ideas come from humans;
+              a catalogue of plotting examples across fifteen libraries in python, r, julia, and javascript. plot ideas come from humans;
               ai drafts the spec, generates code for every library, and reviews each implementation.
               humans approve specs and tune the rules when something repeatedly fails. every example uses
               the same colorblind-safe palette, so switching libraries never breaks your color grammar.

@@ -12,7 +12,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import type { PlotImage } from '../types';
-import { BATCH_SIZE, LANG_DISPLAY, LANG_EXT, type ImageSize } from '../constants';
+import { BATCH_SIZE, LANG_DISPLAY, libExt, type ImageSize } from '../constants';
 import { useCodeFetch } from '../hooks';
 import { buildSrcSet, getResponsiveSizes, getFallbackSrc } from '../utils/responsiveImage';
 import { useThemedPreviewUrl } from '../utils/themedPreview';
@@ -79,7 +79,9 @@ export const ImageCard = memo(function ImageCard({
   // so the row stays as two tokens — normal mode shows language as a separate
   // middot-token between spec-id and library.
   const showLibrary = imageSize === 'normal' || !isXs;
-  const langExt = LANG_EXT[image.language];
+  // Extension suffix honours the per-library override (muix → "tsx") so the
+  // compact card reads "mui.tsx", not "mui.js".
+  const langExt = libExt(image.library, image.language);
   const libraryDisplay = imageSize === 'compact'
     ? `${LIBRARY_ABBR[image.library] || image.library}${langExt ? '.' + langExt : ''}`
     : image.library;

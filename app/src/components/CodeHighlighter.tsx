@@ -3,12 +3,16 @@ import python from 'react-syntax-highlighter/dist/esm/languages/prism/python';
 import r from 'react-syntax-highlighter/dist/esm/languages/prism/r';
 import julia from 'react-syntax-highlighter/dist/esm/languages/prism/julia';
 import javascript from 'react-syntax-highlighter/dist/esm/languages/prism/javascript';
+import tsx from 'react-syntax-highlighter/dist/esm/languages/prism/tsx';
 import { typography } from '../theme';
 
 SyntaxHighlighter.registerLanguage('python', python);
 SyntaxHighlighter.registerLanguage('r', r);
 SyntaxHighlighter.registerLanguage('julia', julia);
 SyntaxHighlighter.registerLanguage('javascript', javascript);
+// The refractor `tsx` grammar auto-registers its own dependencies (jsx →
+// javascript + markup, and typescript), so this one call covers React TSX.
+SyntaxHighlighter.registerLanguage('tsx', tsx);
 
 // Map anyplot language IDs → Prism grammar names. Anything we don't know about
 // falls back to plain text so the block still renders, just unhighlighted.
@@ -17,6 +21,14 @@ const PRISM_LANGUAGE: Record<string, string> = {
   r: 'r',
   julia: 'julia',
   javascript: 'javascript',
+};
+
+// Per-library grammar override: a library whose snippets are authored in a
+// dialect that needs a richer grammar than its language default. MUI X (`muix`)
+// is JavaScript-language but authored as React TSX, so it highlights with the
+// `tsx` grammar (JSX + TypeScript) rather than plain `javascript`.
+const LIBRARY_GRAMMAR_OVERRIDE: Record<string, string> = {
+  muix: 'tsx',
 };
 
 // Theme-aware imprint syntax theme. All colors come from CSS variables in
@@ -61,10 +73,16 @@ const imprintTheme: Record<string, React.CSSProperties> = {
 interface CodeHighlighterProps {
   code: string;
   language?: string;
+  /** Library id — lets a library override its language's default grammar
+   *  (e.g. muix → tsx even though its language is javascript). */
+  library?: string;
 }
 
-export default function CodeHighlighter({ code, language = 'python' }: CodeHighlighterProps) {
-  const prismLanguage = PRISM_LANGUAGE[language.toLowerCase()] ?? 'text';
+export default function CodeHighlighter({ code, language = 'python', library }: CodeHighlighterProps) {
+  const prismLanguage =
+    (library ? LIBRARY_GRAMMAR_OVERRIDE[library.toLowerCase()] : undefined) ??
+    PRISM_LANGUAGE[language.toLowerCase()] ??
+    'text';
   return (
     <SyntaxHighlighter
       language={prismLanguage}
