@@ -45,7 +45,7 @@ describe('AppDataProvider', () => {
       if (url.endsWith('/stats')) return Promise.resolve(jsonResponse(statsBody));
       throw new Error(`unexpected fetch: ${url}`);
     });
-    global.fetch = fetchMock;
+    globalThis.fetch = fetchMock;
 
     render(
       <AppDataProvider>
@@ -84,7 +84,7 @@ describe('AppDataProvider', () => {
         return Promise.resolve(jsonResponse({ specs: 2, plots: 0, libraries: 0 }));
       throw new Error(`unexpected fetch: ${url}`);
     });
-    global.fetch = fetchMock;
+    globalThis.fetch = fetchMock;
 
     render(
       <AppDataProvider>
@@ -99,7 +99,7 @@ describe('AppDataProvider', () => {
 
   it('swallows fetch errors without crashing — context falls back to empty defaults', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    global.fetch = vi.fn().mockRejectedValue(new Error('boom'));
+    globalThis.fetch = vi.fn().mockRejectedValue(new Error('boom'));
 
     render(
       <AppDataProvider>
@@ -133,7 +133,7 @@ describe('AppDataProvider', () => {
           });
         })
     );
-    global.fetch = fetchMock;
+    globalThis.fetch = fetchMock;
 
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 

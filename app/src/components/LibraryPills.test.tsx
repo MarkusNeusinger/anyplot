@@ -4,9 +4,9 @@ import { render, screen, userEvent } from '../test-utils';
 import { LibraryPills } from './LibraryPills';
 
 const mockImplementations = [
-  { library_id: 'matplotlib', library_name: 'Matplotlib', quality_score: 85 },
-  { library_id: 'seaborn', library_name: 'Seaborn', quality_score: 90 },
-  { library_id: 'plotly', library_name: 'Plotly', quality_score: 78 },
+  { library_id: 'matplotlib', library_name: 'Matplotlib', language: 'python', quality_score: 85 },
+  { library_id: 'seaborn', library_name: 'Seaborn', language: 'python', quality_score: 90 },
+  { library_id: 'plotly', library_name: 'Plotly', language: 'python', quality_score: 78 },
 ];
 
 describe('LibraryPills', () => {

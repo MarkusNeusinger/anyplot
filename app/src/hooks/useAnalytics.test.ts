@@ -132,9 +132,9 @@ describe('useAnalytics', () => {
       });
 
       // plausible should be called only once for identical URLs
-      const pageviewCalls = (window.plausible as ReturnType<typeof vi.fn>).mock.calls.filter(
-        ([event]: [string]) => event === 'pageview'
-      );
+      const pageviewCalls = vi
+        .mocked(window.plausible!)
+        .mock.calls.filter(([event]) => event === 'pageview');
       expect(pageviewCalls).toHaveLength(1);
     });
 

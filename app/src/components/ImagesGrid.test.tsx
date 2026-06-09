@@ -1,6 +1,6 @@
 import { createRef } from 'react';
 
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, type Mock, vi } from 'vitest';
 
 import type { ImageSize } from '../constants';
 import { render, screen } from '../test-utils';
@@ -22,6 +22,7 @@ const mockLibraries: LibraryInfo[] = [
   {
     id: 'matplotlib',
     name: 'Matplotlib',
+    language: 'python',
     description: 'Matplotlib desc',
     documentation_url: 'https://matplotlib.org',
   },
@@ -34,6 +35,7 @@ const mockSpecs: SpecInfo[] = [
 function makeImages(n: number): PlotImage[] {
   return Array.from({ length: n }, (_, i) => ({
     library: 'matplotlib',
+    language: 'python',
     url: `https://example.com/img${i}.png`,
     spec_id: `scatter-${i}`,
   }));
@@ -52,8 +54,8 @@ interface DefaultProps {
   openTooltip: string | null;
   loadMoreRef: React.RefObject<HTMLDivElement | null>;
   imageSize: ImageSize;
-  onTooltipToggle: ReturnType<typeof vi.fn>;
-  onCardClick: ReturnType<typeof vi.fn>;
+  onTooltipToggle: Mock<(id: string | null) => void>;
+  onCardClick: Mock<(image: PlotImage) => void>;
 }
 
 function getDefaultProps(overrides: Partial<DefaultProps> = {}): DefaultProps {
@@ -70,8 +72,8 @@ function getDefaultProps(overrides: Partial<DefaultProps> = {}): DefaultProps {
     openTooltip: null,
     loadMoreRef: createRef<HTMLDivElement>(),
     imageSize: 'normal',
-    onTooltipToggle: vi.fn(),
-    onCardClick: vi.fn(),
+    onTooltipToggle: vi.fn<(id: string | null) => void>(),
+    onCardClick: vi.fn<(image: PlotImage) => void>(),
     ...overrides,
   };
 }

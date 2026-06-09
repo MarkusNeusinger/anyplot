@@ -54,20 +54,20 @@ beforeEach(() => {
 });
 
 function mockFetchSuccess() {
-  global.fetch = vi.fn().mockResolvedValue({
+  globalThis.fetch = vi.fn().mockResolvedValue({
     ok: true,
     json: () => Promise.resolve(mockImages),
   });
 }
 
 function mockFetchError() {
-  global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
+  globalThis.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
 }
 
 describe('SpecsListPage', () => {
   it('shows loading state initially', () => {
     // Never-resolving fetch keeps loading=true
-    global.fetch = vi.fn().mockReturnValue(new Promise(() => {}));
+    globalThis.fetch = vi.fn().mockReturnValue(new Promise(() => {}));
     render(<SpecsListPage />);
 
     // Loading state renders Skeleton placeholders (MUI Skeleton uses role="progressbar" internally, but we can check for the skeleton structure)
@@ -124,9 +124,9 @@ describe('SpecsListPage', () => {
     render(<SpecsListPage />);
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalled();
+      expect(globalThis.fetch).toHaveBeenCalled();
     });
-    const fetchUrl = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
+    const fetchUrl = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
     expect(fetchUrl).toContain('/plots/filter');
   });
 });

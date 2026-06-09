@@ -1,3 +1,5 @@
+import { ReactNode } from 'react';
+
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { render, screen } from '../test-utils';
@@ -5,7 +7,7 @@ import { render, screen } from '../test-utils';
 import { ErrorBoundary } from './ErrorBoundary';
 
 // Component that throws on render
-function ThrowingComponent({ message }: { message: string }) {
+function ThrowingComponent({ message }: { message: string }): ReactNode {
   throw new Error(message);
 }
 

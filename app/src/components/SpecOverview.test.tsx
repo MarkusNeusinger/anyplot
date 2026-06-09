@@ -12,6 +12,7 @@ vi.mock('../utils/responsiveImage', () => ({
 const makeImpl = (overrides: Partial<Implementation> = {}): Implementation => ({
   library_id: 'matplotlib',
   library_name: 'Matplotlib',
+  language: 'python',
   preview_url: 'https://example.com/plot.png',
   preview_html: undefined,
   quality_score: 85,

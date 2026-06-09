@@ -24,6 +24,7 @@ class MockResizeObserver {
 const defaultProps = {
   activeFilters: [] as { category: 'lib'; values: string[] }[],
   filterCounts: {
+    lang: { python: 180 },
     lib: { matplotlib: 100, seaborn: 80 },
     spec: {},
     plot: {},

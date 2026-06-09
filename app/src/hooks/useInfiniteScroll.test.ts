@@ -47,6 +47,7 @@ afterEach(() => {
 function makeImages(n: number): PlotImage[] {
   return Array.from({ length: n }, (_, i) => ({
     library: 'matplotlib',
+    language: 'python',
     url: `https://example.com/img${i}.png`,
     spec_id: `spec-${i}`,
   }));

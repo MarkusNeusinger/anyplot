@@ -23,7 +23,7 @@ const makeImpl = (overrides: Partial<Implementation> = {}): Implementation => ({
   library_name: 'Matplotlib',
   language: 'python',
   preview_url: 'https://example.com/plot.png',
-  preview_html: null,
+  preview_html: undefined,
   quality_score: 85,
   code: 'import matplotlib\nprint("hello")',
   ...overrides,
@@ -46,10 +46,12 @@ const defaultProps = {
   codeCopied: null,
   downloadDone: null,
   viewMode: 'preview' as const,
+  reportUrl: 'https://github.com/example/anyplot/issues/new?template=report-plot-issue.yml',
   onImageLoad: vi.fn(),
   onCopyCode: vi.fn(),
   onDownload: vi.fn(),
   onViewModeChange: vi.fn(),
+  onReport: vi.fn(),
   onTrackEvent: vi.fn(),
 };
 

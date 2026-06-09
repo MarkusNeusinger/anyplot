@@ -9,7 +9,7 @@ describe('useFilterFetch', () => {
 
   beforeEach(() => {
     fetchMock = vi.fn();
-    globalThis.fetch = fetchMock;
+    vi.stubGlobal('fetch', fetchMock);
   });
 
   afterEach(() => {
@@ -18,6 +18,7 @@ describe('useFilterFetch', () => {
 
   const mockImages: PlotImage[] = Array.from({ length: 50 }, (_, i) => ({
     library: 'matplotlib',
+    language: 'python',
     url: `https://example.com/img${i}.png`,
     spec_id: `spec-${i}`,
   }));
@@ -63,7 +64,9 @@ describe('useFilterFetch', () => {
     });
 
     it('uses provided initial state and skips fetch', () => {
-      const initialImages: PlotImage[] = [{ library: 'seaborn', url: 'test.png' }];
+      const initialImages: PlotImage[] = [
+        { library: 'seaborn', language: 'python', url: 'test.png' },
+      ];
 
       const { result } = renderHook(() =>
         useFilterFetch({
