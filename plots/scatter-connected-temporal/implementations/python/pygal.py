@@ -1,10 +1,11 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 77/100 | Updated: 2026-06-09
 """
 
 import os
+import re
 import sys
 
 
@@ -110,7 +111,7 @@ chart = pygal.XY(
     dots_size=12,
     show_x_guides=True,
     show_y_guides=True,
-    x_value_formatter=lambda x: f"${x:,.0f}",
+    x_value_formatter=lambda x: f"${x / 1000:.0f}k",
     value_formatter=lambda y: f"{y:.1f} yrs",
     print_labels=True,
     print_values=False,
@@ -165,7 +166,26 @@ chart.add(
     dots_size=26,
 )
 
-# Save PNG and interactive HTML
+# Patch label text colors for dark-theme legibility before PNG conversion
+# pygal's print_labels text color does not adapt to the dark background via the foreground Style token
+_label_texts = {str(yr) for yr in sorted(annotate_years)} | {"▶ 1990", "● 2023"}
+
+
+def _patch_label_colors(svg_str, labels, fill_color):
+    def _fix(m):
+        tag_attrs, content = m.group(1), m.group(2)
+        if not any(lbl in content for lbl in labels):
+            return m.group(0)
+        if "fill=" in tag_attrs:
+            tag_attrs = re.sub(r'\bfill="[^"]*"', f'fill="{fill_color}"', tag_attrs)
+        else:
+            tag_attrs += f' fill="{fill_color}"'
+        return f"<text{tag_attrs}>{content}</text>"
+
+    return re.sub(r"<text([^>]*)>(.*?)</text>", _fix, svg_str, flags=re.DOTALL)
+
+
 svg_data = chart.render()
-cairosvg.svg2png(bytestring=svg_data, write_to=f"plot-{THEME}.png")
+svg_str = _patch_label_colors(svg_data.decode("utf-8"), _label_texts, INK)
+cairosvg.svg2png(bytestring=svg_str.encode("utf-8"), write_to=f"plot-{THEME}.png")
 chart.render_to_file(f"plot-{THEME}.html")
