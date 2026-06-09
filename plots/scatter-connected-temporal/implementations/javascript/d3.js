@@ -5,7 +5,7 @@
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
-const margin = { top: 90, right: 140, bottom: 90, left: 110 };
+const margin = { top: 90, right: 180, bottom: 90, left: 110 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
@@ -32,9 +32,9 @@ const data = [
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 const defs = svg.append("defs");
 
-// Gradient for temporal legend bar (Imprint sequential: green → blue)
+// Legend gradient (green → blue for the legend bar)
 const legendGrad = defs.append("linearGradient")
-  .attr("id", "temporal-grad")
+  .attr("id", "temporal-legend-grad")
   .attr("x1", "0%").attr("x2", "100%");
 legendGrad.append("stop").attr("offset", "0%").attr("stop-color", t.seq[0]);
 legendGrad.append("stop").attr("offset", "100%").attr("stop-color", t.seq[1]);
@@ -45,8 +45,17 @@ const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.t
 const xScale = d3.scaleLinear().domain(d3.extent(data, d => d.gdp)).nice().range([0, iw]);
 const yScale = d3.scaleLinear().domain(d3.extent(data, d => d.le)).nice().range([ih, 0]);
 
-// Temporal color interpolator: Imprint sequential (green → blue)
-const tempColor = frac => d3.interpolateRgb(t.seq[0], t.seq[1])(frac);
+// Path-stroke gradient via gradientUnits="userSpaceOnUse" (idiomatic SVG/D3 technique)
+// Projects color linearly from the 1992 start point to the 2021 end point in data space
+const pathGrad = defs.append("linearGradient")
+  .attr("id", "path-temporal-grad")
+  .attr("gradientUnits", "userSpaceOnUse")
+  .attr("x1", xScale(data[0].gdp))
+  .attr("y1", yScale(data[0].le))
+  .attr("x2", xScale(data[data.length - 1].gdp))
+  .attr("y2", yScale(data[data.length - 1].le));
+pathGrad.append("stop").attr("offset", "0%").attr("stop-color", t.seq[0]);
+pathGrad.append("stop").attr("offset", "100%").attr("stop-color", t.seq[1]);
 
 // Gridlines (both axes — subtle)
 xScale.ticks(6).forEach(v => {
@@ -62,18 +71,23 @@ yScale.ticks(6).forEach(v => {
     .attr("stroke", t.grid).attr("stroke-width", 1);
 });
 
-// Connecting segments, each colored by its midpoint temporal fraction
-for (let i = 0; i < data.length - 1; i++) {
-  const midFrac = (i + 0.5) / (data.length - 1);
-  g.append("line")
-    .attr("x1", xScale(data[i].gdp)).attr("y1", yScale(data[i].le))
-    .attr("x2", xScale(data[i + 1].gdp)).attr("y2", yScale(data[i + 1].le))
-    .attr("stroke", tempColor(midFrac))
-    .attr("stroke-width", 2.5)
-    .attr("stroke-opacity", 0.85);
-}
+// Connecting path with userSpaceOnUse gradient stroke — single <path> element
+const lineGen = d3.line()
+  .x(d => xScale(d.gdp))
+  .y(d => yScale(d.le));
 
-// Data point markers (larger circles for start and end)
+g.append("path")
+  .datum(data)
+  .attr("d", lineGen)
+  .attr("fill", "none")
+  .attr("stroke", "url(#path-temporal-grad)")
+  .attr("stroke-width", 2.5)
+  .attr("stroke-opacity", 0.85);
+
+// Temporal color interpolator (for marker fills, mirrors gradient)
+const tempColor = frac => d3.interpolateRgb(t.seq[0], t.seq[1])(frac);
+
+// Data point markers (larger endpoint circles for 1992 and 2021)
 g.selectAll("circle").data(data).join("circle")
   .attr("cx", d => xScale(d.gdp))
   .attr("cy", d => yScale(d.le))
@@ -82,7 +96,7 @@ g.selectAll("circle").data(data).join("circle")
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 2);
 
-// Year labels at selected notable points
+// Year labels at key economic moments
 const labelConfig = [
   { year: 1992, dx: -46, dy: 6 },
   { year: 2000, dx: 10, dy: -13 },
@@ -92,7 +106,7 @@ const labelConfig = [
   { year: 2020, dx: 6, dy: 22 },
   { year: 2021, dx: 12, dy: -13 },
 ];
-data.forEach((d, i) => {
+data.forEach(d => {
   const cfg = labelConfig.find(c => c.year === d.year);
   if (!cfg) return;
   const isEndpoint = d.year === 1992 || d.year === 2021;
@@ -104,6 +118,36 @@ data.forEach((d, i) => {
     .style("font-weight", isEndpoint ? "700" : "400")
     .text(d.year);
 });
+
+// Narrative event annotations with dashed leader lines
+const d2009 = data.find(d => d.year === 2009);
+const d2020 = data.find(d => d.year === 2020);
+
+// Financial Crisis (2009) — leader line angling down-left, away from year label
+const fc2009x = xScale(d2009.gdp) - 68;
+const fc2009y = yScale(d2009.le) + 60;
+g.append("line")
+  .attr("x1", xScale(d2009.gdp) - 8).attr("y1", yScale(d2009.le) + 12)
+  .attr("x2", fc2009x).attr("y2", fc2009y - 14)
+  .attr("stroke", t.inkSoft).attr("stroke-width", 1).attr("stroke-dasharray", "4,3");
+g.append("text")
+  .attr("x", fc2009x).attr("y", fc2009y)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft).style("font-size", "11px").style("font-style", "italic")
+  .text("Financial Crisis");
+
+// COVID-19 (2020) — leader line going straight down, away from year label
+const cv2020x = xScale(d2020.gdp) - 42;
+const cv2020y = yScale(d2020.le) + 60;
+g.append("line")
+  .attr("x1", xScale(d2020.gdp) - 8).attr("y1", yScale(d2020.le) + 12)
+  .attr("x2", cv2020x).attr("y2", cv2020y - 14)
+  .attr("stroke", t.inkSoft).attr("stroke-width", 1).attr("stroke-dasharray", "4,3");
+g.append("text")
+  .attr("x", cv2020x).attr("y", cv2020y)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft).style("font-size", "11px").style("font-style", "italic")
+  .text("COVID-19");
 
 // Axes
 const xAxis = g.append("g")
@@ -131,18 +175,19 @@ g.append("text")
   .attr("fill", t.ink).style("font-size", "16px")
   .text("Life Expectancy (years)");
 
-// Temporal legend (gradient bar)
-const lgW = 160, lgH = 10, lgX = iw - lgW - 8, lgY = 18;
+// Temporal legend in the right margin — no overlap with data path
+const lgW = 150, lgH = 10;
+const lgX = iw + 16, lgY = ih / 2 - lgH / 2;
 g.append("text")
-  .attr("x", lgX + lgW / 2).attr("y", lgY - 12)
+  .attr("x", lgX + lgW / 2).attr("y", lgY - 14)
   .attr("text-anchor", "middle")
-  .attr("fill", t.inkSoft).style("font-size", "12px")
+  .attr("fill", t.inkSoft).style("font-size", "11px")
   .text("Temporal direction  →");
 g.append("rect")
   .attr("x", lgX).attr("y", lgY)
   .attr("width", lgW).attr("height", lgH)
   .attr("rx", 4)
-  .attr("fill", "url(#temporal-grad)");
+  .attr("fill", "url(#temporal-legend-grad)");
 g.append("text")
   .attr("x", lgX).attr("y", lgY + lgH + 14)
   .attr("fill", t.inkSoft).style("font-size", "11px")
