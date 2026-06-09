@@ -4,6 +4,7 @@
 # Quality: 85/100 | Created: 2026-06-09
 
 using CairoMakie
+using ColorSchemes
 using Colors
 using Random
 using Statistics
@@ -11,22 +12,12 @@ using Statistics
 Random.seed!(42)
 
 # Theme tokens
-const THEME       = get(ENV, "ANYPLOT_THEME", "light")
-const PAGE_BG     = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
-const ELEVATED_BG = THEME == "light" ? colorant"#FFFDF6" : colorant"#242420"
-const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
-const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
+const THEME    = get(ENV, "ANYPLOT_THEME", "light")
+const PAGE_BG  = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
+const INK      = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
+const INK_SOFT = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 
-const IMPRINT_PALETTE = [
-    colorant"#009E73",  # 1 — first categorical series (Imprint palette)
-    colorant"#C475FD",
-    colorant"#4467A3",
-    colorant"#BD8233",
-    colorant"#AE3030",
-    colorant"#2ABCCD",
-    colorant"#954477",
-    colorant"#99B314",
-]
+const ANYPLOT_SEQ = cgrad([colorant"#009E73", colorant"#4467A3"])
 
 # Data — process measurements (coating thickness, micrometers) with a right-skewed tail
 # 85% from a normal base distribution, 15% with a positive boost → slightly right-skewed
@@ -56,10 +47,13 @@ poly_val  = t_coeff .* (0.319381530 .+ t_coeff .* (
 p_upper   = 1.0 .- (1.0 / sqrt(2π)) .* exp.(-abs_z .^ 2 ./ 2.0) .* poly_val
 theoretical_cdf = ifelse.(sorted_z .>= 0.0, p_upper, 1.0 .- p_upper)
 
-# Title
-title_str  = "pp-basic · julia · makie · anyplot.ai"
-n_title    = length(title_str)
-title_size = n_title > 67 ? max(14, round(Int, 20 * 67 / n_title)) : 20
+# Deviation from reference diagonal — key insight: S-curve departure from normality
+dev     = abs.(empirical_cdf .- theoretical_cdf)
+max_dev = maximum(dev)
+
+# 95% KS confidence band half-width (D_α = 1.36 / √n)
+delta  = 1.36 / sqrt(n)
+xs_vec = collect(range(0.0, 1.0, length=200))
 
 # Figure — square canvas (P-P plots use equal 0–1 probability axes)
 fig = Figure(
@@ -70,15 +64,15 @@ fig = Figure(
 
 ax = Axis(
     fig[1, 1];
-    title             = title_str,
-    titlesize         = title_size,
+    title             = "pp-basic · julia · makie · anyplot.ai",
+    titlesize         = 28,
     titlecolor        = INK,
     xlabel            = "Theoretical Cumulative Probability",
     ylabel            = "Empirical Cumulative Probability",
-    xlabelsize        = 15,
-    ylabelsize        = 15,
-    xticklabelsize    = 13,
-    yticklabelsize    = 13,
+    xlabelsize        = 20,
+    ylabelsize        = 20,
+    xticklabelsize    = 16,
+    yticklabelsize    = 16,
     xlabelcolor       = INK,
     ylabelcolor       = INK,
     xticklabelcolor   = INK_SOFT,
@@ -98,6 +92,11 @@ ax = Axis(
     limits            = (0.0, 1.0, 0.0, 1.0),
 )
 
+# 95% KS confidence envelope — defines acceptance region around the diagonal
+band!(ax, xs_vec, clamp.(xs_vec .- delta, 0.0, 1.0), clamp.(xs_vec .+ delta, 0.0, 1.0);
+    color = RGBAf(INK.r, INK.g, INK.b, 0.07),
+)
+
 # Reference diagonal — perfect distributional fit
 lines!(ax, [0.0, 1.0], [0.0, 1.0];
     color     = INK_SOFT,
@@ -105,12 +104,24 @@ lines!(ax, [0.0, 1.0], [0.0, 1.0];
     linestyle = :dash,
 )
 
-# P-P scatter points
-scatter!(ax, theoretical_cdf, empirical_cdf;
-    color       = IMPRINT_PALETTE[1],
-    markersize  = 9,
+# P-P scatter — points colored by absolute deviation from diagonal to highlight S-curve
+scat = scatter!(ax, theoretical_cdf, empirical_cdf;
+    color       = dev,
+    colormap    = ANYPLOT_SEQ,
+    colorrange  = (0.0, max_dev),
+    markersize  = 11,
     strokewidth = 0.5,
     strokecolor = PAGE_BG,
+)
+
+# Colorbar showing deviation magnitude from reference diagonal
+Colorbar(fig[1, 2], scat;
+    label          = "Deviation from Reference",
+    labelcolor     = INK,
+    ticklabelcolor = INK_SOFT,
+    tickcolor      = INK_SOFT,
+    labelsize      = 16,
+    ticklabelsize  = 14,
 )
 
 # Save
