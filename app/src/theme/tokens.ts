@@ -9,7 +9,8 @@
  */
 
 export const typography = {
-  // MonoLisa-only system — serif/sans kept as aliases so existing imports still resolve
+  // Single-typeface system: MonoLisa everywhere (with standard monospace fallbacks);
+  // serif/sans kept as aliases so existing imports still resolve
   fontFamily:
     '"MonoLisa", "MonoLisa Fallback", Consolas, Menlo, Monaco, "DejaVu Sans Mono", monospace',
   serif: '"MonoLisa", "MonoLisa Fallback", Consolas, Menlo, Monaco, "DejaVu Sans Mono", monospace',
