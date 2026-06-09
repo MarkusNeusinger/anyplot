@@ -40,7 +40,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
         with:
           fetch-depth: 0
 
@@ -109,9 +109,15 @@ jobs:
               LANGUAGE="julia"
               EXT=".jl"
               ;;
-            chartjs|d3|echarts)
+            chartjs|d3|echarts|highcharts)
               LANGUAGE="javascript"
               EXT=".js"
+              ;;
+            muix)
+              # MUI X — JavaScript with framework=react, authored as TSX and
+              # bundled through the render harness's esbuild React branch.
+              LANGUAGE="javascript"
+              EXT=".tsx"
               ;;
             *)
               LANGUAGE="python"
@@ -266,7 +272,7 @@ jobs:
               "altair":     "Most likely cause: vl-convert padding title/legend outside `width`/`height`. Add `configure_view(continuousWidth=…, continuousHeight=…)` + zero `padding` and normalize the saved PNG with the PIL crop/pad snippet in `prompts/library/altair.md`.",
               "plotly":     "Most likely cause: `autosize=True` or implicit margin growth. Set `autosize=False` and pin `margin=dict(...)` explicitly.",
               "bokeh":      "Most likely cause: bokeh toolbar adding ~30-50 px above the figure. Set `toolbar_location=None`.",
-              "highcharts": "Most likely cause: Chrome chrome eating viewport space. Use `Emulation.setDeviceMetricsOverride` via CDP (see `prompts/library/highcharts.md` Save section) — `--window-size` alone is not authoritative in headless mode.",
+              "highcharts": "The harness owns exact pixels (Playwright deviceScaleFactor 2 over a fixed mount). Call `Highcharts.chart('container', {...})` and let it auto-size to `#container` — do NOT set `chart.width`/`chart.height`. Use `//# anyplot-orientation: square` only for square specs.",
               "pygal":      "Check that `pygal.<Chart>(width=…, height=…)` and the SVG→PNG conversion don't override dims.",
               "plotnine":   "Check `ggsave(width=…, height=…, units='in', dpi=400)` and `theme(figure_size=…)`; do not pass `bbox_inches='tight'`.",
               "letsplot":   "Check `ggsize(W, H)` and `ggsave(..., scale=4)` pair — only the two canonical pairs land on target.",
@@ -275,6 +281,7 @@ jobs:
               "chartjs":    "The harness owns exact pixels (Playwright deviceScaleFactor 2 over a fixed mount). Drift means the snippet forced its own canvas size: set `responsive: true` + `maintainAspectRatio: false` and let the canvas fill `#container` — do NOT set canvas width/height. Use `//# anyplot-orientation: square` only for square specs.",
               "d3":         "The harness owns exact pixels (Playwright deviceScaleFactor 2 over a fixed mount). Size the `<svg>` to `window.ANYPLOT_SIZE` (1600×900 landscape / 1200×1200 square) — never hard-code other dimensions. Use `//# anyplot-orientation: square` only for square specs.",
               "echarts":    "The harness owns exact pixels (Playwright deviceScaleFactor 2 over a fixed mount). Call `echarts.init(document.getElementById('container'))` with no explicit width/height so it fills the mount; do not pass a `devicePixelRatio` (the page already runs at 2×). Use `//# anyplot-orientation: square` only for square specs.",
+              "muix":       "The harness owns exact pixels (Playwright deviceScaleFactor 2 over a fixed mount via a MUI ThemeProvider). Size the chart with `width={window.ANYPLOT_SIZE.width}` / `height={window.ANYPLOT_SIZE.height}` (1600×900 landscape / 1200×1200 square) — never hard-code other dimensions. Use `//# anyplot-orientation: square` only for square specs.",
           }
           cause = causes.get(LIBRARY, f"Review `prompts/library/{LIBRARY}.md` 'Canvas — hard rule' section.")
 
@@ -302,7 +309,7 @@ jobs:
         id: review
         continue-on-error: true
         timeout-minutes: 30
-        uses: anthropics/claude-code-action@787c5a0ce96a9a6cfb050ea0c8f4c05f2447c251  # v1
+        uses: anthropics/claude-code-action@11ba60486e4aec9ddfeafcf4bb3f00b028ac2c16  # v1
         env:
           LIBRARY: ${{ steps.pr.outputs.library }}
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}

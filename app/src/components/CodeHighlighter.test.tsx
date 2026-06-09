@@ -36,6 +36,14 @@ vi.mock('react-syntax-highlighter/dist/esm/languages/prism/julia', () => ({
   default: {},
 }));
 
+vi.mock('react-syntax-highlighter/dist/esm/languages/prism/javascript', () => ({
+  default: {},
+}));
+
+vi.mock('react-syntax-highlighter/dist/esm/languages/prism/tsx', () => ({
+  default: {},
+}));
+
 import CodeHighlighter from './CodeHighlighter';
 
 describe('CodeHighlighter', () => {
@@ -81,6 +89,28 @@ describe('CodeHighlighter', () => {
     expect(screen.getByTestId('syntax-highlighter')).toHaveAttribute(
       'data-language',
       'text'
+    );
+  });
+
+  it('uses the tsx grammar for the muix library (React TSX) even though its language is javascript', () => {
+    render(
+      <CodeHighlighter
+        code={'export default function Chart() { return <BarChart /> }'}
+        language="javascript"
+        library="muix"
+      />
+    );
+    expect(screen.getByTestId('syntax-highlighter')).toHaveAttribute(
+      'data-language',
+      'tsx'
+    );
+  });
+
+  it('uses the language grammar when the library has no grammar override', () => {
+    render(<CodeHighlighter code={'new Chart()'} language="javascript" library="chartjs" />);
+    expect(screen.getByTestId('syntax-highlighter')).toHaveAttribute(
+      'data-language',
+      'javascript'
     );
   });
 });

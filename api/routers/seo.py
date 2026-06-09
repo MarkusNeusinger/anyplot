@@ -175,7 +175,7 @@ async def seo_plots():
     return HTMLResponse(
         BOT_HTML_TEMPLATE.format(
             title="plots | anyplot.ai",
-            description="Browse and filter Python visualization examples across 9 libraries: matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, lets-plot.",
+            description="Browse and filter visualization examples across 15 libraries in Python, R, Julia, and JavaScript: matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, lets-plot, ggplot2, Makie.jl, Chart.js, D3.js, ECharts, Highcharts, MUI X Charts.",
             image=DEFAULT_PLOTS_IMAGE,
             url="https://anyplot.ai/plots",
         )

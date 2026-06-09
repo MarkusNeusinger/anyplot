@@ -34,6 +34,7 @@ on:
           - chartjs
           - d3
           - echarts
+          - muix
       issue_number:
         description: "Issue number (optional, for tracking)"
         required: false
@@ -127,9 +128,15 @@ jobs:
               LANGUAGE="julia"
               EXT=".jl"
               ;;
-            chartjs|d3|echarts)
+            chartjs|d3|echarts|highcharts)
               LANGUAGE="javascript"
               EXT=".js"
+              ;;
+            muix)
+              # MUI X — JavaScript with framework=react, authored as TSX and
+              # bundled through the render harness's esbuild React branch.
+              LANGUAGE="javascript"
+              EXT=".tsx"
               ;;
             *)
               LANGUAGE="python"
@@ -147,7 +154,7 @@ jobs:
           echo "::notice::Generating $LANGUAGE/$LIBRARY for $SPEC_ID (issue: ${ISSUE:-none}, model: ${MODEL}, ext: ${EXT})"
 
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
         with:
           fetch-depth: 0
 
@@ -222,7 +229,7 @@ jobs:
           python-version: '3.13'
 
       - name: Install uv
-        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v8.1.0
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39  # v8.2.0
 
       - name: Install system dependencies
         run: |
@@ -247,12 +254,6 @@ jobs:
           uv venv .venv
           source .venv/bin/activate
           uv pip install pillow pyyaml
-
-      - name: Setup Chrome for Highcharts
-        if: steps.inputs.outputs.library == 'highcharts'
-        uses: browser-actions/setup-chrome@2e1d749697dd1612b833dba4a722266286fbefcd  # v2
-        with:
-          chrome-version: stable
 
       - name: Setup R + ggplot2
         if: steps.inputs.outputs.language == 'r'
@@ -421,7 +422,7 @@ jobs:
         id: claude
         continue-on-error: true
         timeout-minutes: 60
-        uses: anthropics/claude-code-action@787c5a0ce96a9a6cfb050ea0c8f4c05f2447c251  # v1
+        uses: anthropics/claude-code-action@11ba60486e4aec9ddfeafcf4bb3f00b028ac2c16  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: "--model ${{ steps.inputs.outputs.model }}"
@@ -441,7 +442,7 @@ jobs:
         if: steps.claude.outcome == 'failure'
         id: claude_retry
         timeout-minutes: 60
-        uses: anthropics/claude-code-action@787c5a0ce96a9a6cfb050ea0c8f4c05f2447c251  # v1
+        uses: anthropics/claude-code-action@11ba60486e4aec9ddfeafcf4bb3f00b028ac2c16  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: "--model ${{ steps.inputs.outputs.model }}"
@@ -607,11 +608,15 @@ jobs:
                 ;;
             esac
           elif [ "$LANGUAGE" = "javascript" ]; then
-            # Catalogue id `chartjs` maps to the npm package `chart.js`; `d3` and
+            # Catalogue id `chartjs` maps to the npm package `chart.js` and
+            # `muix` to the scoped community package `@mui/x-charts`; `d3` and
             # `echarts` match their npm names directly.
             case "$LIBRARY" in
               chartjs)
                 LIBRARY_VERSION=$(get_npm_version "chart.js")
+                ;;
+              muix)
+                LIBRARY_VERSION=$(get_npm_version "@mui/x-charts")
                 ;;
               *)
                 LIBRARY_VERSION=$(get_npm_version "$LIBRARY")
@@ -621,9 +626,6 @@ jobs:
             case "$LIBRARY" in
               letsplot)
                 LIBRARY_VERSION=$(get_pip_version "lets-plot")
-                ;;
-              highcharts)
-                LIBRARY_VERSION=$(get_pip_version "highcharts-core")
                 ;;
               *)
                 LIBRARY_VERSION=$(get_pip_version "$LIBRARY")
@@ -637,7 +639,6 @@ jobs:
               case "$LIBRARY" in
                 letsplot) PYTHON_MODULE="lets_plot" ;;
                 plotnine) PYTHON_MODULE="plotnine" ;;
-                highcharts) PYTHON_MODULE="highcharts_core" ;;
                 *) PYTHON_MODULE="$LIBRARY" ;;
               esac
               LIBRARY_VERSION=$(.venv/bin/python -c "import $PYTHON_MODULE; print(getattr($PYTHON_MODULE, '__version__', 'unknown'))" 2>/dev/null || echo "unknown")
@@ -656,7 +657,7 @@ jobs:
           # lib/render that produced no HTML never points preview_html at a 404.
           HAS_HTML="false"
           case "$LIBRARY" in
-            plotly|bokeh|altair|highcharts|pygal|letsplot) HAS_HTML="true" ;;
+            plotly|bokeh|altair|pygal|letsplot) HAS_HTML="true" ;;
           esac
           if [ "$LANGUAGE" = "javascript" ] && [ -f "$IMPL_DIR/plot-light.html" ] && [ -f "$IMPL_DIR/plot-dark.html" ]; then
             HAS_HTML="true"
@@ -945,7 +946,7 @@ jobs:
           HTML_LIGHT=""
           HTML_DARK=""
           case "$LIBRARY" in
-            plotly|bokeh|altair|highcharts|pygal|letsplot)
+            plotly|bokeh|altair|pygal|letsplot)
               HTML_LIGHT="${BASE}/plot-light.html"
               HTML_DARK="${BASE}/plot-dark.html"
               ;;

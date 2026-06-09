@@ -1,6 +1,6 @@
 import Box from '@mui/material/Box';
 import { colors, typography } from '../theme';
-import { LANG_DISPLAY } from '../constants';
+import { LANG_DISPLAY, LIB_TO_FRAMEWORK } from '../constants';
 
 const DESCRIPTIONS: Record<string, string> = {
   matplotlib: 'The foundation. Publication-ready figures with total control.',
@@ -17,6 +17,21 @@ const DESCRIPTIONS: Record<string, string> = {
   chartjs: 'Simple, flexible HTML5-canvas charts. The popular JS default.',
   d3: 'Data-driven SVG. Low-level, maximum control on the web.',
   echarts: 'Powerful interactive charts for the browser. Vast chart catalog.',
+  muix: 'Charts for the MUI / Material UI React ecosystem. Community @mui/x-charts.',
+};
+
+// Human label for a non-"none" framework constraint (drives the React badge).
+const FRAMEWORK_LABEL: Record<string, string> = {
+  react: 'React',
+  vue: 'Vue',
+  svelte: 'Svelte',
+  angular: 'Angular',
+};
+
+// Short license note surfaced on the card. Only set where it's worth calling
+// out (e.g. MUI X ships community-MIT while Pro/Premium stay out of scope).
+const LICENSE_NOTE: Record<string, string> = {
+  muix: 'MIT · community',
 };
 
 interface LibraryCardProps {
@@ -28,6 +43,10 @@ interface LibraryCardProps {
 
 export function LibraryCard({ name, language, count, onClick }: LibraryCardProps) {
   const langLabel = language ? (LANG_DISPLAY[language] || language).toUpperCase() : null;
+  const framework = LIB_TO_FRAMEWORK[name];
+  const frameworkLabel = framework && framework !== 'none' ? (FRAMEWORK_LABEL[framework] || framework) : null;
+  const licenseNote = LICENSE_NOTE[name];
+  const hasBadge = !!(langLabel || frameworkLabel);
   return (
     <Box
       component="button"
@@ -72,31 +91,63 @@ export function LibraryCard({ name, language, count, onClick }: LibraryCardProps
         },
       }}
     >
-      {/* Top-right corner chip — sits above the card's flow content so it
-          doesn't push the library name around. Top offset clears the 2px
-          hover-accent that animates in via ::before. */}
-      {langLabel && (
+      {/* Top-right corner chips — language, and (for framework-locked libs like
+          MUI X) a framework badge stacked beneath it. They sit above the card's
+          flow content so they don't push the library name around; the top offset
+          clears the 2px hover-accent that animates in via ::before. */}
+      {hasBadge && (
         <Box
-          aria-label={`Language: ${langLabel}`}
           sx={{
             position: 'absolute',
             top: 10,
             right: 10,
-            fontFamily: typography.mono,
-            fontSize: '9px',
-            fontWeight: 600,
-            color: 'var(--ink-muted)',
-            bgcolor: 'var(--bg-elevated)',
-            border: '1px solid var(--rule)',
-            borderRadius: '4px',
-            px: 0.75,
-            py: 0.25,
-            letterSpacing: '0.08em',
-            lineHeight: 1.4,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-end',
+            gap: 0.5,
             pointerEvents: 'none',
           }}
         >
-          {langLabel}
+          {langLabel && (
+            <Box
+              aria-label={`Language: ${langLabel}`}
+              sx={{
+                fontFamily: typography.mono,
+                fontSize: '9px',
+                fontWeight: 600,
+                color: 'var(--ink-muted)',
+                bgcolor: 'var(--bg-elevated)',
+                border: '1px solid var(--rule)',
+                borderRadius: '4px',
+                px: 0.75,
+                py: 0.25,
+                letterSpacing: '0.08em',
+                lineHeight: 1.4,
+              }}
+            >
+              {langLabel}
+            </Box>
+          )}
+          {frameworkLabel && (
+            <Box
+              aria-label={`Framework: ${frameworkLabel}`}
+              sx={{
+                fontFamily: typography.mono,
+                fontSize: '9px',
+                fontWeight: 600,
+                color: colors.primary,
+                bgcolor: 'var(--bg-elevated)',
+                border: `1px solid ${colors.primary}`,
+                borderRadius: '4px',
+                px: 0.75,
+                py: 0.25,
+                letterSpacing: '0.08em',
+                lineHeight: 1.4,
+              }}
+            >
+              {frameworkLabel}
+            </Box>
+          )}
         </Box>
       )}
 
@@ -108,7 +159,7 @@ export function LibraryCard({ name, language, count, onClick }: LibraryCardProps
           color: 'var(--ink)',
           // Reserve space under the absolute-positioned chip so a long
           // library name doesn't slide under it.
-          pr: langLabel ? 5 : 0,
+          pr: hasBadge ? 5 : 0,
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
@@ -150,6 +201,15 @@ export function LibraryCard({ name, language, count, onClick }: LibraryCardProps
         transition: 'color 0.2s',
       }}>
         <span aria-hidden="true">.explore()</span>
+        {licenseNote && (
+          <Box component="span" aria-label={`License: ${licenseNote}`} sx={{
+            fontSize: '10px',
+            letterSpacing: '0.06em',
+            color: 'var(--ink-muted)',
+          }}>
+            {licenseNote}
+          </Box>
+        )}
       </Box>
     </Box>
   );

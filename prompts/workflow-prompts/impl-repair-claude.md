@@ -53,8 +53,9 @@ Adjust the canvas-controlling knobs of the relevant library family:
 ## Step 3: Read current implementation
 
 `plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}{EXT}` — `{EXT}` is `.py`
-for python libraries, `.R` for ggplot2, `.jl` for makie, and `.js` for the
-JavaScript libraries (chartjs, d3, echarts).
+for python libraries, `.R` for ggplot2, `.jl` for makie, `.js` for the
+framework-agnostic JavaScript libraries (chartjs, d3, echarts, highcharts), and
+`.tsx` for muix (React / MUI X).
 
 **Do NOT read sibling-library implementations under
 `plots/{SPEC_ID}/implementations/`** (other libraries' source or `.yaml`).
@@ -95,12 +96,14 @@ ANYPLOT_THEME=dark  julia --project=. {LIBRARY}.jl
 ```
 
 **JavaScript (`LANGUAGE=javascript`)**: run the browser render harness (it writes
-both the PNG and the interactive HTML); do not run the `.js` file directly. Run
-from the repo root so `node_modules` resolves:
+both the PNG and the interactive HTML); do not run the `.js`/`.tsx` file directly.
+Run from the repo root so `node_modules` resolves (`{EXT}` is `.js` for
+chartjs/d3/echarts/highcharts, `.tsx` for muix — the harness handles the React
+bundling automatically):
 ```bash
 cd plots/{SPEC_ID}/implementations/{LANGUAGE}
-ANYPLOT_THEME=light node "$GITHUB_WORKSPACE/automation/js-render/render.mjs" {LIBRARY}.js
-ANYPLOT_THEME=dark  node "$GITHUB_WORKSPACE/automation/js-render/render.mjs" {LIBRARY}.js
+ANYPLOT_THEME=light node "$GITHUB_WORKSPACE/automation/js-render/render.mjs" {LIBRARY}{EXT}
+ANYPLOT_THEME=dark  node "$GITHUB_WORKSPACE/automation/js-render/render.mjs" {LIBRARY}{EXT}
 ```
 
 Both renders must succeed.

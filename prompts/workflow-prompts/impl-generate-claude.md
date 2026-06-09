@@ -8,21 +8,30 @@ This is NOT optional. The workflow will FAIL if this file does not exist after y
 
 The `{EXT}` value depends on `{LANGUAGE}`:
 
-| LANGUAGE     | EXT  | Runner                                                  |
-|--------------|------|---------------------------------------------------------|
-| `python`     | `.py` | `python` (in `.venv`)                                  |
-| `r`          | `.R`  | `Rscript`                                              |
-| `julia`      | `.jl` | `julia --project=.`                                    |
-| `javascript` | `.js` | `node automation/js-render/render.mjs` (browser harness) |
+| LANGUAGE     | EXT   | Runner                                                       |
+|--------------|-------|--------------------------------------------------------------|
+| `python`     | `.py`  | `python` (in `.venv`)                                       |
+| `r`          | `.R`   | `Rscript`                                                   |
+| `julia`      | `.jl`  | `julia --project=.`                                         |
+| `javascript` | `.js`  | `node automation/js-render/render.mjs` (browser harness)    |
+| `javascript` | `.tsx` | `node automation/js-render/render.mjs` (MUI X — React, esbuild-bundled by the same harness) |
 
 > **JavaScript renders in a browser, not a CLI.** Unlike R/Julia (which write a
 > PNG directly), a JS charting snippet draws into a DOM node. You do **not** run
-> the `.js` file directly — you run the shared render harness, which wraps your
-> idiomatic snippet (`new Chart(...)`, `d3.select(...)`, `echarts.init(...)`) in
-> an HTML page, loads the pinned library bundle, renders it under headless
+> the `.js`/`.tsx` file directly — you run the shared render harness, which wraps
+> your idiomatic snippet (`new Chart(...)`, `d3.select(...)`, `echarts.init(...)`)
+> in an HTML page, loads the pinned library bundle, renders it under headless
 > Chromium (Playwright), and screenshots the mount node `#container` at the exact
 > canvas size. It emits both `plot-{THEME}.png` (gallery) **and**
 > `plot-{THEME}.html` (interactive detail view). See `prompts/library/{LIBRARY}.md`.
+>
+> **MUI X (`muix`) is the React exception.** Its snippet is a `.tsx` file that
+> **default-exports a React component** (e.g. `export default function Chart() { return <BarChart … /> }`)
+> — there is no imperative `new Chart(...)`. The same harness esbuild-bundles it
+> with react + `@mui/x-charts`, wraps it in a theme-aware MUI `ThemeProvider`, and
+> mounts it via `createRoot`. Run it exactly the same way (`render.mjs muix.tsx`).
+> **Community `@mui/x-charts` only — never `@mui/x-charts-pro` / Premium.** See
+> `prompts/library/muix.md`.
 
 ---
 
@@ -142,7 +151,7 @@ The script MUST:
   - Julia: `get(ENV, "ANYPLOT_THEME", "light")`
   - JavaScript: the browser has no env — the harness exposes `window.ANYPLOT_THEME` (`"light"`/`"dark"`) and `window.ANYPLOT_TOKENS` (page bg, ink, grid, Imprint palette). Read those.
 - Save output as `plot-{THEME}.png` (theme-suffixed). Python/R/Julia save it themselves; **JavaScript snippets do NOT save** — the render harness screenshots `#container` and writes the PNG (and HTML) for you.
-- For interactive libraries (plotly, bokeh, altair, highcharts, pygal, letsplot): also save `plot-{THEME}.html`. ggplot2 and makie are PNG-only, no HTML variant. **JavaScript** (chartjs, d3, echarts) is interactive, but the harness emits the HTML — the snippet must not.
+- For interactive libraries (plotly, bokeh, altair, highcharts, pygal, letsplot): also save `plot-{THEME}.html`. ggplot2 and makie are PNG-only, no HTML variant. **JavaScript** (chartjs, d3, echarts, muix) is interactive, but the harness emits the HTML — the snippet must not.
 - Use `#009E73` (Imprint palette position 1) as the **first categorical series**, always. Multi-series follows the canonical order: `#C475FD`, `#4467A3`, `#BD8233`, `#AE3030`, `#2ABCCD`, `#954477`, `#99B314`. May reassign positions when categories carry strong semantic color cues (grass→green, wood→ochre, blood→red, sky→blue) — see `prompts/default-style-guide.md` "Semantic exception". Three semantic anchors outside the categorical pool: `#DDCC77` (amber, warning), theme-adaptive `palette.neutral` (totals/baseline), theme-adaptive `palette.muted` (other/rest).
 - For continuous data: build `imprint_seq` (single-polarity, `["#009E73", "#4467A3"]`) or `imprint_div` (diverging, `["#AE3030", midpoint, "#4467A3"]` where midpoint is `#FAF8F1` on light / `#1A1A17` on dark) from the Imprint palette. No other cmaps — never viridis/cividis/BrBG/Reds/Blues/Greens or jet/hsv/rainbow.
 - Plot backgrounds: `#FAF8F1` (light) / `#1A1A17` (dark). Never pure `#FFFFFF` or `#000000`.
@@ -178,17 +187,19 @@ ANYPLOT_THEME=dark  julia --project=. {LIBRARY}.jl
 
 **JavaScript (`LANGUAGE=javascript`)**: run the render harness, not the file. It
 wraps your snippet in HTML, renders under headless Chromium, screenshots
-`#container`, and writes both the PNG and the interactive HTML. Run from the repo
+`#container`, and writes both the PNG and the interactive HTML. For `muix` (`.tsx`)
+it additionally esbuild-bundles your default-exported React component with
+react + `@mui/x-charts` and mounts it — same command either way. Run from the repo
 root so `node_modules` resolves:
 ```bash
 cd plots/{SPEC_ID}/implementations/{LANGUAGE}
-ANYPLOT_THEME=light node "$GITHUB_WORKSPACE/automation/js-render/render.mjs" {LIBRARY}.js
-ANYPLOT_THEME=dark  node "$GITHUB_WORKSPACE/automation/js-render/render.mjs" {LIBRARY}.js
+ANYPLOT_THEME=light node "$GITHUB_WORKSPACE/automation/js-render/render.mjs" {LIBRARY}{EXT}
+ANYPLOT_THEME=dark  node "$GITHUB_WORKSPACE/automation/js-render/render.mjs" {LIBRARY}{EXT}
 ```
-The harness derives the library + bundle from the filename (`{LIBRARY}.js`) and
-the orientation from a `//# anyplot-orientation: square` directive in the file
-(default landscape). It exits non-zero if your snippet throws or leaves
-`#container` empty.
+The harness derives the library + bundle from the filename (`{LIBRARY}{EXT}`,
+i.e. `chartjs.js` … `muix.tsx`) and the orientation from a
+`//# anyplot-orientation: square` directive in the file (default landscape). It
+exits non-zero if your snippet throws or leaves `#container` empty.
 
 Both runs must succeed and produce `plot-light.png` / `plot-dark.png` (plus `plot-light.html` / `plot-dark.html` for interactive libs — ggplot2 and makie are PNG-only; the JS harness writes the HTML itself). If either fails, fix and try again (max 3 attempts).
 
