@@ -2,7 +2,6 @@ import { ReactNode } from 'react';
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// Must import after test-utils to get jest-dom matchers
 import { ErrorBoundary } from 'src/components/ErrorBoundary';
 import { render, screen } from 'src/test-utils';
 

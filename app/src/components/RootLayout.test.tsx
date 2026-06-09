@@ -9,12 +9,12 @@ const { setAmbient } = vi.hoisted(() => ({ setAmbient: vi.fn() }));
 
 vi.mock('src/hooks/useAnalytics', async () => {
   const actual =
-    await vi.importActual<typeof import('src/hooks/useAnalytics')>('../hooks/useAnalytics');
+    await vi.importActual<typeof import('src/hooks/useAnalytics')>('src/hooks/useAnalytics');
   return { ...actual, setAnalyticsAmbientProps: setAmbient };
 });
 
 vi.mock('src/hooks', async () => {
-  const actual = await vi.importActual<typeof import('src/hooks')>('../hooks');
+  const actual = await vi.importActual<typeof import('src/hooks')>('src/hooks');
   return {
     ...actual,
     useAnalytics: () => ({ trackEvent: vi.fn(), trackPageview: vi.fn() }),
@@ -24,7 +24,7 @@ vi.mock('src/hooks', async () => {
 
 vi.mock('src/hooks/useLayoutContext', async () => {
   const actual = await vi.importActual<typeof import('src/hooks/useLayoutContext')>(
-    '../hooks/useLayoutContext'
+    'src/hooks/useLayoutContext'
   );
   return {
     ...actual,

@@ -7,7 +7,7 @@ const trackPageview = vi.fn();
 const navigate = vi.fn();
 
 vi.mock('src/hooks', async () => {
-  const actual = await vi.importActual<typeof import('src/hooks')>('../hooks');
+  const actual = await vi.importActual<typeof import('src/hooks')>('src/hooks');
   return {
     ...actual,
     useAnalytics: () => ({ trackEvent, trackPageview }),
@@ -39,7 +39,7 @@ vi.mock('src/hooks/usePlotOfTheDay', () => ({
 
 vi.mock('src/hooks/useLayoutContext', async () => {
   const actual = await vi.importActual<typeof import('src/hooks/useLayoutContext')>(
-    '../hooks/useLayoutContext'
+    'src/hooks/useLayoutContext'
   );
   return { ...actual, useTheme: () => ({ isDark: false, toggle: vi.fn() }) };
 });

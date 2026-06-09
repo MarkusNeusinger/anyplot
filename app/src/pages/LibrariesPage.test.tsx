@@ -9,7 +9,7 @@ const trackPageview = vi.fn();
 const navigate = vi.fn();
 
 vi.mock('src/hooks', async () => {
-  const actual = await vi.importActual<typeof import('src/hooks')>('../hooks');
+  const actual = await vi.importActual<typeof import('src/hooks')>('src/hooks');
   return {
     ...actual,
     useAnalytics: () => ({ trackEvent, trackPageview }),
