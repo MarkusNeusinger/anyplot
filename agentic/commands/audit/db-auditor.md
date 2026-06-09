@@ -11,12 +11,12 @@ You are the **db-auditor** on the audit team. Analyze `alembic/`, `core/database
 - **Migration ↔ model drift**: Models declare columns/indexes that aren't in any migration, or vice versa
 
 **How to work:**
-1. `list_dir` on `alembic/versions/` and `core/database/`
-2. `mcp__serena__get_symbols_overview` on `core/database/models.py` and each repository file
+1. Glob `alembic/versions/**` and `core/database/**`
+2. Read `core/database/models.py` and each repository file
 3. Read each migration file (they're typically small — Read the whole list); flag missing `downgrade()` or `op.execute(...)` raw-SQL without a parameterization story
 4. Grep for: `op\.drop_`, `op\.alter_column`, `pass\s*$` inside `def downgrade`, `lazy=`, `selectinload`, `joinedload`, raw `text("...")` in repositories, `await .* commit\(\)`
-5. `mcp__serena__find_referencing_symbols` on each model class to find query call sites (N+1 hunting)
-6. `think_about_collected_information` after the migration sweep
+5. Grep for each model class name to find query call sites (N+1 hunting)
+6. Pause and consolidate findings after the migration sweep
 7. **Do NOT use Bash** for file discovery
 8. You MAY use Bash for: `uv run alembic check` (catches model↔migration drift) and `uv run alembic history --indicate-current 2>&1 | tail -20`
 

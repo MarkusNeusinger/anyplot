@@ -11,13 +11,13 @@ You are the **agentic-auditor** on the audit team. Your scope is the **agent erg
 - TAC-style sanity (only flag what's actually weak): conditional docs (`/docs`-style routing), model routing per task, self-validation loops, ADWs, context-window discipline (commands that load way more than they need)
 
 **How to work:**
-1. `list_dir` on the directories above
+1. Glob the directories above
 2. Read `CLAUDE.md` end-to-end and any nested `CLAUDE.md` files
-3. `mcp__serena__get_symbols_overview` is mostly not useful here (markdown); rely on Read + Grep + Glob
+3. This scope is mostly markdown — rely on Read + Grep + Glob
 4. Glob for `agentic/commands/*.md`, `prompts/**/*.md`, `.claude/**/*.json`
 5. Cross-check `@`-references in CLAUDE.md and command files against the actual file paths
 6. Grep for inline prompt strings inside `agentic/workflows/`, `automation/scripts/`, and `scripts/` that look like they should live in `prompts/` (note: the old `core/generators/` package was removed — don't look for it)
-7. `think_about_collected_information` after the docs+commands sweep
+7. Pause and consolidate findings after the docs+commands sweep
 8. **Do NOT use Bash** for file discovery
 9. You MAY skip `/agentic`-style numerical scoring — this is an audit, not a TAC scorecard. Surface findings, not a score.
 
