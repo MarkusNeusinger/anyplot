@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: scatter-connected-temporal
 created: '2026-03-13T15:25:29Z'
-updated: '2026-06-09T23:33:34Z'
+updated: '2026-06-09T23:46:48Z'
 generated_by: claude-sonnet
 workflow_run: 27242045143
 issue: 4675
@@ -12,103 +12,109 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/python/pygal/plot-dark.html
-quality_score: 77
+quality_score: 84
 review:
   strengths:
-  - 'Temporal gradient from #009E73 to #4467A3 elegantly encodes time progression
-    using the imprint_seq ramp — matches spec intent exactly'
-  - Era-segment colour coding with 6 named phases gives the legend semantic value
-    beyond visual redundancy
-  - Amber key-year markers (1998, 2005, 2008, 2015, 2020) contextualise historical
-    economic events visually
-  - Semantic red start / blue end anchoring creates a clear narrative arc across the
-    scatter path
-  - Correct imprint_seq continuous treatment for temporal gradient; palette compliance
-    excellent
-  - pygal interactive HTML export leveraged alongside PNG — distinctive library feature
-    used well
-  - Fully deterministic data generation with realistic GDP/life-expectancy shock events
-    modelled
+  - 'Excellent temporal narrative: imprint_seq gradient (green→blue across 6 eras)
+    encodes time direction visually and the ▶ 1990 / ● 2023 bookend markers frame
+    the story clearly'
+  - Three-tier marker hierarchy (dots_size 12→20→26) creates intentional visual prominence
+    for era points, key events, and start/end anchors
+  - 'Correct semantic anchor usage: amber (#DDCC77) for key years and #AE3030 for
+    the start marker match the style-guide roles precisely'
+  - SVG label-color patching correctly adapts year annotation text to INK token in
+    dark theme, avoiding dark-on-dark failure
+  - 'Full spec compliance: connected path, chronological connection, color gradient,
+    key-year annotations, temporal direction arrow — all present'
+  - Realistic and rich dataset (developing country GDP vs life expectancy 1990–2023)
+    with correctly calibrated economic shocks (1998, 2008, 2020)
+  - Interactive HTML output produced alongside the PNG — pygal's distinctive interactive
+    feature used correctly
   weaknesses:
-  - 'Dark-on-dark label failure: year annotation labels (rendered via print_labels=True)
-    appear in dark ink on the dark (#1A1A17) background — pygal''s print_labels text
-    does not automatically inherit the foreground Style token. Fix: override label
-    text colour to INK (#F0EFE8) in dark mode via per-point label_color dict entries
-    or by patching the SVG fill attribute before cairosvg conversion.'
-  - 'X-axis tick label truncation: all X-axis ticks show ''$8,0...'', ''$9,0...''
-    etc. — pygal abbreviates because tick label width exceeds the column width. Fix:
-    use shorter formatter (lambda x: f''${x/1000:.0f}k'' producing ''$8k'', ''$9k''
-    etc.) or reduce x_labels_major_count to give each label more horizontal room.'
-  - Minor crowding of the End (2023) annotation label at the right canvas margin —
-    in dark render this compounds the dark-on-dark issue.
+  - 'Label crowding in the $13k–$16k GDP band: the ''2005'' and ''2008'' year labels
+    plus their amber dots cluster tightly with the era connection line — reduce label
+    font size slightly or offset the labels outward to reduce visual noise'
+  - Right margin is tight for the '● 2023' end-label — increase margin_right from
+    80 to ~120 to give the label comfortable breathing room and prevent edge proximity
+    on the dark render
+  - Pygal's frame renders with all four spines (no spine removal support) — reduces
+    visual refinement compared to the L-shaped or no-spine ideal; this is a library
+    constraint but worth noting as a polish gap
+  - The '2015' and '2020' labels in the upper-right zone also cluster near the data
+    path — slightly larger x-offset for those label positions would improve readability
+    at the dense end of the trajectory
+  - Top margin (margin_top=60) is slightly small for the title; raising to ~90 would
+    give the title line more separation from the top of the chart area
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct
-      Chrome: Title "Life Expectancy vs GDP · scatter-connected-temporal · python · pygal · anyplot.ai" in dark ink — readable. Y-axis label "Life Expectancy (years)" and X-axis label "GDP per Capita (USD)" — readable. Y-axis tick labels "68.0 yrs" through "78.0 yrs" — clearly readable. X-axis tick labels TRUNCATED: showing "$8,0...", "$9,0...", "$10,..." etc. — GDP values not fully readable.
-      Data: Six era segments from brand green (#009E73, 1990–1997) through teal shades to steel blue (#4467A3, 2020–2023). Amber (#DDCC77) larger dots mark key years 1998, 2005, 2008, 2015, 2020 with year text labels adjacent. Red (#AE3030) large dot at start (1990) with "▶ 1990" label. Large blue dot at end (2023) with "● 2023" label. Connected line follows temporal order through era segments.
-      Legibility verdict: PARTIAL FAIL — X-axis tick label truncation; all other text readable.
+      Background: Warm off-white (#FAF8F1) — correct theme surface.
+      Chrome: Title "Life Expectancy vs GDP · scatter-connected-temporal · python · pygal · anyplot.ai" in dark ink at top, clearly readable. X-axis label "GDP per Capita (USD)" and Y-axis label "Life Expectancy (years)" are dark and readable. Tick labels ($8k–$22k, 68.0–78.0 yrs) in muted dark tone, readable. Subtle dashed grid lines visible without competing with data. Legend at bottom with 7 entries in 3 columns — all text readable.
+      Data: Six era segments form a connected scatter path from lower-left (1990, ~$8k / 68 yrs) to upper-right (2023, ~$22k / 76.5 yrs). Colors progress from #009E73 (brand green, 1990–1997) through teal-to-blue interpolations to #4467A3 (2020–2023), correctly implementing imprint_seq. Amber (#DDCC77) dots mark key years (1998, 2005, 2008, 2015, 2020) with year labels in dark text. Red (#AE3030) large dot at 1990 start with "▶ 1990" label; dark-blue large dot at 2023 end with "● 2023" label. Dots clearly visible at 12/20/26px sizes. Some label crowding around $13k–$16k zone.
+      Legibility verdict: PASS — all text readable against warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct
-      Chrome: Title, Y-axis label, Y-axis tick labels, and legend entries are in light text — readable. X-axis tick labels remain truncated (same issue as light render). CRITICAL FAILURE: year annotation labels ("▶ 1990", "1998", "2005", "2008", "2015", "2020", "2023") appear rendered in dark ink on the dark #1A1A17 background — dark-on-dark failure. These labels are barely visible or invisible in the dark render. This is because pygal's print_labels text does not automatically inherit the foreground Style token in dark mode.
-      Data: Data colours identical to light render — correct. Era gradient segments, amber key markers, red start, blue end all visible (colours are theme-independent). The data colour constancy is correct.
-      Legibility verdict: FAIL — year annotation labels are dark-on-dark (near-invisible); X-axis ticks truncated.
+      Background: Warm near-black (#1A1A17) — correct dark surface.
+      Chrome: Title text light-colored and readable against dark background. Axis labels and tick labels render in light ink, clearly legible. Grid lines subtle. Legend text readable. No dark-on-dark failures detected — the SVG label-color patch correctly changed year annotation text (1998, 2005, 2008, 2015, 2020, "▶ 1990", "● 2023") to INK (#F0EFE8), so they read as light text on the dark background.
+      Data: Colors are identical to the light render — brand green (#009E73) first era, sequential gradient to blue (#4467A3) final era. Amber key-year markers and red/blue start/end markers retain their correct colors. Data colors unchanged between themes as required.
+      Legibility verdict: PASS — all text readable against warm near-black background; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 19
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 0
+        score: 7
         max: 8
-        passed: false
-        comment: 'Dark-on-dark failure: year annotation labels (print_labels) appear
-          in dark ink on dark background in dark render. Additionally X-axis tick
-          labels truncated in both renders ($8,0... $9,0... etc.) — GDP values unreadable.'
+        passed: true
+        comment: All font sizes explicitly set; title, axis labels, ticks, year labels
+          readable in both themes. Some year labels in the $13k–$16k zone are small
+          relative to the dense path.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 'Minor crowding: ''2015'' label adjacent to amber dot, ''2023'' label
-          close to large end marker. No hard text-on-text collisions.'
+        comment: 'Label crowding in middle zone ($13k–$16k): ''2005'' and ''2008''
+          labels cluster with era path. ''2015''/''2020'' labels tight in upper-right.
+          Readable but noisy.'
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Markers clearly sized (12/20/26 px), line connections visible. Slight
-          issue: End (2023) large dot stacks with last era segment dot.'
+        comment: 'Marker sizes well-adapted to 34 data points: era dots 12px, key-year
+          20px, start/end 26px. Line width 5px. Excellent density adaptation.'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: No red-green sole signal. Amber for annotations, semantic red for
-          start, blue for end — CVD-distinguishable.
+        comment: Imprint seq gradient is CVD-safe; amber and red markers are clearly
+          distinct; no red-green-only encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas. Legend at bottom functional. X-axis tick
-          truncation indicates insufficient horizontal space per tick column.
+        comment: 3200x1800 canvas, good margin settings. Right margin (80px) is tight
+          for '● 2023' label. Top margin (60px) slightly small for title breathing
+          room.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: GDP per Capita (USD) and Life Expectancy (years) descriptive with
-          units. Title format correct with descriptive prefix.
+        comment: '''GDP per Capita (USD)'' and ''Life Expectancy (years)'' — both
+          descriptive with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First era uses brand green #009E73. Temporal gradient follows imprint_seq
-          (#009E73 to #4467A3). Backgrounds correct (#FAF8F1 light, #1A1A17 dark).
-          Amber anchor used correctly for key years.'
+        comment: 'First era = #009E73 (brand green). Sequential gradient #009E73→#4467A3
+          = imprint_seq. Amber anchor for key events. Backgrounds #FAF8F1/#1A1A17.
+          Data colors identical across themes; chrome correctly flips.'
     design_excellence:
       score: 12
       max: 20
@@ -118,23 +124,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above-generic: intentional temporal gradient with era segmentation,
-          amber accent markers, semantic start/end anchoring, scaled title font. Custom
-          style throughout.'
+        comment: 'Above defaults: temporal gradient across 6 era colors, three-tier
+          marker hierarchy, arrow-character start marker, SVG patching for dark theme.
+          Thoughtful and intentional, not publication-ready but clearly above a configured
+          default.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Dashed guide strokes, rounded line caps, multi-column legend. Spine
-          removal not available in pygal. X-axis truncation detracts.
+        comment: Dashed grid guides, generous margins, round linecap/linejoin on stroke,
+          bottom legend organized in columns. Pygal's forced four-spine frame limits
+          further refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Colour gradient narrates temporal movement. Key year labels contextualise
-          economic events. Clear start/end anchors guide viewer through path.
+        comment: 'Clear temporal narrative: green start → blue end, economic shocks
+          visible as path reversals, key-event amber labels contextualize the story.
+          Visual hierarchy guides the viewer.'
     spec_compliance:
       score: 15
       max: 15
@@ -144,91 +153,92 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct connected scatter plot with temporal path. Points connected
-          chronologically, markers at every data position.
+        comment: Connected scatter with temporal path — XY chart with stroke. Correct
+          chart type fully implemented.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Sequential connection, key year annotations, colour gradient for
-          time direction, directional arrow symbol at start, explicit start/end marking
-          — all present.
+        comment: Chronological connection, key-year annotations, color gradient for
+          temporal direction, visible markers, directional arrow — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=GDP per capita, Y=life expectancy, time encodes path ordering.
-          All 34 data points rendered.
+        comment: X=GDP per capita, Y=life expectancy, time encoded as 2D path trajectory.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'Life Expectancy vs GDP · scatter-connected-temporal · python
-          · pygal · anyplot.ai' with descriptive prefix. Legend labels match era names.
+        comment: 'Title: ''Life Expectancy vs GDP · scatter-connected-temporal · python
+          · pygal · anyplot.ai'' — correct format. Legend with 7 meaningful entries.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Temporal path, era gradient, key annotations, start/end markers.
-          Could add explicit arrow overlays on path segments but colour gradient satisfies
-          spec.
+        comment: 'All aspects present: temporal path, era coloring, key events, start/end
+          markers, path direction indicator.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Life expectancy vs GDP for developing economy 1990-2023. Plausible
-          disruptions (1998, 2008, 2020 shocks). Neutral and appropriate.
+        comment: Developing country GDP vs life expectancy 1990–2023. Realistic economic
+          development narrative, neutral topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: GDP range ~$8k-$22k, life expectancy 68-78 years, 34 points — all
-          appropriate for domain and chart type.
+        comment: $8k–$22k GDP per capita and 68–77 year life expectancy are plausible
+          for a transitioning developing economy. Economic shocks calibrated correctly.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Flat script, no functions or classes, clean era loop.
+        comment: One helper function (_patch_label_colors) is present but justified
+          — workaround for pygal's label color limitation in dark theme. Code otherwise
+          linear and clean.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42), fully deterministic.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. sys.path manipulation justified to avoid shadowing
-          the real pygal package.
+        comment: 'All imports used: os (theme env), re (SVG patching), sys (path fix),
+          cairosvg (PNG), numpy (data), pygal, pygal.style.Style.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI. Era loop clean; per-point dict styling idiomatic in pygal.
+        comment: Clean, idiomatic. Era loop is elegant. SVG patch is a smart technical
+          solution to a real library limitation.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via cairosvg and plot-{THEME}.html via render_to_file.
+        comment: plot-{THEME}.png via cairosvg, plot-{THEME}.html via render_to_file.
+          Both outputs correct.
     library_mastery:
       score: 7
       max: 10
@@ -238,15 +248,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: pygal.XY with correct stroke/show_dots patterns, cairosvg export,
-          per-point dict styling, x_value_formatter, stroke_style customisation.
+        comment: pygal.XY with dict-format data points (value, label, color), stroke/dots_size
+          params, stroke_style dict, print_labels, legend_at_bottom — all idiomatic
+          pygal patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Interactive HTML output (pygal's primary differentiator), per-point
-          colour overrides, multi-column bottom legend, stroke_style with linecap/linejoin.
+        comment: Per-point coloring via 'color' key in data dicts (pygal-specific),
+          stroke_style with linecap/linejoin, interactive HTML output, print_labels
+          with per-point label text — three pygal-distinctive features leveraged.
   verdict: APPROVED
 impl_tags:
   dependencies:
