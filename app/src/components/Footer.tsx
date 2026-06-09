@@ -3,8 +3,8 @@ import { Link as RouterLink } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 
-import { GITHUB_URL } from '../constants';
-import { colors, fontSize, semanticColors, typography } from '../theme';
+import { GITHUB_URL } from 'src/constants';
+import { colors, fontSize, semanticColors, typography } from 'src/theme';
 
 interface FooterProps {
   onTrackEvent?: (name: string, props?: Record<string, string | undefined>) => void;

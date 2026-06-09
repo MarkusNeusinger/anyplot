@@ -1,25 +1,25 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { render, screen, userEvent } from '../test-utils';
+import { render, screen, userEvent } from 'src/test-utils';
 
 const trackEvent = vi.fn();
 
-vi.mock('../hooks', async () => {
-  const actual = await vi.importActual<typeof import('../hooks')>('../hooks');
+vi.mock('src/hooks', async () => {
+  const actual = await vi.importActual<typeof import('src/hooks')>('../hooks');
   return {
     ...actual,
     useAnalytics: () => ({ trackEvent, trackPageview: vi.fn() }),
   };
 });
 
-vi.mock('../hooks/useLayoutContext', async () => {
-  const actual = await vi.importActual<typeof import('../hooks/useLayoutContext')>(
+vi.mock('src/hooks/useLayoutContext', async () => {
+  const actual = await vi.importActual<typeof import('src/hooks/useLayoutContext')>(
     '../hooks/useLayoutContext'
   );
   return { ...actual, useTheme: () => ({ isDark: false, toggle: vi.fn() }) };
 });
 
-import { PlotOfTheDayTerminal } from './PlotOfTheDayTerminal';
+import { PlotOfTheDayTerminal } from 'src/components/PlotOfTheDayTerminal';
 
 const potd = {
   spec_id: 'scatter-basic',

@@ -2,14 +2,14 @@ import type { ReactNode } from 'react';
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { render, screen, userEvent } from '../test-utils';
+import { render, screen, userEvent } from 'src/test-utils';
 
 const trackEvent = vi.fn();
 const trackPageview = vi.fn();
 const navigate = vi.fn();
 
-vi.mock('../hooks', async () => {
-  const actual = await vi.importActual<typeof import('../hooks')>('../hooks');
+vi.mock('src/hooks', async () => {
+  const actual = await vi.importActual<typeof import('src/hooks')>('../hooks');
   return {
     ...actual,
     useAnalytics: () => ({ trackEvent, trackPageview }),
@@ -33,7 +33,7 @@ vi.mock('react-router-dom', async () => {
   return { ...actual, useNavigate: () => navigate };
 });
 
-import { LibrariesPage } from './LibrariesPage';
+import { LibrariesPage } from 'src/pages/LibrariesPage';
 
 describe('LibrariesPage', () => {
   beforeEach(() => {

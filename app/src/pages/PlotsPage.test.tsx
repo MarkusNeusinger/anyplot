@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { render, screen } from '../test-utils';
+import { render, screen } from 'src/test-utils';
 
-vi.mock('../hooks', () => ({
+vi.mock('src/hooks', () => ({
   useAnalytics: () => ({ trackPageview: vi.fn(), trackEvent: vi.fn() }),
   useInfiniteScroll: () => ({ loadMoreRef: { current: null } }),
   useFilterState: () => ({
@@ -42,19 +42,19 @@ vi.mock('react-helmet-async', () => ({
   ),
 }));
 
-vi.mock('../components/FilterBar', () => ({
+vi.mock('src/components/FilterBar', () => ({
   FilterBar: () => <div data-testid="filterbar">FilterBar</div>,
 }));
 
-vi.mock('../components/ImagesGrid', () => ({
+vi.mock('src/components/ImagesGrid', () => ({
   ImagesGrid: () => <div data-testid="images-grid">ImagesGrid</div>,
 }));
 
-vi.mock('../components/Footer', () => ({
+vi.mock('src/components/Footer', () => ({
   Footer: () => <div data-testid="footer">Footer</div>,
 }));
 
-import { PlotsPage } from './PlotsPage';
+import { PlotsPage } from 'src/pages/PlotsPage';
 
 describe('PlotsPage', () => {
   beforeEach(() => {

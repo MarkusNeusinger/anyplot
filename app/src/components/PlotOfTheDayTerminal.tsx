@@ -2,14 +2,14 @@ import { Link as RouterLink } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 
-import { GITHUB_URL } from '../constants';
-import { useAnalytics } from '../hooks';
-import { useTheme } from '../hooks/useLayoutContext';
-import type { PlotOfTheDayData } from '../hooks/usePlotOfTheDay';
-import { colors, typography } from '../theme';
-import { specPath } from '../utils/paths';
-import { buildSrcSet, getFallbackSrc } from '../utils/responsiveImage';
-import { selectPreviewUrl } from '../utils/themedPreview';
+import { GITHUB_URL } from 'src/constants';
+import { useAnalytics } from 'src/hooks';
+import { useTheme } from 'src/hooks/useLayoutContext';
+import type { PlotOfTheDayData } from 'src/hooks/usePlotOfTheDay';
+import { colors, typography } from 'src/theme';
+import { specPath } from 'src/utils/paths';
+import { buildSrcSet, getFallbackSrc } from 'src/utils/responsiveImage';
+import { selectPreviewUrl } from 'src/utils/themedPreview';
 
 interface PlotOfTheDayTerminalProps {
   potd: PlotOfTheDayData | null;

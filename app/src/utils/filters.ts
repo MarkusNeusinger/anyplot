@@ -4,9 +4,9 @@
  * Pure functions extracted for reusability and testing.
  */
 
-import type { ActiveFilters, FilterCategory, FilterCounts } from '../types';
-import { FILTER_CATEGORIES } from '../types';
-import { createFuzzySearcher, getMatchType, type MatchType } from './fuzzySearch';
+import type { ActiveFilters, FilterCategory, FilterCounts } from 'src/types';
+import { FILTER_CATEGORIES } from 'src/types';
+import { createFuzzySearcher, getMatchType, type MatchType } from 'src/utils/fuzzySearch';
 
 /**
  * Get counts for a specific filter category.

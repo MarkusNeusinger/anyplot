@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { render, screen, waitFor } from '../test-utils';
-import { SpecPage } from './SpecPage';
+import { SpecPage } from 'src/pages/SpecPage';
+import { render, screen, waitFor } from 'src/test-utils';
 
 const mockNavigate = vi.fn();
 let mockParams: Record<string, string | undefined> = { specId: 'scatter-basic' };
@@ -22,7 +22,7 @@ vi.mock('react-helmet-async', () => ({
   Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-vi.mock('../hooks', () => ({
+vi.mock('src/hooks', () => ({
   useAnalytics: () => ({
     trackPageview: vi.fn(),
     trackEvent: vi.fn(),
@@ -41,15 +41,15 @@ vi.mock('../hooks', () => ({
 }));
 
 // Mock lazy-loaded components as simple divs
-vi.mock('../components/SpecTabs', () => ({
+vi.mock('src/components/SpecTabs', () => ({
   SpecTabs: () => <div data-testid="spec-tabs">SpecTabs</div>,
 }));
 
-vi.mock('../components/SpecOverview', () => ({
+vi.mock('src/components/SpecOverview', () => ({
   SpecOverview: () => <div data-testid="spec-overview">SpecOverview</div>,
 }));
 
-vi.mock('../components/SpecDetailView', () => ({
+vi.mock('src/components/SpecDetailView', () => ({
   SpecDetailView: () => <div data-testid="spec-detail-view">SpecDetailView</div>,
 }));
 

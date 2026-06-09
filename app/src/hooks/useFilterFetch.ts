@@ -6,9 +6,9 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { API_URL, BATCH_SIZE } from '../constants';
-import type { ActiveFilters, FilterCounts, PlotImage } from '../types';
-import { shuffleArray } from '../utils/shuffle';
+import { API_URL, BATCH_SIZE } from 'src/constants';
+import type { ActiveFilters, FilterCounts, PlotImage } from 'src/types';
+import { shuffleArray } from 'src/utils/shuffle';
 
 interface FilterFetchState {
   filterCounts: FilterCounts | null;

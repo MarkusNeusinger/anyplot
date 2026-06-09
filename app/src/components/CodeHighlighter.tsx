@@ -5,7 +5,7 @@ import r from 'react-syntax-highlighter/dist/esm/languages/prism/r';
 import tsx from 'react-syntax-highlighter/dist/esm/languages/prism/tsx';
 import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-light';
 
-import { typography } from '../theme';
+import { typography } from 'src/theme';
 
 SyntaxHighlighter.registerLanguage('python', python);
 SyntaxHighlighter.registerLanguage('r', r);

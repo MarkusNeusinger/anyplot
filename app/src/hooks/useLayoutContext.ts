@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 
-import type { ActiveFilters, FilterCounts, PlotImage } from '../types';
+import type { ActiveFilters, FilterCounts, PlotImage } from 'src/types';
 
 // Persistent home state that survives navigation
 export interface HomeState {
@@ -23,9 +23,9 @@ export interface HomeStateContextValue {
 }
 
 export interface AppData {
-  specsData: import('../types').SpecInfo[];
-  librariesData: import('../types').LibraryInfo[];
-  languagesData: import('../types').LanguageInfo[];
+  specsData: import('src/types').SpecInfo[];
+  librariesData: import('src/types').LibraryInfo[];
+  languagesData: import('src/types').LanguageInfo[];
   stats: { specs: number; plots: number; libraries: number; lines_of_code?: number } | null;
 }
 

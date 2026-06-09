@@ -10,12 +10,12 @@ import Link from '@mui/material/Link';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
-import { SectionHeader } from '../components/SectionHeader';
-import { DEBUG_API_URL, LIB_ABBREV, LIB_TO_LANG, LIBRARIES } from '../constants';
-import { useCopyCode } from '../hooks';
-import { colors, fontSize, semanticColors, typography } from '../theme';
-import { buildClaudePrompt } from '../utils/claudePrompt';
-import { specPath } from '../utils/paths';
+import { SectionHeader } from 'src/components/SectionHeader';
+import { DEBUG_API_URL, LIB_ABBREV, LIB_TO_LANG, LIBRARIES } from 'src/constants';
+import { useCopyCode } from 'src/hooks';
+import { colors, fontSize, semanticColors, typography } from 'src/theme';
+import { buildClaudePrompt } from 'src/utils/claudePrompt';
+import { specPath } from 'src/utils/paths';
 
 // ============================================================================
 // Types

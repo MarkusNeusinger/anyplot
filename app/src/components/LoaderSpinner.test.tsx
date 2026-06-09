@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { render } from '../test-utils';
-import { LoaderSpinner } from './LoaderSpinner';
+import { LoaderSpinner } from 'src/components/LoaderSpinner';
+import { render } from 'src/test-utils';
 
 describe('LoaderSpinner', () => {
   it('renders without crashing', () => {

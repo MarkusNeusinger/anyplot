@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { render, screen, userEvent } from '../test-utils';
+import { render, screen, userEvent } from 'src/test-utils';
 
 const trackEvent = vi.fn();
 const trackPageview = vi.fn();
 const navigate = vi.fn();
 
-vi.mock('../hooks', async () => {
-  const actual = await vi.importActual<typeof import('../hooks')>('../hooks');
+vi.mock('src/hooks', async () => {
+  const actual = await vi.importActual<typeof import('src/hooks')>('../hooks');
   return {
     ...actual,
     useAnalytics: () => ({ trackEvent, trackPageview }),
@@ -19,7 +19,7 @@ vi.mock('../hooks', async () => {
   };
 });
 
-vi.mock('../hooks/useFeaturedSpecs', () => ({
+vi.mock('src/hooks/useFeaturedSpecs', () => ({
   useFeaturedSpecs: () => [
     {
       spec_id: 'scatter-basic',
@@ -33,12 +33,12 @@ vi.mock('../hooks/useFeaturedSpecs', () => ({
   ],
 }));
 
-vi.mock('../hooks/usePlotOfTheDay', () => ({
+vi.mock('src/hooks/usePlotOfTheDay', () => ({
   usePlotOfTheDay: () => null,
 }));
 
-vi.mock('../hooks/useLayoutContext', async () => {
-  const actual = await vi.importActual<typeof import('../hooks/useLayoutContext')>(
+vi.mock('src/hooks/useLayoutContext', async () => {
+  const actual = await vi.importActual<typeof import('src/hooks/useLayoutContext')>(
     '../hooks/useLayoutContext'
   );
   return { ...actual, useTheme: () => ({ isDark: false, toggle: vi.fn() }) };
@@ -49,11 +49,11 @@ vi.mock('react-router-dom', async () => {
   return { ...actual, useNavigate: () => navigate };
 });
 
-vi.mock('../components/HeroSection', () => ({
+vi.mock('src/components/HeroSection', () => ({
   HeroSection: () => <div data-testid="hero" />,
 }));
 
-vi.mock('../components/NumbersStrip', () => ({
+vi.mock('src/components/NumbersStrip', () => ({
   NumbersStrip: () => <div data-testid="numbers" />,
 }));
 
@@ -63,7 +63,7 @@ vi.mock('react-helmet-async', () => ({
   ),
 }));
 
-import { LandingPage } from './LandingPage';
+import { LandingPage } from 'src/pages/LandingPage';
 
 describe('LandingPage', () => {
   beforeEach(() => {

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { render, screen } from '../test-utils';
+import { render, screen } from 'src/test-utils';
 
 vi.mock('react-syntax-highlighter/dist/esm/prism-light', () => {
   const MockHighlighter = ({
@@ -45,7 +45,7 @@ vi.mock('react-syntax-highlighter/dist/esm/languages/prism/tsx', () => ({
   default: {},
 }));
 
-import CodeHighlighter from './CodeHighlighter';
+import CodeHighlighter from 'src/components/CodeHighlighter';
 
 describe('CodeHighlighter', () => {
   it('renders without crashing', () => {

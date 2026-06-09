@@ -8,7 +8,7 @@ import {
   getResponsiveSizes,
   OVERVIEW_SIZES,
   SPECS_SIZES,
-} from './responsiveImage';
+} from 'src/utils/responsiveImage';
 
 describe('responsiveImage utilities', () => {
   const baseUrl = 'https://cdn.example.com/plots/scatter-basic/matplotlib/plot.png';

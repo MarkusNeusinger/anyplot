@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 
 import Box from '@mui/material/Box';
 
-import { useTypewriter } from '../hooks/useTypewriter';
-import { colors } from '../theme';
+import { useTypewriter } from 'src/hooks/useTypewriter';
+import { colors } from 'src/theme';
 
 interface TypewriterTextProps {
   lines: string[];

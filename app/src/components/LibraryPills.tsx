@@ -5,7 +5,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 
-import { colors, fontSize, semanticColors, typography } from '../theme';
+import { colors, fontSize, semanticColors, typography } from 'src/theme';
 
 // Library abbreviations (same as filter display)
 const LIBRARY_ABBREV: Record<string, string> = {

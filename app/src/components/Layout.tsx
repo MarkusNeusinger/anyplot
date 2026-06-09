@@ -1,15 +1,15 @@
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 
-import { API_URL } from '../constants';
+import { API_URL } from 'src/constants';
 import {
   AppDataContext,
   type HomeState,
   HomeStateContext,
   initialHomeState,
   ThemeContext,
-} from '../hooks/useLayoutContext';
-import { useThemeMode } from '../hooks/useThemeMode';
-import type { LanguageInfo, LibraryInfo, SpecInfo } from '../types';
+} from 'src/hooks/useLayoutContext';
+import { useThemeMode } from 'src/hooks/useThemeMode';
+import type { LanguageInfo, LibraryInfo, SpecInfo } from 'src/types';
 
 // Global provider that wraps the entire router
 export function AppDataProvider({ children }: { children: ReactNode }) {

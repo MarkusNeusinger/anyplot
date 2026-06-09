@@ -5,13 +5,13 @@ import { Outlet, useLocation, useNavigationType } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 
-import { useAnalytics } from '../hooks';
-import { setAnalyticsAmbientProps } from '../hooks/useAnalytics';
-import { useTheme } from '../hooks/useLayoutContext';
-import { FeedbackWidget } from './FeedbackWidget';
-import { Footer } from './Footer';
-import { MastheadRule } from './MastheadRule';
-import { NavBar } from './NavBar';
+import { FeedbackWidget } from 'src/components/FeedbackWidget';
+import { Footer } from 'src/components/Footer';
+import { MastheadRule } from 'src/components/MastheadRule';
+import { NavBar } from 'src/components/NavBar';
+import { useAnalytics } from 'src/hooks';
+import { setAnalyticsAmbientProps } from 'src/hooks/useAnalytics';
+import { useTheme } from 'src/hooks/useLayoutContext';
 
 const containerSx = {
   px: { xs: 2, sm: 4, md: 8, lg: 12 },

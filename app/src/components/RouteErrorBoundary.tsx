@@ -10,7 +10,7 @@ import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Typography from '@mui/material/Typography';
 
-import { NotFoundPage } from '../pages/NotFoundPage';
+import { NotFoundPage } from 'src/pages/NotFoundPage';
 
 const RELOAD_ATTEMPT_KEY = 'anyplot:chunk-reload-attempt';
 
