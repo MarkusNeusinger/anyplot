@@ -30,28 +30,18 @@ const tempAnomaly = [
   1.02, 0.85, 0.89, 1.17
 ];
 
-// Imprint sequential: early (brand green #009E73) → late (blue #4467A3)
-function lerpColor(frac, c1, c2) {
-  const ch = (hex, pos) => parseInt(hex.slice(pos, pos + 2), 16);
-  const r = Math.round(ch(c1, 1) + frac * (ch(c2, 1) - ch(c1, 1)));
-  const g = Math.round(ch(c1, 3) + frac * (ch(c2, 3) - ch(c1, 3)));
-  const b = Math.round(ch(c1, 5) + frac * (ch(c2, 5) - ch(c1, 5)));
-  return `rgb(${r},${g},${b})`;
-}
-
 const keyYears = new Set([1980, 2000, 2010, 2023]);
 const labelPos = { 1980: "left", 2000: "top", 2010: "top", 2023: "right" };
 const n = years.length;
 
+// Encode temporal index as 3rd dimension for native visualMap coloring
 const seriesData = years.map((year, i) => {
-  const frac = i / (n - 1);
-  const color = lerpColor(frac, t.seq[0], t.seq[1]);
   const isKey = keyYears.has(year);
   return {
-    value: [co2[i], tempAnomaly[i]],
+    value: [co2[i], tempAnomaly[i], i],
     name: String(year),
     symbolSize: isKey ? 16 : 8,
-    itemStyle: { color, borderColor: t.pageBg, borderWidth: 1.5 },
+    itemStyle: { borderColor: t.pageBg, borderWidth: 1.5 },
     label: {
       show: isKey,
       formatter: String(year),
@@ -73,6 +63,15 @@ const chart = echarts.init(document.getElementById("container"));
 chart.setOption({
   animation: false,
   backgroundColor: "transparent",
+  // Native ECharts continuous colormap for temporal gradient — no manual lerp needed
+  visualMap: {
+    show: false,
+    type: "continuous",
+    min: 0,
+    max: n - 1,
+    dimension: 2,
+    inRange: { color: t.seq }
+  },
   title: {
     text: titleText,
     left: "center",
@@ -89,8 +88,8 @@ chart.setOption({
     min: 334,
     max: 426,
     axisLabel: { color: t.inkSoft, fontSize: 13 },
-    axisLine: { lineStyle: { color: t.inkSoft } },
-    axisTick: { lineStyle: { color: t.inkSoft } },
+    axisLine: { show: false },
+    axisTick: { show: false },
     splitLine: { lineStyle: { color: t.grid } }
   },
   yAxis: {
@@ -106,8 +105,8 @@ chart.setOption({
       fontSize: 13,
       formatter: (v) => v.toFixed(1)
     },
-    axisLine: { lineStyle: { color: t.inkSoft } },
-    axisTick: { lineStyle: { color: t.inkSoft } },
+    axisLine: { show: false },
+    axisTick: { show: false },
     splitLine: { lineStyle: { color: t.grid } }
   },
   series: [
@@ -115,21 +114,18 @@ chart.setOption({
       type: "line",
       showSymbol: true,
       label: { show: false },
-      lineStyle: {
-        color: {
-          type: "linear",
-          x: 0,
-          y: 1,
-          x2: 1,
-          y2: 0,
-          colorStops: [
-            { offset: 0, color: t.seq[0] },
-            { offset: 1, color: t.seq[1] }
-          ],
-          global: false
-        },
-        width: 2.5,
-        opacity: 0.65
+      lineStyle: { width: 2.5, opacity: 0.65 },
+      // Arrow at path terminus: ECharts markLine makes time direction unmissable
+      markLine: {
+        silent: true,
+        label: { show: false },
+        lineStyle: { color: t.seq[1], width: 2.5, opacity: 0.85 },
+        symbol: ["none", "arrow"],
+        symbolSize: 14,
+        data: [[
+          { coord: [co2[n - 2], tempAnomaly[n - 2]] },
+          { coord: [co2[n - 1], tempAnomaly[n - 1]] }
+        ]]
       },
       data: seriesData
     }
