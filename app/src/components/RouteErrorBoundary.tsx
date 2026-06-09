@@ -10,6 +10,7 @@ import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Typography from '@mui/material/Typography';
 
+import { CONFIG } from 'src/global-config';
 import { NotFoundPage } from 'src/pages/NotFoundPage';
 
 const RELOAD_ATTEMPT_KEY = 'anyplot:chunk-reload-attempt';
@@ -142,7 +143,7 @@ export function RouteErrorBoundary() {
         <Typography variant="body2" sx={{ color: 'var(--ink-muted)' }}>
           {body}
         </Typography>
-        {import.meta.env.DEV && (
+        {CONFIG.isDev && (
           <Typography
             variant="caption"
             component="pre"
