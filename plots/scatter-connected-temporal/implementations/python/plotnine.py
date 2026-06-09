@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
 Library: plotnine 0.15.5 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-09
@@ -19,12 +19,14 @@ import pandas as pd
 from plotnine import (
     aes,
     annotate,
+    arrow,
     element_blank,
     element_line,
     element_rect,
     element_text,
     geom_path,
     geom_point,
+    geom_segment,
     geom_text,
     ggplot,
     labs,
@@ -129,15 +131,8 @@ df = pd.DataFrame(
     {"Unemployment": unemployment, "Inflation": inflation, "Year": years, "Year_num": np.arange(n, dtype=float)}
 )
 
-# Key year labels with custom offsets to reduce crowding in central area
-label_config = {
-    1990: (0.28, 0.55),
-    1995: (-0.45, -0.55),
-    2000: (0.28, 0.55),
-    2005: (0.38, -0.55),
-    2015: (-0.38, -0.55),
-    2020: (0.38, 0.55),
-}
+# Four well-separated key years to anchor temporal reading (avoids central congestion)
+label_config = {1990: (-0.42, 0.55), 2000: (0.32, 0.55), 2010: (0.42, -0.60), 2020: (0.42, 0.55)}
 
 label_rows = []
 for yr, (dx, dy) in label_config.items():
@@ -147,10 +142,34 @@ df_labels = pd.DataFrame(label_rows)
 
 recession_point = df[df["Year"] == 2009].copy()
 
+# Directional arrow segments at inflection points to reinforce temporal flow
+arrow_years = [1992, 1997, 2011, 2017]
+arrow_rows = []
+for yr in arrow_years:
+    r1 = df[df["Year"] == yr].iloc[0]
+    r2 = df[df["Year"] == yr + 1].iloc[0]
+    arrow_rows.append(
+        {
+            "x": r1["Unemployment"],
+            "y": r1["Inflation"],
+            "xend": r2["Unemployment"],
+            "yend": r2["Inflation"],
+            "Year_num": r1["Year_num"],
+        }
+    )
+df_arrows = pd.DataFrame(arrow_rows)
+
 # Plot — geom_path preserves temporal ordering (not geom_line which sorts by x)
 plot = (
     ggplot(df, aes(x="Unemployment", y="Inflation"))
     + geom_path(aes(color="Year_num"), size=1.2)
+    + geom_segment(
+        data=df_arrows,
+        mapping=aes(x="x", y="y", xend="xend", yend="yend", color="Year_num"),
+        arrow=arrow(length=0.1, type="open"),
+        show_legend=False,
+        size=1.2,
+    )
     + geom_point(aes(fill="Year_num"), size=4.0, color=PAGE_BG, stroke=0.6, show_legend=False)
     + geom_point(
         data=recession_point,
@@ -172,7 +191,7 @@ plot = (
     + geom_text(
         aes(x="x_label", y="y_label", label="Label"),
         data=df_labels,
-        size=3.0,
+        size=3.5,
         fontweight="bold",
         color=INK_SOFT,
         inherit_aes=False,
@@ -203,6 +222,8 @@ plot = (
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_line(color=INK, size=0.3, alpha=0.15),
         panel_grid_minor=element_blank(),
+        panel_border=element_blank(),
+        axis_line=element_blank(),
     )
 )
 
