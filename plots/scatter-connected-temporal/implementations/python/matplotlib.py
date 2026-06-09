@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-09
@@ -79,7 +79,7 @@ ax.scatter(
     c=np.arange(n),
     cmap=imprint_seq,
     norm=norm,
-    s=80,
+    s=130,
     edgecolors=PAGE_BG,
     linewidth=0.8,
     zorder=5,
@@ -87,18 +87,37 @@ ax.scatter(
 
 # Annotate key time points
 label_indices = [0, 9, 19, n - 1]
-offsets = [(10, -12), (-12, 10), (10, 10), (-12, -12)]
+offsets = [(10, -14), (-14, 12), (10, 12), (-14, -14)]
 for idx, (dx, dy) in zip(label_indices, offsets, strict=True):
     ax.annotate(
         str(years[idx]),
         (unemployment[idx], inflation[idx]),
         textcoords="offset points",
         xytext=(dx, dy),
-        fontsize=7,
+        fontsize=9,
         fontweight="bold",
         color=imprint_seq(norm(idx)),
         arrowprops={"arrowstyle": "-", "color": imprint_seq(norm(idx)), "alpha": 0.5, "linewidth": 0.6},
     )
+
+# Highlight the unemployment peak — most economically significant inflection point
+peak_idx = int(np.argmax(unemployment))
+ax.annotate(
+    f"Unemployment\npeak · {years[peak_idx]}",
+    (unemployment[peak_idx], inflation[peak_idx]),
+    xytext=(0.68, 0.28),
+    textcoords="axes fraction",
+    fontsize=8,
+    color=INK,
+    bbox={
+        "facecolor": ELEVATED_BG,
+        "edgecolor": INK_SOFT,
+        "alpha": 0.88,
+        "boxstyle": "round,pad=0.35",
+        "linewidth": 0.6,
+    },
+    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "linewidth": 0.7},
+)
 
 # Colorbar for temporal progression
 sm = plt.cm.ScalarMappable(cmap=imprint_seq, norm=mcolors.Normalize(vmin=years[0], vmax=years[-1]))
