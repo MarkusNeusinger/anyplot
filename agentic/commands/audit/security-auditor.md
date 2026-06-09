@@ -12,11 +12,11 @@ You are the **security-auditor** on the audit team. anyplot has a public, unauth
 - **CSP / security headers**: Frontend response headers (if served from FastAPI), iframe restrictions for og-image endpoints
 
 **How to work:**
-1. `list_dir` on `.github/workflows/` and `api/routers/`
+1. Glob `.github/workflows/**` and `api/routers/**`
 2. Grep across the repo for: `os\.getenv`, `os\.environ`, `\${{\s*github\.event\.`, `pull_request_target`, `permissions:`, `actions/checkout@`, `f"\s*SELECT`, `f"\s*INSERT`, `f"\s*UPDATE`, `\.format\(.*SELECT`, `eval\(`, `exec\(`, `subprocess\.`, `shell=True`
-3. `mcp__serena__find_symbol` on each FastAPI router function to see what it accepts and reflects
+3. Grep for each FastAPI router function's definition to see what it accepts and reflects
 4. Read every workflow file that triggers on `pull_request_target`, `issue_comment`, or `workflow_dispatch` end-to-end
-5. `think_about_collected_information` after the workflow + API scan
+5. Pause and consolidate findings after the workflow + API scan
 6. **Do NOT use Bash** for file discovery
 7. You MAY use Bash for: `uv run --with pip-audit pip-audit 2>&1 | tail -30` (ephemeral install — `pip-audit` is intentionally NOT a project dep) and `cd app && yarn audit --level high --groups dependencies 2>&1 | tail -30` (Yarn 1.22 syntax, matches `packageManager` in `app/package.json`)
 

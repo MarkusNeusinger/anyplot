@@ -72,7 +72,7 @@ function verifyPrompt(finding, auditorName, partnerHint) {
   return [
     `You are a rigorous ${partnerHint} reviewer peer-reviewing a finding raised by the ${auditorName}.`,
     `Bring your own domain expertise and independently check it against the actual repo / live system`,
-    `(use Read / Grep / Serena / read-only Bash as needed). Do NOT just re-read the original auditor's reasoning.`,
+    `(use Read / Grep / read-only Bash as needed). Do NOT just re-read the original auditor's reasoning.`,
     ``,
     `FINDING: ${finding.title}`,
     `IMPORTANCE: ${finding.importance}`,
