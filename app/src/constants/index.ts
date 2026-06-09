@@ -1,10 +1,11 @@
 // Constants for anyplot.ai frontend
 
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-// DebugPage uses this — set to "/api" in prod (same-origin via the
-// Cloudflare Worker on anyplot.ai/api/*) so the CF Access cookie can be
-// sent with fetch. Falls back to API_URL locally where there's no Worker.
-export const DEBUG_API_URL = import.meta.env.VITE_DEBUG_API_URL || API_URL;
+import { CONFIG } from 'src/global-config';
+
+export { CONFIG };
+// Compat aliases — prefer CONFIG.api.* in new code.
+export const API_URL = CONFIG.api.baseUrl;
+export const DEBUG_API_URL = CONFIG.api.debugBaseUrl;
 export const GITHUB_URL = 'https://github.com/MarkusNeusinger/anyplot';
 export const LIBRARIES = [
   'altair',
