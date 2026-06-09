@@ -10,14 +10,12 @@ git log --oneline -5
 gh pr list --limit 5 2>/dev/null || echo "(gh CLI not available)"
 ```
 
-## Serena (activate + use)
+## Tools
 
-- Activate the project with `mcp__serena__activate_project` (param: `anyplot`) if not already active.
-- Run `mcp__serena__check_onboarding_performed` once per session.
-- Prefer Serena's symbol-aware tools over grep/glob for code navigation and edits:
-  - `mcp__serena__get_symbols_overview` / `mcp__serena__find_symbol` — semantic lookup
-  - `mcp__serena__find_referencing_symbols` — impact analysis before edits
-  - `mcp__serena__replace_symbol_body` / `mcp__serena__insert_after_symbol` — structural edits
+- Use the built-in Glob/Grep/Read/Edit tools for code navigation and edits:
+  - Read a file, or Grep for `class |def ` declarations — structural overview and symbol lookup
+  - Grep for a symbol name to find its usages/call sites — impact analysis before edits
+  - Edit / Write — code edits
 - See `/prime-deep` for the full tool catalog.
 
 ## What this project is

@@ -12,12 +12,12 @@ You are the **observability-auditor** on the audit team. anyplot uses Plausible 
 - **Tracing / metrics**: No Sentry or OpenTelemetry detected — flag this as a known gap (Importance 3) only if logging coverage is also weak; otherwise note as Positive Pattern that the team has chosen logs-only
 
 **How to work:**
-1. `list_dir` on `app/src/analytics/`, plus Read `api/analytics.py`, `api/cache.py`, `docs/reference/plausible.md`
-2. `mcp__serena__find_symbol` on the Plausible event-emitting functions in both backend and frontend
-3. `mcp__serena__find_referencing_symbols` on each event-emitter to count call sites and check naming
+1. Glob `app/src/analytics/**`, plus Read `api/analytics.py`, `api/cache.py`, `docs/reference/plausible.md`
+2. Grep for the definitions of the Plausible event-emitting functions in both backend and frontend
+3. Grep for each event-emitter's name to count call sites and check naming
 4. Grep for: `print\(`, `logging\.`, `logger\.`, `plausible`, `track`, `event\(`, around the Anthropic SDK call sites
 5. Read `docs/reference/plausible.md` and cross-check every documented event against actual emit sites; flag mismatches in both directions
-6. `think_about_collected_information` after the analytics + logging scan
+6. Pause and consolidate findings after the analytics + logging scan
 7. **Do NOT use Bash** for file discovery
 8. You MAY use Bash for: `cd app && yarn build 2>&1 | tail -20` to check that the analytics bundle builds cleanly
 

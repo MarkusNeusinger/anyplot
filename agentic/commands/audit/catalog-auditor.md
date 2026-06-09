@@ -16,7 +16,7 @@ You don't need to query the database or run helper scripts. The repository under
 
 ## How to look
 
-- Start with `list_dir` / Glob on `plots/` to get a feel for the size and shape (how many specs, how many implementations each).
+- Start with Glob on `plots/` to get a feel for the size and shape (how many specs, how many implementations each).
 - Pick a handful of specs to actually open — mix old and new, big and small, well-covered and sparse. Read their `specification.md`, glance at `specification.yaml`, peek at one or two `metadata/python/{library}.yaml` files.
 - Follow your nose. If something looks off (missing file, suspiciously empty metadata, weird tag, mismatched fields), pull on that thread.
 - Stop when you have enough material for a few real findings. You are not building a coverage report.
@@ -41,7 +41,7 @@ These are **suggestions**. Skip any that don't yield signal and lean into whiche
 
 ## Tool budget
 
-~30 calls. One pass over `plots/` via `list_dir` / Glob, then targeted reads on a handful of specs. Don't open every spec.
+~30 calls. One pass over `plots/` via Glob, then targeted reads on a handful of specs. Don't open every spec.
 
 ## Report format
 

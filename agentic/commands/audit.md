@@ -27,7 +27,7 @@ You are the **audit-lead**. Your job is to coordinate a team of specialist audit
    - Empty / `all` → spawn all 16 auditors
    - Single keyword → spawn only that auditor (see Scope Table)
    - Directory path → Lead determines which auditor(s) cover that path
-   - Optional `since=<git-ref>` (e.g. `since=main`, `since=HEAD~10`) → **Incremental mode**: Lead computes the changed file list once via `git diff --name-only <ref>...HEAD` and passes the relevant subset to each auditor. Auditors must restrict their analysis to those files (plus their direct importers if a quick `mcp__serena__find_referencing_symbols` lookup is cheap). If `since=` is omitted, auditors run a full sweep of their scope. The five external-system auditors (`gcloud`, `github`, `plausible`, `pagespeed`, `seo`) ignore `since=` because their scope is live systems, not files.
+   - Optional `since=<git-ref>` (e.g. `since=main`, `since=HEAD~10`) → **Incremental mode**: Lead computes the changed file list once via `git diff --name-only <ref>...HEAD` and passes the relevant subset to each auditor. Auditors must restrict their analysis to those files (plus their direct importers if a quick Grep lookup is cheap). If `since=` is omitted, auditors run a full sweep of their scope. The five external-system auditors (`gcloud`, `github`, `plausible`, `pagespeed`, `seo`) ignore `since=` because their scope is live systems, not files.
 
 2. **Run baseline measurements** (these are the ONLY Bash commands the Lead runs in this phase):
    ```bash
@@ -113,8 +113,8 @@ Both mechanisms use the **same** active set, Shared Rules, Findings Schema, Dime
 ### Phase 2: Parallel Analysis
 
 Each specialist receives a focused prompt loaded from `agentic/commands/audit/<name>-auditor.md` (see the Specialist Prompts index below), prepended with the Shared Rules. They:
-- Use **Serena tools** (`mcp__serena__get_symbols_overview`, `mcp__serena__find_symbol`, `search_for_pattern`, `list_dir`, `find_file`, `mcp__serena__find_referencing_symbols`) and **Glob/Grep/Read** for code analysis. **Tool-naming note:** `mcp__serena__*` is the canonical MCP-registered prefix that matches `.claude/settings.json` (`mcp__serena__*` is in `permissions.allow`). A few external configs (`CLAUDE.md`, `.serena/project.yml`) may still reference legacy `jet_brains_*` aliases — treat those as the same tools and use the `mcp__serena__*` form here.
-- Use `think_about_collected_information` after non-trivial research sequences
+- Use **Glob/Grep/Read** for code analysis
+- Pause and consolidate findings after non-trivial research sequences
 - Do **NOT** use Bash for file discovery or code searching — only for the per-auditor whitelisted shell commands
 - Stay within the tool budget (~30 calls); set `COVERAGE: partial` if forced to stop early
 - Tag every finding with exactly one **dimension** (see Dimension Taxonomy) and emit it per the **Findings Schema**

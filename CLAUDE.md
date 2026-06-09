@@ -31,22 +31,12 @@ After opening a PR, the work is **not** complete. Stay with the PR until both th
 
 This rule applies to every PR Claude opens, including small fixes and follow-ups.
 
-## MCP Tools (Serena & Context7)
-
-**Serena** - Prefer for Python/TypeScript code navigation and editing (canonical MCP-prefix is `mcp__serena__*`):
-- `mcp__serena__jet_brains_find_symbol` / `mcp__serena__jet_brains_get_symbols_overview` - Find classes, functions, methods
-- `mcp__serena__jet_brains_find_referencing_symbols` - Find all usages of a symbol
-- `mcp__serena__replace_symbol_body` / `mcp__serena__insert_after_symbol` - Edit entire functions/classes
-- `mcp__serena__replace_content` (regex) - Small inline edits
-- `mcp__serena__search_for_pattern` / `mcp__serena__list_dir` / `mcp__serena__find_file` - Non-code files, directory exploration
+## MCP Tools (Context7)
 
 **Context7** - Use for up-to-date library documentation:
 - `resolve-library-id` -> `query-docs` - Get current API docs, code examples
 - Use when working with external libraries (matplotlib, FastAPI, SQLAlchemy, React, etc.)
-
-**When to use:**
-- Serena: Understanding codebase structure, refactoring, finding usages, editing code
-- Context7: Checking correct API usage, finding library-specific patterns, debugging library issues
+- When to use: checking correct API usage, finding library-specific patterns, debugging library issues
 
 ## Development Workflow
 
