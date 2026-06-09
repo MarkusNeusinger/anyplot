@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
 Library: altair 6.2.1 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-09
@@ -87,7 +87,7 @@ path = alt.Chart(df).mark_line(strokeWidth=2.5, opacity=0.60, color=INK_SOFT).en
 # Points colored by temporal progression using Imprint sequential cmap
 points = (
     alt.Chart(df)
-    .mark_point(filled=True, size=200, stroke="white", strokeWidth=1.2)
+    .mark_point(filled=True, size=160, opacity=0.85, stroke="white", strokeWidth=1.2)
     .encode(
         x=x_enc,
         y=y_enc,
@@ -116,7 +116,7 @@ chart = (
         height=320,
         background=PAGE_BG,
         title=alt.Title(
-            "scatter-connected-temporal · altair · anyplot.ai",
+            "scatter-connected-temporal · python · altair · anyplot.ai",
             fontSize=16,
             color=INK,
             subtitle="Unemployment vs. Inflation — tracing the Phillips curve path (1994–2023)",
