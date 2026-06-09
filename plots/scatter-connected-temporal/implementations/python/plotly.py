@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 91/100 | Updated: 2026-06-09
+Library: plotly 6.8.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-09
 """
 
 import os
