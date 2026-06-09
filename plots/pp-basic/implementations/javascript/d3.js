@@ -1,7 +1,7 @@
 // anyplot.ai
 // pp-basic: Probability-Probability (P-P) Plot
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-06-09
+// Library: d3 7.9.0 | JavaScript 22.22.3
+// Quality: 86/100 | Created: 2026-06-09
 
 //# anyplot-orientation: square
 
