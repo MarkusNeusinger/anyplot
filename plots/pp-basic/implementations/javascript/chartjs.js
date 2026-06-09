@@ -59,9 +59,22 @@ const refLine = [
   { x: 1, y: 1 },
 ];
 
+// KS 95% confidence band: ±1.36/sqrt(n) from the diagonal
+// Highlights whether S-curve deviation is statistically significant
+const ksEps = 1.36 / Math.sqrt(n);
+const xs = Array.from({ length: 101 }, (_, i) => i / 100);
+const upperBand = xs.map((x) => ({ x, y: Math.min(1, x + ksEps) }));
+const lowerBand = xs.map((x) => ({ x, y: Math.max(0, x - ksEps) }));
+
 // --- Mount -----------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
+
+// Suppress grid lines at axis boundaries (value=0 and value=1) to achieve
+// an L-shaped frame — removes the top and right box spines that Chart.js
+// draws by default when tick grid lines coincide with the chart edge.
+const innerGrid = (ctx) =>
+  ctx.tick.value <= 0 || ctx.tick.value >= 1 ? "transparent" : t.grid;
 
 // --- Chart -----------------------------------------------------------------
 new Chart(canvas, {
@@ -69,13 +82,28 @@ new Chart(canvas, {
   data: {
     datasets: [
       {
-        label: "Empirical vs Theoretical CDF",
-        data: ppPoints,
-        backgroundColor: t.palette[0] + "bb",
-        borderColor: t.pageBg,
-        borderWidth: 1,
-        pointRadius: 5,
-        pointHoverRadius: 7,
+        // Fill from upperBand to lowerBand (index +1) for the confidence envelope
+        label: "95% confidence band",
+        data: upperBand,
+        type: "line",
+        backgroundColor: t.palette[0] + "20",
+        borderColor: "transparent",
+        borderWidth: 0,
+        pointRadius: 0,
+        fill: "+1",
+        tension: 0,
+        order: 3,
+      },
+      {
+        label: "_lower",
+        data: lowerBand,
+        type: "line",
+        borderColor: "transparent",
+        borderWidth: 0,
+        pointRadius: 0,
+        fill: false,
+        tension: 0,
+        order: 3,
       },
       {
         label: "Reference (perfect fit)",
@@ -87,6 +115,17 @@ new Chart(canvas, {
         pointRadius: 0,
         fill: false,
         tension: 0,
+        order: 2,
+      },
+      {
+        label: "Empirical vs Theoretical CDF",
+        data: ppPoints,
+        backgroundColor: t.palette[0] + "a6",
+        borderColor: t.pageBg,
+        borderWidth: 1,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        order: 1,
       },
     ],
   },
@@ -99,15 +138,16 @@ new Chart(canvas, {
         display: true,
         text: "pp-basic · javascript · chartjs · anyplot.ai",
         color: t.ink,
-        font: { size: 22, weight: "500" },
+        font: { size: 22, weight: "600" },
         padding: { top: 10, bottom: 20 },
       },
       legend: {
         labels: {
-          color: t.inkSoft,
+          color: t.ink,
           font: { size: 14 },
           boxWidth: 14,
           padding: 16,
+          filter: (item) => !item.text.startsWith("_"),
         },
       },
     },
@@ -116,12 +156,13 @@ new Chart(canvas, {
         type: "linear",
         min: 0,
         max: 1,
+        border: { display: true, color: t.inkSoft },
         ticks: {
           color: t.inkSoft,
           font: { size: 14 },
           maxTicksLimit: 6,
         },
-        grid: { color: t.grid },
+        grid: { color: innerGrid },
         title: {
           display: true,
           text: "Theoretical CDF (Normal)",
@@ -134,12 +175,13 @@ new Chart(canvas, {
         type: "linear",
         min: 0,
         max: 1,
+        border: { display: true, color: t.inkSoft },
         ticks: {
           color: t.inkSoft,
           font: { size: 14 },
           maxTicksLimit: 6,
         },
-        grid: { color: t.grid },
+        grid: { color: innerGrid },
         title: {
           display: true,
           text: "Empirical CDF",
