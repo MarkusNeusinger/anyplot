@@ -1,8 +1,9 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-06-09
 """
+
 import os
 
 import matplotlib.pyplot as plt
@@ -19,7 +20,6 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Imprint sequential colormap: brand green (early) → blue (recent)
 imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
@@ -129,6 +129,19 @@ df = pd.DataFrame({"Unemployment Rate (%)": unemployment, "Inflation Rate (%)": 
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 fig.subplots_adjust(left=0.11, bottom=0.13, right=0.88, top=0.82)
 
+# Background: seaborn KDE contours showing historical Phillips curve regime density
+sns.kdeplot(
+    data=df,
+    x="Unemployment Rate (%)",
+    y="Inflation Rate (%)",
+    levels=3,
+    color=INK_SOFT,
+    alpha=0.2,
+    linewidths=0.7,
+    bw_adjust=1.2,
+    ax=ax,
+)
+
 # Temporal path: LineCollection with Imprint sequential gradient
 norm = plt.Normalize(years[0], years[-1])
 points = np.column_stack([unemployment, inflation])
@@ -137,7 +150,7 @@ lc = LineCollection(segments, cmap=imprint_seq, norm=norm, linewidths=1.8, zorde
 lc.set_array(years[:-1].astype(float))
 ax.add_collection(lc)
 
-# Scatter markers with temporal hue encoding via seaborn
+# Scatter markers with temporal hue encoding via seaborn continuous palette
 sns.scatterplot(
     data=df,
     x="Unemployment Rate (%)",
@@ -145,12 +158,22 @@ sns.scatterplot(
     hue="Year",
     hue_norm=(years[0], years[-1]),
     palette=imprint_seq,
-    s=60,
+    s=120,
     edgecolor=PAGE_BG,
     linewidth=0.6,
     legend=False,
     zorder=3,
     ax=ax,
+)
+
+# Directional arrow on temporal path (2016→2017 segment makes time direction explicit)
+i_dir = 26  # index of 2016
+ax.annotate(
+    "",
+    xy=(unemployment[i_dir + 1], inflation[i_dir + 1]),
+    xytext=(unemployment[i_dir], inflation[i_dir]),
+    arrowprops={"arrowstyle": "-|>", "color": INK, "lw": 1.4, "mutation_scale": 14},
+    zorder=4,
 )
 
 # Key economic turning-point annotations
@@ -168,7 +191,7 @@ for idx, offset in key_points.items():
         (unemployment[idx], inflation[idx]),
         textcoords="offset points",
         xytext=offset,
-        fontsize=7,
+        fontsize=8,
         fontweight="bold",
         color=INK,
         arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 0.9, "connectionstyle": "arc3,rad=0.2"},
@@ -180,7 +203,7 @@ ax.text(
     1.03,
     "U.S. Phillips Curve Dynamics: Tracing Unemployment vs. Inflation (1990–2023)",
     transform=ax.transAxes,
-    fontsize=7,
+    fontsize=8,
     color=INK_SOFT,
     ha="center",
     va="bottom",
