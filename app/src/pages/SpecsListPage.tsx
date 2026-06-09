@@ -9,14 +9,14 @@ import Fab from '@mui/material/Fab';
 import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 
-import { SectionHeader } from '../components/SectionHeader';
-import { API_URL, GITHUB_URL } from '../constants';
-import { useAnalytics } from '../hooks';
-import { useAppData, useHomeState } from '../hooks';
-import { colors, fontSize, semanticColors, typography } from '../theme';
-import type { PlotImage } from '../types';
-import { specPath } from '../utils/paths';
-import { buildSrcSet, getFallbackSrc, SPECS_SIZES } from '../utils/responsiveImage';
+import { SectionHeader } from 'src/components/SectionHeader';
+import { API_URL, GITHUB_URL } from 'src/constants';
+import { useAnalytics } from 'src/hooks';
+import { useAppData, useHomeState } from 'src/hooks';
+import { colors, fontSize, semanticColors, typography } from 'src/theme';
+import type { PlotImage } from 'src/types';
+import { specPath } from 'src/utils/paths';
+import { buildSrcSet, getFallbackSrc, SPECS_SIZES } from 'src/utils/responsiveImage';
 
 interface SpecListItem {
   id: string;

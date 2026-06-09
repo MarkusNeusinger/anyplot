@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useCopyCode } from './useCopyCode';
+import { useCopyCode } from 'src/hooks/useCopyCode';
 
 describe('useCopyCode', () => {
   beforeEach(() => {

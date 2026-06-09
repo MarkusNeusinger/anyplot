@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useAppData } from '../hooks/useLayoutContext';
-import { render, screen, waitFor } from '../test-utils';
-import { AppDataProvider } from './Layout';
+import { AppDataProvider } from 'src/components/Layout';
+import { useAppData } from 'src/hooks/useLayoutContext';
+import { render, screen, waitFor } from 'src/test-utils';
 
 // Helper component that reads the context and renders the four counts
 // the user-reported NumbersStrip is built from. Acts as a black-box

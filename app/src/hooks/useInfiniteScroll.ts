@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 
-import { BATCH_SIZE } from '../constants';
-import type { PlotImage } from '../types';
+import { BATCH_SIZE } from 'src/constants';
+import type { PlotImage } from 'src/types';
 
 interface UseInfiniteScrollProps {
   allImages: PlotImage[];

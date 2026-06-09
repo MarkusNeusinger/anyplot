@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createFuzzySearcher, getMatchType } from './fuzzySearch';
+import { createFuzzySearcher, getMatchType } from 'src/utils/fuzzySearch';
 
 describe('fuzzySearch', () => {
   describe('getMatchType', () => {

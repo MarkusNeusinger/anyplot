@@ -11,8 +11,8 @@ import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import Box from '@mui/material/Box';
 import Tooltip from '@mui/material/Tooltip';
 
-import type { ImageSize } from '../constants';
-import { colors, semanticColors } from '../theme';
+import type { ImageSize } from 'src/constants';
+import { colors, semanticColors } from 'src/theme';
 
 interface ToolbarActionsProps {
   imageSize: ImageSize;

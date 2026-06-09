@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import { API_URL } from '../constants';
-import type { PlotImage } from '../types';
-import { shuffleArray } from '../utils/shuffle';
-import { useAppData } from './useLayoutContext';
+import { API_URL } from 'src/constants';
+import { useAppData } from 'src/hooks/useLayoutContext';
+import type { PlotImage } from 'src/types';
+import { shuffleArray } from 'src/utils/shuffle';
 
 function pickRandom<T>(items: T[]): T {
   return items[Math.floor(Math.random() * items.length)];

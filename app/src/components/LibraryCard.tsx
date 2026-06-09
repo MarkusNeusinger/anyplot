@@ -1,7 +1,7 @@
 import Box from '@mui/material/Box';
 
-import { LANG_DISPLAY, LIB_TO_FRAMEWORK } from '../constants';
-import { colors, typography } from '../theme';
+import { LANG_DISPLAY, LIB_TO_FRAMEWORK } from 'src/constants';
+import { colors, typography } from 'src/theme';
 
 const DESCRIPTIONS: Record<string, string> = {
   matplotlib: 'The foundation. Publication-ready figures with total control.',
