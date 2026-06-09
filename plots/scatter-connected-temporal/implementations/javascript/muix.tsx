@@ -1,8 +1,7 @@
 // anyplot.ai
 // scatter-connected-temporal: Connected Scatter Plot with Temporal Path
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-09
+// Library: muix 7.29.1 | JavaScript 22.22.3
+// Quality: 81/100 | Created: 2026-06-09
 
 import { LineChart } from "@mui/x-charts/LineChart";
 import Box from "@mui/material/Box";
