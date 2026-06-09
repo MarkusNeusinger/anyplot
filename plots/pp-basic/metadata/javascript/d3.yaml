@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: pp-basic
 created: '2026-06-09T22:16:38Z'
-updated: '2026-06-09T22:23:37Z'
+updated: '2026-06-09T22:38:09Z'
 generated_by: claude-sonnet
 workflow_run: 27239145415
 issue: 4587
@@ -12,45 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pp-basic/
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pp-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pp-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pp-basic/javascript/d3/plot-dark.html
-quality_score: 86
+quality_score: 90
 review:
   strengths:
-  - 'Perfect spec compliance: all required P-P plot features present (empirical CDF
-    formula, theoretical normal CDF via erf, 45° reference line, square aspect ratio,
-    both axes 0–1)'
-  - 'Both themes fully readable with correct backgrounds (#FAF8F1 / #1A1A17) and identical
-    data colors'
-  - Deterministic data generation via fixed-seed LCG — browser-safe reproducibility
-    with seed=42
-  - Clean D3 idioms with proper .data().join() pattern throughout
-  - Manufacturing context makes the normality diagnostic scientifically grounded
-  - Page-bg stroke halo on markers provides clean visual separation of overlapping
-    points
+  - Deviation band (d3.area with curveMonotoneX) elegantly visualises the departure
+    region between empirical and theoretical CDFs — immediately communicates the S-curve
+    story
+  - Max departure highlight (circle ring + dynamic callout annotation) creates a clear
+    focal point and pulls the viewer's eye to the key diagnostic insight
+  - Custom deterministic LCG (seed=42) and in-code Abramowitz & Stegun erf approximation
+    achieve full reproducibility without browser Math.random()
+  - Correct square orientation with generous margins for the symmetric 0–1 × 0–1 P-P
+    space; clip path keeps band and points cleanly inside plot bounds
+  - Theme-adaptive chrome fully wired through ANYPLOT_TOKENS (pageBg, ink, inkSoft,
+    grid) — both renders pass with no dark-on-dark or light-on-light failures
+  - Hazen plotting position (i+0.5)/N and fitted normal parameters satisfy the spec's
+    CDF requirements precisely
+  - Tick lines removed, grid uses t.grid token at low weight — visual refinement that
+    keeps the chart clean without sacrificing orientation cues
   weaknesses:
-  - 'Design Excellence gap (11/20): technically correct but lacks aesthetic sophistication
-    — no emphasis on the diagnostic deviation story, minimal visual hierarchy between
-    reference line and data'
-  - 'DE-03 (3/6): the S-shaped deviation from diagonal is the key insight but no visual
-    treatment guides the viewer to it — the comparison is present but passive; add
-    visual emphasis (e.g. shaded deviation band or annotated maximum departure point)'
-  - 'LM-02 (2/5): no distinctive D3-specific capability used (path generators, area
-    generators, clip paths) beyond the minimal scatter+axis pattern; leverage d3.area
-    or d3.line for an overlay curve or deviation band'
-  - 'VQ-03 minor (5/6): 200 points at r=5.5 creates slight crowding in the compressed
-    lower-left region (theoretical CDF 0.17–0.35) where the right-skew concentrates
-    data; consider r=4.5 with opacity=0.65 for this density zone'
+  - 'Typography hierarchy is compressed: tick labels at 16px CSS vs axis labels at
+    18px CSS is only a 2-px gap — widening to ~12px ticks / 18px axis labels would
+    give a cleaner visual hierarchy'
+  - The max departure annotation uses a plain two-line text callout; adding a small
+    background rect (fill=t.elevatedBg, rx=4) would make it read as a proper callout
+    box and improve legibility on busy regions of the chart
+  - 'Deviation band fill-opacity 0.13 is very subtle in dark mode (palette[0] on #1A1A17
+    → near-invisible dark teal fill); bumping to 0.20–0.25 in dark mode would preserve
+    the storytelling element across both themes'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light theme surface, not pure white
-      Chrome: Title "pp-basic · javascript · d3 · anyplot.ai" bold centered, clearly readable (dark ink). X-axis label "Theoretical Normal Probability" and Y-axis label "Empirical Probability" in dark ink at 18px — balanced and legible. Tick labels 0.0/0.2/0.4/0.6/0.8/1.0 in inkSoft at 16px — clearly readable. Dashed grey reference diagonal visible. Subtle gridlines on both axes.
-      Data: 200 teal-green (#009E73) circles with opacity 0.72 and page-bg stroke halo. S-shaped curve clearly deviates from the 45° reference line, indicating right skew. Points compressed in lower-left (theoretical CDF ~0.17–0.35) due to right-skewed distribution; spread out in upper range.
-      Legibility verdict: PASS — all text elements clearly readable against warm off-white background.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "pp-basic · javascript · d3 · anyplot.ai" in dark ink, bold, centered at top — clearly readable. X-axis label "Theoretical Normal Probability" and Y-axis label "Empirical Probability" in dark ink, similar sizes, readable. Tick labels 0.0–1.0 on both axes in dark secondary text — readable. Annotation callout "max departure / Δ = 16.5 pp" in dark ink — readable.
+      Data: 200 scatter points in #009E73 (brand green) at opacity 0.65, r=4.5px CSS — clearly visible. A light green fill band (palette[0] at 0.13 fill-opacity) between the empirical curve and the 45-degree diagonal shows the departure region. A dashed gray reference diagonal marks perfect fit. A highlight ring (stroke palette[0]) marks the maximum departure point.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
-      Chrome: Title, axis labels, and tick labels rendered in light colors (ink = #F0EFE8, inkSoft = #B8B7B0) — fully readable against dark background. No dark-on-dark failures detected. Reference diagonal and gridlines visible as lighter strokes on dark surface.
-      Data: Data point color is identical to light render — same #009E73 teal-green, confirming only chrome flips between themes. S-curve pattern equally prominent. Brand green visible and distinguishable on the dark surface.
-      Legibility verdict: PASS — all text readable against near-black background; no dark-on-dark issues found.
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title, axis labels, tick labels, and annotation all rendered in light text — clearly readable against the dark background. No dark-on-dark failures. Grid lines are subtle and visible.
+      Data: Data point colors are identical to the light render — #009E73 green markers at same positions and opacity. The deviation band fill is very subtle on the dark background (dark teal near-invisible), but the primary data points and reference diagonal remain clearly visible. Highlight ring still readable.
+      Legibility verdict: PASS — all chrome text is light-colored and readable; no dark-on-dark failures. Minor note: deviation band fill is less impactful in dark mode due to very low opacity against dark background.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -58,79 +59,81 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 22px/600, axis labels 18px,
-          ticks 16px; balanced and readable in both themes'
+        comment: All font sizes explicitly set; hierarchy title(22px) > axis(18px)
+          > ticks(16px) > annotation(15/13px). Compressed 2-px gap between ticks and
+          axis labels is minor but warrants -1.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data element overlap
+        comment: No overlapping text or data elements; annotation positioned dynamically
+          to avoid overlap.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 200 points at r=5.5, opacity=0.72, page-bg halo; slight crowding
-          in lower-left cluster (theoretical CDF 0.17-0.35) but points distinguishable
+        comment: 200 points at r=4.5 CSS px, opacity=0.65 — appropriate for density.
+          Reference diagonal, deviation band, and highlight ring all clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single series in brand green #009E73; CVD-safe; reference line in
-          inkSoft'
+        comment: 'Single series in #009E73 vs gray reference line — clearly distinguishable
+          without hue reliance. CVD-safe.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas correctly applied; generous margins; square aspect
-          ratio preserved as required by spec
+        comment: Canvas gate passed. Square orientation correct for symmetric P-P
+          space. Generous margins, clip path, nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Theoretical Normal Probability and Empirical Probability — descriptive;
-          no units needed for probability axes
+        comment: 'X: Theoretical Normal Probability, Y: Empirical Probability — descriptive
+          without units (none needed for CDF axes). Title format correct.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 't.palette[0] = #009E73 for first series; light #FAF8F1, dark #1A1A17
-          backgrounds; data colors identical across themes; chrome correctly flips'
+        comment: Data color = palette[0] (#009E73) identical across light and dark.
+          Background pageBg token, chrome uses ink/inkSoft tokens. Both renders theme-correct.
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: 'Clean Imprint-compliant styling above library defaults: tick marks
-          removed, page-bg halo, proper ink hierarchy. Not exceptional — no distinctive
-          emphasis or typographic hierarchy'
+        passed: true
+        comment: 'Clearly above defaults: deviation band, highlight circle, and dynamic
+          annotation show intentional design decisions. pageBg stroke on points adds
+          definition. Strong but not publication-ready at FiveThirtyEight level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: 'Good refinement: subtle gridlines, tick marks removed, page-bg stroke
-          separation, generous margins. Room to push further'
+        passed: true
+        comment: Tick lines removed, subtle grid via t.grid token, clip path, pageBg
+          stroke on scatter points — genuine refinements beyond defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Dashed diagonal vs solid data points creates comparison making S-curve
-          visible, but viewer must interpret the deviation themselves — no visual
-          hierarchy emphasising the departure zone
+        passed: true
+        comment: Deviation band and max departure annotation create a clear focal
+          point and narrate the S-curve departure story. Visual hierarchy guides viewer
+          from scatter to reference line to annotation.
     spec_compliance:
       score: 15
       max: 15
@@ -140,28 +143,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct P-P plot: scatter of empirical CDF vs theoretical normal
-          CDF'
+        comment: 'Correct P-P plot: empirical CDF vs theoretical normal CDF, both
+          axes 0-1.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Hazen empirical CDF, erf CDF approximation, dashed reference line,
-          square canvas, both axes 0-1, 200 right-skewed samples — all present
+        comment: '45-degree reference line present; square aspect ratio via anyplot-orientation:
+          square; Hazen plotting positions; fitted normal parameters; S-curve deviation
+          visible.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Theoretical on X, empirical on Y; full [0,1] range; all data visible
+        comment: X = theoretical, Y = empirical, axes 0-1, 200 points shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title pp-basic · javascript · d3 · anyplot.ai — correct format; no
-          legend needed for single series
+        comment: 'Title: pp-basic · javascript · d3 · anyplot.ai — matches required
+          format. Single series, no legend needed.'
     data_quality:
       score: 15
       max: 15
@@ -171,22 +175,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows canonical P-P plot diagnostic: S-shaped deviation revealing
-          right skew; full 0-1 range; 200 points demonstrate the pattern clearly'
+        comment: 'Shows all P-P plot aspects: S-curve deviation from diagonal, departure
+          region band, max departure annotation, and 200-point scatter.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Manufacturing process measurements testing normality assumption —
-          real, neutral, scientifically appropriate
+        comment: Manufacturing process normality testing — neutral, realistic, scientifically
+          appropriate context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: LCG-seeded deterministic data with appropriate skew magnitude; empirical
-          CDF naturally spans 0-1
+        comment: Both axes correctly bounded 0-1 (cumulative probabilities). Right-skewed
+          distribution (z + 0.45z² − 0.45) produces plausible S-curve departure.
     code_quality:
       score: 10
       max: 10
@@ -196,36 +200,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear structure; utility functions (rand, randn, erf, normCDF) genuinely
-          necessary for deterministic CDF computation
+        comment: Linear script; utility functions (rand, randn, erf, normCDF) justified
+          as necessary primitives for CDF computation in a browser environment without
+          Math libraries.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42) — deterministic in browser environment
+        comment: Custom LCG with seed=42 — fully deterministic, no browser Math.random().
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; d3 is a global; all variables used
+        comment: Only d3 global used; no extraneous imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, purposeful code; erf approximation (Abramowitz & Stegun) is
-          well-known; no fake functionality
+        comment: Clean and readable; dynamic annotation positioning logic is moderately
+          complex but necessary.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: D3 interactive library; harness handles output; orientation directive
-          correctly placed
+        comment: SVG sized from window.ANYPLOT_SIZE, correct D3 7.x API, no hard-coded
+          dimensions.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -233,25 +238,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Correct D3 idioms: select→append→attr chain, .data().join() binding,
-          d3.axisBottom/Left with .call(), d3.format, d3.scaleLinear; tick line removal
-          via .remove()'
+        comment: Expert use of d3.area() with curveMonotoneX, SVG defs/clipPath via
+          D3 selection API, d3.format() for ticks, and d3.axisBottom/Left — clearly
+          above default 3.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Standard scatter paradigm — no D3-distinctive capabilities used (path
-          generators, area generators, clip paths); statistical computations are plain
-          JavaScript
-  verdict: REJECTED
+        passed: true
+        comment: d3.area() deviation band with curveMonotoneX, clip path via D3 defs,
+          and data-driven dynamic annotation positioning are D3-specific features
+          that leverage the library's core SVG-binding strength.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
