@@ -62,7 +62,7 @@ p <- ggplot(df, aes(x = theoretical, y = empirical)) +
   ) +
   geom_point(
     color = IMPRINT_PALETTE[1],
-    size  = 2.0,
+    size  = 2.5,
     alpha = 0.75
   ) +
   scale_x_continuous(
@@ -77,9 +77,10 @@ p <- ggplot(df, aes(x = theoretical, y = empirical)) +
   ) +
   coord_equal() +
   labs(
-    x     = "Theoretical Cumulative Probability",
-    y     = "Empirical Cumulative Probability",
-    title = plot_title
+    x        = "Theoretical Cumulative Probability",
+    y        = "Empirical Cumulative Probability",
+    title    = plot_title,
+    subtitle = "Fitted normal — right-tail deviation visible above 0.6"
   ) +
   theme_minimal(base_size = 8) +
   theme(
@@ -90,10 +91,12 @@ p <- ggplot(df, aes(x = theoretical, y = empirical)) +
       linewidth = 0.5
     ),
     panel.grid.minor = element_blank(),
-    panel.border     = element_rect(color = INK_SOFT, fill = NA),
+    panel.border     = element_blank(),
+    axis.line        = element_line(color = INK_SOFT, linewidth = 0.5),
     axis.title       = element_text(color = INK,      size = 10),
     axis.text        = element_text(color = INK_SOFT, size = 8),
     plot.title       = element_text(color = INK,      size = 12),
+    plot.subtitle    = element_text(color = INK_SOFT, size = 9),
     plot.margin      = margin(20, 20, 20, 20)
   )
 
