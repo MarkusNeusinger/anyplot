@@ -1,7 +1,3 @@
-// anyplot.ai
-// pp-basic: Probability-Probability (P-P) Plot
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 85/100 | Created: 2026-06-09
 //# anyplot-orientation: square
 // anyplot.ai
 // pp-basic: Probability-Probability (P-P) Plot
@@ -67,11 +63,12 @@ const ppData = theoretical.map((thCdf, i) => ({
 
 // --- Custom SVG components ---------------------------------------------------
 
-// 45-degree reference diagonal: data (0,0)→(1,1) maps to drawing-area corners
-function Diagonal() {
+// 45-degree reference diagonal and annotations within the drawing area
+function Overlay() {
   const { left, top, width, height } = useDrawingArea();
   return (
     <g>
+      {/* 45° reference diagonal: data (0,0)→(1,1) maps to drawing-area corners */}
       <line
         x1={left}
         y1={top + height}
@@ -82,15 +79,39 @@ function Diagonal() {
         strokeDasharray="8 4"
         strokeLinecap="round"
       />
+      {/* "Perfect fit" label — at ~78% along diagonal, clear of the upper-right data cluster */}
       <text
-        x={left + width - 6}
-        y={top + 16}
+        x={left + width * 0.74}
+        y={top + height * 0.24}
         textAnchor="end"
         fill={t.inkSoft}
-        fontSize={12}
+        fontSize={13}
         fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
       >
         Perfect fit
+      </text>
+      {/* S-curve deviation annotation near the peak separation (theoretical CDF ~0.45) */}
+      <text
+        x={left + width * 0.36}
+        y={top + height * 0.29}
+        textAnchor="end"
+        fill={t.inkSoft}
+        fontSize={12}
+        fontStyle="italic"
+        fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+      >
+        log-normal
+      </text>
+      <text
+        x={left + width * 0.36}
+        y={top + height * 0.29 + 15}
+        textAnchor="end"
+        fill={t.inkSoft}
+        fontSize={12}
+        fontStyle="italic"
+        fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+      >
+        deviation →
       </text>
     </g>
   );
@@ -105,8 +126,8 @@ function ChartTitle() {
       textAnchor="middle"
       dominantBaseline="middle"
       fill={t.ink}
-      fontSize={18}
-      fontWeight="500"
+      fontSize={20}
+      fontWeight="600"
       fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
     >
       pp-basic · javascript · muix · anyplot.ai
@@ -124,37 +145,40 @@ export default function Chart() {
       colors={t.palette}
       skipAnimation
       margin={{ top: 55, bottom: 90, left: 95, right: 30 }}
+      sx={{
+        "& .MuiChartsGrid-line": { opacity: 0.15 },
+      }}
       xAxis={[{
         min: 0,
         max: 1,
         label: "Theoretical CDF (Normal)",
-        labelStyle: { fontSize: 14 },
+        labelStyle: { fontSize: 16 },
         tickLabelStyle: { fontSize: 12 },
       }]}
       yAxis={[{
         min: 0,
         max: 1,
         label: "Empirical CDF",
-        labelStyle: { fontSize: 14 },
+        labelStyle: { fontSize: 16 },
         tickLabelStyle: { fontSize: 12 },
       }]}
       series={[{
         data: ppData,
         label: "Observed (log-normal)",
-        markerSize: 4,
+        markerSize: 6,
         valueFormatter: (v) =>
           `Theoretical: ${v.x.toFixed(3)}, Empirical: ${v.y.toFixed(3)}`,
       }]}
       slotProps={{
         legend: {
           position: { vertical: "bottom", horizontal: "middle" },
-          itemMarkWidth: 8,
-          itemMarkHeight: 8,
-          labelStyle: { fontSize: 12 },
+          itemMarkWidth: 10,
+          itemMarkHeight: 10,
+          labelStyle: { fontSize: 13, fontWeight: 500 },
         },
       }}
     >
-      <Diagonal />
+      <Overlay />
       <ChartTitle />
     </ScatterChart>
   );
