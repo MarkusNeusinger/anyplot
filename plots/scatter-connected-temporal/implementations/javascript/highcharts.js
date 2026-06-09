@@ -1,6 +1,7 @@
 // anyplot.ai
 // scatter-connected-temporal: Connected Scatter Plot with Temporal Path
 // Library: highcharts 12.6.0 | JavaScript 22.22.3
+// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
 // Quality: 86/100 | Created: 2026-06-09
 //# anyplot-orientation: landscape
 
@@ -19,23 +20,42 @@ const rawData = [
   [1992,  7.5,  3.0], [1993,  6.9,  3.0], [1994,  6.1,  2.6], [1995,  5.6,  2.8]
 ];
 
-const labelYears = new Set([1960, 1965, 1970, 1975, 1980, 1985, 1990, 1995]);
+// 1980 has its own per-point label; omit it from the regular set
+const labelYears = new Set([1960, 1965, 1970, 1975, 1985, 1990, 1995]);
 
 // Scatter series with lineWidth connects points in DATA ARRAY ORDER (temporal order),
 // unlike line series which sorts by x — crucial for the connected scatter path.
 const seriesData = rawData.map(function([year, unemp, infl]) {
-  return {
+  const isStart = year === 1960;
+  const isEnd = year === 1995;
+  const isPeak = year === 1980;
+  const point = {
     x: unemp,
     y: infl,
     name: String(year),
     marker: {
-      radius: (year === 1960 || year === 1995) ? 9 : 5,
-      symbol: year === 1960 ? 'triangle' : (year === 1995 ? 'diamond' : 'circle'),
-      fillColor: t.palette[0],
-      lineWidth: 1.5,
+      radius: (isStart || isEnd) ? 9 : isPeak ? 13 : 7,
+      symbol: isStart ? 'triangle' : (isEnd ? 'diamond' : 'circle'),
+      fillColor: isPeak ? t.amber : t.palette[0],
+      lineWidth: isPeak ? 2.5 : 1.5,
       lineColor: t.pageBg
     }
   };
+  // Prominent focal-point label for the 1980 stagflation climax
+  if (isPeak) {
+    point.dataLabels = {
+      enabled: true,
+      formatter: function () { return '★ Stagflation Peak'; },
+      y: -22,
+      style: {
+        color: t.amber,
+        fontSize: '14px',
+        fontWeight: '700',
+        textOutline: '2px ' + t.pageBg
+      }
+    };
+  }
+  return point;
 });
 
 Highcharts.chart('container', {
@@ -43,7 +63,11 @@ Highcharts.chart('container', {
     type: 'scatter',
     backgroundColor: 'transparent',
     animation: false,
-    style: { fontFamily: 'inherit' }
+    style: { fontFamily: 'inherit' },
+    spacingTop: 20,
+    spacingRight: 30,
+    spacingBottom: 20,
+    spacingLeft: 15
   },
   credits: { enabled: false },
   colors: t.palette,
@@ -52,7 +76,7 @@ Highcharts.chart('container', {
     style: { color: t.ink, fontSize: '22px', fontWeight: '600' }
   },
   subtitle: {
-    text: 'US unemployment rate vs. inflation rate, 1960–1995 · connected chronologically',
+    text: 'US Phillips Curve, 1960 → 1995 · path traces chronological order',
     style: { color: t.inkSoft, fontSize: '14px' }
   },
   xAxis: {
@@ -62,7 +86,7 @@ Highcharts.chart('container', {
     },
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
-    gridLineWidth: 1,
+    gridLineWidth: 0.5,
     gridLineColor: t.grid,
     labels: {
       style: { color: t.inkSoft, fontSize: '14px' },
@@ -74,6 +98,7 @@ Highcharts.chart('container', {
       text: 'Inflation Rate (%)',
       style: { color: t.inkSoft, fontSize: '16px' }
     },
+    gridLineWidth: 0.5,
     gridLineColor: t.grid,
     labels: {
       style: { color: t.inkSoft, fontSize: '14px' },
@@ -98,7 +123,7 @@ Highcharts.chart('container', {
       color: t.palette[0],
       marker: {
         enabled: true,
-        radius: 5,
+        radius: 7,
         symbol: 'circle',
         fillColor: t.palette[0],
         lineWidth: 1.5,
@@ -109,10 +134,10 @@ Highcharts.chart('container', {
         formatter: function () {
           return labelYears.has(parseInt(this.point.name, 10)) ? this.point.name : null;
         },
-        y: -14,
+        y: -16,
         style: {
           color: t.inkSoft,
-          fontSize: '13px',
+          fontSize: '15px',
           fontWeight: 'normal',
           textOutline: '2px ' + t.pageBg
         }
