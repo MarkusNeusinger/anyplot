@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
-import { RouteErrorBoundary } from './RouteErrorBoundary';
+import { RouteErrorBoundary } from 'src/components/RouteErrorBoundary';
 
 vi.mock('react-helmet-async', () => ({
   Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,

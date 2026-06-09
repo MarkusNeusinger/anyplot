@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { render, screen, userEvent, waitFor } from '../test-utils';
-import { StatsPage } from './StatsPage';
+import { StatsPage } from 'src/pages/StatsPage';
+import { render, screen, userEvent, waitFor } from 'src/test-utils';
 
 vi.mock('react-helmet-async', () => ({
   Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -9,7 +9,7 @@ vi.mock('react-helmet-async', () => ({
 
 const mockTrackEvent = vi.fn();
 
-vi.mock('../hooks', () => ({
+vi.mock('src/hooks', () => ({
   useAnalytics: () => ({
     trackPageview: vi.fn(),
     trackEvent: mockTrackEvent,

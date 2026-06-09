@@ -6,14 +6,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
-import { render, screen, userEvent } from '../test-utils';
+import { render, screen, userEvent } from 'src/test-utils';
 
 const trackEvent = vi.fn();
 const cycle = vi.fn();
 const setMode = vi.fn();
 
-vi.mock('../hooks', async () => {
-  const actual = await vi.importActual<typeof import('../hooks')>('../hooks');
+vi.mock('src/hooks', async () => {
+  const actual = await vi.importActual<typeof import('src/hooks')>('src/hooks');
   return {
     ...actual,
     useAnalytics: () => ({ trackEvent, trackPageview: vi.fn() }),
@@ -22,7 +22,7 @@ vi.mock('../hooks', async () => {
   };
 });
 
-import { MastheadRule } from './MastheadRule';
+import { MastheadRule } from 'src/components/MastheadRule';
 
 function renderAt(initialEntry: string, ui: ReactElement) {
   const theme = createTheme();

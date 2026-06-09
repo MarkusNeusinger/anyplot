@@ -1,8 +1,8 @@
 import { fireEvent } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { render, screen, waitFor } from '../test-utils';
-import { DebugPage } from './DebugPage';
+import { DebugPage } from 'src/pages/DebugPage';
+import { render, screen, waitFor } from 'src/test-utils';
 
 const mockDebugData = {
   total_specs: 100,

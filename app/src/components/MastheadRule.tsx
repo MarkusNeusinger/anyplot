@@ -4,11 +4,11 @@ import { Link as RouterLink, useLocation } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 
-import { LANG_EXT, LIB_ABBREV } from '../constants';
-import { useAnalytics, useLatestRelease, useTheme } from '../hooks';
-import { colors, typography } from '../theme';
-import { RESERVED_TOP_LEVEL } from '../utils/paths';
-import { ThemeToggle } from './ThemeToggle';
+import { ThemeToggle } from 'src/components/ThemeToggle';
+import { LANG_EXT, LIB_ABBREV } from 'src/constants';
+import { useAnalytics, useLatestRelease, useTheme } from 'src/hooks';
+import { colors, typography } from 'src/theme';
+import { RESERVED_TOP_LEVEL } from 'src/utils/paths';
 
 // Symmetric block-comment delimiters used when no language context is in the URL.
 // One is picked on mount so each page load reveals a different classic.

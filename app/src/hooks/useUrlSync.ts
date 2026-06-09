@@ -6,8 +6,8 @@
 
 import { useEffect } from 'react';
 
-import type { ActiveFilters } from '../types';
-import { FILTER_CATEGORIES } from '../types';
+import type { ActiveFilters } from 'src/types';
+import { FILTER_CATEGORIES } from 'src/types';
 
 /**
  * Parse URL params into ActiveFilters.

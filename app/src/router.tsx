@@ -4,11 +4,11 @@ import { createBrowserRouter, Navigate, RouterProvider, useParams } from 'react-
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 
-import { ErrorBoundary } from './components/ErrorBoundary';
-import { AppDataProvider } from './components/Layout';
-import { RootLayout } from './components/RootLayout';
-import { RouteErrorBoundary } from './components/RouteErrorBoundary';
-import { NotFoundPage } from './pages/NotFoundPage';
+import { ErrorBoundary } from 'src/components/ErrorBoundary';
+import { AppDataProvider } from 'src/components/Layout';
+import { RootLayout } from 'src/components/RootLayout';
+import { RouteErrorBoundary } from 'src/components/RouteErrorBoundary';
+import { NotFoundPage } from 'src/pages/NotFoundPage';
 
 const LazyFallback = () => (
   <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
@@ -17,7 +17,10 @@ const LazyFallback = () => (
 );
 
 const lazySpec = () =>
-  import('./pages/SpecPage').then(m => ({ Component: m.SpecPage, HydrateFallback: LazyFallback }));
+  import('src/pages/SpecPage').then(m => ({
+    Component: m.SpecPage,
+    HydrateFallback: LazyFallback,
+  }));
 
 function SpecLanguageRedirect() {
   const { specId, language } = useParams();
@@ -46,47 +49,49 @@ const router = createBrowserRouter([
         children: [
           {
             index: true,
-            lazy: () => import('./pages/LandingPage').then(m => ({ Component: m.LandingPage })),
+            lazy: () => import('src/pages/LandingPage').then(m => ({ Component: m.LandingPage })),
           },
           {
             path: 'plots',
-            lazy: () => import('./pages/PlotsPage').then(m => ({ Component: m.PlotsPage })),
+            lazy: () => import('src/pages/PlotsPage').then(m => ({ Component: m.PlotsPage })),
           },
           {
             path: 'specs',
-            lazy: () => import('./pages/SpecsListPage').then(m => ({ Component: m.SpecsListPage })),
+            lazy: () =>
+              import('src/pages/SpecsListPage').then(m => ({ Component: m.SpecsListPage })),
           },
           {
             path: 'libraries',
-            lazy: () => import('./pages/LibrariesPage').then(m => ({ Component: m.LibrariesPage })),
+            lazy: () =>
+              import('src/pages/LibrariesPage').then(m => ({ Component: m.LibrariesPage })),
           },
           {
             path: 'map',
-            lazy: () => import('./pages/MapPage').then(m => ({ Component: m.MapPage })),
+            lazy: () => import('src/pages/MapPage').then(m => ({ Component: m.MapPage })),
           },
           {
             path: 'palette',
-            lazy: () => import('./pages/PalettePage').then(m => ({ Component: m.PalettePage })),
+            lazy: () => import('src/pages/PalettePage').then(m => ({ Component: m.PalettePage })),
           },
           {
             path: 'about',
-            lazy: () => import('./pages/AboutPage').then(m => ({ Component: m.AboutPage })),
+            lazy: () => import('src/pages/AboutPage').then(m => ({ Component: m.AboutPage })),
           },
           {
             path: 'legal',
-            lazy: () => import('./pages/LegalPage').then(m => ({ Component: m.LegalPage })),
+            lazy: () => import('src/pages/LegalPage').then(m => ({ Component: m.LegalPage })),
           },
           {
             path: 'mcp',
-            lazy: () => import('./pages/McpPage').then(m => ({ Component: m.McpPage })),
+            lazy: () => import('src/pages/McpPage').then(m => ({ Component: m.McpPage })),
           },
           {
             path: 'stats',
-            lazy: () => import('./pages/StatsPage').then(m => ({ Component: m.StatsPage })),
+            lazy: () => import('src/pages/StatsPage').then(m => ({ Component: m.StatsPage })),
           },
           {
             path: 'debug',
-            lazy: () => import('./pages/DebugPage').then(m => ({ Component: m.DebugPage })),
+            lazy: () => import('src/pages/DebugPage').then(m => ({ Component: m.DebugPage })),
           },
           { path: ':specId', lazy: lazySpec },
           { path: ':specId/:language', element: <SpecLanguageRedirect /> },

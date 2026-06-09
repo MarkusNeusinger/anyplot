@@ -16,10 +16,10 @@ import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Tooltip from '@mui/material/Tooltip';
 
-import { API_URL } from '../constants';
-import { useAnalytics } from '../hooks';
-import { useLocalStorage } from '../hooks/useLocalStorage';
-import { RESERVED_TOP_LEVEL } from '../utils/paths';
+import { API_URL } from 'src/constants';
+import { useAnalytics } from 'src/hooks';
+import { useLocalStorage } from 'src/hooks/useLocalStorage';
+import { RESERVED_TOP_LEVEL } from 'src/utils/paths';
 
 const MAX_MESSAGE_LENGTH = 500;
 const SESSION_KEY = 'anyplot_feedback_session';

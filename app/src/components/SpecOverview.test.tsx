@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { render, screen, userEvent } from '../test-utils';
-import type { Implementation } from '../types';
-import { SpecOverview } from './SpecOverview';
+import { SpecOverview } from 'src/components/SpecOverview';
+import { render, screen, userEvent } from 'src/test-utils';
+import type { Implementation } from 'src/types';
 
-vi.mock('../utils/responsiveImage', () => ({
+vi.mock('src/utils/responsiveImage', () => ({
   buildSrcSet: (url: string, fmt: string) => `${url}-srcset-${fmt}`,
   OVERVIEW_SIZES: '33vw',
 }));

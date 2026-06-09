@@ -1,9 +1,9 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { BATCH_SIZE } from '../constants';
-import type { PlotImage } from '../types';
-import { useInfiniteScroll } from './useInfiniteScroll';
+import { BATCH_SIZE } from 'src/constants';
+import { useInfiniteScroll } from 'src/hooks/useInfiniteScroll';
+import type { PlotImage } from 'src/types';
 
 // --- IntersectionObserver mock ---
 let observerCallback: IntersectionObserverCallback;
