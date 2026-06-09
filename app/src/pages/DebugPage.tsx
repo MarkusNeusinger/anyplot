@@ -24,13 +24,20 @@ interface SpecStatus {
   title: string;
   updated: string | null;
   avg_score: number | null;
+  // One score field per library in LIBRARIES — keep in sync with the registry
+  // (the matrix renders a column for every LIBRARIES entry and indexes this by
+  // id, so a missing field would read as undefined and miscount).
   altair: number | null;
   bokeh: number | null;
+  chartjs: number | null;
+  d3: number | null;
+  echarts: number | null;
   ggplot2: number | null;
   highcharts: number | null;
   letsplot: number | null;
   makie: number | null;
   matplotlib: number | null;
+  muix: number | null;
   plotly: number | null;
   plotnine: number | null;
   pygal: number | null;

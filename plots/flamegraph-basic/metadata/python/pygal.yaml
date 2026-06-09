@@ -1,197 +1,234 @@
 library: pygal
+language: python
 specification_id: flamegraph-basic
 created: '2026-03-14T20:27:44Z'
-updated: '2026-03-14T21:06:23Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23095681595
+updated: '2026-06-08T21:02:59Z'
+generated_by: claude-opus
+workflow_run: 27165176003
 issue: 4665
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/pygal/plot.html
-quality_score: 80
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/python/pygal/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Depth-based warm color palette (yellow to orange to red) faithfully follows flame
-    graph conventions
-  - Realistic web server profiling data with plausible function names and sample counts
-  - Good use of pygal per-value styling for individual bar coloring
-  - Interactive HTML output leverages pygal SVG rendering capability
-  - Clean monospace typography appropriate for profiling context
+  - 'Faithful flame-graph semantics: BFS-built call-stack tree with widths proportional
+    to sample counts, siblings touch via transparent-spacer alignment inside pygal''s
+    HorizontalStackedBar.'
+  - Dark-theme legibility on matte-red bars is now fixed — per-depth label ink switches
+    to INK_LIGHT (#F0EFE8) when perceived bar luminance < 130, so the deepest Depth
+    4–5 bars ('execute_sql', 'walk_dfa') read cleanly in both themes.
+  - 'Theme adaptation is clean: chrome flips correctly between #FAF8F1/#1A1A17 and
+    INK light/dark; warm bar gradient (amber → ochre → matte red) stays identical
+    between renders as the style guide requires.'
+  - 'Warm gradient is sourced from Imprint anchors (#DDCC77, #BD8233, #AE3030) via
+    the Semantic Exception for the Brendan Gregg flame-graph convention, with an in-code
+    rationale — VQ-07 compliant.'
+  - 'Realistic, neutral CPU-profile dataset: 42 stacks across 6 depth levels modelling
+    a web-service request handler.'
+  - In-bar label gating tries 'name (samples)' → plain name → empty, so wide bars
+    stay informative and narrow ones don't overflow; right margin bumped to 90 px
+    so 'send_response' has breathing room.
+  - 'Distinctive pygal usage: SVG post-processing via regex to inject per-row inline
+    label color, leveraging pygal''s open SVG output as a customization surface.'
   weaknesses:
-  - Some labels truncated at right edge of chart (send_response, compress_gzip)
-  - Vertical gaps between depth rows break traditional flame graph appearance
-  - Only 25 stack traces vs spec suggested 50-500 range
-  - Importlib workaround for module name collision adds code complexity
-  image_description: 'The plot displays a horizontal stacked bar chart representing
-    a flame graph for CPU performance profiling. There are 5 depth levels (Depth 0
-    through Depth 4) on the y-axis labeled "Call Stack Depth", with "Samples" on the
-    x-axis ranging from 0 to 800. The title reads "flamegraph-basic · pygal · pyplots.ai"
-    in monospace font. Depth 0 (bottom) shows a single pale yellow bar "main (800)"
-    spanning the full width. Depth 1 has warm orange/yellow bars for gc_collect (80),
-    idle_wait (50), log_metrics (60), and a large process_request (600). Depth 2 shows
-    mid-orange bars including execute_handler (250), parse_headers (120), route_dispatch
-    (180), with some bars truncated at right edge. Depth 3 has salmon/red bars for
-    db_query (140), serialize_json (70), template_render, decode_base64 (55), validate_utf8
-    (45), lookup_handler (70), regex_match (90), and compress_gzip (truncated at edge).
-    Depth 4 has the darkest red bars: connect_pool, execute_sql (80), fetch_rows,
-    encode_utf8. Colors transition from pale yellow at root to dark red at deepest
-    level following flame graph conventions. White stroke borders separate adjacent
-    bars.'
+  - 'DE-01/DE-03 ceiling: no hot-path callout, no depth-color scale strip, no annotation
+    on the dominant deep stack — a thin arrow + label at ''db_query;execute_sql''
+    would lift storytelling above current ''faithful display'' level.'
+  - Left vertical axis spine is still visible; matching the style guide's L-shaped
+    frame default (or going spine-less since this is a categorical depth axis) would
+    tighten DE-02.
+  - importlib + sys.path.pop(0) dance to avoid the filename collision works but reads
+    as defensive boilerplate ahead of the chart logic; a top-level module rename or
+    pyproject `tool.pytest`-style entry would be cleaner long-term.
+  - Regex-based SVG label recoloring is clever but fragile — if pygal's SVG label
+    markup changes in a future release, the per-depth ink swap silently no-ops. A
+    short comment noting the pygal version that was probed would help future maintainers.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 (style-guide compliant; not pure white).
+      Chrome: title "flamegraph-basic · python · pygal · anyplot.ai" in dark INK ink at top center; y-axis title "Call Stack Depth" rotated on the left; x-axis title "Samples" centered below; "Depth 0" through "Depth 5" row labels in dark INK on the left; x-axis ticks 0/100/200/.../1000 in dark INK along the bottom — all chrome readable against the cream background.
+      Data: six rows of stacked horizontal bars representing the call-stack profile. Depth 0 is a full-width amber #DDCC77 base labeled "main (1000)". Depth 1 carries "process_request (780)" plus gc_collect / idle_wait / log_metrics in ochre tones. Depth 2 shows "execute_handler (340)", "parse_headers (140)", "route_dispatch (200)", "send_response". Depth 3 surfaces "authorize", "db_query (160)", "regex_match". Depth 4 reaches matte-red #AE3030 with "execute_sql" and "walk_dfa". Depth 5 caps with the narrowest leaf. Colors are sourced from Imprint anchors via the Semantic Exception for the Brendan Gregg flame-graph convention; first-warm-anchor is #DDCC77 (amber) not the default #009E73, justified by the domain convention. Sibling bars touch with only a 1.2 px page-bg stroke. In-bar labels sit on warm bars in dark text where it reads clearly.
+      Legibility verdict: PASS — every text element is readable, no overflow past the canvas frame, title fits at ~70% of plot width as expected for the long mandated string.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 (style-guide compliant; not pure black).
+      Chrome: title, axis titles, "Depth 0..5" row labels, and 0–1000 x-axis ticks all render in light INK (#F0EFE8). No dark-on-dark failures on the chrome layer — every chrome element is readable.
+      Data: identical Imprint-anchor warm gradient as the light render (amber #DDCC77 at Depth 0 → ochre #BD8233 mid-stack → matte red #AE3030 at Depth 4–5). The first-attempt weakness (dark text on matte-red bars in dark theme) is resolved: the implementation now precomputes perceived luminance per bar color and switches the in-bar label ink to INK_LIGHT (#F0EFE8) on the deep-red rows, so "execute_sql" and "walk_dfa" are now light text on red rather than dark-on-red. Labels on the bright amber/ochre rows remain dark for contrast there.
+      Legibility verdict: PASS — chrome is theme-correct, in-bar labels are now legible on every depth, both bright and dark bars.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=48, label=24, major_label=22), monospace
-          font appropriate for profiling context
+        comment: All chrome readable in both themes; in-bar label ink now adapts to
+          bar luminance, resolving the dark-theme matte-red weakness from attempt
+          1
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Labels on narrow bars squeezed, some labels at right edge truncated
+        comment: Adjacent siblings separated by 1.2px page-bg stroke; no text overlaps
+          with data or other text
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bars well-sized and visible, transparent spacers create proper alignment
+        comment: Bar widths proportional to sample counts; in-bar labels gated to
+          fit
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Warm amber/ochre/red gradient + luminance-aware label ink keeps contrast
+          well above the WCAG floor in both themes
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Warm yellow-to-red palette is colorblind-safe with good contrast
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Plot fills canvas well but some bars clipped at right edge, large
-          vertical gaps between rows
+        comment: Canvas 3200x1800 confirmed (no /tmp/anyplot-canvas-gate.txt). margin_right=90
+          gives 'send_response' breathing room
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but lack units
+        comment: Axis labels 'Samples' and 'Call Stack Depth'; title in correct format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Warm gradient derived from Imprint anchors via Semantic Exception
+          (Brendan Gregg convention); chrome theme-correct in both renders
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Thoughtful depth-based warm color palette, monospace font, white
-          stroke borders
+        comment: On-brand and intentional; lacks hot-path callout or depth-color scale
+          strip
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid hidden, rounded bars, clean background, some excessive vertical
-          spacing
+        comment: Grid off, theme-adaptive label ink per depth; left axis spine still
+          visible
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color gradient tells depth story, hot path clearly visible
+        comment: Depth-keyed gradient creates real hierarchy guiding the eye downward
+          into the hot path, but no explicit focal annotation
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: HorizontalStackedBar correct for pygal flame graph, gaps between
-          rows deviate from convention
+        comment: Correct horizontal stacked bars layered bottom-to-top per stack depth
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Most features present, only 25 stack traces vs 50-500 suggested
+        comment: Depth levels, proportional widths, in-bar labels, warm palette, siblings
+          touching - all from spec
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shows samples, Y-axis shows depth, widths proportional
+        comment: Samples on x, depth on y - matches Brendan Gregg convention
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend appropriately hidden
+        comment: Title 'flamegraph-basic · python · pygal · anyplot.ai' correct; legend
+          appropriately suppressed
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Multiple depth levels, varying widths, nested hierarchies shown
+        comment: 42 unique stacks across 6 depth levels with multiple sibling branches
+          at every depth
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Web server request processing with realistic function names
+        comment: Web-service request handler profile is domain-accurate and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 800 total samples with sensible distribution
+        comment: Sample counts and parent/child ratios are plausibly proportioned
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: No functions/classes but tree-building BFS adds complexity
+        comment: Linear imports -> data -> tree -> rectangles -> style -> chart ->
+          render
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data
+        comment: Hardcoded stack/sample list - fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, importlib workaround necessary
+        comment: Only used imports; importlib indirection justified by filename collision
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Importlib workaround is ugly but necessary, tree building verbose
+        comment: Transparent-spacer alignment trick + luminance-aware label ink are
+          appropriately scoped
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via render_to_png
-    library_mastery:
-      score: 7
+        comment: Saves plot-{theme}.png + plot-{theme}.html via cairosvg
+    library_features:
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -199,23 +236,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of HorizontalStackedBar with per-value dicts for styling
+        comment: HorizontalStackedBar + per-value dicts + custom Style is pygal-native
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Pygal-specific per-value styling dicts, transparent spacers, interactive
-          SVG/HTML
-  verdict: REJECTED
+        comment: Per-value color/label/style overrides + SVG post-processing for per-row
+          label ink + SVG-in-HTML export - genuinely pygal-distinctive
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - cairosvg
   techniques:
   - annotations
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - edge-highlighting
+  - gradient-fill
   - minimal-chrome

@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
-Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 89/100 | Created: 2026-03-13
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-06-08
 """
+
+import os
 
 import matplotlib.patches as mpatches
 import matplotlib.patheffects as pe
@@ -13,7 +15,18 @@ from matplotlib.collections import PatchCollection
 from matplotlib.colors import LinearSegmentedColormap, Normalize
 
 
-# Data - US states with approximate geographic centroids, population (thousands), and GDP per capita
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint sequential colormap for GDP per capita (single-polarity continuous data)
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
+
+# Data — US states with approximate centroids, population (thousands), and GDP per capita
 np.random.seed(42)
 
 states = {
@@ -79,37 +92,33 @@ radii = np.sqrt(populations / max_pop) * 2.8
 min_radius = 0.55
 radii = np.maximum(radii, min_radius)
 
-# Collision avoidance: push overlapping circles apart with stronger NE corridor separation
+# Collision avoidance — more iterations and stronger push for dense NE corridor
 adjusted_lons = lons.copy()
 adjusted_lats = lats.copy()
 ne_states = {"NY", "NJ", "CT", "RI", "MA", "VT", "NH", "ME", "PA", "DE", "MD"}
-for _ in range(80):
+for _ in range(150):
     for i in range(len(names)):
         for j in range(i + 1, len(names)):
             dx = adjusted_lons[j] - adjusted_lons[i]
             dy = adjusted_lats[j] - adjusted_lats[i]
             dist = np.sqrt(dx**2 + dy**2)
-            # Stronger separation for NE corridor states
             both_ne = names[i] in ne_states and names[j] in ne_states
-            spacing = 1.35 if both_ne else 1.25
+            spacing = 1.5 if both_ne else 1.25
             min_dist = (radii[i] + radii[j]) * spacing
             if dist < min_dist and dist > 0:
                 overlap = min_dist - dist
                 push = overlap / 2
                 nx, ny = dx / dist, dy / dist
-                strength = 0.45 if both_ne else 0.35
+                strength = 0.55 if both_ne else 0.35
                 adjusted_lons[i] -= nx * push * strength
                 adjusted_lats[i] -= ny * push * strength
                 adjusted_lons[j] += nx * push * strength
                 adjusted_lats[j] += ny * push * strength
 
-# Custom colormap: more saturated low-end for contrast against light background
-colors_list = ["#d4a574", "#c4b96e", "#7bc47b", "#3a9eaa", "#1d6fa5", "#162d63"]
-cmap = LinearSegmentedColormap.from_list("wealth", colors_list, N=256)
-
 # Plot
-fig = plt.figure(figsize=(16, 9))
-ax = fig.add_axes([0.03, 0.07, 0.73, 0.84])
+fig = plt.figure(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax = fig.add_axes([0.03, 0.08, 0.73, 0.83])
+ax.set_facecolor(PAGE_BG)
 norm = Normalize(vmin=gdp_per_capita.min(), vmax=gdp_per_capita.max())
 
 # Build circles as PatchCollection for efficient rendering (distinctive matplotlib feature)
@@ -119,31 +128,30 @@ face_colors = []
 sort_idx = np.argsort(-populations)
 
 for i in sort_idx:
-    color = cmap(norm(gdp_per_capita[i]))
-    # Shadow for larger circles via offset patch
+    color = imprint_seq(norm(gdp_per_capita[i]))
     if populations[i] > 8000:
         shadow = mpatches.Circle((adjusted_lons[i] + 0.15, adjusted_lats[i] - 0.15), radii[i])
         shadow_patches.append(shadow)
-
     circle = mpatches.Circle((adjusted_lons[i], adjusted_lats[i]), radii[i])
     main_patches.append(circle)
     face_colors.append(color)
 
-# Draw shadow collection
 if shadow_patches:
-    shadow_col = PatchCollection(shadow_patches, facecolors="none", edgecolors="#00000012", linewidths=4, zorder=1.8)
+    shadow_edgecolor = "#00000012" if THEME == "light" else "#FFFFFF08"
+    shadow_col = PatchCollection(
+        shadow_patches, facecolors="none", edgecolors=shadow_edgecolor, linewidths=4, zorder=1.8
+    )
     ax.add_collection(shadow_col)
 
-# Draw main circles as PatchCollection
 main_col = PatchCollection(
-    main_patches, facecolors=face_colors, edgecolors="white", linewidths=1.8, alpha=0.94, zorder=2
+    main_patches, facecolors=face_colors, edgecolors=PAGE_BG, linewidths=1.2, alpha=0.94, zorder=2
 )
 ax.add_collection(main_col)
 
-# State labels with path effects for readability
+# State labels — lower threshold to include all notable states including tiny WY/VT
 for i in sort_idx:
-    if populations[i] > 2500:
-        fontsize = 16 if populations[i] > 5000 else 14
+    if populations[i] > 560:
+        fontsize = 8 if populations[i] > 5000 else 7
         ax.text(
             adjusted_lons[i],
             adjusted_lats[i],
@@ -152,83 +160,70 @@ for i in sort_idx:
             va="center",
             fontsize=fontsize,
             fontweight="bold",
-            color="#1a1a2e",
+            color=INK,
             zorder=4,
-            path_effects=[pe.withStroke(linewidth=3.0, foreground="white"), pe.Normal()],
+            path_effects=[pe.withStroke(linewidth=2.5, foreground=PAGE_BG), pe.Normal()],
         )
 
-# Annotations with FancyBboxPatch-style boxes
-annotation_style = {
-    "fontweight": "bold",
-    "color": "#1a1a2e",
-    "ha": "center",
-    "zorder": 5,
-    "bbox": {
-        "boxstyle": "round,pad=0.35",
-        "facecolor": "white",
-        "edgecolor": "#aaaaaa",
-        "alpha": 0.92,
-        "mutation_aspect": 0.8,
-    },
-}
-
+# Annotations with theme-adaptive styling
 ca_idx = names.index("CA")
 ax.annotate(
     "California\n39.5M people",
-    fontsize=16,
+    fontsize=8,
     xy=(adjusted_lons[ca_idx], adjusted_lats[ca_idx] - radii[ca_idx]),
     xytext=(adjusted_lons[ca_idx] + 5, adjusted_lats[ca_idx] - 6.5),
-    arrowprops={"arrowstyle": "-|>", "color": "#555", "lw": 1.8, "connectionstyle": "arc3,rad=0.15"},
-    **annotation_style,
+    arrowprops={"arrowstyle": "-|>", "color": INK_SOFT, "lw": 1.5, "connectionstyle": "arc3,rad=0.15"},
+    fontweight="bold",
+    color=INK,
+    ha="center",
+    zorder=5,
+    bbox={"boxstyle": "round,pad=0.35", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.92},
 )
 
 ny_idx = names.index("NY")
 ax.annotate(
     "New York\n$82K GDP/cap",
-    fontsize=16,
+    fontsize=8,
     xy=(adjusted_lons[ny_idx], adjusted_lats[ny_idx] + radii[ny_idx]),
     xytext=(adjusted_lons[ny_idx] - 12, adjusted_lats[ny_idx] + 5.5),
-    arrowprops={"arrowstyle": "-|>", "color": "#555", "lw": 1.8, "connectionstyle": "arc3,rad=-0.15"},
-    **annotation_style,
+    arrowprops={"arrowstyle": "-|>", "color": INK_SOFT, "lw": 1.5, "connectionstyle": "arc3,rad=-0.15"},
+    fontweight="bold",
+    color=INK,
+    ha="center",
+    zorder=5,
+    bbox={"boxstyle": "round,pad=0.35", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.92},
 )
 
 ms_idx = names.index("MS")
 ax.annotate(
     "Mississippi\n$38K GDP/cap (lowest)",
-    fontsize=14,
+    fontsize=7,
     xy=(adjusted_lons[ms_idx], adjusted_lats[ms_idx]),
     xytext=(adjusted_lons[ms_idx] - 11, adjusted_lats[ms_idx] + 4.5),
-    arrowprops={"arrowstyle": "-|>", "color": "#777", "lw": 1.5, "connectionstyle": "arc3,rad=0.1"},
+    arrowprops={"arrowstyle": "-|>", "color": INK_MUTED, "lw": 1.2, "connectionstyle": "arc3,rad=0.1"},
     fontweight="bold",
-    color="#555555",
+    color=INK_SOFT,
     ha="center",
     zorder=5,
-    bbox={"boxstyle": "round,pad=0.35", "facecolor": "white", "edgecolor": "#bbbbbb", "alpha": 0.92},
+    bbox={"boxstyle": "round,pad=0.35", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.9},
 )
 
-# Colorbar with refined styling
-sm = ScalarMappable(cmap=cmap, norm=norm)
+# Colorbar with theme-adaptive styling
+sm = ScalarMappable(cmap=imprint_seq, norm=norm)
 sm.set_array([])
 cbar_ax = fig.add_axes([0.79, 0.18, 0.018, 0.52])
 cbar = fig.colorbar(sm, cax=cbar_ax)
-cbar.set_label("GDP per Capita (USD)", fontsize=20, labelpad=14)
-cbar.ax.tick_params(labelsize=16, length=0, pad=6)
+cbar.set_label("GDP per Capita (USD)", fontsize=11, labelpad=12, color=INK)
+cbar.ax.tick_params(labelsize=9, length=0, pad=5, labelcolor=INK_SOFT)
 cbar.ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"${x / 1000:.0f}K"))
 cbar.outline.set_linewidth(0.3)
-cbar.outline.set_edgecolor("#bbbbbb")
+cbar.outline.set_edgecolor(INK_SOFT)
 
-# Size legend with cleaner layout
+# Size legend
 legend_x = -67.5
 legend_y_base = 28.0
 ax.text(
-    legend_x,
-    legend_y_base + 11.5,
-    "Population",
-    fontsize=18,
-    fontweight="bold",
-    ha="center",
-    va="center",
-    color="#333333",
+    legend_x, legend_y_base + 11.5, "Population", fontsize=10, fontweight="bold", ha="center", va="center", color=INK
 )
 legend_pops = [30000, 10000, 1000]
 legend_labels = ["30M", "10M", "1M"]
@@ -238,15 +233,14 @@ y_pos = legend_y_base
 for r, label in zip(legend_radii, legend_labels, strict=True):
     circle_y = y_pos + r
     legend_circle = mpatches.Circle(
-        (legend_x - 1.5, circle_y), r, facecolor="#e0e6ec", edgecolor="#888888", linewidth=1.0, zorder=2
+        (legend_x - 1.5, circle_y), r, facecolor=ELEVATED_BG, edgecolor=INK_SOFT, linewidth=0.8, zorder=2
     )
     ax.add_patch(legend_circle)
-    ax.text(legend_x + 1.8, circle_y, label, fontsize=16, va="center", ha="left", color="#555555")
+    ax.text(legend_x + 1.8, circle_y, label, fontsize=9, va="center", ha="left", color=INK_SOFT)
     y_pos += r * 2 + 1.0
 
-# Simplified US outline inset using key boundary points
-inset_ax = fig.add_axes([0.03, 0.07, 0.14, 0.22])
-# Concise boundary: West coast, South border, East coast, North border
+# Reference map inset (bottom-left corner for geographic comparison)
+inset_ax = fig.add_axes([0.03, 0.08, 0.14, 0.22])
 us_lon = np.array(
     [
         -124,
@@ -345,63 +339,44 @@ us_lat = np.array(
         42,
     ]
 )
-inset_ax.fill(us_lon, us_lat, color="#d4e6f1", edgecolor="#7f8c8d", linewidth=1.0, alpha=0.6)
+inset_ax.fill(us_lon, us_lat, color=ELEVATED_BG, edgecolor=INK_SOFT, linewidth=0.8, alpha=0.85)
 inset_ax.set_xlim(-128, -64)
 inset_ax.set_ylim(23, 52)
 inset_ax.set_aspect("equal")
-inset_ax.set_title("Actual Geography", fontsize=12, fontweight="bold", color="#777777", pad=3)
+inset_ax.set_title("Actual Geography", fontsize=7, fontweight="bold", color=INK_MUTED, pad=3)
 for spine in inset_ax.spines.values():
-    spine.set_edgecolor("#cccccc")
-    spine.set_linewidth(0.5)
+    spine.set_edgecolor(INK_SOFT)
+    spine.set_linewidth(0.4)
 inset_ax.set_xticks([])
 inset_ax.set_yticks([])
-inset_ax.patch.set_facecolor("#f4f5f7")
-inset_ax.patch.set_alpha(0.9)
+inset_ax.patch.set_facecolor(PAGE_BG)
 
-# Main plot styling
+# Main axes styling
 ax.set_xlim(-128, -63)
 ax.set_ylim(24, 51)
 ax.set_aspect("equal")
-ax.set_facecolor("#f4f5f7")
-fig.patch.set_facecolor("#f4f5f7")
-
-# Title with refined typography
-fig.text(
-    0.39,
-    0.96,
-    "US States by Population",
-    fontsize=28,
-    fontweight="bold",
-    ha="center",
-    va="center",
-    color="#1a1a2e",
-    path_effects=[pe.withStroke(linewidth=4, foreground="#f4f5f7")],
-)
-fig.text(
-    0.39,
-    0.93,
-    "cartogram-area-distortion \u00b7 matplotlib \u00b7 pyplots.ai",
-    fontsize=18,
-    ha="center",
-    va="center",
-    color="#666666",
-)
-
-# Bottom caption
-fig.text(
-    0.39,
-    0.02,
-    "Circle area proportional to state population  |  Color encodes GDP per capita",
-    fontsize=16,
-    ha="center",
-    va="center",
-    color="#666666",
-    style="italic",
-)
-
 for spine in ax.spines.values():
     spine.set_visible(False)
 ax.set_xticks([])
 ax.set_yticks([])
 
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor=fig.get_facecolor())
+# Title — full format: {Descriptive} · {spec-id} · {language} · {library} · anyplot.ai
+title = "US States by Population · cartogram-area-distortion · python · matplotlib · anyplot.ai"
+n = len(title)
+title_fontsize = max(8, round(12 * 67 / n)) if n > 67 else 12
+fig.text(0.40, 0.965, title, fontsize=title_fontsize, fontweight="medium", ha="center", va="center", color=INK)
+
+# Caption
+fig.text(
+    0.40,
+    0.02,
+    "Circle area ∝ state population  |  Color encodes GDP per capita",
+    fontsize=8,
+    ha="center",
+    va="center",
+    color=INK_MUTED,
+    style="italic",
+)
+
+# Save
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

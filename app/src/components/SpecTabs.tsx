@@ -265,7 +265,7 @@ export function SpecTabs({
         {code}
       </Box>
     }>
-      <CodeHighlighter code={code} language={language} />
+      <CodeHighlighter code={code} language={language} library={libraryId} />
     </Suspense>
   ) : null;
 

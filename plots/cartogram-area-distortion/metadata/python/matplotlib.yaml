@@ -1,124 +1,137 @@
 library: matplotlib
+language: python
 specification_id: cartogram-area-distortion
 created: '2026-03-13T21:20:26Z'
-updated: '2026-03-13T21:52:18Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23070855407
+updated: '2026-06-08T03:45:25Z'
+generated_by: claude-sonnet
+workflow_run: 27114249625
 issue: 4671
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/matplotlib/plot.png
-preview_html: null
-quality_score: 89
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Excellent visual design with custom colormap, shadow effects, and path effects
-    creating a polished near-publication-ready appearance
-  - Effective data storytelling through three well-placed annotations highlighting
-    key insights (largest population, highest/lowest GDP per capita)
-  - Strong matplotlib mastery with PatchCollection, path effects, and manual layout
-    control
-  - Comprehensive implementation with size legend, colorbar, inset reference map,
-    and explanatory caption
-  - Clean well-structured code with appropriate collision avoidance algorithm
+  - Sophisticated Dorling cartogram using PatchCollection for efficient circle rendering
+    with collision avoidance algorithm
+  - 'Correct imprint_seq colormap applied to continuous GDP data; theme-adaptive backgrounds
+    (#FAF8F1 / #1A1A17) fully implemented'
+  - PathEffects.withStroke for state label legibility over variable-colored circles;
+    drop shadows on large circles
+  - 'All spec features present: size legend, colorbar, reference inset map, region
+    abbreviations, and three targeted annotations'
+  - Code is clean, sequential, seeded, and uses idiomatic matplotlib — fig.add_axes
+    for precise multi-panel layout, ScalarMappable for colorbar
   weaknesses:
-  - Dorling cartogram (circles) rather than contiguous cartogram with distorted region
-    shapes - loses geographic shape recognition
-  - Minor crowding in NE corridor despite dedicated spacing logic - CT and small NE
-    states are tight
-  - Custom colormap is distinctive but not perceptually uniform - could use viridis-based
-    palette for better accessibility
-  - Some very small states (WY, VT, DE, RI) are unlabeled and hard to identify
-  image_description: 'The plot displays a Dorling cartogram of US states where circle
-    area is proportional to state population. Circles are positioned roughly according
-    to geographic centroids with collision avoidance. Color encodes GDP per capita
-    using a custom sequential colormap ranging from warm tan/gold (low ~$38K) through
-    green to deep navy blue (high ~$82K). The title "US States by Population" appears
-    at top in bold 28pt with subtitle "cartogram-area-distortion · matplotlib · pyplots.ai"
-    below. Three annotations with arrow connectors highlight: California (39.5M people,
-    largest circle, left side), New York ($82K GDP/cap, dark blue, upper right), and
-    Mississippi ($38K GDP/cap lowest, tan/olive, center). A population size legend
-    on the right shows 1M, 10M, and 30M reference circles. A vertical colorbar on
-    the far right displays "GDP per Capita (USD)" with $38K-$82K range. A small inset
-    map in the bottom-left corner labeled "Actual Geography" shows a simplified US
-    outline for reference. State abbreviations are labeled on circles with population
-    > 2,500K. The background is a consistent light gray (#f4f5f7). An italic caption
-    at bottom reads "Circle area proportional to state population | Color encodes
-    GDP per capita."'
+  - Dorling cartogram (floating circles) does not preserve contiguity/adjacency as
+    described in the spec — true contiguous cartograms maintain shared borders after
+    area scaling; a note clarifying the Dorling interpretation would help
+  - Northeast corridor (NY, NJ, CT, RI, MA, VT, NH, ME, DE, MD, PA) is visually crowded
+    — many small circles packed tightly, making individual state boundaries and positions
+    difficult to distinguish despite collision avoidance
+  - 'DE-01: Design sophistication is solid but not exceptional — could be elevated
+    with a subtle background lat-long graticule or faint US outline overlay to anchor
+    the floating circles geographically'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct. No pure white visible.
+      Chrome: Title "US States by Population · cartogram-area-distortion · python · matplotlib · anyplot.ai" rendered in dark ink at top, fully readable. Colorbar label "GDP per Capita (USD)" and tick labels ($40K–$80K) in INK_SOFT, readable. Population size legend header ("Population") and labels (1M, 10M, 30M) readable. Italic caption at bottom readable. Inset "Actual Geography" subtitle in INK_MUTED, legible. Annotation boxes (California 39.5M, New York $82K GDP/cap, Mississippi $38K) styled with ELEVATED_BG fill and INK_SOFT border — all readable.
+      Data: Circles colored with imprint_seq (green #009E73 → blue #4467A3). California is the largest circle (dark blue, high GDP + population). Florida is a large teal circle. Texas is mid-size teal. NE cluster circles are mostly blue (high GDP) and small (low population). State abbreviations rendered in bold INK with PAGE_BG stroke for contrast.
+      Legibility verdict: PASS — all title, annotation, label, and colorbar text clearly readable against warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct. No pure black visible.
+      Chrome: Title in near-white (#F0EFE8 INK token), fully readable against dark background. Colorbar ticks and label in INK_SOFT (#B8B7B0), readable. Population legend labels readable. Caption in INK_MUTED (#A8A79F), legible. Annotation boxes use ELEVATED_BG (#242420) with INK_SOFT border — good contrast against #1A1A17 background. No dark-on-dark failures observed.
+      Data: Circle colors (imprint_seq green→blue) are identical to the light render — only chrome elements flipped. State abbreviations rendered with PATH_BG (#1A1A17) stroke — the stroke merges with the background in dark mode, but the INK-colored text (#F0EFE8) is still legible above the darker circle fills.
+      Legibility verdict: PASS — no dark-on-dark failures; all text visible and readable against the warm near-black background.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=28pt, subtitle=18pt, labels=14-16pt,
-          colorbar=20pt/16pt, legend=16-18pt, caption=16pt'
+        comment: Title, colorbar, annotations, and captions all readable in both themes.
+          NE state labels are at minimum size (7pt) and slightly cramped but remain
+          legible.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Collision avoidance works well overall; minor crowding in NE corridor
-          with CT and small states tight together
+        comment: Collision avoidance works well for most states. NE corridor has acceptable
+          crowding — circles don't overlap but labels are tightly packed.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All circles visible with min_radius enforced; some very small unlabeled
-          states hard to distinguish
+        comment: All circles visible; minimum radius enforced for small states. Color
+          gradient clearly distinguishable. PathEffects prevent labels from blending
+          into circle fills.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Custom sequential colormap reasonably colorblind-safe but not perceptually
-          uniform like viridis
+        comment: imprint_seq (green→blue) is CVD-safe. No red-green sole encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Excellent canvas utilization: cartogram center-left, colorbar right,
-          legend right, inset bottom-left'
+        comment: 'Well-composed multi-panel layout: main cartogram, colorbar, size
+          legend, inset map. No text overflows canvas. Canvas gate passed (3200x1800).'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title, colorbar with units, caption explains encoding,
-          axes appropriately hidden
+        comment: No traditional axes (appropriate for cartogram). Colorbar labeled
+          with units. Caption explains encodings. Title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq used for single-polarity continuous GDP data. Backgrounds
+          #FAF8F1 (light) and #1A1A17 (dark) correct. Data colors identical across
+          both renders.'
     design_excellence:
-      score: 17
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Custom colormap, shadow effects, path effects, refined annotation
-          styling, intentional typography hierarchy, white circle edges
+        comment: Drop shadows on large circles, PathEffects stroke on labels, styled
+          annotation boxes with arrows, inset reference map. Professional and polished
+          — above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Spines removed, no grid, refined colorbar, muted inset styling, generous
-          whitespace, consistent background
+        comment: All spines removed from main axes; no grid (correct for cartogram);
+          generous margins. Inset map has minimal subtle styling.
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Three targeted annotations highlight key insights; size+color dual
-          encoding creates clear hierarchy
+        comment: California immediately draws eye as largest circle. Three annotations
+          highlight specific insights (CA size, NY wealth, MS poverty). Reference
+          inset provides geographic grounding.
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -126,54 +139,59 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Dorling cartogram variant with circles; valid but not contiguous
-          cartogram with distorted shapes
+        comment: Dorling cartogram (proportional circles at approximate geographic
+          positions) is a valid cartogram variant. However spec explicitly mentions
+          contiguous cartograms preserving adjacency — circles don't maintain shared
+          borders.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Size by population, color by GDP, labels, legends, inset reference
-          map; missing contiguous borders
+        comment: 'All spec features: area ∝ population, color scale for GDP, state
+          abbreviation labels, size legend, colorbar, reference map inset.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Area proportional to population via sqrt, color mapped to GDP per
-          capita, geographic positioning correct
+        comment: Circle area correctly proportional to population (sqrt scaling for
+          radius). Color correctly encodes GDP per capita. Geographic positions approximately
+          preserved.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct subtitle format, population size legend with 3 reference
-          circles, colorbar with formatted labels
+        comment: 'Title: ''US States by Population · cartogram-area-distortion · python
+          · matplotlib · anyplot.ai'' — correct format. Colorbar and size legend both
+          properly labeled.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Wide population range (577K-39.5M), wide GDP range ($38K-$82K), good
-          geographic spread
+        comment: 'Shows all dimensions: population (size), GDP per capita (color),
+          geographic layout, state identifiers, annotations for specific insights,
+          reference geography.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: US state population and GDP data with approximately correct real-world
-          values; neutral topic
+        comment: Real US state population data (~2020 census) and plausible GDP per
+          capita estimates. Neutral economic visualization.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Population matches recent census, GDP per capita in realistic $38K-$82K
-          range
+        comment: Population range 577K (WY) to 39.5M (CA) realistic. GDP range $38K–$82K
+          matches real US state variation.
     code_quality:
       score: 10
       max: 10
@@ -183,34 +201,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save structure, no functions or classes
+        comment: No functions or classes. Sequential top-to-bottom structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at top
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: mpatches, patheffects, pyplot, numpy, ScalarMappable,
-          PatchCollection, colormap utilities'
+        comment: 'All imports used: mpatches, patheffects, plt, numpy, ScalarMappable,
+          PatchCollection, LinearSegmentedColormap, Normalize.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized collision avoidance, clean data structure, appropriate
-          complexity
+        comment: PatchCollection for batch circle rendering is the correct idiomatic
+          approach. Collision avoidance is complex but appropriate for the problem.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300 and bbox_inches=tight, no deprecated
-          API
+        comment: Saves plot-{THEME}.png. No bbox_inches='tight'. Current matplotlib
+          API.
     library_mastery:
       score: 8
       max: 10
@@ -220,27 +238,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: PatchCollection for batch rendering, fig.add_axes for layout, ScalarMappable,
-          FuncFormatter, path_effects
+        comment: PatchCollection for efficient batch rendering, fig.add_axes for multi-panel
+          layout, ScalarMappable for detached colorbar, FuncFormatter for tick formatting
+          — all idiomatic matplotlib patterns.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: PatchCollection, path_effects withStroke, manual axes positioning
-          - distinctly matplotlib features
-  verdict: REJECTED
+        comment: PathEffects.withStroke (stroke behind text), PatchCollection with
+          per-face colors, drop shadows via offset edge collections — features distinctive
+          to matplotlib not found in higher-level libraries.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - colorbar
   - patches
-  - custom-legend
   - inset-axes
+  - custom-legend
   patterns:
-  - data-generation
   - iteration-over-groups
+  - explicit-figure
   dataprep:
   - normalization
   styling:

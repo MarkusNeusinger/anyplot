@@ -1,0 +1,244 @@
+library: ggplot2
+language: r
+specification_id: phase-diagram-pt
+created: '2026-06-08T08:35:16Z'
+updated: '2026-06-08T08:51:02Z'
+generated_by: claude-sonnet
+workflow_run: 27125136807
+issue: 4666
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Complete spec implementation — all three phase boundaries, both special points
+    with annotations, four phase regions with labels including supercritical fluid
+  - Physically accurate CO2 data using real-world constants (triple point T=216.55K/P=5.18atm,
+    critical point T=304.13K/P=72.8atm)
+  - Dual visual encoding (color + linetype) improves CVD accessibility and boundary
+    distinguishability
+  - 'Correct Imprint palette in canonical order with brand green #009E73 as first
+    (Solid-Liquid) series; proper theme-adaptive chrome throughout'
+  - Log-scale y-axis (0.001–2000 atm) as recommended by spec; covers full pressure
+    range appropriately
+  weaknesses:
+  - Phase region fills at alpha=0.05 are barely perceptible on the dark render — increase
+    to alpha=0.08–0.10 for better region demarcation without obscuring boundary curves
+  - Annotation text sizes (ggplot2 size 3.2–3.5 ≈ 9–10pt) are slightly small for secondary
+    labels at mobile display scale — increase Triple Point/Critical Point annotations
+    to size=3.8
+  - Minor grid (panel.grid.minor) retained on log-scale plot adds subtle visual noise
+    — consider removing or reducing alpha further to 0.06
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "CO2 Phase Diagram · phase-diagram-pt · r · ggplot2 · anyplot.ai" in bold dark ink, readable. Axis labels "Pressure (atm)" and "Temperature (K)" in dark ink at 10pt, clear. Tick labels at 8pt in INK_SOFT, all readable. Phase region labels (SOLID, LIQUID, GAS, SUPERCRITICAL FLUID) in INK_MUTED bold, visible.
+      Data: Three boundary curves — Solid-Liquid in #009E73 (brand green, solid), Liquid-Gas in #C475FD (lavender, solid), Solid-Gas in #4467A3 (blue, dashed). Open circle markers at triple point and critical point. Semi-transparent region fills at alpha=0.05 (very subtle). All data elements clearly distinguishable.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface, not pure black
+      Chrome: Title in light F0EFE8 ink, readable. Axis labels and tick labels in adaptive INK_SOFT/INK_MUTED tokens, all clearly visible against dark background. No dark-on-dark failures. Legend box uses #242420 elevated background with INK_SOFT border.
+      Data: Boundary curve colors identical to light render (#009E73, #C475FD, #4467A3) — only chrome flipped as required. Region fills barely visible at alpha=0.05 on dark surface. Markers and annotations readable.
+      Legibility verdict: PASS — all text readable against dark background; region fills are very faint but no legibility failures
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title 12pt, axis 10pt, ticks 8pt). Readable
+          in both themes. Annotation text at size 3.2-3.5 (~9-10pt) slightly small
+          for mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or data element collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Boundary curves clearly visible; open circle markers for special
+          points are distinct.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette CVD-safe; dual encoding (color + linetype) adds redundancy.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). Good proportions, nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Pressure (atm) and Temperature (K) — descriptive with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Solid-Liquid first = #009E73. Canonical Imprint order. Backgrounds
+          #FAF8F1/#1A1A17 correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above generic: semi-transparent region fills, dual color+linetype
+          encoding, phase region labels, annotated special points.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped frame via panel.border=blank + axis.line. adjustcolor grid
+          alpha good. Minor grid kept on log-scale adds some noise.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Phase region labels and annotated special points guide the viewer.
+          Region fills at alpha=0.05 barely visible on dark render, weakening demarcation.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct P-T phase diagram.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Triple point, critical point, log pressure axis, all three boundaries,
+          phase region labels, supercritical region, CO2 data.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Temperature X, Pressure (log) Y. Full range displayed.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: CO2 Phase Diagram · phase-diagram-pt · r · ggplot2 · anyplot.ai —
+          correct format with descriptive prefix.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All three boundaries, both special points, four phase regions, supercritical
+          fluid region.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Physically accurate CO2 data with real constants. Neutral scientific
+          subject.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Log pressure 0.001-2000 atm handles wide range. Temperature 130-415
+          K encompasses all boundaries.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic calculations; no random seed needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, tibble, ragg all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured, appropriate complexity for the plot type.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png using ragg::agg_png.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Layered grammar-of-graphics composition, merged legend via shared
+          name in scale_color_manual + scale_linetype_manual, scale_y_log10 with explicit
+          breaks.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses ggplot2-specific annotate() for region fills and text, dual-scale
+          merged legend. Could demonstrate more advanced ggplot2 features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

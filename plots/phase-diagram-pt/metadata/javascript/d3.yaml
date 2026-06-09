@@ -1,0 +1,290 @@
+library: d3
+language: javascript
+specification_id: phase-diagram-pt
+created: '2026-06-08T08:59:19Z'
+updated: '2026-06-08T09:18:34Z'
+generated_by: claude-sonnet
+workflow_run: 27125435411
+issue: 4666
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/javascript/d3/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Scientifically accurate water phase diagram using real constants: triple point
+    at exactly 273.16 K / 611.73 Pa and critical point at 647.1 K / 22.064 MPa, with
+    proper Clausius-Clapeyron equations for sublimation and vaporization curves'
+  - 'Complete spec compliance: all three phase boundaries with distinct styles (solid
+    lines + dashed for sublimation), all four phase regions labeled (SOLID, LIQUID,
+    GAS, SUPERCRITICAL FLUID), triple and critical point markers with coordinate annotations'
+  - 'Correct Imprint palette usage in canonical order: palette[0] #009E73 for solid-liquid,
+    palette[1] #C475FD for liquid-gas, palette[2] #4467A3 for solid-gas, with redundant
+    encoding (dashed line for sublimation) for CVD accessibility'
+  - 'Idiomatic D3: d3.scaleLog for logarithmic pressure axis, d3.line().defined()
+    for proper boundary clipping, SVG clipPath element for rendering within plot bounds,
+    custom tick formatter with Unicode superscripts for scientific notation'
+  - Full theme adaptation with all chrome tokens applied (inkSoft for ticks, ink for
+    title/labels, grid for gridlines), data colors identical between light and dark
+    renders
+  - All font sizes explicitly set (14px tick labels, 16px axis labels and phase region
+    labels, title dynamically scaled by length to prevent overflow)
+  weaknesses:
+  - addMarker arrow function introduces a minor KISS violation — could be inlined
+    directly into the two call sites for stricter flat-script style
+  - Axis domain paths not removed — both xAx and yAx domain lines are still rendered,
+    creating a visible 4-sided box frame; remove with xAx.select('.domain').attr('stroke',
+    'none') and yAx.select('.domain').attr('stroke', 'none') for cleaner L-shaped
+    or frameless look per style guide
+  - Triple point marker uses t.ink (theme-adaptive chrome token) as fill, making the
+    marker flip from dark to light between themes; while semantically reasonable as
+    a reference point, the legend also uses t.ink for the Triple point swatch — if
+    strict data-color consistency is required, consider a fixed palette color (e.g.
+    t.palette[4]) or document the intentional chrome-anchor usage
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, no pure white
+      Chrome: Title "Water Phase Diagram · phase-diagram-pt · javascript · d3 · anyplot.ai" in dark ink, clearly readable; "Pressure (Pa)" Y-axis label and "Temperature (K)" X-axis label in dark ink, both legible; tick labels in subtler inkSoft at 14px, all readable; grid lines are subtle and visible on both axes
+      Data: Solid-liquid boundary in #009E73 brand green (nearly vertical line ~273K); liquid-gas boundary in #C475FD lavender (smooth curve from triple point to critical point); solid-gas boundary in #4467A3 blue (dashed, lower-left region); triple point marked with dark circle at ~(273K, 612Pa); critical point marked with ochre (#BD8233) circle at ~(647K, 22MPa)
+      Phase labels: SOLID (upper-left), LIQUID (center), GAS (lower-right), SUPERCRITICAL FLUID (upper-right) — all in italic bold, clearly positioned in their respective regions
+      Legibility verdict: PASS — all text fully readable against the warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, no pure black
+      Chrome: Title, axis labels, and tick labels all rendered in light-colored ink against the dark background — fully legible, no dark-on-dark failures observed; grid lines are subtle and visible; axis domain lines visible
+      Data: Phase boundary colors are identical to the light render — green solid-liquid, lavender liquid-gas, blue dashed solid-gas; triple point marker appears as white circle (t.ink = #F0EFE8 in dark theme); critical point remains ochre (#BD8233, theme-independent)
+      Phase labels: SOLID, LIQUID, GAS, SUPERCRITICAL FLUID all clearly readable in light secondary-text color against the dark background
+      Legibility verdict: PASS — all text fully readable against the dark background; no dark-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (14px ticks, 16px axis labels, dynamically
+          scaled title). Title spans ~75% of width appropriately for the long mandated
+          format. Minor reduction: title slightly scaled down due to length formula.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Phase labels, point annotations, and legend are all well-separated
+          with no text-on-text overlaps. Critical point annotation and SUPERCRITICAL
+          FLUID label have sufficient vertical separation (~50px).
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Phase boundary curves at 3-3.5px stroke width are clearly visible.
+          Triple point (r=9) and critical point (r=9) markers are prominent. Dashed
+          sublimation curve clearly distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Three distinct Imprint hues with redundant encoding (dashed linestyle
+          for sublimation). Palette is CVD-optimized. Special point markers use shape+color+size
+          distinction.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Good proportions with generous symmetric margins
+          (90/140 top-bottom and left-right). Plot area well utilized. No content
+          cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X-axis: ''Temperature (K)'' and Y-axis: ''Pressure (Pa)'' both descriptive
+          with units. Title follows ''{Descriptive Title} · {spec-id} · {lang} · {lib}
+          · anyplot.ai'' format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (solid-liquid) uses palette[0] #009E73. Canonical Imprint
+          order followed for all 3 series. Backgrounds: #FAF8F1 light / #1A1A17 dark.
+          Data colors identical between themes; only chrome flips.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: italic bold phase region labels, different stroke
+          weights and styles per boundary type, Unicode superscript axis formatting,
+          dynamic title scaling. Not yet FiveThirtyEight-level — legend is functional
+          but plain.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Custom gridlines at explicit scientific intervals. Generous whitespace.
+          Legend without box frame. However, axis domain paths not removed — 4-sided
+          frame visible rather than L-shaped or frameless.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Phase region labels create a clear scientific narrative. Triple and
+          critical point annotations with coordinates provide educational context.
+          Water's anomalous negative-slope melting curve is correctly shown, subtly
+          communicating a key physics insight.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct P-T phase diagram with all three phase boundaries, special
+          points, and logarithmic pressure axis.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: phase regions labeled, triple point and
+          critical point marked and annotated, liquid-gas boundary terminates at critical
+          point, logarithmic pressure axis, water representative data used, solid-liquid
+          boundary shows negative slope (water anomaly).'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Temperature (K) on X-axis, pressure (Pa) on Y-axis. All three boundaries
+          correctly mapped. Full range shown (170-720K, 1-10^9 Pa).
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''Water Phase Diagram · phase-diagram-pt · javascript · d3
+          · anyplot.ai'' matches required format. Legend labels all 3 boundaries and
+          2 special points correctly.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: three distinct phase boundaries with different
+          physical behaviors, two singular points (triple/critical), four labeled
+          phase regions including supercritical fluid, water''s anomalous negative
+          melting slope.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real water phase diagram — universally known scientific reference.
+          Neutral, educational, appropriate for chemistry/physics instruction.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Exact NIST water constants used. Clausius-Clapeyron equations for
+          sublimation (L/R=6141 K) and vaporization (calibrated to exactly reach critical
+          point). Melting slope (-1.346e7 Pa/K) consistent with water ice Ih data.
+          All values factually correct.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Clean sequential structure but introduces addMarker arrow function.
+          Minor KISS violation — could inline the two marker creation calls.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Entirely deterministic: all data generated from mathematical equations,
+          no random numbers. Constants hard-coded.'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: D3 is a global; no explicit imports. Only window globals used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, idiomatic D3 patterns throughout. boundaries array with forEach
+          is elegant. Unicode superscript formatting via toSup helper is a clean solution.
+          No over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correctly uses window.ANYPLOT_SIZE and window.ANYPLOT_TOKENS. D3
+          is an interactive library — harness generates both PNG and HTML. No filesystem
+          writes in code.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert D3 usage: d3.scaleLog for pressure, d3.line().defined() for
+          proper boundary termination, SVG clipPath for rendering within bounds, d3.axisBottom/Left
+          with explicit tickValues, selection chaining throughout.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Several D3-distinctive features: SVG clipPath element for curve
+          clipping, custom tickFormat with Unicode superscripts for scientific notation,
+          d3.line().defined() for partial-domain curves, data-driven path generation
+          with d3.line(). One point off since there''s no use of D3-specific scales
+          like scaleSequential or transition features.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - custom-legend
+  - clip-path
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling: []

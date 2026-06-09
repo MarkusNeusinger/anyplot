@@ -67,7 +67,7 @@ charts rendered by different engines defeat the point.
 
 **Allowed inputs for this implementation:**
 - `plots/{spec-id}/specification.md` and `specification.yaml`
-- `plots/{spec-id}/implementations/{language}/{this-library}{ext}` (if regenerating, same library only — `.py` for python, `.R` for ggplot2, `.jl` for makie)
+- `plots/{spec-id}/implementations/{language}/{this-library}{ext}` (if regenerating, same library only — `.py` for python, `.R` for ggplot2, `.jl` for makie, `.js` for the JavaScript libs, `.tsx` for muix)
 - `plots/{spec-id}/metadata/{language}/{this-library}.yaml` (its own previous review only)
 - `prompts/library/{this-library}.md`
 - `prompts/plot-generator.md`, `prompts/quality-criteria.md`, `prompts/default-style-guide.md`
@@ -324,6 +324,17 @@ Must pass all code quality criteria (CQ-01 through CQ-05) from `prompts/quality-
 - Bare `@show` or expressions at script level that pollute stdout.
 - Falling back to shelling out to Python/R/matplotlib when CairoMakie can't express something — return NOT_FEASIBLE instead.
 - **Extra** `#`-comment blocks beyond the required 4-line header. The Julia equivalent of the Python/R rule: the leading `#` header is **mandatory** (`impl-review.yml` rewrites it); don't insert other multi-line `#` blocks at the top of the file.
+
+**Forbidden (JavaScript — Chart.js / D3 / ECharts / Highcharts / muix):**
+- `import` / `require` / `<script src=…>` of a charting library — the `.js` libs are pre-loaded as globals; the harness handles bundling. (Exception: `muix` is `.tsx` and **does** `import` from `@mui/x-charts` / `@mui/material`, which the harness esbuild-bundles — see `prompts/library/muix.md`.)
+- `fetch()` / CDN / any network access — the runtime is offline and the emitted HTML must be self-contained.
+- Inline HTML scaffolding or screenshot/Selenium plumbing — the harness owns the page and the Playwright screenshot.
+- Leaving entrance animation on — the static PNG must capture the final frame (`animation: false` for Chart.js/ECharts/Highcharts; `skipAnimation` for MUI X).
+
+**Forbidden (React / muix — community surface only):**
+- **`@mui/x-charts-pro` and any MUI X Pro / Premium feature** is strictly forbidden — only the **MIT community** `@mui/x-charts` package is installed and in scope. Importing a Pro/Premium module will fail the build. (You *may* freely add richer chart features when they serve the spec — as long as every one comes from the community `@mui/x-charts` surface.)
+- Any other charting library (Recharts, Nivo, Visx, …) — `muix` demonstrates MUI X only.
+- Manual `ReactDOM.render` / `createRoot` or inline HTML — the harness mounts your default-exported component itself.
 
 > If a library cannot implement a plot type natively, **do not** fall back to another library's **plotting functions** (e.g., don't use `plt.scatter()` inside plotnine). The implementation should **fail** rather than use workarounds. Each library should demonstrate only its own native plotting capabilities.
 

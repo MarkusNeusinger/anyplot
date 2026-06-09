@@ -1,0 +1,277 @@
+library: echarts
+language: javascript
+specification_id: phase-diagram-pt
+created: '2026-06-08T08:59:30Z'
+updated: '2026-06-08T09:20:36Z'
+generated_by: claude-sonnet
+workflow_run: 27125535507
+issue: 4666
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/javascript/echarts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Scientifically accurate CO₂ phase diagram using Clausius-Clapeyron equations with
+    correct triple point (216.55 K / 5.185 atm) and critical point (304.13 K / 72.8
+    atm) values
+  - 'Full Imprint palette compliance: sublimation curve correctly uses brand green
+    #009E73 as first series, all boundary colors and special-point markers drawn from
+    t.palette'
+  - Correct logarithmic Y-axis spanning 0.01–2000 atm accommodating the wide pressure
+    range required for a realistic P-T diagram
+  - 'Thoughtful multi-layer design: subtle markArea phase region shading (opacity
+    0.08) + bold boundary curves (width 5) + labeled special-point markers + graphic
+    text overlays create clear visual hierarchy'
+  - 'Excellent spec coverage: all three phase boundaries, triple point, critical point,
+    four region labels (SOLID, LIQUID, GAS, SUPERCRITICAL FLUID), and log pressure
+    axis all present'
+  - 'Theme-adaptive chrome fully wired: t.ink for primary text, t.inkSoft for secondary
+    text and annotations, t.grid for grid lines — both renders are legible'
+  - 'Clean idiomatic ECharts: animation:false, transparent background, explicit font
+    sizes throughout, no devicePixelRatio override'
+  weaknesses:
+  - Triple point label (positioned 'bottom') may overlap the sublimation curve at
+    its termination point — the two lines of text sit directly on the curve junction;
+    consider offsetting the label to the right or using 'insideBottomRight' to clear
+    the curve intersection
+  - 'LM-02 partially missed: markArea and graphic are used well but the implementation
+    doesn''t leverage ECharts visualMap, rich-text formatter, or tooltip customization
+    for added sophistication'
+  - Axis label nameTextStyle fontsize 18px is slightly larger than the ECharts guide
+    default (14px for labels); while readable, it creates a mild size imbalance between
+    axis title and tick labels (14px)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
+      Chrome: Title "CO₂ Phase Diagram · phase-diagram-pt · javascript · echarts · anyplot.ai" is dark (#1A1A17) bold text, centered, spanning ~62% of canvas width at fontSize 20. X-axis label "Temperature (K)" and Y-axis label "Pressure (atm)" use dark ink, fontsize 18. Tick labels (140–360 K on X; 0.01–2000 on log Y) use inkSoft color at fontSize 14. Legend at bottom shows three entries with thin rect icons in green/purple/blue. Phase region labels SOLID, LIQUID, GAS, SUPERCRITICAL FLUID rendered as graphic elements at opacity 0.55 in inkSoft — clearly readable.
+      Data: Sublimation curve in brand green #009E73 (palette[0]) ✓ runs from 150K to triple point. Vaporization curve in lavender #C475FD (palette[1]) runs from triple point to critical point. Melting curve in blue #4467A3 (palette[2]) rises nearly vertically from triple point. Subtle phase-region shading (opacity 0.08) fills each region. Triple point diamond (palette[3] ochre) and critical point circle (palette[4] matte red) both at symbolSize 22 with ink-colored borders.
+      Legibility verdict: PASS — all text, axes, tick labels, and annotations are clearly readable against the light background. No light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black.
+      Chrome: Title and axis labels render in light-colored text (#F0EFE8 range), clearly readable against the dark background. Tick labels use lighter inkSoft (#B8B7B0 range). Phase region labels (SOLID, LIQUID, GAS, SUPERCRITICAL FLUID) remain readable. Grid lines are subtle, consistent with t.grid token. Legend entries readable in light text.
+      Data: Data colors are identical to the light render — sublimation curve still brand green #009E73, vaporization still lavender #C475FD, melting still blue #4467A3. Phase region shading and special point markers unchanged. Only chrome (background, text, grid) flips to dark theme values. Triple point and critical point labels in inkSoft light-on-dark text — readable.
+      Legibility verdict: PASS — no dark-on-dark failures observed. All text is light-colored on the dark background. Brand green #009E73 remains clearly visible on the warm-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title:20, axis-names:18, ticks:14,
+          annotations:14); proportional and readable in both themes. Minor: axis name
+          at 18px vs guide default 14px creates slight size gap vs tick labels.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean overall; triple point label positioned 'bottom' may touch the
+          sublimation curve terminus — text still readable but marginally overlaps
+          the curve at the triple-point junction.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Boundary curves at lineWidth 5 are bold and prominent. Special point
+          markers at symbolSize 22 with ink borders are clearly visible. Phase region
+          shading at opacity 0.08 is intentionally subtle.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-optimised. Special points use redundant shape
+          encoding (diamond vs circle). No red-green sole-signal issue.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization, balanced grid margins (left:120, right:80,
+          top:86, bottom:120). Legend cleanly anchored at bottom. No content cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Temperature (K) and Pressure (atm) both descriptive with units. Title
+          includes descriptive prefix.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: color:t.palette set globally. Sublimation line explicitly t.palette[0]=#009E73
+          (first series). Vaporization t.palette[1], melting t.palette[2]. Special
+          points palette[3] and palette[4]. Background transparent (shows t.pageBg).
+          Chrome tokens wired correctly in both themes.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured default: intentional multi-layer design (shading
+          + curves + labeled special points + graphic overlays), refined legend with
+          thin rect icons, descriptive title prefix. Not yet at strong-design / publication-ready
+          level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axis lines and tick marks hidden (show:false); grid uses subtle t.grid
+          token; phase region opacity tuned to 0.08; point labels at opacity 0.55.
+          Clean and above defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear focal points at triple point and critical point with annotated
+          values. Phase region labels orient the viewer immediately. Visual hierarchy:
+          bold curves > labeled markers > subtle shading. Above default data-dump
+          level.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct P-T phase diagram with all three phase boundary curves and
+          log pressure axis.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: solid-liquid, liquid-gas, solid-gas boundaries;
+          triple and critical points marked and annotated; phase regions labeled;
+          log Y-axis; supercritical fluid region; CO2 representative data.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Temperature (K) on X, Pressure (atm) on Y with log scale. Correct
+          ranges and data.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''CO₂ Phase Diagram · phase-diagram-pt · javascript · echarts
+          · anyplot.ai'' — correct prefixed format. Legend: Solid–Gas (Sublimation),
+          Liquid–Gas (Vaporization), Solid–Liquid (Melting) — correct.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All features shown: three boundaries, two special points (triple
+          + critical), four labeled regions including supercritical fluid.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real CO₂ data using Clausius-Clapeyron model. Educational/scientific
+          context, non-controversial.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: CO₂ triple point 216.55K/5.185atm and critical point 304.13K/72.8atm
+          match literature values. Curve shapes physically realistic.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: constants → data loops → init → setOption. No functions
+          or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: all data from fixed physical constants and
+          formulas.'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; echarts and ANYPLOT_TOKENS are globals used as intended.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. Three loops for three boundary datasets is
+          clear and minimal.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: animation:false set. ECharts 5 API used correctly. Harness writes
+          plot-{theme}.png + .html.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good ECharts idioms: log axis, mixed series types (line+scatter),
+          markArea for region shading, graphic element for text overlays. Well-structured
+          setOption.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: markArea (ECharts-specific region highlighting) and graphic element
+          (ECharts SVG-layer text) are used appropriately. Could leverage rich-text
+          formatter or visualMap for additional ECharts distinctiveness.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
