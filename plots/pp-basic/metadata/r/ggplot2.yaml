@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: pp-basic
 created: '2026-06-09T22:18:21Z'
-updated: '2026-06-09T22:22:49Z'
+updated: '2026-06-09T22:32:06Z'
 generated_by: claude-sonnet
 workflow_run: 27239324847
 issue: 4587
@@ -12,111 +12,124 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pp-basic/
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pp-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - 'Perfect spec compliance: Hazen plotting positions, coord_equal() for aspect ratio,
-    45-degree reference line, both axes bounded 0-1, fitted normal CDF — all correct'
-  - Theme-adaptive chrome fully implemented with no dark-on-dark failures; Imprint
-    palette data color (#009E73) stays identical across both renders
-  - Clean idiomatic ggplot2 code using modern API (linewidth=, scales::alpha(), ragg::agg_png)
-    with set.seed(42) reproducibility
+  - 'Correct Imprint palette with #009E73 first series; both theme renders have identical
+    data colors and correct warm backgrounds'
+  - Perfect spec compliance — coord_equal(), 0-1 axes, Hazen plotting positions, pnorm
+    CDF, and 45-degree dashed reference line all present
+  - Theme-adaptive chrome correctly implemented in both renders — no dark-on-dark
+    or light-on-light failures
+  - Clean KISS structure with explicit font sizes set at all levels; title/subtitle/axis
+    labels readable in both themes
+  - Informative subtitle guides the viewer to the key diagnostic feature (right-tail
+    deviation above 0.6)
   weaknesses:
-  - Marker size=2.0 for 200 points is slightly small for the 2400x2400 canvas; increase
-    to size=2.5 for better prominence at high resolution
-  - Top and right spines retained via panel.border; style guide recommends L-frame
-    (remove top/right) — replace panel.border with axis.line and panel.border=element_blank()
-  - No subtitle or annotation to guide interpretation of the visible tail deviation
-    — add labs(subtitle='Fitted normal — right-tail deviation visible above 0.6')
-    with INK_SOFT color
+  - Marker size (size=2.5, alpha=0.75) is at the lower end for 200 points — consider
+    increasing to size=3.0 and reducing alpha to 0.65 for better density discrimination
+  - 'Design Excellence could be elevated: consider removing tick marks (axis.ticks
+    = element_blank()), tightening left-side margin to shift the plot area slightly
+    right, and using a slightly thicker reference line (linewidth=1.0) to make the
+    baseline more prominent'
+  - 'LM-02: Uses ggplot2-characteristic geoms (coord_equal, geom_abline) but no deeply
+    distinctive features such as stat_* functions, position adjustments, or faceting
+    that would showcase ggplot2 at a higher level'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "pp-basic · r · ggplot2 · anyplot.ai" in dark ink at 12pt, ~65% plot width. Axis labels "Theoretical Cumulative Probability" (x) and "Empirical Cumulative Probability" (y) in dark INK at 10pt. Tick labels 0.0–1.0 in INK_SOFT at 8pt. All clearly readable.
-      Data: 200 points in brand green #009E73 (alpha=0.75, size=2.0) along the diagonal. Dashed reference line in soft gray INK_SOFT. Subtle grid lines. Four-sided panel border.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct, clearly not pure white
+      Chrome: Title "pp-basic · r · ggplot2 · anyplot.ai" in dark #1A1A17, occupies ~65% of width — good proportion; subtitle "Fitted normal — right-tail deviation visible above 0.6" in #4A4A44 (INK_SOFT); axis labels "Theoretical/Empirical Cumulative Probability" in dark ink; tick labels (0.0–1.0) in INK_SOFT — all clearly readable
+      Data: 200 scatter points in brand green #009E73 (alpha=0.75) tightly following the diagonal with a visible right-tail S-curve deviation above 0.6; dashed reference line in INK_SOFT (#4A4A44) from (0,0) to (1,1)
+      Legibility verdict: PASS — all text is clearly dark on warm-cream background with no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title, axis labels, and tick labels rendered in light #F0EFE8 / #B8B7B0 tones — clearly readable against dark surface. No dark-on-dark failures. Reference diagonal dashed line adapts to lighter INK_SOFT tone.
-      Data: Brand green #009E73 data points — identical color to light render. Imprint palette correctly theme-independent.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct; background appears deep charcoal, not pure black
+      Chrome: Title and axis labels rendered in light #F0EFE8; subtitles and tick labels in #B8B7B0 — all clearly readable against the dark background; dashed reference line appears as a light grey line
+      Data: Scatter points remain identical brand green #009E73 — visually confirmed as same color as light render; the green is clearly distinguishable on the dark background
+      Legibility verdict: PASS — no dark-on-dark failures observed; all text elements are light-colored on the near-black background
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=12pt, axis.title=10pt, axis.text=8pt);
-          all text readable in both themes
+        comment: All font sizes explicitly set (title=12, axis.title=10, axis.text=8,
+          plot.subtitle=9); readable in both themes; no overflow; balanced axis labels
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-text or text-data collisions
+        comment: No text or element overlap in either render
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Points clearly visible; marker size=2.0 slightly small for 2400px
-          canvas — 2.5 preferred
+        comment: 200 points with size=2.5 alpha=0.75; diagnostic pattern clearly visible
+          but markers slightly small for the density — size=3.0 / alpha=0.65 would
+          be slightly better
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series, no red/green conflict
+        comment: 'Imprint green #009E73 on warm backgrounds; good luminance contrast;
+          CVD-safe palette'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 correct for symmetric plot; canvas gate passed;
-          no clipping
+        comment: Square 2400x2400 canvas; coord_equal() maintains correct 1:1 aspect
+          ratio; balanced margins (20,20,20,20); no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels, units implied by 0-1 range, correct title format
+        comment: Descriptive axis labels 'Theoretical Cumulative Probability' and
+          'Empirical Cumulative Probability'; no units needed (dimensionless 0-1 scale)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; both renders
-          theme-correct'
+        comment: '#009E73 first (and only) series; backgrounds #FAF8F1 (light) / #1A1A17
+          (dark); all chrome uses theme-adaptive INK/INK_SOFT tokens; data colors
+          identical across themes'
     design_excellence:
       score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Clean deliberate design with alpha-faded grid, disabled minor grid,
-          appropriate alpha on points
+        comment: Correctly implements anyplot style with Imprint palette and theme
+          tokens; clean minimal look; well-configured but not above default level
+          — no exceptional design flourishes
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Good refinements (minor grid suppressed, subtle grid alpha) but four-sided
-          border kept instead of L-frame
+        comment: Subtle grid (alpha=0.15 on INK), minor grid blanked, panel.border
+          removed, L-shaped axis lines set; good refinement above defaults but tick
+          marks still visible and margins not particularly generous
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Dashed reference line creates clear visual hierarchy; S-shaped deviation
-          visible but no annotation to guide interpretation
+        comment: Subtitle explicitly points viewer to right-tail deviation; dashed
+          reference line vs green data creates clear visual hierarchy; story is communicated,
+          not just displayed
     spec_compliance:
       score: 15
       max: 15
@@ -126,26 +139,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct P-P plot
+        comment: 'Correct P-P plot: empirical CDF vs theoretical CDF on both axes'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Reference line, 0-1 axes, square aspect, Hazen positions, fitted
-          normal all present
+        comment: Both axes 0-1; 45-degree reference line (dashed geom_abline); square
+          aspect ratio via coord_equal(); Hazen plotting positions (i-0.5)/n; pnorm()
+          for theoretical CDF
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=theoretical, Y=empirical, full range shown
+        comment: X=theoretical CDF, Y=empirical CDF; all 200 points visible within
+          [0,1]x[0,1]
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly correct; no legend needed for single series
+        comment: Title 'pp-basic · r · ggplot2 · anyplot.ai' exact format; no legend
+          (correct for single-series)
     data_quality:
       score: 15
       max: 15
@@ -155,19 +171,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All P-P plot elements demonstrated
+        comment: Bimodal mixture (base + delayed group) produces clear right-tail
+          S-curve deviation; demonstrates both the near-fit region (center) and the
+          diagnostic deviation (upper tail)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Reaction time QC scenario plausible and neutral
+        comment: Reaction time QC scenario — exactly the application domain mentioned
+          in the spec; neutral, plausible, science/engineering context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 145ms mean, 12ms sd, 200 obs — realistic
+        comment: 145ms / 162ms reaction times are physiologically plausible; SDs (12ms,
+          8ms) are realistic; bimodal mixture creates meaningful deviation without
+          being extreme
     code_quality:
       score: 10
       max: 10
@@ -177,58 +198,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat linear script
+        comment: Linear imports → theme tokens → data generation → plot construction
+          → save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42)
+        comment: set.seed(42) present
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ggplot2, scales, ragg — all used
+        comment: ggplot2 (plotting), scales (scales::alpha), ragg (PNG device) — all
+          used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Clean, appropriately concise; no over-engineering; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png; uses ragg::agg_png; modern linewidth=
+        comment: Saves as plot-{THEME}.png via sprintf; modern ggplot2 API (linewidth=
+          not size= for lines)
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: coord_equal(), scales::alpha(), modern linewidth=, correct grammar-of-graphics
-          layering
+        comment: 'Expertly uses ggplot2 grammar: layered geoms (geom_abline + geom_point),
+          coord_equal() for aspect ratio, scale_*_continuous with explicit limits/breaks,
+          theme_minimal + theme() layering'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of coord_equal and scale_x/y_continuous with explicit breaks;
-          could go further with stat functions or annotation layers
+        comment: coord_equal() and geom_abline() are characteristically ggplot2 approaches;
+          grammar-of-graphics layering is idiomatic; but no stat_* functions or more
+          advanced ggplot2 mechanisms used
   verdict: APPROVED
 impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - manual-ticks
+  dependencies:
+  - scales
+  techniques: []
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling

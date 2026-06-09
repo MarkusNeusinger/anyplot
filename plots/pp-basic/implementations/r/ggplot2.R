@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' pp-basic: Probability-Probability (P-P) Plot
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 87/100 | Created: 2026-06-09
+#' Quality: 89/100 | Created: 2026-06-09
 
 library(ggplot2)
 library(scales)
