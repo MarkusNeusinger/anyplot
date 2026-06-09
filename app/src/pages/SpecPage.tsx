@@ -11,9 +11,10 @@ import Typography from '@mui/material/Typography';
 
 import { LibraryPills } from 'src/components/LibraryPills';
 import { RelatedSpecs } from 'src/components/RelatedSpecs';
-import { API_URL, GITHUB_URL, LANG_DISPLAY } from 'src/constants';
+import { GITHUB_URL, LANG_DISPLAY } from 'src/constants';
 import { useAnalytics, useCodeFetch } from 'src/hooks';
 import { useAppData } from 'src/hooks';
+import { ApiError, apiGet, apiUrl, endpoints } from 'src/lib/api';
 import { NotFoundPage } from 'src/pages/NotFoundPage';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 import { specPath } from 'src/utils/paths';
@@ -94,13 +95,7 @@ export function SpecPage() {
       setHighlightedTags([]);
 
       try {
-        const res = await fetch(`${API_URL}/specs/${specId}`);
-        if (!res.ok) {
-          setError(res.status === 404 ? 'Spec not found' : 'Failed to load spec');
-          return;
-        }
-
-        const data: SpecDetail = await res.json();
+        const data = await apiGet<SpecDetail>(endpoints.spec(specId));
         setSpecData(data);
 
         // Detail mode: validate library matches an impl in the requested language.
@@ -121,6 +116,10 @@ export function SpecPage() {
           }
         }
       } catch (err) {
+        if (err instanceof ApiError) {
+          setError(err.status === 404 ? 'Spec not found' : 'Failed to load spec');
+          return;
+        }
         console.error('Error fetching spec:', err);
         setError('Failed to load spec');
       } finally {
@@ -252,7 +251,7 @@ export function SpecPage() {
     async (impl: Implementation) => {
       if (!specId) return;
       const link = document.createElement('a');
-      link.href = `${API_URL}/download/${specId}/${impl.library_id}`;
+      link.href = apiUrl(endpoints.download(specId, impl.library_id));
       link.download = `${specId}-${impl.library_id}.png`;
       document.body.appendChild(link);
       link.click();

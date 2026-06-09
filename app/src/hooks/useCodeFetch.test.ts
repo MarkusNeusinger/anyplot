@@ -52,7 +52,8 @@ describe('useCodeFetch', () => {
 
       expect(code).toBe(mplCode);
       expect(globalThis.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/specs/scatter-basic/matplotlib/code')
+        expect.stringContaining('/specs/scatter-basic/matplotlib/code'),
+        undefined
       );
     });
 
@@ -178,7 +179,8 @@ describe('useCodeFetch', () => {
 
       expect(code).toBe(ggCode);
       expect(globalThis.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/specs/scatter-basic/ggplot2/code?language=r')
+        expect.stringContaining('/specs/scatter-basic/ggplot2/code?language=r'),
+        undefined
       );
     });
 
@@ -197,7 +199,8 @@ describe('useCodeFetch', () => {
 
       expect(code).toBe(jlCode);
       expect(globalThis.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/specs/scatter-basic/makie/code?language=julia')
+        expect.stringContaining('/specs/scatter-basic/makie/code?language=julia'),
+        undefined
       );
     });
 
@@ -216,7 +219,8 @@ describe('useCodeFetch', () => {
 
       expect(code).toBe(tsxCode);
       expect(globalThis.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/specs/scatter-basic/muix/code?language=javascript')
+        expect.stringContaining('/specs/scatter-basic/muix/code?language=javascript'),
+        undefined
       );
     });
 
