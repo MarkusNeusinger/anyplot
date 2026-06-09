@@ -1,0 +1,273 @@
+library: chartjs
+language: javascript
+specification_id: pp-basic
+created: '2026-06-09T22:15:48Z'
+updated: '2026-06-09T22:39:39Z'
+generated_by: claude-sonnet
+workflow_run: 27239053499
+issue: 4587
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pp-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pp-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pp-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pp-basic/javascript/chartjs/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Correct P-P plot with Hazen plotting positions (i+1)/(n+1) and normal CDF via
+    Abramowitz & Stegun erf approximation — statistically rigorous implementation
+  - KS 95% confidence band adds interpretive statistical context beyond the minimum
+    spec requirements
+  - Square orientation correctly chosen for this symmetric 0–1 vs 0–1 probability
+    plot
+  - Deterministic LCG + Box-Muller data generation with fixed seed is fully reproducible
+  - innerGrid function suppresses grid lines at axis boundaries (tick=0 and tick=1)
+    creating a clean L-shaped frame — idiomatic Chart.js approach
+  - 'Chart.js fill: ''+1'' used correctly to shade area between upperBand and lowerBand
+    datasets'
+  - Legend filter hides the internal '_lower' dataset label cleanly
+  - 'Theme-adaptive chrome: all text (title, axis labels, ticks, legend) uses t.ink
+    / t.inkSoft tokens that flip between themes'
+  - Both renders fully legible — no dark-on-dark or light-on-light failures
+  - 'Code quality is excellent: well-separated concerns, reproducible data, no functions
+    wrapping chart creation, idiomatic Chart.js API'
+  weaknesses:
+  - Confidence band fill (palette[0] + '20' = 12% opacity) is barely distinguishable
+    from the dark background in the dark render — the band provides interpretive value
+    but nearly disappears at night mode. Increase opacity to ~25% ('40' hex) or use
+    the muted semantic anchor (t.inkSoft at low alpha) so the band is perceptible
+    in both themes
+  - In the dark render the confidence band legend swatch shows the same near-invisible
+    pale tint — users reading the legend in dark mode may not connect the swatch to
+    the shaded region. Not a legibility failure but a minor UI inconsistency
+  - 'DE-01: Visual sophistication is solid but not exceptional — the plot lacks emphasis
+    techniques (e.g., highlighting the key S-curve deviation region with an annotation
+    or subtle callout) that would elevate it from ''clean and correct'' to ''tells
+    a visual story'''
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, no pure white
+      Chrome: Title "pp-basic · javascript · chartjs · anyplot.ai" in dark ink at top, clearly readable. X-axis label "Theoretical CDF (Normal)" and Y-axis label "Empirical CDF" in dark ink, both readable and proportionally sized at ~16px. Tick labels (0, 0.2, 0.4, 0.6, 0.8, 1.0 on both axes) in inkSoft, clearly readable. Three-item legend (green swatch "Empirical vs Theoretical CDF", dashed line "Reference (perfect fit)", translucent swatch "95% confidence band") — all readable.
+      Data: 200 scatter points in brand green (#009E73) at ~65% opacity showing a characteristic S-curve deviation from the diagonal — points cluster above the diagonal in the 0–0.5 theoretical CDF range (signature of right-skewed data vs normal). Dashed reference line (perfect fit diagonal) in inkSoft across the full 0–1 range. Light green confidence band (95% KS band) fills the region ±1.36/√200 around the diagonal and is clearly visible as a soft green shading.
+      Legibility verdict: PASS — all text readable, no overflow, no overlap.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface.
+      Chrome: Title in light cream text, clearly readable. Axis labels in light ink, clearly readable. Tick labels in soft light text, clearly readable. Legend text in light ink, clearly readable. No dark-on-dark failures anywhere.
+      Data: Scatter points remain brand green (#009E73) — identical to light render, clearly visible against dark background. Reference line renders as a light dashed line (inkSoft in dark theme = ~#B8B7B0), clearly visible. Confidence band (palette[0] + 12% opacity = very dark green-tinted fill) is present but significantly harder to distinguish from the near-black background compared to the light render — the band is faintly visible but provides less interpretive clarity in this theme.
+      Legibility verdict: PASS — all text and main data elements readable. Minor note: the confidence band fill is quite faint in dark mode (12% opacity of #009E73 over #1A1A17 produces low contrast), though the band shape can still be perceived.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All text legible in both themes; title/axis/tick sizes well-proportioned.
+          Minor: legend items moderately dense but readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-text or text-data overlap; legend items clearly separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Scatter points clearly visible in both themes; reference line clearly
+          visible. Confidence band clearly visible in light render but quite faint
+          in dark render due to 12% opacity.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single main data series in brand green #009E73 (CVD-safe). Reference
+          line uses neutral ink color. No red-green sole signal.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Square format correct. Good proportions. Title
+          spans ~65% plot width. No overflow or clipping. Canvas dimensions correct.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Title matches required format exactly. X: ''Theoretical CDF (Normal)'',
+          Y: ''Empirical CDF'' — descriptive with appropriate context.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (and only) data series uses palette[0] (#009E73). Light bg
+          #FAF8F1, dark bg #1A1A17 confirmed. Data colors identical between themes;
+          chrome (text, grid) flips correctly.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above-baseline sophistication: KS confidence band adds statistical
+          depth, innerGrid L-frame trick shows Chart.js mastery, intentional visual
+          hierarchy (scatter > ref line > band). No extraordinary aesthetic design
+          beyond functional correctness.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped frame via conditional grid color function, subtle grid lines,
+          clean point styling with alpha and page-bg edge. Above the 2-point baseline.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Reference diagonal and confidence band create a clear interpretive
+          framework. S-curve deviation from diagonal is visually apparent. Could be
+          strengthened with annotation highlighting the key deviation region.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct P-P plot: empirical CDF vs theoretical CDF. Both axes 0–1.
+          45-degree reference line. Square aspect ratio.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Empirical CDF computed via Hazen plotting positions (i+1)/(n+1).
+          Theoretical CDF via normal distribution with fitted mean/std. Reference
+          line. Square aspect. All required features present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = theoretical CDF, Y = empirical CDF. Both axes properly bounded
+          0–1. All 200 data points plotted.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'pp-basic · javascript · chartjs · anyplot.ai' matches required
+          format exactly. Legend labels are descriptive. Internal '_lower' dataset
+          hidden via filter.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all P-P plot features: CDF comparison, reference line, and
+          statistical confidence band. Right-skewed distribution creates meaningful
+          visible deviation from diagonal.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 200 samples from a right-skewed distribution (normal + 0.3*z²) compared
+          against normal reference. Realistic distributional analysis scenario. Neutral
+          domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Both axes 0–1 (correct for probabilities). 200 data points within
+          specified range of 50–500.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Helper functions (lcg, randn, erf, normCDF) are statistically necessary
+          utilities, not chart-structure abstractions. Chart creation is a single
+          new Chart() call. Clean overall structure.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: LCG with fixed seed 987654321 provides fully deterministic data generation
+          across all environments.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports — Chart.js is a global (correct for harness environment).
+          No unused code.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. innerGrid helper is elegant. No fake UI.
+          Code is readable and purposeful.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'No filesystem saves (harness handles). Current Chart.js 4.x API.
+          Correct mount-node contract with #container.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Mixed dataset types (scatter + line) idiomatic in Chart.js 4. fill:
+          ''+1'' for band shading is the recommended Chart.js pattern. order property
+          for layer control. Legend filter callback. All idiomatic.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'fill: ''+1'' band fill, conditional grid color function (innerGrid),
+          dataset-level legend filtering, and mixed chart types all demonstrate Chart.js-specific
+          knowledge beyond generic usage.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
