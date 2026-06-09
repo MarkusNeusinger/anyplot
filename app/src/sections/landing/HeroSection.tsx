@@ -2,11 +2,11 @@ import { Link as RouterLink } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 
-import { PlotOfTheDayTerminal } from 'src/components/PlotOfTheDayTerminal';
-import { TypewriterText } from 'src/components/TypewriterText';
 import { useAnalytics } from 'src/hooks';
 import type { PlotOfTheDayData } from 'src/hooks/usePlotOfTheDay';
 import { paths } from 'src/routes/paths';
+import { PlotOfTheDayTerminal } from 'src/sections/landing/PlotOfTheDayTerminal';
+import { TypewriterText } from 'src/sections/landing/TypewriterText';
 import { colors, typography } from 'src/theme';
 
 interface HeroSectionProps {

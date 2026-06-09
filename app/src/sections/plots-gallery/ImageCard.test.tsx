@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { ImageCard } from 'src/components/ImageCard';
+import { ImageCard } from 'src/sections/plots-gallery/ImageCard';
 import { render, screen } from 'src/test-utils';
 import type { PlotImage } from 'src/types';
 

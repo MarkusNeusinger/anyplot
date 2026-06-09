@@ -38,13 +38,13 @@ vi.mock('src/hooks/useLayoutContext', async () => {
   };
 });
 
-vi.mock('src/components/MastheadRule', () => ({
+vi.mock('src/layouts/MastheadRule', () => ({
   MastheadRule: () => <div data-testid="masthead" />,
 }));
-vi.mock('src/components/NavBar', () => ({ NavBar: () => <div data-testid="navbar" /> }));
-vi.mock('src/components/Footer', () => ({ Footer: () => <div data-testid="footer" /> }));
+vi.mock('src/layouts/NavBar', () => ({ NavBar: () => <div data-testid="navbar" /> }));
+vi.mock('src/layouts/Footer', () => ({ Footer: () => <div data-testid="footer" /> }));
 
-import { RootLayout } from 'src/components/RootLayout';
+import { RootLayout } from 'src/layouts/RootLayout';
 
 const theme = createTheme();
 

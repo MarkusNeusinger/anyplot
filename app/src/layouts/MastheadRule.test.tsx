@@ -22,7 +22,7 @@ vi.mock('src/hooks', async () => {
   };
 });
 
-import { MastheadRule } from 'src/components/MastheadRule';
+import { MastheadRule } from 'src/layouts/MastheadRule';
 
 function renderAt(initialEntry: string, ui: ReactElement) {
   const theme = createTheme();

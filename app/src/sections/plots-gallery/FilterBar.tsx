@@ -15,8 +15,8 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 
-import { ToolbarActions } from 'src/components/ToolbarActions';
 import type { ImageSize } from 'src/constants';
+import { ToolbarActions } from 'src/sections/plots-gallery/ToolbarActions';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 import type { ActiveFilters, FilterCategory, FilterCounts } from 'src/types';
 import { FILTER_CATEGORIES, FILTER_LABELS, FILTER_TOOLTIPS } from 'src/types';

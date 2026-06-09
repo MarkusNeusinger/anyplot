@@ -9,22 +9,24 @@ import Button from '@mui/material/Button';
 import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 
-import { LibraryPills } from 'src/components/LibraryPills';
-import { RelatedSpecs } from 'src/components/RelatedSpecs';
 import { GITHUB_URL, LANG_DISPLAY } from 'src/constants';
 import { useAnalytics, useCodeFetch } from 'src/hooks';
 import { useAppData } from 'src/hooks';
 import { ApiError, apiGet, apiUrl, endpoints } from 'src/lib/api';
 import { NotFoundPage } from 'src/pages/NotFoundPage';
 import { paths, specPath } from 'src/routes/paths';
+import { LibraryPills } from 'src/sections/spec-detail/LibraryPills';
+import { RelatedSpecs } from 'src/sections/spec-detail/RelatedSpecs';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 
-const SpecTabs = lazy(() => import('src/components/SpecTabs').then(m => ({ default: m.SpecTabs })));
+const SpecTabs = lazy(() =>
+  import('src/sections/spec-detail/SpecTabs').then(m => ({ default: m.SpecTabs }))
+);
 const SpecOverview = lazy(() =>
-  import('src/components/SpecOverview').then(m => ({ default: m.SpecOverview }))
+  import('src/sections/spec-detail/SpecOverview').then(m => ({ default: m.SpecOverview }))
 );
 const SpecDetailView = lazy(() =>
-  import('src/components/SpecDetailView').then(m => ({ default: m.SpecDetailView }))
+  import('src/sections/spec-detail/SpecDetailView').then(m => ({ default: m.SpecDetailView }))
 );
 import type { Implementation } from 'src/types';
 

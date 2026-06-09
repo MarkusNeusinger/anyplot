@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { SpecOverview } from 'src/components/SpecOverview';
+import { SpecOverview } from 'src/sections/spec-detail/SpecOverview';
 import { render, screen, userEvent } from 'src/test-utils';
 import type { Implementation } from 'src/types';
 
