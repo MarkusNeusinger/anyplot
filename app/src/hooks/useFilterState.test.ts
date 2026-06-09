@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest';
-import { isFiltersEmpty } from './useFilterState';
+import { describe, expect, it } from 'vitest';
+
 import type { ActiveFilters } from '../types';
+import { isFiltersEmpty } from './useFilterState';
 
 describe('isFiltersEmpty', () => {
   it('returns true for empty array', () => {
@@ -16,9 +17,7 @@ describe('isFiltersEmpty', () => {
   });
 
   it('returns false when any group has values', () => {
-    const filters: ActiveFilters = [
-      { category: 'lib', values: ['matplotlib'] },
-    ];
+    const filters: ActiveFilters = [{ category: 'lib', values: ['matplotlib'] }];
     expect(isFiltersEmpty(filters)).toBe(false);
   });
 
@@ -31,9 +30,7 @@ describe('isFiltersEmpty', () => {
   });
 
   it('returns false with multiple values in a group', () => {
-    const filters: ActiveFilters = [
-      { category: 'lib', values: ['matplotlib', 'seaborn'] },
-    ];
+    const filters: ActiveFilters = [{ category: 'lib', values: ['matplotlib', 'seaborn'] }];
     expect(isFiltersEmpty(filters)).toBe(false);
   });
 });

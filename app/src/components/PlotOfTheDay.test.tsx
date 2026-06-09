@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { render, screen, waitFor } from '../test-utils';
 
 const trackEvent = vi.fn();
@@ -17,10 +18,18 @@ import { PlotOfTheDay } from './PlotOfTheDay';
 const sessionStorageMock: Record<string, string> = {};
 const sessionStorageStub = {
   getItem: vi.fn((key: string) => sessionStorageMock[key] ?? null),
-  setItem: vi.fn((key: string, value: string) => { sessionStorageMock[key] = value; }),
-  removeItem: vi.fn((key: string) => { delete sessionStorageMock[key]; }),
-  clear: vi.fn(() => { Object.keys(sessionStorageMock).forEach(k => delete sessionStorageMock[k]); }),
-  get length() { return Object.keys(sessionStorageMock).length; },
+  setItem: vi.fn((key: string, value: string) => {
+    sessionStorageMock[key] = value;
+  }),
+  removeItem: vi.fn((key: string) => {
+    delete sessionStorageMock[key];
+  }),
+  clear: vi.fn(() => {
+    Object.keys(sessionStorageMock).forEach(k => delete sessionStorageMock[k]);
+  }),
+  get length() {
+    return Object.keys(sessionStorageMock).length;
+  },
   key: vi.fn(() => null),
 };
 
@@ -156,7 +165,10 @@ describe('PlotOfTheDay', () => {
     // After dismiss, component should return null
     expect(container.firstChild).toBeNull();
     expect(sessionStorageStub.setItem).toHaveBeenCalledWith('potd_dismissed', 'true');
-    expect(trackEvent).toHaveBeenCalledWith('potd_dismiss', expect.objectContaining({ spec: 'scatter-basic', library: 'matplotlib' }));
+    expect(trackEvent).toHaveBeenCalledWith(
+      'potd_dismiss',
+      expect.objectContaining({ spec: 'scatter-basic', library: 'matplotlib' })
+    );
   });
 
   it('tracks nav_click when the image, title and source link are clicked', async () => {
@@ -175,14 +187,20 @@ describe('PlotOfTheDay', () => {
     });
 
     await user.click(screen.getByText('Basic Scatter Plot'));
-    expect(trackEvent).toHaveBeenCalledWith('nav_click', expect.objectContaining({ source: 'potd_title' }));
+    expect(trackEvent).toHaveBeenCalledWith(
+      'nav_click',
+      expect.objectContaining({ source: 'potd_title' })
+    );
 
     const sourceLink = screen.getByText(/python plots\/scatter-basic\/matplotlib\.py/);
     expect(sourceLink.getAttribute('href')).toMatch(
-      /\/blob\/main\/plots\/scatter-basic\/implementations\/python\/matplotlib\.py$/,
+      /\/blob\/main\/plots\/scatter-basic\/implementations\/python\/matplotlib\.py$/
     );
     await user.click(sourceLink);
-    expect(trackEvent).toHaveBeenCalledWith('nav_click', expect.objectContaining({ source: 'potd_source_link' }));
+    expect(trackEvent).toHaveBeenCalledWith(
+      'nav_click',
+      expect.objectContaining({ source: 'potd_source_link' })
+    );
   });
 
   it('hides library version when it is "unknown"', async () => {

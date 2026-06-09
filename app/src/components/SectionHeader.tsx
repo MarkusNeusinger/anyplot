@@ -1,7 +1,9 @@
-import Box from '@mui/material/Box';
 import { Link } from 'react-router-dom';
-import { colors, typography } from '../theme';
+
+import Box from '@mui/material/Box';
+
 import { useAnalytics } from '../hooks';
+import { colors, typography } from '../theme';
 
 interface SectionHeaderBaseProps {
   /** Prefix symbol — e.g. `§`, `❯`, `$`. Rendered at the same size as the title. */
@@ -46,41 +48,48 @@ export function SectionHeader(props: SectionHeaderProps) {
     '&:hover': { color: colors.primary },
   } as const;
   return (
-    <Box sx={{
-      display: 'grid',
-      gridTemplateColumns: 'auto 1fr auto',
-      alignItems: 'baseline',
-      gap: { xs: 1.5, md: 2 },
-      mb: 4,
-      pt: 2.5,
-      pb: 1.5,
-      borderBottom: `1px solid var(--rule)`,
-    }}>
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: 'auto 1fr auto',
+        alignItems: 'baseline',
+        gap: { xs: 1.5, md: 2 },
+        mb: 4,
+        pt: 2.5,
+        pb: 1.5,
+        borderBottom: `1px solid var(--rule)`,
+      }}
+    >
       {prompt && (
-        <Box sx={{
-          fontFamily: typography.mono,
-          fontSize: { xs: '0.95rem', sm: '1.15rem', md: '1.4rem' },
-          fontWeight: 500,
-          color: 'var(--ink-muted)',
-          whiteSpace: 'nowrap',
-        }}>
+        <Box
+          sx={{
+            fontFamily: typography.mono,
+            fontSize: { xs: '0.95rem', sm: '1.15rem', md: '1.4rem' },
+            fontWeight: 500,
+            color: 'var(--ink-muted)',
+            whiteSpace: 'nowrap',
+          }}
+        >
           {prompt}
         </Box>
       )}
-      <Box component="h2" sx={{
-        fontFamily: typography.serif,
-        fontWeight: 400,
-        fontSize: titleFontSize,
-        lineHeight: 1.15,
-        letterSpacing: '-0.02em',
-        color: 'var(--ink)',
-        m: 0,
-        '& em': {
-          fontStyle: 'italic',
-          color: colors.primary,
-          fontWeight: 300,
-        },
-      }}>
+      <Box
+        component="h2"
+        sx={{
+          fontFamily: typography.serif,
+          fontWeight: 400,
+          fontSize: titleFontSize,
+          lineHeight: 1.15,
+          letterSpacing: '-0.02em',
+          color: 'var(--ink)',
+          m: 0,
+          '& em': {
+            fontStyle: 'italic',
+            color: colors.primary,
+            fontWeight: 300,
+          },
+        }}
+      >
         {title}
       </Box>
       {linkText && linkTo && (
@@ -99,7 +108,12 @@ export function SectionHeader(props: SectionHeaderProps) {
           href={linkHref}
           target="_blank"
           rel="noopener noreferrer"
-          onClick={() => trackEvent('external_link', { source: 'section_header', destination: externalDestination(linkHref) })}
+          onClick={() =>
+            trackEvent('external_link', {
+              source: 'section_header',
+              destination: externalDestination(linkHref),
+            })
+          }
           sx={linkSx}
         >
           {linkText}

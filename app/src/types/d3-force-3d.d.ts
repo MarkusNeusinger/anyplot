@@ -15,11 +15,7 @@ declare module 'd3-force-3d' {
     radius?: number | ((node: N, i: number, nodes: N[]) => number)
   ): Force<N>;
 
-  export function forceX<N>(
-    x?: number | ((node: N, i: number, nodes: N[]) => number)
-  ): Force<N>;
+  export function forceX<N>(x?: number | ((node: N, i: number, nodes: N[]) => number)): Force<N>;
 
-  export function forceY<N>(
-    y?: number | ((node: N, i: number, nodes: N[]) => number)
-  ): Force<N>;
+  export function forceY<N>(y?: number | ((node: N, i: number, nodes: N[]) => number)): Force<N>;
 }

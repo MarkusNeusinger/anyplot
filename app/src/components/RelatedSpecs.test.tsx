@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { render, screen, waitFor } from '../test-utils';
 import { RelatedSpecs } from './RelatedSpecs';
 
@@ -141,9 +142,7 @@ describe('RelatedSpecs', () => {
   });
 
   it('renders "no preview" text when preview_url is null', async () => {
-    const relatedWithNoPreview = [
-      { ...mockRelated[0], preview_url: null },
-    ];
+    const relatedWithNoPreview = [{ ...mockRelated[0], preview_url: null }];
     fetchMock.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve({ related: relatedWithNoPreview }),

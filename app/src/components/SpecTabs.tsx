@@ -1,26 +1,27 @@
-import { useState, useCallback, useEffect, lazy, Suspense } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
+
 import { useNavigate } from 'react-router-dom';
-import Box from '@mui/material/Box';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
-import Chip from '@mui/material/Chip';
-import Collapse from '@mui/material/Collapse';
+
+import CheckIcon from '@mui/icons-material/Check';
 import CodeIcon from '@mui/icons-material/Code';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DescriptionIcon from '@mui/icons-material/Description';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ImageIcon from '@mui/icons-material/Image';
 import StarIcon from '@mui/icons-material/Star';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import CheckIcon from '@mui/icons-material/Check';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
+import Collapse from '@mui/material/Collapse';
+import IconButton from '@mui/material/IconButton';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
 
 const CodeHighlighter = lazy(() => import('./CodeHighlighter'));
-import { colors, fontSize, semanticColors, typography } from '../theme';
 import { API_URL } from '../constants';
-
+import { colors, fontSize, semanticColors, typography } from '../theme';
 
 // Cached global tag counts — loaded once, shared across all SpecTabs instances
 let cachedTagCounts: Record<string, Record<string, number>> | null = null;
@@ -189,14 +190,16 @@ export function SpecTabs({
   // In overview mode, start with Spec tab open; in detail mode, all collapsed
   const [tabIndex, setTabIndex] = useState<number | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
-  const [tagCounts, setTagCounts] = useState<Record<string, Record<string, number>> | null>(cachedTagCounts);
+  const [tagCounts, setTagCounts] = useState<Record<string, Record<string, number>> | null>(
+    cachedTagCounts
+  );
 
   // Fetch global tag counts once (module-level cache)
   useEffect(() => {
     if (cachedTagCounts) return;
     const controller = new AbortController();
     fetch(`${API_URL}/plots/filter?limit=1`, { signal: controller.signal })
-      .then(r => r.ok ? r.json() : null)
+      .then(r => (r.ok ? r.json() : null))
       .then(data => {
         if (data?.globalCounts) {
           cachedTagCounts = data.globalCounts;
@@ -208,10 +211,13 @@ export function SpecTabs({
   }, []);
 
   // Get count for a tag value (e.g., "scatter" in "plot" category → 421 implementations)
-  const getTagCount = useCallback((paramName: string | undefined, value: string): number | null => {
-    if (!tagCounts || !paramName) return null;
-    return tagCounts[paramName]?.[value] ?? null;
-  }, [tagCounts]);
+  const getTagCount = useCallback(
+    (paramName: string | undefined, value: string): number | null => {
+      if (!tagCounts || !paramName) return null;
+      return tagCounts[paramName]?.[value] ?? null;
+    },
+    [tagCounts]
+  );
 
   const navigate = useNavigate();
 
@@ -227,7 +233,7 @@ export function SpecTabs({
   );
 
   const toggleCategory = (category: string) => {
-    setExpandedCategories((prev) => ({ ...prev, [category]: !prev[category] }));
+    setExpandedCategories(prev => ({ ...prev, [category]: !prev[category] }));
   };
 
   const handleCopy = useCallback(async () => {
@@ -235,7 +241,12 @@ export function SpecTabs({
     try {
       await navigator.clipboard.writeText(code);
       setCopied(true);
-      onTrackEvent?.('copy_code', { spec: specId, library: libraryId, method: 'tab', page: 'spec_detail' });
+      onTrackEvent?.('copy_code', {
+        spec: specId,
+        library: libraryId,
+        method: 'tab',
+        page: 'spec_detail',
+      });
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Copy failed:', err);
@@ -250,21 +261,41 @@ export function SpecTabs({
 
     // Toggle: clicking same tab collapses it
     if (tabIndex === newValue) {
-      onTrackEvent?.('tab_toggle', { action: 'close', tab: tabNames[tabIndex], library: libraryId || undefined });
+      onTrackEvent?.('tab_toggle', {
+        action: 'close',
+        tab: tabNames[tabIndex],
+        library: libraryId || undefined,
+      });
       setTabIndex(null);
     } else {
       setTabIndex(newValue);
-      onTrackEvent?.('tab_toggle', { action: 'open', tab: tabNames[newValue], library: libraryId || undefined });
+      onTrackEvent?.('tab_toggle', {
+        action: 'open',
+        tab: tabNames[newValue],
+        library: libraryId || undefined,
+      });
     }
   };
 
   // Lazy-loaded syntax highlighter - only loads when Code tab is opened
   const highlightedCode = code ? (
-    <Suspense fallback={
-      <Box sx={{ fontFamily: typography.fontFamily, fontSize: '0.85rem', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', overflowX: 'auto', minWidth: 0, color: semanticColors.labelText }}>
-        {code}
-      </Box>
-    }>
+    <Suspense
+      fallback={
+        <Box
+          sx={{
+            fontFamily: typography.fontFamily,
+            fontSize: '0.85rem',
+            whiteSpace: 'pre-wrap',
+            overflowWrap: 'anywhere',
+            overflowX: 'auto',
+            minWidth: 0,
+            color: semanticColors.labelText,
+          }}
+        >
+          {code}
+        </Box>
+      }
+    >
       <CodeHighlighter code={code} language={language} library={libraryId} />
     </Suspense>
   ) : null;
@@ -315,16 +346,56 @@ export function SpecTabs({
           }}
         >
           {!overviewMode && (
-            <Tab onClick={(e) => tabIndex === 0 && handleTabChange(e, 0)} icon={<CodeIcon sx={{ fontSize: '1.1rem' }} />} iconPosition="start" label="Code" />
+            <Tab
+              onClick={e => tabIndex === 0 && handleTabChange(e, 0)}
+              icon={<CodeIcon sx={{ fontSize: '1.1rem' }} />}
+              iconPosition="start"
+              label="Code"
+            />
           )}
-          <Tab onClick={(e) => tabIndex === specTabIndex && handleTabChange(e, specTabIndex)} icon={<DescriptionIcon sx={{ fontSize: '1.1rem' }} />} iconPosition="start" label={<><Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Specification</Box><Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>Spec</Box></>} />
+          <Tab
+            onClick={e => tabIndex === specTabIndex && handleTabChange(e, specTabIndex)}
+            icon={<DescriptionIcon sx={{ fontSize: '1.1rem' }} />}
+            iconPosition="start"
+            label={
+              <>
+                <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                  Specification
+                </Box>
+                <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
+                  Spec
+                </Box>
+              </>
+            }
+          />
           {!overviewMode && (
-            <Tab onClick={(e) => tabIndex === 2 && handleTabChange(e, 2)} icon={<ImageIcon sx={{ fontSize: '1.1rem' }} />} iconPosition="start" label={<><Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Implementation</Box><Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>Impl</Box></>} />
+            <Tab
+              onClick={e => tabIndex === 2 && handleTabChange(e, 2)}
+              icon={<ImageIcon sx={{ fontSize: '1.1rem' }} />}
+              iconPosition="start"
+              label={
+                <>
+                  <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                    Implementation
+                  </Box>
+                  <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
+                    Impl
+                  </Box>
+                </>
+              }
+            />
           )}
           {!overviewMode && (
             <Tab
-              onClick={(e) => tabIndex === 3 && handleTabChange(e, 3)}
-              icon={<StarIcon sx={{ fontSize: '1.1rem', color: tabIndex === 3 ? colors.primary : colors.warning }} />}
+              onClick={e => tabIndex === 3 && handleTabChange(e, 3)}
+              icon={
+                <StarIcon
+                  sx={{
+                    fontSize: '1.1rem',
+                    color: tabIndex === 3 ? colors.primary : colors.warning,
+                  }}
+                />
+              }
               iconPosition="start"
               label={qualityScore ? `${Math.round(qualityScore)}` : 'Quality'}
             />
@@ -431,7 +502,6 @@ export function SpecTabs({
               </Box>
             </>
           )}
-
         </Box>
       </TabPanel>
 
@@ -516,14 +586,29 @@ export function SpecTabs({
             )}
 
             {/* No data message */}
-            {!imageDescription && (!strengths || strengths.length === 0) && (!weaknesses || weaknesses.length === 0) && (
-              <Typography sx={{ fontFamily: typography.fontFamily, fontSize: '0.85rem', color: 'var(--ink-muted)' }}>
-                No implementation review data available.
-              </Typography>
-            )}
+            {!imageDescription &&
+              (!strengths || strengths.length === 0) &&
+              (!weaknesses || weaknesses.length === 0) && (
+                <Typography
+                  sx={{
+                    fontFamily: typography.fontFamily,
+                    fontSize: '0.85rem',
+                    color: 'var(--ink-muted)',
+                  }}
+                >
+                  No implementation review data available.
+                </Typography>
+              )}
 
             {/* Metadata */}
-            <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.sm, color: 'var(--ink-muted)', mt: 2 }}>
+            <Typography
+              sx={{
+                fontFamily: typography.fontFamily,
+                fontSize: fontSize.sm,
+                color: 'var(--ink-muted)',
+                mt: 2,
+              }}
+            >
               {specId}
               {libraryId && ` · ${libraryId}`}
               {(() => {
@@ -538,194 +623,257 @@ export function SpecTabs({
       {/* Quality Tab - only in detail mode */}
       {!overviewMode && (
         <TabPanel value={tabIndex} index={3}>
-        <Box
-          sx={{
-            bgcolor: 'var(--bg-page)',
-            p: 3,
-            borderRadius: 1,
-            fontFamily: typography.fontFamily,
-          }}
-        >
-          {/* Score */}
-          <MdHeading level={2}>Score</MdHeading>
-          <Typography
+          <Box
             sx={{
+              bgcolor: 'var(--bg-page)',
+              p: 3,
+              borderRadius: 1,
               fontFamily: typography.fontFamily,
-              fontSize: '2rem',
-              fontWeight: 700,
-              color: qualityScore && qualityScore >= 90 ? colors.success : qualityScore && qualityScore >= 70 ? colors.warning : colors.error,
             }}
           >
-            {qualityScore ? `${Math.round(qualityScore)}/100` : 'N/A'}
-          </Typography>
+            {/* Score */}
+            <MdHeading level={2}>Score</MdHeading>
+            <Typography
+              sx={{
+                fontFamily: typography.fontFamily,
+                fontSize: '2rem',
+                fontWeight: 700,
+                color:
+                  qualityScore && qualityScore >= 90
+                    ? colors.success
+                    : qualityScore && qualityScore >= 70
+                      ? colors.warning
+                      : colors.error,
+              }}
+            >
+              {qualityScore ? `${Math.round(qualityScore)}/100` : 'N/A'}
+            </Typography>
 
-          {/* Criteria Checklist */}
-          {criteriaChecklist && Object.keys(criteriaChecklist).length > 0 && (
-            <>
-              <MdHeading level={2}>Breakdown</MdHeading>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                {Object.entries(criteriaChecklist).map(([category, data]) => {
-                  const catData = data as { score?: number; max?: number; items?: Array<{ id: string; name: string; score: number; max: number; passed: boolean; comment?: string }> };
-                  const score = catData.score ?? 0;
-                  const max = catData.max ?? 0;
-                  const pct = max > 0 ? (score / max) * 100 : 0;
-                  const items = catData.items || [];
-                  const isExpanded = expandedCategories[category] ?? false;
+            {/* Criteria Checklist */}
+            {criteriaChecklist && Object.keys(criteriaChecklist).length > 0 && (
+              <>
+                <MdHeading level={2}>Breakdown</MdHeading>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                  {Object.entries(criteriaChecklist).map(([category, data]) => {
+                    const catData = data as {
+                      score?: number;
+                      max?: number;
+                      items?: Array<{
+                        id: string;
+                        name: string;
+                        score: number;
+                        max: number;
+                        passed: boolean;
+                        comment?: string;
+                      }>;
+                    };
+                    const score = catData.score ?? 0;
+                    const max = catData.max ?? 0;
+                    const pct = max > 0 ? (score / max) * 100 : 0;
+                    const items = catData.items || [];
+                    const isExpanded = expandedCategories[category] ?? false;
 
-                  return (
-                    <Box key={category}>
-                      {/* Category header - clickable */}
-                      <Box
-                        onClick={() => items.length > 0 && toggleCategory(category)}
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          mb: 0.5,
-                          cursor: items.length > 0 ? 'pointer' : 'default',
-                          '&:hover': items.length > 0 ? { opacity: 0.8 } : {},
-                        }}
-                      >
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          {items.length > 0 && (
-                            isExpanded ? (
-                              <ExpandLessIcon sx={{ fontSize: '1rem', color: 'var(--ink-muted)' }} />
-                            ) : (
-                              <ExpandMoreIcon sx={{ fontSize: '1rem', color: 'var(--ink-muted)' }} />
-                            )
-                          )}
-                          <Typography sx={{ fontFamily: typography.fontFamily, fontSize: '0.85rem', color: semanticColors.labelText }}>
-                            {category.replace(/_/g, ' ')}
+                    return (
+                      <Box key={category}>
+                        {/* Category header - clickable */}
+                        <Box
+                          onClick={() => items.length > 0 && toggleCategory(category)}
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            mb: 0.5,
+                            cursor: items.length > 0 ? 'pointer' : 'default',
+                            '&:hover': items.length > 0 ? { opacity: 0.8 } : {},
+                          }}
+                        >
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            {items.length > 0 &&
+                              (isExpanded ? (
+                                <ExpandLessIcon
+                                  sx={{ fontSize: '1rem', color: 'var(--ink-muted)' }}
+                                />
+                              ) : (
+                                <ExpandMoreIcon
+                                  sx={{ fontSize: '1rem', color: 'var(--ink-muted)' }}
+                                />
+                              ))}
+                            <Typography
+                              sx={{
+                                fontFamily: typography.fontFamily,
+                                fontSize: '0.85rem',
+                                color: semanticColors.labelText,
+                              }}
+                            >
+                              {category.replace(/_/g, ' ')}
+                            </Typography>
+                          </Box>
+                          <Typography
+                            sx={{
+                              fontFamily: typography.fontFamily,
+                              fontSize: '0.85rem',
+                              color: semanticColors.mutedText,
+                            }}
+                          >
+                            {score}/{max}
                           </Typography>
                         </Box>
-                        <Typography sx={{ fontFamily: typography.fontFamily, fontSize: '0.85rem', color: semanticColors.mutedText }}>
-                          {score}/{max}
-                        </Typography>
-                      </Box>
-                      {/* Progress bar */}
-                      <Box sx={{ height: 4, bgcolor: 'var(--rule)', borderRadius: 2, overflow: 'hidden' }}>
+                        {/* Progress bar */}
                         <Box
                           sx={{
-                            height: '100%',
-                            width: `${pct}%`,
-                            bgcolor: pct >= 90 ? colors.success : pct >= 70 ? colors.warning : colors.error,
+                            height: 4,
+                            bgcolor: 'var(--rule)',
                             borderRadius: 2,
+                            overflow: 'hidden',
                           }}
-                        />
-                      </Box>
-                      {/* Expandable items */}
-                      <Collapse in={isExpanded}>
-                        <Box sx={{ mt: 1, ml: 2, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-                          {items.map((item) => (
-                            <Box key={item.id} sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
-                              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                  <Box
-                                    sx={{
-                                      width: 6,
-                                      height: 6,
-                                      borderRadius: '50%',
-                                      bgcolor:
-                                        item.score === 0
-                                          ? colors.error
-                                          : item.score === item.max
-                                            ? colors.success
-                                            : colors.warning,
-                                    }}
-                                  />
-                                  <Typography sx={{ fontFamily: typography.fontFamily, fontSize: '0.85rem', color: semanticColors.labelText }}>
-                                    {item.name}
-                                  </Typography>
-                                </Box>
-                                <Typography sx={{ fontFamily: typography.fontFamily, fontSize: '0.8rem', color: 'var(--ink-muted)' }}>
-                                  {item.score}/{item.max}
-                                </Typography>
-                              </Box>
-                              {item.comment && (
-                                <Typography
+                        >
+                          <Box
+                            sx={{
+                              height: '100%',
+                              width: `${pct}%`,
+                              bgcolor:
+                                pct >= 90
+                                  ? colors.success
+                                  : pct >= 70
+                                    ? colors.warning
+                                    : colors.error,
+                              borderRadius: 2,
+                            }}
+                          />
+                        </Box>
+                        {/* Expandable items */}
+                        <Collapse in={isExpanded}>
+                          <Box
+                            sx={{
+                              mt: 1,
+                              ml: 2,
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: 0.75,
+                            }}
+                          >
+                            {items.map(item => (
+                              <Box
+                                key={item.id}
+                                sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}
+                              >
+                                <Box
                                   sx={{
-                                    fontFamily: typography.fontFamily,
-                                    fontSize: '0.85rem',
-                                    color: semanticColors.mutedText,
-                                    ml: 1.5,
-                                    fontStyle: 'italic',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
                                   }}
                                 >
-                                  {item.comment}
-                                </Typography>
-                              )}
-                            </Box>
-                          ))}
-                        </Box>
-                      </Collapse>
-                    </Box>
-                  );
-                })}
-              </Box>
-            </>
-          )}
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                    <Box
+                                      sx={{
+                                        width: 6,
+                                        height: 6,
+                                        borderRadius: '50%',
+                                        bgcolor:
+                                          item.score === 0
+                                            ? colors.error
+                                            : item.score === item.max
+                                              ? colors.success
+                                              : colors.warning,
+                                      }}
+                                    />
+                                    <Typography
+                                      sx={{
+                                        fontFamily: typography.fontFamily,
+                                        fontSize: '0.85rem',
+                                        color: semanticColors.labelText,
+                                      }}
+                                    >
+                                      {item.name}
+                                    </Typography>
+                                  </Box>
+                                  <Typography
+                                    sx={{
+                                      fontFamily: typography.fontFamily,
+                                      fontSize: '0.8rem',
+                                      color: 'var(--ink-muted)',
+                                    }}
+                                  >
+                                    {item.score}/{item.max}
+                                  </Typography>
+                                </Box>
+                                {item.comment && (
+                                  <Typography
+                                    sx={{
+                                      fontFamily: typography.fontFamily,
+                                      fontSize: '0.85rem',
+                                      color: semanticColors.mutedText,
+                                      ml: 1.5,
+                                      fontStyle: 'italic',
+                                    }}
+                                  >
+                                    {item.comment}
+                                  </Typography>
+                                )}
+                              </Box>
+                            ))}
+                          </Box>
+                        </Collapse>
+                      </Box>
+                    );
+                  })}
+                </Box>
+              </>
+            )}
 
-          {/* No data message */}
-          {!qualityScore && (!criteriaChecklist || Object.keys(criteriaChecklist).length === 0) && (
-            <Typography sx={{ fontFamily: typography.fontFamily, fontSize: '0.85rem', color: 'var(--ink-muted)' }}>
-              No quality data available.
-            </Typography>
-          )}
-        </Box>
+            {/* No data message */}
+            {!qualityScore &&
+              (!criteriaChecklist || Object.keys(criteriaChecklist).length === 0) && (
+                <Typography
+                  sx={{
+                    fontFamily: typography.fontFamily,
+                    fontSize: '0.85rem',
+                    color: 'var(--ink-muted)',
+                  }}
+                >
+                  No quality data available.
+                </Typography>
+              )}
+          </Box>
         </TabPanel>
       )}
 
       {/* Tags — always visible after tab content (spec tags + impl tags on detail page) */}
-      {((tags && Object.keys(tags).length > 0) || (implTags && Object.values(implTags).some(v => v?.length > 0))) && (
+      {((tags && Object.keys(tags).length > 0) ||
+        (implTags && Object.values(implTags).some(v => v?.length > 0))) && (
         <Box sx={{ mt: 1.5, display: 'flex', flexWrap: 'wrap', gap: 2.5, py: 1.5 }}>
-          {tags && Object.entries(tags).map(([category, values]) => {
-            const paramName = SPEC_TAG_PARAM_MAP[category];
-            return (
-              <Box key={`spec-${category}`} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Typography component="span" sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.sm, color: semanticColors.mutedText }}>
-                  {category.replace(/_/g, ' ')}:
-                </Typography>
-                {values.map((value, i) => {
-                  const isHighlighted = highlightedTags.includes(value);
-                  const count = getTagCount(paramName, value);
-                  const chip = (
-                    <Chip key={i} label={value} size="small"
-                      onClick={paramName ? () => handleTagClick(paramName, value) : undefined}
-                      sx={{
-                        fontFamily: typography.fontFamily, fontSize: fontSize.xs, height: 24,
-                        bgcolor: isHighlighted ? colors.highlight.bg : 'var(--bg-surface)',
-                        color: isHighlighted ? colors.highlight.text : semanticColors.labelText,
-                        cursor: paramName ? 'pointer' : 'default',
-                        transition: 'all 0.2s ease',
-                        fontWeight: isHighlighted ? 600 : 400,
-                        '&:hover': paramName ? { bgcolor: 'var(--bg-elevated)' } : {},
-                      }}
-                    />
-                  );
-                  return count !== null ? (
-                    <Tooltip key={i} title={`${count} plots`} placement="top" enterDelay={200}>{chip}</Tooltip>
-                  ) : chip;
-                })}
-              </Box>
-            );
-          })}
-          {!overviewMode && implTags && Object.entries(implTags)
-            .filter(([, values]) => values && values.length > 0)
-            .map(([category, values]) => {
-              const paramName = IMPL_TAG_PARAM_MAP[category];
+          {tags &&
+            Object.entries(tags).map(([category, values]) => {
+              const paramName = SPEC_TAG_PARAM_MAP[category];
               return (
-                <Box key={`impl-${category}`} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Typography component="span" sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.sm, color: semanticColors.mutedText }}>
-                    {category}:
+                <Box
+                  key={`spec-${category}`}
+                  sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                >
+                  <Typography
+                    component="span"
+                    sx={{
+                      fontFamily: typography.fontFamily,
+                      fontSize: fontSize.sm,
+                      color: semanticColors.mutedText,
+                    }}
+                  >
+                    {category.replace(/_/g, ' ')}:
                   </Typography>
                   {values.map((value, i) => {
                     const isHighlighted = highlightedTags.includes(value);
                     const count = getTagCount(paramName, value);
                     const chip = (
-                      <Chip key={i} label={value} size="small"
+                      <Chip
+                        key={i}
+                        label={value}
+                        size="small"
                         onClick={paramName ? () => handleTagClick(paramName, value) : undefined}
                         sx={{
-                          fontFamily: typography.fontFamily, fontSize: fontSize.xs, height: 24,
+                          fontFamily: typography.fontFamily,
+                          fontSize: fontSize.xs,
+                          height: 24,
                           bgcolor: isHighlighted ? colors.highlight.bg : 'var(--bg-surface)',
                           color: isHighlighted ? colors.highlight.text : semanticColors.labelText,
                           cursor: paramName ? 'pointer' : 'default',
@@ -736,15 +884,72 @@ export function SpecTabs({
                       />
                     );
                     return count !== null ? (
-                      <Tooltip key={i} title={`${count} plots`} placement="top" enterDelay={200}>{chip}</Tooltip>
-                    ) : chip;
+                      <Tooltip key={i} title={`${count} plots`} placement="top" enterDelay={200}>
+                        {chip}
+                      </Tooltip>
+                    ) : (
+                      chip
+                    );
                   })}
                 </Box>
               );
             })}
+          {!overviewMode &&
+            implTags &&
+            Object.entries(implTags)
+              .filter(([, values]) => values && values.length > 0)
+              .map(([category, values]) => {
+                const paramName = IMPL_TAG_PARAM_MAP[category];
+                return (
+                  <Box
+                    key={`impl-${category}`}
+                    sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                  >
+                    <Typography
+                      component="span"
+                      sx={{
+                        fontFamily: typography.fontFamily,
+                        fontSize: fontSize.sm,
+                        color: semanticColors.mutedText,
+                      }}
+                    >
+                      {category}:
+                    </Typography>
+                    {values.map((value, i) => {
+                      const isHighlighted = highlightedTags.includes(value);
+                      const count = getTagCount(paramName, value);
+                      const chip = (
+                        <Chip
+                          key={i}
+                          label={value}
+                          size="small"
+                          onClick={paramName ? () => handleTagClick(paramName, value) : undefined}
+                          sx={{
+                            fontFamily: typography.fontFamily,
+                            fontSize: fontSize.xs,
+                            height: 24,
+                            bgcolor: isHighlighted ? colors.highlight.bg : 'var(--bg-surface)',
+                            color: isHighlighted ? colors.highlight.text : semanticColors.labelText,
+                            cursor: paramName ? 'pointer' : 'default',
+                            transition: 'all 0.2s ease',
+                            fontWeight: isHighlighted ? 600 : 400,
+                            '&:hover': paramName ? { bgcolor: 'var(--bg-elevated)' } : {},
+                          }}
+                        />
+                      );
+                      return count !== null ? (
+                        <Tooltip key={i} title={`${count} plots`} placement="top" enterDelay={200}>
+                          {chip}
+                        </Tooltip>
+                      ) : (
+                        chip
+                      );
+                    })}
+                  </Box>
+                );
+              })}
         </Box>
       )}
-
     </Box>
   );
 }

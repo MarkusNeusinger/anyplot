@@ -1,9 +1,11 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '../test-utils';
-import { ImagesGrid } from './ImagesGrid';
-import type { PlotImage, LibraryInfo, SpecInfo } from '../types';
-import type { ImageSize } from '../constants';
 import { createRef } from 'react';
+
+import { describe, expect, it, vi } from 'vitest';
+
+import type { ImageSize } from '../constants';
+import { render, screen } from '../test-utils';
+import type { LibraryInfo, PlotImage, SpecInfo } from '../types';
+import { ImagesGrid } from './ImagesGrid';
 
 // Mock child components to isolate ImagesGrid
 vi.mock('./ImageCard', () => ({
@@ -13,13 +15,16 @@ vi.mock('./ImageCard', () => ({
 }));
 
 vi.mock('./LoaderSpinner', () => ({
-  LoaderSpinner: ({ size }: { size: string }) => (
-    <div data-testid="loader-spinner">{size}</div>
-  ),
+  LoaderSpinner: ({ size }: { size: string }) => <div data-testid="loader-spinner">{size}</div>,
 }));
 
 const mockLibraries: LibraryInfo[] = [
-  { id: 'matplotlib', name: 'Matplotlib', description: 'Matplotlib desc', documentation_url: 'https://matplotlib.org' },
+  {
+    id: 'matplotlib',
+    name: 'Matplotlib',
+    description: 'Matplotlib desc',
+    documentation_url: 'https://matplotlib.org',
+  },
 ];
 
 const mockSpecs: SpecInfo[] = [
@@ -102,18 +107,14 @@ describe('ImagesGrid', () => {
 
   it('renders bottom loading indicator when isLoadingMore and hasMore', () => {
     const images = makeImages(3);
-    render(
-      <ImagesGrid {...getDefaultProps({ images, hasMore: true, isLoadingMore: true })} />,
-    );
+    render(<ImagesGrid {...getDefaultProps({ images, hasMore: true, isLoadingMore: true })} />);
     // There should be two loader spinners: one is the bottom small spinner
     const spinners = screen.getAllByTestId('loader-spinner');
-    expect(spinners.some((s) => s.textContent === 'small')).toBe(true);
+    expect(spinners.some(s => s.textContent === 'small')).toBe(true);
   });
 
   it('does not show loading spinner when loading but isTransitioning is true', () => {
-    render(
-      <ImagesGrid {...getDefaultProps({ loading: true, isTransitioning: true })} />,
-    );
+    render(<ImagesGrid {...getDefaultProps({ loading: true, isTransitioning: true })} />);
     // When isTransitioning is true and images is empty and loading, the first branch
     // is skipped. The second branch renders the empty alert because images.length===0
     // and !loading is false — so the condition (images.length > 0 || !loading) is false
@@ -123,7 +124,7 @@ describe('ImagesGrid', () => {
 
   it('returns null when images empty, loading true, and transitioning true', () => {
     const { container } = render(
-      <ImagesGrid {...getDefaultProps({ loading: true, isTransitioning: true, images: [] })} />,
+      <ImagesGrid {...getDefaultProps({ loading: true, isTransitioning: true, images: [] })} />
     );
     // The component returns null in this case (neither spinner nor alert)
     expect(container.firstChild).toBeNull();

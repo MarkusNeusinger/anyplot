@@ -1,8 +1,10 @@
 import { memo, useMemo } from 'react';
-import Box from '@mui/material/Box';
-import IconButton from '@mui/material/IconButton';
+
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
+
 import { colors, fontSize, semanticColors, typography } from '../theme';
 
 // Library abbreviations (same as filter display)
@@ -45,7 +47,7 @@ export const LibraryPills = memo(function LibraryPills({
 
   // Get current index
   const currentIndex = useMemo(() => {
-    const idx = sortedImpls.findIndex((impl) => impl.library_id === selectedLibrary);
+    const idx = sortedImpls.findIndex(impl => impl.library_id === selectedLibrary);
     return idx >= 0 ? idx : 0;
   }, [sortedImpls, selectedLibrary]);
 
@@ -102,7 +104,12 @@ export const LibraryPills = memo(function LibraryPills({
             onClick={onAll}
             role="button"
             tabIndex={0}
-            onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onAll(); } }}
+            onKeyDown={(e: React.KeyboardEvent) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onAll();
+              }
+            }}
             aria-label="Back to library comparison"
             sx={{
               display: 'inline-flex',
@@ -117,95 +124,110 @@ export const LibraryPills = memo(function LibraryPills({
               '& .all-arrow': { transition: 'transform 0.2s' },
               '&:hover': { color: colors.primary },
               '&:hover .all-arrow': { transform: 'translateX(-3px)' },
-              '&:focus-visible': { outline: `2px solid ${colors.primary}`, outlineOffset: 2, borderRadius: '2px' },
+              '&:focus-visible': {
+                outline: `2px solid ${colors.primary}`,
+                outlineOffset: 2,
+                borderRadius: '2px',
+              },
             }}
           >
-            <Box component="span" className="all-arrow">←</Box>
+            <Box component="span" className="all-arrow">
+              ←
+            </Box>
             <Box component="span">.compare()</Box>
           </Box>
           {/* Vertical divider. Asymmetric mx compensates for the prev IconButton's
               ~5 px internal left padding so the visible whitespace on either side
               of the rule is equal. */}
-          <Box sx={{ height: 20, width: '1px', bgcolor: 'var(--rule)', ml: 1.5, mr: '7px', display: { xs: 'none', sm: 'block' } }} />
+          <Box
+            sx={{
+              height: 20,
+              width: '1px',
+              bgcolor: 'var(--rule)',
+              ml: 1.5,
+              mr: '7px',
+              display: { xs: 'none', sm: 'block' },
+            }}
+          />
         </>
       )}
 
       {/* Carousel row — stays horizontal even when the wrapper stacks on xs */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-      {/* Left Arrow */}
-      <IconButton
-        onClick={handlePrev}
-        aria-label="Previous library"
-        size="small"
-        sx={{
-          color: semanticColors.mutedText,
-          '&:hover': { color: colors.primary, bgcolor: 'var(--bg-surface)' },
-        }}
-      >
-        <ChevronLeftIcon />
-      </IconButton>
+        {/* Left Arrow */}
+        <IconButton
+          onClick={handlePrev}
+          aria-label="Previous library"
+          size="small"
+          sx={{
+            color: semanticColors.mutedText,
+            '&:hover': { color: colors.primary, bgcolor: 'var(--bg-surface)' },
+          }}
+        >
+          <ChevronLeftIcon />
+        </IconButton>
 
-      {/* Pills Container */}
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 0.75,
-          justifyContent: 'center',
-        }}
-      >
-        {visibleItems.map(({ impl, position }) => {
-          const isCenter = position === 'center';
+        {/* Pills Container */}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.75,
+            justifyContent: 'center',
+          }}
+        >
+          {visibleItems.map(({ impl, position }) => {
+            const isCenter = position === 'center';
 
-          return (
-            <Box
-              key={impl.library_id}
-              onClick={() => onSelect(impl.library_id)}
-              title={!isCenter ? impl.library_id : undefined}
-              sx={{
-                px: 1.5,
-                py: 0.5,
-                borderRadius: 2,
-                fontFamily: typography.fontFamily,
-                fontSize: fontSize.base,
-                fontWeight: isCenter ? 600 : 400,
-                bgcolor: 'var(--bg-surface)',
-                border: isCenter ? `1px solid ${colors.primary}` : '1px solid transparent',
-                color: isCenter ? 'var(--ink-soft)' : semanticColors.mutedText,
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                whiteSpace: 'nowrap',
-                '&:hover': {
-                  bgcolor: 'var(--bg-elevated)',
-                  borderColor: colors.primary,
-                  color: 'var(--ink-soft)',
-                },
-              }}
-            >
-              {/* Full name on desktop, abbreviated on mobile */}
-              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                {impl.library_id}
+            return (
+              <Box
+                key={impl.library_id}
+                onClick={() => onSelect(impl.library_id)}
+                title={!isCenter ? impl.library_id : undefined}
+                sx={{
+                  px: 1.5,
+                  py: 0.5,
+                  borderRadius: 2,
+                  fontFamily: typography.fontFamily,
+                  fontSize: fontSize.base,
+                  fontWeight: isCenter ? 600 : 400,
+                  bgcolor: 'var(--bg-surface)',
+                  border: isCenter ? `1px solid ${colors.primary}` : '1px solid transparent',
+                  color: isCenter ? 'var(--ink-soft)' : semanticColors.mutedText,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  whiteSpace: 'nowrap',
+                  '&:hover': {
+                    bgcolor: 'var(--bg-elevated)',
+                    borderColor: colors.primary,
+                    color: 'var(--ink-soft)',
+                  },
+                }}
+              >
+                {/* Full name on desktop, abbreviated on mobile */}
+                <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                  {impl.library_id}
+                </Box>
+                <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
+                  {isCenter ? impl.library_id : LIBRARY_ABBREV[impl.library_id] || impl.library_id}
+                </Box>
               </Box>
-              <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
-                {isCenter ? impl.library_id : (LIBRARY_ABBREV[impl.library_id] || impl.library_id)}
-              </Box>
-            </Box>
-          );
-        })}
-      </Box>
+            );
+          })}
+        </Box>
 
-      {/* Right Arrow */}
-      <IconButton
-        onClick={handleNext}
-        aria-label="Next library"
-        size="small"
-        sx={{
-          color: semanticColors.mutedText,
-          '&:hover': { color: colors.primary, bgcolor: 'var(--bg-surface)' },
-        }}
-      >
-        <ChevronRightIcon />
-      </IconButton>
+        {/* Right Arrow */}
+        <IconButton
+          onClick={handleNext}
+          aria-label="Next library"
+          size="small"
+          sx={{
+            color: semanticColors.mutedText,
+            '&:hover': { color: colors.primary, bgcolor: 'var(--bg-surface)' },
+          }}
+        >
+          <ChevronRightIcon />
+        </IconButton>
       </Box>
     </Box>
   );

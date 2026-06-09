@@ -1,22 +1,25 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import {
-  flattenTags,
-  computeIDF,
-  weightedJaccard,
   buildKNNLinks,
-  selectMapThumbUrl,
   buildVariantUrl,
-  pickTier,
-  pickBestLoadedTier,
+  computeIDF,
   fitToBox,
+  flattenTags,
+  pickBestLoadedTier,
+  pickTier,
   primaryPlotType,
-  topPlotTypes,
+  selectMapThumbUrl,
   type SpecMapItem,
+  topPlotTypes,
+  weightedJaccard,
 } from './MapPage.helpers';
 
-
-function spec(id: string, tags: SpecMapItem['tags'], implTags: SpecMapItem['impl_tags'] = null): SpecMapItem {
+function spec(
+  id: string,
+  tags: SpecMapItem['tags'],
+  implTags: SpecMapItem['impl_tags'] = null
+): SpecMapItem {
   return {
     id,
     title: id,
@@ -27,7 +30,6 @@ function spec(id: string, tags: SpecMapItem['tags'], implTags: SpecMapItem['impl
     impl_tags: implTags,
   };
 }
-
 
 describe('flattenTags', () => {
   it('prefixes values with their category', () => {
@@ -56,7 +58,6 @@ describe('flattenTags', () => {
   });
 });
 
-
 describe('computeIDF', () => {
   it('assigns log(N / df) to every tag', () => {
     const specs = [
@@ -70,10 +71,7 @@ describe('computeIDF', () => {
   });
 
   it('gives ubiquitous tags weight ~0', () => {
-    const specs = [
-      spec('a', { data_type: ['numeric'] }),
-      spec('b', { data_type: ['numeric'] }),
-    ];
+    const specs = [spec('a', { data_type: ['numeric'] }), spec('b', { data_type: ['numeric'] })];
     expect(computeIDF(specs).get('data_type:numeric')).toBe(0);
   });
 
@@ -108,7 +106,6 @@ describe('computeIDF', () => {
   });
 });
 
-
 describe('weightedJaccard', () => {
   const idf = new Map([
     ['plot_type:scatter', 1.0],
@@ -125,9 +122,20 @@ describe('weightedJaccard', () => {
   });
 
   it('weights overlap by IDF (rare overlap > common overlap)', () => {
-    const rareIdf = new Map([['plot_type:scatter', 2], ['features:basic', 0.1]]);
-    const sharedRare = weightedJaccard(['plot_type:scatter'], ['plot_type:scatter', 'features:basic'], rareIdf);
-    const sharedCommon = weightedJaccard(['features:basic'], ['features:basic', 'plot_type:scatter'], rareIdf);
+    const rareIdf = new Map([
+      ['plot_type:scatter', 2],
+      ['features:basic', 0.1],
+    ]);
+    const sharedRare = weightedJaccard(
+      ['plot_type:scatter'],
+      ['plot_type:scatter', 'features:basic'],
+      rareIdf
+    );
+    const sharedCommon = weightedJaccard(
+      ['features:basic'],
+      ['features:basic', 'plot_type:scatter'],
+      rareIdf
+    );
     expect(sharedRare).toBeGreaterThan(sharedCommon);
   });
 
@@ -136,7 +144,6 @@ describe('weightedJaccard', () => {
     expect(weightedJaccard(['plot_type:scatter'], [], idf)).toBe(0);
   });
 });
-
 
 describe('buildKNNLinks', () => {
   it('keeps top-K neighbors above the similarity threshold', () => {
@@ -168,10 +175,7 @@ describe('buildKNNLinks', () => {
   });
 
   it('drops links below minSim', () => {
-    const specs = [
-      spec('a', { plot_type: ['scatter'] }),
-      spec('b', { plot_type: ['line'] }),
-    ];
+    const specs = [spec('a', { plot_type: ['scatter'] }), spec('b', { plot_type: ['line'] })];
     const links = buildKNNLinks(specs, computeIDF(specs), 5, 0.5);
     expect(links).toHaveLength(0);
   });
@@ -189,7 +193,6 @@ describe('buildKNNLinks', () => {
     }
   });
 });
-
 
 describe('selectMapThumbUrl', () => {
   it('returns the dark URL in dark mode and light URL in light mode', () => {
@@ -209,19 +212,25 @@ describe('selectMapThumbUrl', () => {
   });
 });
 
-
 describe('buildVariantUrl', () => {
   it('rewrites .png to _{tier}.webp', () => {
-    expect(buildVariantUrl('https://example.com/plot.png', 400)).toBe('https://example.com/plot_400.webp');
-    expect(buildVariantUrl('https://example.com/plot-light.png', 800)).toBe('https://example.com/plot-light_800.webp');
-    expect(buildVariantUrl('https://example.com/plot-dark.png', 1200)).toBe('https://example.com/plot-dark_1200.webp');
+    expect(buildVariantUrl('https://example.com/plot.png', 400)).toBe(
+      'https://example.com/plot_400.webp'
+    );
+    expect(buildVariantUrl('https://example.com/plot-light.png', 800)).toBe(
+      'https://example.com/plot-light_800.webp'
+    );
+    expect(buildVariantUrl('https://example.com/plot-dark.png', 1200)).toBe(
+      'https://example.com/plot-dark_1200.webp'
+    );
   });
 
   it('passes through URLs that do not end in .png', () => {
-    expect(buildVariantUrl('https://example.com/plot.svg', 400)).toBe('https://example.com/plot.svg');
+    expect(buildVariantUrl('https://example.com/plot.svg', 400)).toBe(
+      'https://example.com/plot.svg'
+    );
   });
 });
-
 
 describe('pickTier', () => {
   it('returns 400 when device pixel size fits in 400 with headroom', () => {
@@ -240,7 +249,6 @@ describe('pickTier', () => {
   });
 });
 
-
 describe('primaryPlotType', () => {
   it('returns the first plot_type entry', () => {
     expect(primaryPlotType(spec('a', { plot_type: ['scatter', 'point'] }))).toBe('scatter');
@@ -251,7 +259,6 @@ describe('primaryPlotType', () => {
     expect(primaryPlotType(spec('a', { domain: ['statistics'] }))).toBe('other');
   });
 });
-
 
 describe('topPlotTypes', () => {
   it('returns the N most frequent primary types in descending order', () => {
@@ -287,13 +294,12 @@ describe('topPlotTypes', () => {
 
   it('excludes the synthetic "other" bucket so it does not waste a color slot', () => {
     const specs = [
-      spec('s1', null),  // no plot_type → primaryPlotType returns 'other'
+      spec('s1', null), // no plot_type → primaryPlotType returns 'other'
       spec('s2', { plot_type: ['line'] }),
     ];
     expect(topPlotTypes(specs, 5)).toEqual(['line']);
   });
 });
-
 
 describe('fitToBox', () => {
   it('returns a square for 1:1 aspect ratio', () => {
@@ -303,13 +309,13 @@ describe('fitToBox', () => {
   it('keeps width = box and shrinks height for 16:9', () => {
     const r = fitToBox(22, 16 / 9);
     expect(r.w).toBe(22);
-    expect(r.h).toBeCloseTo(22 * 9 / 16);
+    expect(r.h).toBeCloseTo((22 * 9) / 16);
   });
 
   it('keeps height = box and shrinks width for portrait (9:16)', () => {
     const r = fitToBox(22, 9 / 16);
     expect(r.h).toBe(22);
-    expect(r.w).toBeCloseTo(22 * 9 / 16);
+    expect(r.w).toBeCloseTo((22 * 9) / 16);
   });
 
   it('falls back to a square for invalid aspect ratios', () => {
@@ -318,7 +324,6 @@ describe('fitToBox', () => {
     expect(fitToBox(22, Infinity)).toEqual({ w: 22, h: 22 });
   });
 });
-
 
 describe('pickBestLoadedTier', () => {
   function img(): HTMLImageElement {

@@ -1,11 +1,15 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
 import { render, screen } from '../test-utils';
-import { ImageCard } from './ImageCard';
 import type { PlotImage } from '../types';
+import { ImageCard } from './ImageCard';
 
 // Mock useCodeFetch to avoid actual API calls
 vi.mock('../hooks/useCodeFetch', () => ({
-  useCodeFetch: () => ({ fetchCode: vi.fn().mockResolvedValue('print("hello")'), cache: new Map() }),
+  useCodeFetch: () => ({
+    fetchCode: vi.fn().mockResolvedValue('print("hello")'),
+    cache: new Map(),
+  }),
 }));
 
 const baseImage: PlotImage = {

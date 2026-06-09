@@ -1,13 +1,15 @@
 import { useEffect } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+
 import { Helmet } from 'react-helmet-async';
+import { Link as RouterLink } from 'react-router-dom';
+
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 
 import { SectionHeader } from '../components/SectionHeader';
-import { useAnalytics } from '../hooks';
 import { GITHUB_URL } from '../constants';
-import { colors, typography, textStyle, codeBlockStyle, proseLinkStyle } from '../theme';
+import { useAnalytics } from '../hooks';
+import { codeBlockStyle, colors, proseLinkStyle, textStyle, typography } from '../theme';
 
 const PIPELINE_BLOCK = `// pipeline
 idea    → human-submitted        (github issue)
@@ -67,10 +69,11 @@ export function AboutPage() {
           <SectionHeader prompt="❯" title={<em>about</em>} />
           <Box sx={proseColumnSx}>
             <Box sx={{ ...textStyle, fontSize: '18px', color: 'var(--ink)', fontWeight: 300 }}>
-              a catalogue of plotting examples across fifteen libraries in python, r, julia, and javascript. plot ideas come from humans;
-              ai drafts the spec, generates code for every library, and reviews each implementation.
-              humans approve specs and tune the rules when something repeatedly fails. every example uses
-              the same colorblind-safe palette, so switching libraries never breaks your color grammar.
+              a catalogue of plotting examples across fifteen libraries in python, r, julia, and
+              javascript. plot ideas come from humans; ai drafts the spec, generates code for every
+              library, and reviews each implementation. humans approve specs and tune the rules when
+              something repeatedly fails. every example uses the same colorblind-safe palette, so
+              switching libraries never breaks your color grammar.
             </Box>
           </Box>
         </Box>
@@ -80,9 +83,9 @@ export function AboutPage() {
           <SectionHeader prompt="❯" title={<em>pipeline</em>} />
           <Box sx={proseColumnSx}>
             <Box sx={textStyle}>
-              humans curate; ai executes. the catalogue maintains itself: when matplotlib ships a new release,
-              we re-run the pipeline; when a better example pattern emerges, we update the spec and every
-              library regenerates. we never patch generated code by hand.
+              humans curate; ai executes. the catalogue maintains itself: when matplotlib ships a
+              new release, we re-run the pipeline; when a better example pattern emerges, we update
+              the spec and every library regenerates. we never patch generated code by hand.
             </Box>
             <Box sx={{ ...codeBlockStyle, whiteSpace: 'pre', fontSize: '13px', mt: 3 }}>
               {PIPELINE_BLOCK}
@@ -95,9 +98,9 @@ export function AboutPage() {
           <SectionHeader prompt="❯" title={<em>palette</em>} />
           <Box sx={proseColumnSx}>
             <Box sx={textStyle}>
-              every plot uses <strong>imprint</strong>, our own colourblind-safe categorical palette —
-              8 hues plus 3 semantic anchors, tuned for warm-paper rendering and validated against the
-              three main forms of colour vision deficiency. it sits in the same neighbourhood as
+              every plot uses <strong>imprint</strong>, our own colourblind-safe categorical palette
+              — 8 hues plus 3 semantic anchors, tuned for warm-paper rendering and validated against
+              the three main forms of colour vision deficiency. it sits in the same neighbourhood as
               Okabe-Ito, Paul Tol&apos;s &ldquo;muted&rdquo;, and ColorBrewer Set2 — about 8% of men
               have some form of CVD, and most plotting libraries ignore this entirely. we make it
               the default.
@@ -106,7 +109,9 @@ export function AboutPage() {
               see the{' '}
               <Link
                 href="/palette"
-                onClick={() => trackEvent('internal_link', { destination: 'palette', source: 'about' })}
+                onClick={() =>
+                  trackEvent('internal_link', { destination: 'palette', source: 'about' })
+                }
                 sx={proseLinkStyle}
               >
                 palette page
@@ -121,9 +126,9 @@ export function AboutPage() {
           <SectionHeader prompt="❯" title={<em>library-agnostic</em>} />
           <Box sx={proseColumnSx}>
             <Box sx={textStyle}>
-              a "gentoo penguin" is always blue, whether you draw it in matplotlib, plotly, or bokeh.
-              the palette travels with you across libraries. switching tools doesn't mean re-learning
-              your color grammar.
+              a "gentoo penguin" is always blue, whether you draw it in matplotlib, plotly, or
+              bokeh. the palette travels with you across libraries. switching tools doesn't mean
+              re-learning your color grammar.
             </Box>
           </Box>
         </Box>
@@ -136,20 +141,25 @@ export function AboutPage() {
               it started as pyplots.ai, a small catalogue of python plotting examples built in a
               weekend. it grew when it became clear people wanted two things from a catalogue like
               this: inspiration for which plot fits their data, and a way to get to know libraries
-              they hadn't used before — each has its own specialties. anyplot is the grown-up version,
-              anchored in a colorblind-safe palette that travels across every library.
+              they hadn't used before — each has its own specialties. anyplot is the grown-up
+              version, anchored in a colorblind-safe palette that travels across every library.
             </Box>
             <Box sx={{ ...textStyle, mt: 1 }}>
               built in Visp, a small town in the Swiss Alps, by a data scientist looking for one
-              place to find the right plot for the data in front of him — and a way to explore
-              what each library does best.
+              place to find the right plot for the data in front of him — and a way to explore what
+              each library does best.
             </Box>
             <Box sx={{ ...textStyle, mt: 1 }}>
               curious about the stack, costs, or analytics? see{' '}
               <Link
                 component={RouterLink}
                 to="/legal#transparency"
-                onClick={() => trackEvent('internal_link', { destination: 'legal_transparency', source: 'about' })}
+                onClick={() =>
+                  trackEvent('internal_link', {
+                    destination: 'legal_transparency',
+                    source: 'about',
+                  })
+                }
                 sx={proseLinkStyle}
               >
                 transparency
@@ -164,21 +174,28 @@ export function AboutPage() {
           <SectionHeader prompt="❯" title={<em>contribute</em>} />
           <Box sx={proseColumnSx}>
             <Box sx={textStyle}>
-              everything happens on GitHub — issues, releases, discussions. there's no separate forum,
-              no signup, no account.
+              everything happens on GitHub — issues, releases, discussions. there's no separate
+              forum, no signup, no account.
             </Box>
-            <Box sx={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 1.5,
-              mt: 2,
-              fontFamily: typography.mono,
-            }}>
+            <Box
+              sx={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 1.5,
+                mt: 2,
+                fontFamily: typography.mono,
+              }}
+            >
               <Link
                 href={`${GITHUB_URL}/issues/new?labels=spec-request&title=%5Bplot+request%5D+`}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => trackEvent('external_link', { destination: 'github_plot_request', source: 'about' })}
+                onClick={() =>
+                  trackEvent('external_link', {
+                    destination: 'github_plot_request',
+                    source: 'about',
+                  })
+                }
                 sx={ctaSx}
               >
                 request_plot()
@@ -187,7 +204,9 @@ export function AboutPage() {
                 href={`${GITHUB_URL}/issues/new?labels=bug`}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => trackEvent('external_link', { destination: 'github_bug', source: 'about' })}
+                onClick={() =>
+                  trackEvent('external_link', { destination: 'github_bug', source: 'about' })
+                }
                 sx={ctaSx}
               >
                 report_bug()
@@ -196,7 +215,12 @@ export function AboutPage() {
                 href={`${GITHUB_URL}/discussions`}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => trackEvent('external_link', { destination: 'github_discussions', source: 'about' })}
+                onClick={() =>
+                  trackEvent('external_link', {
+                    destination: 'github_discussions',
+                    source: 'about',
+                  })
+                }
                 sx={ctaSx}
               >
                 discuss()
@@ -205,7 +229,9 @@ export function AboutPage() {
                 href={`${GITHUB_URL}/releases`}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => trackEvent('external_link', { destination: 'github_releases', source: 'about' })}
+                onClick={() =>
+                  trackEvent('external_link', { destination: 'github_releases', source: 'about' })
+                }
                 sx={ctaSx}
               >
                 changelog()

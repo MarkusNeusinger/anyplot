@@ -1,7 +1,8 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
-import { useFilterFetch } from './useFilterFetch';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import type { ActiveFilters, PlotImage } from '../types';
+import { useFilterFetch } from './useFilterFetch';
 
 describe('useFilterFetch', () => {
   let fetchMock: ReturnType<typeof vi.fn>;
@@ -23,8 +24,32 @@ describe('useFilterFetch', () => {
 
   const mockApiResponse = {
     images: mockImages,
-    counts: { lib: { matplotlib: 50 }, spec: {}, plot: {}, data: {}, dom: {}, feat: {}, dep: {}, tech: {}, pat: {}, prep: {}, style: {} },
-    globalCounts: { lib: { matplotlib: 50 }, spec: {}, plot: {}, data: {}, dom: {}, feat: {}, dep: {}, tech: {}, pat: {}, prep: {}, style: {} },
+    counts: {
+      lib: { matplotlib: 50 },
+      spec: {},
+      plot: {},
+      data: {},
+      dom: {},
+      feat: {},
+      dep: {},
+      tech: {},
+      pat: {},
+      prep: {},
+      style: {},
+    },
+    globalCounts: {
+      lib: { matplotlib: 50 },
+      spec: {},
+      plot: {},
+      data: {},
+      dom: {},
+      feat: {},
+      dep: {},
+      tech: {},
+      pat: {},
+      prep: {},
+      style: {},
+    },
     orCounts: [],
     specTitles: { 'spec-0': 'Scatter Plot' },
   };
@@ -33,9 +58,7 @@ describe('useFilterFetch', () => {
     it('starts loading when no initialState provided', () => {
       fetchMock.mockResolvedValue({ ok: true, json: () => Promise.resolve(mockApiResponse) });
 
-      const { result } = renderHook(() =>
-        useFilterFetch({ activeFilters: [] })
-      );
+      const { result } = renderHook(() => useFilterFetch({ activeFilters: [] }));
       expect(result.current.loading).toBe(true);
     });
 
@@ -94,9 +117,7 @@ describe('useFilterFetch', () => {
     it('populates images after successful fetch', async () => {
       fetchMock.mockResolvedValue({ ok: true, json: () => Promise.resolve(mockApiResponse) });
 
-      const { result } = renderHook(() =>
-        useFilterFetch({ activeFilters: [] })
-      );
+      const { result } = renderHook(() => useFilterFetch({ activeFilters: [] }));
 
       await waitFor(() => {
         expect(result.current.allImages.length).toBe(50);
@@ -112,9 +133,7 @@ describe('useFilterFetch', () => {
       const smallResponse = { ...mockApiResponse, images: mockImages.slice(0, 5) };
       fetchMock.mockResolvedValue({ ok: true, json: () => Promise.resolve(smallResponse) });
 
-      const { result } = renderHook(() =>
-        useFilterFetch({ activeFilters: [] })
-      );
+      const { result } = renderHook(() => useFilterFetch({ activeFilters: [] }));
 
       await waitFor(() => {
         expect(result.current.displayedImages).toHaveLength(5);
@@ -126,9 +145,7 @@ describe('useFilterFetch', () => {
     it('stores filter counts and spec titles', async () => {
       fetchMock.mockResolvedValue({ ok: true, json: () => Promise.resolve(mockApiResponse) });
 
-      const { result } = renderHook(() =>
-        useFilterFetch({ activeFilters: [] })
-      );
+      const { result } = renderHook(() => useFilterFetch({ activeFilters: [] }));
 
       await waitFor(() => {
         expect(result.current.filterCounts).not.toBeNull();
@@ -143,9 +160,7 @@ describe('useFilterFetch', () => {
     it('sets error on network failure', async () => {
       fetchMock.mockRejectedValue(new Error('Network error'));
 
-      const { result } = renderHook(() =>
-        useFilterFetch({ activeFilters: [] })
-      );
+      const { result } = renderHook(() => useFilterFetch({ activeFilters: [] }));
 
       await waitFor(() => {
         expect(result.current.error).toContain('Error loading images');
@@ -155,9 +170,7 @@ describe('useFilterFetch', () => {
     it('sets error on non-ok HTTP response', async () => {
       fetchMock.mockResolvedValue({ ok: false });
 
-      const { result } = renderHook(() =>
-        useFilterFetch({ activeFilters: [] })
-      );
+      const { result } = renderHook(() => useFilterFetch({ activeFilters: [] }));
 
       await waitFor(() => {
         expect(result.current.error).toContain('Error loading images');

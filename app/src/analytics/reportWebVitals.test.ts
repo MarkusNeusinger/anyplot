@@ -1,15 +1,20 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
-import { reportWebVitals } from './reportWebVitals';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import { setAnalyticsAmbientProps } from '../hooks/useAnalytics';
+import { reportWebVitals } from './reportWebVitals';
 
 // Single hoisted mock (vi.mock dedupes by module path — last call wins, so
 // keeping one shared mock avoids cross-test interference).
 vi.mock('web-vitals', () => ({
-  onLCP: (cb: (m: { value: number; rating: string }) => void) => cb({ value: 2500, rating: 'good' }),
-  onCLS: (cb: (m: { value: number; rating: string }) => void) => cb({ value: 0.15, rating: 'needs-improvement' }),
+  onLCP: (cb: (m: { value: number; rating: string }) => void) =>
+    cb({ value: 2500, rating: 'good' }),
+  onCLS: (cb: (m: { value: number; rating: string }) => void) =>
+    cb({ value: 0.15, rating: 'needs-improvement' }),
   onINP: (cb: (m: { value: number; rating: string }) => void) => cb({ value: 200, rating: 'good' }),
-  onFCP: (cb: (m: { value: number; rating: string }) => void) => cb({ value: 1200, rating: 'good' }),
-  onTTFB: (cb: (m: { value: number; rating: string }) => void) => cb({ value: 400, rating: 'good' }),
+  onFCP: (cb: (m: { value: number; rating: string }) => void) =>
+    cb({ value: 1200, rating: 'good' }),
+  onTTFB: (cb: (m: { value: number; rating: string }) => void) =>
+    cb({ value: 400, rating: 'good' }),
 }));
 
 describe('reportWebVitals', () => {

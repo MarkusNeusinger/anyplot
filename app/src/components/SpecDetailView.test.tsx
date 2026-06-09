@@ -1,8 +1,9 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, userEvent } from '../test-utils';
-import { SpecDetailView } from './SpecDetailView';
+import { describe, expect, it, vi } from 'vitest';
+
 import { ThemeContext, type ThemeContextValue } from '../hooks/useLayoutContext';
+import { render, screen, userEvent } from '../test-utils';
 import type { Implementation } from '../types';
+import { SpecDetailView } from './SpecDetailView';
 
 const darkThemeValue: ThemeContextValue = {
   mode: 'dark',
@@ -30,7 +31,11 @@ const makeImpl = (overrides: Partial<Implementation> = {}): Implementation => ({
 
 const implA = makeImpl({ library_id: 'altair', library_name: 'Altair' });
 const implB = makeImpl({ library_id: 'matplotlib', library_name: 'Matplotlib' });
-const implC = makeImpl({ library_id: 'plotly', library_name: 'Plotly', preview_html: '<div>interactive</div>' });
+const implC = makeImpl({
+  library_id: 'plotly',
+  library_name: 'Plotly',
+  preview_html: '<div>interactive</div>',
+});
 
 const defaultProps = {
   specTitle: 'Basic Scatter Plot',
@@ -56,18 +61,14 @@ describe('SpecDetailView', () => {
   });
 
   it('shows skeleton when image is not loaded', () => {
-    const { container } = render(
-      <SpecDetailView {...defaultProps} imageLoaded={false} />,
-    );
+    const { container } = render(<SpecDetailView {...defaultProps} imageLoaded={false} />);
     // MUI Skeleton renders a span with class containing MuiSkeleton
     const skeleton = container.querySelector('.MuiSkeleton-root');
     expect(skeleton).toBeInTheDocument();
   });
 
   it('does not show skeleton when image is loaded', () => {
-    const { container } = render(
-      <SpecDetailView {...defaultProps} imageLoaded={true} />,
-    );
+    const { container } = render(<SpecDetailView {...defaultProps} imageLoaded={true} />);
     const skeleton = container.querySelector('.MuiSkeleton-root');
     expect(skeleton).not.toBeInTheDocument();
   });
@@ -102,13 +103,7 @@ describe('SpecDetailView', () => {
     expect(screen.queryByRole('button', { name: /show interactive/i })).not.toBeInTheDocument();
 
     // With preview_html — renders an in-page toggle button (no longer a link)
-    rerender(
-      <SpecDetailView
-        {...defaultProps}
-        currentImpl={implC}
-        selectedLibrary="plotly"
-      />,
-    );
+    rerender(<SpecDetailView {...defaultProps} currentImpl={implC} selectedLibrary="plotly" />);
     expect(screen.getByRole('button', { name: /show interactive/i })).toBeInTheDocument();
   });
 
@@ -119,33 +114,22 @@ describe('SpecDetailView', () => {
   });
 
   it('does not show implementation counter when only one implementation', () => {
-    render(
-      <SpecDetailView
-        {...defaultProps}
-        implementations={[implB]}
-      />,
-    );
+    render(<SpecDetailView {...defaultProps} implementations={[implB]} />);
     expect(screen.queryByText('1/1')).not.toBeInTheDocument();
   });
 
   it('shows ">>> .copied" overlay when codeCopied matches current library', () => {
-    render(
-      <SpecDetailView {...defaultProps} codeCopied="matplotlib" />,
-    );
+    render(<SpecDetailView {...defaultProps} codeCopied="matplotlib" />);
     expect(screen.getByText('>>> .copied')).toBeInTheDocument();
   });
 
   it('shows ">>> .downloaded" overlay when downloadDone matches current library', () => {
-    render(
-      <SpecDetailView {...defaultProps} downloadDone="matplotlib" />,
-    );
+    render(<SpecDetailView {...defaultProps} downloadDone="matplotlib" />);
     expect(screen.getByText('>>> .downloaded')).toBeInTheDocument();
   });
 
   it('does not show overlay when codeCopied does not match current library', () => {
-    render(
-      <SpecDetailView {...defaultProps} codeCopied="plotly" />,
-    );
+    render(<SpecDetailView {...defaultProps} codeCopied="plotly" />);
     expect(screen.queryByText('>>> .copied')).not.toBeInTheDocument();
     expect(screen.queryByText('>>> .downloaded')).not.toBeInTheDocument();
   });
@@ -175,16 +159,14 @@ describe('SpecDetailView', () => {
     render(
       <ThemeContext.Provider value={darkThemeValue}>
         <SpecDetailView {...defaultProps} />
-      </ThemeContext.Provider>,
+      </ThemeContext.Provider>
     );
     const darkBtn = screen.getByRole('button', { name: /download png/i });
     expect(darkBtn).toHaveStyle({ backgroundColor: 'rgba(36,36,32,0.9)' });
   });
 
   it('renders nothing special when currentImpl is null', () => {
-    render(
-      <SpecDetailView {...defaultProps} currentImpl={null} />,
-    );
+    render(<SpecDetailView {...defaultProps} currentImpl={null} />);
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /copy code/i })).not.toBeInTheDocument();
   });

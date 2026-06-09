@@ -5,7 +5,8 @@
  * This hook fetches code from the lightweight /specs/{spec_id}/{library}/code endpoint.
  */
 
-import { useState, useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
+
 import { API_URL } from '../constants';
 
 interface CodeCache {
@@ -28,55 +29,66 @@ export function useCodeFetch(): UseCodeFetchReturn {
   const cacheRef = useRef<CodeCache>({});
   const pendingRef = useRef<Map<string, Promise<string | null>>>(new Map());
 
-  const getCode = useCallback((specId: string, library: string, language: string = 'python'): string | null => {
-    return cacheRef.current[cacheKey(specId, library, language)] ?? null;
-  }, []);
+  const getCode = useCallback(
+    (specId: string, library: string, language: string = 'python'): string | null => {
+      return cacheRef.current[cacheKey(specId, library, language)] ?? null;
+    },
+    []
+  );
 
-  const fetchCode = useCallback(async (specId: string, library: string, language: string = 'python'): Promise<string | null> => {
-    const key = cacheKey(specId, library, language);
+  const fetchCode = useCallback(
+    async (
+      specId: string,
+      library: string,
+      language: string = 'python'
+    ): Promise<string | null> => {
+      const key = cacheKey(specId, library, language);
 
-    // Check cache first
-    if (key in cacheRef.current) {
-      return cacheRef.current[key];
-    }
+      // Check cache first
+      if (key in cacheRef.current) {
+        return cacheRef.current[key];
+      }
 
-    // Check if already fetching
-    const pending = pendingRef.current.get(key);
-    if (pending) {
-      return pending;
-    }
+      // Check if already fetching
+      const pending = pendingRef.current.get(key);
+      if (pending) {
+        return pending;
+      }
 
-    // Only append the language query param when it diverges from the API
-    // default — keeps URLs for the common Python case unchanged.
-    const url = language === 'python'
-      ? `${API_URL}/specs/${specId}/${library}/code`
-      : `${API_URL}/specs/${specId}/${library}/code?language=${encodeURIComponent(language)}`;
+      // Only append the language query param when it diverges from the API
+      // default — keeps URLs for the common Python case unchanged.
+      const url =
+        language === 'python'
+          ? `${API_URL}/specs/${specId}/${library}/code`
+          : `${API_URL}/specs/${specId}/${library}/code?language=${encodeURIComponent(language)}`;
 
-    setIsLoading(true);
-    const promise = (async () => {
-      try {
-        const response = await fetch(url);
-        if (!response.ok) {
+      setIsLoading(true);
+      const promise = (async () => {
+        try {
+          const response = await fetch(url);
+          if (!response.ok) {
+            cacheRef.current[key] = null;
+            return null;
+          }
+
+          const data = await response.json();
+          const code = data.code ?? null;
+          cacheRef.current[key] = code;
+          return code;
+        } catch {
           cacheRef.current[key] = null;
           return null;
+        } finally {
+          pendingRef.current.delete(key);
+          setIsLoading(false);
         }
+      })();
 
-        const data = await response.json();
-        const code = data.code ?? null;
-        cacheRef.current[key] = code;
-        return code;
-      } catch {
-        cacheRef.current[key] = null;
-        return null;
-      } finally {
-        pendingRef.current.delete(key);
-        setIsLoading(false);
-      }
-    })();
-
-    pendingRef.current.set(key, promise);
-    return promise;
-  }, []);
+      pendingRef.current.set(key, promise);
+      return promise;
+    },
+    []
+  );
 
   return { fetchCode, getCode, isLoading };
 }

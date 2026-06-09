@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { render, screen, waitFor } from '../test-utils';
 import { SpecsListPage } from './SpecsListPage';
 
@@ -30,9 +31,21 @@ vi.mock('../utils/responsiveImage', () => ({
 
 const mockImages = {
   images: [
-    { library: 'matplotlib', url: 'https://example.com/bar-basic/matplotlib/plot.png', spec_id: 'bar-basic' },
-    { library: 'seaborn', url: 'https://example.com/bar-basic/seaborn/plot.png', spec_id: 'bar-basic' },
-    { library: 'matplotlib', url: 'https://example.com/scatter-basic/matplotlib/plot.png', spec_id: 'scatter-basic' },
+    {
+      library: 'matplotlib',
+      url: 'https://example.com/bar-basic/matplotlib/plot.png',
+      spec_id: 'bar-basic',
+    },
+    {
+      library: 'seaborn',
+      url: 'https://example.com/bar-basic/seaborn/plot.png',
+      spec_id: 'bar-basic',
+    },
+    {
+      library: 'matplotlib',
+      url: 'https://example.com/scatter-basic/matplotlib/plot.png',
+      spec_id: 'scatter-basic',
+    },
   ],
 };
 

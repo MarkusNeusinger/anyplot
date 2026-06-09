@@ -1,4 +1,5 @@
 import Box from '@mui/material/Box';
+
 import { colors } from '../theme';
 
 interface LoaderSpinnerProps {

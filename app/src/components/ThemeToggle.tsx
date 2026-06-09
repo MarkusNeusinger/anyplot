@@ -1,6 +1,7 @@
 import Box from '@mui/material/Box';
-import { colors, typography } from '../theme';
+
 import type { ThemeMode } from '../hooks/useLayoutContext';
+import { colors, typography } from '../theme';
 
 interface ThemeToggleProps {
   mode: ThemeMode;

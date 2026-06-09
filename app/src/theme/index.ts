@@ -10,7 +10,8 @@
 
 export const typography = {
   // MonoLisa-only system — serif/sans kept as aliases so existing imports still resolve
-  fontFamily: '"MonoLisa", "MonoLisa Fallback", Consolas, Menlo, Monaco, "DejaVu Sans Mono", monospace',
+  fontFamily:
+    '"MonoLisa", "MonoLisa Fallback", Consolas, Menlo, Monaco, "DejaVu Sans Mono", monospace',
   serif: '"MonoLisa", "MonoLisa Fallback", Consolas, Menlo, Monaco, "DejaVu Sans Mono", monospace',
   sans: '"MonoLisa", "MonoLisa Fallback", Consolas, Menlo, Monaco, "DejaVu Sans Mono", monospace',
   mono: '"MonoLisa", "MonoLisa Fallback", "JetBrains Mono", Consolas, monospace',
@@ -23,16 +24,16 @@ export const colors = {
 
   // imprint full palette — 8 categorical hues in hybrid-v3 sort order
   imprint: {
-    green: '#009E73',   // slot 0 — brand
+    green: '#009E73', // slot 0 — brand
     lavender: '#C475FD', // slot 1
-    blue: '#4467A3',    // slot 2
-    ochre: '#BD8233',   // slot 3
-    red: '#AE3030',     // slot 4 — deferred semantic anchor for bad / loss / error
-    cyan: '#2ABCCD',    // slot 5
-    rose: '#954477',    // slot 6
-    lime: '#99B314',    // slot 7
+    blue: '#4467A3', // slot 2
+    ochre: '#BD8233', // slot 3
+    red: '#AE3030', // slot 4 — deferred semantic anchor for bad / loss / error
+    cyan: '#2ABCCD', // slot 5
+    rose: '#954477', // slot 6
+    lime: '#99B314', // slot 7
     // Semantic anchors outside the categorical pool
-    amber: '#DDCC77',   // warning / caution (fixed hex)
+    amber: '#DDCC77', // warning / caution (fixed hex)
     // neutral + muted are theme-adaptive — exposed as CSS vars below
   },
 
@@ -52,9 +53,9 @@ export const colors = {
 
   // Semantic colors — imprint mapped
   success: '#009E73', // brand green
-  error: '#AE3030',   // matte red (slot 4 — the deferred semantic anchor)
+  error: '#AE3030', // matte red (slot 4 — the deferred semantic anchor)
   warning: '#DDCC77', // amber (semantic anchor, outside pool)
-  info: '#4467A3',    // blue (slot 2)
+  info: '#4467A3', // blue (slot 2)
 
   // Background — warm off-white
   background: '#F5F3EC',

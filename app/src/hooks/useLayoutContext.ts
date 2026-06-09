@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react';
-import type { PlotImage, ActiveFilters, FilterCounts } from '../types';
+
+import type { ActiveFilters, FilterCounts, PlotImage } from '../types';
 
 // Persistent home state that survives navigation
 export interface HomeState {

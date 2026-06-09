@@ -1,12 +1,15 @@
 import { useEffect } from 'react';
-import { Link as RouterLink, isRouteErrorResponse, useRouteError } from 'react-router-dom';
+
+import { isRouteErrorResponse, Link as RouterLink, useRouteError } from 'react-router-dom';
+
+import HomeIcon from '@mui/icons-material/Home';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Typography from '@mui/material/Typography';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import HomeIcon from '@mui/icons-material/Home';
+
 import { NotFoundPage } from '../pages/NotFoundPage';
 
 const RELOAD_ATTEMPT_KEY = 'anyplot:chunk-reload-attempt';

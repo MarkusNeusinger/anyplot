@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { useAnalytics, setAnalyticsAmbientProps } from './useAnalytics';
+import { act, renderHook } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { setAnalyticsAmbientProps, useAnalytics } from './useAnalytics';
 
 describe('useAnalytics', () => {
   const originalLocation = window.location;
@@ -175,7 +176,12 @@ describe('useAnalytics', () => {
       // and filter segments are appended directly to the domain — matching
       // how the other `/plots?lib=…` filters are already tracked.
       Object.defineProperty(window, 'location', {
-        value: { ...originalLocation, hostname: 'anyplot.ai', pathname: '/plots', search: '?lang=python' },
+        value: {
+          ...originalLocation,
+          hostname: 'anyplot.ai',
+          pathname: '/plots',
+          search: '?lang=python',
+        },
         writable: true,
         configurable: true,
       });

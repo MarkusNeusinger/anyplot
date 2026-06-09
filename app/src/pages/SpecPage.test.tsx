@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { render, screen, waitFor } from '../test-utils';
 import { SpecPage } from './SpecPage';
 
@@ -125,7 +126,9 @@ describe('SpecPage', () => {
     render(<SpecPage />);
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { level: 1, name: /page not found/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { level: 1, name: /page not found/i })
+      ).toBeInTheDocument();
     });
     expect(screen.getByText(/404 — no route matched/i)).toBeInTheDocument();
   });

@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '../test-utils';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { render, screen } from '../test-utils';
 // Must import after test-utils to get jest-dom matchers
 import { ErrorBoundary } from './ErrorBoundary';
 

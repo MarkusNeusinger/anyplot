@@ -5,24 +5,26 @@
  */
 
 import { useMemo } from 'react';
+
 import { Link } from 'react-router-dom';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
-import Skeleton from '@mui/material/Skeleton';
-import MuiLink from '@mui/material/Link';
-import ClickAwayListener from '@mui/material/ClickAwayListener';
+
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DownloadIcon from '@mui/icons-material/Download';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import Box from '@mui/material/Box';
+import ClickAwayListener from '@mui/material/ClickAwayListener';
+import IconButton from '@mui/material/IconButton';
+import MuiLink from '@mui/material/Link';
+import Skeleton from '@mui/material/Skeleton';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
 
-import type { Implementation } from '../types';
-import { buildSrcSet, OVERVIEW_SIZES } from '../utils/responsiveImage';
-import { specPath } from '../utils/paths';
-import { selectPreviewUrl } from '../utils/themedPreview';
 import { useTheme } from '../hooks/useLayoutContext';
 import { colors, fontSize, semanticColors, typography } from '../theme';
+import type { Implementation } from '../types';
+import { specPath } from '../utils/paths';
+import { buildSrcSet, OVERVIEW_SIZES } from '../utils/responsiveImage';
+import { selectPreviewUrl } from '../utils/themedPreview';
 
 interface LibraryMeta {
   id: string;
@@ -79,7 +81,7 @@ export function SpecOverview({
         gap: 3,
       }}
     >
-      {sortedImpls.map((impl) => (
+      {sortedImpls.map(impl => (
         <ImplementationCard
           key={impl.library_id}
           impl={impl}
@@ -185,7 +187,10 @@ function ImplementationCard({
                 const target = e.target as HTMLImageElement;
                 if (!target.dataset.fallback) {
                   target.dataset.fallback = '1';
-                  target.closest('picture')?.querySelectorAll('source').forEach(s => s.remove());
+                  target
+                    .closest('picture')
+                    ?.querySelectorAll('source')
+                    .forEach(s => s.remove());
                   target.removeAttribute('srcset');
                   target.src = previewUrl;
                 }
@@ -198,21 +203,23 @@ function ImplementationCard({
 
         {/* Copied/Downloaded confirmation overlay */}
         {(codeCopied === impl.library_id || downloadDone === impl.library_id) && (
-          <Box sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            bgcolor: 'rgba(0,0,0,0.7)',
-            color: '#fff',
-            px: 1.5,
-            py: 0.5,
-            borderRadius: 1,
-            fontFamily: typography.fontFamily,
-            fontSize: fontSize.sm,
-            pointerEvents: 'none',
-            zIndex: 2,
-          }}>
+          <Box
+            sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              bgcolor: 'rgba(0,0,0,0.7)',
+              color: '#fff',
+              px: 1.5,
+              py: 0.5,
+              borderRadius: 1,
+              fontFamily: typography.fontFamily,
+              fontSize: fontSize.sm,
+              pointerEvents: 'none',
+              zIndex: 2,
+            }}
+          >
             {codeCopied === impl.library_id ? '>>> .copied' : '>>> .downloaded'}
           </Box>
         )}
@@ -220,7 +227,7 @@ function ImplementationCard({
         {/* Action Buttons (top-right) */}
         <Box
           className="action-buttons"
-          onClick={(e) => e.stopPropagation()}
+          onClick={e => e.stopPropagation()}
           sx={{
             position: 'absolute',
             top: 8,
@@ -233,7 +240,10 @@ function ImplementationCard({
         >
           <Tooltip title=".copy()" disableFocusListener>
             <IconButton
-              onClick={(e: React.MouseEvent) => { (e.currentTarget as HTMLElement).blur(); onCopyCode(impl); }}
+              onClick={(e: React.MouseEvent) => {
+                (e.currentTarget as HTMLElement).blur();
+                onCopyCode(impl);
+              }}
               aria-label="Copy code"
               sx={{
                 bgcolor: 'rgba(255,255,255,0.9)',
@@ -246,7 +256,10 @@ function ImplementationCard({
           </Tooltip>
           <Tooltip title=".download()" disableFocusListener>
             <IconButton
-              onClick={(e: React.MouseEvent) => { (e.currentTarget as HTMLElement).blur(); onDownload(impl); }}
+              onClick={(e: React.MouseEvent) => {
+                (e.currentTarget as HTMLElement).blur();
+                onDownload(impl);
+              }}
               aria-label="Download PNG"
               sx={{
                 bgcolor: 'rgba(255,255,255,0.9)',
@@ -295,7 +308,9 @@ function ImplementationCard({
             <Tooltip
               title={
                 <Box>
-                  <Typography sx={{ fontSize: fontSize.md, mb: libMeta?.documentation_url ? 1 : 0 }}>
+                  <Typography
+                    sx={{ fontSize: fontSize.md, mb: libMeta?.documentation_url ? 1 : 0 }}
+                  >
                     {libMeta?.description || 'No description available'}
                   </Typography>
                   {libMeta?.documentation_url && (
@@ -303,7 +318,7 @@ function ImplementationCard({
                       href={libMeta.documentation_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={e => e.stopPropagation()}
                       sx={{
                         display: 'inline-flex',
                         alignItems: 'center',
@@ -337,7 +352,7 @@ function ImplementationCard({
               }}
             >
               <Typography
-                onClick={(e) => {
+                onClick={e => {
                   e.stopPropagation();
                   onTooltipToggle(isTooltipOpen ? null : tooltipId);
                 }}
@@ -358,7 +373,9 @@ function ImplementationCard({
         </ClickAwayListener>
         {impl.quality_score && (
           <>
-            <Typography sx={{ color: semanticColors.mutedText, fontSize: fontSize.md }}>·</Typography>
+            <Typography sx={{ color: semanticColors.mutedText, fontSize: fontSize.md }}>
+              ·
+            </Typography>
             <Typography
               sx={{
                 fontSize: fontSize.md,

@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
+
+import type { ActiveFilters, FilterCounts } from '../types';
 import { getSearchResults } from './filters';
-import type { FilterCounts, ActiveFilters } from '../types';
 
 describe('getSearchResults', () => {
   const mockFilterCounts: FilterCounts = {
@@ -44,21 +45,21 @@ describe('getSearchResults', () => {
     const results = getSearchResults(mockFilterCounts, emptyFilters, 'scatter', null);
 
     expect(results.length).toBeGreaterThan(0);
-    expect(results.some((r) => r.value === 'scatter-basic')).toBe(true);
+    expect(results.some(r => r.value === 'scatter-basic')).toBe(true);
   });
 
   it('finds matches with typos', () => {
     const results = getSearchResults(mockFilterCounts, emptyFilters, 'scater', null);
 
     expect(results.length).toBeGreaterThan(0);
-    expect(results.some((r) => r.value.includes('scatter'))).toBe(true);
+    expect(results.some(r => r.value.includes('scatter'))).toBe(true);
   });
 
   it('assigns matchType correctly', () => {
     const results = getSearchResults(mockFilterCounts, emptyFilters, 'scatter', null);
 
     expect(results.length).toBeGreaterThan(0);
-    results.forEach((result) => {
+    results.forEach(result => {
       expect(['exact', 'fuzzy']).toContain(result.matchType);
     });
   });
@@ -69,10 +70,10 @@ describe('getSearchResults', () => {
     if (results.length > 1) {
       const exactIndices = results
         .map((r, i) => (r.matchType === 'exact' ? i : -1))
-        .filter((i) => i >= 0);
+        .filter(i => i >= 0);
       const fuzzyIndices = results
         .map((r, i) => (r.matchType === 'fuzzy' ? i : -1))
-        .filter((i) => i >= 0);
+        .filter(i => i >= 0);
 
       if (exactIndices.length > 0 && fuzzyIndices.length > 0) {
         const maxExactIndex = Math.max(...exactIndices);
@@ -85,7 +86,7 @@ describe('getSearchResults', () => {
   it('filters by selected category', () => {
     const results = getSearchResults(mockFilterCounts, emptyFilters, 'scatter', 'spec');
 
-    results.forEach((result) => {
+    results.forEach(result => {
       expect(result.category).toBe('spec');
     });
   });
@@ -94,7 +95,7 @@ describe('getSearchResults', () => {
     const activeFilters: ActiveFilters = [{ category: 'spec', values: ['scatter-basic'] }];
     const results = getSearchResults(mockFilterCounts, activeFilters, 'scatter', null);
 
-    expect(results.some((r) => r.value === 'scatter-basic')).toBe(false);
+    expect(results.some(r => r.value === 'scatter-basic')).toBe(false);
   });
 
   it('searches spec titles when provided', () => {
@@ -111,14 +112,14 @@ describe('getSearchResults', () => {
     );
 
     expect(results.length).toBeGreaterThan(0);
-    expect(results.some((r) => r.value === 'heatmap-correlation')).toBe(true);
+    expect(results.some(r => r.value === 'heatmap-correlation')).toBe(true);
   });
 
   it('includes count in results', () => {
     const results = getSearchResults(mockFilterCounts, emptyFilters, 'scatter', null);
 
     expect(results.length).toBeGreaterThan(0);
-    results.forEach((result) => {
+    results.forEach(result => {
       expect(typeof result.count).toBe('number');
       expect(result.count).toBeGreaterThan(0);
     });
@@ -127,6 +128,6 @@ describe('getSearchResults', () => {
   it('supports multi-word queries', () => {
     const results = getSearchResults(mockFilterCounts, emptyFilters, 'hi k', 'spec');
 
-    expect(results.some((r) => r.value === 'histogram-kde')).toBe(true);
+    expect(results.some(r => r.value === 'histogram-kde')).toBe(true);
   });
 });

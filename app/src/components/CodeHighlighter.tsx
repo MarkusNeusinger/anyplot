@@ -1,9 +1,10 @@
-import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-light';
+import javascript from 'react-syntax-highlighter/dist/esm/languages/prism/javascript';
+import julia from 'react-syntax-highlighter/dist/esm/languages/prism/julia';
 import python from 'react-syntax-highlighter/dist/esm/languages/prism/python';
 import r from 'react-syntax-highlighter/dist/esm/languages/prism/r';
-import julia from 'react-syntax-highlighter/dist/esm/languages/prism/julia';
-import javascript from 'react-syntax-highlighter/dist/esm/languages/prism/javascript';
 import tsx from 'react-syntax-highlighter/dist/esm/languages/prism/tsx';
+import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-light';
+
 import { typography } from '../theme';
 
 SyntaxHighlighter.registerLanguage('python', python);
@@ -78,7 +79,11 @@ interface CodeHighlighterProps {
   library?: string;
 }
 
-export default function CodeHighlighter({ code, language = 'python', library }: CodeHighlighterProps) {
+export default function CodeHighlighter({
+  code,
+  language = 'python',
+  library,
+}: CodeHighlighterProps) {
   const prismLanguage =
     (library ? LIBRARY_GRAMMAR_OVERRIDE[library.toLowerCase()] : undefined) ??
     PRISM_LANGUAGE[language.toLowerCase()] ??

@@ -24,11 +24,11 @@ function prefersReducedMotion(): boolean {
 
 export function useTypewriter(
   lines: string[],
-  { charDelay = 45, linePause = 250, startDelay = 200 }: UseTypewriterOptions = {},
+  { charDelay = 45, linePause = 250, startDelay = 200 }: UseTypewriterOptions = {}
 ): UseTypewriterResult {
   const reduced = prefersReducedMotion();
   const [rendered, setRendered] = useState<string[]>(() =>
-    reduced ? [...lines] : lines.map(() => ''),
+    reduced ? [...lines] : lines.map(() => '')
   );
   const [activeLine, setActiveLine] = useState<number>(reduced ? -1 : 0);
 

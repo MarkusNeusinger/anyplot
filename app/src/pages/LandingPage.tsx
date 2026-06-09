@@ -1,21 +1,23 @@
 import { useEffect, useState } from 'react';
+
 import { Helmet } from 'react-helmet-async';
-import Box from '@mui/material/Box';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
+import Box from '@mui/material/Box';
+
 import { HeroSection } from '../components/HeroSection';
-import { NumbersStrip } from '../components/NumbersStrip';
 import { LibrariesSection } from '../components/LibrariesSection';
+import { NumbersStrip } from '../components/NumbersStrip';
 import { SectionHeader } from '../components/SectionHeader';
-import { useAppData, useAnalytics } from '../hooks';
-import { usePlotOfTheDay } from '../hooks/usePlotOfTheDay';
-import { useFeaturedSpecs, type FeaturedImpl } from '../hooks/useFeaturedSpecs';
-import { useTheme } from '../hooks/useLayoutContext';
 import { GITHUB_URL } from '../constants';
+import { useAnalytics, useAppData } from '../hooks';
+import { type FeaturedImpl, useFeaturedSpecs } from '../hooks/useFeaturedSpecs';
+import { useTheme } from '../hooks/useLayoutContext';
+import { usePlotOfTheDay } from '../hooks/usePlotOfTheDay';
+import { colors, semanticColors, typography } from '../theme';
 import { specPath } from '../utils/paths';
 import { buildSrcSet, getFallbackSrc } from '../utils/responsiveImage';
 import { selectPreviewUrl } from '../utils/themedPreview';
-import { colors, semanticColors, typography } from '../theme';
 
 export function LandingPage() {
   const { librariesData, stats } = useAppData();
@@ -126,7 +128,8 @@ function MapSection({ specCount }: { specCount?: number }) {
             bgcolor: 'var(--bg-surface)',
             overflow: 'hidden',
             position: 'relative',
-            transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s, border-color 0.25s',
+            transition:
+              'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s, border-color 0.25s',
             '&::before': {
               content: '""',
               position: 'absolute',
@@ -191,13 +194,34 @@ const MAP_PREVIEW_NODES: Array<{ x: number; y: number; r: number; cluster: 0 | 1
 
 const MAP_PREVIEW_LINKS: Array<[number, number]> = [
   // Cluster A internal
-  [0, 1], [0, 2], [1, 2], [2, 3], [0, 4], [1, 5], [0, 5],
+  [0, 1],
+  [0, 2],
+  [1, 2],
+  [2, 3],
+  [0, 4],
+  [1, 5],
+  [0, 5],
   // Cluster B internal
-  [6, 7], [6, 8], [7, 9], [6, 10], [7, 10],
+  [6, 7],
+  [6, 8],
+  [7, 9],
+  [6, 10],
+  [7, 10],
   // Cluster C internal
-  [11, 12], [12, 13], [11, 14], [13, 14], [14, 15], [12, 15],
+  [11, 12],
+  [12, 13],
+  [11, 14],
+  [13, 14],
+  [14, 15],
+  [12, 15],
   // Bridges via neutrals
-  [2, 16], [16, 8], [3, 17], [17, 11], [16, 17], [17, 18], [18, 3],
+  [2, 16],
+  [16, 8],
+  [3, 17],
+  [17, 11],
+  [16, 17],
+  [17, 18],
+  [18, 3],
 ];
 
 const CLUSTER_PALETTE = ['#009E73', '#AE3030', '#4467A3'] as const;
@@ -250,7 +274,12 @@ function MapClusterPreview() {
 function PaletteSection() {
   return (
     <Box sx={{ py: { xs: 2, md: 3 } }}>
-      <SectionHeader prompt="❯" title={<em>palette</em>} linkText="palette.explore()" linkTo="/palette" />
+      <SectionHeader
+        prompt="❯"
+        title={<em>palette</em>}
+        linkText="palette.explore()"
+        linkTo="/palette"
+      />
 
       <Box
         sx={{
@@ -305,7 +334,7 @@ function LabelledPaletteStrip() {
       .writeText(hex)
       .then(() => {
         setCopiedHex(hex);
-        setTimeout(() => setCopiedHex((c) => (c === hex ? null : c)), 1500);
+        setTimeout(() => setCopiedHex(c => (c === hex ? null : c)), 1500);
       })
       .catch(() => {
         // Silently ignore — the user can still read the hex on the swatch.
@@ -352,20 +381,20 @@ function LabelledPaletteStrip() {
                 className="hex-label"
                 sx={{
                   fontFamily: typography.mono,
-                fontSize: '12px',
-                fontWeight: 500,
-                color: '#fff',
-                bgcolor: 'rgba(0,0,0,0.65)',
-                px: 1,
-                py: 0.25,
-                borderRadius: 1,
-                whiteSpace: 'nowrap',
-                pointerEvents: 'none',
-              }}
-            >
-              {copied ? 'copied ✓' : hex}
+                  fontSize: '12px',
+                  fontWeight: 500,
+                  color: '#fff',
+                  bgcolor: 'rgba(0,0,0,0.65)',
+                  px: 1,
+                  py: 0.25,
+                  borderRadius: 1,
+                  whiteSpace: 'nowrap',
+                  pointerEvents: 'none',
+                }}
+              >
+                {copied ? 'copied ✓' : hex}
+              </Box>
             </Box>
-          </Box>
           );
         })}
       </Box>
@@ -395,11 +424,22 @@ function LabelledPaletteStrip() {
  * preview grid of featured implementations on the right so visitors see what
  * specs become.
  */
-function SpecsSection({ specCount, featured }: { specCount?: number; featured: FeaturedImpl[] | null }) {
+function SpecsSection({
+  specCount,
+  featured,
+}: {
+  specCount?: number;
+  featured: FeaturedImpl[] | null;
+}) {
   const { trackEvent } = useAnalytics();
   return (
     <Box sx={{ py: { xs: 2, md: 3 } }}>
-      <SectionHeader prompt="❯" title={<em>specifications</em>} linkText="specs.all()" linkTo="/specs" />
+      <SectionHeader
+        prompt="❯"
+        title={<em>specifications</em>}
+        linkText="specs.all()"
+        linkTo="/specs"
+      />
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mb: { xs: 4, md: 5 } }}>
         <Box
@@ -416,9 +456,8 @@ function SpecsSection({ specCount, featured }: { specCount?: number; featured: F
           <Box component="span" sx={{ color: 'var(--ink)' }}>
             what the plot shows, what data it needs, and when to use it.
           </Box>{' '}
-          from that single source, implementations are generated for every
-          supported library. new specs come from github issues; anyone can
-          propose one.
+          from that single source, implementations are generated for every supported library. new
+          specs come from github issues; anyone can propose one.
         </Box>
 
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
@@ -512,12 +551,18 @@ function MethodLink({ to, href, subject, verb, external, source }: MethodLinkPro
     '& .subj': { opacity: 0.7, transition: 'opacity 0.2s' },
     '&:hover': { color: colors.primary },
     '&:hover .subj': { opacity: 1 },
-    '&:focus-visible': { outline: `2px solid ${colors.primary}`, outlineOffset: 2, borderRadius: '2px' },
+    '&:focus-visible': {
+      outline: `2px solid ${colors.primary}`,
+      outlineOffset: 2,
+      borderRadius: '2px',
+    },
   } as const;
 
   const content = (
     <>
-      <Box component="span" className="subj">{subject}</Box>
+      <Box component="span" className="subj">
+        {subject}
+      </Box>
       {`.${verb}()`}
     </>
   );
@@ -566,7 +611,8 @@ function FeaturedThumb({ item }: { item: FeaturedImpl | null }) {
     overflow: 'hidden',
     textDecoration: 'none',
     color: 'inherit',
-    transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s, border-color 0.25s',
+    transition:
+      'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s, border-color 0.25s',
     '&::before': {
       content: '""',
       position: 'absolute',
@@ -627,8 +673,24 @@ function FeaturedThumb({ item }: { item: FeaturedImpl | null }) {
     return (
       <Box sx={cardSx}>
         <Box sx={imageSx} />
-        <Box sx={{ ...titleSx, height: 14, width: '70%', bgcolor: 'var(--bg-elevated)', borderRadius: 0.5 }} />
-        <Box sx={{ height: 12, width: '90%', bgcolor: 'var(--bg-elevated)', borderRadius: 0.5, mx: 0.25 }} />
+        <Box
+          sx={{
+            ...titleSx,
+            height: 14,
+            width: '70%',
+            bgcolor: 'var(--bg-elevated)',
+            borderRadius: 0.5,
+          }}
+        />
+        <Box
+          sx={{
+            height: 12,
+            width: '90%',
+            bgcolor: 'var(--bg-elevated)',
+            borderRadius: 0.5,
+            mx: 0.25,
+          }}
+        />
       </Box>
     );
   }
@@ -637,13 +699,32 @@ function FeaturedThumb({ item }: { item: FeaturedImpl | null }) {
     <Box
       component={RouterLink}
       to={specPath(item.spec_id)}
-      onClick={() => trackEvent('nav_click', { source: 'featured_thumb', target: 'spec_hub', spec: item.spec_id, library: item.library_id })}
+      onClick={() =>
+        trackEvent('nav_click', {
+          source: 'featured_thumb',
+          target: 'spec_hub',
+          spec: item.spec_id,
+          library: item.library_id,
+        })
+      }
       sx={cardSx}
     >
       <Box sx={imageSx}>
-        <Box component="picture" key={previewUrl} sx={{ display: 'block', width: '100%', height: '100%' }}>
-          <source type="image/webp" srcSet={buildSrcSet(previewUrl, 'webp')} sizes="(max-width: 599px) 50vw, 25vw" />
-          <source type="image/png" srcSet={buildSrcSet(previewUrl, 'png')} sizes="(max-width: 599px) 50vw, 25vw" />
+        <Box
+          component="picture"
+          key={previewUrl}
+          sx={{ display: 'block', width: '100%', height: '100%' }}
+        >
+          <source
+            type="image/webp"
+            srcSet={buildSrcSet(previewUrl, 'webp')}
+            sizes="(max-width: 599px) 50vw, 25vw"
+          />
+          <source
+            type="image/png"
+            srcSet={buildSrcSet(previewUrl, 'png')}
+            sizes="(max-width: 599px) 50vw, 25vw"
+          />
           <Box
             component="img"
             src={getFallbackSrc(previewUrl)}
@@ -658,4 +739,3 @@ function FeaturedThumb({ item }: { item: FeaturedImpl | null }) {
     </Box>
   );
 }
-

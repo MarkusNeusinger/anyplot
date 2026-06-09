@@ -1,5 +1,6 @@
-import { useCallback, useRef, useMemo } from "react";
-import { RESERVED_TOP_LEVEL } from "../utils/paths";
+import { useCallback, useMemo, useRef } from 'react';
+
+import { RESERVED_TOP_LEVEL } from '../utils/paths';
 
 interface EventProps {
   [key: string]: string | undefined;
@@ -25,10 +26,7 @@ export function getAnalyticsAmbientProps(): Record<string, string> {
   return { ...ambientProps };
 }
 
-function debounce<T extends (...args: never[]) => void>(
-  fn: T,
-  delay: number,
-): T {
+function debounce<T extends (...args: never[]) => void>(fn: T, delay: number): T {
   let timeoutId: ReturnType<typeof setTimeout>;
   return ((...args: Parameters<T>) => {
     clearTimeout(timeoutId);
@@ -48,9 +46,9 @@ function buildPlausibleUrl(): string {
   // For routes like /:specId/:language[/:library] we keep the full pathname so
   // filter segments are appended after it. Reserved top-level routes use no prefix.
   const pathname = window.location.pathname;
-  const parts = pathname.split("/").filter(Boolean);
+  const parts = pathname.split('/').filter(Boolean);
   const pathPrefix =
-    parts.length > 0 && !RESERVED_TOP_LEVEL.has(parts[0]) ? `/${parts.join("/")}` : "";
+    parts.length > 0 && !RESERVED_TOP_LEVEL.has(parts[0]) ? `/${parts.join('/')}` : '';
 
   // Definierte Reihenfolge der Filter-Kategorien (inkl. impl-level tags).
   // - `language` covers the spec-hub carousel scope (`/{spec}?language=python`)
@@ -59,19 +57,19 @@ function buildPlausibleUrl(): string {
   //   without it, the lang filter would never show up as a distinct pageview
   //   path in Plausible.
   const orderedKeys = [
-    "lang",
-    "lib",
-    "spec",
-    "plot",
-    "data",
-    "dom",
-    "feat",
-    "dep",
-    "tech",
-    "pat",
-    "prep",
-    "style",
-    "language",
+    'lang',
+    'lib',
+    'spec',
+    'plot',
+    'data',
+    'dom',
+    'feat',
+    'dep',
+    'tech',
+    'pat',
+    'prep',
+    'style',
+    'language',
   ];
 
   for (const key of orderedKeys) {
@@ -86,14 +84,13 @@ function buildPlausibleUrl(): string {
   }
 
   return segments.length > 0
-    ? `https://anyplot.ai${pathPrefix}/${segments.join("/")}`
-    : `https://anyplot.ai${pathPrefix || "/"}`;
+    ? `https://anyplot.ai${pathPrefix}/${segments.join('/')}`
+    : `https://anyplot.ai${pathPrefix || '/'}`;
 }
 
 export function useAnalytics() {
-  const lastPageviewRef = useRef<string>("");
-  const isProduction =
-    typeof window !== "undefined" && window.location.hostname === "anyplot.ai";
+  const lastPageviewRef = useRef<string>('');
+  const isProduction = typeof window !== 'undefined' && window.location.hostname === 'anyplot.ai';
 
   const sendPageview = useCallback(
     (urlOverride?: string) => {
@@ -114,31 +111,23 @@ export function useAnalytics() {
       lastPageviewRef.current = url;
 
       const props = Object.keys(ambientProps).length > 0 ? { ...ambientProps } : undefined;
-      window.plausible?.("pageview", props ? { url, props } : { url });
+      window.plausible?.('pageview', props ? { url, props } : { url });
     },
-    [isProduction],
+    [isProduction]
   );
 
-  const trackPageview = useMemo(
-    () => debounce(sendPageview, 150),
-    [sendPageview],
-  );
+  const trackPageview = useMemo(() => debounce(sendPageview, 150), [sendPageview]);
 
   const trackEvent = useCallback(
     (name: string, props?: EventProps) => {
       if (!isProduction) return;
       const cleanProps = props
-        ? Object.fromEntries(
-            Object.entries(props).filter(([, v]) => v !== undefined),
-          )
+        ? Object.fromEntries(Object.entries(props).filter(([, v]) => v !== undefined))
         : {};
       const merged = { ...ambientProps, ...cleanProps } as Record<string, string>;
-      window.plausible?.(
-        name,
-        Object.keys(merged).length > 0 ? { props: merged } : undefined,
-      );
+      window.plausible?.(name, Object.keys(merged).length > 0 ? { props: merged } : undefined);
     },
-    [isProduction],
+    [isProduction]
   );
 
   return { trackPageview, trackEvent };

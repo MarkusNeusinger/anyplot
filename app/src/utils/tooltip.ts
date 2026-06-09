@@ -16,11 +16,7 @@ export type TooltipType = 'spec' | 'lib';
  * const id = createTooltipId('spec', 'scatter-basic', 'matplotlib');
  * // Returns: 'spec-scatter-basic-matplotlib'
  */
-export function createTooltipId(
-  type: TooltipType,
-  specId: string,
-  library: string
-): string {
+export function createTooltipId(type: TooltipType, specId: string, library: string): string {
   return `${type}-${specId}-${library}`;
 }
 

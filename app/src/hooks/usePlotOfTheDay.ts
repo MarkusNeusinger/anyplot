@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+
 import { API_URL } from '../constants';
 
 export interface PlotOfTheDayData {

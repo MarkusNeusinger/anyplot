@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { render, screen, userEvent, waitFor } from '../test-utils';
 import { StatsPage } from './StatsPage';
 
@@ -86,7 +87,9 @@ const mockVisitors = {
  * /insights/visitors. Route by URL so the visitors response isn't silently
  * replaced by the dashboard payload (and vice versa).
  */
-function mockFetchSuccess(visitorsPayload: { points: Array<{ date: string; visitors: number }> } | null = mockVisitors) {
+function mockFetchSuccess(
+  visitorsPayload: { points: Array<{ date: string; visitors: number }> } | null = mockVisitors
+) {
   vi.stubGlobal(
     'fetch',
     vi.fn().mockImplementation((url: string) => {
@@ -100,7 +103,7 @@ function mockFetchSuccess(visitorsPayload: { points: Array<{ date: string; visit
         ok: true,
         json: () => Promise.resolve(mockDashboard),
       });
-    }),
+    })
   );
 }
 
@@ -115,7 +118,7 @@ function mockFetchError() {
         return Promise.resolve({ ok: true, json: () => Promise.resolve({ points: [] }) });
       }
       return Promise.resolve({ ok: false, status: 500 });
-    }),
+    })
   );
 }
 

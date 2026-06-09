@@ -1,12 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, userEvent } from '../test-utils';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { render, screen, userEvent, waitFor } from '../test-utils';
 import { SpecTabs } from './SpecTabs';
 
 // Mock the lazy-loaded CodeHighlighter
 vi.mock('./CodeHighlighter', () => ({
-  default: ({ code }: { code: string }) => (
-    <pre data-testid="code-highlighter">{code}</pre>
-  ),
+  default: ({ code }: { code: string }) => <pre data-testid="code-highlighter">{code}</pre>,
 }));
 
 // Mock the constants module to avoid import.meta issues
@@ -101,7 +100,7 @@ describe('SpecTabs', () => {
         applications={['Data analysis', 'Statistical visualization']}
         data={['Random numeric data', 'CSV files']}
         notes={['Use for small datasets', 'Works best with 2D data']}
-      />,
+      />
     );
 
     await user.click(screen.getByRole('tab', { name: /spec/i }));
@@ -140,7 +139,7 @@ describe('SpecTabs', () => {
         imageDescription="A colorful scatter plot with labeled axes"
         strengths={['Clear layout', 'Good color choices']}
         weaknesses={['Missing legend', 'Overlapping points']}
-      />,
+      />
     );
 
     await user.click(screen.getByRole('tab', { name: /impl/i }));
@@ -187,7 +186,14 @@ describe('SpecTabs', () => {
         score: 18,
         max: 20,
         items: [
-          { id: 'vq1', name: 'Color harmony', score: 9, max: 10, passed: true, comment: 'Great palette' },
+          {
+            id: 'vq1',
+            name: 'Color harmony',
+            score: 9,
+            max: 10,
+            passed: true,
+            comment: 'Great palette',
+          },
           { id: 'vq2', name: 'Layout balance', score: 9, max: 10, passed: true },
         ],
       },
@@ -217,7 +223,7 @@ describe('SpecTabs', () => {
         {...baseProps}
         tags={{ plot_type: ['scatter', 'bubble'], data_type: ['numeric'] }}
         implTags={{ dependencies: ['numpy'], techniques: ['vectorized'] }}
-      />,
+      />
     );
 
     // Spec tags
@@ -243,7 +249,7 @@ describe('SpecTabs', () => {
         overviewMode
         tags={{ plot_type: ['scatter'] }}
         implTags={{ dependencies: ['numpy'] }}
-      />,
+      />
     );
 
     expect(screen.getByText('scatter')).toBeInTheDocument();
@@ -313,7 +319,7 @@ describe('SpecTabs', () => {
         imageDescription={undefined}
         strengths={undefined}
         weaknesses={undefined}
-      />,
+      />
     );
 
     await user.click(screen.getByRole('tab', { name: /impl/i }));
@@ -327,9 +333,7 @@ describe('SpecTabs', () => {
 
     await user.click(screen.getByRole('tab', { name: /impl/i }));
 
-    expect(
-      screen.queryByText('No implementation review data available.'),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText('No implementation review data available.')).not.toBeInTheDocument();
   });
 
   // -------------------------------------------------------
@@ -351,12 +355,7 @@ describe('SpecTabs', () => {
   it('renders tags and fetch mock is configured for tag counts', async () => {
     // The module-level cache means fetch may or may not be called depending
     // on test execution order. We verify the component renders tags correctly.
-    render(
-      <SpecTabs
-        {...baseProps}
-        tags={{ plot_type: ['scatter'] }}
-      />,
-    );
+    render(<SpecTabs {...baseProps} tags={{ plot_type: ['scatter'] }} />);
 
     // Tag chip is rendered
     expect(screen.getByText('scatter')).toBeInTheDocument();
@@ -375,15 +374,13 @@ describe('SpecTabs', () => {
         {...baseProps}
         imageDescription="Plot description"
         generatedAt="2025-01-15T00:00:00Z"
-      />,
+      />
     );
 
     await user.click(screen.getByRole('tab', { name: /impl/i }));
 
     // The metadata line contains specId, libraryId, and date together
-    expect(
-      screen.getByText(/scatter-basic · matplotlib · Jan 15, 2025/),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/scatter-basic · matplotlib · Jan 15, 2025/)).toBeInTheDocument();
   });
 
   // -------------------------------------------------------
@@ -399,7 +396,7 @@ describe('SpecTabs', () => {
       expect(screen.getByTestId('code-highlighter')).toBeInTheDocument();
     });
     expect(screen.getByTestId('code-highlighter')).toHaveTextContent(
-      'import matplotlib print("hello")',
+      'import matplotlib print("hello")'
     );
   });
 
@@ -424,11 +421,7 @@ describe('SpecTabs', () => {
     });
 
     render(
-      <SpecTabs
-        {...baseProps}
-        onTrackEvent={onTrackEvent}
-        tags={{ plot_type: ['scatter'] }}
-      />,
+      <SpecTabs {...baseProps} onTrackEvent={onTrackEvent} tags={{ plot_type: ['scatter'] }} />
     );
 
     await user.click(screen.getByText('scatter'));
@@ -450,7 +443,14 @@ describe('SpecTabs', () => {
         score: 18,
         max: 20,
         items: [
-          { id: 'vq1', name: 'Color harmony', score: 9, max: 10, passed: true, comment: 'Looks great' },
+          {
+            id: 'vq1',
+            name: 'Color harmony',
+            score: 9,
+            max: 10,
+            passed: true,
+            comment: 'Looks great',
+          },
         ],
       },
     };

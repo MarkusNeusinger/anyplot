@@ -1,19 +1,21 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
-import Box from '@mui/material/Box';
-import Alert from '@mui/material/Alert';
-import Fab from '@mui/material/Fab';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import type { PlotImage } from '../types';
-import type { ImageSize } from '../constants';
-import { useInfiniteScroll, useAnalytics, useFilterState, isFiltersEmpty } from '../hooks';
+import { Helmet } from 'react-helmet-async';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Fab from '@mui/material/Fab';
+
 import { FilterBar } from '../components/FilterBar';
 import { ImagesGrid } from '../components/ImagesGrid';
+import type { ImageSize } from '../constants';
+import { isFiltersEmpty, useAnalytics, useFilterState, useInfiniteScroll } from '../hooks';
 import { useAppData, useHomeState } from '../hooks';
-import { specPath } from '../utils/paths';
 import { colors } from '../theme';
+import type { PlotImage } from '../types';
+import { specPath } from '../utils/paths';
 
 export function PlotsPage() {
   const navigate = useNavigate();
@@ -128,7 +130,7 @@ export function PlotsPage() {
       // If the user is browsing under an active language filter, propagate it
       // as `?language=…` so the destination impl-page carousel stays scoped to
       // that language. Without the filter, the carousel walks all impls.
-      const langActive = activeFilters.some((f) => f.category === 'lang');
+      const langActive = activeFilters.some(f => f.category === 'lang');
       const qs = langActive && img.language ? `?language=${encodeURIComponent(img.language)}` : '';
       navigate(`${specPath(specId, img.language, img.library)}${qs}`);
     },
@@ -166,14 +168,17 @@ export function PlotsPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleRandom, handleRemoveGroup, activeFilters.length]);
 
-  const specFilter = activeFilters.find((f) => f.category === 'spec');
+  const specFilter = activeFilters.find(f => f.category === 'spec');
   const selectedSpec = specFilter?.values[0] || '';
 
   return (
     <Box onClick={handleContainerClick}>
       <Helmet>
         <title>plots | anyplot.ai</title>
-        <meta name="description" content="Browse and filter 2,600+ visualization examples across 15 libraries in Python, R, Julia, and JavaScript. Search by plot type, domain, features, and more." />
+        <meta
+          name="description"
+          content="Browse and filter 2,600+ visualization examples across 15 libraries in Python, R, Julia, and JavaScript. Search by plot type, domain, features, and more."
+        />
         <link rel="canonical" href="https://anyplot.ai/plots" />
       </Helmet>
 

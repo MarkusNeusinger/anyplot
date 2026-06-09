@@ -1,14 +1,15 @@
 import { Link as RouterLink } from 'react-router-dom';
+
 import Box from '@mui/material/Box';
 
 import { GITHUB_URL } from '../constants';
+import { useAnalytics } from '../hooks';
+import { useTheme } from '../hooks/useLayoutContext';
+import type { PlotOfTheDayData } from '../hooks/usePlotOfTheDay';
 import { colors, typography } from '../theme';
+import { specPath } from '../utils/paths';
 import { buildSrcSet, getFallbackSrc } from '../utils/responsiveImage';
 import { selectPreviewUrl } from '../utils/themedPreview';
-import { useTheme } from '../hooks/useLayoutContext';
-import { useAnalytics } from '../hooks';
-import { specPath } from '../utils/paths';
-import type { PlotOfTheDayData } from '../hooks/usePlotOfTheDay';
 
 interface PlotOfTheDayTerminalProps {
   potd: PlotOfTheDayData | null;
@@ -48,8 +49,24 @@ export function PlotOfTheDayTerminal({
   // - chartjs/d3/echarts/highcharts (JavaScript) ship as .js + node (browser render harness)
   // - muix (React/MUI X) is the .tsx exception within JavaScript, still + node
   // - every Python library as .py + python
-  const ext = potd.library_id === 'muix' ? '.tsx' : potd.language === 'r' ? '.R' : potd.language === 'julia' ? '.jl' : potd.language === 'javascript' ? '.js' : '.py';
-  const runner = potd.language === 'r' ? 'Rscript' : potd.language === 'julia' ? 'julia --project=.' : potd.language === 'javascript' ? 'node' : 'python';
+  const ext =
+    potd.library_id === 'muix'
+      ? '.tsx'
+      : potd.language === 'r'
+        ? '.R'
+        : potd.language === 'julia'
+          ? '.jl'
+          : potd.language === 'javascript'
+            ? '.js'
+            : '.py';
+  const runner =
+    potd.language === 'r'
+      ? 'Rscript'
+      : potd.language === 'julia'
+        ? 'julia --project=.'
+        : potd.language === 'javascript'
+          ? 'node'
+          : 'python';
   const displayFilename = `plots/${potd.spec_id}/${potd.library_id}${ext}`;
   const implPath = specPath(potd.spec_id, potd.language, potd.library_id);
   const githubFileUrl = `${GITHUB_URL}/blob/main/plots/${potd.spec_id}/implementations/${potd.language}/${potd.library_id}${ext}`;
@@ -92,14 +109,23 @@ export function PlotOfTheDayTerminal({
           fontSize: '12px',
         }}
       >
-        <Box component="span" sx={{ color: colors.primary, fontWeight: 700 }}>$</Box>
+        <Box component="span" sx={{ color: colors.primary, fontWeight: 700 }}>
+          $
+        </Box>
         <Box component="span">{runner}</Box>
         <Box
           component="a"
           href={githubFileUrl}
           target="_blank"
           rel="noopener noreferrer"
-          onClick={() => trackEvent('nav_click', { source: 'potd_terminal_filename', target: 'github', spec: potd.spec_id, library: potd.library_id })}
+          onClick={() =>
+            trackEvent('nav_click', {
+              source: 'potd_terminal_filename',
+              target: 'github',
+              spec: potd.spec_id,
+              library: potd.library_id,
+            })
+          }
           sx={{
             flex: 1,
             minWidth: 0,
@@ -112,7 +138,11 @@ export function PlotOfTheDayTerminal({
             // stretched flex child.
             textDecoration: 'none',
             transition: 'color 0.2s, text-decoration-color 0.2s',
-            '&:hover': { color: colors.primary, textDecoration: 'underline dotted', textUnderlineOffset: '3px' },
+            '&:hover': {
+              color: colors.primary,
+              textDecoration: 'underline dotted',
+              textUnderlineOffset: '3px',
+            },
           }}
         >
           {displayFilename}
@@ -123,7 +153,14 @@ export function PlotOfTheDayTerminal({
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Open source on GitHub"
-          onClick={() => trackEvent('nav_click', { source: 'potd_terminal_github', target: 'github', spec: potd.spec_id, library: potd.library_id })}
+          onClick={() =>
+            trackEvent('nav_click', {
+              source: 'potd_terminal_github',
+              target: 'github',
+              spec: potd.spec_id,
+              library: potd.library_id,
+            })
+          }
           sx={{
             color: 'inherit',
             textDecoration: 'none',
@@ -133,7 +170,10 @@ export function PlotOfTheDayTerminal({
             '&:hover .gh-subject': { opacity: 1 },
           }}
         >
-          <Box component="span" className="gh-subject">github</Box>.open()
+          <Box component="span" className="gh-subject">
+            github
+          </Box>
+          .open()
         </Box>
       </Box>
 
@@ -143,7 +183,14 @@ export function PlotOfTheDayTerminal({
         component={RouterLink}
         to={implPath}
         aria-label={`Open ${potd.spec_title} implementation for ${potd.library_name}`}
-        onClick={() => trackEvent('nav_click', { source: 'potd_terminal_image', target: 'spec_detail', spec: potd.spec_id, library: potd.library_id })}
+        onClick={() =>
+          trackEvent('nav_click', {
+            source: 'potd_terminal_image',
+            target: 'spec_detail',
+            spec: potd.spec_id,
+            library: potd.library_id,
+          })
+        }
         sx={{
           display: 'block',
           mx: 'auto',
@@ -202,12 +249,18 @@ export function PlotOfTheDayTerminal({
           color: 'var(--ink-muted)',
         }}
       >
-        <Box component="span" sx={{ color: colors.primary }}>&gt;&gt;&gt;</Box>
-        <Box component="span" sx={{ color: 'var(--ink-soft)' }}>{potd.spec_title}</Box>
+        <Box component="span" sx={{ color: colors.primary }}>
+          &gt;&gt;&gt;
+        </Box>
+        <Box component="span" sx={{ color: 'var(--ink-soft)' }}>
+          {potd.spec_title}
+        </Box>
         <Box component="span">·</Box>
         <Box component="span">{potd.library_name}</Box>
         <Box sx={{ flex: 1 }} />
-        <Box component="span" sx={{ opacity: 0.8 }}>// plot of the day</Box>
+        <Box component="span" sx={{ opacity: 0.8 }}>
+          // plot of the day
+        </Box>
       </Box>
     </Box>
   );

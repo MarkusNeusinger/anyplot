@@ -1,5 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
 import { fireEvent } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+
 import { render, screen } from '../test-utils';
 import { LegalPage } from './LegalPage';
 
@@ -20,7 +21,7 @@ describe('LegalPage', () => {
     render(<LegalPage />);
 
     const headings = screen.getAllByRole('heading');
-    const headingTexts = headings.map((h) => h.textContent);
+    const headingTexts = headings.map(h => h.textContent);
 
     expect(headingTexts).toContain('legal notice');
     expect(headingTexts).toContain('privacy policy');
@@ -75,5 +76,4 @@ describe('LegalPage', () => {
     expect(trackEvent).toHaveBeenCalledWith('external_link', { destination: 'x' });
     expect(trackEvent).toHaveBeenCalledWith('external_link', { destination: 'github_personal' });
   });
-
 });

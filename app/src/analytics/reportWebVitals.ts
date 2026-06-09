@@ -6,63 +6,61 @@ import { getAnalyticsAmbientProps } from '../hooks/useAnalytics';
  * Only runs in production (anyplot.ai), dynamically imported for zero dev cost.
  */
 export function reportWebVitals() {
-  if (
-    typeof window === 'undefined' ||
-    window.location.hostname !== 'anyplot.ai'
-  ) {
+  if (typeof window === 'undefined' || window.location.hostname !== 'anyplot.ai') {
     return;
   }
 
-  import('web-vitals').then(({ onLCP, onCLS, onINP, onFCP, onTTFB }) => {
-    onLCP((metric) => {
-      window.plausible?.('LCP', {
-        props: {
-          ...getAnalyticsAmbientProps(),
-          value: String(Math.round(metric.value / 100) * 100),
-          rating: metric.rating,
-        },
+  import('web-vitals')
+    .then(({ onLCP, onCLS, onINP, onFCP, onTTFB }) => {
+      onLCP(metric => {
+        window.plausible?.('LCP', {
+          props: {
+            ...getAnalyticsAmbientProps(),
+            value: String(Math.round(metric.value / 100) * 100),
+            rating: metric.rating,
+          },
+        });
       });
-    });
 
-    onCLS((metric) => {
-      window.plausible?.('CLS', {
-        props: {
-          ...getAnalyticsAmbientProps(),
-          value: String(Math.round(metric.value * 100) / 100),
-          rating: metric.rating,
-        },
+      onCLS(metric => {
+        window.plausible?.('CLS', {
+          props: {
+            ...getAnalyticsAmbientProps(),
+            value: String(Math.round(metric.value * 100) / 100),
+            rating: metric.rating,
+          },
+        });
       });
-    });
 
-    onINP((metric) => {
-      window.plausible?.('INP', {
-        props: {
-          ...getAnalyticsAmbientProps(),
-          value: String(Math.round(metric.value / 50) * 50),
-          rating: metric.rating,
-        },
+      onINP(metric => {
+        window.plausible?.('INP', {
+          props: {
+            ...getAnalyticsAmbientProps(),
+            value: String(Math.round(metric.value / 50) * 50),
+            rating: metric.rating,
+          },
+        });
       });
-    });
 
-    onFCP((metric) => {
-      window.plausible?.('FCP', {
-        props: {
-          ...getAnalyticsAmbientProps(),
-          value: String(Math.round(metric.value / 100) * 100),
-          rating: metric.rating,
-        },
+      onFCP(metric => {
+        window.plausible?.('FCP', {
+          props: {
+            ...getAnalyticsAmbientProps(),
+            value: String(Math.round(metric.value / 100) * 100),
+            rating: metric.rating,
+          },
+        });
       });
-    });
 
-    onTTFB((metric) => {
-      window.plausible?.('TTFB', {
-        props: {
-          ...getAnalyticsAmbientProps(),
-          value: String(Math.round(metric.value / 100) * 100),
-          rating: metric.rating,
-        },
+      onTTFB(metric => {
+        window.plausible?.('TTFB', {
+          props: {
+            ...getAnalyticsAmbientProps(),
+            value: String(Math.round(metric.value / 100) * 100),
+            rating: metric.rating,
+          },
+        });
       });
-    });
-  })
-  .catch(() => {});
+    })
+    .catch(() => {});
 }
