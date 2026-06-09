@@ -15,17 +15,17 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 
-import type { ImageSize } from '../constants';
-import { colors, fontSize, semanticColors, typography } from '../theme';
-import type { ActiveFilters, FilterCategory, FilterCounts } from '../types';
-import { FILTER_CATEGORIES, FILTER_LABELS, FILTER_TOOLTIPS } from '../types';
+import { ToolbarActions } from 'src/components/ToolbarActions';
+import type { ImageSize } from 'src/constants';
+import { colors, fontSize, semanticColors, typography } from 'src/theme';
+import type { ActiveFilters, FilterCategory, FilterCounts } from 'src/types';
+import { FILTER_CATEGORIES, FILTER_LABELS, FILTER_TOOLTIPS } from 'src/types';
 import {
   getAvailableValues,
   getAvailableValuesForGroup,
   getSearchResults,
   type SearchResult,
-} from '../utils';
-import { ToolbarActions } from './ToolbarActions';
+} from 'src/utils';
 
 interface FilterBarProps {
   activeFilters: ActiveFilters;

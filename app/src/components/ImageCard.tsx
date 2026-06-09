@@ -13,12 +13,12 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 
-import { BATCH_SIZE, type ImageSize, LANG_DISPLAY, libExt } from '../constants';
-import { useCodeFetch } from '../hooks';
-import { colors, fontSize, semanticColors, typography } from '../theme';
-import type { PlotImage } from '../types';
-import { buildSrcSet, getFallbackSrc, getResponsiveSizes } from '../utils/responsiveImage';
-import { useThemedPreviewUrl } from '../utils/themedPreview';
+import { BATCH_SIZE, type ImageSize, LANG_DISPLAY, libExt } from 'src/constants';
+import { useCodeFetch } from 'src/hooks';
+import { colors, fontSize, semanticColors, typography } from 'src/theme';
+import type { PlotImage } from 'src/types';
+import { buildSrcSet, getFallbackSrc, getResponsiveSizes } from 'src/utils/responsiveImage';
+import { useThemedPreviewUrl } from 'src/utils/themedPreview';
 
 // Library abbreviations for compact mode
 const LIBRARY_ABBR: Record<string, string> = {

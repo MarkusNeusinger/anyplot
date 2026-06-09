@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { render, screen, waitFor } from '../test-utils';
-import { RelatedSpecs } from './RelatedSpecs';
+import { RelatedSpecs } from 'src/components/RelatedSpecs';
+import { render, screen, waitFor } from 'src/test-utils';
 
 describe('RelatedSpecs', () => {
   let fetchMock: ReturnType<typeof vi.fn>;
@@ -122,7 +122,7 @@ describe('RelatedSpecs', () => {
       json: () => Promise.resolve({ related: mockRelated }),
     });
 
-    const { userEvent } = await import('../test-utils');
+    const { userEvent } = await import('src/test-utils');
     const user = userEvent.setup();
     const onHoverTags = vi.fn();
 

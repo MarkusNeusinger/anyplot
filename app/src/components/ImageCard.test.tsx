@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { render, screen } from '../test-utils';
-import type { PlotImage } from '../types';
-import { ImageCard } from './ImageCard';
+import { ImageCard } from 'src/components/ImageCard';
+import { render, screen } from 'src/test-utils';
+import type { PlotImage } from 'src/types';
 
 // Mock useCodeFetch to avoid actual API calls; mirrors the real hook contract
 // (fetchCode, getCode, isLoading) so contract drift breaks this test.
-vi.mock('../hooks/useCodeFetch', () => ({
+vi.mock('src/hooks/useCodeFetch', () => ({
   useCodeFetch: () => ({
     fetchCode: vi.fn().mockResolvedValue('print("hello")'),
     getCode: vi.fn().mockReturnValue(null),
@@ -59,7 +59,7 @@ describe('ImageCard', () => {
   });
 
   it('calls onClick when card is clicked', async () => {
-    const { userEvent } = await import('../test-utils');
+    const { userEvent } = await import('src/test-utils');
     const user = userEvent.setup();
     const onClick = vi.fn();
 
@@ -77,7 +77,7 @@ describe('ImageCard', () => {
   });
 
   it('toggles spec tooltip on spec_id click', async () => {
-    const { userEvent } = await import('../test-utils');
+    const { userEvent } = await import('src/test-utils');
     const user = userEvent.setup();
     const onTooltipToggle = vi.fn();
 
@@ -111,7 +111,7 @@ describe('ImageCard', () => {
     });
 
     it('toggles the language tooltip on click', async () => {
-      const { userEvent } = await import('../test-utils');
+      const { userEvent } = await import('src/test-utils');
       const user = userEvent.setup();
       const onTooltipToggle = vi.fn();
       render(<ImageCard {...defaultProps} onTooltipToggle={onTooltipToggle} />);

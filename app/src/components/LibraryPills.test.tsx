@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { render, screen, userEvent } from '../test-utils';
-import { LibraryPills } from './LibraryPills';
+import { LibraryPills } from 'src/components/LibraryPills';
+import { render, screen, userEvent } from 'src/test-utils';
 
 const mockImplementations = [
   { library_id: 'matplotlib', library_name: 'Matplotlib', language: 'python', quality_score: 85 },

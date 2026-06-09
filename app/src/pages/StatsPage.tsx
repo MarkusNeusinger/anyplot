@@ -8,14 +8,14 @@ import Link from '@mui/material/Link';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
-import { SectionHeader } from '../components/SectionHeader';
-import { API_URL } from '../constants';
-import { useAnalytics } from '../hooks';
-import { useTheme } from '../hooks/useLayoutContext';
-import { colors, fontSize, semanticColors, typography } from '../theme';
-import { specPath } from '../utils/paths';
-import { buildSrcSet, getFallbackSrc } from '../utils/responsiveImage';
-import { selectPreviewUrl } from '../utils/themedPreview';
+import { SectionHeader } from 'src/components/SectionHeader';
+import { API_URL } from 'src/constants';
+import { useAnalytics } from 'src/hooks';
+import { useTheme } from 'src/hooks/useLayoutContext';
+import { colors, fontSize, semanticColors, typography } from 'src/theme';
+import { specPath } from 'src/utils/paths';
+import { buildSrcSet, getFallbackSrc } from 'src/utils/responsiveImage';
+import { selectPreviewUrl } from 'src/utils/themedPreview';
 
 interface LibraryStats {
   id: string;

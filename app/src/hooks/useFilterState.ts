@@ -7,11 +7,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import type { ActiveFilters, FilterCategory, FilterCounts, PlotImage } from '../types';
-import { FILTER_CATEGORIES } from '../types';
-import { useFilterFetch } from './useFilterFetch';
-import { useHomeState } from './useLayoutContext';
-import { parseUrlFilters, useUrlSync } from './useUrlSync';
+import { useFilterFetch } from 'src/hooks/useFilterFetch';
+import { useHomeState } from 'src/hooks/useLayoutContext';
+import { parseUrlFilters, useUrlSync } from 'src/hooks/useUrlSync';
+import type { ActiveFilters, FilterCategory, FilterCounts, PlotImage } from 'src/types';
+import { FILTER_CATEGORIES } from 'src/types';
 
 /**
  * Check if filters are empty.

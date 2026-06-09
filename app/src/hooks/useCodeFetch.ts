@@ -7,7 +7,7 @@
 
 import { useCallback, useRef, useState } from 'react';
 
-import { API_URL } from '../constants';
+import { API_URL } from 'src/constants';
 
 interface CodeCache {
   [key: string]: string | null; // key: `${spec_id}:${language}:${library}`

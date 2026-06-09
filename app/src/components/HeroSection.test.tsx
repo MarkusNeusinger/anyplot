@@ -1,26 +1,26 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { render, screen, userEvent } from '../test-utils';
+import { render, screen, userEvent } from 'src/test-utils';
 
 const trackEvent = vi.fn();
 
-vi.mock('../hooks', async () => {
-  const actual = await vi.importActual<typeof import('../hooks')>('../hooks');
+vi.mock('src/hooks', async () => {
+  const actual = await vi.importActual<typeof import('src/hooks')>('src/hooks');
   return {
     ...actual,
     useAnalytics: () => ({ trackEvent, trackPageview: vi.fn() }),
   };
 });
 
-vi.mock('./PlotOfTheDayTerminal', () => ({
+vi.mock('src/components/PlotOfTheDayTerminal', () => ({
   PlotOfTheDayTerminal: () => <div data-testid="potd-terminal" />,
 }));
 
-vi.mock('./TypewriterText', () => ({
+vi.mock('src/components/TypewriterText', () => ({
   TypewriterText: () => <div data-testid="typewriter" />,
 }));
 
-import { HeroSection } from './HeroSection';
+import { HeroSection } from 'src/components/HeroSection';
 
 describe('HeroSection', () => {
   beforeEach(() => {

@@ -7,7 +7,7 @@
 
 import { describe, expect, it, vi } from 'vitest';
 
-import { shuffleArray } from './shuffle';
+import { shuffleArray } from 'src/utils/shuffle';
 
 describe('shuffleArray', () => {
   it('returns an array of the same length', () => {

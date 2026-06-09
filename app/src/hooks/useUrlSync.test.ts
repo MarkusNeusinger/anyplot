@@ -1,8 +1,8 @@
 import { renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { ActiveFilters } from '../types';
-import { buildFilterUrl, parseUrlFilters, useUrlSync } from './useUrlSync';
+import { buildFilterUrl, parseUrlFilters, useUrlSync } from 'src/hooks/useUrlSync';
+import type { ActiveFilters } from 'src/types';
 
 describe('parseUrlFilters', () => {
   beforeEach(() => {

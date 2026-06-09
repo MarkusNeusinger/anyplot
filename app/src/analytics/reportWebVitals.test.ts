@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { setAnalyticsAmbientProps } from '../hooks/useAnalytics';
-import { reportWebVitals } from './reportWebVitals';
+import { reportWebVitals } from 'src/analytics/reportWebVitals';
+import { setAnalyticsAmbientProps } from 'src/hooks/useAnalytics';
 
 // Single hoisted mock (vi.mock dedupes by module path — last call wins, so
 // keeping one shared mock avoids cross-test interference).

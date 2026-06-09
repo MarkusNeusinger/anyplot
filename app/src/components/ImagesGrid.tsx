@@ -4,10 +4,10 @@ import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 
-import type { ImageSize } from '../constants';
-import type { LanguageInfo, LibraryInfo, PlotImage, SpecInfo } from '../types';
-import { ImageCard } from './ImageCard';
-import { LoaderSpinner } from './LoaderSpinner';
+import { ImageCard } from 'src/components/ImageCard';
+import { LoaderSpinner } from 'src/components/LoaderSpinner';
+import type { ImageSize } from 'src/constants';
+import type { LanguageInfo, LibraryInfo, PlotImage, SpecInfo } from 'src/types';
 
 interface ImagesGridProps {
   images: PlotImage[];
