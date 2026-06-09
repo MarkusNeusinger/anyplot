@@ -1,7 +1,7 @@
 // anyplot.ai
 // pp-basic: Probability-Probability (P-P) Plot
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-06-09
+// Library: echarts 5.5.1 | JavaScript 22.22.3
+// Quality: 90/100 | Created: 2026-06-09
 //# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
