@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { setAnalyticsAmbientProps, useAnalytics } from './useAnalytics';
+import { setAnalyticsAmbientProps, useAnalytics } from 'src/hooks/useAnalytics';
 
 describe('useAnalytics', () => {
   const originalLocation = window.location;

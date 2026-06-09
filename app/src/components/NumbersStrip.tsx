@@ -1,6 +1,6 @@
 import Box from '@mui/material/Box';
 
-import { typography } from '../theme';
+import { typography } from 'src/theme';
 
 interface NumbersStripProps {
   stats: {

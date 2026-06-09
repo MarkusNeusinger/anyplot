@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { render, screen, userEvent } from '../test-utils';
+import { render, screen, userEvent } from 'src/test-utils';
 
 const trackEvent = vi.fn();
 const navigate = vi.fn();
 
-vi.mock('../hooks', async () => {
-  const actual = await vi.importActual<typeof import('../hooks')>('../hooks');
+vi.mock('src/hooks', async () => {
+  const actual = await vi.importActual<typeof import('src/hooks')>('src/hooks');
   return {
     ...actual,
     useAnalytics: () => ({ trackEvent, trackPageview: vi.fn() }),
@@ -21,7 +21,7 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-import { NavBar } from './NavBar';
+import { NavBar } from 'src/components/NavBar';
 
 describe('NavBar', () => {
   beforeEach(() => {

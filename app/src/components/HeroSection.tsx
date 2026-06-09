@@ -2,11 +2,11 @@ import { Link as RouterLink } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 
-import { useAnalytics } from '../hooks';
-import type { PlotOfTheDayData } from '../hooks/usePlotOfTheDay';
-import { colors, typography } from '../theme';
-import { PlotOfTheDayTerminal } from './PlotOfTheDayTerminal';
-import { TypewriterText } from './TypewriterText';
+import { PlotOfTheDayTerminal } from 'src/components/PlotOfTheDayTerminal';
+import { TypewriterText } from 'src/components/TypewriterText';
+import { useAnalytics } from 'src/hooks';
+import type { PlotOfTheDayData } from 'src/hooks/usePlotOfTheDay';
+import { colors, typography } from 'src/theme';
 
 interface HeroSectionProps {
   potd?: PlotOfTheDayData | null;

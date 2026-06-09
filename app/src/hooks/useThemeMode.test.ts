@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useThemeMode } from './useThemeMode';
+import { useThemeMode } from 'src/hooks/useThemeMode';
 
 type MQListener = (e: MediaQueryListEvent) => void;
 

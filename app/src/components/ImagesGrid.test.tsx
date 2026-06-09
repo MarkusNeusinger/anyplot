@@ -2,19 +2,19 @@ import { createRef } from 'react';
 
 import { describe, expect, it, type Mock, vi } from 'vitest';
 
-import type { ImageSize } from '../constants';
-import { render, screen } from '../test-utils';
-import type { LibraryInfo, PlotImage, SpecInfo } from '../types';
-import { ImagesGrid } from './ImagesGrid';
+import { ImagesGrid } from 'src/components/ImagesGrid';
+import type { ImageSize } from 'src/constants';
+import { render, screen } from 'src/test-utils';
+import type { LibraryInfo, PlotImage, SpecInfo } from 'src/types';
 
 // Mock child components to isolate ImagesGrid
-vi.mock('./ImageCard', () => ({
+vi.mock('src/components/ImageCard', () => ({
   ImageCard: ({ image, index }: { image: PlotImage; index: number }) => (
     <div data-testid={`image-card-${index}`}>{image.library}</div>
   ),
 }));
 
-vi.mock('./LoaderSpinner', () => ({
+vi.mock('src/components/LoaderSpinner', () => ({
   LoaderSpinner: ({ size }: { size: string }) => <div data-testid="loader-spinner">{size}</div>,
 }));
 

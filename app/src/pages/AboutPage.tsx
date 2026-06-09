@@ -6,10 +6,10 @@ import { Link as RouterLink } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 
-import { SectionHeader } from '../components/SectionHeader';
-import { GITHUB_URL } from '../constants';
-import { useAnalytics } from '../hooks';
-import { codeBlockStyle, colors, proseLinkStyle, textStyle, typography } from '../theme';
+import { SectionHeader } from 'src/components/SectionHeader';
+import { GITHUB_URL } from 'src/constants';
+import { useAnalytics } from 'src/hooks';
+import { codeBlockStyle, colors, proseLinkStyle, textStyle, typography } from 'src/theme';
 
 const PIPELINE_BLOCK = `// pipeline
 idea    → human-submitted        (github issue)

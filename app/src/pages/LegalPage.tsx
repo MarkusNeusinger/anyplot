@@ -10,9 +10,9 @@ import TableCell from '@mui/material/TableCell';
 import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
 
-import { SectionHeader } from '../components/SectionHeader';
-import { GITHUB_URL } from '../constants';
-import { useAnalytics } from '../hooks';
+import { SectionHeader } from 'src/components/SectionHeader';
+import { GITHUB_URL } from 'src/constants';
+import { useAnalytics } from 'src/hooks';
 import {
   fontSize,
   proseLinkStyle,
@@ -20,7 +20,7 @@ import {
   subheadingStyle,
   tableStyle,
   textStyle,
-} from '../theme';
+} from 'src/theme';
 
 const firstColStyle = {
   '& .MuiTableCell-root:first-of-type': {

@@ -19,12 +19,12 @@ import Skeleton from '@mui/material/Skeleton';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
-import { useTheme } from '../hooks/useLayoutContext';
-import { colors, fontSize, semanticColors, typography } from '../theme';
-import type { Implementation } from '../types';
-import { specPath } from '../utils/paths';
-import { buildSrcSet, OVERVIEW_SIZES } from '../utils/responsiveImage';
-import { selectPreviewUrl } from '../utils/themedPreview';
+import { useTheme } from 'src/hooks/useLayoutContext';
+import { colors, fontSize, semanticColors, typography } from 'src/theme';
+import type { Implementation } from 'src/types';
+import { specPath } from 'src/utils/paths';
+import { buildSrcSet, OVERVIEW_SIZES } from 'src/utils/responsiveImage';
+import { selectPreviewUrl } from 'src/utils/themedPreview';
 
 interface LibraryMeta {
   id: string;

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { render, screen, userEvent, waitFor } from '../test-utils';
-import { FeedbackWidget } from './FeedbackWidget';
+import { FeedbackWidget } from 'src/components/FeedbackWidget';
+import { render, screen, userEvent, waitFor } from 'src/test-utils';
 
 describe('FeedbackWidget', () => {
   beforeEach(() => {

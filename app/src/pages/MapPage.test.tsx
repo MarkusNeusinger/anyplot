@@ -3,8 +3,8 @@ import { forwardRef, useImperativeHandle } from 'react';
 import { fireEvent } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { act, render, screen, waitFor } from '../test-utils';
-import { MapPage, outlierSquashForce, type SimNode } from './MapPage';
+import { MapPage, outlierSquashForce, type SimNode } from 'src/pages/MapPage';
+import { act, render, screen, waitFor } from 'src/test-utils';
 
 vi.mock('react-helmet-async', () => ({
   Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -18,14 +18,14 @@ vi.mock('react-router-dom', async () => {
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
-vi.mock('../hooks', () => ({
+vi.mock('src/hooks', () => ({
   useAnalytics: () => ({
     trackPageview: vi.fn(),
     trackEvent: mockTrackEvent,
   }),
 }));
 
-vi.mock('../hooks/useLayoutContext', () => ({
+vi.mock('src/hooks/useLayoutContext', () => ({
   useTheme: () => ({ isDark: false }),
 }));
 
