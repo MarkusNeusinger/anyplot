@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: scatter-connected-temporal
 created: '2026-03-13T15:24:50Z'
-updated: '2026-06-09T23:33:45Z'
+updated: '2026-06-09T23:41:45Z'
 generated_by: claude-sonnet
 workflow_run: 27242210557
 issue: 4675
@@ -12,42 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/python/letsplot/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - 'Full spec compliance: all required features (path, gradient, arrow, annotations,
-    endpoint highlights) implemented correctly.'
-  - Correct imprint_seq colormap (brand green to Imprint blue) with matching theme-adaptive
-    backgrounds in both renders.
-  - 'Excellent data storytelling: six annotated economic turning points with directional
-    arrow make the temporal narrative self-explanatory.'
-  - Code quality is exemplary — flat, reproducible, clean imports, elegant nudge_map
-    logic.
-  - layer_tooltips() with formatted year/unemployment/inflation fields is a genuine
-    letsplot strength well-exploited.
+  - Full spec compliance — temporal path, directional arrow, color gradient, endpoint
+    highlighting, and key-year annotations all implemented as required
+  - 'Correct Imprint sequential gradient (#009E73 → #4467A3) used for continuous temporal
+    encoding, matching imprint_seq exactly'
+  - Complete theme adaptation with correct token values (PAGE_BG, INK, INK_SOFT, ELEVATED_BG)
+    applied to all chrome elements — both renders are fully legible
+  - letsplot-native interactive tooltips via layer_tooltips() with formatted year/unemployment/inflation
+    data
+  - 'Compelling data storytelling: Phillips curve economic context, economic turning-point
+    annotations, temporal arrow — the narrative reads naturally'
+  - Canvas correctly 800×450 @ scale=4 → 3200×1800; HTML export also included
   weaknesses:
-  - Panel box frame is present (rectangular border around data area) — style guide
-    default is L-shaped frame (remove top and right spines). Add theme(panel_border=element_blank())
-    or equivalent.
-  - Year annotation font size=5mm is near the lower bound for mobile readability;
-    consider nudging to size=6 for the bold monospace labels.
-  - Path alpha=0.75 in the dense cluster (4-6% unemployment range) slightly reduces
-    segment clarity.
+  - Year annotation text (geom_text size=6 mm ≈ 17pt at source resolution) is slightly
+    large relative to tick labels (10pt); reducing to size=4–5 mm would improve proportional
+    balance between annotation and tick label sizes
+  - Dense mid-plot cluster (unemployment 4–6%, 1990s–2000s regime) makes the temporal
+    path hard to follow locally — fading or thinning earlier path segments (e.g.,
+    alpha ramping with time_idx) would improve readability of the historical path
+  - 'DE-01 headroom: standard horizontal gradient colorbar legend; a custom legend
+    approach (e.g., inline year markers at 1990/2006/2023 along the gradient bar with
+    small point icons) would lift aesthetic sophistication'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct Imprint light surface, not pure white.
-      Chrome: Title "scatter-connected-temporal · python · letsplot · anyplot.ai" visible in dark ink #1A1A17. Subtitle "Phillips Curve: unemployment vs inflation, 1990–2023" in soft ink. Axis labels "Unemployment Rate (%)" and "Inflation Rate (%)" both readable. Tick labels in INK_SOFT (#4A4A44). Year annotations (bold monospace) for 1990, 2000, 2007, 2009, 2020, 2023 all readable. Legend "Year" with colorbar labeled 1990/2006/2023.
-      Data: Temporal path from brand green #009E73 (1990) to Imprint blue #4467A3 (2023) — correct imprint_seq gradient. All 34 points visible as filled circles. 1990 and 2023 endpoints enlarged with dark ink rings. Directional arrow at terminal segment points toward 2023.
-      Legibility verdict: PASS — all text clearly readable against light background.
+      Background: Warm off-white (#FAF8F1) — correct, no pure white.
+      Chrome: Title "scatter-connected-temporal · python · letsplot · anyplot.ai" in dark ink at top-left — clearly readable. Subtitle "Phillips Curve: unemployment vs inflation, 1990–2023" in smaller INK_SOFT — readable. X-axis label "Unemployment Rate (%)" and Y-axis label "Inflation Rate (%)" in dark ink — both readable. Tick labels (3–10% on x, −1–8% on y) in INK_SOFT — all readable. Year annotations 1990/2000/2007/2009/2020/2023 in bold monospace dark ink — readable. Legend "Year" with 1990/2006/2023 labels on elevated (#FFFDF6) background — readable.
+      Data: Gradient path from green (#009E73, 1990) to blue (#4467A3, 2023). Small circular point markers along the path; larger endpoint markers (size=6) with INK border highlighting 1990 (green) and 2023 (blue). Arrow at terminal segment pointing toward 2023 in blue. Subtle grid visible behind data.
+      Legibility verdict: PASS — all text is clearly readable against the warm off-white background. No light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct Imprint dark surface, not pure black.
-      Chrome: Title, subtitle, axis labels, tick labels, and year annotations all render in light cream (#F0EFE8 / #B8B7B0) and are clearly readable. No dark-on-dark failures detected. Grid lines subtle and visible. Legend text readable.
-      Data: Temporal gradient colors are identical to light render (brand green #009E73 to Imprint blue #4467A3) — only chrome tokens flip. 2023 endpoint marker has white ring (correct dark-theme INK). Brand green #009E73 clearly visible on dark background.
-      Legibility verdict: PASS — all text clearly readable against dark background.
+      Background: Warm near-black (#1A1A17) — correct, no pure black.
+      Chrome: Title, subtitle, axis labels, tick labels, year annotations all rendered in light (#F0EFE8 / #B8B7B0) — clearly readable against the dark surface. Legend text light on elevated dark (#242420) background — readable. No dark-on-dark failures observed.
+      Data: Data colors (green-to-blue gradient) are identical to the light render — only chrome elements (text, background, grid, legend box) have flipped. Arrow and endpoint highlights use the same gradient values.
+      Legibility verdict: PASS — all text is clearly readable against the warm near-black background. No dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -55,47 +58,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; year annotation labels at geom_text
-          size=5mm are readable but approach lower bound for mobile readability.
+        comment: All text readable in both renders. Year annotations (geom_text size=6mm
+          ~17pt) are slightly large relative to tick labels but not problematic.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Year labels nudged clear of data points. Dense path cluster makes
-          segments hard to distinguish but no text-on-text or text-on-data collisions.
+        comment: nudge_map prevents point-label collision; minor visual crowding in
+          dense 4–6% unemployment cluster but no text overlap.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Temporal gradient clear, endpoint markers highlighted, direction
-          arrow prominent. Path alpha=0.75 slightly reduces clarity in dense mid-section.
+        comment: Path (size=1.5, alpha=0.75), points (size=3.5), endpoint highlights
+          (size=6), arrow all clearly visible against background in both renders.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (green to blue) is CVD-safe.
+        comment: Imprint sequential gradient (green→blue) is CVD-safe. Good contrast
+          in both themes.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). No overflow. Good proportions.
+        comment: Canvas gate passed (3200×1800). Good proportions, legend fits within
+          bounds, no clipping or overflow.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; subtitle adds narrative context.
+        comment: Both axis labels include units (%). Title format correct. Subtitle
+          provides context.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Correct imprint_seq gradient (SEQ_LOW=#009E73, SEQ_HIGH=#4467A3).
-          Backgrounds #FAF8F1/#1A1A17 correct. Both renders theme-correct.'
+        comment: 'imprint_seq gradient (#009E73 → #4467A3). Backgrounds #FAF8F1/#1A1A17
+          correct. Data colors identical across both renders; only chrome flips.'
     design_excellence:
       score: 13
       max: 20
@@ -105,24 +111,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Intentional visual hierarchy: dual point sizes, direction arrow,
-          bold monospace year labels. Subtitle adds Phillips Curve framing. Above
-          baseline.'
+        comment: 'Above default: temporal gradient encoding, endpoint emphasis, directional
+          arrow, monospace bold annotations, theme adaptation. Standard gradient colorbar
+          limits ceiling.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: theme_minimal() used but rectangular box panel frame remains visible.
-          Style guide default is L-shaped frame. Grid opacity well-controlled, minor
-          grid suppressed.
-      - id: DE-03
-        name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Six key economic turning points annotated. Color gradient + direction
-          arrow encode time dimension. Clear focal point at 2023 spike.
+        comment: 'Above default: panel_border removed, minor grid hidden, subtle grid
+          opacity (rgba 0.12), generous margins. Theme-minimal base with deliberate
+          overrides.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Above default: Phillips curve narrative is clear, arrow shows direction
+          of time, gradient reinforces temporal flow, turning-point annotations provide
+          economic context.'
     spec_compliance:
       score: 15
       max: 15
@@ -132,53 +139,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Connected scatter with temporal path, exactly as specified.
+        comment: Correct connected scatter plot with temporal path.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Chronological path, color gradient, directional arrow, visible point
-          markers, year annotations all present.
+        comment: Sequential connections, key-year annotations, directional arrow,
+          visible point markers, temporal gradient — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=unemployment, Y=inflation, time_idx as color aesthetic correctly
-          mapped.
+        comment: X=unemployment, Y=inflation, time_idx drives color gradient and path
+          ordering. 34 data points (1990–2023) within spec range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly scatter-connected-temporal · python · letsplot ·
-          anyplot.ai. Year legend with 1990/2006/2023 labels.
+        comment: Title 'scatter-connected-temporal · python · letsplot · anyplot.ai'
+          is correct. Year gradient legend with 1990/2006/2023 labels present.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Scatter points, connecting path, color-encoded temporal progression,
-          directional arrow, key-event annotations — full feature set.
+        comment: 'Full feature set: temporal path, color gradient, arrows, endpoint
+          highlights, interactive tooltips, key-year annotations.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Phillips Curve dynamics 1990–2023 with plausible recession/recovery
-          patterns. Neutral economic data.
+        comment: Phillips curve is a well-established economic concept. Unemployment
+          3.5–10% and inflation −0.4–6.5% are realistic. Economic turning points historically
+          grounded. Neutral, factual data.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Unemployment 3–10%, inflation -1 to 8%, 34 annual points. Realistic
-          magnitudes.
+        comment: 34 data points within spec's 10–100 range. Value ranges are domain-appropriate.
     code_quality:
       score: 10
       max: 10
@@ -188,32 +195,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: Flat script, no functions or classes, linear flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All lets_plot imports are used. os, numpy, pandas as expected.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: nudge_map dict, key_years set, df_labels filtering — appropriate
-          complexity.
+        comment: Appropriate complexity. layer_tooltips() is real interactive feature,
+          not fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current API usage.
     library_mastery:
       score: 7
       max: 10
@@ -223,27 +230,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Full ggplot grammar: layered geoms, scale functions, theme(). shape=21
-          idiomatic. ggsize + scale=4 correct for canvas.'
+        comment: 'Idiomatic ggplot grammar: geom layering, aes() mappings, scale_*_gradient,
+          theme_minimal() + theme() overrides, ggsize(), ggsave(scale=4).'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: layer_tooltips() with formatted field lines, HTML export, arrow()
-          in geom_segment. Could exploit more letsplot-specific capabilities.
+        comment: Uses layer_tooltips() with custom line formatting (a distinctive
+          letsplot feature), arrow() function, geom_path() for connected ordering,
+          shape=21 fill/stroke split. Above default.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - layer-composition
   - hover-tooltips
   - html-export
-  - layer-composition
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - alpha-blending
   - custom-colormap
+  - alpha-blending
   - edge-highlighting
