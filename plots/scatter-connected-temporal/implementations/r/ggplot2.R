@@ -4,7 +4,6 @@
 #' Quality: 87/100 | Created: 2026-06-09
 
 library(ggplot2)
-library(dplyr)
 library(scales)
 library(ragg)
 
@@ -46,6 +45,14 @@ df <- data.frame(
 key_years <- c(1980, 1990, 2000, 2010, 2019)
 df_labels <- df[df$year %in% key_years, ]
 
+# Per-label positions to avoid crowding (2000 nudged left, 2019 nudged higher)
+df_labels$lbl_x <- df_labels$unemployment + c( 0.2,  0.2, -0.3,  0.2,  0.2)
+df_labels$lbl_y <- df_labels$inflation    + c( 0.6,  0.5,  0.5,  0.5,  0.7)
+
+# Arrow segment: from start point toward first step for temporal direction cue
+arrow_start <- df[df$year == 1980, ]
+arrow_end   <- df[df$year == 1981, ]
+
 # Title: scale fontsize for long title (80 chars -> size 10)
 plot_title <- "Phillips Curve Dynamics · scatter-connected-temporal · r · ggplot2 · anyplot.ai"
 title_size <- max(8L, round(12 * 67 / nchar(plot_title)))
@@ -59,18 +66,29 @@ p <- ggplot(df, aes(x = unemployment, y = inflation)) +
     lineend   = "round",
     linejoin  = "round"
   ) +
+  # Start-of-path arrow to reinforce temporal direction
+  geom_segment(
+    data   = data.frame(
+      x    = arrow_start$unemployment,
+      y    = arrow_start$inflation,
+      xend = arrow_end$unemployment,
+      yend = arrow_end$inflation
+    ),
+    aes(x = x, y = y, xend = xend, yend = yend),
+    color     = IMPRINT_PALETTE[1],
+    linewidth = 1.2,
+    arrow     = arrow(length = unit(0.18, "cm"), type = "closed")
+  ) +
   geom_point(
     aes(color = year),
-    size  = 2.8,
+    size  = 3.5,
     alpha = 0.95
   ) +
   geom_text(
     data     = df_labels,
-    aes(label = year),
+    aes(x = lbl_x, y = lbl_y, label = year),
     color    = INK,
     size     = 3.2,
-    nudge_x  = 0.2,
-    nudge_y  = 0.5,
     fontface = "bold"
   ) +
   scale_color_gradient(
@@ -101,7 +119,7 @@ p <- ggplot(df, aes(x = unemployment, y = inflation)) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG,     color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG,     color = NA),
-    panel.grid.major  = element_line(color = INK_MUTED,  linewidth = 0.2),
+    panel.grid.major  = element_line(color = INK_MUTED,  linewidth = 0.15),
     panel.grid.minor  = element_blank(),
     panel.border      = element_blank(),
     axis.line         = element_line(color = INK_SOFT,   linewidth = 0.4),
