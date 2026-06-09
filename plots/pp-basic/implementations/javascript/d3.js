@@ -38,8 +38,12 @@ const empirical = sorted.map((_, i) => (i + 0.5) / N);
 
 // Normal CDF via error function approximation (Abramowitz & Stegun 7.1.26)
 function erf(z) {
-  const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741;
-  const a4 = -1.453152027, a5 = 1.061405429, q = 0.3275911;
+  const a1 = 0.254829592,
+    a2 = -0.284496736,
+    a3 = 1.421413741;
+  const a4 = -1.453152027,
+    a5 = 1.061405429,
+    q = 0.3275911;
   const sign = z < 0 ? -1 : 1;
   const ta = 1 / (1 + q * Math.abs(z));
   const y = 1 - (((((a5 * ta + a4) * ta + a3) * ta + a2) * ta + a1) * ta) * Math.exp(-z * z);
@@ -52,6 +56,13 @@ function normCDF(x, mu, sigma) {
 const theoretical = sorted.map((val) => normCDF(val, sampleMean, sampleStd));
 const points = theoretical.map((th, i) => ({ th, em: empirical[i] }));
 
+// Max absolute departure from the diagonal — the key diagnostic insight
+const maxDevIdx = points.reduce(
+  (best, p, i) => (Math.abs(p.em - p.th) > Math.abs(points[best].em - points[best].th) ? i : best),
+  0,
+);
+const mdp = points[maxDevIdx];
+
 // --- Layout ---
 const margin = { top: 95, right: 70, bottom: 110, left: 110 };
 const iw = width - margin.left - margin.right;
@@ -62,6 +73,15 @@ const svg = d3
   .append("svg")
   .attr("width", width)
   .attr("height", height);
+
+// Clip path — keeps deviation band and trend line inside plot bounds
+svg
+  .append("defs")
+  .append("clipPath")
+  .attr("id", "pp-clip")
+  .append("rect")
+  .attr("width", iw)
+  .attr("height", ih);
 
 const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
@@ -92,6 +112,23 @@ g.append("g")
   .attr("stroke", t.grid)
   .attr("stroke-width", 1);
 
+// --- Deviation band: d3.area between empirical curve and 45° diagonal ---
+// Fills the departure region so the S-curve story is immediately visible
+const areaGen = d3
+  .area()
+  .x((d) => x(d.th))
+  .y0((d) => y(d.th)) // baseline: perfect-fit diagonal
+  .y1((d) => y(d.em)) // actual: empirical CDF
+  .curve(d3.curveMonotoneX);
+
+g.append("path")
+  .datum(points)
+  .attr("d", areaGen)
+  .attr("clip-path", "url(#pp-clip)")
+  .attr("fill", t.palette[0])
+  .attr("fill-opacity", 0.13)
+  .attr("stroke", "none");
+
 // --- 45-degree reference line (perfect fit) ---
 g.append("line")
   .attr("x1", x(0))
@@ -109,11 +146,59 @@ g.selectAll("circle")
   .join("circle")
   .attr("cx", (d) => x(d.th))
   .attr("cy", (d) => y(d.em))
-  .attr("r", 5.5)
+  .attr("r", 4.5)
   .attr("fill", t.palette[0])
-  .attr("opacity", 0.72)
+  .attr("opacity", 0.65)
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 1);
+
+// --- Highlight ring at maximum departure point ---
+const mdpPx = x(mdp.th);
+const mdpPy = y(mdp.em);
+
+g.append("circle")
+  .attr("cx", mdpPx)
+  .attr("cy", mdpPy)
+  .attr("r", 10)
+  .attr("fill", "none")
+  .attr("stroke", t.palette[0])
+  .attr("stroke-width", 2)
+  .attr("opacity", 0.9);
+
+// --- Annotation: callout for maximum departure ---
+const goRight = mdpPx < iw / 2;
+const goUp = mdpPy >= ih / 3;
+const aX = goRight ? mdpPx + 130 : mdpPx - 130;
+const aY = goUp ? mdpPy - 75 : mdpPy + 75;
+const anchor = goRight ? "start" : "end";
+const connX = goRight ? mdpPx + 14 : mdpPx - 14;
+const connY = goUp ? mdpPy - 14 : mdpPy + 14;
+
+g.append("line")
+  .attr("x1", connX)
+  .attr("y1", connY)
+  .attr("x2", aX)
+  .attr("y2", aY + (goUp ? 32 : -32))
+  .attr("stroke", t.inkSoft)
+  .attr("stroke-width", 1.5)
+  .attr("opacity", 0.65);
+
+g.append("text")
+  .attr("x", aX)
+  .attr("y", aY)
+  .attr("text-anchor", anchor)
+  .attr("fill", t.ink)
+  .style("font-size", "15px")
+  .style("font-weight", "600")
+  .text("max departure");
+
+g.append("text")
+  .attr("x", aX)
+  .attr("y", aY + 22)
+  .attr("text-anchor", anchor)
+  .attr("fill", t.inkSoft)
+  .style("font-size", "13px")
+  .text(`Δ = ${(Math.abs(mdp.em - mdp.th) * 100).toFixed(1)} pp`);
 
 // --- Axes ---
 const xAxis = g
