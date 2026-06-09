@@ -1,116 +1,139 @@
 library: seaborn
+language: python
 specification_id: heatmap-loss-triangle
 created: '2026-03-09T11:55:02Z'
-updated: '2026-03-09T12:07:22Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22852106657
+updated: '2026-06-03T10:17:04Z'
+generated_by: claude-sonnet
+workflow_run: 26876704263
 issue: 4581
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/seaborn/plot.png
-preview_html: null
-quality_score: 90
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Excellent spec compliance with all required features implemented faithfully including
-    triangular structure, actual/projected distinction, development factors, and cell
-    annotations
-  - Strong data storytelling through the visual split between actual and projected
-    regions with hatching
-  - Custom colormap and adaptive text colors demonstrate design thoughtfulness
-  - Clean, well-organized code with appropriate use of seaborn mask and annotation
-    features
-  - Realistic actuarial data with proper chain-ladder development patterns
+  - 'Perfect spec compliance: all required actuarial features present (actual/projected
+    triangle, diagonal boundary, dev factors, annotated cells, legend)'
+  - Sophisticated dual-pass sns.heatmap with mask for split annotation styling (bold
+    actual, italic projected) — idiomatic seaborn
+  - Intelligent brightness-based annotation recoloring ensures every cell is readable
+    regardless of colormap position
+  - Correct Imprint sequential colormap for single-polarity continuous data; complete
+    theme-adaptive chrome in both renders
+  - 'Excellent data quality: realistic chain-ladder actuarial scenario with factually
+    correct diminishing development factors'
+  - 'Perfect code quality: KISS structure, reproducible, clean imports, no fake functionality'
   weaknesses:
-  - Annotation font size (13pt) is slightly small for the canvas size — could benefit
-    from 14-15pt
-  - Some matplotlib-level manipulation reduces library mastery score
-  image_description: 'The plot displays an actuarial loss development triangle as
-    a 10x10 heatmap. Rows represent accident years 2015-2024, columns represent development
-    periods 1-10. Cells are colored with a custom blue sequential colormap ranging
-    from light blue for low values to dark navy for high values. The upper-left triangle
-    contains actual/observed values with solid cell backgrounds and bold annotations;
-    the lower-right triangle shows projected (IBNR) values with diagonal hatching
-    overlay and italic annotations. Cell annotations display cumulative amounts (full
-    numbers with comma separators for values under 10K, abbreviated K format for larger
-    values). Text color adapts to background brightness — white text on dark cells,
-    dark text on light cells. A styled rounded box above the plot displays the 9 age-to-age
-    development factors in monospace font. The colorbar on the right is labeled "Cumulative
-    Claims ($K)". A legend in the bottom-right distinguishes "Actual" (solid) from
-    "Projected (IBNR)" (hatched). Title reads "heatmap-loss-triangle · seaborn · pyplots.ai".
-    X-axis: "Development Period (Years)", Y-axis: "Accident Year".'
+  - Cell annotation density is high (100 cells at 8pt); at mobile scale (~400 px)
+    the annotations become very small — consider 7pt or reducing annotation precision
+    for projected cells
+  - Margins around the heatmap are slightly compressed by the combination of dev-factors
+    box above and legend below; tight_layout(rect=[0, 0.10, 1, 0.97]) would give slightly
+    more padding
+  - Step-line and hatching overlay rely entirely on raw matplotlib patches/lines —
+    the core seaborn heatmap work is excellent but surrounding code pulls LM-01 below
+    perfect
+  - Dev-factors row text at 7pt monospace is the smallest text element; may become
+    difficult to read at mobile widths (~400 px srcset) — consider increasing to 8pt
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "heatmap-loss-triangle · python · seaborn · anyplot.ai" in dark ink, clearly readable. Axis labels "Development Period (Years)" and "Accident Year" at 10pt, readable. Tick labels at 8pt for years (2015–2024) and periods (1–10), readable. Colorbar label "Cumulative Claims ($K)" in INK_SOFT. Dev-factors box above in muted ink on elevated background.
+      Data: Imprint sequential colormap green (#009E73) at low values → blue (#4467A3) at high values. Upper-left actual triangle has bold annotations; lower-right projected triangle has italic annotations + hatching overlay. Diagonal step-line marks actual/projected boundary.
+      Legibility verdict: PASS — all text elements clearly readable against light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light cream (#F0EFE8), axis labels in light ink, tick labels in INK_SOFT (#B8B7B0), colorbar ticks and label in light tones. Dev-factors box uses dark elevated background (#242420) with soft border. Legend text in INK (light cream). No dark-on-dark failure observed anywhere.
+      Data: Colors identical to light render — same green→blue gradient, same hatching pattern, same diagonal step-line. Adaptive annotation coloring (white on dark cells, light cream on lighter cells) — both readable.
+      Legibility verdict: PASS — all text elements clearly readable against dark background. No dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt).
-          Annotations at 13pt slightly below ideal for 4800x2700 canvas.
+        comment: All font sizes explicitly set; title fontsize computed from length
+          (12pt for 52-char title); cell annotations 8pt dense but legible at full
+          resolution; dev-factors 7pt borderline at mobile scale
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text. Dev factors box well-positioned. Legend sits
-          cleanly in bottom-right.
+        comment: No inter-element collisions; 6-digit annotations fit in ~168px cells
+          at 8pt; minor compression risk at narrowest viewports
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All heatmap cells clearly visible with appropriate sizing. Hatching
-          pattern is distinct.
+        comment: Heatmap cells fully visible; color gradient clear; hatching pattern
+          distinctive; adaptive annotation coloring ensures all text readable
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue sequential colormap is colorblind-safe. Adaptive text colors
-          ensure readability.
+        comment: Imprint sequential colormap CVD-safe; actual vs projected uses dual
+          encoding (color + hatching + legend), not color alone
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins. Colorbar integrates
-          naturally.
+        comment: Canvas 2400x2400 confirmed (gate passed); tight_layout(rect=[0,0.08,1,1])
+          correct; dev-factors box + legend below slightly compresses heatmap area
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with context: Development Period (Years) and
-          Accident Year.'
+        comment: Development Period (Years) and Accident Year descriptive; colorbar
+          labeled Cumulative Claims ($K)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq (green #009E73 → blue #4467A3) correct for single-polarity
+          continuous data; backgrounds #FAF8F1/#1A1A17; chrome fully theme-adaptive
+          in both renders'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom blue colormap, white cell separators, hatching overlay, styled
-          dev factors box. Clearly above defaults.
+        comment: 'Multiple design layers: custom Imprint cmap, brightness-based annotation
+          recoloring, dual-pass mask technique, hatching overlay, styled step-line,
+          dev-factors box. Above defaults but not publication-ready.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Clean white line separators, styled dev factors box, customized colorbar,
-          adaptive text colors.
+        comment: Clean cell separators with PAGE_BG lines, colorbar shrunk to 0.8,
+          rounded dev-factors box, no competing grid. Could be more generous with
+          margins.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Actual/projected visual split tells clear story. Color intensity
-          guides eye through development stages.
+        comment: Diagonal step-line clearly shows where observed data ends; hatching
+          dual-encodes IBNR region; dev-factors row gives actuarial context; color
+          intensity guides eye to higher-magnitude projections
     spec_compliance:
       score: 15
       max: 15
@@ -120,28 +143,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct triangular matrix heatmap visualization.
+        comment: Correct triangular heatmap, 10x10 matrix, upper-left actual, lower-right
+          projected
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: actual/projected distinction, cell annotations,
-          dev factors, color encoding, legend.'
+        comment: 'All features present: hatching/legend for actual vs projected, diagonal
+          boundary, comma-formatted annotations, dev factors, color magnitude encoding,
+          correct row/column labels'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=development periods, Y=accident years. All 100 cells populated
-          correctly.
+        comment: X=Development Period, Y=Accident Year, color=cumulative magnitude
+          — all correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. Legend labels Actual and Projected (IBNR)
-          are clear.
+        comment: Title matches exact format; legend labels Actual and Projected (IBNR)
+          match spec
     data_quality:
       score: 15
       max: 15
@@ -151,22 +176,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: 10 years x 10 periods, actual + projected cells,
-          decreasing dev factors.'
+        comment: Full 10x10 triangle, 55 actual + 45 projected, all plot-type features
+          showcased
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Insurance claims reserving is a real, neutral business scenario with
-          appropriate values.
+        comment: Genuine actuarial loss triangle with accident years 2015-2024, dev
+          periods 1-10, chain-ladder factors, plausible cumulative amounts in neutral
+          insurance domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Base claims 4200-7000K growing over time. Dev factors follow realistic
-          chain-ladder pattern.
+        comment: Base claims $4.2-7.0M (thousands notation), factors realistically
+          diminishing 2.50→1.008, fully developed values $25-41M consistent with mid-sized
+          commercial portfolio
     code_quality:
       score: 10
       max: 10
@@ -176,33 +203,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, plot, style, save. No functions
-          or classes.'
+        comment: 'Linear flow: theme tokens → colormap → data → heatmap layers → styling
+          → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at beginning.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: matplotlib.patches, plt, np, pd, sns, LinearSegmentedColormap.'
+        comment: 'All imports used: os, mpatches, plt, numpy, pandas, seaborn, LinearSegmentedColormap'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. Dual-heatmap with masks is clean. Text color
-          adaptation is necessary.
+        comment: Dual-pass heatmap with complementary masks is appropriate technique;
+          no over-engineering or fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300 and bbox_inches=tight. Current API.
+        comment: Saves plot-{THEME}.png at dpi=400, facecolor=PAGE_BG, no bbox_inches='tight'
+          (correct)
     library_mastery:
       score: 7
       max: 10
@@ -212,15 +240,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses sns.heatmap with mask, annot, fmt, cbar_kws effectively. Some
-          matplotlib-level code needed.
+        comment: 'sns.heatmap with mask, annot, fmt, annot_kws, cbar_kws idiomatic;
+          dual-pass complementary masks for per-region annotation styles is seaborn-native.
+          Deduction: projection overlay (patches, step-line) uses raw matplotlib.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Leverages seaborn mask parameter and annot with custom DataFrame
-          — distinctive seaborn features.
+        comment: mask parameter for triangular split heatmaps and dual-call bold/italic
+          annotation styling are distinctive seaborn capabilities. Generic beyond
+          core heatmap.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -236,4 +266,4 @@ impl_tags:
   dataprep: []
   styling:
   - custom-colormap
-  - edge-highlighting
+  - alpha-blending

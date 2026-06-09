@@ -519,6 +519,36 @@ A bar chart.
         impls = {(i["language_id"], i["library_id"]) for i in result["implementations"]}
         assert impls == {("javascript", "chartjs"), ("javascript", "d3")}
 
+    def test_scan_javascript_discovers_tsx_alongside_js(self, tmp_path):
+        """A single implementations/javascript/ dir may hold both .js (chartjs/d3/
+        echarts/highcharts) and .tsx (muix, the React entry); discovery scans both
+        via language_file_extensions("javascript")."""
+        plot_dir = tmp_path / "bar-basic"
+        plot_dir.mkdir()
+
+        (plot_dir / "specification.md").write_text("""# bar-basic: Basic Bar
+
+## Description
+A bar chart.
+
+## Applications
+- Testing
+
+## Data
+- Values
+""")
+
+        js_dir = plot_dir / "implementations" / "javascript"
+        js_dir.mkdir(parents=True)
+        (js_dir / "echarts.js").write_text("// echarts code")
+        (js_dir / "muix.tsx").write_text("// muix react code\nexport default function Chart() { return null; }")
+
+        result = scan_plot_directory(plot_dir)
+
+        assert result is not None
+        impls = {(i["language_id"], i["library_id"]) for i in result["implementations"]}
+        assert impls == {("javascript", "echarts"), ("javascript", "muix")}
+
     def test_scan_skips_unknown_language_dir(self, tmp_path):
         """A language directory with no known extensions is skipped, not crashed."""
         plot_dir = tmp_path / "weird"

@@ -1,0 +1,260 @@
+library: d3
+language: javascript
+specification_id: scatter-ashby-material
+created: '2026-06-03T17:20:48Z'
+updated: '2026-06-03T17:27:20Z'
+generated_by: claude-sonnet
+workflow_run: 26897159764
+issue: 4677
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Perfect spec compliance: log-log axes, convex hull family regions, direct family
+    labels, E/rho guide lines all implemented correctly'
+  - 'Excellent D3 idioms: d3.polygonHull() + d3.curveCatmullRomClosed.alpha(0.5) produces
+    smooth, visually distinctive Ashby-chart blobs'
+  - 'Accurate material property data: density and Young''s modulus values match CES
+    Edupack / Ashby textbook references for all families'
+  - 'Clean theme-adaptive chrome: t.pageBg background, t.ink/inkSoft for text and
+    axes, t.grid for gridlines, correctly adapted in both light and dark renders'
+  - Clip paths applied correctly to hull group and scatter group preventing data overflow
+    beyond the plot area
+  weaknesses:
+  - Helper function expandHull() defined in top-level scope — minor KISS violation;
+    could be inlined into the hull-drawing loop
+  - Family labels at 14px CSS (28px in PNG) are slightly small — at 400px mobile scale
+    they may become marginal; bump to 15-16px for safety
+  - 'DE-02 refinement: tick marks (the short lines) share the same inkSoft color as
+    the axis domain line — using a lighter t.grid color for tick lines would add polish'
+  - 'Design storytelling could be enhanced: the E/rho guide annotation ''E/rho = c''
+    is present but minimal — labeling individual guide lines with actual k-values
+    (e.g. E/rho = 0.01) would make the performance-index story clearer'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct
+      Chrome: Title "scatter-ashby-material · javascript · d3 · anyplot.ai" in dark bold text at 22px, clearly readable. X-axis label "Density (kg/m³)" and Y-axis label "Young's Modulus (GPa)" in dark medium-weight text at 16px. Tick labels (30, 100, 300, 1k, 3k, 10k on x; 0.001–100 on y) in dark secondary text at 13px. All text readable against the warm off-white background. No light-on-light issues.
+      Data: 7 material families each with a semi-transparent filled hull region (fill-opacity 0.13) and colored border stroke plus scatter points (r=5). Color order: Metals=green (#009E73), Ceramics=lavender (#C475FD), Polymers=blue (#4467A3), Composites=ochre (#BD8233), Elastomers=matte-red (#AE3030), Foams=cyan (#2ABCCD), Natural=rose (#954477). Family labels in matching family color sit inside each region. Three dashed E/rho guide lines at low opacity (0.3) with an "E/rho = c" annotation in the upper-right.
+      Legibility verdict: PASS — all text and data elements clearly readable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct
+      Chrome: Title in light cream text, clearly visible. Axis labels and tick labels in light secondary text against the dark surface. Grid lines subtle but visible. Axis domain lines visible in muted light color. No dark-on-dark failures observed — all text is light-on-dark as expected.
+      Data: Data colors are identical to the light render (green Metals, lavender Ceramics, blue Polymers, ochre Composites, red Elastomers, cyan Foams, rose Natural). Hull fills appear slightly more vivid against the dark background but remain semi-transparent. Scatter points retain white-stroke halos (pageBg becomes dark, creating a dark ring — subtle but acceptable).
+      Legibility verdict: PASS — all text and data elements clearly readable in dark theme.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (22px title, 16px axis labels, 13px
+          ticks, 14px family labels). Readable in both themes. Minor: family labels
+          at 14px are borderline small at mobile scale.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap. Family labels well-positioned at group centroids.
+          Natural Materials two-line label clears Polymers label.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: r=5 CSS (10px in PNG) with fill-opacity 0.9 and white stroke — appropriate
+          for 57 data points. All points clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette used — colorblind-safe. 7 families with distinct
+          hue families. No red-green sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 landscape. Margins top=72 right=60 bottom=92 left=110 —
+          well-balanced. Plot fills 75-80% of canvas area.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Density (kg/m³)'', Y: ''Young''s Modulus (GPa)'' — both descriptive
+          with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint palette canonical order via t.palette. First family (Metals)
+          = #009E73. Background #FAF8F1 light / #1A1A17 dark. Data colors identical
+          across themes. Chrome fully theme-adaptive.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: convex hull regions with smooth Catmull-Rom curves,
+          colored family labels at centroids, E/rho guide lines. Clearly above library
+          defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped frame (no top/right axes), subtle grid at t.grid stroke,
+          semi-transparent hull fills (0.13), dashed guide lines at 0.3 opacity. Tick
+          lines share inkSoft color with domain — minor refinement gap.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Hull regions create clear visual clustering of material families.
+          E/rho guide lines provide engineering context and performance-index storytelling.
+          Visual hierarchy guides viewer naturally.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Ashby chart: log-log scatter with convex hull family regions
+          — exact spec type.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Log-log axes, colored hull regions, family labels, axis labels with
+          units, E/rho guide lines — all spec features present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Density on x-axis, Young's modulus on y-axis. Correct log domain
+          [18,25000] x [0.0002,800]. All 57 points visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''scatter-ashby-material · javascript · d3 · anyplot.ai''
+          — correct format. In-place family labels replace legend effectively.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 57 points across 7 families (Metals, Ceramics, Polymers, Composites,
+          Elastomers, Foams, Natural). Covers full range of spec's requested material
+          families.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real materials science context. Classic density vs Young's modulus
+          Ashby chart — standard in engineering education.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Material property values match CES Edupack / Ashby textbook: steel
+          (7800/200), Al (2700/70), Ti (4500/110), Al2O3 (3900/390), CFRP (1600/150)
+          — all factually accurate.'
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly linear flow but defines expandHull() helper function — minor
+          KISS violation.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hard-coded. Fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports (D3 is global). Only uses what's needed.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable code. No fake UI elements. Good variable naming.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct orientation directive, SVG appended to #container, harness
+          handles PNG output.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert D3: data joins (.selectAll.data.join), d3.group(), d3.polygonHull(),
+          d3.scaleLog(), d3.scaleOrdinal(), custom tick values, clip paths — all idiomatic.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: d3.polygonHull() + d3.curveCatmullRomClosed.alpha(0.5) for smooth
+          hull boundaries, d3.group() for family grouping — distinctly D3 patterns
+          not easily replicated elsewhere.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

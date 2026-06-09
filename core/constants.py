@@ -25,6 +25,7 @@ SUPPORTED_LIBRARIES = frozenset(
         "letsplot",
         "makie",
         "matplotlib",
+        "muix",
         "plotly",
         "plotnine",
         "pygal",
@@ -91,11 +92,10 @@ LANGUAGE_FILE_EXTENSIONS = {lang["id"]: lang["file_extension"] for lang in LANGU
 # `file_extension` is an OPTIONAL per-library override of the language default
 # (LANGUAGE_FILE_EXTENSIONS). Most libraries omit it and inherit the default
 # (.py / .R / .jl / .js). It exists because JavaScript breaks the 1:1
-# language→extension assumption: framework-agnostic JS libs are `.js`, but a
-# React lib like MUI X is `.tsx`. Phase-1 libs are all `.js` (= the language
-# default) so none set it here; the mechanism is wired through
-# language_file_extensions() + sync_to_postgres so a future `.tsx` entry is a
-# one-line addition.
+# language→extension assumption: framework-agnostic JS libs are `.js`, but the
+# React lib MUI X (`muix`) is `.tsx`. MUI X is the first — and currently only —
+# library to set it; the mechanism is wired through language_file_extensions() +
+# sync_to_postgres so JavaScript discovery scans both `.js` and `.tsx`.
 LIBRARIES_METADATA = [
     {
         "id": "altair",
@@ -152,13 +152,17 @@ LIBRARIES_METADATA = [
         "description": "The de facto standard for data visualization in R. ggplot2 is an implementation of the grammar of graphics: declarative, layered charts that compose with a small set of primitives (geoms, aesthetics, scales, facets, themes).",
     },
     {
+        # Migrated Python → JavaScript (library-expansion.md §6, "most-used variant"):
+        # native highcharts.js (~1 M npm downloads/wk) vastly outweighs the
+        # highcharts-core Python wrapper (~5 k/wk), so the canonical entry is the JS
+        # library, rendered through the browser harness like the Phase-1 JS libs.
         "id": "highcharts",
         "name": "Highcharts",
-        "language_id": "python",
+        "language_id": "javascript",
         "framework": "none",
-        "version": "1.10.0",
+        "version": "12.6.0",
         "documentation_url": "https://www.highcharts.com",
-        "description": "Powerful data visualization for real-world apps. Fast to implement, endlessly flexible. Makes it easy for developers to create charts and dashboards for web and mobile platforms.",
+        "description": "The industry-standard JavaScript charting library for finance, news, and BI dashboards — SVG-rendered, endlessly flexible, battle-tested. Commercial license, free for non-commercial use.",
     },
     {
         "id": "letsplot",
@@ -186,6 +190,25 @@ LIBRARIES_METADATA = [
         "version": "3.9.0",
         "documentation_url": "https://matplotlib.org",
         "description": "Comprehensive library for creating static, animated, and interactive visualizations in Python. Matplotlib makes easy things easy and hard things possible.",
+    },
+    {
+        # First React (framework != none) and first `.tsx` entry — the real
+        # end-to-end test of both the `framework` field and the per-library
+        # file_extension override (both stood up in Phase 1). language_id stays
+        # `javascript`: React is a runtime constraint, not a language
+        # (library-expansion.md §6). Rendered through the Node + Playwright
+        # harness, but via its esbuild `framework: react` branch (snippet is a
+        # default-exported component, bundled with react + @mui, mounted in a MUI
+        # ThemeProvider) — not the UMD-global path the other JS libs use.
+        # Community @mui/x-charts only (MIT); Pro/Premium are out of scope (§9).
+        "id": "muix",
+        "name": "MUI X Charts",
+        "language_id": "javascript",
+        "framework": "react",
+        "version": "7.29.1",
+        "documentation_url": "https://mui.com/x/react-charts/",
+        "file_extension": ".tsx",  # per-library override; the JavaScript default is .js
+        "description": "Charting components for the MUI (Material UI) React ecosystem. The community @mui/x-charts package (MIT) covers bar, line, pie, scatter and more. anyplot uses only the MIT community surface; Pro/Premium features are out of scope.",
     },
     {
         "id": "plotly",
@@ -227,18 +250,21 @@ LIBRARIES_METADATA = [
 
 # Optional per-library file-extension overrides. A library inherits its
 # language's default extension (LANGUAGE_FILE_EXTENSIONS) unless it declares a
-# "file_extension" in LIBRARIES_METADATA above. Empty today — Phase-1 JS libs
-# are all `.js` — but discovery honours it so a future `.tsx` React entry needs
-# no code change beyond the metadata line.
+# "file_extension" in LIBRARIES_METADATA above. Currently just `{"muix": ".tsx"}`
+# — the React MUI X entry, whose snippets are authored as TSX while the other
+# JavaScript libs stay `.js`. Discovery honours it so the language directory can
+# hold both extensions.
 LIBRARY_FILE_EXTENSION_OVERRIDES = {
     lib["id"]: lib["file_extension"] for lib in LIBRARIES_METADATA if lib.get("file_extension")
 }
 
-# Interactive libraries that generate HTML previews (not just PNG). The three
-# JS libraries render in a browser; the harness emits both a static PNG (gallery
-# grid + og:image) and a self-contained interactive HTML page (detail view).
+# Interactive libraries that generate HTML previews (not just PNG). The
+# browser-rendered JS libraries (Chart.js, D3, ECharts, Highcharts, and the
+# React MUI X entry) render in a browser; the harness emits both a static PNG
+# (gallery grid + og:image) and a self-contained interactive HTML page (detail
+# view). For MUI X the page is the esbuild-bundled React app inlined whole.
 INTERACTIVE_LIBRARIES = frozenset(
-    ["altair", "bokeh", "chartjs", "d3", "echarts", "highcharts", "letsplot", "plotly", "pygal"]
+    ["altair", "bokeh", "chartjs", "d3", "echarts", "highcharts", "letsplot", "muix", "plotly", "pygal"]
 )
 
 # =============================================================================

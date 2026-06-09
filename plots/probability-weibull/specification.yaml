@@ -3,7 +3,7 @@ title: Weibull Probability Plot for Reliability Analysis
 
 # Specification tracking
 created: "2026-03-07T20:32:08Z"
-updated: null
+updated: "2026-06-07T22:32:14Z"
 issue: 4668
 suggested: MarkusNeusinger
 
@@ -11,10 +11,10 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - scatter
-    - probability
   data_type:
     - numeric
     - continuous
+    - probability
   domain:
     - engineering
     - statistics

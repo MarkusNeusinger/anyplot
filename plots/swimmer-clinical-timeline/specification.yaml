@@ -6,7 +6,7 @@ title: Swimmer Plot for Clinical Trial Timelines
 
 # Specification tracking
 created: "2026-03-07T20:32:12Z"
-updated: null
+updated: "2026-06-08T05:47:58Z"
 issue: 4670
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - bar
-    - span
   data_type:
     - categorical
     - timeseries

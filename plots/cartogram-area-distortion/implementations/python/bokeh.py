@@ -1,21 +1,44 @@
-""" pyplots.ai
+""" anyplot.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
-Library: bokeh 3.9.0 | Python 3.14.3
-Quality: 83/100 | Created: 2026-03-13
+Library: bokeh 3.9.1 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-06-08
 """
 
+import os
+import sys
+import time
+from pathlib import Path
+
+
+# Prevent this script (bokeh.py) from shadowing the installed bokeh package when
+# Python adds its own directory to sys.path[0] on direct invocation.
+sys.path = [p for p in sys.path if os.path.abspath(p or os.getcwd()) != os.path.dirname(os.path.abspath(__file__))]
+
 import numpy as np
-from bokeh.io import export_png
+from bokeh.io import output_file, save
 from bokeh.models import BasicTicker, ColorBar, ColumnDataSource, Label, LinearColorMapper, Range1d
-from bokeh.palettes import Viridis256
-from bokeh.plotting import figure, save
+from bokeh.plotting import figure
 from bokeh.transform import transform
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-np.random.seed(42)
+# Theme tokens — Imprint palette, theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Data - US states: (lon, lat, population in millions, approximate land area rank for reference outline)
-# Includes all 50 states with AK and HI in inset positions
+# Imprint sequential colormap: brand green (#009E73) → blue (#4467A3), 256 stops
+_c0 = np.array([0x00, 0x9E, 0x73])
+_c1 = np.array([0x44, 0x67, 0xA3])
+IMPRINT_SEQ256 = [
+    "#{:02X}{:02X}{:02X}".format(*np.round(_c0 + (_c1 - _c0) * (t / 255.0)).astype(int)) for t in range(256)
+]
+
+# Data — US states: (longitude, latitude, population in millions)
 states = {
     "WA": (-122.0, 47.5, 7.7),
     "OR": (-120.5, 44.0, 4.2),
@@ -65,7 +88,6 @@ states = {
     "VT": (-72.6, 44.0, 0.6),
     "NH": (-71.5, 43.5, 1.4),
     "ME": (-69.0, 45.0, 1.4),
-    # Alaska and Hawaii in inset positions (lower-left)
     "AK": (-124.0, 30.0, 0.7),
     "HI": (-118.0, 28.0, 1.4),
 }
@@ -75,13 +97,11 @@ lons = [states[s][0] for s in names]
 lats = [states[s][1] for s in names]
 populations = [states[s][2] for s in names]
 
-# Scale circle sizes: area proportional to population
+# Circle area proportional to population; raised min_size so small states remain visible
 min_pop, max_pop = min(populations), max(populations)
-min_size, max_size = 25, 95
+min_size, max_size = 22, 92
 sizes = [min_size + (max_size - min_size) * np.sqrt((p - min_pop) / (max_pop - min_pop)) for p in populations]
-
-# Reference outline sizes: uniform circles representing equal geographic area (original region reference)
-ref_outline_size = 35
+ref_outline_size = 32  # uniform reference circles — geographic footprint baseline
 
 source = ColumnDataSource(
     data={
@@ -95,183 +115,258 @@ source = ColumnDataSource(
     }
 )
 
-# Color mapper using built-in Viridis palette (perceptually uniform, colorblind-safe)
-color_mapper = LinearColorMapper(palette=Viridis256, low=min_pop, high=max_pop)
+color_mapper = LinearColorMapper(palette=IMPRINT_SEQ256, low=min_pop, high=max_pop)
 
-# Plot
+# Title fontsize scaled by character count (floor 34pt)
+title_str = "cartogram-area-distortion · python · bokeh · anyplot.ai"
+title_fontsize = max(34, round(50 * (67 / len(title_str) if len(title_str) > 67 else 1.0)))
+
+# Figure — 3200×1800 landscape; toolbar_location=None prevents extra height in PNG
 p = figure(
-    width=4800,
-    height=2700,
-    title="cartogram-area-distortion · bokeh · pyplots.ai",
+    width=3200,
+    height=1800,
+    title=title_str,
     x_axis_label="Longitude (°W)",
     y_axis_label="Latitude (°N)",
-    x_range=Range1d(-128, -66),
-    y_range=Range1d(25, 50.5),
-    tools="hover,pan,wheel_zoom,reset",
+    x_range=Range1d(-128, -65),
+    y_range=Range1d(25, 51.5),
+    toolbar_location=None,
+    tools="hover",
     tooltips=[("State", "@name"), ("Population", "@pop_label")],
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=80,
 )
 
-# Original region outlines: uniform-sized circles showing equal geographic area for comparison
-# This provides a reference baseline so viewers can see how distortion changes each region
+# Reference circles: uniform size shows geographic footprint for comparison
+# Increased alpha (0.7) from previous (0.45) for a clear comparison baseline
 p.scatter(
     x="lon",
     y="lat",
     size="ref_size",
     source=source,
     fill_color=None,
-    line_color="#888888",
-    line_width=1.5,
+    line_color=INK_SOFT,
+    line_width=2.0,
     line_dash="dashed",
-    line_alpha=0.45,
+    line_alpha=0.7,
 )
 
-# Main cartogram circles: area distorted by population
+# Cartogram circles: area scaled by population, Imprint sequential colormap
 p.scatter(
     x="lon",
     y="lat",
     size="size",
     source=source,
     fill_color=transform("population", color_mapper),
-    fill_alpha=0.88,
-    line_color="#2c2c2c",
+    fill_alpha=0.9,
+    line_color=PAGE_BG,
     line_width=1.5,
 )
 
-# Label major states with careful offsets to avoid crowding in the Northeast
-# Skip NJ and MA in labels to reduce Northeast crowding; they are visible via hover
+# Focal emphasis: bold stroke on the 5 most populous states (CA, TX, FL, NY, PA)
+top5_states = {"CA", "TX", "FL", "NY", "PA"}
+top5_idx = [i for i, n in enumerate(names) if n in top5_states]
+top5_source = ColumnDataSource(
+    data={
+        "lon": [lons[i] for i in top5_idx],
+        "lat": [lats[i] for i in top5_idx],
+        "population": [populations[i] for i in top5_idx],
+        "size": [sizes[i] for i in top5_idx],
+        "name": [names[i] for i in top5_idx],
+        "pop_label": [f"{populations[i]:.1f}M" for i in top5_idx],
+    }
+)
+p.scatter(
+    x="lon",
+    y="lat",
+    size="size",
+    source=top5_source,
+    fill_color=transform("population", color_mapper),
+    fill_alpha=0.9,
+    line_color=INK,
+    line_width=4.5,
+)
+
+# State abbreviation labels for states with population > 6M
 label_offsets = {
-    "NY": (2.5, 1.5),
+    "CA": (0, 1.8),
+    "TX": (0, -2.0),
+    "FL": (1.5, -1.5),
+    "NY": (2.0, 1.5),
     "PA": (-2.0, -2.0),
-    "VA": (2.0, -1.5),
+    "IL": (0, -1.5),
     "OH": (-2.5, -1.0),
     "MI": (0, 1.0),
-    "NC": (2.0, -1.0),
     "GA": (0, -1.5),
+    "NC": (2.0, -1.0),
+    "VA": (2.0, -1.5),
 }
-skip_labels = {"NJ", "MA"}  # Too crowded in Northeast; visible via tooltips
+skip_labels = {"NJ", "MA"}  # too crowded in the Northeast
 for i, name in enumerate(names):
-    if populations[i] > 7.0 and name not in skip_labels:
+    if populations[i] > 6.0 and name not in skip_labels:
         dx, dy = label_offsets.get(name, (0, 0))
-        label = Label(
-            x=lons[i] + dx,
-            y=lats[i] + dy,
-            text=name,
-            text_font_size="15pt",
-            text_align="center",
-            text_baseline="middle",
-            text_color="#1a1a1a",
-            text_font_style="bold",
+        p.add_layout(
+            Label(
+                x=lons[i] + dx,
+                y=lats[i] + dy,
+                text=name,
+                text_font_size="24pt",
+                text_align="center",
+                text_baseline="middle",
+                text_color=INK,
+                text_font_style="bold",
+            )
         )
-        p.add_layout(label)
 
-# Size legend: annotated reference circles in upper-left corner
-size_legend_x = -126.5
-size_legend_y = 48.5
-legend_pops = [5.0, 15.0, 30.0]
-legend_title = Label(
-    x=size_legend_x,
-    y=size_legend_y + 0.8,
-    text="Population (M)",
-    text_font_size="13pt",
-    text_color="#444444",
-    text_font_style="bold",
+# Size legend — upper-left corner
+size_legend_x = -127.5
+size_legend_y = 48.8
+p.add_layout(
+    Label(
+        x=size_legend_x,
+        y=size_legend_y + 1.1,
+        text="Population",
+        text_font_size="26pt",
+        text_color=INK_SOFT,
+        text_font_style="bold",
+    )
 )
-p.add_layout(legend_title)
-for j, lp in enumerate(legend_pops):
+for j, lp in enumerate([5.0, 15.0, 30.0]):
     ls = min_size + (max_size - min_size) * np.sqrt((lp - min_pop) / (max_pop - min_pop))
-    ly = size_legend_y - j * 1.8
-    legend_src = ColumnDataSource(data={"x": [size_legend_x], "y": [ly], "s": [ls]})
+    ly = size_legend_y - j * 2.4
+    fill_hex = IMPRINT_SEQ256[min(255, int((lp - min_pop) / (max_pop - min_pop) * 255))]
     p.scatter(
-        x="x",
-        y="y",
-        size="s",
-        source=legend_src,
-        fill_color=Viridis256[int(255 * np.sqrt((lp - min_pop) / (max_pop - min_pop)))],
-        fill_alpha=0.88,
-        line_color="#2c2c2c",
+        x=[size_legend_x + 0.8],
+        y=[ly],
+        size=ls,
+        fill_color=fill_hex,
+        fill_alpha=0.9,
+        line_color=PAGE_BG,
         line_width=1.5,
     )
-    legend_label = Label(
-        x=size_legend_x + 2.5,
-        y=ly,
-        text=f"{lp:.0f}M",
-        text_font_size="12pt",
-        text_color="#555555",
-        text_baseline="middle",
+    p.add_layout(
+        Label(
+            x=size_legend_x + 3.5,
+            y=ly,
+            text=f"{lp:.0f}M",
+            text_font_size="24pt",
+            text_color=INK_SOFT,
+            text_baseline="middle",
+        )
     )
-    p.add_layout(legend_label)
 
-# Annotation: reference outline explanation
-ref_note = Label(
-    x=-126.5,
-    y=42.5,
-    text="- - = original region outline",
-    text_font_size="12pt",
-    text_color="#777777",
-    text_font_style="italic",
+# Reference outline annotation
+p.add_layout(
+    Label(
+        x=-127.5,
+        y=40.8,
+        text="- - = geographic area (reference)",
+        text_font_size="22pt",
+        text_color=INK_MUTED,
+        text_font_style="italic",
+    )
 )
-p.add_layout(ref_note)
 
-# Inset labels for AK and HI
+# AK and HI inset labels
 for abbr in ("AK", "HI"):
-    ix = states[abbr][0]
-    iy = states[abbr][1]
-    inset_label = Label(x=ix, y=iy - 1.5, text=abbr, text_font_size="12pt", text_align="center", text_color="#555555")
-    p.add_layout(inset_label)
+    p.add_layout(
+        Label(
+            x=states[abbr][0],
+            y=states[abbr][1] - 1.8,
+            text=abbr,
+            text_font_size="24pt",
+            text_align="center",
+            text_color=INK_SOFT,
+        )
+    )
 
-# Color bar
+# Subtitle — storytelling annotation preserved from previous version
+p.add_layout(
+    Label(
+        x=-128.0,
+        y=50.8,
+        text="Circle area ∝ population — California (39M) dwarfs Wyoming (0.6M) by 65×",
+        text_font_size="26pt",
+        text_color=INK_MUTED,
+        text_font_style="italic",
+    )
+)
+
+# Color bar — enlarged tick labels and title for 3200×1800 legibility
 color_bar = ColorBar(
     color_mapper=color_mapper,
     ticker=BasicTicker(desired_num_ticks=6),
-    label_standoff=16,
-    major_label_text_font_size="16pt",
+    label_standoff=20,
+    major_label_text_font_size="30pt",
+    major_label_text_color=INK_SOFT,
     title="Population (millions)",
-    title_text_font_size="17pt",
-    width=55,
-    padding=60,
-    margin=30,
+    title_text_font_size="32pt",
+    title_text_color=INK,
+    width=70,
+    padding=80,
+    margin=40,
+    background_fill_color=ELEVATED_BG,
+    border_line_color=INK_SOFT,
 )
 p.add_layout(color_bar, "right")
 
-# Subtitle for context and storytelling
-subtitle = Label(
-    x=-127,
-    y=49.5,
-    text="Circle area proportional to population — California (39M) dwarfs Wyoming (0.6M) by 65\u00d7",
-    text_font_size="16pt",
-    text_color="#666666",
-    text_font_style="italic",
-)
-p.add_layout(subtitle)
-
-# Typography and style
-p.title.text_font_size = "28pt"
-p.title.text_color = "#222222"
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
-p.xaxis.axis_label_text_color = "#444444"
-p.yaxis.axis_label_text_color = "#444444"
-
-# Refined grid and background
-p.xgrid.grid_line_alpha = 0.12
-p.ygrid.grid_line_alpha = 0.12
-p.xgrid.grid_line_width = 1
-p.ygrid.grid_line_width = 1
-p.xgrid.grid_line_color = "#bbbbbb"
-p.ygrid.grid_line_color = "#bbbbbb"
-
-p.background_fill_color = "#f8f8f4"
-p.border_fill_color = "#ffffff"
-p.outline_line_color = None
-
-# Remove minor ticks for cleaner look
+# Typography
+p.title.text_font_size = f"{title_fontsize}pt"
+p.title.text_color = INK
+p.title.text_font_style = "bold"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
 p.xaxis.minor_tick_line_color = None
 p.yaxis.minor_tick_line_color = None
-p.xaxis.major_tick_line_color = "#aaaaaa"
-p.yaxis.major_tick_line_color = "#aaaaaa"
 
-# Save
-export_png(p, filename="plot.png")
-save(p, filename="plot.html", title="Cartogram Area Distortion - Bokeh")
+# Background and borders
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = None
+
+# Grid — subtle
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.12
+p.ygrid.grid_line_alpha = 0.12
+
+# Save interactive HTML then screenshot to PNG via headless Chrome
+output_file(f"plot-{THEME}.html")
+save(p)
+
+W, H = 3200, 1800
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+
+# Chrome headless has ~139 px of browser chrome overhead; resize so the
+# viewport (window.innerHeight) is exactly H, not H minus that overhead.
+vh = driver.execute_script("return window.innerHeight")
+if vh != H:
+    driver.set_window_size(W, H + (H - vh))
+
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()

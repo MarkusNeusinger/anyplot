@@ -1,0 +1,240 @@
+library: echarts
+language: javascript
+specification_id: pictogram-basic
+created: '2026-06-03T14:19:20Z'
+updated: '2026-06-03T14:25:41Z'
+generated_by: claude-sonnet
+workflow_run: 26890354970
+issue: 4674
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/javascript/echarts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent use of ECharts native pictorialBar type — the correct idiomatic tool
+    for this plot
+  - Perfect spec compliance including unit legend, fractional icon handling, and descending
+    sort
+  - Title font scaling formula prevents overflow on the long mandated string
+  - Real, accurate coffee production data creates an immediately relatable and factually
+    grounded chart
+  - Color-per-country using Imprint palette canonical order is visually engaging and
+    CVD-safe
+  weaknesses:
+  - Axis tick labels (14px CSS, ~28 source px) are slightly small for the 3200x1800
+    canvas; increasing to 16-18px CSS would improve mobile readability
+  - The right ~55% of the canvas is empty due to Brazil scale dominance; consider
+    tighter right grid margin or annotation noting Brazil's exceptional output
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1) — correct theme surface
+      Chrome: Title "Coffee Production · pictogram-basic · javascript · echarts · anyplot.ai" in dark bold text; subtitle "○ Each icon = 5 million 60 kg bags" in lighter inkSoft; Y-axis country labels (Brazil, Vietnam, Colombia, Indonesia, Ethiopia, Honduras) in dark text; X-axis tick labels (0, 10M, 20M, ..., 70M) and axis name "Production (millions of 60 kg bags)" all clearly visible
+      Data: Brazil row in #009E73 (brand green) with ~12.6 circles; Vietnam in lavender; Colombia in blue; Indonesia in ochre; Ethiopia in matte red; Honduras in cyan. Value labels ("63M bags" etc.) to the right of each row. Partial last circle on Brazil row.
+      Legibility verdict: PASS — all text readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17) — correct dark theme surface
+      Chrome: Title and subtitle rendered in light/white text, clearly legible; Y-axis country labels and X-axis tick labels/name all visible in light-toned theme-adaptive text; no dark-on-dark failures observed
+      Data: All six country colors identical to light render — Brazil #009E73, Vietnam lavender, Colombia blue, Indonesia ochre, Ethiopia matte red, Honduras cyan. Data labels visible in soft light ink.
+      Legibility verdict: PASS — all text readable against near-black background; no dark-on-dark issues
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title scales with length; readable
+          in both themes; tick labels at 14px CSS slightly small for canvas
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between circles, labels, or axis text in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 80px circles are prominent and clearly visible in both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette used; CVD-safe; each country distinct hue
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good margins; right ~55% empty due to Brazil scale dominance
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X-axis: Production (millions of 60 kg bags) with units; Y-axis:
+          country names'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series Brazil = #009E73; canonical Imprint order; transparent
+          background; both renders theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean purposeful design above default (4); multi-color pictogram
+          rows with real data; Brazil dominance is compelling
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No grid, no tick marks, minimal axis lines, subtitle as legend; visible
+          refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Brazil's row of 12+ circles vs 1-2 for others creates immediate story;
+          descending sort reinforces ranking
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct pictogram using ECharts pictorialBar with symbolRepeat; horizontal
+          isotype layout
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Unit value, unit legend, partial icon for Brazil (12.6), left-aligned
+          rows all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=production quantity, Y=countries; all 6 categories visible; axis
+          range appropriate
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: Coffee Production · pictogram-basic · javascript · echarts
+          · anyplot.ai; subtitle as unit legend'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full range of quantities; partial icon demonstrated; 6 countries
+          shows comparison capability
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real 2022 coffee production data; neutral agricultural topic; major
+          producers
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values accurately reflect actual global coffee production rankings
+          and magnitudes
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat linear flow: constants → data → init → setOption; no functions
+          or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hard-coded; fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only harness-provided globals used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic code; smart title scaling formula
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'animation: false set; echarts.init without explicit size/DPR; harness
+          handles output'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses ECharts pictorialBar with symbolRepeat, symbolBoundingData,
+          symbolMargin; harness contract correct
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: pictorialBar with symbolRepeat unique to ECharts; emphasis disabled
+          for static render optimization
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling: []

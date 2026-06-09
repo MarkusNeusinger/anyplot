@@ -1,0 +1,262 @@
+library: seaborn
+language: python
+specification_id: swimmer-clinical-timeline
+created: '2026-06-08T06:00:50Z'
+updated: '2026-06-08T06:17:28Z'
+generated_by: claude-sonnet
+workflow_run: 27118706745
+issue: 4670
+language_version: 3.13.13
+library_version: 0.13.2
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - 'Complete spec compliance: all swimmer plot elements present (arms, events, ongoing
+    arrows, legend, units)'
+  - Excellent Imprint palette usage with semantically correct ANYPLOT_AMBER for adverse
+    events
+  - 'Clean theme adaptation: both renders pass with correct backgrounds and full chrome
+    flip'
+  - Meaningful data storytelling via median duration annotation and duration-sorted
+    layout
+  - 'Professional code quality: seed set, KISS structure, all imports used'
+  weaknesses:
+  - 'LM-02: Event markers plotted in a loop per event type rather than using a single
+    sns.scatterplot call with hue=event_type and style=event_type — missing seaborn
+    most distinctive grouping feature'
+  - 'DE-01: Composition is functional but lacks a stronger focal point or emphasis
+    technique (e.g., highlighting responders, bracket annotations for response rate)'
+  - 'VQ-01: Y-axis patient-ID labels at 7.5pt are tight for 25 rows; could be bumped
+    to 8pt or bar height slightly reduced for more breathing room'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "swimmer-clinical-timeline · python · seaborn · anyplot.ai" in dark ink (#1A1A17), clearly readable. X-axis label "Time on Study (months)" in dark ink, readable. Patient-ID tick labels at 7.5pt in dark secondary ink (#4A4A44), readable. Median annotation in muted italic at top-right, visible.
+      Data: Arm A bars in #009E73 (brand green), Arm B bars in #C475FD (lavender). Event markers: ochre triangles (Partial Response), blue stars (Complete Response), red diamonds (Progression), amber X marks (Adverse Event). Ongoing-treatment arrows in arm color.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: All text elements (title, axis label, tick labels, legend text, median annotation) rendered in light colors (#F0EFE8 / #B8B7B0). No dark-on-dark failures detected. Legend box in elevated dark fill (#242420). Grid lines subtle against dark background.
+      Data: Bar colors identical to light render (#009E73 and #C475FD) — Imprint palette unchanged across themes. Event marker colors identical. Ongoing arrows in arm colors, visible against dark background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 12pt, x-label 10pt, x-ticks
+          8pt, y-ticks 7.5pt). Proportions balanced. Minor deduction: 25 patient-ID
+          labels at 7.5pt are compact but pass desktop readability; slightly borderline
+          at mobile scale.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text or marker-on-label collisions visible in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars at alpha=0.82 well-visible; event markers sized 75-150 s appropriate
+          for ~50-100 events; ongoing arrows prominent.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; redundant shape encoding for event types
+          provides additional discrimination.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; plot fills canvas well with balanced margins;
+          legend does not overlap data.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Time on Study (months)'' is descriptive with units; Y-axis correctly
+          unlabelled (patient IDs serve as the axis).'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #C475FD; event markers use Imprint
+          positions 3-5; ANYPLOT_AMBER correctly used for Adverse Event; backgrounds
+          correct in both themes; all chrome is theme-adaptive.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Imprint palette applied with intent; clinical trial aesthetic clean
+          and professional; well-structured legend mixing patch and line handles.
+          Above configured default (4) but not reaching strong design (6).
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed; subtle x-axis-only grid (alpha=0.15); tick
+          marks suppressed; legend frame at 0.5pt linewidth. Good refinement visible.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Duration sorting creates natural visual hierarchy; median-duration
+          annotation anchors Arm A vs Arm B comparison; ongoing arrows add forward-looking
+          narrative. Story clearly presented but no additional emphasis guides the
+          eye further.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal swimmer plot with all expected visual elements.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Sorted bars, distinct event markers, ongoing-patient arrows, legend,
+          time-unit x-axis, patient-ID y-axis, treatment-arm color coding — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = time on study (months), Y = patient ID; all 25 patients visible
+          with correct bar lengths.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is exactly 'swimmer-clinical-timeline · python · seaborn ·
+          anyplot.ai'; legend labels match data categories precisely.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All swimmer-plot features showcased: two treatment arms, four event
+          types, ongoing vs completed patients, wide duration range.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Simulated Phase II oncology trial with standard terminology in a
+          neutral clinical context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Durations 3-22 months realistic for oncology Phase II; 25-patient
+          cohort size appropriate; event timing constrained to within bar duration.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports -> theme tokens -> data generation -> plot -> save.
+          No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports are used (mpatches for arm patches, Line2D for event/ongoing
+          legend handles, sys/os for path protection).
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized; sys.path manipulation documented inline; no
+          over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png without bbox_inches='tight'; correct current
+          API.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses sns.scatterplot for event markers (correct axes-level API);
+          sns.set_theme with rc dict for comprehensive theme adaptation. Bars use
+          matplotlib directly (seaborn has no barh primitive), which is the correct
+          seaborn-idiomatic fallback.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: sns.scatterplot handles event markers but iterates per-type rather
+          than using hue+style in a single call, missing seaborn's most distinctive
+          grouping/encoding feature.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - patches
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
+  - edge-highlighting

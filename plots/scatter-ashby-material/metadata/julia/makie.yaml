@@ -1,0 +1,278 @@
+library: makie
+language: julia
+specification_id: scatter-ashby-material
+created: '2026-06-03T17:15:28Z'
+updated: '2026-06-03T17:33:30Z'
+generated_by: claude-sonnet
+workflow_run: 26896925213
+issue: 4677
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - Correct Ashby chart with log-log scatter, colored ellipse bubble regions, and
+    direct family labels
+  - 'All 7 Imprint palette colors applied in canonical order; #009E73 correctly first
+    (Metals)'
+  - Both themes fully readable — warm off-white light bg (#FAF8F1) and near-black
+    dark bg (#1A1A17) with correct chrome inversion
+  - Performance index guide lines (E/ρ and E^½/ρ) add genuine engineering context
+    and storytelling value
+  - 'Perfect spec compliance: log-log axes, bubble regions, family labels, units on
+    both axes, optional guide lines'
+  - Factually accurate material property ranges (foams at ~0.01 GPa / 63 kg/m³, metals
+    at ~126 GPa / 4500 kg/m³)
+  - 'Idiomatic Makie usage: poly! with Point2f arrays for ellipse polygons, RGBAf
+    typed colors, xscale=log10 as Axis property'
+  - Clean KISS structure with a single for-loop over family groups; Random.seed!(42)
+    for reproducibility
+  weaknesses:
+  - Ellipse bubble regions are too faint (fill alpha=0.30) — spec requires clearly
+    visible colored regions; increase to 0.45-0.55 and stroke to 0.90
+  - Family labels placed at only 0.55× ry above center, causing overlap with scatter
+    points in the dense Ceramics/Composites/Metals zone — place labels at 1.15-1.30×
+    ry outside the ellipse top
+  - Guide line annotation labels fontsize=9 (18px effective) too small to read at
+    mobile width — increase to fontsize=11-12
+  - Family label fontsize=11 (22px effective) is on the small side for a 3200×1800
+    canvas — nudge to 12-13pt for better mobile legibility
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface, not pure white.
+      Chrome: Title "Stiffness vs Weight · scatter-ashby-material · julia · makie · anyplot.ai" in dark ink at top, fully visible. "Density (kg/m³)" x-axis label and "Young's Modulus (GPa)" y-axis label both dark and readable. Tick labels in dark secondary ink, all visible. Top and right spines removed; subtle grid at ~12% alpha.
+      Data: 7 material families in Imprint palette canonical order — Metals (#009E73 green, top-right cluster), Ceramics (#4467A3 blue), Composites (#BD8233 ochre), Natural Mat. (#954477 rose), Polymers (#C475FD lavender), Foams (#2ABCCD cyan, lower-left), Elastomers (#AE3030 red, lower-center). Faint colored ellipse fill regions (alpha 0.30) visible around each cluster with 0.72-alpha stroke border. Two dashed performance index guide lines (INK_MUTED) diagonal across the log-log space, labeled "E/ρ = c" and "E^½/ρ = c" in very small text near the right edge.
+      Legibility verdict: PASS — all primary text readable. Minor: guide line labels (fontsize=9) are very small and borderline readable. Family labels overlap with scatter points in the dense Ceramics/Composites/Metals region.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface.
+      Chrome: Title and axis labels correctly inverted to off-white (#F0EFE8 equivalent). Tick labels in #B8B7B0 secondary ink — all visible against dark background. No dark-on-dark failures. Spines (#B8B7B0) and subtle grid visible.
+      Data: All 7 family colors are identical to the light render — no hue shift between themes. Ellipse regions appear slightly more visible against the dark background due to increased contrast of the colored semi-transparent fills. Guide lines in INK_MUTED (#A8A79F on dark) visible as dashed lines.
+      Legibility verdict: PASS — all text readable. Same minor concerns as light render: guide line labels small, some label-to-point overlap in dense cluster region.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title/axis labels/ticks clearly readable
+          in both themes. -1 for guide line annotation labels at fontsize=9 (18px
+          effective) — too small at mobile widths.
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Moderate overlap: family labels in the dense Ceramics/Composites/Metals
+          zone sit inside or just above the ellipse top edge, overlapping with scatter
+          points. Main content still readable.'
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Scatter points at markersize=12 are well-sized for 125 points. Ellipse
+          bubble regions technically present (fill alpha=0.30, stroke alpha=0.72)
+          but fill is quite faint on light background. -1 because the spec asks for
+          clearly visible colored family regions.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe. Markers have PAGE_BG stroke for definition.
+          7-color multi-series uses palette positions 1-7 which are designed for this
+          count.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). Plot fills canvas well. Balanced
+          margins. No content cut off. Guide lines use the full axis extent effectively.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Density (kg/m³)'', Y: ''Young''s Modulus (GPa)'' — both descriptive
+          with units. Title format correct with descriptive prefix.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Metals) = #009E73 brand green. All 7 families use
+          canonical Imprint palette positions 1-7. Background #FAF8F1 light / #1A1A17
+          dark. Chrome is theme-adaptive in both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured defaults: ellipse bubble regions, direct family
+          labels (no legend), performance index guide lines, and thoughtful typography
+          scaling. Not yet publication-ready due to faint bubble fills and minor label
+          crowding.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: top/right spines removed, subtle grid at 0.12 alpha,
+          markers have PAGE_BG stroke for definition, ellipse fills have deliberate
+          alpha. Not perfect — no explicit legend/callout box styling, minor spacing
+          issues.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Visual hierarchy present: performance index guide lines (E/ρ, E^½/ρ)
+          traverse the chart creating clear focal points for material selection reasoning.
+          Color-coded family groupings guide viewer. Direct labels remove lookup overhead.
+          Genuinely tells the Ashby engineering story.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Ashby chart: log-log scatter with colored family regions,
+          direct labels, and performance guide lines.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: log-log axes, bubble regions, text labels per
+          family, axis labels with units, distinct colors, optional guide lines included.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Density (kg/m³), Y=Young's Modulus (GPa), both log scale. Full
+          data range visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'Stiffness vs Weight · scatter-ashby-material · julia · makie
+          · anyplot.ai' follows {Descriptive} · {spec-id} · {lang} · {lib} · anyplot.ai
+          format. Direct labels replace legend appropriately.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 7 material families spanning 8+ orders of magnitude in E and 4+ in
+          density. Foams to ceramics covers the full Ashby chart range. Performance
+          guide lines demonstrate multi-property selection.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic materials science scenario. Neutral educational/engineering
+          context. No sensitive content.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Factually accurate: foams ~0.032 GPa / 63 kg/m³, elastomers ~0.016
+          GPa / 1122 kg/m³, polymers ~2 GPa / 1202 kg/m³, wood/natural ~7.9 GPa /
+          355 kg/m³, composites ~71 GPa / 1585 kg/m³, metals ~126 GPa / 4467 kg/m³,
+          ceramics ~251 GPa / 2630 kg/m³. All align well with CES Edupack values.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Theme tokens → data → plot → save. Single for-loop over families
+          is clean and appropriate.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set before data generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: using CairoMakie, Colors, Random — all three are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and appropriate complexity. RGBAf conversions are slightly
+          verbose but necessary. No fake UI elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2. Uses size= (modern
+          Makie 0.22 API, correctly replacing deprecated resolution=).
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Strong idiomatic usage: poly! with Point2f arrays, RGBAf typed alpha
+          colors, xscale=log10 as Axis property, xlims!/ylims!, colorant"" syntax.
+          Above average.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: poly! with closed Point2f polygon for ellipse regions is distinctly
+          Makie. RGBAf typed color with explicit Float32 components, log-scale as
+          first-class Axis property. General approach (scatter+polygon+text) is replicable
+          in matplotlib.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

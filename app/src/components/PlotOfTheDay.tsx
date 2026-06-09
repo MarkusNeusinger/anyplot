@@ -104,9 +104,10 @@ export function PlotOfTheDay() {
           {(() => {
             // Per-language file extension + runner command. Anyplot ships Python
             // for nine libraries, R for ggplot2, Julia for makie, and JavaScript
-            // for chartjs/d3/echarts; the chip mimics what a user would actually
-            // type into a shell, so the runner label flips too.
-            const ext = data.language === 'r' ? '.R' : data.language === 'julia' ? '.jl' : data.language === 'javascript' ? '.js' : '.py';
+            // for chartjs/d3/echarts/highcharts/muix; the chip mimics what a user
+            // would actually type into a shell, so the runner label flips too.
+            // muix is the React (.tsx) exception within JavaScript.
+            const ext = data.library_id === 'muix' ? '.tsx' : data.language === 'r' ? '.R' : data.language === 'julia' ? '.jl' : data.language === 'javascript' ? '.js' : '.py';
             const runner = data.language === 'r' ? 'Rscript' : data.language === 'julia' ? 'julia --project=.' : data.language === 'javascript' ? 'node' : 'python';
             return (
               <Typography

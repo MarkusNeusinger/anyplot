@@ -1,95 +1,107 @@
 library: plotly
+language: python
 specification_id: heatmap-loss-triangle
 created: '2026-03-09T11:57:31Z'
-updated: '2026-03-09T12:16:01Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22852106647
+updated: '2026-06-03T10:11:51Z'
+generated_by: claude-sonnet
+workflow_run: 26876806147
 issue: 4581
-python_version: 3.14.3
-library_version: 6.6.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/plotly/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/python/plotly/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - 'Perfect spec compliance: all 8 required features implemented including actual/projected
-    distinction, diagonal boundary, cell annotations, development factors, colorbar,
-    legend, and proper labels'
-  - Excellent data quality with realistic actuarial context and appropriate development
-    factors (2.5 to 1.01)
-  - Creative amber overlay and dashed diagonal to distinguish actual from projected
-    regions
-  - White background highlighting on boundary cells is an effective visual technique
-  - Rich Plotly hover tooltips with customdata showing accident year, development
-    period, and formatted claims
-  - Clean well-structured code with appropriate complexity for 100-cell annotation
-    generation
+  - 'Excellent spec coverage: all required features (diagonal line, amber tint, dev
+    factors row, cell annotations, legend, colorbar) are present'
+  - Correct imprint_seq colorscale for continuous heatmap data; amber (#DDCC77) semantic
+    anchor used correctly for projected region
+  - 'Strong data storytelling: diagonal separator + amber overlay + font weight distinction
+    work together to make the actual/projected boundary unmistakable in dark render'
+  - Canvas gate passed; correct 2400x2400 square format; theme-adaptive chrome correctly
+    implemented for both renders
+  - Development factors annotation row with proper label is a sophisticated actuarial
+    addition matching the spec requirement exactly
   weaknesses:
-  - Minor tightness in rightmost column where boundary cell annotation approaches
-    colorbar edge
-  - Could push typographic hierarchy further with varying font weights between actual
-    and projected cells
-  image_description: The plot displays a 10x10 heatmap loss development triangle with
-    accident years 2015-2024 on the Y-axis and development periods 1-10 on the X-axis.
-    Cells are colored using a Blues colorscale encoding cumulative claim amounts ranging
-    from approximately 4,300 to 49,569. Each cell is annotated with the cumulative
-    value formatted with thousands separators in bold Arial Black font, with white
-    text on darker cells and dark text on lighter cells. A dashed diagonal line separates
-    actual (upper-left) from projected (lower-right) values, with projected cells
-    overlaid with a subtle amber/orange tint. Diagonal boundary cells have a white
-    background highlight. A legend at the top distinguishes "Actual (observed)" in
-    blue from "Projected (estimated IBNR)" in amber. Development factors (2.500 down
-    to 1.010) are displayed below the x-axis. A colorbar on the right shows "Cumulative
-    Claims ($)". The background is a soft off-white (#fafafa) using the plotly_white
-    template. The title "heatmap-loss-triangle · plotly · pyplots.ai" is centered
-    at the top.
+  - 'Boundary diagonal cell annotations invisible in light render: font_color is computed
+    as ''#F0EFE8'' for cells with relative value > 0.50, but these cells also get
+    ELEVATED_BG=''#FFFDF6'' as annotation bgcolor — near-white text on near-white
+    background creates ~8 invisible boundary cells along the diagonal. Fix: when boundary=True,
+    override font_color to INK (dark text in light mode) unconditionally, since ELEVATED_BG
+    already provides a visible box background.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light surface
+      Chrome: Title 'heatmap-loss-triangle · python · plotly · anyplot.ai' readable in dark ink; X-axis label 'Development Period (Years)' and Y-axis label 'Accident Year' both readable; tick labels readable at 10px; colorbar 'Cumulative Claims ($)' readable; legend items readable
+      Data: imprint_seq (green #009E73 to blue #4467A3) heatmap gradient; amber (#DDCC77, 22% opacity) overlay on projected lower-right triangle; dashed diagonal separator; dev factors row below x-axis
+      Critical issue: Boundary diagonal cells have ELEVATED_BG='#FFFDF6' annotation bgcolor with font_color='#F0EFE8' for cells where cumulative value > 50% of z-range (~8 of 10 boundary cells) — near-white text on near-white box = invisible. These cells appear as unexplained empty white boxes along the diagonal.
+      Legibility verdict: FAIL — boundary cell annotations invisible for ~8 of 10 diagonal cells (light-on-light contrast failure)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface
+      Chrome: Title visible in light ink (#F0EFE8); axis labels readable; tick labels readable; all text clearly distinguishable against dark background; no dark-on-dark failures
+      Data: Colors identical to light render (imprint_seq same green-to-blue gradient; amber overlay identical); boundary cells now correctly visible with ELEVATED_BG=#242420 (dark) providing contrast for light font text — values like '31,545', '33,711', '33,079' visible along diagonal
+      Legibility verdict: PASS — all text readable including boundary diagonal cells; brand green #009E73 visible at low end of colorscale
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 5
         max: 8
-        passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, tick
-          labels 17pt, cell annotations 17pt, dev factors 13pt'
+        passed: false
+        comment: '~8 of 10 boundary diagonal cells invisible in light render: font_color=''#F0EFE8''
+          on ELEVATED_BG=''#FFFDF6'' = near-white on near-white. Title/axis labels/ticks
+          all readable in both themes.'
       - id: VQ-02
         name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: Cell annotations fit well. Minor tightness on rightmost column boundary
-          cell near colorbar
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All heatmap cells clearly visible with good color differentiation
-          and subtle amber overlay
+        comment: No overlapping elements; cell annotations, dev factors row, legend,
+          and title well-separated
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Heatmap cells clearly visible; amber overlay distinguishable; colorbar
+          well-sized. Minor deduction for boundary cell annotation invisibility in
+          light render.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blues colorscale is colorblind-safe. Amber overlay provides accessible
-          distinction
+        comment: imprint_seq is CVD-safe; amber (#DDCC77) perceptually distinct from
+          green-blue range
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions with explicit margins. Plot fills canvas well at
-          1600x900 scale=3
+        comment: Canvas gate passed (2400x2400 square). No edge clipping. Good margins.
+          Title, dev factors, colorbar well-placed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Development Period (Years), Accident
-          Year, Cumulative Claims ($)'
+        comment: Title matches spec format; 'Development Period (Years)'; 'Accident
+          Year'; 'Cumulative Claims ($)' on colorbar
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq correctly used for continuous heatmap; amber (#DDCC77)
+          is correct semantic anchor; theme-adaptive PAGE_BG; both renders have correct
+          warm backgrounds
     design_excellence:
       score: 14
       max: 20
@@ -99,22 +111,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful blue-amber distinction, Arial Black for values, white
-          boundary highlights, cohesive off-white background
+        comment: 'Well above defaults: imprint_seq colorscale, amber tint overlay,
+          diagonal dashed separator, different font families for actual/projected,
+          styled colorbar, dev factors annotation row'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: plotly_white template, subtle background, dashed diagonal, generous
-          margins
+        comment: Subtle 15%-opacity grid, proper whitespace, well-integrated colorbar
+          with border and tickformat, clean legend placement
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Amber overlay and diagonal communicate actual/projected boundary.
-          Dev factors provide analytical context
+        comment: Diagonal line + amber overlay + font weight distinction create clear
+          actual/projected story; dev factors add analytical depth; color gradient
+          encodes magnitude
     spec_compliance:
       score: 15
       max: 15
@@ -124,28 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct heatmap loss triangle with triangular structure
+        comment: Correct triangular heatmap for actuarial loss development
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All 8 required features present: actual/projected distinction, diagonal,
-          annotations, dev factors, colorbar, legend, labels'
+        comment: Actual/projected distinction; diagonal separator; cell annotations
+          with thousands format; dev factors row; colorbar; legend
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Rows map to accident years 2015-2024, columns to development periods
-          1-10
+        comment: 'X: dev periods 1-10; Y: accident years 2015-2024; color: cumulative
+          amount; triangular structure correct'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches format. Legend distinguishes Actual (observed) and
-          Projected (estimated IBNR)
+        comment: 'Title: ''heatmap-loss-triangle · python · plotly · anyplot.ai'';
+          legend: Actual (observed) and Projected (est. IBNR)'
     data_quality:
       score: 15
       max: 15
@@ -155,22 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full 10x10 triangle with ~55 actual and ~45 projected cells showing
-          increasing trends and decreasing factors
+        comment: All 55 actual + 45 projected cells; dev factors; color gradient;
+          triangle boundary
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Insurance cumulative paid claims is a real-world actuarial scenario.
-          Neutral business topic
+        comment: Actuarial context with 2015-2024 accident years; realistic dev factors
+          (2.50 to 1.01 declining); plausible claim ranges
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Claims 4000-49000 plausible for scaled triangles. Development factors
-          2.5 to 1.01 realistic
+        comment: Standard 10x10 triangle; reasonable $4K-$50K synthetic claims; decreasing
+          dev factors match mature triangle
     code_quality:
       score: 10
       max: 10
@@ -180,32 +194,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports, Data, Plot, Save flow. No functions or classes
+        comment: No functions or classes; clean linear procedural structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at the start
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported, both used
+        comment: os, sys, numpy, plotly.graph_objects — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. Programmatic annotation/shape generation
-          is clean and necessary
+        comment: Appropriate complexity; no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Current Plotly API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
       score: 7
       max: 10
@@ -215,15 +228,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Heatmap with customdata, shapes for overlays, annotations,
-          layout configuration
+        comment: go.Heatmap with colorscale/zmin/zmax/colorbar; hovertemplate+customdata;
+          shapes API; autosize=False with explicit width/height
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Plotly-specific: customdata with hovertemplate, shapes overlay system,
-          HTML export with CDN'
+        comment: hovertemplate+customdata for rich hover; shapes for per-cell amber
+          rectangles; per-cell annotation bgcolor and font family; HTML interactive
+          export
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -232,7 +246,7 @@ impl_tags:
   - annotations
   - hover-tooltips
   - html-export
-  - custom-legend
+  - manual-ticks
   patterns:
   - data-generation
   - matrix-construction

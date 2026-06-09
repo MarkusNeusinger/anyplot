@@ -34,8 +34,9 @@ const mockDebugData = {
       title: 'Basic Scatter',
       updated: '2025-01-01',
       avg_score: 92,
-      altair: 90, bokeh: 91, ggplot2: null, highcharts: null, letsplot: null,
-      makie: null, matplotlib: 95, plotly: 88, plotnine: null, pygal: null, seaborn: 94,
+      altair: 90, bokeh: 91, chartjs: null, d3: null, echarts: null,
+      ggplot2: null, highcharts: null, letsplot: null, makie: null,
+      matplotlib: 95, muix: 87, plotly: 88, plotnine: null, pygal: null, seaborn: 94,
     },
   ],
 };

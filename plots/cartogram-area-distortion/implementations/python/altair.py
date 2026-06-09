@@ -1,14 +1,39 @@
-""" pyplots.ai
+""" anyplot.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 87/100 | Created: 2026-03-13
+Library: altair 6.2.1 | Python 3.13.13
+Quality: 85/100 | Updated: 2026-06-08
 """
+
+import os
+import sys
+
+
+# Remove '' and this file's directory from sys.path so 'import altair' resolves
+# to the installed package, not this file (which shares the library's name)
+_here = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if p not in ("", _here)]
 
 import altair as alt
 import pandas as pd
+from PIL import Image
 
 
-# Data - US states with population (2023 estimates, millions) and centroids
+# Theme tokens (Imprint palette — see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+REF_FILL = "#EEEBE3" if THEME == "light" else "#252521"
+REF_STROKE = "#CCCAC0" if THEME == "light" else "#3A3A36"
+
+# Imprint palette — positions 1-4 for four US Census regions
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+region_order = ["Northeast", "Midwest", "South", "West"]
+region_colors = IMPRINT_PALETTE[:4]
+
+# Data - US states (2023 population estimates, millions) and geographic centroids
 states = pd.DataFrame(
     [
         {"state": "AL", "name": "Alabama", "pop": 5.1, "lat": 32.8, "lon": -86.8, "region": "South"},
@@ -64,53 +89,40 @@ states = pd.DataFrame(
     ]
 )
 
-# Compute rank for storytelling emphasis
 states = states.sort_values("pop", ascending=False).reset_index(drop=True)
 states["rank"] = states.index + 1
 states["pop_label"] = states["pop"].apply(lambda x: f"{x:.1f}M")
+top5 = states.head(5)
+labeled_states = states[states["pop"] >= 4.0].copy()
 
-# Reference map background (faint outlines for geographic context)
+# Reference map - faint state outlines for geographic context
 us_topo_url = "https://cdn.jsdelivr.net/npm/vega-datasets@2/data/us-10m.json"
-us_states = alt.topo_feature(us_topo_url, "states")
+us_states_topo = alt.topo_feature(us_topo_url, "states")
 
-# Region color palette (colorblind-safe, refined hues)
-region_order = ["Northeast", "Midwest", "South", "West"]
-region_colors = ["#306998", "#D4A934", "#C75B28", "#3A8A5C"]
-
-# Background reference map - very subtle for context
 background = (
-    alt.Chart(us_states)
-    .mark_geoshape(fill="#F5F5F2", stroke="#D8D8D5", strokeWidth=0.5)
-    .project(type="albersUsa")
-    .properties(width=1600, height=900)
+    alt.Chart(us_states_topo).mark_geoshape(fill=REF_FILL, stroke=REF_STROKE, strokeWidth=0.4).project(type="albersUsa")
 )
 
-# Top 5 states highlighted with stronger stroke
-top5 = states.head(5)
-other = states.iloc[5:]
+# Dorling cartogram — single layer with alt.condition to highlight top-5 states
+top5_names = ["California", "Texas", "Florida", "New York", "Pennsylvania"]
+is_top5 = alt.FieldOneOfPredicate(field="name", oneOf=top5_names)
 
-# Dorling cartogram - main circles
-circles_main = (
-    alt.Chart(other)
-    .mark_circle(opacity=0.82, stroke="#FFFFFF", strokeWidth=1.5)
+circles = (
+    alt.Chart(states)
+    .mark_circle()
     .encode(
         longitude="lon:Q",
         latitude="lat:Q",
         size=alt.Size(
             "pop:Q",
-            scale=alt.Scale(domain=[0.5, 40], range=[200, 6000]),
+            scale=alt.Scale(domain=[0.5, 40], range=[40, 1800]),
             legend=alt.Legend(
                 title="Population (millions)",
-                titleFontSize=18,
-                titleFont="Helvetica Neue, Arial",
-                labelFontSize=16,
-                labelFont="Helvetica Neue, Arial",
-                symbolFillColor="#306998",
-                symbolStrokeColor="#FFFFFF",
+                titleFontSize=10,
+                labelFontSize=10,
                 orient="bottom-right",
-                offset=20,
-                titleLimit=280,
-                values=[1, 5, 10, 20],
+                offset=15,
+                values=[1, 5, 10, 20, 35],
             ),
         ),
         color=alt.Color(
@@ -118,16 +130,17 @@ circles_main = (
             scale=alt.Scale(domain=region_order, range=region_colors),
             legend=alt.Legend(
                 title="Region",
-                titleFontSize=18,
-                titleFont="Helvetica Neue, Arial",
-                labelFontSize=16,
-                labelFont="Helvetica Neue, Arial",
-                symbolSize=500,
+                titleFontSize=10,
+                labelFontSize=10,
+                symbolSize=200,
                 symbolStrokeWidth=0,
                 orient="bottom-left",
-                offset=20,
+                offset=15,
             ),
         ),
+        opacity=alt.condition(is_top5, alt.value(0.90), alt.value(0.82)),
+        stroke=alt.condition(is_top5, alt.value(INK), alt.value(PAGE_BG)),
+        strokeWidth=alt.condition(is_top5, alt.value(2.0), alt.value(1.2)),
         tooltip=[
             alt.Tooltip("name:N", title="State"),
             alt.Tooltip("pop:Q", title="Population (M)", format=".1f"),
@@ -137,71 +150,74 @@ circles_main = (
     .project(type="albersUsa")
 )
 
-# Top 5 states with emphasized strokes
-circles_top5 = (
-    alt.Chart(top5)
-    .mark_circle(opacity=0.9, stroke="#333333", strokeWidth=2.5)
-    .encode(
-        longitude="lon:Q",
-        latitude="lat:Q",
-        size=alt.Size("pop:Q", scale=alt.Scale(domain=[0.5, 40], range=[200, 6000]), legend=None),
-        color=alt.Color("region:N", scale=alt.Scale(domain=region_order, range=region_colors), legend=None),
-        tooltip=[
-            alt.Tooltip("name:N", title="State"),
-            alt.Tooltip("pop:Q", title="Population (M)", format=".1f"),
-            alt.Tooltip("region:N", title="Region"),
-        ],
-    )
-    .project(type="albersUsa")
-)
-
-# State abbreviation labels - larger font, only for states >= 4M
-labeled_states = states[states["pop"] >= 4.0].copy()
+# State abbreviation labels for states >= 4M population
 labels = (
     alt.Chart(labeled_states)
-    .mark_text(fontSize=17, fontWeight="bold", color="#FFFFFF", font="Helvetica Neue, Arial")
+    .mark_text(fontSize=11, fontWeight="bold", color="#FFFFFF")
     .encode(longitude="lon:Q", latitude="lat:Q", text="state:N")
     .project(type="albersUsa")
 )
 
-# Population values under labels for top 5 states
+# Population values below labels for top 5 states
 pop_labels = (
     alt.Chart(top5)
-    .mark_text(fontSize=13, color="#FFFFFF", font="Helvetica Neue, Arial", dy=16, fontStyle="italic")
+    .mark_text(fontSize=10, color="#FFFFFF", dy=16, fontStyle="italic")
     .encode(longitude="lon:Q", latitude="lat:Q", text="pop_label:N")
     .project(type="albersUsa")
 )
 
-# Annotation text - key insight about population concentration
-annotation_data = pd.DataFrame([{"text": "Top 5 states hold 37% of the US population", "lat": 26.0, "lon": -105.0}])
+# Annotation — key insight placed in lower map area
+annotation_data = pd.DataFrame([{"text": "Top 5 states hold 37% of US population", "lat": 25.5, "lon": -110.0}])
 annotation = (
     alt.Chart(annotation_data)
-    .mark_text(fontSize=16, font="Helvetica Neue, Arial", fontStyle="italic", color="#555555", align="left")
+    .mark_text(fontSize=9, fontStyle="italic", color=INK_MUTED, align="left")
     .encode(longitude="lon:Q", latitude="lat:Q", text="text:N")
     .project(type="albersUsa")
 )
 
+# Title with scaled font size for the longer mandated title string
+title_str = "US States by Population · cartogram-area-distortion · python · altair · anyplot.ai"
+n = len(title_str)
+ratio = 67 / n if n > 67 else 1.0
+title_fontsize = max(11, round(16 * ratio))
+
 # Combine all layers
 chart = (
-    (background + circles_main + circles_top5 + labels + pop_labels + annotation)
+    (background + circles + labels + pop_labels + annotation)
     .properties(
-        width=1600,
-        height=900,
+        width=620,
+        height=320,
         title=alt.Title(
-            text="US States by Population · cartogram-area-distortion · altair · pyplots.ai",
-            subtitle="Circle area proportional to state population — darker outlines mark the five most populous states",
-            fontSize=28,
-            subtitleFontSize=17,
-            subtitleColor="#777777",
+            text=title_str,
+            subtitle="Dorling cartogram: circle area ∝ state population — bold outlines mark the 5 most populous states",
+            fontSize=title_fontsize,
+            subtitleFontSize=10,
+            subtitleColor=INK_SOFT,
             anchor="middle",
-            font="Helvetica Neue, Arial",
-            subtitleFont="Helvetica Neue, Arial",
         ),
     )
-    .configure_view(strokeWidth=0)
-    .configure(background="#FAFAF8")
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
+    .configure(background=PAGE_BG)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
+    .configure_title(color=INK)
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save PNG
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+# Pad to exact 3200×1800 target (vl-convert inner-view padding leaves canvas short)
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        "Shrink chart width/height values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+# Save interactive HTML
+chart.save(f"plot-{THEME}.html")

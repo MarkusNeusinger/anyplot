@@ -1,0 +1,279 @@
+library: echarts
+language: javascript
+specification_id: probability-weibull
+created: '2026-06-07T23:26:46Z'
+updated: '2026-06-07T23:35:50Z'
+generated_by: claude-sonnet
+workflow_run: 27107434741
+issue: 4668
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/javascript/echarts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Comprehensive Weibull implementation: log x-axis, linearized Weibull y-axis with
+    custom percentage formatter, fitted line via OLS regression on log10(time), median
+    rank positions, hollow circles for censored vs filled for failures, and 63.2%
+    reference line — all spec requirements met perfectly'
+  - 'Excellent data design: hydraulic pump service-life scenario with 14 failures
+    and 6 right-censored observations produces a realistic, technically valid Weibull
+    plot; β=3.20 and η=4,881h are plausible values for wear-out failures'
+  - 'Idiomatic ECharts usage: log-type axis with minorSplitLine for decade subdivisions,
+    graphic overlay for parameter annotation with elevatedBg theme token, custom y-axis
+    formatter back-converting Weibull scale to probability percentages'
+  - 'Full theme compliance: brand green #009E73 on failure points, palette[2] blue
+    for the analytical fit line, palette[3] ochre for the reference line; chrome flips
+    correctly across both light (#FAF8F1) and dark (#1A1A17) themes with all tokens
+    applied'
+  - All font sizes explicitly set (title 22px, axis names 16px, tick labels 13px,
+    legend 14px) and well-proportioned; both renders are fully legible with no dark-on-dark
+    or light-on-light failures
+  weaknesses:
+  - 'Design Excellence could be elevated: consider removing all four axis spines (pure
+    borderless look suits a probability plot), adding a subtle text annotation at
+    the 63.2% reference line intercept with the fit (''η = 4,881 h'' directly on the
+    plot), and using a slightly smaller symbolSize for censored points to reinforce
+    their secondary status'
+  - 'LM-02: the visualization does not use any ECharts interaction or chart-specific
+    distinctive feature beyond log axis and graphic overlay; tooltip configuration
+    (even non-interactive for static screenshot) or a markLine/markPoint built-in
+    could be more ECharts-native than the manual graphic group'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — matches the required light surface exactly, not pure white.
+      Chrome: Title "probability-weibull · javascript · echarts · anyplot.ai" in dark ink at top center, spanning ~60% of canvas width. Y-axis label "Cumulative Failure Probability" rotated 90° on the left in inkSoft. X-axis label "Time to Failure (hours)" centered below the plot. Both axis names at fontSize 16, visually balanced. Tick labels on y-axis show probability percentages ("3%", "8%", "20%", "45%", "81%", "99%") in inkSoft at fontSize 13 — ECharts auto-generated ticks at ~0.5 Weibull-y intervals, all clearly readable. X-axis ticks "350", "1k", "10k", "22k" in inkSoft, readable.
+      Data: 14 filled green circles (#009E73 = palette[0]) for failure observations, placed at median-rank Weibull positions. 6 hollow circles with inkSoft border for censored (suspended) observations, projected onto the fitted line. Blue fit line (palette[2] = #4467A3, width 3) traverses the data with a good OLS fit. Dashed ochre reference line (palette[3] = #BD8233) at 63.2% probability level (y=0 in Weibull coordinates). Parameter annotation box (elevatedBg #FFFDF6, dark ink text) in the upper-right quadrant showing β (shape) = 3.20 and η (char. life) = 4,881 h.
+      Legibility verdict: PASS — all text readable, no overflow, no overlap.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface, not pure black.
+      Chrome: Title, axis labels, tick labels all render in light ink (#F0EFE8 / inkSoft #B8B7B0) — clearly readable against the dark background. No dark-on-dark failures detected. Annotation box uses elevatedBg #242420 (slightly lighter than page bg) with light-colored text — fully readable. Grid lines are subtle, appropriate opacity.
+      Data: Data colors are identical to the light render — green failure circles (#009E73), hollow censored circles with inkSoft border (lighter gray on dark), blue fit line (#4467A3), ochre reference line (#BD8233). The borderColor of failure markers uses t.pageBg which flips to #1A1A17 — the white-border effect on light becomes a dark-border effect on dark, maintaining marker definition.
+      Legibility verdict: PASS — all text readable in dark theme, no dark-on-dark issues.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 22px, axis names 16px, tick
+          labels 13px, legend 14px. Proportions are balanced, both themes fully legible,
+          no overflow.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements. Log scale naturally spaces
+          x-tick labels. Data points well-distributed across plot area.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: symbolSize 16 is well-calibrated for 20 data points. Hollow circles
+          visually distinct from filled. Fit line width 3 prominent but not overwhelming.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Failures (green #009E73) vs censored (hollow inkSoft border) use
+          shape+fill redundancy, not color alone. Fit line (blue) vs reference (ochre)
+          are distinct under CVD.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Grid margins (left 115, right 70, top 110, bottom
+          90) are generous. Plot utilizes ~70% of canvas area. Legend at top center,
+          annotation in upper-right quadrant — balanced layout.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X-axis: ''Time to Failure (hours)'' — descriptive with units. Y-axis:
+          ''Cumulative Failure Probability'' — descriptive; percentage units appear
+          in tick labels. Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First categorical data series (Failure) uses palette[0] #009E73.
+          Fit line uses palette[2], reference line palette[3]. Background #FAF8F1
+          light / #1A1A17 dark — correct. Data colors identical across themes, chrome
+          flips correctly.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Deliberate color assignments (primary data=green, analytical fit=blue,
+          threshold=ochre), hollow vs filled distinction, styled annotation box with
+          elevatedBg token. Above configured defaults but not yet FiveThirtyEight
+          level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: minorSplitLine for log scale decade subdivision, dashed x-grid vs
+          solid y-grid (semantically appropriate for log scale), proper theme token
+          mapping throughout. Good refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Parameter annotation box (β, η) creates a clear focal point and immediately
+          communicates the key insight of a Weibull plot. Failure/censored distinction
+          guides reading. 63.2% reference provides engineering context.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Weibull probability plot: log x-axis, linearized Weibull
+          y-axis (ln(-ln(1-F))), straight fitted line, failure vs censored visual
+          distinction.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: log x-axis, Weibull y-scale, fitted line
+          with β/η annotation, median rank (i-0.3)/(n+0.4), hollow/filled distinction
+          for censored/failures, 63.2% reference line.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: time to failure (hours, log scale). Y: Weibull transform ln(-ln(1-F))
+          with probability labels. Correct data mapping for Weibull probability paper.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''probability-weibull · javascript · echarts · anyplot.ai''
+          — correct format. Legend: ''Failure'', ''Censored (suspended)'', ''Weibull
+          Fit'', ''63.2% Reference'' — descriptive and accurate.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows both failures (14) and right-censored (6) observations, fitted
+          line, 63.2% characteristic life reference, and annotated Weibull parameters
+          — comprehensive coverage of all plot type aspects.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Hydraulic pump service-life study — real-world reliability engineering
+          scenario. Time values (620h–13,500h) and failure/suspension mix are plausible
+          for industrial component testing. Neutral topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: β=3.20 (wear-out failure mode, β>1 appropriate for fatigue), η=4,881h
+          (reasonable characteristic life for hydraulic pump), data range 620–13,500h
+          plausible for hours-based industrial reliability test.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: data → rank computation → regression → init → setOption.
+          No function definitions, clean and readable.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: hardcoded observation array, no RNG.'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed (ECharts is a global). Only window.ANYPLOT_TOKENS
+          and echarts used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized with clear section comments. Regression computation
+          is appropriately explicit without over-engineering. No fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'animation: false set, echarts.init on #container, setOption called
+          — correct harness contract. Produces plot-{theme}.png and .html via harness.'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Log axis type, minorSplitLine, custom formatter, graphic overlay,
+          scatter+line combination — idiomatic ECharts patterns. Correct use of ANYPLOT_TOKENS
+          throughout.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: minorSplitLine (ECharts-specific for log decade grid), graphic API
+          for annotation box, combining scatter+line series with mixed symbol/no-symbol
+          treatment. Some distinctive ECharts usage.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - edge-highlighting

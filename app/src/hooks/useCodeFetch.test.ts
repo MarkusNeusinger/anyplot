@@ -198,6 +198,25 @@ describe('useCodeFetch', () => {
       );
     });
 
+    it('appends ?language=javascript for muix (.tsx React) impls', async () => {
+      const tsxCode = 'export default function Chart() { return <BarChart /> }';
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ code: tsxCode }),
+      });
+
+      const { result } = renderHook(() => useCodeFetch());
+      let code: string | null = null;
+      await act(async () => {
+        code = await result.current.fetchCode('scatter-basic', 'muix', 'javascript');
+      });
+
+      expect(code).toBe(tsxCode);
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/specs/scatter-basic/muix/code?language=javascript')
+      );
+    });
+
     it('caches python, r, and julia impls under separate keys for the same library_id', async () => {
       const pyCode = 'import matplotlib';
       const rCode = 'library(matplotlib)';

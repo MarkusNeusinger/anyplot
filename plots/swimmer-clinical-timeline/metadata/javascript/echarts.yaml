@@ -1,0 +1,266 @@
+library: echarts
+language: javascript
+specification_id: swimmer-clinical-timeline
+created: '2026-06-08T06:32:04Z'
+updated: '2026-06-08T06:50:23Z'
+generated_by: claude-sonnet
+workflow_run: 27119594926
+issue: 4670
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/javascript/echarts/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - 'Full spec compliance: horizontal bars sorted by duration, four distinct event
+    symbol types, ongoing-patient arrows, and dual treatment-arm color coding all
+    present'
+  - 'Imprint palette applied correctly: Arm A uses #009E73 (brand green), Arm B #C475FD;
+    matte red #AE3030 for PD (semantic bad/loss) is correct and idiomatic'
+  - Both themes render correctly — warm off-white (#FAF8F1) light background, warm
+    near-black (#1A1A17) dark background; all chrome tokens flip and no dark-on-dark
+    failures
+  - Hardcoded deterministic data with 25 realistic Phase II oncology patients across
+    two treatment arms — realistic IDs, event times, and durations
+  - 'Clever ECharts-specific technique: empty scatter series used as legend proxy
+    to render colored rect legend icons for treatment arms independently of the bar
+    series'
+  - Custom SVG path in legend for Progressive Disease icon matches the symbolRotate:180
+    triangle in the scatter series — visually consistent
+  - 'Clean KISS code structure: inline data, clean forEach loops, single setOption
+    call — no unnecessary abstraction'
+  weaknesses:
+  - Y-axis 'Patient' label placed at nameLocation:'end' with inverse:true — this puts
+    the label at the bottom-left near the x-axis intersection, which is unconventional
+    and visually awkward; move to nameLocation:'middle' with appropriate nameGap
+  - Event marker symbolSize 13-15 is small for a 3200×1800 canvas; at 2× devicePixelRatio
+    that is ~26-30 output pixels — slightly undersized for easy visual parsing at
+    mobile scale; increase to 16-20
+  - 'Design Excellence is functional but not exceptional: no emphasis technique distinguishes
+    notable patients (e.g., a complete-responder at 52 weeks), and no visual focal
+    point is created; consider size variation on the ongoing-arrow markers or a vertical
+    reference line at median duration'
+  - No horizontal reference line or annotation marking the data cutoff or median duration
+    — a single markLine would significantly improve storytelling without adding complexity
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "swimmer-clinical-timeline · javascript · echarts · anyplot.ai" in dark bold text, centered, fully visible (~75% width). Patient IDs (PT-001 through PT-023) on Y-axis in dark soft text, all readable. X-axis label "Time on Study (Weeks)" in dark soft text, fully visible. "Patient" Y-axis label appears at the bottom-left (nameLocation:'end' with inverse:true), slightly unconventional but readable. Legend at bottom with six entries (Arm A rect, Arm B rect, Partial Response triangle, Complete Response diamond, Progressive Disease inverted triangle, Ongoing arrow) — all visible and labeled.
+      Data: Arm A bars in brand green (#009E73), Arm B bars in lavender (#C475FD). Bars are horizontal and sorted longest-at-top (PT-001, 52 wks) to shortest-at-bottom (PT-023, 6 wks). Ochre upward triangles mark Partial Response events. Blue diamonds mark Complete Response events. Red inverted triangles mark Progressive Disease. Gray/neutral arrows extend past bar ends for ongoing patients. Vertical grid lines are subtle.
+      Legibility verdict: PASS — all text readable, no clipping, no overlap.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title in light text, clearly readable. Patient IDs in light text on Y-axis, all readable. X-axis label in light text, readable. "Patient" Y-axis label at bottom in light text — readable but unconventional placement persists. Legend text is light-colored, all entries visible.
+      Data: Bar colors are identical to light render — green (#009E73) for Arm A, lavender (#C475FD) for Arm B. All event markers (ochre triangles, blue diamonds, red inverted triangles, theme-adaptive arrows) identical to light render. No dark-on-dark failures observed — tick labels, axis labels, and title all appear in appropriately light colors.
+      Legibility verdict: PASS — both themes fully readable, chrome tokens applied correctly throughout.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set; title 27px, x-axis label 19px, y-axis
+          label 15px, tick labels 14-15px. Readable in both themes. Minor: x-axis
+          label 19px is slightly large for the short ''Time on Study (Weeks)'' label.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element overlap observed in either theme.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bars clearly visible. Event marker symbolSize 13-15 (~26-30 output
+          px at 2x) is slightly small but visible. Ongoing arrows visible past bar
+          ends.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Redundant encoding (shape + color) for all event types ensures CVD-safe
+          distinction. Imprint palette is CVD-optimized.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Good canvas utilization. Minor: Y-axis ''Patient'' label at nameLocation:''end''
+          with inverse:true places it unconventionally at the bottom intersection.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X-axis: ''Time on Study (Weeks)'' with units. Y-axis: ''Patient''
+          descriptive. Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: First series (#009E73 brand green) correct. Multi-series uses Imprint
+          palette positions 0-4. Matte red for PD is semantic-correct. Backgrounds
+          and chrome correct in both themes.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above library defaults: correct Imprint palette, rounded bar corners
+          (borderRadius [0,2,2,0]), transparent background, clean layout. Not yet
+          publication-ready — no emphasis or focal point.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Rounded bar corners, token-based chrome, vertical-only grid, no horizontal
+          grid on category axis, clean legend spacing. Good refinement above defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Sorted-by-duration layout + dual color coding for treatment arms
+          creates visual hierarchy. Notable patients (long-duration complete responders)
+          could benefit from additional emphasis.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct swimmer plot: horizontal bars per patient, sorted by duration,
+          event markers on timeline.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct markers for PR (triangle), CR (diamond), PD (inverted triangle),
+          Ongoing (arrow). Bars color-coded by treatment arm. Clear legend. Patient
+          IDs on Y-axis. Time units on X-axis.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis = time in weeks, Y-axis = patient IDs, bar length = duration,
+          events plotted at correct times.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''swimmer-clinical-timeline · javascript · echarts · anyplot.ai''
+          — correct. Legend has all 6 required entries with correct symbols.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows both treatment arms, three event types (PR, CR, PD), ongoing
+          patients, wide duration range (6-52 weeks), varied response patterns.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Phase II oncology trial with realistic patient IDs, arm assignments,
+          event timings, and treatment durations. Clinically neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 6-52 week duration range realistic for Phase II oncology. 25 patients
+          appropriate cohort size. Event timings proportionally plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean flow: token setup → data → event array building → init → setOption.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data — no RNG needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: JS file uses only globals (echarts, window.ANYPLOT_TOKENS) — no unnecessary
+          imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately complex, no fake UI. forEach loops are idiomatic.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ECharts library produces plot-{theme}.png and plot-{theme}.html via
+          harness.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Correct ECharts patterns: animation:false, transparent backgroundColor,
+          token-mapped chrome, category axis with inverse:true, containLabel grid.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'ECharts-specific: empty scatter series as legend proxy for bar arm
+          colors; custom SVG path icon for PD legend; mixed bar+scatter series in
+          one chart; symbolRotate for directional markers.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling: []

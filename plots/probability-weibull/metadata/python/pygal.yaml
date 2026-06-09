@@ -1,112 +1,142 @@
 library: pygal
+language: python
 specification_id: probability-weibull
 created: '2026-03-11T21:54:05Z'
-updated: '2026-03-11T22:24:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22976096712
+updated: '2026-06-07T23:10:45Z'
+generated_by: claude-sonnet
+workflow_run: 27107121698
 issue: 4668
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/pygal/plot.html
-quality_score: 87
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/python/pygal/plot-dark.html
+quality_score: 83
 review:
   strengths:
-  - Excellent statistical implementation with correct Weibull linearization and median
-    rank plotting positions
-  - Cohesive blue-tonal color palette with intentional warm/cool accent contrast for
-    key markers
-  - Strong data storytelling through eta and B10 focal points with enlarged markers
-    and distinct colors
-  - Good use of pygal-specific features like label dicts, tooltip formatting, and
-    dual PNG/HTML output
-  - Clean, well-organized code with appropriate complexity
+  - Excellent spec compliance — all required features present (Weibull line, median
+    rank, censored distinctions, 63.2% reference, B10 life marker)
+  - Realistic turbine blade fatigue scenario with correct engineering parameters (β=2.5,
+    η≈8000h)
+  - Complete and clean code — KISS structure, seeded RNG, all imports used
+  - Strong library mastery — stroke_style dasharray, custom dict labels for axes,
+    print_values with formatter, tooltip_fancy_mode
+  - 'Visual hierarchy through size variation: dots_size 12 for data, 22 for key markers
+    (η, B10)'
   weaknesses:
-  - Title format prepends extra descriptive text before the standard spec-id/library/pyplots.ai
-    pattern
-  - Minor data point clustering at upper-right of the distribution
-  - Could push library mastery further with more pygal-unique features
-  image_description: The plot displays a Weibull probability plot titled "Turbine
-    Blade Fatigue Life · probability-weibull · pygal · pyplots.ai". The x-axis shows
-    "Time to Failure (hours, log scale)" with labeled ticks at 1,000 through 15,000.
-    The y-axis shows "Cumulative Failure Probability" on a linearized Weibull scale
-    with probability levels from 1% to 99%. A medium-blue fitted line runs diagonally
-    from lower-left to upper-right. Dark navy dots (18 failures) are scattered along
-    the fit line. Light steel-blue dots (5 censored observations) appear at slightly
-    different positions. A dashed gray horizontal line marks the 63.2% characteristic
-    life level. A large burnt-orange dot marks eta approximately 7,772h at the intersection
-    of the fit line and 63.2% reference. A large green dot marks B10 approximately
-    2,640h at the 10% probability level. The legend at the bottom is arranged in 3
-    columns across 2 rows with all 6 series clearly labeled. The background is white
-    with a very light gray plot area and subtle dashed grid lines.
+  - Imprint palette canonical order not followed — series 2 uses pos 3 (#4467A3 blue)
+    and series 3 uses pos 2 (#C475FD lavender); the swap is aesthetic, not semantically
+    justified — should follow canonical 1→2→3 order
+  - Legend at bottom with 6 items in 3 columns is tight — first entry 'Weibull Fit
+    (β=2.08, η=7,772h, R²=0.979)' is very long and crowds its column; consider switching
+    to legend_at_bottom_columns=2 or shortening the legend label
+  - DE-01 design sophistication is solid but not publication-ready — spines cannot
+    be removed in pygal SVG but the overall look is a well-configured default rather
+    than exceptional
+  - DE-03 storytelling is good via size/color cues but could be stronger — a visible
+    drop-line from B10 and η markers to the axes would guide the eye more explicitly
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, non-pure-white surface.
+      Chrome: Title "Turbine Blade Fatigue Life · probability-weibull · python · pygal · anyplot.ai" clearly rendered in dark ink at dynamically-scaled font (~57px), spanning ~75% of canvas width — appropriate for a 78-char title. Y-axis label "Cumulative Failure Probability" and X-axis label "Time to Failure (hours, log scale)" both readable in dark ink. Y-axis tick labels (1% through 99%) and X-axis tick labels (1,000 through 15,000) clearly readable in dark muted tone.
+      Data: Weibull fit line in brand green #009E73 (Imprint pos 1) runs diagonally across the plot. Failure points in blue #4467A3 (Imprint pos 3 — used at series 2, slight canonical-order deviation). Censored points in lavender #C475FD (Imprint pos 2 — used at series 3). 63.2% dashed reference line in muted neutral (INK_MUTED). Ochre η marker (#BD8233, pos 4) prominently oversized. Matte red B10 marker (#AE3030, pos 5) prominently oversized. Legend at bottom in 3 columns — slightly tight for the long first entry.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, non-pure-black surface.
+      Chrome: Title, axis labels, and tick labels all rendered in light-colored text (#F0EFE8 / INK_SOFT tokens) — fully readable against dark background. Grid lines subtle and visible. No dark-on-dark text failures observed.
+      Data: Data colors are identical to light render — brand green fit line, blue failures, lavender censored, ochre η marker, matte red B10. The 63.2% dashed line is clearly visible as a gray dashed horizontal. Legend entries readable. Theme chrome correctly flipped.
+      Legibility verdict: PASS — all text readable against dark background; theme-adaptive tokens properly applied.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=56, label=40, major_label=36,
-          legend=38, value=32'
+        comment: 'All font sizes explicitly set; title dynamically scaled (57px for
+          78-char title), axis labels 56px, tick/legend 44px. Both renders readable.
+          Minor: dynamic title slightly smaller than default 66.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Minor clustering at upper-right but no text overlap
+        comment: Data area clean. Legend in 3 columns is tight — first entry 'Weibull
+          Fit (β=2.08, η=7,772h, R²=0.979)' crowds its column. Minor crowding but
+          still readable.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Failure dots=12, censored=9, markers=22 all well-differentiated
+        comment: Failure and censored points clearly visible (dots_size=12). Key markers
+          oversized (dots_size=22). Reference dashed line slightly light in the light
+          render but visible.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette. Elements distinguishable by color and size.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue-tonal palette with orange/green accents, colorblind-safe
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good utilization, legend at bottom takes some vertical space
+        comment: 3200x1800 landscape. Plot fills canvas well with generous but balanced
+          margins. Legend at bottom integrates cleanly.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units on both axes
+        comment: 'X: ''Time to Failure (hours, log scale)''; Y: ''Cumulative Failure
+          Probability''. Both descriptive with units/context.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'First series (fit line) correctly #009E73. However, canonical order
+          violated: series 2 uses Imprint pos 3 (blue) instead of pos 2 (lavender),
+          and series 3 uses pos 2 instead of pos 3 — swapped for aesthetic reasons
+          without semantic justification. Chrome and backgrounds theme-correct in
+          both renders.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom blue-tonal palette with warm/cool accents, professional polish
-          above defaults
+        comment: 'Strong design choices: Imprint palette with semantic assignments,
+          size-varied markers for hierarchy, thoughtful color mapping. Above well-configured
+          default but not publication-ready.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Custom plot background, subtle dashed guides, generous margins
+        comment: Careful margins, bottom legend with columns, appropriate dot sizes.
+          Grid visible and functional. pygal SVG rendering limits spine removal but
+          overall refined look.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Eta and B10 markers create clear focal points with distinct colors
-          and sizes
+        comment: 'Good hierarchy: fit line most prominent, η and B10 as oversized
+          focal markers, 63.2% reference guides interpretation. Viewer sees engineering
+          insight immediately.'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -114,49 +144,58 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Weibull probability plot with linearized axes
+        comment: 'Correct Weibull probability plot: log-time x-axis, linearized Weibull
+          y-axis, fitted straight line.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: log x, Weibull y, fitted line, median
-          rank, censored distinction, 63.2% line'
+        comment: 'All required: fitted line with β/η annotation, median rank (i-0.3)/(n+0.4),
+          censored vs failure distinction, 63.2% reference line, B10 life marked.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on x, probability on y, all data visible
+        comment: 'X: log-time correctly implemented via ln() transform with original-value
+          labels. Y: Weibull linearized scale. All data visible.'
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title prepends descriptive text before required format pattern
+        comment: 'Title: ''Turbine Blade Fatigue Life · probability-weibull · python
+          · pygal · anyplot.ai'' — correct {Descriptive} · {spec-id} · {lang} · {lib}
+          · anyplot.ai format. Legend labels informative with counts and parameters.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows failures, censored, fitted line, eta, B10, R-squared
+        comment: 'Shows all aspects: failures, censored suspensions, fitted Weibull
+          line, characteristic life (η), B10 life, 63.2% reference — complete feature
+          coverage.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Turbine blade fatigue life is a classic reliability engineering scenario
+        comment: Turbine blade fatigue-life analysis — real reliability engineering
+          scenario. Hours as unit, engineering parameters (β=2.5, η≈8000h) realistic
+          for wear-out failure mode.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Beta=2.5, eta=8000h are plausible Weibull parameters for turbine
-          components
+        comment: β=2.5 realistic for material fatigue. η~8000h plausible for turbine
+          blades. 18 failures + 5 censored ratio realistic for accelerated life testing.
+          B10~2640h physically reasonable.
     code_quality:
       score: 10
       max: 10
@@ -166,59 +205,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, linearization, fit, chart, save'
+        comment: 'Linear flat structure: imports → tokens → data → transforms → fit
+          → config → series → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, pygal, Style, scipy.stats'
+        comment: os, sys, numpy, pygal, pygal.style.Style, scipy.stats — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity for statistical transformations
+        comment: Well-organized, appropriate complexity for a Weibull analysis. sys.path
+          manipulation is necessary and clearly commented. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Good use of pygal.XY, Style, label dicts, formatters, stroke_style
+        comment: 'Expert pygal usage: XY chart, Style object, dict-format data points
+          with labels, x_labels/y_labels with value+label dicts, stroke_style kwargs,
+          legend_at_bottom with columns.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal-specific tooltip formatting, label dicts, print_values,
-          dual PNG/HTML output
-  verdict: REJECTED
+        comment: 'Uses pygal-specific features: stroke_style with dasharray, x_value_formatter/value_formatter
+          lambdas, print_values with custom formatter, tooltip_fancy_mode, dict-format
+          data points for per-point tooltips. Good but not maximally leveraged.'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - manual-ticks
-  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   dataprep:
   - regression
-  styling:
-  - grid-styling
+  - cumulative-sum
+  styling: []

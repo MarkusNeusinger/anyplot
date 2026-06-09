@@ -1,0 +1,252 @@
+library: ggplot2
+language: r
+specification_id: spectrogram-mel
+created: '2026-06-03T18:11:42Z'
+updated: '2026-06-03T18:32:41Z'
+generated_by: claude-sonnet
+workflow_run: 26903575433
+issue: 4672
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Full STFT and mel filterbank implemented in pure R without librosa — impressive
+    DSP fidelity with no external audio dependencies
+  - 'imprint_seq colormap (#009E73 → #4467A3) correctly applied to continuous intensity
+    data per style guide rules'
+  - Complete theme-adaptive chrome with all tokens (INK, INK_SOFT, INK_MUTED, PAGE_BG,
+    ELEVATED_BG) properly flipped between themes
+  - Meaningful annotations (1 kHz boundary with region labels Fundamentals/Overtones,
+    note onset markers) guide interpretation
+  - 'Perfect spec compliance: dB scale, mel filterbank, colorbar labeled in dB, Hz-labeled
+    y-axis, time x-axis'
+  - Clean reproducible code with set.seed(42), no classes or unnecessary wrappers,
+    modern linewidth= API
+  weaknesses:
+  - 'Annotation text at size=2.3 mm is slightly small; ''Fundamentals'' in light render
+    has marginal contrast against teal tiles (#6B6A63 on #009E73 background) — raise
+    to size=2.8–3.0 and use INK_SOFT instead of INK_MUTED for annotations overlaying
+    colored tiles'
+  - Spectrogram dynamic range dominated by narrow energy band; data storytelling limited
+    — consider tightening colorbar floor from -80 dB to -60 dB to enhance contrast
+    in the meaningful energy region, or add a second annotated frequency boundary
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "spectrogram-mel · r · ggplot2 · anyplot.ai" bold dark ink, ~70% plot width. Subtitle readable. Axis labels "Time (s)" and "Frequency (Hz)" in dark ink. Tick labels (100 Hz–8k Hz, 0–3 s) in INK_SOFT (#4A4A44). All readable.
+      Data: imprint_seq colormap (green #009E73 low → blue #4467A3 high) fills heatmap tiles. Dashed 1 kHz boundary line and dotted onset markers visible. "Fundamentals" and "Overtones" annotations present but subtle (INK_MUTED #6B6A63 on teal tiles). "1 kHz" label near right edge readable.
+      Legibility verdict: PASS (annotation text slightly small/low-contrast on colored tiles — minor)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and all text flip to light ink (#F0EFE8 / #B8B7B0). All labels clearly readable. No dark-on-dark failures. "Fundamentals" and "Overtones" annotations more visible in dark mode (INK_MUTED #A8A79F reads better against dark teal). Legend uses elevated background #242420 with soft border.
+      Data: Colors are IDENTICAL to light render — imprint_seq green-to-blue gradient unchanged between themes. Only chrome flips.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title 12pt, axis labels 10pt, tick labels 8pt all properly sized.
+          Annotation text size=2.3mm slightly small; 'Fundamentals' has marginal contrast
+          on teal tiles in light render.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-text or text-data overlaps in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Heatmap tiles clearly visible; dotted onset lines thin but appropriate
+          for secondary reference.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (green→blue) is CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 passes gate. Proportions appropriate for spectrogram.
+          Colorbar well-positioned.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (s), Frequency (Hz), colorbar dB — all labeled with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq (#009E73 low, #4467A3 high). Backgrounds #FAF8F1 / #1A1A17
+          correct. All chrome tokens theme-adaptive.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Intentional design: custom imprint_seq colormap, annotated 1 kHz
+          boundary, region labels, percussive synthesis. Clear visual hierarchy.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid fully removed, panel border absent, axis lines styled, legend
+          with elevated-background border, 16px margins.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: 1 kHz boundary with region labels and onset markers provide interpretive
+          scaffolding. Subtitle gives context. Dynamic range concentration limits
+          visual impact.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct mel spectrogram via geom_tile on mel-scaled frequency axis.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: dB conversion, mel filterbank, sequential colormap, colorbar labeled
+          in dB — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time(s), Y=mel band with Hz labels, fill=dB values.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''spectrogram-mel · r · ggplot2 · anyplot.ai''. Colorbar
+          labeled ''dB''.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full 128-band mel spectrogram, 8 harmonics per note, percussive onset
+          bursts, additive noise floor.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: C-major arpeggio is neutral, universally recognizable, with realistic
+          synthesis parameters.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Standard parameters: 22050 Hz SR, n_fft=2048, hop_length=512, n_mels=128,
+          -80 to 0 dB range.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No wrapper functions or classes; hz_to_mel/mel_to_hz helpers necessary
+          for filterbank.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) at top.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, scales, ragg — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: DSP complexity inherent to plot type; no fake UI; clean R idioms.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-%s.png with THEME env var; modern linewidth= API used.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: geom_tile, scale_fill_gradient with limits/breaks/oob, guide_colorbar
+          customization, scale_y_continuous with custom breaks/labels, expand=c(0,0).
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Full mel filterbank in pure R; custom Hz labels from mel scale inversion;
+          guide_colorbar barheight/barwidth; annotate() with fontface='italic'.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - ragg
+  techniques:
+  - colorbar
+  - annotations
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap

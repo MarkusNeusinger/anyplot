@@ -1,0 +1,253 @@
+library: makie
+language: julia
+specification_id: phase-diagram-pt
+created: '2026-06-08T08:37:33Z'
+updated: '2026-06-08T08:56:47Z'
+generated_by: claude-sonnet
+workflow_run: 27125237861
+issue: 4666
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Scientifically accurate water phase diagram using real Clausius-Clapeyron equations,
+    correct physical constants (triple point 273.16 K/611.73 Pa, critical point 647.1
+    K/22.064 MPa), and water's anomalous negative-slope melting curve
+  - 'Full spec compliance: all three phase boundary curves, triple point (circle)
+    and critical point (star) with distinct markers and annotations, phase region
+    labels, supercritical fluid region with subtle polygon shading, logarithmic pressure
+    axis'
+  - Excellent theme adaptation with all Imprint tokens (PAGE_BG, ELEVATED_BG, INK,
+    INK_SOFT, INK_MUTED) correctly applied and data colors identical between light
+    and dark renders
+  - 'Idiomatic Makie usage: poly! for the supercritical polygon, yscale=log10 in Axis
+    constructor, axislegend, RGBAf for alpha colors, Point2f[] for polygon vertices'
+  - Clean code structure with well-documented physical constants and minimal complexity
+    — no unnecessary abstractions
+  weaknesses:
+  - Annotation text at fontsize=13 renders at 26px on the 3200×1800 canvas — slightly
+    small for annotation labels; increase Triple Point and Critical Point annotation
+    fontsize to 15-16 for better readability
+  - Supercritical region polygon shading at 8% opacity (SC_FILL) is almost imperceptibly
+    subtle — bumping to 12-14% would make it more visually apparent without adding
+    noise
+  - SUPER-CRITICAL FLUID label at x=662 with :center alignment is tight against the
+    right axis margin (right limit=680); shifting to x=655 or using :right alignment
+    would give more breathing room
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface.
+      Chrome: Title "Water Phase Diagram · phase-diagram-pt · julia · makie · anyplot.ai" in dark ink at top center, comfortably spanning ~70% of canvas width. X-axis label "Temperature (K)" and Y-axis label "Pressure (Pa)" in dark ink, clearly readable. Tick labels in #4A4A44 (INK_SOFT), log-scale Y-axis ticks visible. Top and right spines removed, left and bottom in INK_SOFT. Subtle grid lines at 12% INK opacity.
+      Data: Three phase boundary curves — Liquid-Gas in #009E73 (brand green), Solid-Liquid in #C475FD (lavender), Solid-Gas in #4467A3 (blue). Triple point marked with filled black circle (size 16) at ~(273, 612 Pa), critical point with black star (size 18) at top right ~(647, 22 MPa). Phase region labels SOLID, LIQUID, GAS in bold INK_MUTED, SUPER-CRITICAL FLUID multi-line label at top right. Subtle near-transparent polygon shading in supercritical region. Legend in bottom-right with framed elevated background.
+      Legibility verdict: PASS — all text clearly readable against warm cream background.
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct Imprint dark surface.
+      Chrome: Title and axis labels flip to #F0EFE8 (INK in dark theme) — clearly readable light text on dark background. Tick labels in #B8B7B0 (INK_SOFT dark), clearly visible. Grid lines flip to 12% of light INK value, subtle but present against dark surface.
+      Data: All three phase boundary curves retain identical colors (#009E73, #C475FD, #4467A3) — Imprint data colors unchanged between themes, confirming correct implementation. Triple point marker appears as light/white circle (INK in dark = #F0EFE8), critical point as light star — both clearly visible against dark background. Phase region labels and annotations in INK_MUTED dark (#A8A79F). Legend framed with elevated dark background (#242420).
+      Legibility verdict: PASS — no dark-on-dark failures; all text is light-colored on near-black background and clearly readable.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; minor deduction for annotation
+          text (Triple Point, Critical Point) at fontsize=13 rendering at 26px on
+          3200x1800 — slightly small
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All three phase boundary curves clearly visible with linewidth=3;
+          markers well-sized
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette used, colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, clean layout; SUPER-CRITICAL FLUID label at right
+          edge is readable
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Temperature (K) and Pressure (Pa) with units; title correct format
+          with descriptive prefix
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order, backgrounds #FAF8F1/#1A1A17
+          correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Above generic: supercritical region polygon shading, dual marker
+          types (circle vs star), phase region labels, all add intentional visual
+          sophistication'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle 12% grid, framed legend with elevated background,
+          clean margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Phase region labels guide the viewer; triple/critical point annotations
+          with coordinates tell the scientific story; supercritical shading differentiates
+          the fourth region
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct P-T phase diagram with log pressure axis
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Triple point, critical point, all three boundaries, phase region
+          labels, supercritical region, log scale — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: T on X, P(log) on Y, physically accurate boundary curves
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with descriptive prefix; legend labels match
+          boundary types
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All aspects covered including water's anomalous negative melting
+          slope — exceptional detail
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real water constants, Clausius-Clapeyron equations, neutral educational
+          context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 220-680 K, 1-5e7 Pa, well-chosen to show all three phase regions
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean top-to-bottom script, no unnecessary abstractions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) present (data is deterministic but seed is harmless)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Physical constants documented with comments, clear data generation
+          steps
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2) correct; uses size=
+          (current Makie 0.22 API)
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: lines!, scatter!, text!, poly!, axislegend all used idiomatically;
+          yscale=log10 in Axis constructor
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: poly! with Point2f[] for supercritical polygon is distinctively Makie;
+          RGBAf for alpha colors; yscale in Axis constructor rather than post-hoc
+          transform
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - log-scale
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

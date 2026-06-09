@@ -6,7 +6,7 @@ title: NMR Spectrum (Nuclear Magnetic Resonance)
 
 # Specification tracking
 created: "2026-03-07T20:32:43Z"
-updated: null
+updated: "2026-06-03T15:42:37Z"
 issue: 4676
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - line
-    - spectrum
   data_type:
     - numeric
     - continuous
@@ -25,3 +24,4 @@ tags:
   features:
     - annotated
     - reversed-axis
+    - spectrum
