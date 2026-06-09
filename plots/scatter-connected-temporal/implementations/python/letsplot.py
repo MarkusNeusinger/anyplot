@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-09
@@ -143,7 +143,7 @@ plot = (
     + geom_text(
         data=df_labels,
         mapping=aes(x="label_x", y="label_y", label="year_label"),
-        size=5,
+        size=6,
         color=INK,
         family="monospace",
         fontface="bold",
@@ -174,6 +174,7 @@ plot = (
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        panel_border=element_blank(),
         plot_margin=[20, 20, 10, 10],
     )
 )
