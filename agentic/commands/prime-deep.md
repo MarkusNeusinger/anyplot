@@ -18,7 +18,6 @@ gh pr list --limit 10 2>/dev/null || echo "(gh CLI not available)"
 ## Read
 
 @agentic/docs/project-guide.md
-@agentic/commands/context.md
 @docs/concepts/vision.md
 @pyproject.toml
 
