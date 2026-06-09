@@ -1,11 +1,12 @@
 import { Link as RouterLink } from 'react-router-dom';
+
 import Box from '@mui/material/Box';
 
-import { colors, typography } from '../theme';
-import { TypewriterText } from './TypewriterText';
-import { PlotOfTheDayTerminal } from './PlotOfTheDayTerminal';
-import type { PlotOfTheDayData } from '../hooks/usePlotOfTheDay';
 import { useAnalytics } from '../hooks';
+import type { PlotOfTheDayData } from '../hooks/usePlotOfTheDay';
+import { colors, typography } from '../theme';
+import { PlotOfTheDayTerminal } from './PlotOfTheDayTerminal';
+import { TypewriterText } from './TypewriterText';
 
 interface HeroSectionProps {
   potd?: PlotOfTheDayData | null;
@@ -90,7 +91,9 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
               .
             </Box>
             plot
-            <Box component="span" sx={{ fontWeight: 400, opacity: 0.45 }}>()</Box>
+            <Box component="span" sx={{ fontWeight: 400, opacity: 0.45 }}>
+              ()
+            </Box>
           </Box>
           <br />
           <Box
@@ -139,8 +142,7 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
         >
           every plot begins as a library-agnostic spec. ai drafts implementations across every
           supported library, validates them against quality criteria, and keeps them current. you
-          discover, copy, and adapt — plug in <em>your</em>
-          {' '}data. that&apos;s it.
+          discover, copy, and adapt — plug in <em>your</em> data. that&apos;s it.
         </Box>
 
         <TypewriterText
@@ -203,7 +205,6 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
             />
           </Box>
         </Box>
-
       </Box>
 
       {/* Right: terminal plot */}
@@ -215,7 +216,19 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
   );
 }
 
-function PrimaryCta({ to, subject, verb, ariaLabel, onClick }: { to: string; subject: string; verb: string; ariaLabel: string; onClick?: () => void }) {
+function PrimaryCta({
+  to,
+  subject,
+  verb,
+  ariaLabel,
+  onClick,
+}: {
+  to: string;
+  subject: string;
+  verb: string;
+  ariaLabel: string;
+  onClick?: () => void;
+}) {
   return (
     <Box
       component={RouterLink}
@@ -242,7 +255,9 @@ function PrimaryCta({ to, subject, verb, ariaLabel, onClick }: { to: string; sub
       }}
     >
       <Box component="span">
-        <Box component="span" className="cta-subject">{subject}</Box>
+        <Box component="span" className="cta-subject">
+          {subject}
+        </Box>
         {`.${verb}()`}
       </Box>{' '}
       <Box component="span">→</Box>
@@ -288,11 +303,17 @@ function SecondaryLink({
         '& .link-subject': { opacity: 0.7, transition: 'opacity 0.2s' },
         '&:hover': { color: colors.primary },
         '&:hover .link-subject': { opacity: 1 },
-        '&:focus-visible': { outline: `2px solid ${colors.primary}`, outlineOffset: 2, borderRadius: '2px' },
+        '&:focus-visible': {
+          outline: `2px solid ${colors.primary}`,
+          outlineOffset: 2,
+          borderRadius: '2px',
+        },
       }}
     >
       <Box component="span">
-        <Box component="span" className="link-subject">{subject}</Box>
+        <Box component="span" className="link-subject">
+          {subject}
+        </Box>
         {`.${verb}()`}
       </Box>
     </Box>

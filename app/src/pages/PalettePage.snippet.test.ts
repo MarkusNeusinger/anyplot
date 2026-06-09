@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { snippet, PALETTE, type Lang } from './PalettePage';
+import { type Lang, PALETTE, snippet } from './PalettePage';
 
 const LANGS: Lang[] = ['python', 'r', 'julia', 'js'];
 
@@ -8,7 +8,7 @@ describe('PalettePage snippet()', () => {
   // Regression: the /palette page calls the palette "imprint" everywhere
   // (heading, meta, history, imprint_seq / imprint_div colormaps), so the
   // copy-paste code must use the IMPRINT object — never ANYPLOT_*.
-  it.each(LANGS)('emits a unified IMPRINT object, never ANYPLOT_*, for %s (hex)', (lang) => {
+  it.each(LANGS)('emits a unified IMPRINT object, never ANYPLOT_*, for %s (hex)', lang => {
     const code = snippet(lang, false, PALETTE);
     expect(code).toContain('IMPRINT');
     // single bundled object exposes hues + the semantic anchors + cmaps
@@ -21,7 +21,7 @@ describe('PalettePage snippet()', () => {
     expect(code).not.toContain('ANYPLOT');
   });
 
-  it.each(LANGS)('still uses the IMPRINT object in OKLCH mode for %s', (lang) => {
+  it.each(LANGS)('still uses the IMPRINT object in OKLCH mode for %s', lang => {
     const code = snippet(lang, true, PALETTE);
     expect(code).toContain('IMPRINT');
     expect(code).toContain('hues');
@@ -48,7 +48,7 @@ describe('PalettePage snippet()', () => {
   // the JS snippet may emit a bare oklch() literal as an actual colour value.
   it.each(['python', 'r', 'julia'] as Lang[])(
     'keeps runnable hex (never a bare oklch() value) in OKLCH mode for %s',
-    (lang) => {
+    lang => {
       const code = snippet(lang, true, PALETTE);
       expect(code).toContain('#009E73'); // brand-green hex is still the real value
       expect(code).toContain('# oklch('); // coordinate shown as a comment

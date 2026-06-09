@@ -1,4 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
 import { render, screen, userEvent } from '../test-utils';
 import { Footer } from './Footer';
 
@@ -25,7 +26,10 @@ describe('Footer', () => {
     render(<Footer onTrackEvent={onTrackEvent} />);
 
     await user.click(screen.getByText('github'));
-    expect(onTrackEvent).toHaveBeenCalledWith('external_link', expect.objectContaining({ destination: 'github' }));
+    expect(onTrackEvent).toHaveBeenCalledWith(
+      'external_link',
+      expect.objectContaining({ destination: 'github' })
+    );
   });
 
   it('calls onTrackEvent when clicking report link', async () => {
@@ -35,7 +39,10 @@ describe('Footer', () => {
     render(<Footer onTrackEvent={onTrackEvent} />);
 
     await user.click(screen.getByText('report'));
-    expect(onTrackEvent).toHaveBeenCalledWith('external_link', expect.objectContaining({ destination: 'github_issue_chooser' }));
+    expect(onTrackEvent).toHaveBeenCalledWith(
+      'external_link',
+      expect.objectContaining({ destination: 'github_issue_chooser' })
+    );
   });
 
   it('renders without onTrackEvent', () => {
@@ -50,7 +57,10 @@ describe('Footer', () => {
     render(<Footer onTrackEvent={onTrackEvent} />);
 
     await user.click(screen.getByText('markus neusinger'));
-    expect(onTrackEvent).toHaveBeenCalledWith('external_link', expect.objectContaining({ destination: 'linkedin' }));
+    expect(onTrackEvent).toHaveBeenCalledWith(
+      'external_link',
+      expect.objectContaining({ destination: 'linkedin' })
+    );
   });
 
   it('calls onTrackEvent when clicking about link', async () => {
@@ -60,7 +70,10 @@ describe('Footer', () => {
     render(<Footer onTrackEvent={onTrackEvent} />);
 
     await user.click(screen.getByText('about'));
-    expect(onTrackEvent).toHaveBeenCalledWith('internal_link', expect.objectContaining({ destination: 'about' }));
+    expect(onTrackEvent).toHaveBeenCalledWith(
+      'internal_link',
+      expect.objectContaining({ destination: 'about' })
+    );
   });
 
   it('calls onTrackEvent when clicking legal link', async () => {
@@ -70,14 +83,23 @@ describe('Footer', () => {
     render(<Footer onTrackEvent={onTrackEvent} />);
 
     await user.click(screen.getByText('legal'));
-    expect(onTrackEvent).toHaveBeenCalledWith('internal_link', expect.objectContaining({ destination: 'legal' }));
+    expect(onTrackEvent).toHaveBeenCalledWith(
+      'internal_link',
+      expect.objectContaining({ destination: 'legal' })
+    );
   });
 
   it('passes selectedSpec and selectedLibrary to tracking', async () => {
     const onTrackEvent = vi.fn();
     const user = userEvent.setup();
 
-    render(<Footer onTrackEvent={onTrackEvent} selectedSpec="scatter-basic" selectedLibrary="matplotlib" />);
+    render(
+      <Footer
+        onTrackEvent={onTrackEvent}
+        selectedSpec="scatter-basic"
+        selectedLibrary="matplotlib"
+      />
+    );
 
     await user.click(screen.getByText('github'));
     expect(onTrackEvent).toHaveBeenCalledWith('external_link', {
@@ -100,7 +122,10 @@ describe('Footer', () => {
     render(<Footer />);
 
     const reportLink = screen.getByText('report').closest('a');
-    expect(reportLink).toHaveAttribute('href', 'https://github.com/MarkusNeusinger/anyplot/issues/new/choose');
+    expect(reportLink).toHaveAttribute(
+      'href',
+      'https://github.com/MarkusNeusinger/anyplot/issues/new/choose'
+    );
     expect(reportLink).toHaveAttribute('target', '_blank');
   });
 

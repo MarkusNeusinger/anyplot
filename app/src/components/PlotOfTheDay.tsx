@@ -1,19 +1,21 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+
 import { Link as RouterLink } from 'react-router-dom';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Link from '@mui/material/Link';
-import IconButton from '@mui/material/IconButton';
-import CloseIcon from '@mui/icons-material/Close';
+
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import CloseIcon from '@mui/icons-material/Close';
+import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
+import Link from '@mui/material/Link';
+import Typography from '@mui/material/Typography';
 
 import { API_URL, GITHUB_URL } from '../constants';
-import { colors, typography, fontSize, semanticColors } from '../theme';
+import { useAnalytics } from '../hooks';
+import { useTheme } from '../hooks/useLayoutContext';
+import { colors, fontSize, semanticColors, typography } from '../theme';
+import { specPath } from '../utils/paths';
 import { buildSrcSet, getFallbackSrc } from '../utils/responsiveImage';
 import { selectPreviewUrl } from '../utils/themedPreview';
-import { useTheme } from '../hooks/useLayoutContext';
-import { useAnalytics } from '../hooks';
-import { specPath } from '../utils/paths';
 
 interface PlotOfTheDayData {
   spec_id: string;
@@ -38,7 +40,9 @@ const mono = typography.fontFamily;
 export function PlotOfTheDay() {
   const [data, setData] = useState<PlotOfTheDayData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [dismissed, setDismissed] = useState(() => window.sessionStorage.getItem('potd_dismissed') === 'true');
+  const [dismissed, setDismissed] = useState(
+    () => window.sessionStorage.getItem('potd_dismissed') === 'true'
+  );
   const { isDark } = useTheme();
   const { trackEvent } = useAnalytics();
   const previewUrl = selectPreviewUrl(data, isDark);
@@ -46,18 +50,24 @@ export function PlotOfTheDay() {
   useEffect(() => {
     if (dismissed) return;
     fetch(`${API_URL}/insights/plot-of-the-day`)
-      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+      .then(r => {
+        if (!r.ok) throw new Error();
+        return r.json();
+      })
       .then(setData)
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [dismissed]);
 
-  const handleDismiss = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    trackEvent('potd_dismiss', { spec: data?.spec_id, library: data?.library_id });
-    setDismissed(true);
-    window.sessionStorage.setItem('potd_dismissed', 'true');
-  }, [trackEvent, data]);
+  const handleDismiss = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      trackEvent('potd_dismiss', { spec: data?.spec_id, library: data?.library_id });
+      setDismissed(true);
+      window.sessionStorage.setItem('potd_dismissed', 'true');
+    },
+    [trackEvent, data]
+  );
 
   // Already dismissed — no space needed (user saw page before)
   if (dismissed) return null;
@@ -72,43 +82,67 @@ export function PlotOfTheDay() {
 
   return (
     <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-      <Box sx={{
-        width: { xs: '92vw', sm: 'auto' },
-        maxWidth: 700,
-        borderRadius: 2,
-        overflow: 'hidden',
-        border: '1px solid var(--rule)',
-        boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-        transition: 'all 0.3s ease',
-        '&:hover': {
-          boxShadow: '0 6px 24px rgba(0,0,0,0.1)',
-        },
-        opacity: 0,
-        animation: 'potdFadeIn 1s ease-out 0.3s forwards',
-        '@keyframes potdFadeIn': {
-          '0%': { opacity: 0, transform: 'translateY(20px)' },
-          '100%': { opacity: 1, transform: 'translateY(0)' },
-        },
-      }}>
+      <Box
+        sx={{
+          width: { xs: '92vw', sm: 'auto' },
+          maxWidth: 700,
+          borderRadius: 2,
+          overflow: 'hidden',
+          border: '1px solid var(--rule)',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+          transition: 'all 0.3s ease',
+          '&:hover': {
+            boxShadow: '0 6px 24px rgba(0,0,0,0.1)',
+          },
+          opacity: 0,
+          animation: 'potdFadeIn 1s ease-out 0.3s forwards',
+          '@keyframes potdFadeIn': {
+            '0%': { opacity: 0, transform: 'translateY(20px)' },
+            '100%': { opacity: 1, transform: 'translateY(0)' },
+          },
+        }}
+      >
         {/* Top bar — full width terminal prompt */}
-        <Box sx={{
-          display: 'flex',
-          alignItems: 'center',
-          px: 1.5,
-          py: 0.5,
-          bgcolor: 'var(--bg-surface)',
-          borderBottom: '1px solid var(--rule)',
-          gap: 0.75,
-        }}>
-          <Typography sx={{ fontFamily: mono, fontSize: fontSize.xs, color: colors.primary, fontWeight: 600 }}>$</Typography>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            px: 1.5,
+            py: 0.5,
+            bgcolor: 'var(--bg-surface)',
+            borderBottom: '1px solid var(--rule)',
+            gap: 0.75,
+          }}
+        >
+          <Typography
+            sx={{ fontFamily: mono, fontSize: fontSize.xs, color: colors.primary, fontWeight: 600 }}
+          >
+            $
+          </Typography>
           {(() => {
             // Per-language file extension + runner command. Anyplot ships Python
             // for nine libraries, R for ggplot2, Julia for makie, and JavaScript
             // for chartjs/d3/echarts/highcharts/muix; the chip mimics what a user
             // would actually type into a shell, so the runner label flips too.
             // muix is the React (.tsx) exception within JavaScript.
-            const ext = data.library_id === 'muix' ? '.tsx' : data.language === 'r' ? '.R' : data.language === 'julia' ? '.jl' : data.language === 'javascript' ? '.js' : '.py';
-            const runner = data.language === 'r' ? 'Rscript' : data.language === 'julia' ? 'julia --project=.' : data.language === 'javascript' ? 'node' : 'python';
+            const ext =
+              data.library_id === 'muix'
+                ? '.tsx'
+                : data.language === 'r'
+                  ? '.R'
+                  : data.language === 'julia'
+                    ? '.jl'
+                    : data.language === 'javascript'
+                      ? '.js'
+                      : '.py';
+            const runner =
+              data.language === 'r'
+                ? 'Rscript'
+                : data.language === 'julia'
+                  ? 'julia --project=.'
+                  : data.language === 'javascript'
+                    ? 'node'
+                    : 'python';
             return (
               <Typography
                 component="a"
@@ -117,16 +151,27 @@ export function PlotOfTheDay() {
                 rel="noopener noreferrer"
                 onClick={(e: React.MouseEvent) => {
                   e.stopPropagation();
-                  trackEvent('nav_click', { source: 'potd_source_link', target: 'github', spec: data.spec_id, library: data.library_id });
+                  trackEvent('nav_click', {
+                    source: 'potd_source_link',
+                    target: 'github',
+                    spec: data.spec_id,
+                    library: data.library_id,
+                  });
                 }}
                 sx={{
-                  fontFamily: mono, fontSize: fontSize.xxs, color: semanticColors.mutedText,
-                  flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                  fontFamily: mono,
+                  fontSize: fontSize.xxs,
+                  color: semanticColors.mutedText,
+                  flex: 1,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
                   textDecoration: 'none',
                   '&:hover': { color: colors.primary },
                 }}
               >
-                {runner} plots/{data.spec_id}/{data.library_id}{ext}
+                {runner} plots/{data.spec_id}/{data.library_id}
+                {ext}
               </Typography>
             );
           })()}
@@ -135,7 +180,8 @@ export function PlotOfTheDay() {
             size="small"
             aria-label="Dismiss plot of the day"
             sx={{
-              color: 'var(--ink-muted)', p: 0.25,
+              color: 'var(--ink-muted)',
+              p: 0.25,
               '&:hover': { color: 'var(--ink-soft)' },
             }}
           >
@@ -144,15 +190,24 @@ export function PlotOfTheDay() {
         </Box>
 
         {/* Middle — image left, info right */}
-        <Box sx={{
-          display: 'flex',
-          flexDirection: { xs: 'column', sm: 'row' },
-        }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+          }}
+        >
           {/* Image */}
           <Link
             component={RouterLink}
             to={specPath(data.spec_id, data.language, data.library_id)}
-            onClick={() => trackEvent('nav_click', { source: 'potd_image', target: 'spec_detail', spec: data.spec_id, library: data.library_id })}
+            onClick={() =>
+              trackEvent('nav_click', {
+                source: 'potd_image',
+                target: 'spec_detail',
+                spec: data.spec_id,
+                library: data.library_id,
+              })
+            }
             sx={{
               display: 'block',
               textDecoration: 'none',
@@ -163,9 +218,20 @@ export function PlotOfTheDay() {
           >
             {previewUrl && (
               <Box component="picture" key={previewUrl} sx={{ display: 'block' }}>
-                <source type="image/webp" srcSet={buildSrcSet(previewUrl, 'webp')} sizes="(max-width: 599px) 92vw, 350px" />
-                <source type="image/png" srcSet={buildSrcSet(previewUrl, 'png')} sizes="(max-width: 599px) 92vw, 350px" />
-                <Box component="img" src={getFallbackSrc(previewUrl)} alt={data.spec_title}
+                <source
+                  type="image/webp"
+                  srcSet={buildSrcSet(previewUrl, 'webp')}
+                  sizes="(max-width: 599px) 92vw, 350px"
+                />
+                <source
+                  type="image/png"
+                  srcSet={buildSrcSet(previewUrl, 'png')}
+                  sizes="(max-width: 599px) 92vw, 350px"
+                />
+                <Box
+                  component="img"
+                  src={getFallbackSrc(previewUrl)}
+                  alt={data.spec_title}
                   sx={{
                     width: '100%',
                     height: '100%',
@@ -179,28 +245,32 @@ export function PlotOfTheDay() {
           </Link>
 
           {/* Info */}
-          <Box sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            flex: 1,
-            minWidth: 0,
-            p: 2,
-            bgcolor: 'var(--bg-surface)',
-            borderLeft: { xs: 'none', sm: '1px solid var(--rule)' },
-            borderTop: { xs: '1px solid var(--rule)', sm: 'none' },
-          }}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              flex: 1,
+              minWidth: 0,
+              p: 2,
+              bgcolor: 'var(--bg-surface)',
+              borderLeft: { xs: 'none', sm: '1px solid var(--rule)' },
+              borderTop: { xs: '1px solid var(--rule)', sm: 'none' },
+            }}
+          >
             {/* Label */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1 }}>
               <AutoAwesomeIcon sx={{ fontSize: fontSize.sm, color: colors.accent }} />
-              <Typography sx={{
-                fontFamily: mono,
-                fontSize: fontSize.sm,
-                color: 'var(--ink-soft)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                fontWeight: 600,
-              }}>
+              <Typography
+                sx={{
+                  fontFamily: mono,
+                  fontSize: fontSize.sm,
+                  color: 'var(--ink-soft)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  fontWeight: 600,
+                }}
+              >
                 plot of the day
               </Typography>
             </Box>
@@ -209,37 +279,48 @@ export function PlotOfTheDay() {
             <Link
               component={RouterLink}
               to={specPath(data.spec_id, data.language, data.library_id)}
-              onClick={() => trackEvent('nav_click', { source: 'potd_title', target: 'spec_detail', spec: data.spec_id, library: data.library_id })}
+              onClick={() =>
+                trackEvent('nav_click', {
+                  source: 'potd_title',
+                  target: 'spec_detail',
+                  spec: data.spec_id,
+                  library: data.library_id,
+                })
+              }
               sx={{
                 textDecoration: 'none',
                 color: 'var(--ink)',
                 '&:hover': { color: colors.primaryDark },
               }}
             >
-              <Typography sx={{
-                fontFamily: mono,
-                fontSize: fontSize.lg,
-                fontWeight: 600,
-                lineHeight: 1.4,
-              }}>
+              <Typography
+                sx={{
+                  fontFamily: mono,
+                  fontSize: fontSize.lg,
+                  fontWeight: 600,
+                  lineHeight: 1.4,
+                }}
+              >
                 {data.spec_title}
               </Typography>
             </Link>
 
             {/* Description */}
             {data.image_description && (
-              <Typography sx={{
-                fontFamily: mono,
-                fontSize: fontSize.xs,
-                color: semanticColors.subtleText,
-                mt: 1,
-                lineHeight: 1.5,
-                fontStyle: 'italic',
-                display: '-webkit-box',
-                WebkitLineClamp: { xs: 2, sm: 3 },
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-              }}>
+              <Typography
+                sx={{
+                  fontFamily: mono,
+                  fontSize: fontSize.xs,
+                  color: semanticColors.subtleText,
+                  mt: 1,
+                  lineHeight: 1.5,
+                  fontStyle: 'italic',
+                  display: '-webkit-box',
+                  WebkitLineClamp: { xs: 2, sm: 3 },
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                }}
+              >
                 &ldquo;{data.image_description.trim()}&rdquo;
               </Typography>
             )}
@@ -247,26 +328,61 @@ export function PlotOfTheDay() {
         </Box>
 
         {/* Bottom bar — terminal output style */}
-        <Box sx={{
-          display: 'flex',
-          alignItems: 'center',
-          px: 1.5,
-          py: 0.5,
-          bgcolor: 'var(--bg-surface)',
-          borderTop: '1px solid var(--rule)',
-        }}>
-          <Typography sx={{ fontFamily: mono, fontSize: fontSize.xxs, color: colors.primary, mr: 0.5 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            px: 1.5,
+            py: 0.5,
+            bgcolor: 'var(--bg-surface)',
+            borderTop: '1px solid var(--rule)',
+          }}
+        >
+          <Typography
+            sx={{ fontFamily: mono, fontSize: fontSize.xxs, color: colors.primary, mr: 0.5 }}
+          >
             &gt;&gt;&gt;
           </Typography>
-          <Typography sx={{ fontFamily: mono, fontSize: fontSize.xxs, color: semanticColors.mutedText }}>
+          <Typography
+            sx={{ fontFamily: mono, fontSize: fontSize.xxs, color: semanticColors.mutedText }}
+          >
             plot.png saved
           </Typography>
           <Box sx={{ flex: 1 }} />
-          <Typography sx={{ fontFamily: mono, fontSize: fontSize.xxs, color: 'var(--ink-muted)', mx: 1 }}>
+          <Typography
+            sx={{ fontFamily: mono, fontSize: fontSize.xxs, color: 'var(--ink-muted)', mx: 1 }}
+          >
             │
           </Typography>
-          <Typography sx={{ fontFamily: mono, fontSize: fontSize.xxs, color: semanticColors.mutedText, whiteSpace: 'nowrap' }}>
-            {data.library_name}{data.library_version && data.library_version !== 'unknown' ? ` ${data.library_version}` : ''} · {data.language === 'r' ? 'R' : data.language === 'julia' ? 'Julia' : data.language === 'javascript' ? 'JavaScript' : 'Python'} {data.language_version || data.python_version || (data.language === 'r' ? '4.4' : data.language === 'julia' ? '1.11' : data.language === 'javascript' ? '22' : '3.13')}
+          <Typography
+            sx={{
+              fontFamily: mono,
+              fontSize: fontSize.xxs,
+              color: semanticColors.mutedText,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {data.library_name}
+            {data.library_version && data.library_version !== 'unknown'
+              ? ` ${data.library_version}`
+              : ''}{' '}
+            ·{' '}
+            {data.language === 'r'
+              ? 'R'
+              : data.language === 'julia'
+                ? 'Julia'
+                : data.language === 'javascript'
+                  ? 'JavaScript'
+                  : 'Python'}{' '}
+            {data.language_version ||
+              data.python_version ||
+              (data.language === 'r'
+                ? '4.4'
+                : data.language === 'julia'
+                  ? '1.11'
+                  : data.language === 'javascript'
+                    ? '22'
+                    : '3.13')}
           </Typography>
         </Box>
       </Box>

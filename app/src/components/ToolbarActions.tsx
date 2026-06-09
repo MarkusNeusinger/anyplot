@@ -4,11 +4,12 @@
  */
 
 import { Link } from 'react-router-dom';
-import Box from '@mui/material/Box';
-import Tooltip from '@mui/material/Tooltip';
+
+import ListIcon from '@mui/icons-material/List';
 import ViewAgendaIcon from '@mui/icons-material/ViewAgenda';
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
-import ListIcon from '@mui/icons-material/List';
+import Box from '@mui/material/Box';
+import Tooltip from '@mui/material/Tooltip';
 
 import type { ImageSize } from '../constants';
 import { colors, semanticColors } from '../theme';
@@ -48,7 +49,11 @@ export function PlotsLink() {
 /**
  * Grid size toggle button - switches between normal and compact view.
  */
-export function GridSizeToggle({ imageSize, onImageSizeChange, onTrackEvent }: ToolbarActionsProps) {
+export function GridSizeToggle({
+  imageSize,
+  onImageSizeChange,
+  onTrackEvent,
+}: ToolbarActionsProps) {
   const handleToggle = () => {
     const newSize = imageSize === 'normal' ? 'compact' : 'normal';
     onImageSizeChange(newSize);
@@ -95,7 +100,11 @@ export function GridSizeToggle({ imageSize, onImageSizeChange, onTrackEvent }: T
 /**
  * Combined toolbar actions component with plots link and grid toggle.
  */
-export function ToolbarActions({ imageSize, onImageSizeChange, onTrackEvent }: ToolbarActionsProps) {
+export function ToolbarActions({
+  imageSize,
+  onImageSizeChange,
+  onTrackEvent,
+}: ToolbarActionsProps) {
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
       <GridSizeToggle

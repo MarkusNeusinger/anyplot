@@ -1,8 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { MemoryRouter } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { render as rtlRender } from '@testing-library/react';
 import type { ReactElement } from 'react';
+
+import { render as rtlRender } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+
 import { render, screen, userEvent } from '../test-utils';
 
 const trackEvent = vi.fn();
@@ -55,10 +58,16 @@ describe('MastheadRule', () => {
     expect(trackEvent).toHaveBeenCalledWith('nav_click', { source: 'masthead_logo', target: '/' });
 
     await user.click(screen.getByText('main'));
-    expect(trackEvent).toHaveBeenCalledWith('nav_click', { source: 'masthead_branch', target: 'github_main' });
+    expect(trackEvent).toHaveBeenCalledWith('nav_click', {
+      source: 'masthead_branch',
+      target: 'github_main',
+    });
 
     await user.click(screen.getByText('v1.2.3'));
-    expect(trackEvent).toHaveBeenCalledWith('nav_click', { source: 'masthead_release', target: 'v1.2.3' });
+    expect(trackEvent).toHaveBeenCalledWith('nav_click', {
+      source: 'masthead_release',
+      target: 'v1.2.3',
+    });
   });
 
   it('keeps the `~/anyplot.ai` root marker visible on xs for short breadcrumbs', () => {
@@ -85,7 +94,7 @@ describe('MastheadRule', () => {
 function collectStylesFor(el: Element): string {
   const classes = el.className.split(/\s+/).filter(Boolean);
   return Array.from(document.querySelectorAll('style'))
-    .map((s) => s.textContent ?? '')
-    .filter((css) => classes.some((c) => css.includes('.' + c)))
+    .map(s => s.textContent ?? '')
+    .filter(css => classes.some(c => css.includes('.' + c)))
     .join('\n');
 }

@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import { useAppData, useHomeState, initialHomeState } from './useLayoutContext';
+import { describe, expect, it } from 'vitest';
+
+import { initialHomeState, useAppData, useHomeState } from './useLayoutContext';
 
 describe('useAppData', () => {
   it('throws when used outside provider', () => {

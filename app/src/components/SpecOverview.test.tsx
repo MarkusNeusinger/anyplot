@@ -1,7 +1,8 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
 import { render, screen, userEvent } from '../test-utils';
-import { SpecOverview } from './SpecOverview';
 import type { Implementation } from '../types';
+import { SpecOverview } from './SpecOverview';
 
 vi.mock('../utils/responsiveImage', () => ({
   buildSrcSet: (url: string, fmt: string) => `${url}-srcset-${fmt}`,
@@ -11,6 +12,7 @@ vi.mock('../utils/responsiveImage', () => ({
 const makeImpl = (overrides: Partial<Implementation> = {}): Implementation => ({
   library_id: 'matplotlib',
   library_name: 'Matplotlib',
+  language: 'python',
   preview_url: 'https://example.com/plot.png',
   preview_html: undefined,
   quality_score: 85,
@@ -74,12 +76,7 @@ describe('SpecOverview', () => {
 
   it('does not show quality score when null', () => {
     const implNoScore = makeImpl({ library_id: 'seaborn', quality_score: null });
-    render(
-      <SpecOverview
-        {...defaultProps}
-        implementations={[implNoScore]}
-      />,
-    );
+    render(<SpecOverview {...defaultProps} implementations={[implNoScore]} />);
     expect(screen.getByText('seaborn')).toBeInTheDocument();
     // No score rendered - only the library name text and no numeric text
     const allText = screen.getByText('seaborn').closest('[class]')?.parentElement?.textContent;
@@ -148,30 +145,24 @@ describe('SpecOverview', () => {
     });
     // SpecOverview checks `impl.preview_url` as truthy -> falsy string renders skeleton
     const { container } = render(
-      <SpecOverview {...defaultProps} implementations={[implNoPreview]} />,
+      <SpecOverview {...defaultProps} implementations={[implNoPreview]} />
     );
     const skeleton = container.querySelector('.MuiSkeleton-root');
     expect(skeleton).toBeInTheDocument();
   });
 
   it('shows ">>> .copied" overlay when codeCopied matches a library_id', () => {
-    render(
-      <SpecOverview {...defaultProps} codeCopied="matplotlib" />,
-    );
+    render(<SpecOverview {...defaultProps} codeCopied="matplotlib" />);
     expect(screen.getByText('>>> .copied')).toBeInTheDocument();
   });
 
   it('shows ">>> .downloaded" overlay when downloadDone matches a library_id', () => {
-    render(
-      <SpecOverview {...defaultProps} downloadDone="plotly" />,
-    );
+    render(<SpecOverview {...defaultProps} downloadDone="plotly" />);
     expect(screen.getByText('>>> .downloaded')).toBeInTheDocument();
   });
 
   it('does not show overlay when codeCopied does not match any library_id', () => {
-    render(
-      <SpecOverview {...defaultProps} codeCopied="nonexistent" />,
-    );
+    render(<SpecOverview {...defaultProps} codeCopied="nonexistent" />);
     expect(screen.queryByText('>>> .copied')).not.toBeInTheDocument();
     expect(screen.queryByText('>>> .downloaded')).not.toBeInTheDocument();
   });

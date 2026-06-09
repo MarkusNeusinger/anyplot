@@ -1,24 +1,26 @@
 import { useEffect } from 'react';
+
 import { Helmet } from 'react-helmet-async';
+
 import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
 import Link from '@mui/material/Link';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
+import Typography from '@mui/material/Typography';
 
 import { SectionHeader } from '../components/SectionHeader';
-import { useAnalytics } from '../hooks';
 import { GITHUB_URL } from '../constants';
+import { useAnalytics } from '../hooks';
 import {
-  typography,
-  subheadingStyle,
-  textStyle,
   codeBlockStyle,
-  tableStyle,
   proseLinkStyle,
+  subheadingStyle,
+  tableStyle,
+  textStyle,
+  typography,
 } from '../theme';
 
 const inlineCodeSx = {
@@ -64,11 +66,16 @@ export function McpPage() {
           <Box sx={{ maxWidth: 760, mx: 'auto' }}>
             <Typography sx={textStyle}>
               the{' '}
-              <Link href="https://modelcontextprotocol.io" target="_blank" rel="noopener" sx={proseLinkStyle}>
+              <Link
+                href="https://modelcontextprotocol.io"
+                target="_blank"
+                rel="noopener"
+                sx={proseLinkStyle}
+              >
                 Model Context Protocol (MCP)
               </Link>{' '}
-              is an open standard by Anthropic that enables ai assistants to securely connect to external
-              data sources and tools.
+              is an open standard by Anthropic that enables ai assistants to securely connect to
+              external data sources and tools.
             </Typography>
 
             <Typography sx={textStyle}>
@@ -89,7 +96,9 @@ export function McpPage() {
 
             <Typography sx={textStyle}>
               <strong>endpoint</strong>:{' '}
-              <Box component="code" sx={inlineCodeSx}>https://api.anyplot.ai/mcp/</Box>
+              <Box component="code" sx={inlineCodeSx}>
+                https://api.anyplot.ai/mcp/
+              </Box>
             </Typography>
           </Box>
         </Box>
@@ -107,15 +116,28 @@ export function McpPage() {
               <TableBody>
                 <TableRow>
                   <TableCell sx={{ width: 140 }}>server name</TableCell>
-                  <TableCell><Box component="code" sx={inlineCodeSx}>anyplot</Box></TableCell>
+                  <TableCell>
+                    <Box component="code" sx={inlineCodeSx}>
+                      anyplot
+                    </Box>
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>url</TableCell>
-                  <TableCell><Box component="code" sx={inlineCodeSx}>https://api.anyplot.ai/mcp/</Box></TableCell>
+                  <TableCell>
+                    <Box component="code" sx={inlineCodeSx}>
+                      https://api.anyplot.ai/mcp/
+                    </Box>
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>transport</TableCell>
-                  <TableCell><Box component="code" sx={inlineCodeSx}>http</Box> (Streamable HTTP)</TableCell>
+                  <TableCell>
+                    <Box component="code" sx={inlineCodeSx}>
+                      http
+                    </Box>{' '}
+                    (Streamable HTTP)
+                  </TableCell>
                 </TableRow>
               </TableBody>
             </Table>
@@ -149,28 +171,66 @@ export function McpPage() {
               </TableHead>
               <TableBody>
                 <TableRow>
-                  <TableCell><Box component="code" sx={inlineCodeSx}>list_specs</Box></TableCell>
-                  <TableCell>list all plot specifications with summary information (title, tags, library count)</TableCell>
+                  <TableCell>
+                    <Box component="code" sx={inlineCodeSx}>
+                      list_specs
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    list all plot specifications with summary information (title, tags, library
+                    count)
+                  </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell><Box component="code" sx={inlineCodeSx}>search_specs_by_tags</Box></TableCell>
-                  <TableCell>search specifications using tag filters (plot_type, data_type, domain, features, library)</TableCell>
+                  <TableCell>
+                    <Box component="code" sx={inlineCodeSx}>
+                      search_specs_by_tags
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    search specifications using tag filters (plot_type, data_type, domain, features,
+                    library)
+                  </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell><Box component="code" sx={inlineCodeSx}>get_spec_detail</Box></TableCell>
-                  <TableCell>get complete specification including all implementations and metadata</TableCell>
+                  <TableCell>
+                    <Box component="code" sx={inlineCodeSx}>
+                      get_spec_detail
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    get complete specification including all implementations and metadata
+                  </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell><Box component="code" sx={inlineCodeSx}>get_implementation</Box></TableCell>
-                  <TableCell>get implementation code for a specific specification and library</TableCell>
+                  <TableCell>
+                    <Box component="code" sx={inlineCodeSx}>
+                      get_implementation
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    get implementation code for a specific specification and library
+                  </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell><Box component="code" sx={inlineCodeSx}>list_libraries</Box></TableCell>
-                  <TableCell>list all supported plotting libraries (matplotlib, seaborn, plotly, etc.)</TableCell>
+                  <TableCell>
+                    <Box component="code" sx={inlineCodeSx}>
+                      list_libraries
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    list all supported plotting libraries (matplotlib, seaborn, plotly, etc.)
+                  </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell><Box component="code" sx={inlineCodeSx}>get_tag_values</Box></TableCell>
-                  <TableCell>get all available values for a specific tag category with counts</TableCell>
+                  <TableCell>
+                    <Box component="code" sx={inlineCodeSx}>
+                      get_tag_values
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    get all available values for a specific tag category with counts
+                  </TableCell>
                 </TableRow>
               </TableBody>
             </Table>
@@ -184,23 +244,25 @@ export function McpPage() {
           <Box sx={{ maxWidth: 760, mx: 'auto' }}>
             <Typography sx={subheadingStyle}>ai-assisted plot discovery</Typography>
             <Typography sx={textStyle}>
-              ask Claude to find the right plot type for your data. for example: &quot;I have two numeric
-              variables and want to show their correlation. What plot types does anyplot have?&quot;
-              Claude will search the specifications and suggest appropriate visualizations.
+              ask Claude to find the right plot type for your data. for example: &quot;I have two
+              numeric variables and want to show their correlation. What plot types does anyplot
+              have?&quot; Claude will search the specifications and suggest appropriate
+              visualizations.
             </Typography>
 
             <Typography sx={subheadingStyle}>code generation with ai</Typography>
             <Typography sx={textStyle}>
-              Claude can fetch implementation code and adapt it to your specific data. ask: &quot;Get me
-              the matplotlib code for a scatter plot and modify it to use my sales data.&quot; Claude
-              will retrieve the code and customize it for your needs.
+              Claude can fetch implementation code and adapt it to your specific data. ask:
+              &quot;Get me the matplotlib code for a scatter plot and modify it to use my sales
+              data.&quot; Claude will retrieve the code and customize it for your needs.
             </Typography>
 
             <Typography sx={subheadingStyle}>comparing library implementations</Typography>
             <Typography sx={textStyle}>
-              compare how different libraries implement the same visualization. ask: &quot;Show me how
-              to create a heatmap in both seaborn and plotly.&quot; Claude will fetch both implementations
-              so you can compare their approaches and choose the best fit for your project.
+              compare how different libraries implement the same visualization. ask: &quot;Show me
+              how to create a heatmap in both seaborn and plotly.&quot; Claude will fetch both
+              implementations so you can compare their approaches and choose the best fit for your
+              project.
             </Typography>
           </Box>
         </Box>
@@ -228,7 +290,12 @@ export function McpPage() {
                 <TableRow>
                   <TableCell>mcp official website</TableCell>
                   <TableCell>
-                    <Link href="https://modelcontextprotocol.io" target="_blank" rel="noopener" sx={proseLinkStyle}>
+                    <Link
+                      href="https://modelcontextprotocol.io"
+                      target="_blank"
+                      rel="noopener"
+                      sx={proseLinkStyle}
+                    >
                       modelcontextprotocol.io
                     </Link>
                   </TableCell>
@@ -236,7 +303,9 @@ export function McpPage() {
                 <TableRow>
                   <TableCell>mcp inspector</TableCell>
                   <TableCell>
-                    <Box component="code" sx={inlineCodeSx}>npx @modelcontextprotocol/inspector https://api.anyplot.ai/mcp/</Box>
+                    <Box component="code" sx={inlineCodeSx}>
+                      npx @modelcontextprotocol/inspector https://api.anyplot.ai/mcp/
+                    </Box>
                   </TableCell>
                 </TableRow>
               </TableBody>

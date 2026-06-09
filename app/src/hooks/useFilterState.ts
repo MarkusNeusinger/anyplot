@@ -5,19 +5,19 @@
  * Composes useUrlSync and useFilterFetch for cleaner separation of concerns.
  */
 
-import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import type { PlotImage, FilterCategory, ActiveFilters, FilterCounts } from '../types';
+import type { ActiveFilters, FilterCategory, FilterCounts, PlotImage } from '../types';
 import { FILTER_CATEGORIES } from '../types';
+import { useFilterFetch } from './useFilterFetch';
 import { useHomeState } from './useLayoutContext';
 import { parseUrlFilters, useUrlSync } from './useUrlSync';
-import { useFilterFetch } from './useFilterFetch';
 
 /**
  * Check if filters are empty.
  */
 export function isFiltersEmpty(filters: ActiveFilters): boolean {
-  return filters.length === 0 || filters.every((f) => f.values.length === 0);
+  return filters.length === 0 || filters.every(f => f.values.length === 0);
 }
 
 /**
@@ -30,9 +30,7 @@ export function isFiltersEmpty(filters: ActiveFilters): boolean {
  * Exported for unit testing.
  */
 export function imagesContentKey(images: readonly PlotImage[]): string {
-  return images
-    .map((i) => `${i.spec_id ?? `url:${i.url}`}:${i.library}`)
-    .join('|');
+  return images.map(i => `${i.spec_id ?? `url:${i.url}`}:${i.library}`).join('|');
 }
 
 interface UseFilterStateOptions {
@@ -161,7 +159,7 @@ export function useFilterState({
     if (allImages.length === 0 && displayedImages.length === 0) return;
     if (syncKey === lastSyncedKeyRef.current) return;
     lastSyncedKeyRef.current = syncKey;
-    setHomeState((prev) => ({
+    setHomeState(prev => ({
       ...prev,
       allImages,
       displayedImages,
@@ -186,12 +184,12 @@ export function useFilterState({
 
   // Add a new filter group (creates new chip - AND with other groups)
   const handleAddFilter = useCallback((category: FilterCategory, value: string) => {
-    setActiveFilters((prev) => [...prev, { category, values: [value] }]);
+    setActiveFilters(prev => [...prev, { category, values: [value] }]);
   }, []);
 
   // Add value to existing group by index (OR within that group)
   const handleAddValueToGroup = useCallback((groupIndex: number, value: string) => {
-    setActiveFilters((prev) => {
+    setActiveFilters(prev => {
       const newFilters = [...prev];
       const group = newFilters[groupIndex];
       if (group && !group.values.includes(value)) {
@@ -208,12 +206,12 @@ export function useFilterState({
       if (group) {
         onTrackEvent('filter_remove', { category: group.category, value });
       }
-      setActiveFilters((prev) => {
+      setActiveFilters(prev => {
         const newFilters = [...prev];
         const grp = newFilters[groupIndex];
         if (!grp) return prev;
 
-        const updatedValues = grp.values.filter((v) => v !== value);
+        const updatedValues = grp.values.filter(v => v !== value);
         if (updatedValues.length === 0) {
           return newFilters.filter((_, i) => i !== groupIndex);
         }
@@ -231,7 +229,7 @@ export function useFilterState({
       if (group) {
         onTrackEvent('filter_remove', { category: group.category, value: group.values.join(',') });
       }
-      setActiveFilters((prev) => prev.filter((_, i) => i !== groupIndex));
+      setActiveFilters(prev => prev.filter((_, i) => i !== groupIndex));
     },
     [onTrackEvent]
   );
@@ -244,14 +242,15 @@ export function useFilterState({
       const countsToUse = currentFilters.length > 0 ? filterCounts : globalCounts;
       if (!countsToUse) return;
 
-      const availableCategories = FILTER_CATEGORIES.filter((cat) => {
+      const availableCategories = FILTER_CATEGORIES.filter(cat => {
         const counts = countsToUse[cat];
         return counts && Object.keys(counts).length > 0;
       });
 
       if (availableCategories.length === 0) return;
 
-      const randomCategory = availableCategories[Math.floor(Math.random() * availableCategories.length)];
+      const randomCategory =
+        availableCategories[Math.floor(Math.random() * availableCategories.length)];
       const values = Object.keys(countsToUse[randomCategory]);
 
       if (values.length === 0) return;
@@ -266,7 +265,7 @@ export function useFilterState({
 
       // Start animation with old label, change filter immediately (so images load)
       setRandomAnimation({ index: newIndex, phase: 'out', oldLabel });
-      setActiveFilters((prev) => {
+      setActiveFilters(prev => {
         if (prev.length === 0) {
           return [newFilter];
         }

@@ -1,9 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { render, screen } from '../test-utils';
 
 // Mock the utils module
 vi.mock('../utils', () => ({
-  getAvailableValues: vi.fn(() => [['scatter', 10], ['bar', 5]]),
+  getAvailableValues: vi.fn(() => [
+    ['scatter', 10],
+    ['bar', 5],
+  ]),
   getAvailableValuesForGroup: vi.fn(() => [['scatter', 15]]),
   getSearchResults: vi.fn(() => []),
 }));
@@ -20,9 +24,18 @@ class MockResizeObserver {
 const defaultProps = {
   activeFilters: [] as { category: 'lib'; values: string[] }[],
   filterCounts: {
+    lang: { python: 180 },
     lib: { matplotlib: 100, seaborn: 80 },
-    spec: {}, plot: {}, data: {}, dom: {}, feat: {},
-    dep: {}, tech: {}, pat: {}, prep: {}, style: {},
+    spec: {},
+    plot: {},
+    data: {},
+    dom: {},
+    feat: {},
+    dep: {},
+    tech: {},
+    pat: {},
+    prep: {},
+    style: {},
   },
   orCounts: [] as Record<string, number>[],
   specTitles: {},
@@ -51,9 +64,7 @@ describe('FilterBar', () => {
   });
 
   it('renders active filter chip with category:value format', () => {
-    const filters = [
-      { category: 'lib' as const, values: ['matplotlib'] },
-    ];
+    const filters = [{ category: 'lib' as const, values: ['matplotlib'] }];
     render(<FilterBar {...defaultProps} activeFilters={filters} />);
     // Chip label is "category:value" format
     expect(screen.getByText('lib:matplotlib')).toBeInTheDocument();
@@ -75,9 +86,7 @@ describe('FilterBar', () => {
   });
 
   it('renders comma-separated values in chip', () => {
-    const filters = [
-      { category: 'lib' as const, values: ['matplotlib', 'seaborn'] },
-    ];
+    const filters = [{ category: 'lib' as const, values: ['matplotlib', 'seaborn'] }];
     render(<FilterBar {...defaultProps} activeFilters={filters} />);
     expect(screen.getByText('lib:matplotlib,seaborn')).toBeInTheDocument();
   });

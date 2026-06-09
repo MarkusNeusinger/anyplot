@@ -65,7 +65,7 @@ export function fuzzySearch<T extends SearchableItem>(
 ): FuzzyResult<T>[] {
   const results = searcher.search(query);
 
-  return results.map((result) => ({
+  return results.map(result => ({
     item: result.item,
     score: result.score ?? 0,
     matchType: getMatchType(result.score ?? 0),

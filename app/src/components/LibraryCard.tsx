@@ -1,6 +1,7 @@
 import Box from '@mui/material/Box';
-import { colors, typography } from '../theme';
+
 import { LANG_DISPLAY, LIB_TO_FRAMEWORK } from '../constants';
+import { colors, typography } from '../theme';
 
 const DESCRIPTIONS: Record<string, string> = {
   matplotlib: 'The foundation. Publication-ready figures with total control.',
@@ -13,7 +14,8 @@ const DESCRIPTIONS: Record<string, string> = {
   highcharts: 'Interactive web charts, stock charts, and maps.',
   letsplot: 'Grammar of graphics by JetBrains. Interactive.',
   ggplot2: 'The reference grammar of graphics. R’s expressive plotting standard.',
-  makie: 'High-performance Julia visualization. CairoMakie ships publication-quality static charts.',
+  makie:
+    'High-performance Julia visualization. CairoMakie ships publication-quality static charts.',
   chartjs: 'Simple, flexible HTML5-canvas charts. The popular JS default.',
   d3: 'Data-driven SVG. Low-level, maximum control on the web.',
   echarts: 'Powerful interactive charts for the browser. Vast chart catalog.',
@@ -44,7 +46,8 @@ interface LibraryCardProps {
 export function LibraryCard({ name, language, count, onClick }: LibraryCardProps) {
   const langLabel = language ? (LANG_DISPLAY[language] || language).toUpperCase() : null;
   const framework = LIB_TO_FRAMEWORK[name];
-  const frameworkLabel = framework && framework !== 'none' ? (FRAMEWORK_LABEL[framework] || framework) : null;
+  const frameworkLabel =
+    framework && framework !== 'none' ? FRAMEWORK_LABEL[framework] || framework : null;
   const licenseNote = LICENSE_NOTE[name];
   const hasBadge = !!(langLabel || frameworkLabel);
   return (
@@ -151,62 +154,77 @@ export function LibraryCard({ name, language, count, onClick }: LibraryCardProps
         </Box>
       )}
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 1 }}>
-        <Box sx={{
-          fontFamily: typography.mono,
-          fontSize: '15px',
-          fontWeight: 700,
-          color: 'var(--ink)',
-          // Reserve space under the absolute-positioned chip so a long
-          // library name doesn't slide under it.
-          pr: hasBadge ? 5 : 0,
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-          minWidth: 0,
-        }}>
+      <Box
+        sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 1 }}
+      >
+        <Box
+          sx={{
+            fontFamily: typography.mono,
+            fontSize: '15px',
+            fontWeight: 700,
+            color: 'var(--ink)',
+            // Reserve space under the absolute-positioned chip so a long
+            // library name doesn't slide under it.
+            pr: hasBadge ? 5 : 0,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            minWidth: 0,
+          }}
+        >
           {name}
         </Box>
         {count != null && (
-          <Box sx={{
-            fontFamily: typography.mono,
-            fontSize: '10px',
-            color: 'var(--ink-muted)',
-            letterSpacing: '0.08em',
-            flexShrink: 0,
-          }}>
+          <Box
+            sx={{
+              fontFamily: typography.mono,
+              fontSize: '10px',
+              color: 'var(--ink-muted)',
+              letterSpacing: '0.08em',
+              flexShrink: 0,
+            }}
+          >
             {count} examples
           </Box>
         )}
       </Box>
 
-      <Box sx={{
-        fontFamily: typography.serif,
-        fontSize: '14px',
-        lineHeight: 1.5,
-        color: 'var(--ink-soft)',
-        fontWeight: 300,
-      }}>
+      <Box
+        sx={{
+          fontFamily: typography.serif,
+          fontSize: '14px',
+          lineHeight: 1.5,
+          color: 'var(--ink-soft)',
+          fontWeight: 300,
+        }}
+      >
         {DESCRIPTIONS[name] || ''}
       </Box>
 
-      <Box className="lib-card-cta" sx={{
-        fontFamily: typography.mono,
-        fontSize: '11px',
-        color: 'var(--ink-muted)',
-        mt: 'auto',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        transition: 'color 0.2s',
-      }}>
+      <Box
+        className="lib-card-cta"
+        sx={{
+          fontFamily: typography.mono,
+          fontSize: '11px',
+          color: 'var(--ink-muted)',
+          mt: 'auto',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          transition: 'color 0.2s',
+        }}
+      >
         <span aria-hidden="true">.explore()</span>
         {licenseNote && (
-          <Box component="span" aria-label={`License: ${licenseNote}`} sx={{
-            fontSize: '10px',
-            letterSpacing: '0.06em',
-            color: 'var(--ink-muted)',
-          }}>
+          <Box
+            component="span"
+            aria-label={`License: ${licenseNote}`}
+            sx={{
+              fontSize: '10px',
+              letterSpacing: '0.06em',
+              color: 'var(--ink-muted)',
+            }}
+          >
             {licenseNote}
           </Box>
         )}

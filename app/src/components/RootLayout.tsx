@@ -1,15 +1,17 @@
 import { useEffect } from 'react';
+
 import { Outlet, useLocation, useNavigationType } from 'react-router-dom';
+
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 
 import { useAnalytics } from '../hooks';
 import { setAnalyticsAmbientProps } from '../hooks/useAnalytics';
 import { useTheme } from '../hooks/useLayoutContext';
+import { FeedbackWidget } from './FeedbackWidget';
+import { Footer } from './Footer';
 import { MastheadRule } from './MastheadRule';
 import { NavBar } from './NavBar';
-import { Footer } from './Footer';
-import { FeedbackWidget } from './FeedbackWidget';
 
 const containerSx = {
   px: { xs: 2, sm: 4, md: 8, lg: 12 },
@@ -58,12 +60,14 @@ export function RootLayout() {
   }, [pathname]);
 
   return (
-    <Box sx={{
-      display: 'flex',
-      flexDirection: 'column',
-      minHeight: '100svh',
-      bgcolor: 'var(--bg-page)',
-    }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100svh',
+        bgcolor: 'var(--bg-page)',
+      }}
+    >
       {/* Masthead — sticky everywhere except /plots, where it scrolls away with the page. */}
       <Box
         sx={{

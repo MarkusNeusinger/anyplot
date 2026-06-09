@@ -1,8 +1,10 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+
 import { RouteErrorBoundary } from './RouteErrorBoundary';
 
 vi.mock('react-helmet-async', () => ({
@@ -80,19 +82,25 @@ describe('RouteErrorBoundary', () => {
         <RouterProvider router={router} />
       </ThemeProvider>
     );
-    expect(await screen.findByRole('heading', { level: 1, name: /page not found/i })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { level: 1, name: /page not found/i })
+    ).toBeInTheDocument();
     expect(screen.getByText(/404 — no route matched/i)).toBeInTheDocument();
   });
 
   it('auto-reloads once on chunk load errors', async () => {
-    renderWithRouter(new Error('Failed to fetch dynamically imported module: https://example.com/x.js'));
+    renderWithRouter(
+      new Error('Failed to fetch dynamically imported module: https://example.com/x.js')
+    );
     await waitFor(() => expect(window.location.reload).toHaveBeenCalledTimes(1));
     expect(sessionStorage.getItem('anyplot:chunk-reload-attempt')).not.toBeNull();
   });
 
   it('does not reload loop — shows recovery UI after a prior attempt', async () => {
     sessionStorage.setItem('anyplot:chunk-reload-attempt', String(Date.now()));
-    renderWithRouter(new Error('Failed to fetch dynamically imported module: https://example.com/x.js'));
+    renderWithRouter(
+      new Error('Failed to fetch dynamically imported module: https://example.com/x.js')
+    );
     expect(await screen.findByText('A new version is available')).toBeInTheDocument();
     expect(window.location.reload).not.toHaveBeenCalled();
   });

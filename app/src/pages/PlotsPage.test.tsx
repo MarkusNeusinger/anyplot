@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { render, screen } from '../test-utils';
 
 vi.mock('../hooks', () => ({
@@ -36,7 +37,9 @@ vi.mock('../hooks', () => ({
 }));
 
 vi.mock('react-helmet-async', () => ({
-  Helmet: ({ children }: { children: React.ReactNode }) => <div data-testid="helmet">{children}</div>,
+  Helmet: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="helmet">{children}</div>
+  ),
 }));
 
 vi.mock('../components/FilterBar', () => ({

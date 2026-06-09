@@ -5,24 +5,25 @@
  * Toggles between static preview (PNG) and interactive HTML iframe.
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import DownloadIcon from '@mui/icons-material/Download';
+import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined';
+import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
 import Skeleton from '@mui/material/Skeleton';
-import DownloadIcon from '@mui/icons-material/Download';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined';
+import Tooltip from '@mui/material/Tooltip';
 
-import type { Implementation } from '../types';
 import { API_URL } from '../constants';
-import { colors, fontSize, typography } from '../theme';
-import { buildDetailSrcSet, DETAIL_SIZES } from '../utils/responsiveImage';
-import { selectPreviewUrl, selectPreviewHtml } from '../utils/themedPreview';
 import { useTheme } from '../hooks/useLayoutContext';
+import { colors, fontSize, typography } from '../theme';
+import type { Implementation } from '../types';
+import { buildDetailSrcSet, DETAIL_SIZES } from '../utils/responsiveImage';
+import { selectPreviewHtml, selectPreviewUrl } from '../utils/themedPreview';
 
 const INITIAL_WIDTH = 1600;
 const INITIAL_HEIGHT = 900;
@@ -63,7 +64,7 @@ export function SpecDetailView({
   onTrackEvent,
 }: SpecDetailViewProps) {
   const sortedImpls = [...implementations].sort((a, b) => a.library_id.localeCompare(b.library_id));
-  const currentIndex = sortedImpls.findIndex((impl) => impl.library_id === selectedLibrary);
+  const currentIndex = sortedImpls.findIndex(impl => impl.library_id === selectedLibrary);
 
   // Static preview zoom + pan
   const containerRef = useRef<HTMLDivElement>(null);
@@ -152,15 +153,17 @@ export function SpecDetailView({
         });
       }
       setAnimating(true);
-      setZoomed((z) => !z);
+      setZoomed(z => !z);
       if (animTimerRef.current) clearTimeout(animTimerRef.current);
       animTimerRef.current = setTimeout(() => setAnimating(false), 300);
     },
-    [zoomed],
+    [zoomed]
   );
 
   useEffect(() => {
-    return () => { if (animTimerRef.current) clearTimeout(animTimerRef.current); };
+    return () => {
+      if (animTimerRef.current) clearTimeout(animTimerRef.current);
+    };
   }, []);
 
   const handleMouseMove = useCallback(
@@ -172,7 +175,7 @@ export function SpecDetailView({
         y: ((e.clientY - rect.top) / rect.height) * 100,
       });
     },
-    [zoomed, animating],
+    [zoomed, animating]
   );
 
   const handleTouchMove = useCallback(
@@ -185,7 +188,7 @@ export function SpecDetailView({
         y: ((touch.clientY - rect.top) / rect.height) * 100,
       });
     },
-    [zoomed, animating],
+    [zoomed, animating]
   );
 
   const { isDark } = useTheme();
@@ -283,7 +286,9 @@ export function SpecDetailView({
             </Tooltip>
             <Tooltip title=".raw()" disableFocusListener>
               <IconButton
-                onClick={() => previewHtml && window.open(previewHtml, '_blank', 'noopener,noreferrer')}
+                onClick={() =>
+                  previewHtml && window.open(previewHtml, '_blank', 'noopener,noreferrer')
+                }
                 aria-label="Open raw HTML"
                 sx={overlayButtonSx}
                 size="medium"
@@ -300,7 +305,12 @@ export function SpecDetailView({
           tabIndex={0}
           aria-label={zoomed ? 'Zoom out' : 'Zoom in'}
           onClick={handleZoomToggle}
-          onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleZoomToggle(e as unknown as React.MouseEvent); } }}
+          onKeyDown={(e: React.KeyboardEvent) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleZoomToggle(e as unknown as React.MouseEvent);
+            }
+          }}
           onMouseMove={handleMouseMove}
           onTouchMove={handleTouchMove}
           sx={{
@@ -324,9 +334,21 @@ export function SpecDetailView({
             />
           )}
           {previewUrl && (
-            <Box component="picture" key={previewUrl} sx={{ display: imageLoaded ? 'contents' : 'none' }}>
-              <source type="image/webp" srcSet={buildDetailSrcSet(previewUrl, 'webp')} sizes={DETAIL_SIZES} />
-              <source type="image/png" srcSet={buildDetailSrcSet(previewUrl, 'png')} sizes={DETAIL_SIZES} />
+            <Box
+              component="picture"
+              key={previewUrl}
+              sx={{ display: imageLoaded ? 'contents' : 'none' }}
+            >
+              <source
+                type="image/webp"
+                srcSet={buildDetailSrcSet(previewUrl, 'webp')}
+                sizes={DETAIL_SIZES}
+              />
+              <source
+                type="image/png"
+                srcSet={buildDetailSrcSet(previewUrl, 'png')}
+                sizes={DETAIL_SIZES}
+              />
               <Box
                 component="img"
                 src={`${previewUrl.replace(/\.png$/, '')}_1200.png`}
@@ -345,7 +367,10 @@ export function SpecDetailView({
                   const target = e.target as HTMLImageElement;
                   if (!target.dataset.fallback) {
                     target.dataset.fallback = '1';
-                    target.closest('picture')?.querySelectorAll('source').forEach(s => s.remove());
+                    target
+                      .closest('picture')
+                      ?.querySelectorAll('source')
+                      .forEach(s => s.remove());
                     target.removeAttribute('srcset');
                     target.src = previewUrl;
                   }
@@ -354,29 +379,38 @@ export function SpecDetailView({
             </Box>
           )}
 
-          {currentImpl && (codeCopied === currentImpl.library_id || downloadDone === currentImpl.library_id) && (
-            <Box sx={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              bgcolor: 'rgba(0,0,0,0.7)',
-              color: '#fff',
-              px: 1.5,
-              py: 0.5,
-              borderRadius: 1,
-              fontFamily: typography.fontFamily,
-              fontSize: fontSize.sm,
-              pointerEvents: 'none',
-              zIndex: 2,
-            }}>
-              {codeCopied === currentImpl.library_id ? '>>> .copied' : '>>> .downloaded'}
-            </Box>
-          )}
+          {currentImpl &&
+            (codeCopied === currentImpl.library_id || downloadDone === currentImpl.library_id) && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  bgcolor: 'rgba(0,0,0,0.7)',
+                  color: '#fff',
+                  px: 1.5,
+                  py: 0.5,
+                  borderRadius: 1,
+                  fontFamily: typography.fontFamily,
+                  fontSize: fontSize.sm,
+                  pointerEvents: 'none',
+                  zIndex: 2,
+                }}
+              >
+                {codeCopied === currentImpl.library_id ? '>>> .copied' : '>>> .downloaded'}
+              </Box>
+            )}
 
           <Box
-            onClick={(e) => e.stopPropagation()}
-            sx={{ position: 'absolute', top: 8, left: 8, display: zoomed ? 'none' : 'flex', gap: 0.5 }}
+            onClick={e => e.stopPropagation()}
+            sx={{
+              position: 'absolute',
+              top: 8,
+              left: 8,
+              display: zoomed ? 'none' : 'flex',
+              gap: 0.5,
+            }}
           >
             <Tooltip title=".report()" disableFocusListener>
               <IconButton
@@ -384,7 +418,10 @@ export function SpecDetailView({
                 href={reportUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={(e: React.MouseEvent) => { (e.currentTarget as HTMLElement).blur(); onReport(); }}
+                onClick={(e: React.MouseEvent) => {
+                  (e.currentTarget as HTMLElement).blur();
+                  onReport();
+                }}
                 aria-label="Report issue"
                 sx={overlayButtonSx}
                 size="medium"
@@ -395,13 +432,22 @@ export function SpecDetailView({
           </Box>
 
           <Box
-            onClick={(e) => e.stopPropagation()}
-            sx={{ position: 'absolute', top: 8, right: 8, display: zoomed ? 'none' : 'flex', gap: 0.5 }}
+            onClick={e => e.stopPropagation()}
+            sx={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              display: zoomed ? 'none' : 'flex',
+              gap: 0.5,
+            }}
           >
             {currentImpl && (
               <Tooltip title=".copy()" disableFocusListener>
                 <IconButton
-                  onClick={(e: React.MouseEvent) => { (e.currentTarget as HTMLElement).blur(); onCopyCode(currentImpl); }}
+                  onClick={(e: React.MouseEvent) => {
+                    (e.currentTarget as HTMLElement).blur();
+                    onCopyCode(currentImpl);
+                  }}
                   aria-label="Copy code"
                   sx={overlayButtonSx}
                   size="medium"
@@ -413,7 +459,10 @@ export function SpecDetailView({
             {currentImpl && (
               <Tooltip title=".download()" disableFocusListener>
                 <IconButton
-                  onClick={(e: React.MouseEvent) => { (e.currentTarget as HTMLElement).blur(); onDownload(currentImpl); }}
+                  onClick={(e: React.MouseEvent) => {
+                    (e.currentTarget as HTMLElement).blur();
+                    onDownload(currentImpl);
+                  }}
                   aria-label="Download PNG"
                   sx={overlayButtonSx}
                   size="medium"
@@ -427,7 +476,10 @@ export function SpecDetailView({
                 <IconButton
                   onClick={() => {
                     onViewModeChange('interactive');
-                    onTrackEvent('view_mode_change', { mode: 'interactive', library: selectedLibrary });
+                    onTrackEvent('view_mode_change', {
+                      mode: 'interactive',
+                      library: selectedLibrary,
+                    });
                   }}
                   aria-label="Show interactive"
                   sx={overlayButtonSx}

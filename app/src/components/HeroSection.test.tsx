@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { render, screen, userEvent } from '../test-utils';
 
 const trackEvent = vi.fn();
@@ -31,12 +32,18 @@ describe('HeroSection', () => {
     render(<HeroSection potd={null} />);
 
     await user.click(screen.getByLabelText('Browse plots'));
-    expect(trackEvent).toHaveBeenCalledWith('nav_click', { source: 'hero_cta_browse', target: '/plots' });
+    expect(trackEvent).toHaveBeenCalledWith('nav_click', {
+      source: 'hero_cta_browse',
+      target: '/plots',
+    });
 
     await user.click(screen.getByLabelText('Connect via MCP'));
     expect(trackEvent).toHaveBeenCalledWith('nav_click', { source: 'hero_mcp', target: '/mcp' });
 
     await user.click(screen.getByLabelText('Clone on GitHub'));
-    expect(trackEvent).toHaveBeenCalledWith('nav_click', { source: 'hero_github', target: 'github' });
+    expect(trackEvent).toHaveBeenCalledWith('nav_click', {
+      source: 'hero_github',
+      target: 'github',
+    });
   });
 });

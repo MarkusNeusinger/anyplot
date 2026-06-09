@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { useCodeFetch } from './useCodeFetch';
 
 describe('useCodeFetch', () => {
@@ -112,7 +113,9 @@ describe('useCodeFetch', () => {
     });
 
     it('returns null and caches on network error', async () => {
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('Network error'));
+      (globalThis.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+        new Error('Network error')
+      );
       const { result } = renderHook(() => useCodeFetch());
 
       let code: string | null = 'initial';
@@ -221,7 +224,8 @@ describe('useCodeFetch', () => {
       const pyCode = 'import matplotlib';
       const rCode = 'library(matplotlib)';
       const jlCode = 'using Matplotlib';
-      globalThis.fetch = vi.fn()
+      globalThis.fetch = vi
+        .fn()
         .mockResolvedValueOnce({ ok: true, json: async () => ({ code: pyCode }) })
         .mockResolvedValueOnce({ ok: true, json: async () => ({ code: rCode }) })
         .mockResolvedValueOnce({ ok: true, json: async () => ({ code: jlCode }) });

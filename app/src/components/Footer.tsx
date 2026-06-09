@@ -1,6 +1,8 @@
+import { Link as RouterLink } from 'react-router-dom';
+
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
-import { Link as RouterLink } from 'react-router-dom';
+
 import { GITHUB_URL } from '../constants';
 import { colors, fontSize, semanticColors, typography } from '../theme';
 
@@ -41,20 +43,23 @@ export function Footer({ onTrackEvent, selectedSpec, selectedLibrary }: FooterPr
     onTrackEvent?.('internal_link', { destination, spec: selectedSpec, library: selectedLibrary });
 
   return (
-    <Box component="footer" sx={{
-      mt: 4,
-      pt: 4,
-      borderTop: '1px solid var(--rule)',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      flexWrap: 'wrap',
-      gap: 1,
-      fontSize: fontSize.md,
-      fontFamily: typography.mono,
-      color: semanticColors.mutedText,
-      letterSpacing: '0.08em',
-    }}>
+    <Box
+      component="footer"
+      sx={{
+        mt: 4,
+        pt: 4,
+        borderTop: '1px solid var(--rule)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: 1,
+        fontSize: fontSize.md,
+        fontFamily: typography.mono,
+        color: semanticColors.mutedText,
+        letterSpacing: '0.08em',
+      }}
+    >
       <Link
         href={GITHUB_URL}
         target="_blank"
@@ -87,21 +92,11 @@ export function Footer({ onTrackEvent, selectedSpec, selectedLibrary }: FooterPr
         </Link>
       </Box>
       <span>·</span>
-      <Link
-        component={RouterLink}
-        to="/about"
-        onClick={trackInternal('about')}
-        sx={linkSx}
-      >
+      <Link component={RouterLink} to="/about" onClick={trackInternal('about')} sx={linkSx}>
         about
       </Link>
       <span>·</span>
-      <Link
-        component={RouterLink}
-        to="/legal"
-        onClick={trackInternal('legal')}
-        sx={linkSx}
-      >
+      <Link component={RouterLink} to="/legal" onClick={trackInternal('legal')} sx={linkSx}>
         legal
       </Link>
     </Box>

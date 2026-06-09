@@ -1,22 +1,24 @@
-import { memo, useState, useCallback } from 'react';
+import { memo, useCallback, useState } from 'react';
+
+import CheckIcon from '@mui/icons-material/Check';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
-import Typography from '@mui/material/Typography';
-import Tooltip from '@mui/material/Tooltip';
-import Link from '@mui/material/Link';
-import IconButton from '@mui/material/IconButton';
 import CircularProgress from '@mui/material/CircularProgress';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import CheckIcon from '@mui/icons-material/Check';
-import useMediaQuery from '@mui/material/useMediaQuery';
+import IconButton from '@mui/material/IconButton';
+import Link from '@mui/material/Link';
 import { useTheme } from '@mui/material/styles';
-import type { PlotImage } from '../types';
-import { BATCH_SIZE, LANG_DISPLAY, libExt, type ImageSize } from '../constants';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
+import useMediaQuery from '@mui/material/useMediaQuery';
+
+import { BATCH_SIZE, type ImageSize, LANG_DISPLAY, libExt } from '../constants';
 import { useCodeFetch } from '../hooks';
-import { buildSrcSet, getResponsiveSizes, getFallbackSrc } from '../utils/responsiveImage';
+import { colors, fontSize, semanticColors, typography } from '../theme';
+import type { PlotImage } from '../types';
+import { buildSrcSet, getFallbackSrc, getResponsiveSizes } from '../utils/responsiveImage';
 import { useThemedPreviewUrl } from '../utils/themedPreview';
-import { colors, typography, fontSize, semanticColors } from '../theme';
 
 // Library abbreviations for compact mode
 const LIBRARY_ABBR: Record<string, string> = {
@@ -82,9 +84,10 @@ export const ImageCard = memo(function ImageCard({
   // Extension suffix honours the per-library override (muix → "tsx") so the
   // compact card reads "mui.tsx", not "mui.js".
   const langExt = libExt(image.library, image.language);
-  const libraryDisplay = imageSize === 'compact'
-    ? `${LIBRARY_ABBR[image.library] || image.library}${langExt ? '.' + langExt : ''}`
-    : image.library;
+  const libraryDisplay =
+    imageSize === 'compact'
+      ? `${LIBRARY_ABBR[image.library] || image.library}${langExt ? '.' + langExt : ''}`
+      : image.library;
   const languageDisplay = LANG_DISPLAY[image.language] || image.language;
   const showLanguageToken = imageSize === 'normal' && !!image.language && showLibrary;
 
@@ -93,28 +96,36 @@ export const ImageCard = memo(function ImageCard({
     onClick(image);
   }, [onClick, image]);
 
-  const handleCopyCode = useCallback(async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (copyState !== 'idle' || !image.spec_id) return;
+  const handleCopyCode = useCallback(
+    async (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (copyState !== 'idle' || !image.spec_id) return;
 
-    setCopyState('loading');
-    try {
-      // Use cached code if available, otherwise fetch. Pass `image.language`
-      // so R impls (ggplot2 today) hit the right DB row — the code endpoint
-      // defaults to Python and would 404 on an R artifact otherwise.
-      const code = image.code ?? await fetchCode(image.spec_id, image.library, image.language);
-      if (code) {
-        await navigator.clipboard.writeText(code);
-        setCopyState('copied');
-        onTrackEvent?.('copy_code', { spec: image.spec_id, library: image.library, method: 'card', page: 'home' });
-        setTimeout(() => setCopyState('idle'), 2000);
-      } else {
+      setCopyState('loading');
+      try {
+        // Use cached code if available, otherwise fetch. Pass `image.language`
+        // so R impls (ggplot2 today) hit the right DB row — the code endpoint
+        // defaults to Python and would 404 on an R artifact otherwise.
+        const code = image.code ?? (await fetchCode(image.spec_id, image.library, image.language));
+        if (code) {
+          await navigator.clipboard.writeText(code);
+          setCopyState('copied');
+          onTrackEvent?.('copy_code', {
+            spec: image.spec_id,
+            library: image.library,
+            method: 'card',
+            page: 'home',
+          });
+          setTimeout(() => setCopyState('idle'), 2000);
+        } else {
+          setCopyState('idle');
+        }
+      } catch {
         setCopyState('idle');
       }
-    } catch {
-      setCopyState('idle');
-    }
-  }, [image.spec_id, image.library, image.language, image.code, copyState, fetchCode, onTrackEvent]);
+    },
+    [image.spec_id, image.library, image.language, image.code, copyState, fetchCode, onTrackEvent]
+  );
 
   const cardId = `${image.spec_id}-${image.library}`;
   const specTooltipId = `spec-${cardId}`;
@@ -129,20 +140,24 @@ export const ImageCard = memo(function ImageCard({
 
   return (
     <Box
-      sx={isFirstBatch ? {
-        animation: 'fadeIn 0.4s ease-out',
-        animationDelay: `${index * 0.03}s`,
-        animationFillMode: 'backwards',
-        '@keyframes fadeIn': {
-          from: { opacity: 0, transform: 'translateY(10px)' },
-          to: { opacity: 1, transform: 'translateY(0)' },
-        },
-      } : undefined}
+      sx={
+        isFirstBatch
+          ? {
+              animation: 'fadeIn 0.4s ease-out',
+              animationDelay: `${index * 0.03}s`,
+              animationFillMode: 'backwards',
+              '@keyframes fadeIn': {
+                from: { opacity: 0, transform: 'translateY(10px)' },
+                to: { opacity: 1, transform: 'translateY(0)' },
+              },
+            }
+          : undefined
+      }
     >
       <Card
         elevation={0}
         onClick={handleClick}
-        onKeyDown={(e) => {
+        onKeyDown={e => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             handleClick();
@@ -186,7 +201,11 @@ export const ImageCard = memo(function ImageCard({
             loading={index < BATCH_SIZE ? 'eager' : 'lazy'}
             fetchPriority={index === 0 ? 'high' : undefined}
             src={getFallbackSrc(imgUrl)}
-            alt={viewMode === 'library' ? `${image.spec_id} - ${image.library}` : `${selectedSpec} - ${image.library}`}
+            alt={
+              viewMode === 'library'
+                ? `${image.spec_id} - ${image.library}`
+                : `${selectedSpec} - ${image.library}`
+            }
             sx={{
               display: 'block',
               width: '100%',
@@ -199,7 +218,10 @@ export const ImageCard = memo(function ImageCard({
               // Remove <source> elements and clear srcset so browser falls back to plot.png
               if (!target.dataset.fallback) {
                 target.dataset.fallback = '1';
-                target.closest('picture')?.querySelectorAll('source').forEach(s => s.remove());
+                target
+                  .closest('picture')
+                  ?.querySelectorAll('source')
+                  .forEach(s => s.remove());
                 target.removeAttribute('srcset');
                 target.src = imgUrl;
               } else {
@@ -210,21 +232,23 @@ export const ImageCard = memo(function ImageCard({
         </Box>
         {/* Copied confirmation */}
         {copyState === 'copied' && (
-          <Box sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            bgcolor: 'rgba(0,0,0,0.7)',
-            color: '#fff',
-            px: 1.5,
-            py: 0.5,
-            borderRadius: 1,
-            fontFamily: typography.fontFamily,
-            fontSize: fontSize.sm,
-            pointerEvents: 'none',
-            zIndex: 2,
-          }}>
+          <Box
+            sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              bgcolor: 'rgba(0,0,0,0.7)',
+              color: '#fff',
+              px: 1.5,
+              py: 0.5,
+              borderRadius: 1,
+              fontFamily: typography.fontFamily,
+              fontSize: fontSize.sm,
+              pointerEvents: 'none',
+              zIndex: 2,
+            }}
+          >
             {'>>> .copied'}
           </Box>
         )}
@@ -255,7 +279,9 @@ export const ImageCard = memo(function ImageCard({
         </IconButton>
       </Card>
       {/* Label below card: clickable spec-id · library */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 1.5, gap: 0.5 }}>
+      <Box
+        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 1.5, gap: 0.5 }}
+      >
         {/* Clickable Spec ID */}
         <Tooltip
           title={specDescription || 'No description available'}
@@ -277,7 +303,7 @@ export const ImageCard = memo(function ImageCard({
         >
           <Typography
             data-description-btn
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation();
               onTooltipToggle(isSpecTooltipOpen ? null : specTooltipId);
             }}
@@ -326,7 +352,8 @@ export const ImageCard = memo(function ImageCard({
                         '&:hover': { color: '#fff' },
                       }}
                     >
-                      {languageDocUrl.replace(/^https?:\/\//, '')} <OpenInNewIcon sx={{ fontSize: 12 }} />
+                      {languageDocUrl.replace(/^https?:\/\//, '')}{' '}
+                      <OpenInNewIcon sx={{ fontSize: 12 }} />
                     </Link>
                   )}
                 </Box>
@@ -350,7 +377,7 @@ export const ImageCard = memo(function ImageCard({
               <Typography
                 data-description-btn
                 aria-label={`Language: ${languageDisplay}`}
-                onClick={(e) => {
+                onClick={e => {
                   e.stopPropagation();
                   onTooltipToggle(isLangTooltipOpen ? null : langTooltipId);
                 }}
@@ -398,7 +425,8 @@ export const ImageCard = memo(function ImageCard({
                         '&:hover': { color: '#fff' },
                       }}
                     >
-                      {libraryDocUrl.replace(/^https?:\/\//, '')} <OpenInNewIcon sx={{ fontSize: 12 }} />
+                      {libraryDocUrl.replace(/^https?:\/\//, '')}{' '}
+                      <OpenInNewIcon sx={{ fontSize: 12 }} />
                     </Link>
                   )}
                 </Box>
@@ -421,7 +449,7 @@ export const ImageCard = memo(function ImageCard({
             >
               <Typography
                 data-description-btn
-                onClick={(e) => {
+                onClick={e => {
                   e.stopPropagation();
                   onTooltipToggle(isLibTooltipOpen ? null : libTooltipId);
                 }}

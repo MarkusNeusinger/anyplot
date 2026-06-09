@@ -1,15 +1,17 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import CssBaseline from '@mui/material/CssBaseline';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { AppRouter } from './router';
-import { reportWebVitals } from './analytics/reportWebVitals';
-import { typography, colors, fontSize } from './theme';
-
 // Import design tokens (CSS custom properties for theming + dark mode)
 import './styles/tokens.css';
 // Import web fonts - MonoLisa from GCS, Fraunces + Inter from Google Fonts
 import './styles/fonts.css';
+
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+
+import CssBaseline from '@mui/material/CssBaseline';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+
+import { reportWebVitals } from './analytics/reportWebVitals';
+import { AppRouter } from './router';
+import { colors, fontSize, typography } from './theme';
 
 const theme = createTheme({
   typography: {

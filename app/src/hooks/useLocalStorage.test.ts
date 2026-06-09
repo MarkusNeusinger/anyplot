@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
+import { beforeEach, describe, expect, it } from 'vitest';
+
 import { useLocalStorage } from './useLocalStorage';
 
 describe('useLocalStorage', () => {
@@ -30,7 +31,7 @@ describe('useLocalStorage', () => {
   it('supports functional updates', () => {
     const { result } = renderHook(() => useLocalStorage('count', 10));
     act(() => {
-      result.current[1]((prev) => prev + 5);
+      result.current[1](prev => prev + 5);
     });
     expect(result.current[0]).toBe(15);
   });

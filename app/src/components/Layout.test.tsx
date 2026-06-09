@@ -1,7 +1,8 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { useAppData } from '../hooks/useLayoutContext';
 import { render, screen, waitFor } from '../test-utils';
 import { AppDataProvider } from './Layout';
-import { useAppData } from '../hooks/useLayoutContext';
 
 // Helper component that reads the context and renders the four counts
 // the user-reported NumbersStrip is built from. Acts as a black-box
@@ -44,12 +45,12 @@ describe('AppDataProvider', () => {
       if (url.endsWith('/stats')) return Promise.resolve(jsonResponse(statsBody));
       throw new Error(`unexpected fetch: ${url}`);
     });
-    global.fetch = fetchMock;
+    globalThis.fetch = fetchMock;
 
     render(
       <AppDataProvider>
         <DataPeek />
-      </AppDataProvider>,
+      </AppDataProvider>
     );
 
     // All four endpoints should be hit (in parallel) — this is the regression
@@ -59,11 +60,11 @@ describe('AppDataProvider', () => {
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledTimes(4);
     });
-    const urls = fetchMock.mock.calls.map((c) => c[0] as string);
-    expect(urls.some((u) => u.endsWith('/specs'))).toBe(true);
-    expect(urls.some((u) => u.endsWith('/libraries'))).toBe(true);
-    expect(urls.some((u) => u.endsWith('/languages'))).toBe(true);
-    expect(urls.some((u) => u.endsWith('/stats'))).toBe(true);
+    const urls = fetchMock.mock.calls.map(c => c[0] as string);
+    expect(urls.some(u => u.endsWith('/specs'))).toBe(true);
+    expect(urls.some(u => u.endsWith('/libraries'))).toBe(true);
+    expect(urls.some(u => u.endsWith('/languages'))).toBe(true);
+    expect(urls.some(u => u.endsWith('/stats'))).toBe(true);
 
     await waitFor(() => {
       expect(screen.getByTestId('stats-libraries')).toHaveTextContent('11');
@@ -75,18 +76,20 @@ describe('AppDataProvider', () => {
 
   it('handles the /specs envelope ({specs: [...]}) as well as a bare array', async () => {
     const fetchMock = vi.fn().mockImplementation((url: string) => {
-      if (url.endsWith('/specs')) return Promise.resolve(jsonResponse({ specs: [{ id: 'a' }, { id: 'b' }] }));
+      if (url.endsWith('/specs'))
+        return Promise.resolve(jsonResponse({ specs: [{ id: 'a' }, { id: 'b' }] }));
       if (url.endsWith('/libraries')) return Promise.resolve(jsonResponse({ libraries: [] }));
       if (url.endsWith('/languages')) return Promise.resolve(jsonResponse({ languages: [] }));
-      if (url.endsWith('/stats')) return Promise.resolve(jsonResponse({ specs: 2, plots: 0, libraries: 0 }));
+      if (url.endsWith('/stats'))
+        return Promise.resolve(jsonResponse({ specs: 2, plots: 0, libraries: 0 }));
       throw new Error(`unexpected fetch: ${url}`);
     });
-    global.fetch = fetchMock;
+    globalThis.fetch = fetchMock;
 
     render(
       <AppDataProvider>
         <DataPeek />
-      </AppDataProvider>,
+      </AppDataProvider>
     );
 
     await waitFor(() => {
@@ -96,12 +99,12 @@ describe('AppDataProvider', () => {
 
   it('swallows fetch errors without crashing — context falls back to empty defaults', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    global.fetch = vi.fn().mockRejectedValue(new Error('boom'));
+    globalThis.fetch = vi.fn().mockRejectedValue(new Error('boom'));
 
     render(
       <AppDataProvider>
         <DataPeek />
-      </AppDataProvider>,
+      </AppDataProvider>
     );
 
     await waitFor(() => {
@@ -128,16 +131,16 @@ describe('AppDataProvider', () => {
             err.name = 'AbortError';
             reject(err);
           });
-        }),
+        })
     );
-    global.fetch = fetchMock;
+    globalThis.fetch = fetchMock;
 
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     const { unmount } = render(
       <AppDataProvider>
         <DataPeek />
-      </AppDataProvider>,
+      </AppDataProvider>
     );
 
     // Pending — no data resolved yet
@@ -147,7 +150,7 @@ describe('AppDataProvider', () => {
 
     // The aborted rejection must not surface as an unhandled warn — the
     // catch branch's `if (signal.aborted) return` guards it.
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await new Promise(resolve => setTimeout(resolve, 0));
     expect(warnSpy).not.toHaveBeenCalled();
 
     warnSpy.mockRestore();

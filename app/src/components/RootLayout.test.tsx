@@ -1,13 +1,15 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render } from '@testing-library/react';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { MemoryRouter, Routes, Route, Link } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
+import { Link, MemoryRouter, Route, Routes } from 'react-router-dom';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 const { setAmbient } = vi.hoisted(() => ({ setAmbient: vi.fn() }));
 
 vi.mock('../hooks/useAnalytics', async () => {
-  const actual = await vi.importActual<typeof import('../hooks/useAnalytics')>('../hooks/useAnalytics');
+  const actual =
+    await vi.importActual<typeof import('../hooks/useAnalytics')>('../hooks/useAnalytics');
   return { ...actual, setAnalyticsAmbientProps: setAmbient };
 });
 
@@ -21,7 +23,9 @@ vi.mock('../hooks', async () => {
 });
 
 vi.mock('../hooks/useLayoutContext', async () => {
-  const actual = await vi.importActual<typeof import('../hooks/useLayoutContext')>('../hooks/useLayoutContext');
+  const actual = await vi.importActual<typeof import('../hooks/useLayoutContext')>(
+    '../hooks/useLayoutContext'
+  );
   return {
     ...actual,
     useTheme: () => ({
@@ -62,7 +66,7 @@ function renderAt(initialPath: string) {
           </Route>
         </Routes>
       </MemoryRouter>
-    </ThemeProvider>,
+    </ThemeProvider>
   );
 }
 

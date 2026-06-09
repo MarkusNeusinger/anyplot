@@ -1,8 +1,9 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { useInfiniteScroll } from './useInfiniteScroll';
-import type { PlotImage } from '../types';
+import { act, renderHook } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { BATCH_SIZE } from '../constants';
+import type { PlotImage } from '../types';
+import { useInfiniteScroll } from './useInfiniteScroll';
 
 // --- IntersectionObserver mock ---
 let observerCallback: IntersectionObserverCallback;
@@ -22,7 +23,9 @@ class MockIntersectionObserver {
   readonly root = null;
   readonly rootMargin = '';
   readonly thresholds: readonly number[] = [];
-  takeRecords(): IntersectionObserverEntry[] { return []; }
+  takeRecords(): IntersectionObserverEntry[] {
+    return [];
+  }
 }
 
 beforeEach(() => {
@@ -30,7 +33,10 @@ beforeEach(() => {
   lastObserverOptions = undefined;
   vi.stubGlobal('IntersectionObserver', MockIntersectionObserver);
   // requestAnimationFrame — execute immediately
-  vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => { cb(0); return 0; });
+  vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+    cb(0);
+    return 0;
+  });
 });
 
 afterEach(() => {
@@ -41,6 +47,7 @@ afterEach(() => {
 function makeImages(n: number): PlotImage[] {
   return Array.from({ length: n }, (_, i) => ({
     library: 'matplotlib',
+    language: 'python',
     url: `https://example.com/img${i}.png`,
     spec_id: `spec-${i}`,
   }));
@@ -60,7 +67,7 @@ describe('useInfiniteScroll', () => {
         hasMore: true,
         setDisplayedImages: setDisplayed,
         setHasMore: setHasMore,
-      }),
+      })
     );
 
     expect(result.current.loadMoreRef).toBeDefined();
@@ -80,13 +87,17 @@ describe('useInfiniteScroll', () => {
         hasMore: true,
         setDisplayedImages: setDisplayed,
         setHasMore: setHasMore,
-      }),
+      })
     );
 
     // Unblock loading (wait for the 150ms guard)
-    act(() => { vi.advanceTimersByTime(200); });
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
 
-    act(() => { result.current.loadMore(); });
+    act(() => {
+      result.current.loadMore();
+    });
 
     expect(setDisplayed).toHaveBeenCalled();
     expect(setHasMore).toHaveBeenCalled();
@@ -104,11 +115,15 @@ describe('useInfiniteScroll', () => {
         hasMore: false,
         setDisplayedImages: setDisplayed,
         setHasMore: setHasMore,
-      }),
+      })
     );
 
-    act(() => { vi.advanceTimersByTime(200); });
-    act(() => { result.current.loadMore(); });
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+    act(() => {
+      result.current.loadMore();
+    });
 
     // setDisplayed should not be called by loadMore (may be called by checkAndLoad effects)
     // The key assertion is that hasMore=false prevents additional loading
@@ -126,11 +141,11 @@ describe('useInfiniteScroll', () => {
         hasMore: true,
         setDisplayedImages: vi.fn(),
         setHasMore: vi.fn(),
-      }),
+      })
     );
 
     expect(lastObserverOptions).toEqual(
-      expect.objectContaining({ threshold: 0.1, rootMargin: '2400px 0px' }),
+      expect.objectContaining({ threshold: 0.1, rootMargin: '2400px 0px' })
     );
   });
 
@@ -147,17 +162,19 @@ describe('useInfiniteScroll', () => {
         hasMore: true,
         setDisplayedImages: setDisplayed,
         setHasMore: setHasMore,
-      }),
+      })
     );
 
     // Unblock loading guard
-    act(() => { vi.advanceTimersByTime(200); });
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
 
     // Simulate intersection
     act(() => {
       observerCallback(
         [{ isIntersecting: true } as IntersectionObserverEntry],
-        {} as IntersectionObserver,
+        {} as IntersectionObserver
       );
     });
 
@@ -175,7 +192,7 @@ describe('useInfiniteScroll', () => {
         hasMore: true,
         setDisplayedImages: vi.fn(),
         setHasMore: vi.fn(),
-      }),
+      })
     );
 
     unmount();
@@ -197,11 +214,13 @@ describe('useInfiniteScroll', () => {
           setDisplayedImages: setDisplayed,
           setHasMore: setHasMore,
         }),
-      { initialProps: { images: all } },
+      { initialProps: { images: all } }
     );
 
     // Unblock initial guard
-    act(() => { vi.advanceTimersByTime(200); });
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
     setDisplayed.mockClear();
     setHasMore.mockClear();
 
@@ -210,12 +229,18 @@ describe('useInfiniteScroll', () => {
     rerender({ images: newAll });
 
     // loadMore should be blocked immediately after allImages change
-    act(() => { result.current.loadMore(); });
+    act(() => {
+      result.current.loadMore();
+    });
     expect(setHasMore).not.toHaveBeenCalled();
 
     // After 200ms the guard lifts
-    act(() => { vi.advanceTimersByTime(200); });
-    act(() => { result.current.loadMore(); });
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+    act(() => {
+      result.current.loadMore();
+    });
     expect(setDisplayed).toHaveBeenCalled();
   });
 });

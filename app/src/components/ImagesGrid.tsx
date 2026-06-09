@@ -1,11 +1,13 @@
-import { useMemo, useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
+
+import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
-import Alert from '@mui/material/Alert';
+
+import type { ImageSize } from '../constants';
+import type { LanguageInfo, LibraryInfo, PlotImage, SpecInfo } from '../types';
 import { ImageCard } from './ImageCard';
 import { LoaderSpinner } from './LoaderSpinner';
-import type { PlotImage, LibraryInfo, LanguageInfo, SpecInfo } from '../types';
-import type { ImageSize } from '../constants';
 
 interface ImagesGridProps {
   images: PlotImage[];
@@ -45,10 +47,11 @@ export function ImagesGrid({
   onTrackEvent,
 }: ImagesGridProps) {
   // Grid columns: normal = max 3 cols, compact = max 6 cols
-  const gridColumns = useMemo(() =>
-    imageSize === 'compact'
-      ? { xs: 6, sm: 6, md: 3, lg: 3, xl: 2 }  // 2→2→4→4→6 cols
-      : { xs: 12, sm: 12, md: 6, lg: 6, xl: 4 }, // 1→1→2→2→3 cols
+  const gridColumns = useMemo(
+    () =>
+      imageSize === 'compact'
+        ? { xs: 6, sm: 6, md: 3, lg: 3, xl: 2 } // 2→2→4→4→6 cols
+        : { xs: 12, sm: 12, md: 6, lg: 6, xl: 4 }, // 1→1→2→2→3 cols
     [imageSize]
   );
 
@@ -72,9 +75,12 @@ export function ImagesGrid({
   }, [specsData]);
 
   // Stable callback for card clicks
-  const handleCardClick = useCallback((image: PlotImage) => {
-    onCardClick(image);
-  }, [onCardClick]);
+  const handleCardClick = useCallback(
+    (image: PlotImage) => {
+      onCardClick(image);
+    },
+    [onCardClick]
+  );
 
   // Show loading spinner on initial load
   if (loading && !isTransitioning && images.length === 0) {
@@ -117,14 +123,14 @@ export function ImagesGrid({
             No images found for this spec.
           </Alert>
         ) : (
-            <Grid
-              container
-              spacing={3}
-              sx={{
-                opacity: isTransitioning ? 0 : 1,
-                transition: 'opacity 0.15s ease-in-out',
-              }}
-            >
+          <Grid
+            container
+            spacing={3}
+            sx={{
+              opacity: isTransitioning ? 0 : 1,
+              transition: 'opacity 0.15s ease-in-out',
+            }}
+          >
             {images.map((image, index) => {
               const lib = libraryMap.get(image.library);
               const lang = languageMap.get(image.language);
@@ -153,12 +159,10 @@ export function ImagesGrid({
                 </Grid>
               );
             })}
-            </Grid>
+          </Grid>
         )}
         {/* Load more trigger (invisible) */}
-        {hasMore && (
-          <Box ref={loadMoreRef} sx={{ height: 1 }} />
-        )}
+        {hasMore && <Box ref={loadMoreRef} sx={{ height: 1 }} />}
         {/* Fixed loading indicator at bottom - only when actively loading */}
         {isLoadingMore && hasMore && (
           <Box

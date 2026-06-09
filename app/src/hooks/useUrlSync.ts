@@ -17,13 +17,13 @@ export function parseUrlFilters(): ActiveFilters {
   const params = new URLSearchParams(window.location.search);
   const filters: ActiveFilters = [];
 
-  FILTER_CATEGORIES.forEach((category) => {
+  FILTER_CATEGORIES.forEach(category => {
     const allValues = params.getAll(category);
-    allValues.forEach((value) => {
+    allValues.forEach(value => {
       if (value) {
         const values = value
           .split(',')
-          .map((v) => v.trim())
+          .map(v => v.trim())
           .filter(Boolean);
         if (values.length > 0) {
           filters.push({ category, values });
@@ -65,8 +65,8 @@ export function useUrlSync({ activeFilters, onTrackPageview }: UseUrlSyncOptions
 
     // Update document title
     const filterParts = activeFilters
-      .filter((f) => f.values.length > 0)
-      .map((f) => `${f.category}:${f.values.join(',')}`)
+      .filter(f => f.values.length > 0)
+      .map(f => `${f.category}:${f.values.join(',')}`)
       .join(' ');
 
     document.title = filterParts ? `${filterParts} | anyplot.ai` : 'anyplot.ai';

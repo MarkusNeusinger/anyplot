@@ -1,8 +1,12 @@
 import js from '@eslint/js';
 import tseslint from '@typescript-eslint/eslint-plugin';
 import tsparser from '@typescript-eslint/parser';
+import prettierConfig from 'eslint-config-prettier';
+import perfectionist from 'eslint-plugin-perfectionist';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
+import unusedImports from 'eslint-plugin-unused-imports';
+import globals from 'globals';
 
 export default [
   js.configs.recommended,
@@ -17,80 +21,14 @@ export default [
           jsx: true,
         },
       },
-      globals: {
-        // Browser globals
-        window: 'readonly',
-        document: 'readonly',
-        navigator: 'readonly',
-        console: 'readonly',
-        setTimeout: 'readonly',
-        clearTimeout: 'readonly',
-        setInterval: 'readonly',
-        clearInterval: 'readonly',
-        fetch: 'readonly',
-        URL: 'readonly',
-        URLSearchParams: 'readonly',
-        localStorage: 'readonly',
-        sessionStorage: 'readonly',
-        Storage: 'readonly',
-        history: 'readonly',
-        location: 'readonly',
-        requestAnimationFrame: 'readonly',
-        cancelAnimationFrame: 'readonly',
-        performance: 'readonly',
-        crypto: 'readonly',
-        // DOM types
-        HTMLElement: 'readonly',
-        HTMLDivElement: 'readonly',
-        HTMLInputElement: 'readonly',
-        HTMLSelectElement: 'readonly',
-        HTMLButtonElement: 'readonly',
-        HTMLAnchorElement: 'readonly',
-        HTMLImageElement: 'readonly',
-        HTMLCanvasElement: 'readonly',
-        HTMLIFrameElement: 'readonly',
-        Element: 'readonly',
-        Node: 'readonly',
-        NodeList: 'readonly',
-        // Events
-        MouseEvent: 'readonly',
-        KeyboardEvent: 'readonly',
-        TouchEvent: 'readonly',
-        ClipboardEvent: 'readonly',
-        Event: 'readonly',
-        MessageEvent: 'readonly',
-        MediaQueryListEvent: 'readonly',
-        // APIs
-        AbortController: 'readonly',
-        AbortSignal: 'readonly',
-        RequestInit: 'readonly',
-        Response: 'readonly',
-        ResizeObserver: 'readonly',
-        IntersectionObserver: 'readonly',
-        MutationObserver: 'readonly',
-        Blob: 'readonly',
-        File: 'readonly',
-        FileReader: 'readonly',
-        // Idle / animation callback APIs
-        requestIdleCallback: 'readonly',
-        cancelIdleCallback: 'readonly',
-        IdleRequestCallback: 'readonly',
-        IdleDeadline: 'readonly',
-        IdleRequestOptions: 'readonly',
-        IdleCallbackHandle: 'readonly',
-        FrameRequestCallback: 'readonly',
-        // IntersectionObserver type aliases
-        IntersectionObserverCallback: 'readonly',
-        IntersectionObserverInit: 'readonly',
-        IntersectionObserverEntry: 'readonly',
-        // React (for JSX runtime)
-        React: 'readonly',
-      },
+      globals: globals.browser,
     },
     plugins: {
       '@typescript-eslint': tseslint,
       'react-hooks': reactHooks,
       'react-refresh': reactRefresh,
+      perfectionist,
+      'unused-imports': unusedImports,
     },
     rules: {
       ...tseslint.configs.recommended.rules,
@@ -98,29 +36,39 @@ export default [
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       'no-unused-vars': 'off',
+      // TypeScript reports undefined identifiers itself (incl. DOM lib types);
+      // with no-undef active every DOM global would need hand-listing here.
+      'no-undef': 'off',
       // Allow ref updates during render (common pattern for keeping refs in sync)
       'react-hooks/refs': 'off',
+      'unused-imports/no-unused-imports': 'error',
+      'perfectionist/sort-imports': [
+        'error',
+        {
+          type: 'natural',
+          newlinesBetween: 1,
+          internalPattern: ['^src/'],
+          groups: [
+            'side-effect-style',
+            'side-effect',
+            'react',
+            ['builtin', 'external'],
+            'mui',
+            'internal',
+            ['parent', 'sibling', 'index'],
+            'unknown',
+          ],
+          customGroups: [
+            { groupName: 'react', elementNamePattern: ['^react$', '^react-dom'] },
+            { groupName: 'mui', elementNamePattern: ['^@mui/'] },
+          ],
+        },
+      ],
+      'perfectionist/sort-named-imports': ['error', { type: 'natural' }],
     },
   },
   {
-    files: ['src/**/*.test.{ts,tsx}'],
-    languageOptions: {
-      globals: {
-        // Vitest globals
-        describe: 'readonly',
-        it: 'readonly',
-        expect: 'readonly',
-        vi: 'readonly',
-        beforeEach: 'readonly',
-        afterEach: 'readonly',
-        beforeAll: 'readonly',
-        afterAll: 'readonly',
-        globalThis: 'readonly',
-        global: 'readonly',
-      },
-    },
+    ignores: ['dist/**', 'node_modules/**', 'coverage/**', '*.config.js', '*.config.mjs'],
   },
-  {
-    ignores: ['dist/**', 'node_modules/**', '*.config.js'],
-  },
+  prettierConfig,
 ];

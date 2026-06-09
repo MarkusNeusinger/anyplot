@@ -1,11 +1,17 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '../test-utils';
-import { ImageCard } from './ImageCard';
-import type { PlotImage } from '../types';
+import { describe, expect, it, vi } from 'vitest';
 
-// Mock useCodeFetch to avoid actual API calls
+import { render, screen } from '../test-utils';
+import type { PlotImage } from '../types';
+import { ImageCard } from './ImageCard';
+
+// Mock useCodeFetch to avoid actual API calls; mirrors the real hook contract
+// (fetchCode, getCode, isLoading) so contract drift breaks this test.
 vi.mock('../hooks/useCodeFetch', () => ({
-  useCodeFetch: () => ({ fetchCode: vi.fn().mockResolvedValue('print("hello")'), cache: new Map() }),
+  useCodeFetch: () => ({
+    fetchCode: vi.fn().mockResolvedValue('print("hello")'),
+    getCode: vi.fn().mockReturnValue(null),
+    isLoading: false,
+  }),
 }));
 
 const baseImage: PlotImage = {

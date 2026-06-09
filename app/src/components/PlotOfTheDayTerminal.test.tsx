@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { render, screen, userEvent } from '../test-utils';
 
 const trackEvent = vi.fn();
@@ -12,7 +13,9 @@ vi.mock('../hooks', async () => {
 });
 
 vi.mock('../hooks/useLayoutContext', async () => {
-  const actual = await vi.importActual<typeof import('../hooks/useLayoutContext')>('../hooks/useLayoutContext');
+  const actual = await vi.importActual<typeof import('../hooks/useLayoutContext')>(
+    '../hooks/useLayoutContext'
+  );
   return { ...actual, useTheme: () => ({ isDark: false, toggle: vi.fn() }) };
 });
 
@@ -51,16 +54,25 @@ describe('PlotOfTheDayTerminal', () => {
     render(<PlotOfTheDayTerminal potd={potd} />);
 
     await user.click(screen.getByText(/plots\/scatter-basic\/matplotlib\.py/));
-    expect(trackEvent).toHaveBeenCalledWith('nav_click', expect.objectContaining({ source: 'potd_terminal_filename' }));
+    expect(trackEvent).toHaveBeenCalledWith(
+      'nav_click',
+      expect.objectContaining({ source: 'potd_terminal_filename' })
+    );
 
     const githubLink = screen.getByLabelText('Open source on GitHub');
     expect(githubLink.getAttribute('href')).toMatch(
-      /\/blob\/main\/plots\/scatter-basic\/implementations\/python\/matplotlib\.py$/,
+      /\/blob\/main\/plots\/scatter-basic\/implementations\/python\/matplotlib\.py$/
     );
     await user.click(githubLink);
-    expect(trackEvent).toHaveBeenCalledWith('nav_click', expect.objectContaining({ source: 'potd_terminal_github' }));
+    expect(trackEvent).toHaveBeenCalledWith(
+      'nav_click',
+      expect.objectContaining({ source: 'potd_terminal_github' })
+    );
 
     await user.click(screen.getByLabelText(/Open Basic Scatter implementation/));
-    expect(trackEvent).toHaveBeenCalledWith('nav_click', expect.objectContaining({ source: 'potd_terminal_image' }));
+    expect(trackEvent).toHaveBeenCalledWith(
+      'nav_click',
+      expect.objectContaining({ source: 'potd_terminal_image' })
+    );
   });
 });

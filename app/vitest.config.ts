@@ -6,6 +6,14 @@ export default defineConfig({
     environment: 'jsdom',
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     setupFiles: ['./src/setupTests.ts'],
+    // MUI >= 9.1 ships .mjs files with directory imports (e.g.
+    // react-transition-group/TransitionGroupContext) that Node's native ESM
+    // loader rejects; inline MUI so Vite's resolver handles those imports.
+    server: {
+      deps: {
+        inline: [/@mui\//],
+      },
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

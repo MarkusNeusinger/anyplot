@@ -1,6 +1,7 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
 import { render, screen, userEvent } from '../test-utils';
-import { PlotsLink, GridSizeToggle, ToolbarActions } from './ToolbarActions';
+import { GridSizeToggle, PlotsLink, ToolbarActions } from './ToolbarActions';
 
 describe('PlotsLink', () => {
   it('renders a link to /plots', () => {
@@ -36,19 +37,13 @@ describe('GridSizeToggle', () => {
   it('renders with aria-label for current state', () => {
     render(<GridSizeToggle {...defaultProps} />);
 
-    expect(screen.getByRole('button')).toHaveAttribute(
-      'aria-label',
-      'Switch to compact view'
-    );
+    expect(screen.getByRole('button')).toHaveAttribute('aria-label', 'Switch to compact view');
   });
 
   it('shows "Switch to normal view" when in compact mode', () => {
     render(<GridSizeToggle {...defaultProps} imageSize="compact" />);
 
-    expect(screen.getByRole('button')).toHaveAttribute(
-      'aria-label',
-      'Switch to normal view'
-    );
+    expect(screen.getByRole('button')).toHaveAttribute('aria-label', 'Switch to normal view');
   });
 
   it('toggles to compact on click and fires tracking event', async () => {
@@ -75,11 +70,7 @@ describe('GridSizeToggle', () => {
     const user = userEvent.setup();
 
     render(
-      <GridSizeToggle
-        {...defaultProps}
-        imageSize="compact"
-        onImageSizeChange={onImageSizeChange}
-      />
+      <GridSizeToggle {...defaultProps} imageSize="compact" onImageSizeChange={onImageSizeChange} />
     );
 
     await user.click(screen.getByRole('button'));
@@ -114,11 +105,7 @@ describe('GridSizeToggle', () => {
 describe('ToolbarActions', () => {
   it('renders the GridSizeToggle (PlotsLink was removed from the composite)', () => {
     render(
-      <ToolbarActions
-        imageSize="normal"
-        onImageSizeChange={vi.fn()}
-        onTrackEvent={vi.fn()}
-      />
+      <ToolbarActions imageSize="normal" onImageSizeChange={vi.fn()} onTrackEvent={vi.fn()} />
     );
 
     expect(screen.getByRole('button')).toBeInTheDocument();

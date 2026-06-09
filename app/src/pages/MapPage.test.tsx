@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { forwardRef, useImperativeHandle } from 'react';
+
 import { fireEvent } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { act, render, screen, waitFor } from '../test-utils';
 import { MapPage, outlierSquashForce, type SimNode } from './MapPage';
-
 
 vi.mock('react-helmet-async', () => ({
   Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -87,7 +87,6 @@ vi.mock('react-force-graph-2d', () => ({
   }),
 }));
 
-
 function makeCtxStub() {
   // Minimal mock of CanvasRenderingContext2D — just enough surface for drawNode/paintHitbox.
   return {
@@ -102,7 +101,6 @@ function makeCtxStub() {
     globalAlpha: 1,
   };
 }
-
 
 const mockSpecs = [
   {
@@ -134,17 +132,15 @@ const mockSpecs = [
   },
 ];
 
-
 function mockFetchSuccess() {
   vi.stubGlobal(
     'fetch',
     vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(mockSpecs),
-    }),
+    })
   );
 }
-
 
 // jsdom doesn't ship ResizeObserver; stub it so the page's useEffect doesn't crash
 // AND fire the callback once with non-zero dimensions so the `size.w > 0` gate that
@@ -163,7 +159,6 @@ class MockResizeObserver {
   unobserve() {}
   disconnect() {}
 }
-
 
 describe('MapPage', () => {
   beforeEach(() => {
@@ -246,9 +241,24 @@ describe('MapPage', () => {
     render(<MapPage />);
     await waitFor(() => expect(lastFgProps.current).not.toBeNull());
 
-    const drawNode = lastFgProps.current!.nodeCanvasObject as (n: unknown, c: unknown, gs?: number) => void;
+    const drawNode = lastFgProps.current!.nodeCanvasObject as (
+      n: unknown,
+      c: unknown,
+      gs?: number
+    ) => void;
     const ctx = makeCtxStub();
-    drawNode({ id: 'scatter-basic', x: 100, y: 100, imgs: new Map(), pendingTiers: new Set(), colorBucket: null }, ctx, 1);
+    drawNode(
+      {
+        id: 'scatter-basic',
+        x: 100,
+        y: 100,
+        imgs: new Map(),
+        pendingTiers: new Set(),
+        colorBucket: null,
+      },
+      ctx,
+      1
+    );
 
     // Without an attached image, the fallback rect path runs.
     expect(ctx.fillRect).toHaveBeenCalled();
@@ -261,16 +271,33 @@ describe('MapPage', () => {
     render(<MapPage />);
     await waitFor(() => expect(lastFgProps.current).not.toBeNull());
 
-    const drawNode = lastFgProps.current!.nodeCanvasObject as (n: unknown, c: unknown, gs?: number) => void;
+    const drawNode = lastFgProps.current!.nodeCanvasObject as (
+      n: unknown,
+      c: unknown,
+      gs?: number
+    ) => void;
     const ctx = makeCtxStub();
     const fakeImg = { src: 'x' } as unknown as HTMLImageElement;
     drawNode(
-      { id: 'scatter-basic', x: 50, y: 50, imgs: new Map([[400, fakeImg]]), pendingTiers: new Set(), colorBucket: null },
+      {
+        id: 'scatter-basic',
+        x: 50,
+        y: 50,
+        imgs: new Map([[400, fakeImg]]),
+        pendingTiers: new Set(),
+        colorBucket: null,
+      },
       ctx,
-      1,
+      1
     );
 
-    expect(ctx.drawImage).toHaveBeenCalledWith(fakeImg, expect.any(Number), expect.any(Number), expect.any(Number), expect.any(Number));
+    expect(ctx.drawImage).toHaveBeenCalledWith(
+      fakeImg,
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Number)
+    );
     expect(ctx.strokeRect).toHaveBeenCalled();
   });
 
@@ -279,9 +306,24 @@ describe('MapPage', () => {
     render(<MapPage />);
     await waitFor(() => expect(lastFgProps.current).not.toBeNull());
 
-    const paintHitbox = lastFgProps.current!.nodePointerAreaPaint as (n: unknown, c: string, ctx: unknown) => void;
+    const paintHitbox = lastFgProps.current!.nodePointerAreaPaint as (
+      n: unknown,
+      c: string,
+      ctx: unknown
+    ) => void;
     const ctx = makeCtxStub();
-    paintHitbox({ id: 'scatter-basic', x: 80, y: 60, imgs: new Map(), pendingTiers: new Set(), colorBucket: null }, '#ff00ff', ctx);
+    paintHitbox(
+      {
+        id: 'scatter-basic',
+        x: 80,
+        y: 60,
+        imgs: new Map(),
+        pendingTiers: new Set(),
+        colorBucket: null,
+      },
+      '#ff00ff',
+      ctx
+    );
 
     expect(ctx.fillStyle).toBe('#ff00ff');
     expect(ctx.fillRect).toHaveBeenCalled();
@@ -297,8 +339,16 @@ describe('MapPage', () => {
     onNodeHover({ id: 'scatter-basic' });
     await waitFor(() => {
       const linkColor = lastFgProps.current!.linkColor as (l: unknown) => string;
-      const colorInvolved = linkColor({ source: 'scatter-basic', target: 'line-basic', weight: 0.5 });
-      const colorOther = linkColor({ source: 'line-basic', target: 'scatter-color-mapped', weight: 0.5 });
+      const colorInvolved = linkColor({
+        source: 'scatter-basic',
+        target: 'line-basic',
+        weight: 0.5,
+      });
+      const colorOther = linkColor({
+        source: 'line-basic',
+        target: 'scatter-color-mapped',
+        weight: 0.5,
+      });
       expect(colorInvolved).toMatch(/^#/); // brand color (hex)
       expect(colorInvolved).not.toBe(colorOther);
     });
@@ -321,7 +371,11 @@ describe('MapPage', () => {
     render(<MapPage />);
     await waitFor(() => expect(lastFgProps.current).not.toBeNull());
 
-    const nodes = (lastFgProps.current!.graphData as { nodes: Array<{ id: string; x?: number; y?: number; vx?: number; vy?: number }> }).nodes;
+    const nodes = (
+      lastFgProps.current!.graphData as {
+        nodes: Array<{ id: string; x?: number; y?: number; vx?: number; vy?: number }>;
+      }
+    ).nodes;
     // Every node should have a numeric seed position before FG2D ever ticks the simulation —
     // without seeding, FG2D's random initialiser would leave x/y undefined here.
     for (const n of nodes) {
@@ -551,7 +605,7 @@ describe('MapPage', () => {
 
     // 1. Initial state: gate is visible, progressbar reachable.
     expect(
-      screen.getByRole('progressbar', { name: 'Layout computation progress' }),
+      screen.getByRole('progressbar', { name: 'Layout computation progress' })
     ).toHaveAttribute('aria-valuenow', '0');
 
     // 2. Cool the simulation. settled flips true → gate gets
@@ -560,8 +614,8 @@ describe('MapPage', () => {
     act(() => onEngineStop());
     await waitFor(() =>
       expect(
-        screen.queryByRole('progressbar', { name: 'Layout computation progress' }),
-      ).not.toBeInTheDocument(),
+        screen.queryByRole('progressbar', { name: 'Layout computation progress' })
+      ).not.toBeInTheDocument()
     );
 
     // 3. Open the weights panel and bump a slider. The first slider in

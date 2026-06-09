@@ -1,15 +1,15 @@
-import { useState, useEffect, useRef, useCallback, type ReactNode } from 'react';
+import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 
 import { API_URL } from '../constants';
-import type { LanguageInfo, LibraryInfo, SpecInfo } from '../types';
 import {
   AppDataContext,
-  HomeStateContext,
-  ThemeContext,
-  initialHomeState,
   type HomeState,
+  HomeStateContext,
+  initialHomeState,
+  ThemeContext,
 } from '../hooks/useLayoutContext';
 import { useThemeMode } from '../hooks/useThemeMode';
+import type { LanguageInfo, LibraryInfo, SpecInfo } from '../types';
 
 // Global provider that wraps the entire router
 export function AppDataProvider({ children }: { children: ReactNode }) {
@@ -17,7 +17,12 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [specsData, setSpecsData] = useState<SpecInfo[]>([]);
   const [librariesData, setLibrariesData] = useState<LibraryInfo[]>([]);
   const [languagesData, setLanguagesData] = useState<LanguageInfo[]>([]);
-  const [stats, setStats] = useState<{ specs: number; plots: number; libraries: number; lines_of_code?: number } | null>(null);
+  const [stats, setStats] = useState<{
+    specs: number;
+    plots: number;
+    libraries: number;
+    lines_of_code?: number;
+  } | null>(null);
 
   // Persistent home state (both ref for sync access and state for reactivity)
   const [homeState, setHomeState] = useState<HomeState>(initialHomeState);
@@ -31,7 +36,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   // Save scroll position synchronously to ref (called before navigation)
   const saveScrollPosition = useCallback(() => {
     homeStateRef.current = { ...homeStateRef.current, scrollY: window.scrollY };
-    setHomeState((prev) => ({ ...prev, scrollY: window.scrollY }));
+    setHomeState(prev => ({ ...prev, scrollY: window.scrollY }));
   }, []);
 
   // Fire metadata fetches immediately on mount. Previously these were wrapped
@@ -89,7 +94,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   return (
     <ThemeContext.Provider value={themeMode}>
       <AppDataContext.Provider value={{ specsData, librariesData, languagesData, stats }}>
-        <HomeStateContext.Provider value={{ homeState, homeStateRef, setHomeState, saveScrollPosition }}>
+        <HomeStateContext.Provider
+          value={{ homeState, homeStateRef, setHomeState, saveScrollPosition }}
+        >
           {children}
         </HomeStateContext.Provider>
       </AppDataContext.Provider>

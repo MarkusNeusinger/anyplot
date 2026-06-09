@@ -1,8 +1,9 @@
 import Box from '@mui/material/Box';
-import { SectionHeader } from './SectionHeader';
-import { LibraryCard } from './LibraryCard';
-import type { LibraryInfo } from '../types';
+
 import { LIBRARIES } from '../constants';
+import type { LibraryInfo } from '../types';
+import { LibraryCard } from './LibraryCard';
+import { SectionHeader } from './SectionHeader';
 
 interface LibrariesSectionProps {
   libraries: LibraryInfo[];
@@ -34,11 +35,17 @@ export function LibrariesSection({
         linkTo="/plots"
       />
 
-      <Box sx={{
-        display: 'grid',
-        gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(auto-fill, minmax(280px, 1fr))' },
-        gap: 2.5,
-      }}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            sm: 'repeat(2, 1fr)',
+            md: 'repeat(auto-fill, minmax(280px, 1fr))',
+          },
+          gap: 2.5,
+        }}
+      >
         {libList.map(lib => (
           <LibraryCard
             key={lib.name}

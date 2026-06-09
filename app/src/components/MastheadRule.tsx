@@ -1,21 +1,24 @@
 import { useState } from 'react';
+
 import { Link as RouterLink, useLocation } from 'react-router-dom';
+
 import Box from '@mui/material/Box';
-import { typography, colors } from '../theme';
-import { ThemeToggle } from './ThemeToggle';
-import { useTheme, useLatestRelease, useAnalytics } from '../hooks';
+
+import { LANG_EXT, LIB_ABBREV } from '../constants';
+import { useAnalytics, useLatestRelease, useTheme } from '../hooks';
+import { colors, typography } from '../theme';
 import { RESERVED_TOP_LEVEL } from '../utils/paths';
-import { LIB_ABBREV, LANG_EXT } from '../constants';
+import { ThemeToggle } from './ThemeToggle';
 
 // Symmetric block-comment delimiters used when no language context is in the URL.
 // One is picked on mount so each page load reveals a different classic.
 const COMMENT_POOL = [
-  { open: '"""', close: '"""' },       // python docstring
-  { open: '/*', close: '*/' },         // js / c / rust / css / go
-  { open: '<!--', close: '-->' },      // html
-  { open: '{-', close: '-}' },         // haskell
-  { open: '(*', close: '*)' },         // ocaml / fsharp
-  { open: '--[[', close: ']]' },       // lua
+  { open: '"""', close: '"""' }, // python docstring
+  { open: '/*', close: '*/' }, // js / c / rust / css / go
+  { open: '<!--', close: '-->' }, // html
+  { open: '{-', close: '-}' }, // haskell
+  { open: '(*', close: '*)' }, // ocaml / fsharp
+  { open: '--[[', close: ']]' }, // lua
 ] as const;
 
 // When the URL carries a language segment, use its native block-comment style instead.
@@ -159,40 +162,45 @@ export function MastheadRule() {
     // SpecLanguageRedirect). Detail pages carry it as a path segment.
     const queryLanguage = new URLSearchParams(location.search).get('language');
     const effectiveLanguage = language || queryLanguage;
-    if (effectiveLanguage && LANG_DELIM[effectiveLanguage]) centerDelim = LANG_DELIM[effectiveLanguage];
+    if (effectiveLanguage && LANG_DELIM[effectiveLanguage])
+      centerDelim = LANG_DELIM[effectiveLanguage];
   }
 
   return (
-    <Box sx={{
-      display: 'grid',
-      // xs+sm: left takes all remaining room, toggle hugs the right edge —
-      // the center comment is hidden until md, so giving it its own balanced
-      // 1fr column at sm just wastes ~half the bar on whitespace and forces
-      // the breadcrumb to truncate. md+: when the center comment actually
-      // shows (landing / spec hub / lang hub), use balanced 1fr auto 1fr so
-      // the comment sits visually centred. On impl pages the comment is
-      // hidden — collapse the right column to `auto` so the breadcrumb can
-      // claim the full row width instead of half.
-      gridTemplateColumns: {
-        xs: '1fr auto auto',
-        md: centerVisible ? '1fr auto 1fr' : '1fr auto auto',
-      },
-      alignItems: 'center',
-      columnGap: { xs: 1, sm: 2 },
-      py: 1.25,
-      mb: 0,
-      borderBottom: '1px solid var(--rule)',
-      fontFamily: typography.mono,
-      fontSize: '11px',
-      color: 'var(--ink-muted)',
-      letterSpacing: '0.04em',
-    }}>
-      <Box sx={{
-        display: 'block',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-      }}>
+    <Box
+      sx={{
+        display: 'grid',
+        // xs+sm: left takes all remaining room, toggle hugs the right edge —
+        // the center comment is hidden until md, so giving it its own balanced
+        // 1fr column at sm just wastes ~half the bar on whitespace and forces
+        // the breadcrumb to truncate. md+: when the center comment actually
+        // shows (landing / spec hub / lang hub), use balanced 1fr auto 1fr so
+        // the comment sits visually centred. On impl pages the comment is
+        // hidden — collapse the right column to `auto` so the breadcrumb can
+        // claim the full row width instead of half.
+        gridTemplateColumns: {
+          xs: '1fr auto auto',
+          md: centerVisible ? '1fr auto 1fr' : '1fr auto auto',
+        },
+        alignItems: 'center',
+        columnGap: { xs: 1, sm: 2 },
+        py: 1.25,
+        mb: 0,
+        borderBottom: '1px solid var(--rule)',
+        fontFamily: typography.mono,
+        fontSize: '11px',
+        color: 'var(--ink-muted)',
+        letterSpacing: '0.04em',
+      }}
+    >
+      <Box
+        sx={{
+          display: 'block',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}
+      >
         {/* Root marker — hidden on xs (where the NavBar logo `any.plot()` below
             already anchors the brand) so the breadcrumb has room for the
             spec-id + lang + lib without truncating. Short single-segment
@@ -217,7 +225,9 @@ export function MastheadRule() {
               href={`${REPO_URL}/tree/main`}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => trackEvent('nav_click', { source: 'masthead_branch', target: 'github_main' })}
+              onClick={() =>
+                trackEvent('nav_click', { source: 'masthead_branch', target: 'github_main' })
+              }
               sx={linkSx}
             >
               main
@@ -228,7 +238,9 @@ export function MastheadRule() {
               href={releaseTag ? `${REPO_URL}/releases/tag/${releaseTag}` : `${REPO_URL}/releases`}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => trackEvent('nav_click', { source: 'masthead_release', target: version })}
+              onClick={() =>
+                trackEvent('nav_click', { source: 'masthead_release', target: version })
+              }
               sx={linkSx}
             >
               {version}
@@ -241,7 +253,11 @@ export function MastheadRule() {
               <>
                 {/* xs+sm show the shorthand (`py`, `p9`); md+ has room for the
                     full name. Matches NavBar's md-breakpoint convention. */}
-                <Box component="span" sx={{ display: { xs: 'inline', md: 'none' } }} title={seg.label}>
+                <Box
+                  component="span"
+                  sx={{ display: { xs: 'inline', md: 'none' } }}
+                  title={seg.label}
+                >
                   {seg.short}
                 </Box>
                 <Box component="span" sx={{ display: { xs: 'none', md: 'inline' } }}>
@@ -263,7 +279,9 @@ export function MastheadRule() {
                   <Box
                     component={RouterLink}
                     to={seg.to}
-                    onClick={() => trackEvent('nav_click', { source: 'breadcrumb', target: seg.to })}
+                    onClick={() =>
+                      trackEvent('nav_click', { source: 'breadcrumb', target: seg.to })
+                    }
                     sx={linkSx}
                   >
                     {labelEl}
@@ -279,21 +297,25 @@ export function MastheadRule() {
         )}
       </Box>
 
-      <Box sx={{
-        px: 2,
-        fontFeatureSettings: '"tnum"',
-        textAlign: 'center',
-        display: { xs: 'none', md: centerVisible ? 'block' : 'none' },
-      }}>
+      <Box
+        sx={{
+          px: 2,
+          fontFeatureSettings: '"tnum"',
+          textAlign: 'center',
+          display: { xs: 'none', md: centerVisible ? 'block' : 'none' },
+        }}
+      >
         {`${centerDelim.open} ${centerContent} ${centerDelim.close}`}
       </Box>
 
-      <Box sx={{
-        textAlign: 'right',
-        gridColumn: '3',
-        display: 'flex',
-        justifyContent: 'flex-end',
-      }}>
+      <Box
+        sx={{
+          textAlign: 'right',
+          gridColumn: '3',
+          display: 'flex',
+          justifyContent: 'flex-end',
+        }}
+      >
         <ThemeToggle mode={mode} onCycle={handleThemeToggle} />
       </Box>
     </Box>

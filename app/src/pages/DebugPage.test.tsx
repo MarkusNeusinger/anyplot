@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fireEvent } from '@testing-library/react';
-import { render, screen, waitFor } from '../test-utils';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { render, screen, waitFor } from '../test-utils';
 import { DebugPage } from './DebugPage';
 
 const mockDebugData = {
@@ -9,7 +9,14 @@ const mockDebugData = {
   total_implementations: 500,
   coverage_percent: 85.5,
   library_stats: [
-    { id: 'matplotlib', name: 'Matplotlib', impl_count: 80, avg_score: 91.5, min_score: 60, max_score: 99 },
+    {
+      id: 'matplotlib',
+      name: 'Matplotlib',
+      impl_count: 80,
+      avg_score: 91.5,
+      min_score: 60,
+      max_score: 99,
+    },
   ],
   low_score_specs: [],
   oldest_specs: [],
@@ -34,9 +41,21 @@ const mockDebugData = {
       title: 'Basic Scatter',
       updated: '2025-01-01',
       avg_score: 92,
-      altair: 90, bokeh: 91, chartjs: null, d3: null, echarts: null,
-      ggplot2: null, highcharts: null, letsplot: null, makie: null,
-      matplotlib: 95, muix: 87, plotly: 88, plotnine: null, pygal: null, seaborn: 94,
+      altair: 90,
+      bokeh: 91,
+      chartjs: null,
+      d3: null,
+      echarts: null,
+      ggplot2: null,
+      highcharts: null,
+      letsplot: null,
+      makie: null,
+      matplotlib: 95,
+      muix: 87,
+      plotly: 88,
+      plotnine: null,
+      pygal: null,
+      seaborn: 94,
     },
   ],
 };
@@ -47,21 +66,32 @@ describe('DebugPage', () => {
   });
 
   it('shows loading state initially', () => {
-    vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => new Promise(() => {}))
+    );
     render(<DebugPage />);
     expect(screen.getByText(/loading debug data/i)).toBeInTheDocument();
   });
 
   it('renders debug data after fetch', async () => {
-    vi.stubGlobal('fetch', vi.fn((url: string) => {
-      if (url.includes('/debug/ping')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({ database_connected: true, response_time_ms: 42, timestamp: '2026-04-24T12:00:00Z' }),
-        });
-      }
-      return Promise.resolve({ ok: true, json: () => Promise.resolve(mockDebugData) });
-    }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) => {
+        if (url.includes('/debug/ping')) {
+          return Promise.resolve({
+            ok: true,
+            json: () =>
+              Promise.resolve({
+                database_connected: true,
+                response_time_ms: 42,
+                timestamp: '2026-04-24T12:00:00Z',
+              }),
+          });
+        }
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(mockDebugData) });
+      })
+    );
 
     render(<DebugPage />);
 
@@ -71,12 +101,19 @@ describe('DebugPage', () => {
   });
 
   it('handles fetch error gracefully', async () => {
-    vi.stubGlobal('fetch', vi.fn((url: string) => {
-      if (url.includes('/debug/ping')) {
-        return Promise.resolve({ ok: true, json: () => Promise.resolve({ database_connected: false, response_time_ms: 0, timestamp: '' }) });
-      }
-      return Promise.resolve({ ok: false, status: 500 });
-    }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) => {
+        if (url.includes('/debug/ping')) {
+          return Promise.resolve({
+            ok: true,
+            json: () =>
+              Promise.resolve({ database_connected: false, response_time_ms: 0, timestamp: '' }),
+          });
+        }
+        return Promise.resolve({ ok: false, status: 500 });
+      })
+    );
 
     render(<DebugPage />);
 
@@ -91,7 +128,10 @@ describe('DebugPage', () => {
   // tests miss (and the codecov/patch gate flagged at 65% diff coverage).
   it('renders the admin-token form on 401', async () => {
     sessionStorage.clear();
-    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({ ok: false, status: 401 })));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.resolve({ ok: false, status: 401 }))
+    );
 
     render(<DebugPage />);
 
@@ -104,7 +144,10 @@ describe('DebugPage', () => {
 
   it('renders the admin-token form on 503 with the not-configured hint', async () => {
     sessionStorage.clear();
-    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({ ok: false, status: 503 })));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.resolve({ ok: false, status: 503 }))
+    );
 
     render(<DebugPage />);
 
@@ -125,9 +168,14 @@ describe('DebugPage', () => {
         Promise.resolve({
           ok: false,
           status: 403,
-          json: () => Promise.resolve({ status: 403, message: 'User stranger@example.com not authorized', path: '/debug/status' }),
-        }),
-      ),
+          json: () =>
+            Promise.resolve({
+              status: 403,
+              message: 'User stranger@example.com not authorized',
+              path: '/debug/status',
+            }),
+        })
+      )
     );
 
     render(<DebugPage />);
@@ -147,7 +195,12 @@ describe('DebugPage', () => {
       if (url.includes('/debug/ping')) {
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({ database_connected: true, response_time_ms: 10, timestamp: '2026-04-27T00:00:00Z' }),
+          json: () =>
+            Promise.resolve({
+              database_connected: true,
+              response_time_ms: 10,
+              timestamp: '2026-04-27T00:00:00Z',
+            }),
         });
       }
       if (callIndex === 1) {
@@ -174,7 +227,10 @@ describe('DebugPage', () => {
 
   it('clears the stored token and re-prompts', async () => {
     sessionStorage.setItem('anyplot.adminToken', 'stored-token');
-    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({ ok: false, status: 401 })));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.resolve({ ok: false, status: 401 }))
+    );
 
     render(<DebugPage />);
 
@@ -195,7 +251,10 @@ describe('DebugPage', () => {
   // bootstraps the gate by triggering one top-level navigation.
   it('forces a top-level navigation on TypeError and sets the reload guard', async () => {
     sessionStorage.clear();
-    vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new TypeError('Failed to fetch'))));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.reject(new TypeError('Failed to fetch')))
+    );
     const replaceSpy = vi.fn();
     Object.defineProperty(window, 'location', {
       configurable: true,
@@ -213,7 +272,10 @@ describe('DebugPage', () => {
 
   it('does not loop: second TypeError after the guard is set surfaces the error', async () => {
     sessionStorage.setItem('anyplot.debugAuthReloaded', '1');
-    vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new TypeError('Failed to fetch'))));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.reject(new TypeError('Failed to fetch')))
+    );
     const replaceSpy = vi.fn();
     Object.defineProperty(window, 'location', {
       configurable: true,
@@ -240,33 +302,45 @@ describe('DebugPage', () => {
       value: { ...window.location, origin: 'https://anyplot.ai', href: 'https://anyplot.ai/debug' },
     });
 
-    vi.stubGlobal('fetch', vi.fn((url: string) => {
-      if (url.includes('/debug/ping')) {
-        return Promise.resolve({ ok: true, json: () => Promise.resolve({ database_connected: true, response_time_ms: 10, timestamp: '2026-05-21T00:00:00Z' }) });
-      }
-      if (url.includes('/debug/feedback/messages')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve([
-            {
-              id: 'fb-1',
-              message: 'Axis labels overlap on mobile',
-              reaction: 'bug',
-              contact: null,
-              path: '/plots/scatter-basic',
-              spec_id: 'scatter-basic',
-              viewport: '375x812',
-              status: 'new',
-              created_at: '2026-05-21T09:00:00Z',
-            },
-          ]),
-        });
-      }
-      if (url.includes('/debug/feedback/top')) {
-        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
-      }
-      return Promise.resolve({ ok: true, json: () => Promise.resolve(mockDebugData) });
-    }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) => {
+        if (url.includes('/debug/ping')) {
+          return Promise.resolve({
+            ok: true,
+            json: () =>
+              Promise.resolve({
+                database_connected: true,
+                response_time_ms: 10,
+                timestamp: '2026-05-21T00:00:00Z',
+              }),
+          });
+        }
+        if (url.includes('/debug/feedback/messages')) {
+          return Promise.resolve({
+            ok: true,
+            json: () =>
+              Promise.resolve([
+                {
+                  id: 'fb-1',
+                  message: 'Axis labels overlap on mobile',
+                  reaction: 'bug',
+                  contact: null,
+                  path: '/plots/scatter-basic',
+                  spec_id: 'scatter-basic',
+                  viewport: '375x812',
+                  status: 'new',
+                  created_at: '2026-05-21T09:00:00Z',
+                },
+              ]),
+          });
+        }
+        if (url.includes('/debug/feedback/top')) {
+          return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+        }
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(mockDebugData) });
+      })
+    );
 
     render(<DebugPage />);
 
@@ -280,5 +354,4 @@ describe('DebugPage', () => {
     expect(copied).toContain('> Axis labels overlap on mobile');
     expect(copied).toContain('Open a pull request');
   });
-
 });

@@ -1,11 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '../test-utils';
+import { ReactNode } from 'react';
 
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { render, screen } from '../test-utils';
 // Must import after test-utils to get jest-dom matchers
 import { ErrorBoundary } from './ErrorBoundary';
 
 // Component that throws on render
-function ThrowingComponent({ message }: { message: string }) {
+function ThrowingComponent({ message }: { message: string }): ReactNode {
   throw new Error(message);
 }
 

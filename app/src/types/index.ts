@@ -103,10 +103,10 @@ export type FilterCounts = Record<FilterCategory, Record<string, number>>;
 export interface FilteredPlotsResponse {
   total: number;
   images: PlotImage[];
-  counts: FilterCounts;  // Contextual counts (for AND additions)
-  globalCounts: FilterCounts;  // Global counts (for reference)
-  orCounts: Record<string, number>[];  // Per-group counts for OR additions
-  specTitles: Record<string, string>;  // Mapping spec_id -> title for search/tooltips
+  counts: FilterCounts; // Contextual counts (for AND additions)
+  globalCounts: FilterCounts; // Global counts (for reference)
+  orCounts: Record<string, number>[]; // Per-group counts for OR additions
+  specTitles: Record<string, string>; // Mapping spec_id -> title for search/tooltips
 }
 
 export interface LibraryInfo {

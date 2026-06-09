@@ -4,7 +4,7 @@
  * Pure functions extracted for reusability and testing.
  */
 
-import type { FilterCategory, ActiveFilters, FilterCounts } from '../types';
+import type { ActiveFilters, FilterCategory, FilterCounts } from '../types';
 import { FILTER_CATEGORIES } from '../types';
 import { createFuzzySearcher, getMatchType, type MatchType } from './fuzzySearch';
 
@@ -25,9 +25,7 @@ export function getSelectedValuesForCategory(
   activeFilters: ActiveFilters,
   category: FilterCategory
 ): string[] {
-  return activeFilters
-    .filter((f) => f.category === category)
-    .flatMap((f) => f.values);
+  return activeFilters.filter(f => f.category === category).flatMap(f => f.values);
 }
 
 /**
@@ -123,8 +121,8 @@ export function getSearchResults(
 
     // Build searchable items for this category
     const items = Object.keys(counts)
-      .filter((value) => !selected.includes(value))
-      .map((value) => ({
+      .filter(value => !selected.includes(value))
+      .map(value => ({
         value,
         title: category === 'spec' ? specTitles[value] : undefined,
         count: counts[value],

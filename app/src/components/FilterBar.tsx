@@ -1,33 +1,39 @@
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import Box from '@mui/material/Box';
-import Chip from '@mui/material/Chip';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import ListItemText from '@mui/material/ListItemText';
-import Typography from '@mui/material/Typography';
-import InputBase from '@mui/material/InputBase';
-import Divider from '@mui/material/Divider';
-import Tooltip from '@mui/material/Tooltip';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
-import AddIcon from '@mui/icons-material/Add';
-import useMediaQuery from '@mui/material/useMediaQuery';
+import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
+import Divider from '@mui/material/Divider';
+import InputBase from '@mui/material/InputBase';
+import ListItemText from '@mui/material/ListItemText';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 import { useTheme } from '@mui/material/styles';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
-import type { FilterCategory, ActiveFilters, FilterCounts } from '../types';
-import { FILTER_LABELS, FILTER_TOOLTIPS, FILTER_CATEGORIES } from '../types';
 import type { ImageSize } from '../constants';
-import { getAvailableValues, getAvailableValuesForGroup, getSearchResults, type SearchResult } from '../utils';
+import { colors, fontSize, semanticColors, typography } from '../theme';
+import type { ActiveFilters, FilterCategory, FilterCounts } from '../types';
+import { FILTER_CATEGORIES, FILTER_LABELS, FILTER_TOOLTIPS } from '../types';
+import {
+  getAvailableValues,
+  getAvailableValuesForGroup,
+  getSearchResults,
+  type SearchResult,
+} from '../utils';
 import { ToolbarActions } from './ToolbarActions';
-import { fontSize, semanticColors, colors, typography } from '../theme';
 
 interface FilterBarProps {
   activeFilters: ActiveFilters;
-  filterCounts: FilterCounts | null;  // Contextual counts (for AND additions)
-  orCounts: Record<string, number>[];  // Per-group counts for OR additions
-  specTitles: Record<string, string>;  // Mapping spec_id -> title for search/tooltips
-  currentTotal: number;  // Total number of filtered images
-  displayedCount: number;  // Currently displayed images
+  filterCounts: FilterCounts | null; // Contextual counts (for AND additions)
+  orCounts: Record<string, number>[]; // Per-group counts for OR additions
+  specTitles: Record<string, string>; // Mapping spec_id -> title for search/tooltips
+  currentTotal: number; // Total number of filtered images
+  displayedCount: number; // Currently displayed images
   randomAnimation: { index: number; phase: 'out' | 'in'; oldLabel?: string } | null;
   searchInputRef?: React.RefObject<HTMLInputElement | null>;
   imageSize: ImageSize;
@@ -71,9 +77,7 @@ export function FilterBar({
       const windowHeight = window.innerHeight;
 
       // Estimate total height based on ratio of loaded vs total plots
-      const loadRatio = displayedCount > 0 && currentTotal > 0
-        ? currentTotal / displayedCount
-        : 1;
+      const loadRatio = displayedCount > 0 && currentTotal > 0 ? currentTotal / displayedCount : 1;
       const estimatedTotalHeight = (docHeight - windowHeight) * loadRatio;
 
       const percent = Math.round((scrollY / estimatedTotalHeight) * 100);
@@ -143,12 +147,15 @@ export function FilterBar({
   }, []);
 
   // Select category from dropdown
-  const handleCategorySelect = useCallback((category: FilterCategory) => {
-    setSelectedCategory(category);
-    setSearchQuery('');
-    setHighlightedIndex(-1);
-    setTimeout(() => inputRef.current?.focus(), 50);
-  }, [inputRef]);
+  const handleCategorySelect = useCallback(
+    (category: FilterCategory) => {
+      setSelectedCategory(category);
+      setSearchQuery('');
+      setHighlightedIndex(-1);
+      setTimeout(() => inputRef.current?.focus(), 50);
+    },
+    [inputRef]
+  );
 
   // Select value (add new filter group)
   const handleValueSelect = useCallback(
@@ -249,12 +256,10 @@ export function FilterBar({
   const getDropdownItems = useCallback(() => {
     if (!selectedCategory && !hasQuery) {
       // Categories list
-      return FILTER_CATEGORIES
-        .filter((cat) => {
-          const available = getAvailableValues(filterCounts, activeFilters, cat);
-          return available.length > 0;
-        })
-        .map((cat) => ({ type: 'category' as const, category: cat }));
+      return FILTER_CATEGORIES.filter(cat => {
+        const available = getAvailableValues(filterCounts, activeFilters, cat);
+        return available.length > 0;
+      }).map(cat => ({ type: 'category' as const, category: cat }));
     } else if (selectedCategory && !hasQuery) {
       // Category selected but no query - show all available values for this category
       const available = getAvailableValues(filterCounts, activeFilters, selectedCategory);
@@ -267,7 +272,7 @@ export function FilterBar({
       }));
     } else {
       // Search results (with query)
-      return searchResults.map((r) => ({ type: 'value' as const, ...r }));
+      return searchResults.map(r => ({ type: 'value' as const, ...r }));
     }
   }, [selectedCategory, hasQuery, filterCounts, activeFilters, searchResults]);
 
@@ -278,10 +283,10 @@ export function FilterBar({
     (event: React.KeyboardEvent) => {
       if (event.key === 'ArrowDown') {
         event.preventDefault();
-        setHighlightedIndex((prev) => Math.min(prev + 1, dropdownItems.length - 1));
+        setHighlightedIndex(prev => Math.min(prev + 1, dropdownItems.length - 1));
       } else if (event.key === 'ArrowUp') {
         event.preventDefault();
-        setHighlightedIndex((prev) => Math.max(prev - 1, -1));
+        setHighlightedIndex(prev => Math.max(prev - 1, -1));
       } else if (event.key === 'Enter') {
         event.preventDefault();
         const item = dropdownItems[highlightedIndex] || dropdownItems[0];
@@ -298,14 +303,22 @@ export function FilterBar({
         inputRef.current?.blur();
       }
     },
-    [dropdownItems, highlightedIndex, handleCategorySelect, handleValueSelect, handleDropdownClose, inputRef]
+    [
+      dropdownItems,
+      highlightedIndex,
+      handleCategorySelect,
+      handleValueSelect,
+      handleDropdownClose,
+      inputRef,
+    ]
   );
 
   // Get active group for chip menu
   const activeGroup = activeGroupIndex !== null ? activeFilters[activeGroupIndex] : null;
-  const availableValuesForActiveGroup = activeGroupIndex !== null
-    ? getAvailableValuesForGroup(activeGroupIndex, activeFilters, orCounts, currentTotal)
-    : [];
+  const availableValuesForActiveGroup =
+    activeGroupIndex !== null
+      ? getAvailableValuesForGroup(activeGroupIndex, activeFilters, orCounts, currentTotal)
+      : [];
 
   return (
     <Box
@@ -369,165 +382,181 @@ export function FilterBar({
           </Box>
         )}
         {/* Active filter chips */}
-      {activeFilters.map((group, index) => {
-        const isAnimating = randomAnimation?.index === index;
-        const animationClass = isAnimating ? `chip-blur-${randomAnimation.phase}` : undefined;
-        // Show old label during 'out' phase, new label during 'in' phase
-        const displayLabel = isAnimating && randomAnimation.phase === 'out' && randomAnimation.oldLabel
-          ? randomAnimation.oldLabel
-          : `${group.category}:${group.values.join(',')}`;
+        {activeFilters.map((group, index) => {
+          const isAnimating = randomAnimation?.index === index;
+          const animationClass = isAnimating ? `chip-blur-${randomAnimation.phase}` : undefined;
+          // Show old label during 'out' phase, new label during 'in' phase
+          const displayLabel =
+            isAnimating && randomAnimation.phase === 'out' && randomAnimation.oldLabel
+              ? randomAnimation.oldLabel
+              : `${group.category}:${group.values.join(',')}`;
 
-        return (
-          <Chip
-            key={`${group.category}-${index}`}
-            label={displayLabel}
-            onClick={(e) => handleChipClick(e, index)}
-            onDelete={() => onRemoveGroup(index)}
-            deleteIcon={<CloseIcon sx={{ fontSize: '1rem !important' }} />}
-            sx={{
-              fontFamily: typography.fontFamily,
-              fontSize: fontSize.base,
-              height: 32,
-              bgcolor: 'var(--bg-surface)',
-              border: `1px solid ${colors.primary}`,
-              color: 'var(--ink-soft)',
-              cursor: 'pointer',
-              '&:hover': { bgcolor: 'var(--bg-elevated)' },
-              '& .MuiChip-deleteIcon': {
-                color: 'var(--ink-muted)',
-                '&:hover': { color: colors.primary },
-              },
-              ...(animationClass === 'chip-blur-out' && {
-                animation: 'chip-roll-out 0.5s ease-in forwards',
-              }),
-              ...(animationClass === 'chip-blur-in' && {
-                animation: 'chip-roll-in 0.5s ease-out forwards',
-              }),
-              '@keyframes chip-roll-out': {
-                '0%': { transform: 'perspective(200px) rotateX(0deg)' },
-                '100%': { transform: 'perspective(200px) rotateX(180deg)' },
-              },
-              '@keyframes chip-roll-in': {
-                '0%': { transform: 'perspective(200px) rotateX(180deg)' },
-                '100%': { transform: 'perspective(200px) rotateX(360deg)' },
-              },
-            }}
-          />
-        );
-      })}
-
-      {/* Search input - collapsed icon or expanded input */}
-      {!maxFiltersReached && (
-        <Box
-          ref={searchContainerRef}
-          role={isSearchExpanded ? undefined : 'button'}
-          tabIndex={isSearchExpanded ? undefined : 0}
-          aria-label={isSearchExpanded ? undefined : 'Open filter search'}
-          onClick={handleSearchExpand}
-          onKeyDown={(e) => {
-            if (!isSearchExpanded && (e.key === 'Enter' || e.key === ' ')) {
-              e.preventDefault();
-              handleSearchExpand();
-            }
-          }}
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 0.5,
-            px: isSearchExpanded ? 1.5 : 0,
-            height: 32,
-            width: isSearchExpanded ? { xs: 220, sm: 220, md: 'auto' } : 32,
-            minWidth: isSearchExpanded ? { xs: 220, sm: 220, md: 200 } : 32,
-            border: isSearchExpanded ? '1px dashed var(--ink-muted)' : 'none',
-            borderRadius: '16px',
-            bgcolor: isDropdownOpen ? 'var(--bg-elevated)' : 'transparent',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            '&:hover': {
-              borderColor: isSearchExpanded ? colors.primary : undefined,
-              bgcolor: isSearchExpanded ? 'var(--bg-elevated)' : undefined,
-            },
-            '&:hover .search-icon': {
-              color: colors.primary,
-            },
-            '&:focus': isSearchExpanded ? {} : { outline: `2px solid ${colors.primary}`, outlineOffset: 2 },
-          }}
-        >
-          <Tooltip title={isSearchExpanded ? '' : '.find()'}>
-            <SearchIcon
-              className="search-icon"
+          return (
+            <Chip
+              key={`${group.category}-${index}`}
+              label={displayLabel}
+              onClick={e => handleChipClick(e, index)}
+              onDelete={() => onRemoveGroup(index)}
+              deleteIcon={<CloseIcon sx={{ fontSize: '1rem !important' }} />}
               sx={{
-                color: 'var(--ink-muted)',
-                fontSize: isSearchExpanded ? '1rem' : '1.25rem',
-                transition: 'all 0.2s ease',
-                flexShrink: 0,
+                fontFamily: typography.fontFamily,
+                fontSize: fontSize.base,
+                height: 32,
+                bgcolor: 'var(--bg-surface)',
+                border: `1px solid ${colors.primary}`,
+                color: 'var(--ink-soft)',
+                cursor: 'pointer',
+                '&:hover': { bgcolor: 'var(--bg-elevated)' },
+                '& .MuiChip-deleteIcon': {
+                  color: 'var(--ink-muted)',
+                  '&:hover': { color: colors.primary },
+                },
+                ...(animationClass === 'chip-blur-out' && {
+                  animation: 'chip-roll-out 0.5s ease-in forwards',
+                }),
+                ...(animationClass === 'chip-blur-in' && {
+                  animation: 'chip-roll-in 0.5s ease-out forwards',
+                }),
+                '@keyframes chip-roll-out': {
+                  '0%': { transform: 'perspective(200px) rotateX(0deg)' },
+                  '100%': { transform: 'perspective(200px) rotateX(180deg)' },
+                },
+                '@keyframes chip-roll-in': {
+                  '0%': { transform: 'perspective(200px) rotateX(180deg)' },
+                  '100%': { transform: 'perspective(200px) rotateX(360deg)' },
+                },
               }}
             />
-          </Tooltip>
-          <label htmlFor="filter-search" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0,0,0,0)' }}>
-            {selectedCategory ? `Search ${FILTER_LABELS[selectedCategory]}` : 'Search filters'}
-          </label>
-          <InputBase
-            inputRef={inputRef}
-            id="filter-search"
-            name="filter-search"
-            inputProps={{ 'aria-label': selectedCategory ? `Search ${FILTER_LABELS[selectedCategory]}` : 'Search filters' }}
-            placeholder={selectedCategory ? FILTER_LABELS[selectedCategory] : '.find(_)'}
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setHighlightedIndex(-1);
-              if (!dropdownAnchor) {
-                setDropdownAnchor(searchContainerRef.current);
+          );
+        })}
+
+        {/* Search input - collapsed icon or expanded input */}
+        {!maxFiltersReached && (
+          <Box
+            ref={searchContainerRef}
+            role={isSearchExpanded ? undefined : 'button'}
+            tabIndex={isSearchExpanded ? undefined : 0}
+            aria-label={isSearchExpanded ? undefined : 'Open filter search'}
+            onClick={handleSearchExpand}
+            onKeyDown={e => {
+              if (!isSearchExpanded && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault();
+                handleSearchExpand();
               }
             }}
-            onFocus={() => {
-              if (!isSearchManuallyExpanded && activeFilters.length > 0) {
-                setIsSearchManuallyExpanded(true);
-              }
-              setDropdownAnchor(searchContainerRef.current);
-              setHighlightedIndex(-1);
-            }}
-            onBlur={handleSearchBlur}
-            onKeyDown={handleKeyDown}
             sx={{
-              flex: isSearchExpanded ? 1 : 0,
-              width: isSearchExpanded ? 'auto' : 0,
-              opacity: isSearchExpanded ? 1 : 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 0.5,
+              px: isSearchExpanded ? 1.5 : 0,
+              height: 32,
+              width: isSearchExpanded ? { xs: 220, sm: 220, md: 'auto' } : 32,
+              minWidth: isSearchExpanded ? { xs: 220, sm: 220, md: 200 } : 32,
+              border: isSearchExpanded ? '1px dashed var(--ink-muted)' : 'none',
+              borderRadius: '16px',
+              bgcolor: isDropdownOpen ? 'var(--bg-elevated)' : 'transparent',
+              cursor: 'pointer',
               transition: 'all 0.2s ease',
-              fontFamily: typography.fontFamily,
-              fontSize: fontSize.base,
-              color: 'var(--ink)',
-              '& input': {
-                padding: 0,
+              '&:hover': {
+                borderColor: isSearchExpanded ? colors.primary : undefined,
+                bgcolor: isSearchExpanded ? 'var(--bg-elevated)' : undefined,
+              },
+              '&:hover .search-icon': {
+                color: colors.primary,
+              },
+              '&:focus': isSearchExpanded
+                ? {}
+                : { outline: `2px solid ${colors.primary}`, outlineOffset: 2 },
+            }}
+          >
+            <Tooltip title={isSearchExpanded ? '' : '.find()'}>
+              <SearchIcon
+                className="search-icon"
+                sx={{
+                  color: 'var(--ink-muted)',
+                  fontSize: isSearchExpanded ? '1rem' : '1.25rem',
+                  transition: 'all 0.2s ease',
+                  flexShrink: 0,
+                }}
+              />
+            </Tooltip>
+            <label
+              htmlFor="filter-search"
+              style={{
+                position: 'absolute',
+                width: 1,
+                height: 1,
+                overflow: 'hidden',
+                clip: 'rect(0,0,0,0)',
+              }}
+            >
+              {selectedCategory ? `Search ${FILTER_LABELS[selectedCategory]}` : 'Search filters'}
+            </label>
+            <InputBase
+              inputRef={inputRef}
+              id="filter-search"
+              name="filter-search"
+              inputProps={{
+                'aria-label': selectedCategory
+                  ? `Search ${FILTER_LABELS[selectedCategory]}`
+                  : 'Search filters',
+              }}
+              placeholder={selectedCategory ? FILTER_LABELS[selectedCategory] : '.find(_)'}
+              value={searchQuery}
+              onChange={e => {
+                setSearchQuery(e.target.value);
+                setHighlightedIndex(-1);
+                if (!dropdownAnchor) {
+                  setDropdownAnchor(searchContainerRef.current);
+                }
+              }}
+              onFocus={() => {
+                if (!isSearchManuallyExpanded && activeFilters.length > 0) {
+                  setIsSearchManuallyExpanded(true);
+                }
+                setDropdownAnchor(searchContainerRef.current);
+                setHighlightedIndex(-1);
+              }}
+              onBlur={handleSearchBlur}
+              onKeyDown={handleKeyDown}
+              sx={{
+                flex: isSearchExpanded ? 1 : 0,
+                width: isSearchExpanded ? 'auto' : 0,
+                opacity: isSearchExpanded ? 1 : 0,
+                transition: 'all 0.2s ease',
                 fontFamily: typography.fontFamily,
                 fontSize: fontSize.base,
                 color: 'var(--ink)',
-                '&::placeholder': {
-                  color: semanticColors.mutedText,
-                  opacity: 1,
+                '& input': {
+                  padding: 0,
+                  fontFamily: typography.fontFamily,
+                  fontSize: fontSize.base,
+                  color: 'var(--ink)',
+                  '&::placeholder': {
+                    color: semanticColors.mutedText,
+                    opacity: 1,
+                  },
                 },
-              },
-            }}
-          />
-          {isSearchExpanded && (searchQuery || selectedCategory) && (
-            <CloseIcon
-              onClick={(e) => {
-                e.stopPropagation();
-                setSearchQuery('');
-                setSelectedCategory(null);
-              }}
-              sx={{
-                color: 'var(--ink-muted)',
-                fontSize: fontSize.lg,
-                cursor: 'pointer',
-                '&:hover': { color: 'var(--ink-soft)' },
               }}
             />
-          )}
-        </Box>
-      )}
+            {isSearchExpanded && (searchQuery || selectedCategory) && (
+              <CloseIcon
+                onClick={e => {
+                  e.stopPropagation();
+                  setSearchQuery('');
+                  setSelectedCategory(null);
+                }}
+                sx={{
+                  color: 'var(--ink-muted)',
+                  fontSize: fontSize.lg,
+                  cursor: 'pointer',
+                  '&:hover': { color: 'var(--ink-soft)' },
+                }}
+              />
+            )}
+          </Box>
+        )}
       </Box>
 
       {/* Counter and toggle row (mobile only) */}
@@ -590,18 +619,15 @@ export function FilterBar({
       >
         {!selectedCategory && !hasQuery
           ? // Show categories
-            FILTER_CATEGORIES.map((category) => {
+            FILTER_CATEGORIES.map(category => {
               const availableVals = getAvailableValues(filterCounts, activeFilters, category);
               if (availableVals.length === 0) return null;
               // Calculate actual index among visible items
-              const visibleIdx = dropdownItems.findIndex((item) => item.type === 'category' && item.category === category);
+              const visibleIdx = dropdownItems.findIndex(
+                item => item.type === 'category' && item.category === category
+              );
               return (
-                <Tooltip
-                  key={category}
-                  title={FILTER_TOOLTIPS[category]}
-                  placement="right"
-                  arrow
-                >
+                <Tooltip key={category} title={FILTER_TOOLTIPS[category]} placement="right" arrow>
                   <MenuItem
                     onClick={() => handleCategorySelect(category)}
                     selected={visibleIdx === highlightedIndex}
@@ -647,23 +673,25 @@ export function FilterBar({
                     <Divider key="divider" />,
                   ]
                 : []),
-              ...((() => {
+              ...(() => {
                 // Use searchResults if query exists, otherwise show all available values for selected category
                 const resultsToShow: SearchResult[] = hasQuery
                   ? searchResults
                   : selectedCategory
-                    ? getAvailableValues(filterCounts, activeFilters, selectedCategory).map(([value, count]) => ({
-                        category: selectedCategory,
-                        value,
-                        count,
-                        matchType: 'exact' as const,
-                      }))
+                    ? getAvailableValues(filterCounts, activeFilters, selectedCategory).map(
+                        ([value, count]) => ({
+                          category: selectedCategory,
+                          value,
+                          count,
+                          matchType: 'exact' as const,
+                        })
+                      )
                     : [];
 
                 if (resultsToShow.length > 0) {
                   // Split results into exact and fuzzy matches
-                  const exactResults = resultsToShow.filter((r) => r.matchType === 'exact');
-                  const fuzzyResults = resultsToShow.filter((r) => r.matchType === 'fuzzy');
+                  const exactResults = resultsToShow.filter(r => r.matchType === 'exact');
+                  const fuzzyResults = resultsToShow.filter(r => r.matchType === 'fuzzy');
 
                   const renderMenuItem = (result: SearchResult, idx: number) => {
                     const { category, value, count } = result;
@@ -707,7 +735,12 @@ export function FilterBar({
                       </MenuItem>
                     );
                     return specTitle ? (
-                      <Tooltip key={`${category}-${value}`} title={specTitle} placement="right" arrow>
+                      <Tooltip
+                        key={`${category}-${value}`}
+                        title={specTitle}
+                        placement="right"
+                        arrow
+                      >
                         <span>{menuItem}</span>
                       </Tooltip>
                     ) : (
@@ -759,7 +792,7 @@ export function FilterBar({
                     </MenuItem>,
                   ];
                 }
-              })()),
+              })(),
             ]}
       </Menu>
 
@@ -803,16 +836,21 @@ export function FilterBar({
                     onClick={() => handleAddValueToExistingGroup(value)}
                     sx={{ fontFamily: typography.fontFamily, py: 0.5 }}
                   >
-                    <AddIcon fontSize="small" sx={{ mr: 1, color: colors.success, fontSize: '1rem' }} />
+                    <AddIcon
+                      fontSize="small"
+                      sx={{ mr: 1, color: colors.success, fontSize: '1rem' }}
+                    />
                     <Typography sx={{ fontSize: fontSize.base, flex: 1 }}>{value}</Typography>
-                    <Typography sx={{ fontSize: fontSize.sm, color: semanticColors.mutedText }}>({count})</Typography>
+                    <Typography sx={{ fontSize: fontSize.sm, color: semanticColors.mutedText }}>
+                      ({count})
+                    </Typography>
                   </MenuItem>
                 )),
                 <Divider key="divider-add" />,
               ]
             : []),
           // Remove individual values
-          ...activeGroup.values.map((value) => (
+          ...activeGroup.values.map(value => (
             <MenuItem
               key={`remove-${value}`}
               onClick={() => handleRemoveValue(value)}

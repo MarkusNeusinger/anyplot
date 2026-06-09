@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { render, screen, waitFor } from '../test-utils';
 import { SpecPage } from './SpecPage';
 
@@ -83,14 +84,14 @@ beforeEach(() => {
 });
 
 function mockFetchSuccess(data = mockSpecData) {
-  global.fetch = vi.fn().mockResolvedValue({
+  globalThis.fetch = vi.fn().mockResolvedValue({
     ok: true,
     json: () => Promise.resolve(data),
   });
 }
 
 function mockFetch404() {
-  global.fetch = vi.fn().mockResolvedValue({
+  globalThis.fetch = vi.fn().mockResolvedValue({
     ok: false,
     status: 404,
     json: () => Promise.resolve({}),
@@ -98,13 +99,13 @@ function mockFetch404() {
 }
 
 function mockFetchError() {
-  global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
+  globalThis.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
 }
 
 describe('SpecPage', () => {
   it('shows loading state initially', () => {
     // Never-resolving fetch keeps loading=true
-    global.fetch = vi.fn().mockReturnValue(new Promise(() => {}));
+    globalThis.fetch = vi.fn().mockReturnValue(new Promise(() => {}));
     render(<SpecPage />);
 
     // Loading state does NOT show the spec title
@@ -125,7 +126,9 @@ describe('SpecPage', () => {
     render(<SpecPage />);
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { level: 1, name: /page not found/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { level: 1, name: /page not found/i })
+      ).toBeInTheDocument();
     });
     expect(screen.getByText(/404 — no route matched/i)).toBeInTheDocument();
   });
@@ -177,9 +180,9 @@ describe('SpecPage', () => {
     render(<SpecPage />);
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalled();
+      expect(globalThis.fetch).toHaveBeenCalled();
     });
-    const fetchUrl = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
+    const fetchUrl = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
     expect(fetchUrl).toContain('/specs/scatter-basic');
   });
 
@@ -248,7 +251,8 @@ describe('SpecPage', () => {
         expect(mockSetSearchParams).toHaveBeenCalled();
       });
       // The drop call passes a URLSearchParams with no `language` key.
-      const lastCall = mockSetSearchParams.mock.calls.at(-1);
+      const calls = mockSetSearchParams.mock.calls;
+      const lastCall = calls[calls.length - 1];
       const params = lastCall?.[0] as URLSearchParams;
       expect(params.get('language')).toBeNull();
       mockSearchParams.delete('language');

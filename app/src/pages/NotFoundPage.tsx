@@ -1,8 +1,10 @@
-import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import { Link } from 'react-router-dom';
+
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import { typography, colors, semanticColors } from '../theme';
+
+import { colors, semanticColors, typography } from '../theme';
 
 export function NotFoundPage() {
   return (
@@ -26,17 +28,27 @@ export function NotFoundPage() {
         >
           <span className="subj">page</span>.miss()
         </Typography>
-        <Typography sx={{ fontFamily: typography.fontFamily, color: semanticColors.mutedText, mb: 4 }}>
+        <Typography
+          sx={{ fontFamily: typography.fontFamily, color: semanticColors.mutedText, mb: 4 }}
+        >
           404 — no route matched
         </Typography>
         <Box
           component={Link}
           to="/"
           aria-label="Go home"
-          sx={{ color: colors.primary, fontFamily: typography.mono, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+          sx={{
+            color: colors.primary,
+            fontFamily: typography.mono,
+            textDecoration: 'none',
+            '&:hover': { textDecoration: 'underline' },
+          }}
         >
           <span aria-hidden="true">
-            <Box component="span" sx={{ color: 'var(--ink-muted)' }}>page</Box>.home()
+            <Box component="span" sx={{ color: 'var(--ink-muted)' }}>
+              page
+            </Box>
+            .home()
           </span>
         </Box>
       </Box>

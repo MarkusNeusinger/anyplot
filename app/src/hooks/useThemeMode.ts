@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 const STORAGE_KEY = 'theme';
 
@@ -14,9 +14,11 @@ function readStoredMode(): ThemeMode {
 }
 
 function systemPrefersDark(): boolean {
-  return typeof window !== 'undefined'
-    && typeof window.matchMedia === 'function'
-    && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+  );
 }
 
 function persistMode(mode: ThemeMode): void {
@@ -39,9 +41,7 @@ export function useThemeMode() {
   const [mode, setModeState] = useState<ThemeMode>(readStoredMode);
   const [systemDark, setSystemDark] = useState<boolean>(systemPrefersDark);
 
-  const effective: EffectiveTheme = mode === 'system'
-    ? (systemDark ? 'dark' : 'light')
-    : mode;
+  const effective: EffectiveTheme = mode === 'system' ? (systemDark ? 'dark' : 'light') : mode;
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', effective);
