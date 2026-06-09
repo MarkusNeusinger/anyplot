@@ -2,8 +2,8 @@ import { Link } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 
-import { useAnalytics } from '../hooks';
-import { colors, typography } from '../theme';
+import { useAnalytics } from 'src/hooks';
+import { colors, typography } from 'src/theme';
 
 interface SectionHeaderBaseProps {
   /** Prefix symbol — e.g. `§`, `❯`, `$`. Rendered at the same size as the title. */

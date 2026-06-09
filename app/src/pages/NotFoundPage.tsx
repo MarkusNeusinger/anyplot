@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 
-import { colors, semanticColors, typography } from '../theme';
+import { colors, semanticColors, typography } from 'src/theme';
 
 export function NotFoundPage() {
   return (

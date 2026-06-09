@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef } from 'react';
 
-import { RESERVED_TOP_LEVEL } from '../utils/paths';
+import { RESERVED_TOP_LEVEL } from 'src/utils/paths';
 
 interface EventProps {
   [key: string]: string | undefined;

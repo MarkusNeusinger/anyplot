@@ -1,18 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { render, screen, waitFor } from '../test-utils';
+import { render, screen, waitFor } from 'src/test-utils';
 
 const trackEvent = vi.fn();
 
-vi.mock('../hooks', async () => {
-  const actual = await vi.importActual<typeof import('../hooks')>('../hooks');
+vi.mock('src/hooks', async () => {
+  const actual = await vi.importActual<typeof import('src/hooks')>('src/hooks');
   return {
     ...actual,
     useAnalytics: () => ({ trackEvent, trackPageview: vi.fn() }),
   };
 });
 
-import { PlotOfTheDay } from './PlotOfTheDay';
+import { PlotOfTheDay } from 'src/components/PlotOfTheDay';
 
 // Mock sessionStorage
 const sessionStorageMock: Record<string, string> = {};
@@ -150,7 +150,7 @@ describe('PlotOfTheDay', () => {
       json: () => Promise.resolve(mockData),
     });
 
-    const { userEvent } = await import('../test-utils');
+    const { userEvent } = await import('src/test-utils');
     const user = userEvent.setup();
 
     const { container } = render(<PlotOfTheDay />);
@@ -177,7 +177,7 @@ describe('PlotOfTheDay', () => {
       json: () => Promise.resolve(mockData),
     });
 
-    const { userEvent } = await import('../test-utils');
+    const { userEvent } = await import('src/test-utils');
     const user = userEvent.setup();
 
     render(<PlotOfTheDay />);

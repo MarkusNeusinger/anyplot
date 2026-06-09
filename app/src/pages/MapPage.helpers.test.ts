@@ -13,7 +13,7 @@ import {
   type SpecMapItem,
   topPlotTypes,
   weightedJaccard,
-} from './MapPage.helpers';
+} from 'src/pages/MapPage.helpers';
 
 function spec(
   id: string,

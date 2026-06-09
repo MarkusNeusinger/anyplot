@@ -13,7 +13,7 @@
  * theme and fall back to the legacy field during the transition.
  */
 
-import { useTheme } from '../hooks/useLayoutContext';
+import { useTheme } from 'src/hooks/useLayoutContext';
 
 /** Shape accepted by {@link selectPreviewUrl} — covers Implementation + PlotImage + POTD */
 export interface ThemedPreviewSource {

@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { render, screen } from '../test-utils';
+import { render, screen } from 'src/test-utils';
 
 // Mock the utils module
-vi.mock('../utils', () => ({
+vi.mock('src/utils', () => ({
   getAvailableValues: vi.fn(() => [
     ['scatter', 10],
     ['bar', 5],
@@ -12,7 +12,7 @@ vi.mock('../utils', () => ({
   getSearchResults: vi.fn(() => []),
 }));
 
-import { FilterBar } from './FilterBar';
+import { FilterBar } from 'src/components/FilterBar';
 
 // ResizeObserver polyfill
 class MockResizeObserver {

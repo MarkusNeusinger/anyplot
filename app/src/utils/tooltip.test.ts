@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createTooltipId, isTooltipOpen, parseTooltipId } from './tooltip';
+import { createTooltipId, isTooltipOpen, parseTooltipId } from 'src/utils/tooltip';
 
 describe('createTooltipId', () => {
   it('creates spec tooltip ID', () => {

@@ -8,14 +8,14 @@ import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Fab from '@mui/material/Fab';
 
-import { FilterBar } from '../components/FilterBar';
-import { ImagesGrid } from '../components/ImagesGrid';
-import type { ImageSize } from '../constants';
-import { isFiltersEmpty, useAnalytics, useFilterState, useInfiniteScroll } from '../hooks';
-import { useAppData, useHomeState } from '../hooks';
-import { colors } from '../theme';
-import type { PlotImage } from '../types';
-import { specPath } from '../utils/paths';
+import { FilterBar } from 'src/components/FilterBar';
+import { ImagesGrid } from 'src/components/ImagesGrid';
+import type { ImageSize } from 'src/constants';
+import { isFiltersEmpty, useAnalytics, useFilterState, useInfiniteScroll } from 'src/hooks';
+import { useAppData, useHomeState } from 'src/hooks';
+import { colors } from 'src/theme';
+import type { PlotImage } from 'src/types';
+import { specPath } from 'src/utils/paths';
 
 export function PlotsPage() {
   const navigate = useNavigate();

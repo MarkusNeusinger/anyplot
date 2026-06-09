@@ -12,10 +12,10 @@ import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Tooltip from '@mui/material/Tooltip';
 
-import { SectionHeader } from '../components/SectionHeader';
-import matrixData from '../data/paletteMatrices.json';
-import { useAnalytics, useTheme } from '../hooks';
-import { colors, fontSize, textStyle, typography } from '../theme';
+import { SectionHeader } from 'src/components/SectionHeader';
+import matrixData from 'src/data/paletteMatrices.json';
+import { useAnalytics, useTheme } from 'src/hooks';
+import { colors, fontSize, textStyle, typography } from 'src/theme';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Imprint palette — 8 categorical hues + OKLCH coords for the wheel

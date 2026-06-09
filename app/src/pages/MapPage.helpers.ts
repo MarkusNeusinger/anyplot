@@ -10,7 +10,7 @@
  * canvas refresh.
  */
 
-import { selectPreviewUrl } from '../utils/themedPreview';
+import { selectPreviewUrl } from 'src/utils/themedPreview';
 
 /** Backend response shape from GET /api/specs/map. Mirrors api/schemas.py::SpecMapItem. */
 export interface SpecMapItem {
