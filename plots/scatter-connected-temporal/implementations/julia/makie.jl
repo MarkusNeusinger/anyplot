@@ -86,16 +86,33 @@ end
 sc = scatter!(ax, co2, temp;
     color       = t_norm,
     colormap    = ANYPLOT_SEQ,
-    markersize  = 11,
+    markersize  = 14,
     strokewidth = 1.0,
     strokecolor = PAGE_BG,
 )
+
+# Directional arrow at temporal start (1980) — scaled to 6% of each axis span for visibility
+let
+    co2_span  = maximum(co2) - minimum(co2)
+    temp_span = maximum(temp) - minimum(temp)
+    dx = co2[2] - co2[1]
+    dy = temp[2] - temp[1]
+    nx = dx / co2_span
+    ny = dy / temp_span
+    len = sqrt(nx^2 + ny^2)
+    scale = 0.06
+    arrows!(ax, [co2[1]], [temp[1]], [nx / len * scale * co2_span], [ny / len * scale * temp_span];
+        arrowsize = 16,
+        color     = ANYPLOT_SEQ[0.0],
+        linewidth = 2.0,
+    )
+end
 
 # Key year labels at notable positions
 for ki in key_idx
     text!(ax, co2[ki], temp[ki];
         text     = string(years[ki]),
-        fontsize = 11,
+        fontsize = 13,
         color    = INK,
         align    = (:center, :bottom),
         offset   = (0, 8),
@@ -115,7 +132,7 @@ Colorbar(fig[1, 2];
     width          = 18,
 )
 
-colgap!(fig.layout, 1, 10)
+colgap!(fig.layout, 1, 20)
 
 # Save
 save("plot-$(THEME).png", fig; px_per_unit = 2)
