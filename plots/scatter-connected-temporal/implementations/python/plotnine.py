@@ -1,8 +1,18 @@
-""" pyplots.ai
+"""anyplot.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
-Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 89/100 | Created: 2026-03-13
+Library: plotnine | Python 3.14
+Quality: pending | Created: 2026-06-09
 """
+
+import os
+import sys
+
+
+# This file is named after the library it imports — remove its directory from
+# sys.path so Python finds the installed plotnine package, not this script.
+_here = os.path.dirname(os.path.abspath(__file__))
+if sys.path and os.path.abspath(sys.path[0]) == _here:
+    sys.path.pop(0)
 
 import numpy as np
 import pandas as pd
@@ -11,6 +21,7 @@ from plotnine import (
     annotate,
     element_blank,
     element_line,
+    element_rect,
     element_text,
     geom_path,
     geom_point,
@@ -26,7 +37,19 @@ from plotnine import (
 )
 
 
-# Data - US unemployment rate vs inflation rate (stylized Phillips curve), 1990-2020
+# Theme-adaptive chrome tokens (Imprint palette — see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint sequential gradient: brand green → blue (temporal progression low→high)
+SEQ_LOW = "#009E73"
+SEQ_HIGH = "#4467A3"
+RECESSION_COLOR = "#AE3030"  # Imprint matte red — semantic bad/crisis anchor
+
+# Data: US unemployment rate vs inflation rate (Phillips curve), 1990-2020
 np.random.seed(42)
 years = np.arange(1990, 2021)
 n = len(years)
@@ -106,14 +129,14 @@ df = pd.DataFrame(
     {"Unemployment": unemployment, "Inflation": inflation, "Year": years, "Year_num": np.arange(n, dtype=float)}
 )
 
-# Labels with custom offsets to avoid crowding
+# Key year labels with custom offsets to reduce crowding in central area
 label_config = {
-    1990: (0.25, 0.45),
-    1995: (-0.35, -0.45),
-    2000: (0.25, 0.45),
-    2005: (0.3, -0.45),
-    2015: (-0.3, -0.45),
-    2020: (0.35, 0.45),
+    1990: (0.28, 0.55),
+    1995: (-0.45, -0.55),
+    2000: (0.28, 0.55),
+    2005: (0.38, -0.55),
+    2015: (-0.38, -0.55),
+    2020: (0.38, 0.55),
 }
 
 label_rows = []
@@ -122,65 +145,65 @@ for yr, (dx, dy) in label_config.items():
     label_rows.append({"x_label": row["Unemployment"] + dx, "y_label": row["Inflation"] + dy, "Label": str(yr)})
 df_labels = pd.DataFrame(label_rows)
 
-# Highlight the 2008-2009 recession (peak unemployment)
 recession_point = df[df["Year"] == 2009].copy()
 
-# Plot - using geom_path for correct temporal ordering (not geom_line which sorts by x)
+# Plot — geom_path preserves temporal ordering (not geom_line which sorts by x)
 plot = (
     ggplot(df, aes(x="Unemployment", y="Inflation"))
     + geom_path(aes(color="Year_num"), size=1.2)
-    + geom_point(aes(fill="Year_num"), size=4.5, color="white", stroke=0.8, show_legend=False)
-    # Highlight recession peak with a larger red-outlined marker
+    + geom_point(aes(fill="Year_num"), size=4.0, color=PAGE_BG, stroke=0.6, show_legend=False)
     + geom_point(
         data=recession_point,
         mapping=aes(x="Unemployment", y="Inflation"),
-        size=8,
-        color="#c0392b",
+        size=7.5,
+        color=RECESSION_COLOR,
         fill="none",
-        stroke=1.5,
+        stroke=1.8,
     )
     + annotate(
         "text",
-        x=recession_point["Unemployment"].values[0] - 0.6,
-        y=recession_point["Inflation"].values[0] + 0.5,
+        x=recession_point["Unemployment"].values[0] - 0.9,
+        y=recession_point["Inflation"].values[0] + 0.75,
         label="2009 Recession",
-        size=13,
+        size=3.5,
         fontweight="bold",
-        color="#c0392b",
+        color=RECESSION_COLOR,
     )
-    # Year labels (positioned with per-label offsets)
     + geom_text(
         aes(x="x_label", y="y_label", label="Label"),
         data=df_labels,
-        size=13,
+        size=3.0,
         fontweight="bold",
-        color="#444444",
+        color=INK_SOFT,
         inherit_aes=False,
     )
     + scale_color_gradient(
-        low="#6a9bc5", high="#1a3a5c", name="Year", breaks=[0, 10, 20, 30], labels=["1990", "2000", "2010", "2020"]
+        low=SEQ_LOW, high=SEQ_HIGH, name="Year", breaks=[0, 10, 20, 30], labels=["1990", "2000", "2010", "2020"]
     )
-    + scale_fill_gradient(low="#6a9bc5", high="#1a3a5c")
+    + scale_fill_gradient(low=SEQ_LOW, high=SEQ_HIGH)
     + scale_x_continuous(breaks=range(3, 11), expand=(0.05, 0.3))
     + scale_y_continuous(breaks=range(-1, 7), expand=(0.05, 0.3))
     + labs(
         x="Unemployment Rate (%)",
         y="Inflation Rate (%)",
-        title="Phillips Curve (1990\u20132020) \u00b7 scatter-connected-temporal \u00b7 plotnine \u00b7 pyplots.ai",
+        title="scatter-connected-temporal · python · plotnine · anyplot.ai",
     )
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
-        text=element_text(size=14),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        plot_title=element_text(size=24, fontweight="bold"),
-        legend_title=element_text(size=16),
-        legend_text=element_text(size=14),
+        figure_size=(8, 4.5),
+        text=element_text(size=7, color=INK),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
+        plot_title=element_text(size=12, fontweight="bold", color=INK),
+        legend_title=element_text(size=8, color=INK),
+        legend_text=element_text(size=7, color=INK_SOFT),
         legend_position="right",
-        panel_grid_major=element_line(color="#cccccc", size=0.5, alpha=0.2),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.15),
         panel_grid_minor=element_blank(),
     )
 )
 
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
