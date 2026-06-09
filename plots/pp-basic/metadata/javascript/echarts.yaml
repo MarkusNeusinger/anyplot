@@ -1,0 +1,248 @@
+library: echarts
+language: javascript
+specification_id: pp-basic
+created: '2026-06-09T22:19:00Z'
+updated: '2026-06-09T22:24:21Z'
+generated_by: claude-sonnet
+workflow_run: 27239237816
+issue: 4587
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pp-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pp-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pp-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pp-basic/javascript/echarts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Technically correct P-P plot with proper Weibull plotting positions and Abramowitz
+    & Stegun normal CDF approximation
+  - Deterministic LCG ensures reproducibility in the browser context without seeded
+    Math.random
+  - Square orientation correctly chosen for the diagnostic plot type
+  - All chrome fully theme-adaptive; data colors identical across light and dark renders
+  - Density-appropriate opacity (0.75) and subtle marker border for 200-point scatter
+  weaknesses:
+  - 'Top and right spines are kept visible (axisLine: show: true on both axes) — for
+    a diagnostic scatter plot the style guide recommends removing top/right spines;
+    keeping the full rectangular frame is defensible but misses the minimalism default'
+  - Real-world context (process measurements / quality control) visible only in code
+    comment, not in the chart title or axis labels — a brief descriptive prefix in
+    the title would strengthen DQ-02
+  - 'LM-02 limited: no use of ECharts-distinctive capabilities beyond the scatter+line
+    mix (e.g., visualMap for highlighting deviation zones, or markArea to shade the
+    acceptable band)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white approximately #FAF8F1 — correct theme surface
+      Chrome: Title "pp-basic · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly readable. Y-axis label "Empirical Cumulative Probability" rotated vertically in secondary ink color, readable. X-axis label "Theoretical Cumulative Probability" below axis, readable. Tick labels 0, 0.25, 0.5, 0.75, 1 on both axes in secondary ink, clearly readable. Legend at bottom with "Observations" (green dot) and "Perfect fit" (dashed) in secondary ink, readable.
+      Data: 200 brand green (#009E73) scatter points tracing a tight diagonal with slight S-curve deviation. Dashed dark reference line (45-degree diagonal) styled with inkSoft token.
+      Legibility verdict: PASS — all text clearly readable against warm light background; no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black approximately #1A1A17 — correct dark theme surface
+      Chrome: Title readable in light-colored text. Axis labels readable in light secondary text. Tick labels readable in light secondary text. Legend readable. Dashed reference line becomes light/white dashed against dark background — correctly adapts. Grid lines subtle but visible.
+      Data: Brand green (#009E73) scatter dots — identical color to light render as required. No color shift observed.
+      Legibility verdict: PASS — all text clearly readable against dark background; no dark-on-dark failures detected
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis names 14px, ticks
+          14px, legend 14px). Well-proportioned in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 200 scatter points at size 7 with opacity 0.75 — density-appropriate.
+          Reference line visible through data.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green data against dashed reference line; CVD-safe, distinguishable
+          without hue alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas correct for P-P plot; generous balanced margins; no
+          content cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes descriptively named with full probability labels.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; all chrome theme-adaptive;
+          data colors identical across themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Clearly above generic defaults: brand-green scatter with subtle
+          page-background border stroke, density-appropriate alpha, dashed reference
+          line styled with inkSoft token.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid lines use token colors (subtle), axis lines and ticks themed
+          correctly. All four spines kept — appropriate for enclosed diagnostic plot
+          but misses top/right spine removal.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: green scatter as primary, dashed line as
+          secondary reference. Slight S-curve deviation tells the statistical story.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct P-P plot: empirical CDF vs. theoretical CDF, both axes 0-1,
+          square aspect ratio.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 45-degree reference line, Weibull plotting positions, fitted normal
+          CDF, square aspect ratio — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = Theoretical CDF, Y = Empirical CDF; full 0-1 range on both axes.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'pp-basic · javascript · echarts · anyplot.ai'; legend
+          labels 'Observations' and 'Perfect fit' are correct.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 200 points with mild right skew; shows center-tracking and tail-deviation
+          behavior.
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Process measurement context mentioned in code comment but not exposed
+          in chart labels. Plausible but slightly abstract from viewer's perspective.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 200 samples within spec range; probability 0-1; normal with mild
+          skew realistic for process data.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean flow: LCG/RNG helpers -> data generation -> init -> setOption.
+          Helper functions are necessary utilities.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (rngState = 42); fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unnecessary imports; uses only echarts global and window.ANYPLOT_TOKENS.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Abramowitz & Stegun CDF approximation is elegant browser-native solution.
+          z-ordering appropriate.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Interactive library; harness produces plot-{theme}.png and plot-{theme}.html.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'echarts.init + setOption pattern; animation: false; no explicit
+          size/devicePixelRatio; square orientation directive; all ECharts idioms
+          correctly applied.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Mixed scatter + line series with z-index layer control is ECharts-specific.
+          Token-driven theme adaptation well-executed. No visualMap or markArea usage.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
