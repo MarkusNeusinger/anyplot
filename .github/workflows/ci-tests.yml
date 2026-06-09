@@ -218,6 +218,21 @@ jobs:
       working-directory: app
       run: yarn install --frozen-lockfile
 
+    - name: Lint frontend
+      if: steps.check.outputs.should_test == 'true'
+      working-directory: app
+      run: yarn lint
+
+    - name: Check frontend formatting
+      if: steps.check.outputs.should_test == 'true'
+      working-directory: app
+      run: yarn fm:check
+
+    - name: Type-check frontend (app + tests)
+      if: steps.check.outputs.should_test == 'true'
+      working-directory: app
+      run: yarn type-check
+
     - name: Run frontend tests with coverage
       if: steps.check.outputs.should_test == 'true'
       working-directory: app

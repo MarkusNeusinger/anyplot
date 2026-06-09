@@ -1,0 +1,6 @@
+node_modules/
+dist/
+coverage/
+yarn.lock
+# Hand-tuned inline critical CSS + meta tags — keep formatting as-is
+index.html
