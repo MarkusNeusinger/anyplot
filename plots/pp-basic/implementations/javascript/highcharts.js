@@ -31,7 +31,8 @@ function normalCDF(x, mu, sigma) {
     return z >= 0 ? p : 1 - p;
 }
 
-// Generate 200 samples: slightly right-skewed (normal + half-normal component)
+// Generate 200 samples: right-skewed, simulating manufacturing process cycle times
+// (short cycles dominate; occasional long runs create a heavier upper tail)
 const N = 200;
 const samples = [];
 for (let i = 0; i < N; i++) {
@@ -55,18 +56,26 @@ const ppPoints = sorted.map((x, i) => {
 // 45-degree reference line (perfect distributional fit)
 const refLine = [[0, 0], [1, 1]];
 
+// Deviation zone: where the S-shaped curve crosses the diagonal (~0.35–0.65)
+const devBandColor = 'rgba(0, 158, 115, 0.08)';
+
 Highcharts.chart("container", {
     chart: {
         backgroundColor: "transparent",
+        plotBorderWidth: 0,
         animation: false,
         style: { fontFamily: "inherit" },
-        margin: [60, 40, 80, 80]
+        margin: [80, 50, 95, 90]
     },
     credits: { enabled: false },
     colors: t.palette,
     title: {
         text: "pp-basic · javascript · highcharts · anyplot.ai",
         style: { color: t.ink, fontSize: "22px", fontWeight: "600" }
+    },
+    subtitle: {
+        text: "Manufacturing process cycle times (n=200) vs Normal — S-curve signals heavier tails",
+        style: { color: t.inkSoft, fontSize: "13px" }
     },
     xAxis: {
         title: {
@@ -77,13 +86,28 @@ Highcharts.chart("container", {
         max: 1,
         tickInterval: 0.25,
         lineColor: t.inkSoft,
+        lineWidth: 1,
         tickColor: t.inkSoft,
+        tickLength: 5,
         gridLineColor: t.grid,
         gridLineWidth: 1,
         labels: {
             style: { color: t.inkSoft, fontSize: "14px" },
             format: "{value:.2f}"
-        }
+        },
+        plotBands: [{
+            from: 0.35,
+            to: 0.65,
+            color: devBandColor,
+            zIndex: 0,
+            label: {
+                text: "deviation zone",
+                align: "center",
+                verticalAlign: "top",
+                y: 14,
+                style: { color: t.inkSoft, fontSize: "11px", fontStyle: "italic" }
+            }
+        }]
     },
     yAxis: {
         title: {
@@ -94,13 +118,21 @@ Highcharts.chart("container", {
         max: 1,
         tickInterval: 0.25,
         lineColor: t.inkSoft,
+        lineWidth: 1,
         tickColor: t.inkSoft,
+        tickLength: 5,
         gridLineColor: t.grid,
         gridLineWidth: 1,
         labels: {
             style: { color: t.inkSoft, fontSize: "14px" },
             format: "{value:.2f}"
-        }
+        },
+        plotBands: [{
+            from: 0.35,
+            to: 0.65,
+            color: "rgba(0, 158, 115, 0.04)",
+            zIndex: 0
+        }]
     },
     legend: {
         enabled: true,
@@ -125,7 +157,7 @@ Highcharts.chart("container", {
     series: [
         {
             type: "scatter",
-            name: "Observed vs Normal",
+            name: "Manufacturing Cycle Times",
             data: ppPoints,
             color: t.palette[0],
             zIndex: 2
