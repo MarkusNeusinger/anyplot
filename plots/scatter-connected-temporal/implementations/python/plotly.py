@@ -1,21 +1,32 @@
-""" pyplots.ai
+""" anyplot.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-13
+Library: plotly 6.8.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-09
 """
+
+import os
 
 import numpy as np
 import plotly.colors as pc
 import plotly.graph_objects as go
 
 
-# Data - US-style Phillips Curve: Unemployment vs Inflation (1990-2023)
-np.random.seed(42)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
+# Imprint sequential colormap — green (#009E73) → blue (#4467A3)
+imprint_seq = [[0.0, "#009E73"], [1.0, "#4467A3"]]
+
+# Data - US Phillips Curve: Unemployment vs Inflation (1990-2023)
 years = np.arange(1990, 2024)
 n = len(years)
 
-# Realistic unemployment and inflation patterns
 unemployment = np.array(
     [
         5.6,
@@ -94,16 +105,12 @@ inflation = np.array(
     ]
 )
 
-# Temporal normalization for color mapping
 t_norm = np.linspace(0, 1, n)
-
-# Use Plotly's built-in viridis colorscale for consistent color sampling
-viridis = pc.get_colorscale("viridis")
 
 fig = go.Figure()
 
-# Segment-by-segment colored lines using Plotly's sample_colorscale for consistency
-seg_colors = pc.sample_colorscale("viridis", [t_norm[i] for i in range(n - 1)])
+# Line segments colored by Imprint sequential gradient
+seg_colors = pc.sample_colorscale(imprint_seq, [t_norm[i] for i in range(n - 1)])
 
 for i in range(n - 1):
     r, g, b = pc.unlabel_rgb(seg_colors[i])
@@ -118,29 +125,29 @@ for i in range(n - 1):
         )
     )
 
-# Data points with viridis color gradient
+# Data points with Imprint sequential gradient and colorbar
 fig.add_trace(
     go.Scatter(
         x=unemployment,
         y=inflation,
         mode="markers",
         marker={
-            "size": 18,
+            "size": 14,
             "color": t_norm,
-            "colorscale": "viridis",
-            "line": {"color": "white", "width": 2},
+            "colorscale": imprint_seq,
+            "line": {"color": PAGE_BG, "width": 2},
             "colorbar": {
-                "title": {"text": "Year", "font": {"size": 18}},
+                "title": {"text": "Year", "font": {"size": 12, "color": INK}},
                 "tickvals": [0, 0.2, 0.4, 0.6, 0.8, 1],
                 "ticktext": ["1990", "1997", "2003", "2010", "2017", "2023"],
-                "tickfont": {"size": 16},
+                "tickfont": {"size": 10, "color": INK_SOFT},
                 "len": 0.75,
-                "thickness": 22,
+                "thickness": 18,
                 "outlinewidth": 0,
                 "x": 1.02,
+                "bgcolor": PAGE_BG,
             },
         },
-        text=[str(y) for y in years],
         customdata=np.column_stack([years, unemployment, inflation]),
         hovertemplate=(
             "<b>%{customdata[0]:.0f}</b><br>"
@@ -152,7 +159,7 @@ fig.add_trace(
     )
 )
 
-# Annotate key time points with improved positioning
+# Year annotations at key time points
 key_points = {
     0: ("1990", 45, -35),
     9: ("1999", -50, -40),
@@ -169,20 +176,17 @@ for idx, (label, ax_off, ay_off) in key_points.items():
         text=f"<b>{label}</b>",
         showarrow=True,
         arrowhead=0,
-        arrowcolor="rgba(80, 80, 80, 0.35)",
+        arrowcolor=INK_MUTED,
         arrowwidth=1.5,
         ax=ax_off,
         ay=ay_off,
-        font={"size": 16, "color": "#2d2d2d"},
-        bgcolor="rgba(255, 255, 255, 0.8)",
+        font={"size": 11, "color": INK},
+        bgcolor=ELEVATED_BG,
         borderpad=4,
     )
 
-# Directional arrows showing temporal flow at two path points
-for start_idx, end_idx, color in [
-    (10, 13, "#3e4989"),  # Early 2000s path direction
-    (27, 30, "#6ece58"),  # Late 2010s into pandemic
-]:
+# Directional arrows indicating temporal flow
+for start_idx, end_idx in [(10, 13), (27, 30)]:
     fig.add_annotation(
         x=unemployment[end_idx],
         y=inflation[end_idx],
@@ -196,63 +200,55 @@ for start_idx, end_idx, color in [
         arrowhead=3,
         arrowsize=2,
         arrowwidth=2.5,
-        arrowcolor=color,
-        opacity=0.5,
+        arrowcolor=INK_SOFT,
+        opacity=0.6,
     )
 
-# Decade shading to help distinguish dense regions
-decade_labels = [
-    {"x": 6.8, "y": 5.0, "text": "1990s", "color": "rgba(68,1,84,0.12)"},
-    {"x": 7.8, "y": -0.1, "text": "2000s", "color": "rgba(49,104,142,0.10)"},
-    {"x": 4.0, "y": 0.3, "text": "2010s", "color": "rgba(53,183,121,0.10)"},
-    {"x": 5.8, "y": 7.5, "text": "2020s", "color": "rgba(253,231,37,0.12)"},
-]
-
-for dl in decade_labels:
+# Decade labels for context
+for x_pos, y_pos, decade in [(6.8, 5.0, "1990s"), (7.8, -0.1, "2000s"), (4.0, 0.3, "2010s"), (5.8, 7.5, "2020s")]:
     fig.add_annotation(
-        x=dl["x"],
-        y=dl["y"],
-        text=f"<i>{dl['text']}</i>",
-        showarrow=False,
-        font={"size": 20, "color": "rgba(100,100,100,0.5)"},
+        x=x_pos, y=y_pos, text=f"<i>{decade}</i>", showarrow=False, font={"size": 12, "color": INK_MUTED}
     )
 
-# Layout with refined styling
+# Layout
+title_text = "scatter-connected-temporal · python · plotly · anyplot.ai"
+title_n = len(title_text)
+title_size = max(round(16 * (67 / title_n if title_n > 67 else 1.0)), 11)
+
 fig.update_layout(
-    title={
-        "text": "scatter-connected-temporal · plotly · pyplots.ai",
-        "font": {"size": 28, "color": "#2d2d2d"},
-        "x": 0.5,
-        "y": 0.96,
-    },
+    autosize=False,
+    title={"text": title_text, "font": {"size": title_size, "color": INK}, "x": 0.5, "y": 0.97},
     xaxis={
-        "title": {"text": "Unemployment Rate (%)", "font": {"size": 22, "color": "#3d3d3d"}},
-        "tickfont": {"size": 18, "color": "#555"},
+        "title": {"text": "Unemployment Rate (%)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "showgrid": True,
-        "gridcolor": "rgba(0, 0, 0, 0.06)",
+        "gridcolor": GRID,
         "gridwidth": 1,
         "griddash": "dot",
         "zeroline": False,
         "showline": False,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
     },
     yaxis={
-        "title": {"text": "Inflation Rate (%)", "font": {"size": 22, "color": "#3d3d3d"}},
-        "tickfont": {"size": 18, "color": "#555"},
+        "title": {"text": "Inflation Rate (%)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "showgrid": True,
-        "gridcolor": "rgba(0, 0, 0, 0.06)",
+        "gridcolor": GRID,
         "gridwidth": 1,
         "griddash": "dot",
         "zeroline": False,
         "showline": False,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
     },
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     template="plotly_white",
-    plot_bgcolor="rgba(250, 250, 252, 1)",
-    paper_bgcolor="white",
-    width=1600,
-    height=900,
-    margin={"l": 90, "r": 100, "t": 90, "b": 80},
+    margin={"l": 80, "r": 100, "t": 80, "b": 60},
 )
 
 # Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
