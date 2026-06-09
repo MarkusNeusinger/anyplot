@@ -83,6 +83,12 @@ jobs:
               LANGUAGE="javascript"
               EXT=".js"
               ;;
+            muix)
+              # MUI X — JavaScript with framework=react, authored as TSX and
+              # bundled through the render harness's esbuild React branch.
+              LANGUAGE="javascript"
+              EXT=".tsx"
+              ;;
             *)
               LANGUAGE="python"
               EXT=".py"

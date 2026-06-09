@@ -39,6 +39,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { build as esbuild } from "esbuild";
 import { chromium } from "playwright";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -93,9 +94,18 @@ function themeTokens(theme) {
 }
 
 // -----------------------------------------------------------------------------
-// Library → bundle. framework=none Phase-1 libs expose a single UMD global. Only
-// the snippet's own library is inlined, so the standalone HTML stays small and
-// the page can't accidentally lean on a sibling library.
+// Library → bundle.
+//
+// framework=none libs (Chart.js, D3, ECharts, Highcharts) expose a single UMD
+// global loaded from a prebuilt `dist`. Only the snippet's own library is
+// inlined, so the standalone HTML stays small and the page can't accidentally
+// lean on a sibling library.
+//
+// framework=react libs (MUI X Charts) have no UMD global — the snippet is a
+// `.tsx` module that default-exports a React component. They are bundled on the
+// fly with esbuild (snippet + react + react-dom + @mui/*), wrapped in a MUI
+// ThemeProvider, and mounted via createRoot. `framework: "react"` selects that
+// path; `dist`/`global` are unused for it.
 // -----------------------------------------------------------------------------
 const BUNDLES = {
   chartjs: { global: "Chart", dist: "chart.js/dist/chart.umd.js" },
@@ -106,7 +116,90 @@ const BUNDLES = {
   // for non-commercial use — only the core bundle is vendored (no highcharts-more
   // / modules), matching the framework=none single-global model of the Phase-1 libs.
   highcharts: { global: "Highcharts", dist: "highcharts/highcharts.js" },
+  // MUI X Charts — community @mui/x-charts (MIT), React framework. Authored as
+  // `.tsx`, bundled via esbuild (see bundleReactSnippet). Only the MIT community
+  // surface is vendored; @mui/x-charts-pro / Premium are NOT installed.
+  muix: { framework: "react" },
 };
+
+// -----------------------------------------------------------------------------
+// React (framework=react) bundling — the MUI X path.
+//
+// The framework-agnostic libs load a prebuilt UMD bundle and the snippet draws
+// into `#container` imperatively. React libs are different: the snippet is a
+// `.tsx` module that *default-exports a component*, so there is nothing to draw
+// until we (a) wrap it in a MUI ThemeProvider whose palette follows ANYPLOT_THEME
+// and (b) mount it into `#container` with createRoot. We synthesize that mount
+// entry, then esbuild-bundle entry + snippet + react/react-dom/@mui into one IIFE
+// that we inline exactly like a UMD bundle. esbuild compiles the JSX/TSX (getBBox
+// text layout still happens in the real browser, which is why the harness, not
+// jsdom SSR, renders it). Returns the bundled JS as a string.
+// -----------------------------------------------------------------------------
+async function bundleReactSnippet(snippetPath) {
+  // The snippet default-exports a React component. We import it by absolute path
+  // so esbuild resolves it regardless of cwd, wrap it in a theme provider mapped
+  // onto ANYPLOT_TOKENS, and mount it. __anyplotReady is set only after fonts +
+  // a few frames so MUI X's getBBox-based axis/legend layout (it measures real
+  // SVG text, then re-renders) has settled before the screenshot.
+  const entry = `
+import React from "react";
+import { createRoot } from "react-dom/client";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import AnyplotChart from ${JSON.stringify(snippetPath)};
+
+const t = window.ANYPLOT_TOKENS;
+const mode = window.ANYPLOT_THEME === "dark" ? "dark" : "light";
+const theme = createTheme({
+  palette: {
+    mode,
+    background: { default: t.pageBg, paper: t.elevatedBg },
+    text: { primary: t.ink, secondary: t.inkSoft },
+    divider: t.grid,
+  },
+  typography: {
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+  },
+});
+
+const root = createRoot(document.getElementById("container"));
+root.render(
+  React.createElement(ThemeProvider, { theme }, React.createElement(AnyplotChart))
+);
+
+(async () => {
+  try { await (document.fonts ? document.fonts.ready : Promise.resolve()); } catch (e) {}
+  requestAnimationFrame(() =>
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => { window.__anyplotReady = true; })
+    )
+  );
+})();
+`;
+  const result = await esbuild({
+    stdin: {
+      contents: entry,
+      resolveDir: REPO_ROOT,
+      sourcefile: "anyplot-react-entry.tsx",
+      loader: "tsx",
+    },
+    bundle: true,
+    write: false,
+    format: "iife",
+    platform: "browser",
+    target: "es2020",
+    jsx: "automatic",
+    minify: true,
+    legalComments: "none",
+    absWorkingDir: REPO_ROOT,
+    nodePaths: [NODE_MODULES],
+    // React / MUI gate huge dev-only branches on process.env.NODE_ENV; pin it to
+    // production so esbuild dead-code-eliminates them (smaller bundle, no dev
+    // warnings), and shim `process` for any stray references in the browser.
+    define: { "process.env.NODE_ENV": '"production"' },
+    banner: { js: "globalThis.process=globalThis.process||{env:{NODE_ENV:'production'}};" },
+  });
+  return result.outputFiles[0].text;
+}
 
 function parseArgs(argv) {
   const args = { square: false, library: null, file: null };
@@ -209,17 +302,28 @@ async function main() {
     process.exit(2);
   }
 
-  const bundlePath = path.join(NODE_MODULES, bundleInfo.dist);
-  if (!existsSync(bundlePath)) {
-    console.error(`render: bundle missing: ${bundlePath}\nRun \`npm ci\` at the repo root first.`);
-    process.exit(2);
-  }
-  const bundleSource = await readFile(bundlePath, "utf-8");
-
   const orientation = orientationFromSource(snippetSource, args.square);
   const css = ORIENTATIONS[orientation];
 
-  const html = buildHtml({ tokens, bundleSource, snippetSource, css });
+  // framework=react libs (MUI X) are esbuild-bundled into a single IIFE that
+  // both pulls in react/@mui *and* mounts the snippet's default-exported
+  // component — there is no separate UMD bundle + imperative snippet. We inline
+  // that IIFE as the page's only library script (snippetSource left empty), so
+  // the rest of the pipeline — self-contained HTML, draw check, screenshot — is
+  // identical to the framework=none path.
+  let html;
+  if (bundleInfo.framework === "react") {
+    const bundleSource = await bundleReactSnippet(filePath);
+    html = buildHtml({ tokens, bundleSource, snippetSource: "", css });
+  } else {
+    const bundlePath = path.join(NODE_MODULES, bundleInfo.dist);
+    if (!existsSync(bundlePath)) {
+      console.error(`render: bundle missing: ${bundlePath}\nRun \`npm ci\` at the repo root first.`);
+      process.exit(2);
+    }
+    const bundleSource = await readFile(bundlePath, "utf-8");
+    html = buildHtml({ tokens, bundleSource, snippetSource, css });
+  }
 
   // Write the self-contained interactive page first — it is a deliverable in its
   // own right and useful for debugging even if the screenshot step later fails.
@@ -232,6 +336,15 @@ async function main() {
       viewport: { width: css.cssWidth, height: css.cssHeight },
       deviceScaleFactor: DEVICE_SCALE_FACTOR,
     });
+
+    // Static screenshot of an animated chart must catch the *final* frame, never
+    // a mid-tween one. The library prompts already mandate disabling animation
+    // (Chart.js/ECharts/Highcharts `animation:false`, MUI X `skipAnimation`), but
+    // emulating `prefers-reduced-motion: reduce` is a belt-and-suspenders guard:
+    // well-behaved libraries (MUI X among them) skip entrance animation under it,
+    // so a forgotten flag can't leak a half-grown bar into the PNG. colorScheme
+    // is pinned to the active theme for any lib that keys off prefers-color-scheme.
+    await page.emulateMedia({ reducedMotion: "reduce", colorScheme: theme });
 
     const consoleErrors = [];
     page.on("console", (msg) => {

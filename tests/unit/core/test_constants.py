@@ -34,7 +34,8 @@ class TestSupportedLibraries:
     def test_contains_expected_libraries(self) -> None:
         """Should contain exactly the expected catalog of library IDs.
 
-        9 Python + ggplot2 (R) + makie (Julia) + chartjs/d3/echarts (JavaScript).
+        9 Python + ggplot2 (R) + makie (Julia) + chartjs/d3/echarts/highcharts
+        (framework-agnostic JavaScript) + muix (React/MUI X JavaScript).
         """
         expected = {
             "altair",
@@ -47,6 +48,7 @@ class TestSupportedLibraries:
             "letsplot",
             "makie",
             "matplotlib",
+            "muix",
             "plotly",
             "plotnine",
             "pygal",
@@ -91,6 +93,19 @@ class TestLibrariesMetadata:
             assert lib["language_id"] == "javascript"
             assert lib["framework"] == "none"
 
+    def test_muix_is_react_javascript_tsx(self) -> None:
+        """MUI X is JavaScript with framework=react and a .tsx override.
+
+        It is the first React (framework != none) and first `.tsx` entry — the
+        real end-to-end exercise of both the `framework` field and the
+        per-library file_extension override. React is a runtime constraint, not a
+        language, so language_id stays `javascript` (library-expansion.md §6).
+        """
+        muix = next(lib for lib in LIBRARIES_METADATA if lib["id"] == "muix")
+        assert muix["language_id"] == "javascript"
+        assert muix["framework"] == "react"
+        assert muix["file_extension"] == ".tsx"
+
     def test_documentation_urls_are_valid(self) -> None:
         """Documentation URLs should be valid HTTP(S) URLs."""
         for lib in LIBRARIES_METADATA:
@@ -118,10 +133,22 @@ class TestInteractiveLibraries:
     def test_contains_expected_libraries(self) -> None:
         """Should contain the expected interactive libraries.
 
-        The three JavaScript libraries render in a browser and ship a
-        self-contained interactive HTML page alongside the static PNG.
+        The browser-rendered JavaScript libraries (chartjs, d3, echarts,
+        highcharts, and the React MUI X entry muix) ship a self-contained
+        interactive HTML page alongside the static PNG.
         """
-        expected = {"altair", "bokeh", "chartjs", "d3", "echarts", "highcharts", "letsplot", "plotly", "pygal"}
+        expected = {
+            "altair",
+            "bokeh",
+            "chartjs",
+            "d3",
+            "echarts",
+            "highcharts",
+            "letsplot",
+            "muix",
+            "plotly",
+            "pygal",
+        }
         assert INTERACTIVE_LIBRARIES == expected
 
     def test_matplotlib_seaborn_plotnine_not_interactive(self) -> None:
@@ -294,13 +321,18 @@ class TestLibraryFileExtensions:
         assert library_file_extension("d3") == ".js"
         assert library_file_extension("echarts") == ".js"
 
+    def test_muix_overrides_to_tsx(self) -> None:
+        """MUI X is the one library that overrides its language default (.js → .tsx)."""
+        assert library_file_extension("muix") == ".tsx"
+
     def test_unknown_library_falls_back_to_py(self) -> None:
         """Unknown libraries default to .py rather than raising."""
         assert library_file_extension("does-not-exist") == ".py"
 
-    def test_language_file_extensions_phase1_javascript_is_js_only(self) -> None:
-        """All Phase-1 JS libs are .js, so JavaScript discovery scans only .js."""
-        assert language_file_extensions("javascript") == {".js"}
+    def test_language_file_extensions_javascript_is_js_and_tsx(self) -> None:
+        """JavaScript discovery scans both `.js` (chartjs/d3/echarts/highcharts)
+        and `.tsx` (muix, the React entry)."""
+        assert language_file_extensions("javascript") == {".js", ".tsx"}
 
     def test_language_file_extensions_single_extension_languages(self) -> None:
         """Languages without per-library overrides expose just their default."""
