@@ -1,7 +1,7 @@
 # anyplot.ai
 # pp-basic: Probability-Probability (P-P) Plot
 # Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 85/100 | Created: 2026-06-09
+# Quality: 87/100 | Created: 2026-06-09
 
 using CairoMakie
 using ColorSchemes
