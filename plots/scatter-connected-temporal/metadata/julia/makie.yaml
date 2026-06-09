@@ -1,0 +1,246 @@
+library: makie
+language: julia
+specification_id: scatter-connected-temporal
+created: '2026-06-09T23:32:02Z'
+updated: '2026-06-09T23:49:08Z'
+generated_by: claude-sonnet
+workflow_run: 27242377591
+issue: 4675
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - 'Temporal gradient (Imprint seq: green → blue) elegantly encodes time direction
+    as the primary visual encoding, matching the spec intent perfectly'
+  - Directional arrow at the 1980 path origin guides the viewer through the temporal
+    journey without cluttering the chart
+  - 'Full theme-adaptive chrome: all color tokens (INK, INK_SOFT, PAGE_BG) correctly
+    threaded to every axis element in both light and dark renders'
+  - Realistic CO₂ / temperature data with scientifically accurate baselines and growth
+    rates
+  - Modern Makie API (size= parameter) and idiomatic Julia patterns (let block, cgrad,
+    RGBAf)
+  weaknesses:
+  - Year annotation fontsize (13pt, effective 26 source px) is slightly small; bumping
+    to 14-15pt would improve mobile readability without risk of overlap
+  - Title titlesize (19pt) is formula-correct but just below the 20pt default; with
+    the 72-char title and current layout, increasing to 20pt would not overflow
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "CO₂ vs Temperature · scatter-connected-temporal · julia · makie · anyplot.ai" readable in dark ink; axis labels "Atmospheric CO₂ (ppm)" and "Temperature Anomaly (°C)" clear; tick labels readable; year annotations (1980, 1990, 2000, 2010, 2022) visible
+      Data: Connected scatter path with Imprint sequential colormap (green #009E73 at 1980 → blue #4467A3 at 2022); 43 data points with markersize=14 and white stroke; directional arrow at 1980 start; compact colorbar on right with Year label
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: All text renders in light warm tones (#F0EFE8 / #B8B7B0); title, axis labels, tick labels, and year annotations all clearly readable against dark surface; no dark-on-dark failures detected
+      Data: Identical green-to-blue temporal gradient as light render; data colors unchanged across themes as required
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; year annotations at 13pt are slightly
+          small for mobile scaling
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Year annotations offset cleanly above points; no text-data collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 43 points with markersize=14 prominent and well-sized; strokewidth=1
+          adds definition
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint seq gradient is CVD-safe; no red-green sole distinction
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); colorbar in layout grid provides
+          excellent balance
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Atmospheric CO2 (ppm) and Temperature Anomaly (°C) are descriptive
+          with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint seq cgrad(#009E73 → #4467A3) for continuous temporal data;
+          correct backgrounds; data colors identical across themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional sequential colormap for temporal encoding; directional
+          arrow; colorbar with year axis are deliberate design choices above generic
+          default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed; 12% opacity grid; strokewidth on markers;
+          compact 18px colorbar
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Temporal gradient + arrow + key-year milestones create clear narrative
+          arc; climate co-evolution trend immediately readable
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct connected scatter temporal plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Points connected in temporal order, key time-point annotations, directional
+          arrow, color gradient for temporal progression
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: CO2 on x, temperature anomaly on y, years 1980-2022 as temporal ordering
+          variable
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows {Descriptive} · {spec-id} · julia · makie · anyplot.ai
+          format; colorbar with Year label serves as temporal legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All spec features shown: scatter + line path + gradient + arrow
+          + annotations + colorbar'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: CO2 vs temperature anomaly is a real-world, politically neutral,
+          scientifically valid topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: CO2 starting at 338 ppm rising ~1.9 ppm/year and temperature anomaly
+          starting at 0.10°C rising ~0.018°C/year accurate to real observations
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie, Colors, Random — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiom; let block for arrow calculation is good Julia style;
+          no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save(plot-$(THEME).png, fig; px_per_unit=2); modern Makie size= API
+          (v0.22.10)
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Axis theme tokens threaded correctly; RGBAf for grid colors; cgrad
+          for sequential colormap; colgap! for layout; Colorbar in figure grid
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Per-segment lines! loop for smooth gradient coloring; arrows! primitive
+          for directional marker; Colorbar in layout grid; cgrad two-stop gradient
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
+  - edge-highlighting

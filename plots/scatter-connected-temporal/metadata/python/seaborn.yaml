@@ -1,40 +1,53 @@
 library: seaborn
+language: python
 specification_id: scatter-connected-temporal
 created: '2026-03-13T15:25:33Z'
-updated: '2026-03-13T15:56:43Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23057665455
+updated: '2026-06-09T23:36:14Z'
+generated_by: claude-sonnet
+workflow_run: 27241621391
 issue: 4675
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/seaborn/plot.png
-preview_html: null
-quality_score: 90
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - 'Excellent data choice: Phillips curve dynamics tell a compelling economic story
-    with real-world relevance'
-  - Strong annotation system with curved arrows at key economic turning points guides
-    the reader through the narrative
-  - 'Professional aesthetic: custom blue gradient, white marker edges, italic subtitle,
-    and refined grid create publication-quality feel'
-  - Clean, well-organized code with hardcoded realistic data for full reproducibility
+  - 'Perfect spec compliance: all required connected-scatter features implemented
+    (temporal path, gradient encoding, directional arrow, chronological annotations,
+    visible markers)'
+  - 'Outstanding data quality: realistic U.S. Phillips curve data with historically
+    significant turning points correctly placed'
+  - KDE density contour background (sns.kdeplot) adds genuine analytical value showing
+    where the Phillips curve regime historically clustered
+  - imprint_seq colormap correctly applied for temporal continuous encoding
+  - 'Theme adaptation is thorough: all chrome elements use INK/INK_SOFT tokens and
+    both renders pass readability checks'
+  - Clean code structure with hardcoded arrays for full reproducibility
   weaknesses:
-  - Library mastery limited by reliance on matplotlib LineCollection for core connected-path
-    technique rather than seaborn-native approach
-  image_description: 'The plot displays a connected scatter plot tracing U.S. Phillips
-    Curve dynamics from 1990 to 2023 on a light gray background. The x-axis shows
-    "Unemployment Rate (%)" ranging from ~3 to 10, and the y-axis shows "Inflation
-    Rate (%)" ranging from about -0.5 to 8.5. Data points are connected by line segments
-    in chronological order, with both markers and lines colored using a blue gradient
-    from light steel blue (1990) to very dark navy (2023). Each point has a white
-    edge for contrast. Six key economic turning points are annotated with curved arrows:
-    1990 (high inflation start), 2000 (dot-com boom), 2009 (Great Recession peak unemployment),
-    2012 (recovery midpoint), 2019 (pre-pandemic low), and 2023 (post-pandemic normalization).
-    A colorbar on the right maps the blue gradient to years. The title follows the
-    required format, and an italic subtitle reads "U.S. Phillips Curve Dynamics: Tracing
-    Unemployment vs. Inflation (1990-2023)". Top and right spines are removed, with
-    a subtle y-axis grid.'
+  - Year annotations (fontsize=8 bold) are readable at full resolution but approach
+    the lower threshold for mobile-scaled display; bumping to fontsize=9 would add
+    robustness
+  - 'Annotation cluster in the upper-left (2000, 2023, 2019): both 2000 and 2023 share
+    nearly identical xytext offsets (+14,+12) and (+16,+12) despite adjacent data
+    points (~4.0,4.2) and (~3.6,4.1) causing crowding — adjust 2023 offset to (-20,20)
+    or (16,28) to separate labels'
+  - Core temporal path relies on matplotlib LineCollection rather than a seaborn primitive,
+    limiting seaborn-distinctive character of the implementation
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface
+      Chrome: Title "scatter-connected-temporal · python · seaborn · anyplot.ai" at 12pt clearly readable. Italic subtitle "U.S. Phillips Curve Dynamics: Tracing Unemployment vs. Inflation (1990-2023)" at 8pt readable. Axis labels "Unemployment Rate (%)" and "Inflation Rate (%)" at 10pt readable. Tick labels at 8pt readable. Year annotations (1990, 2000, 2009, 2012, 2019, 2023) at 8pt bold readable; minor crowding in upper-left cluster but no overlap. Colorbar label "Year" and tick labels 1990-2020 readable.
+      Data: imprint_seq gradient (green #009E73 early years → blue #4467A3 recent years) applied to both line segments and scatter markers. 34 data points with s=120 clearly visible. KDE density contours in subtle gray (alpha=0.2) as background. Directional arrow visible.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface
+      Chrome: Title, axis labels, tick labels, subtitle, and year annotations all render in light ink (#F0EFE8 / #B8B7B0) — clearly readable against dark background. No dark-on-dark failure detected. Colorbar label and ticks in INK_SOFT correctly styled.
+      Data: Data colors (imprint_seq gradient) are identical to the light render — only chrome flips. Brand green #009E73 is visible on the dark background as expected. All 34 markers and connecting lines clearly distinguishable from the background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 28
@@ -42,47 +55,54 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          annotations 14pt, colorbar 16pt/14pt'
+        comment: Title 12pt, axis labels 10pt, tick labels 8pt all set and readable
+          in both themes. Annotations at 8pt bold fine at full resolution; marginally
+          small for mobile scaling.
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: All annotations well-separated with offset positions and curved arrows;
-          no text collisions
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 34 points at s=180 with white edges clearly visible; some clustering
-          in 4-6% unemployment range
+        comment: No true text overlap. Minor crowding in upper-left cluster (2000,
+          2023, 2019 adjacent data points with similar xytext offsets); arrows disambiguate.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 34 data points with s=120 appropriately prominent. Line segments
+          and directional arrow clearly visible.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (green to blue) is CVD-safe. No red-green sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Monochromatic blue gradient is colorblind-safe, relying on lightness
-          variation
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good proportions; colorbar creates slight asymmetry but plot fills
-          canvas well
+        comment: Canvas gate passed. 3200x1800 px confirmed. Generous margins via
+          subplots_adjust. Nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units on both axes
+        comment: Descriptive labels with units. Title in exact mandated format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq correctly built from #009E73 to #4467A3. PAGE_BG theme-adaptive.
+          Data colors identical across renders.'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -90,22 +110,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom blue blend palette, white marker edges, italic subtitle, curved
-          arrows — clearly above defaults
+        comment: 'Above 4-default: KDE background adds analytical depth; LineCollection
+          gradient is sophisticated; intentional annotation of economic turning points
+          shows design intent.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle y-axis-only grid at alpha=0.2, generous whitespace,
-          marker edge styling
+        comment: 'Above 2-default: sns.despine, y-only grid at alpha=0.15, KDE at
+          alpha=0.2, colorbar styled with theme tokens, careful subplots_adjust.'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Annotations guide viewer through economic cycles; subtitle contextualizes
-          Phillips curve story
+        comment: 'Above 2-default: narrative subtitle, temporal path encodes the insight,
+          directional arrow, annotations at economic inflection points guide the reader.'
     spec_compliance:
       score: 15
       max: 15
@@ -115,27 +136,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct connected scatter plot with temporal path
+        comment: Correct connected scatter with temporal path.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: connected points, annotations, color
-          gradient, visible markers'
+        comment: 'All features: chronological connections, key annotations, directional
+          arrow, color gradient, visible markers.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=unemployment, Y=inflation, connected temporally with full range
-          padding
+        comment: X=unemployment, Y=inflation, all 34 points visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; colorbar serves as temporal legend
+        comment: Title in exact format. Colorbar as temporal scale legend is appropriate.
     data_quality:
       score: 15
       max: 15
@@ -145,21 +165,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows Phillips curve loops, regime changes, cyclical patterns, and
-          directional trends
+        comment: All spec aspects demonstrated including density background.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: U.S. unemployment vs inflation is classic economics; values align
-          with real-world data
+        comment: U.S. Phillips curve 1990-2023, realistic values, politically neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Unemployment 3.6-9.6%, inflation -0.4-8.0% realistic for U.S. 1990-2023
+        comment: Unemployment 3.6-9.6%, inflation -0.4-8.0%, 34 annual points.
     code_quality:
       score: 10
       max: 10
@@ -169,61 +187,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save flow, no functions or classes
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; data is hardcoded for full determinism
+        comment: Hardcoded data arrays, fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: matplotlib.pyplot, numpy, pandas, seaborn, LineCollection'
+        comment: All 7 imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; LineCollection for gradient path is the right
-          approach
+        comment: Appropriate complexity, no fake UI, no AR-08.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, bbox_inches=tight
+        comment: Saves as plot-{THEME}.png, dpi=400, no bbox_inches='tight'.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses sns.scatterplot, set_theme, despine, color_palette correctly
-          but core path uses matplotlib LineCollection
+        comment: sns.set_theme, sns.scatterplot with hue_norm, sns.kdeplot, sns.despine
+          all idiomatic. Core path via matplotlib LineCollection limits pure seaborn
+          score.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: sns.color_palette blend, sns.set_theme with custom rc, sns.despine
-          — seaborn-specific but main technique is matplotlib
+        comment: sns.kdeplot as background density and sns.scatterplot with continuous
+          hue_norm are genuine seaborn-distinctive capabilities.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - colorbar
+  - annotations
   patterns:
-  - data-generation
   - explicit-figure
-  dataprep: []
+  dataprep:
+  - kde
   styling:
   - custom-colormap
+  - alpha-blending
   - edge-highlighting
-  - grid-styling
