@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: scatter-connected-temporal
 created: '2026-06-09T23:28:54Z'
-updated: '2026-06-09T23:37:52Z'
+updated: '2026-06-09T23:51:13Z'
 generated_by: claude-sonnet
 workflow_run: 27242295762
 issue: 4675
@@ -12,50 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - Correct connected scatter with geom_path + geom_point layers using imprint_seq
-    gradient (green-to-blue) for temporal direction encoding
-  - 'Full spec compliance: chronological path, visible point markers, key-year text
-    annotations, and colorbar legend'
-  - Both themes (light/dark) implemented correctly with proper chrome token adaptation
-    — no dark-on-dark issues
-  - Descriptive title prefix Phillips Curve Dynamics adds economic context
-  - Appropriate title font-size scaling formula applied for the long mandated title
-    string
-  - Percentage tick labels on both axes with label_number(suffix=%)
-  - 'Good layout: L-shaped spine frame, minor grids removed, generous margins, legend
-    at bottom'
+  - Correct use of geom_path() (not geom_line) preserves temporal order — idiomatic
+    ggplot2 for connected scatter
+  - 'imprint_seq gradient (green #009E73 → blue #4467A3) elegantly encodes temporal
+    progression along both path and points'
+  - Arrow overlay (geom_segment with arrow parameter) reinforces time direction without
+    cluttering the chart
+  - 'Full theme-adaptive chrome: PAGE_BG, INK, INK_SOFT, INK_MUTED all correctly toggled
+    between light and dark'
+  - Title font scaling formula correctly handles the 80-character mandated title (size
+    capped at 10pt via linear formula)
+  - Real historical Phillips curve data (1980–2019) with accurate economic values
+    provides compelling real-world context
+  - guide_colorbar with barwidth/barheight customization makes the continuous legend
+    compact and well-positioned
+  - Panel border removed, minor grid disabled, axis lines added — clean L-shaped frame
+    without full box
   weaknesses:
-  - dplyr is imported (library(dplyr)) but never used — all data manipulation uses
-    base R; remove this unused import to fix CQ-03
-  - 'Design sophistication is at configured-default level (DE-01=5/8): consider adding
-    an explicit start-of-path arrow annotation (geom_segment with arrow) to reinforce
-    temporal direction beyond the color gradient alone, and increase geom_point size
-    slightly (3.5) to make individual years more prominent'
-  - 'Minor label crowding in the lower-left cluster: 2019 (unemployment~3.5%) and
-    2000 (unemployment~4%) labels are close together — increase nudge_y for the 2019
-    label or offset it with nudge_x=-0.3 to separate them more clearly'
-  - 'Grid lines use INK_MUTED (#6B6A63 light / #A8A79F dark) which is functional but
-    slightly more prominent than the style-guide guideline of rgba(26,26,23,0.15)
-    — consider reducing linewidth to 0.15 or using a more transparent color string
-    for subtler grid lines'
+  - 'Label overlap: ''2000'' and ''2019'' are nearly co-located (lbl_x both = 3.7%,
+    lbl_y = 3.1 vs 3.0 — only 0.1% separation on a 17%-range axis, ~8 source-px gap
+    vs ~50px text height). Labels overlap in both renders. Fix: increase y-offset
+    for ''2019'' to at least inflation + 1.5 or nudge x for one of the two labels.'
+  - 'Year colorbar legend (1980–2010) is truncated — the colorbar ticks show 1980,
+    1990, 2000, 2010 but not 2019. Minor cosmetic issue: the max scale value (2019)
+    is cut off. Widen barwidth or set breaks explicitly to include 2019.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "Phillips Curve Dynamics · scatter-connected-temporal · r · ggplot2 · anyplot.ai" bold dark text, clearly readable; axis labels "Unemployment Rate" (x) and "Inflation Rate" (y) in dark ink, appropriately sized; tick labels showing 4%/6%/8%/10% and 0%/5%/10%/15% in muted dark ink, all legible
-      Data: Connected path from 1980 (brand green #009E73) to late 2010s (blue #4467A3) via imprint_seq gradient; 40 circular markers visible at each year; bold year annotations at 1980, 1990, 2000, 2010, 2019 — dark text, readable; horizontal colorbar legend "Year" at bottom
-      Legibility verdict: PASS — all text elements clearly readable against the off-white surface; no light-on-light failures
+      Background: Warm off-white (#FAF8F1) — correctly set, not pure white.
+      Chrome: Title "Phillips Curve Dynamics · scatter-connected-temporal · r · ggplot2 · anyplot.ai" renders at ~10pt (scaled from default 12pt for 80-char title), bold, dark ink — readable. X-axis label "Unemployment Rate" and Y-axis label "Inflation Rate" both at 10pt in dark ink — readable. Tick labels (3%, 4%, ... 10% on x; 0%, 5%, 10%, 15% on y) at 8pt in INK_SOFT — readable. Bottom legend "Year" colorbar shows gradient from green to blue across 1980–2010 range.
+      Data: Path and points graduate from brand green #009E73 (1980, high-inflation/high-unemployment region, upper-right) through teal/mid-green to blue #4467A3 (recent years, lower-left cluster). Small arrow at start (1980→1981) in green reinforces temporal direction. Year labels "1980", "1990", "2010" are well-spaced; "2000" and "2019" appear nearly stacked (overlapping vertically) in the lower-left of the scatter.
+      Legibility verdict: PASS overall. Minor readability issue: "2000" and "2019" labels nearly overlap.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light/cream color, clearly readable against dark background; axis labels and tick labels in light muted tone (#B8B7B0), all legible; year annotations in light text, readable; colorbar legend visible at bottom
-      Data: Gradient colors identical to light render — brand green #009E73 for 1980 transitioning to blue #4467A3 for later years; path and point markers clearly distinguishable against dark background; same 5-label annotation set visible
-      Legibility verdict: PASS — no dark-on-dark failures observed; all text light-colored on dark surface; data colors match light render confirming only chrome flipped
+      Background: Warm near-black (#1A1A17) — correctly set, not pure black.
+      Chrome: Title, axis labels, and tick labels all render in light-colored ink (#F0EFE8 / #B8B7B0) — clearly readable against the dark background. No dark-on-dark failures observed. Legend text and title in appropriate light tones.
+      Data: Path and point colors are identical to the light render — green #009E73 through to blue #4467A3 gradient. Arrow at start visible. Year annotation labels appear in INK (#F0EFE8 in dark mode) — readable against the dark background. The "2000"/"2019" overlap issue persists identically in the dark render.
+      Legibility verdict: PASS. Data colors identical to light render (only chrome flipped). No dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -63,82 +61,78 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; title scaled via formula (10pt for
-          81-char title); axis titles 10pt, tick labels 8pt, year annotations 3.2mm
-          bold — all readable in both themes; minor: title slightly compact at 10pt
-          vs ideal 12pt default'
+        comment: All font sizes explicitly set (axis.title=10, axis.text=8, title_size=10,
+          legend.text=8, legend.title=9). Readable in both themes. Minor deduction
+          for the 2000/2019 proximity causing readability concern.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: No hard overlaps; minor crowding between 2019 and 2000 year labels
-          in the lower-left cluster (both near unemployment 3.5-4%)
+        passed: false
+        comment: '''2000'' and ''2019'' labels nearly co-located (lbl_y = 3.1 vs 3.0
+          — only 0.1% gap on 17%-range axis). Labels overlap in both renders.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 40 points at size=2.8 with alpha=0.95 — well-adapted to data density;
-          path at linewidth=1.0 clearly visible
+        comment: 40 data points, size=3.5 markers with alpha=0.95, linewidth=1.0 path.
+          Well-adapted to medium density connected scatter.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq gradient (green to blue) is perceptually safe under CVD;
-          luminance varies across the range
+        comment: Green-to-blue imprint_seq gradient is CVD-safe. No red-green reliance.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas confirmed (gate passed); good margins; colorbar
-          at bottom well-placed; no overflow or clipping
+        comment: 3200x1800 landscape (8x4.5in at dpi=400). Good canvas utilization,
+          legend at bottom, generous margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Unemployment Rate and Inflation Rate as axis labels; percentage units
-          shown in tick labels via label_number(suffix=%)
+        comment: Descriptive labels 'Unemployment Rate' and 'Inflation Rate'; % shown
+          in tick labels via label_number(suffix='%').
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous data correctly uses imprint_seq (#009E73 to #4467A3);
-          light bg #FAF8F1, dark bg #1A1A17; chrome tokens flip correctly between
-          themes'
+        comment: 'Uses imprint_seq gradient (low=#009E73, high=#4467A3) for continuous
+          temporal variable. Backgrounds #FAF8F1 / #1A1A17 correctly set. All chrome
+          theme-adaptive.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above configured-default level: intentional gradient encoding for
-          temporal direction, descriptive title prefix, clean chrome setup; not yet
-          publication-ready — no start/end arrow, no additional visual emphasis beyond
-          color'
+        comment: 'Strong design: gradient along the temporal path is visually striking
+          and informative. Arrow cue adds clarity. Clean minimal chrome. Clearly above
+          library defaults.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinements: L-shaped spine frame (panel.border=blank + axis.line),
-          minor grids removed, explicit generous margins, legend on ELEVATED_BG; grid
-          could be subtler (linewidth 0.15 or rgba opacity)'
+        comment: Subtle grid (linewidth=0.15, INK_MUTED), minor grid disabled, panel
+          border removed, axis lines added for L-shape frame. Good refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Year annotations at economic milestones create narrative waypoints;
-          color gradient guides eye through time; 1980 high-inflation outlier naturally
-          prominent; title signals the Phillips curve story
+        comment: Gradient + arrow + year annotations create clear temporal narrative.
+          Viewer follows the economic path from high-inflation 1980s to lower-inflation
+          2010s. Good visual hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -148,30 +142,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct connected scatter: geom_path (chronological path) + geom_point
-          (markers at each position)'
+        comment: Connected scatter with temporal path. geom_path for connections,
+          geom_point for markers — correct plot type fully implemented.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: chronological path, visible markers,
-          year annotations at key time points, color gradient encoding temporal direction'
+        comment: 'All required features present: chronological connection (geom_path),
+          key time point annotations (1980/1990/2000/2010/2019), arrow for direction
+          (geom_segment with arrow), color gradient for temporal progression, visible
+          markers (geom_point).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=unemployment rate, Y=inflation rate, time encoded as color — correct;
-          all 40 data points (1980-2019) visible
+        comment: X=unemployment rate, Y=inflation rate, time encoded via color gradient.
+          All axes show full data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: Phillips Curve Dynamics · scatter-connected-temporal · r
-          · ggplot2 · anyplot.ai — correct format with descriptive prefix; Year colorbar
-          legend appropriate'
+        comment: Title 'Phillips Curve Dynamics · scatter-connected-temporal · r ·
+          ggplot2 · anyplot.ai' matches required format with optional descriptive
+          prefix. Year colorbar legend appropriate.
     data_quality:
       score: 15
       max: 15
@@ -181,25 +177,27 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows full temporal path with multiple economic regime changes; inflation
-          ranges from -0.4% to 13.5%; path crosses different regions showing cyclical
-          patterns
+        comment: 'Shows full complexity of connected scatter: looping paths, direction
+          changes, clustering in 2000s, extreme 1980 outlier, 2008 recession excursion
+          to high unemployment.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Phillips curve (unemployment vs inflation) is a well-known economic
-          concept; 40 years of data 1980-2019 is a neutral, real-world economic context
+        comment: Classic Phillips curve (US unemployment vs inflation 1980-2019).
+          Real, comprehensible, neutral economic data. Well-known academic and journalistic
+          visualization context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Values consistent with historical US economic data: unemployment
-          3.5-9.7%, inflation -0.4% to 13.5% — plausible and factually reasonable'
+        comment: Unemployment 3.5-9.7%, inflation -0.4% to 13.5% — accurate historical
+          US values. The data reflects actual economic patterns including the 1980-81
+          disinflation and 2008-09 recession.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -207,64 +205,68 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → tokens → data → plot → save; no functions
-          or classes'
+        comment: 'Clean linear flow: theme tokens → data → plot layers → save. No
+          functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present; data is hardcoded so fully deterministic
+        comment: set.seed(42) present; data is hardcoded historical values (fully
+          deterministic).
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: library(dplyr) is imported but never used — all data manipulation
-          uses base R (data.frame, bracket subsetting, %in%)
+        passed: true
+        comment: ggplot2 (plot), scales (label_number), ragg (agg_png device) — all
+          three used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and readable; title font-size scaling formula is a good touch;
-          guide_colorbar customization is appropriate
+        comment: Per-label nudge offsets are thoughtful. Title-size scaling formula
+          is appropriate. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: sprintf('plot-%s.png', THEME) → plot-light.png / plot-dark.png; device=ragg::agg_png
-          used correctly
+        comment: Saves as sprintf('plot-%s.png', THEME) → plot-light.png / plot-dark.png.
+          Uses ragg::agg_png device. Correct.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert ggplot2: aes(color=year) with scale_color_gradient for continuous
+          mapping on path AND points simultaneously, guide_colorbar customization,
+          geom_path for temporal ordering (not geom_line which sorts by x), proper
+          theme inheritance from theme_minimal.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Uses ggplot2 grammar correctly: geom_path() for ordered connected
-          scatter (correct over geom_line), proper aes() color=year mapping, scale_color_gradient
-          with guide_colorbar, expansion() for padding, theme() chaining'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses geom_path() which connects points in data order (key ggplot2
-          distinction from geom_line), label_number(suffix='%') from scales, expansion(mult=...)
-          for asymmetric axis padding — above generic default
-  verdict: REJECTED
+        comment: geom_path temporal ordering, continuous aesthetic mapping across
+          multiple geom layers, guide_colorbar with custom dimensions, geom_segment
+          arrow — all distinctively ggplot2 patterns. One point deducted as no faceting
+          or advanced grammar technique.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - colorbar
   - annotations
+  - colorbar
+  - layer-composition
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - custom-colormap
   - alpha-blending
+  - custom-colormap
