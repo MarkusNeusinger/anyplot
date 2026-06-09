@@ -137,18 +137,7 @@ class TestInteractiveLibraries:
         highcharts, and the React MUI X entry muix) ship a self-contained
         interactive HTML page alongside the static PNG.
         """
-        expected = {
-            "altair",
-            "bokeh",
-            "chartjs",
-            "d3",
-            "echarts",
-            "highcharts",
-            "letsplot",
-            "muix",
-            "plotly",
-            "pygal",
-        }
+        expected = {"altair", "bokeh", "chartjs", "d3", "echarts", "highcharts", "letsplot", "muix", "plotly", "pygal"}
         assert INTERACTIVE_LIBRARIES == expected
 
     def test_matplotlib_seaborn_plotnine_not_interactive(self) -> None:
