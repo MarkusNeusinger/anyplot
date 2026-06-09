@@ -7,14 +7,14 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 const { setAmbient } = vi.hoisted(() => ({ setAmbient: vi.fn() }));
 
-vi.mock('../hooks/useAnalytics', async () => {
+vi.mock('src/hooks/useAnalytics', async () => {
   const actual =
-    await vi.importActual<typeof import('../hooks/useAnalytics')>('../hooks/useAnalytics');
+    await vi.importActual<typeof import('src/hooks/useAnalytics')>('src/hooks/useAnalytics');
   return { ...actual, setAnalyticsAmbientProps: setAmbient };
 });
 
-vi.mock('../hooks', async () => {
-  const actual = await vi.importActual<typeof import('../hooks')>('../hooks');
+vi.mock('src/hooks', async () => {
+  const actual = await vi.importActual<typeof import('src/hooks')>('src/hooks');
   return {
     ...actual,
     useAnalytics: () => ({ trackEvent: vi.fn(), trackPageview: vi.fn() }),
@@ -22,9 +22,9 @@ vi.mock('../hooks', async () => {
   };
 });
 
-vi.mock('../hooks/useLayoutContext', async () => {
-  const actual = await vi.importActual<typeof import('../hooks/useLayoutContext')>(
-    '../hooks/useLayoutContext'
+vi.mock('src/hooks/useLayoutContext', async () => {
+  const actual = await vi.importActual<typeof import('src/hooks/useLayoutContext')>(
+    'src/hooks/useLayoutContext'
   );
   return {
     ...actual,
@@ -38,11 +38,13 @@ vi.mock('../hooks/useLayoutContext', async () => {
   };
 });
 
-vi.mock('./MastheadRule', () => ({ MastheadRule: () => <div data-testid="masthead" /> }));
-vi.mock('./NavBar', () => ({ NavBar: () => <div data-testid="navbar" /> }));
-vi.mock('./Footer', () => ({ Footer: () => <div data-testid="footer" /> }));
+vi.mock('src/components/MastheadRule', () => ({
+  MastheadRule: () => <div data-testid="masthead" />,
+}));
+vi.mock('src/components/NavBar', () => ({ NavBar: () => <div data-testid="navbar" /> }));
+vi.mock('src/components/Footer', () => ({ Footer: () => <div data-testid="footer" /> }));
 
-import { RootLayout } from './RootLayout';
+import { RootLayout } from 'src/components/RootLayout';
 
 const theme = createTheme();
 

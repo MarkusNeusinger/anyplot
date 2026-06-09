@@ -1,4 +1,4 @@
-import { getAnalyticsAmbientProps } from '../hooks/useAnalytics';
+import { getAnalyticsAmbientProps } from 'src/hooks/useAnalytics';
 
 /**
  * Core Web Vitals tracking via web-vitals library.

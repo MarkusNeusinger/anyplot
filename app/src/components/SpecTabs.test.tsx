@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { render, screen, userEvent, waitFor } from '../test-utils';
-import { SpecTabs } from './SpecTabs';
+import { SpecTabs } from 'src/components/SpecTabs';
+import { render, screen, userEvent, waitFor } from 'src/test-utils';
 
 // Mock the lazy-loaded CodeHighlighter
-vi.mock('./CodeHighlighter', () => ({
+vi.mock('src/components/CodeHighlighter', () => ({
   default: ({ code }: { code: string }) => <pre data-testid="code-highlighter">{code}</pre>,
 }));
 
 // Mock the constants module to avoid import.meta issues
-vi.mock('../constants', () => ({
+vi.mock('src/constants', () => ({
   API_URL: 'http://localhost:8000',
 }));
 

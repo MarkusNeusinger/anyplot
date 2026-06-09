@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ActiveFilters, FilterCounts } from '../types';
-import { getSearchResults } from './filters';
+import type { ActiveFilters, FilterCounts } from 'src/types';
+import { getSearchResults } from 'src/utils/filters';
 
 describe('getSearchResults', () => {
   const mockFilterCounts: FilterCounts = {

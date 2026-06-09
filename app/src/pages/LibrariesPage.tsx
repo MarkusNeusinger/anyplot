@@ -6,11 +6,11 @@ import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 
-import { LibraryCard } from '../components/LibraryCard';
-import { SectionHeader } from '../components/SectionHeader';
-import { LIB_TO_FRAMEWORK, LIBRARIES } from '../constants';
-import { useAnalytics, useAppData } from '../hooks';
-import { colors, textStyle, typography } from '../theme';
+import { LibraryCard } from 'src/components/LibraryCard';
+import { SectionHeader } from 'src/components/SectionHeader';
+import { LIB_TO_FRAMEWORK, LIBRARIES } from 'src/constants';
+import { useAnalytics, useAppData } from 'src/hooks';
+import { colors, textStyle, typography } from 'src/theme';
 
 // Framework filter (per library-expansion.md §6: "all JavaScript libs" vs
 // "React-compatible"). Built generically off LIB_TO_FRAMEWORK so adding a

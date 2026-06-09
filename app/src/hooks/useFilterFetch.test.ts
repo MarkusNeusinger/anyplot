@@ -1,8 +1,8 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { ActiveFilters, PlotImage } from '../types';
-import { useFilterFetch } from './useFilterFetch';
+import { useFilterFetch } from 'src/hooks/useFilterFetch';
+import type { ActiveFilters, PlotImage } from 'src/types';
 
 describe('useFilterFetch', () => {
   let fetchMock: ReturnType<typeof vi.fn>;

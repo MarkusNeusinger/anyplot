@@ -9,12 +9,12 @@ import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Typography from '@mui/material/Typography';
 
-import { API_URL, LIB_ABBREV } from '../constants';
-import { useTheme } from '../hooks/useLayoutContext';
-import { colors, fontSize, semanticColors, typography } from '../theme';
-import { specPath } from '../utils/paths';
-import { buildSrcSet, getFallbackSrc } from '../utils/responsiveImage';
-import { selectPreviewUrl } from '../utils/themedPreview';
+import { API_URL, LIB_ABBREV } from 'src/constants';
+import { useTheme } from 'src/hooks/useLayoutContext';
+import { colors, fontSize, semanticColors, typography } from 'src/theme';
+import { specPath } from 'src/utils/paths';
+import { buildSrcSet, getFallbackSrc } from 'src/utils/responsiveImage';
+import { selectPreviewUrl } from 'src/utils/themedPreview';
 
 interface RelatedSpec {
   id: string;

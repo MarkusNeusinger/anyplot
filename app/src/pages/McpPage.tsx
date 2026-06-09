@@ -11,9 +11,9 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
 
-import { SectionHeader } from '../components/SectionHeader';
-import { GITHUB_URL } from '../constants';
-import { useAnalytics } from '../hooks';
+import { SectionHeader } from 'src/components/SectionHeader';
+import { GITHUB_URL } from 'src/constants';
+import { useAnalytics } from 'src/hooks';
 import {
   codeBlockStyle,
   proseLinkStyle,
@@ -21,7 +21,7 @@ import {
   tableStyle,
   textStyle,
   typography,
-} from '../theme';
+} from 'src/theme';
 
 const inlineCodeSx = {
   fontFamily: typography.mono,

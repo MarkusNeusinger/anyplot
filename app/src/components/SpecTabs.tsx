@@ -19,9 +19,9 @@ import Tabs from '@mui/material/Tabs';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
-const CodeHighlighter = lazy(() => import('./CodeHighlighter'));
-import { API_URL } from '../constants';
-import { colors, fontSize, semanticColors, typography } from '../theme';
+const CodeHighlighter = lazy(() => import('src/components/CodeHighlighter'));
+import { API_URL } from 'src/constants';
+import { colors, fontSize, semanticColors, typography } from 'src/theme';
 
 // Cached global tag counts — loaded once, shared across all SpecTabs instances
 let cachedTagCounts: Record<string, Record<string, number>> | null = null;

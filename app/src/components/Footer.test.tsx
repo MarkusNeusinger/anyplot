@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { render, screen, userEvent } from '../test-utils';
-import { Footer } from './Footer';
+import { Footer } from 'src/components/Footer';
+import { render, screen, userEvent } from 'src/test-utils';
 
 describe('Footer', () => {
   it('renders footer links', () => {

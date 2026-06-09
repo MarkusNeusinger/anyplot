@@ -18,12 +18,12 @@ import IconButton from '@mui/material/IconButton';
 import Skeleton from '@mui/material/Skeleton';
 import Tooltip from '@mui/material/Tooltip';
 
-import { API_URL } from '../constants';
-import { useTheme } from '../hooks/useLayoutContext';
-import { colors, fontSize, typography } from '../theme';
-import type { Implementation } from '../types';
-import { buildDetailSrcSet, DETAIL_SIZES } from '../utils/responsiveImage';
-import { selectPreviewHtml, selectPreviewUrl } from '../utils/themedPreview';
+import { API_URL } from 'src/constants';
+import { useTheme } from 'src/hooks/useLayoutContext';
+import { colors, fontSize, typography } from 'src/theme';
+import type { Implementation } from 'src/types';
+import { buildDetailSrcSet, DETAIL_SIZES } from 'src/utils/responsiveImage';
+import { selectPreviewHtml, selectPreviewUrl } from 'src/utils/themedPreview';
 
 const INITIAL_WIDTH = 1600;
 const INITIAL_HEIGHT = 900;

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { API_URL } from '../constants';
+import { API_URL } from 'src/constants';
 
 export interface PlotOfTheDayData {
   spec_id: string;

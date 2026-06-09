@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ActiveFilters } from '../types';
-import { isFiltersEmpty } from './useFilterState';
+import { isFiltersEmpty } from 'src/hooks/useFilterState';
+import type { ActiveFilters } from 'src/types';
 
 describe('isFiltersEmpty', () => {
   it('returns true for empty array', () => {

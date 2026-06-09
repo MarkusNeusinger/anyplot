@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useCodeFetch } from './useCodeFetch';
+import { useCodeFetch } from 'src/hooks/useCodeFetch';
 
 describe('useCodeFetch', () => {
   beforeEach(() => {
