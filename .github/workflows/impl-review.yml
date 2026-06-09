@@ -109,7 +109,7 @@ jobs:
               LANGUAGE="julia"
               EXT=".jl"
               ;;
-            chartjs|d3|echarts)
+            chartjs|d3|echarts|highcharts)
               LANGUAGE="javascript"
               EXT=".js"
               ;;
@@ -266,7 +266,7 @@ jobs:
               "altair":     "Most likely cause: vl-convert padding title/legend outside `width`/`height`. Add `configure_view(continuousWidth=…, continuousHeight=…)` + zero `padding` and normalize the saved PNG with the PIL crop/pad snippet in `prompts/library/altair.md`.",
               "plotly":     "Most likely cause: `autosize=True` or implicit margin growth. Set `autosize=False` and pin `margin=dict(...)` explicitly.",
               "bokeh":      "Most likely cause: bokeh toolbar adding ~30-50 px above the figure. Set `toolbar_location=None`.",
-              "highcharts": "Most likely cause: Chrome chrome eating viewport space. Use `Emulation.setDeviceMetricsOverride` via CDP (see `prompts/library/highcharts.md` Save section) — `--window-size` alone is not authoritative in headless mode.",
+              "highcharts": "The harness owns exact pixels (Playwright deviceScaleFactor 2 over a fixed mount). Call `Highcharts.chart('container', {...})` and let it auto-size to `#container` — do NOT set `chart.width`/`chart.height`. Use `//# anyplot-orientation: square` only for square specs.",
               "pygal":      "Check that `pygal.<Chart>(width=…, height=…)` and the SVG→PNG conversion don't override dims.",
               "plotnine":   "Check `ggsave(width=…, height=…, units='in', dpi=400)` and `theme(figure_size=…)`; do not pass `bbox_inches='tight'`.",
               "letsplot":   "Check `ggsize(W, H)` and `ggsave(..., scale=4)` pair — only the two canonical pairs land on target.",

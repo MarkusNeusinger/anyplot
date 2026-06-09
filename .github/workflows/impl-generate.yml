@@ -127,7 +127,7 @@ jobs:
               LANGUAGE="julia"
               EXT=".jl"
               ;;
-            chartjs|d3|echarts)
+            chartjs|d3|echarts|highcharts)
               LANGUAGE="javascript"
               EXT=".js"
               ;;
@@ -247,12 +247,6 @@ jobs:
           uv venv .venv
           source .venv/bin/activate
           uv pip install pillow pyyaml
-
-      - name: Setup Chrome for Highcharts
-        if: steps.inputs.outputs.library == 'highcharts'
-        uses: browser-actions/setup-chrome@2e1d749697dd1612b833dba4a722266286fbefcd  # v2
-        with:
-          chrome-version: stable
 
       - name: Setup R + ggplot2
         if: steps.inputs.outputs.language == 'r'
@@ -622,9 +616,6 @@ jobs:
               letsplot)
                 LIBRARY_VERSION=$(get_pip_version "lets-plot")
                 ;;
-              highcharts)
-                LIBRARY_VERSION=$(get_pip_version "highcharts-core")
-                ;;
               *)
                 LIBRARY_VERSION=$(get_pip_version "$LIBRARY")
                 ;;
@@ -637,7 +628,6 @@ jobs:
               case "$LIBRARY" in
                 letsplot) PYTHON_MODULE="lets_plot" ;;
                 plotnine) PYTHON_MODULE="plotnine" ;;
-                highcharts) PYTHON_MODULE="highcharts_core" ;;
                 *) PYTHON_MODULE="$LIBRARY" ;;
               esac
               LIBRARY_VERSION=$(.venv/bin/python -c "import $PYTHON_MODULE; print(getattr($PYTHON_MODULE, '__version__', 'unknown'))" 2>/dev/null || echo "unknown")
@@ -656,7 +646,7 @@ jobs:
           # lib/render that produced no HTML never points preview_html at a 404.
           HAS_HTML="false"
           case "$LIBRARY" in
-            plotly|bokeh|altair|highcharts|pygal|letsplot) HAS_HTML="true" ;;
+            plotly|bokeh|altair|pygal|letsplot) HAS_HTML="true" ;;
           esac
           if [ "$LANGUAGE" = "javascript" ] && [ -f "$IMPL_DIR/plot-light.html" ] && [ -f "$IMPL_DIR/plot-dark.html" ]; then
             HAS_HTML="true"
@@ -945,7 +935,7 @@ jobs:
           HTML_LIGHT=""
           HTML_DARK=""
           case "$LIBRARY" in
-            plotly|bokeh|altair|highcharts|pygal|letsplot)
+            plotly|bokeh|altair|pygal|letsplot)
               HTML_LIGHT="${BASE}/plot-light.html"
               HTML_DARK="${BASE}/plot-dark.html"
               ;;

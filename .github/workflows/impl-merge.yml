@@ -113,7 +113,7 @@ jobs:
               LANGUAGE="julia"
               EXT=".jl"
               ;;
-            chartjs|d3|echarts)
+            chartjs|d3|echarts|highcharts)
               LANGUAGE="javascript"
               EXT=".js"
               ;;

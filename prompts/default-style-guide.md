@@ -245,28 +245,29 @@ Before finalizing any plot, consider removing:
 
 Three library families with different sizing controls:
 
-| Element | DPI-based (matplotlib, seaborn, plotnine) | Scale-based (plotly, altair, lets-plot) | Native-pixel (bokeh, highcharts, pygal) |
+| Element | DPI-based (matplotlib, seaborn, plotnine) | Scale-based (plotly, altair, lets-plot) | Native-pixel (bokeh, pygal) |
 |---------|--------------------------------------------|------------------------------------------|------------------------------------------|
 | Canvas (16:9) | `figsize=(8, 4.5)` `dpi=400` | `width=800 height=450 scale=4` | `width=3200 height=1800` |
 | Canvas (1:1) | `figsize=(6, 6)` `dpi=400` | `width=600 height=600 scale=4` | `width=2400 height=2400` |
-| Title | 12pt | 16px | bokeh `'50pt'`; highcharts `'66px'`; pygal `66` |
-| Axis labels | 10pt | 12px | bokeh `'42pt'`; highcharts `'56px'`; pygal `56` |
-| Tick labels | 8pt | 10px | bokeh `'34pt'`; highcharts `'44px'`; pygal `44` |
-| Legend | 8pt | 10px | bokeh `'34pt'`; highcharts `'44px'`; pygal `44` |
+| Title | 12pt | 16px | bokeh `'50pt'`; pygal `66` |
+| Axis labels | 10pt | 12px | bokeh `'42pt'`; pygal `56` |
+| Tick labels | 8pt | 10px | bokeh `'34pt'`; pygal `44` |
+| Legend | 8pt | 10px | bokeh `'34pt'`; pygal `44` |
 
-All three families produce the same 3200×1800 (or 2400×2400) output, so the source-pixel sizes of text are now comparable across libraries.
+The JavaScript libraries (chartjs, d3, echarts, highcharts) are a fourth family: they render through the browser harness at `deviceScaleFactor=2` over a 1600×900 (or 1200×1200) CSS mount, so they size text in **CSS px within that mount space** (title `~22px`, labels `~14px`) — not the native 3200-px numbers. Their per-library prompts are the source of truth; see e.g. `prompts/library/highcharts.md`.
 
-**Why the Native-pixel numbers look so much bigger** — and why bokeh's number differs from highcharts/pygal:
+All families produce the same 3200×1800 (or 2400×2400) output, so the source-pixel sizes of text are comparable across libraries.
+
+**Why the Native-pixel numbers look so much bigger** — and why bokeh's number differs from pygal:
 
 The three families use completely different unit conventions for the same visual size. Target source-pixel height for the title is ~67 (matches matplotlib 12pt @ dpi=400).
 
 - **DPI-based** (matplotlib): `12pt × 400dpi/72 = 67 source-px`. The `pt` value is multiplied by dpi at render time.
 - **Scale-based** (plotly): `16px × scale=4 = 64 source-px`. The `px` value is multiplied by scale at render time.
 - **bokeh** (`'pt'` strings rendered through headless Chrome as CSS pt): `'50pt' × 1.333 = 67 source-px`. CSS pt is 1.333 source-px in the browser, no extra multiplier.
-- **highcharts** (`'px'` CSS strings rendered through headless Chrome): `'66px' = 66 source-px`. CSS px maps 1:1 to source pixels at devicePixelRatio=1.
 - **pygal** (unitless integer rendered into SVG): `66 = 66 source-px`. SVG unitless ≈ user-units ≈ pixels in the source-pixel grid.
 
-So **the same target visual size requires a different nominal number per library** because each library's unit constant differs. bokeh '50pt' ≈ highcharts '66px' ≈ pygal 66 ≈ matplotlib 12pt @ dpi=400 ≈ plotly 16px @ scale=4. Don't try to make them all look the same number.
+So **the same target visual size requires a different nominal number per library** because each library's unit constant differs. bokeh '50pt' ≈ pygal 66 ≈ matplotlib 12pt @ dpi=400 ≈ plotly 16px @ scale=4. Don't try to make them all look the same number. (The JS libraries differ again — they render at dpr=2 over a 1600-px mount, so their CSS px are ~half the native number; their own prompts give the values.)
 
 Bokeh also needs `min_border_*` reservations on the `figure(...)` constructor so the larger axis labels have room and aren't clipped from the PNG. See `prompts/library/bokeh.md` for the canonical numbers — keep that file as the single source of truth so the bottom/left/top/right values don't drift between here and the library prompt.
 

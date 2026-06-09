@@ -152,13 +152,17 @@ LIBRARIES_METADATA = [
         "description": "The de facto standard for data visualization in R. ggplot2 is an implementation of the grammar of graphics: declarative, layered charts that compose with a small set of primitives (geoms, aesthetics, scales, facets, themes).",
     },
     {
+        # Migrated Python → JavaScript (library-expansion.md §6, "most-used variant"):
+        # native highcharts.js (~1 M npm downloads/wk) vastly outweighs the
+        # highcharts-core Python wrapper (~5 k/wk), so the canonical entry is the JS
+        # library, rendered through the browser harness like the Phase-1 JS libs.
         "id": "highcharts",
         "name": "Highcharts",
-        "language_id": "python",
+        "language_id": "javascript",
         "framework": "none",
-        "version": "1.10.0",
+        "version": "12.6.0",
         "documentation_url": "https://www.highcharts.com",
-        "description": "Powerful data visualization for real-world apps. Fast to implement, endlessly flexible. Makes it easy for developers to create charts and dashboards for web and mobile platforms.",
+        "description": "The industry-standard JavaScript charting library for finance, news, and BI dashboards — SVG-rendered, endlessly flexible, battle-tested. Commercial license, free for non-commercial use.",
     },
     {
         "id": "letsplot",

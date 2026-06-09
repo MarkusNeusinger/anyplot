@@ -101,6 +101,11 @@ const BUNDLES = {
   chartjs: { global: "Chart", dist: "chart.js/dist/chart.umd.js" },
   d3: { global: "d3", dist: "d3/dist/d3.min.js" },
   echarts: { global: "echarts", dist: "echarts/dist/echarts.min.js" },
+  // Highcharts ships its UMD bundle at the package root (highcharts.js); loaded
+  // as a <script> it defines the `Highcharts` global. Commercial license, free
+  // for non-commercial use — only the core bundle is vendored (no highcharts-more
+  // / modules), matching the framework=none single-global model of the Phase-1 libs.
+  highcharts: { global: "Highcharts", dist: "highcharts/highcharts.js" },
 };
 
 function parseArgs(argv) {

@@ -2,7 +2,7 @@
   "name": "anyplot-js-runtime",
   "version": "1.0.0",
   "private": true,
-  "description": "Pinned JavaScript toolchain for anyplot's browser-rendered chart libraries (Chart.js, D3.js, ECharts). The committed package-lock.json is the lockfile CI restores with `npm ci`; it is the JS sibling of pyproject.toml / Project.toml / the Posit snapshot used for Python / Julia / R.",
+  "description": "Pinned JavaScript toolchain for anyplot's browser-rendered chart libraries (Chart.js, D3.js, ECharts, Highcharts). The committed package-lock.json is the lockfile CI restores with `npm ci`; it is the JS sibling of pyproject.toml / Project.toml / the Posit snapshot used for Python / Julia / R.",
   "license": "MIT",
   "type": "module",
   "engines": {
@@ -14,7 +14,8 @@
   "dependencies": {
     "chart.js": "4.4.7",
     "d3": "7.9.0",
-    "echarts": "5.5.1"
+    "echarts": "5.5.1",
+    "highcharts": "12.6.0"
   },
   "devDependencies": {
     "esbuild": "0.24.2",
