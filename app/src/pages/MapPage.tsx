@@ -11,9 +11,9 @@ import Slider from '@mui/material/Slider';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 
-import { API_URL } from 'src/constants';
 import { useAnalytics } from 'src/hooks';
 import { useTheme } from 'src/hooks/useLayoutContext';
+import { ApiError, apiGet, endpoints } from 'src/lib/api';
 import {
   buildKNNLinks,
   buildVariantUrl,
@@ -293,14 +293,14 @@ export function MapPage() {
 
   useEffect(() => {
     const ctrl = new AbortController();
-    fetch(`${API_URL}/specs/map`, { signal: ctrl.signal })
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json() as Promise<SpecMapItem[]>;
-      })
+    apiGet<SpecMapItem[]>(endpoints.specsMap, { signal: ctrl.signal })
       .then(setSpecs)
-      .catch(err => {
-        if (err.name !== 'AbortError') setError(err.message ?? 'Failed to load map data');
+      .catch((err: unknown) => {
+        if (err instanceof Error && err.name === 'AbortError') return;
+        // Keep the pre-migration user-visible message ("HTTP <status>") rather
+        // than surfacing the longer ApiError format in the error banner.
+        if (err instanceof ApiError) setError(`HTTP ${err.status}`);
+        else setError(err instanceof Error ? err.message : 'Failed to load map data');
       });
     return () => ctrl.abort();
   }, []);

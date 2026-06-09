@@ -7,7 +7,7 @@
 
 import { useCallback, useRef, useState } from 'react';
 
-import { API_URL } from 'src/constants';
+import { apiGet, endpoints } from 'src/lib/api';
 
 interface CodeCache {
   [key: string]: string | null; // key: `${spec_id}:${language}:${library}`
@@ -25,7 +25,10 @@ const cacheKey = (specId: string, library: string, language: string) =>
   `${specId}:${language}:${library}`;
 
 export function useCodeFetch(): UseCodeFetchReturn {
-  const [isLoading, setIsLoading] = useState(false);
+  // Count in-flight requests instead of a boolean: with overlapping fetches
+  // (different cache keys) the first completion must not clear the loading
+  // state while the second request is still pending.
+  const [pendingCount, setPendingCount] = useState(0);
   const cacheRef = useRef<CodeCache>({});
   const pendingRef = useRef<Map<string, Promise<string | null>>>(new Map());
 
@@ -55,23 +58,12 @@ export function useCodeFetch(): UseCodeFetchReturn {
         return pending;
       }
 
-      // Only append the language query param when it diverges from the API
-      // default — keeps URLs for the common Python case unchanged.
-      const url =
-        language === 'python'
-          ? `${API_URL}/specs/${specId}/${library}/code`
-          : `${API_URL}/specs/${specId}/${library}/code?language=${encodeURIComponent(language)}`;
-
-      setIsLoading(true);
+      setPendingCount(count => count + 1);
       const promise = (async () => {
         try {
-          const response = await fetch(url);
-          if (!response.ok) {
-            cacheRef.current[key] = null;
-            return null;
-          }
-
-          const data = await response.json();
+          const data = await apiGet<{ code?: string | null }>(
+            endpoints.code(specId, library, language)
+          );
           const code = data.code ?? null;
           cacheRef.current[key] = code;
           return code;
@@ -80,7 +72,7 @@ export function useCodeFetch(): UseCodeFetchReturn {
           return null;
         } finally {
           pendingRef.current.delete(key);
-          setIsLoading(false);
+          setPendingCount(count => count - 1);
         }
       })();
 
@@ -90,5 +82,5 @@ export function useCodeFetch(): UseCodeFetchReturn {
     []
   );
 
-  return { fetchCode, getCode, isLoading };
+  return { fetchCode, getCode, isLoading: pendingCount > 0 };
 }

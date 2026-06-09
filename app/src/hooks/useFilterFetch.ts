@@ -6,7 +6,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { API_URL, BATCH_SIZE } from 'src/constants';
+import { BATCH_SIZE } from 'src/constants';
+import { apiGet, endpoints } from 'src/lib/api';
 import type { ActiveFilters, FilterCounts, PlotImage } from 'src/types';
 import { shuffleArray } from 'src/utils/shuffle';
 
@@ -96,13 +97,13 @@ export function useFilterFetch({
           }
         });
 
-        const queryString = params.toString();
-        const url = `${API_URL}/plots/filter${queryString ? `?${queryString}` : ''}`;
-
-        const response = await fetch(url, { signal: abortController.signal });
-        if (!response.ok) throw new Error('Failed to fetch filtered plots');
-
-        const data = await response.json();
+        const data = await apiGet<{
+          counts: FilterCounts;
+          globalCounts?: FilterCounts;
+          orCounts?: Record<string, number>[];
+          specTitles?: Record<string, string>;
+          images?: PlotImage[];
+        }>(endpoints.plotsFilter(params.toString()), { signal: abortController.signal });
 
         if (abortController.signal.aborted) return;
 

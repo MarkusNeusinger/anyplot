@@ -1,6 +1,5 @@
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 
-import { API_URL } from 'src/constants';
 import {
   AppDataContext,
   type HomeState,
@@ -9,6 +8,7 @@ import {
   ThemeContext,
 } from 'src/hooks/useLayoutContext';
 import { useThemeMode } from 'src/hooks/useThemeMode';
+import { ApiError, apiGet, endpoints } from 'src/lib/api';
 import type { LanguageInfo, LibraryInfo, SpecInfo } from 'src/types';
 
 // Global provider that wraps the entire router
@@ -51,35 +51,35 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     const signal = abortController.signal;
 
     const load = async () => {
+      // Non-ok responses used to be skipped per endpoint (res.ok check) while
+      // the other setters still ran; map ApiError to null to keep that, and
+      // rethrow everything else (network errors, aborts) so the whole load
+      // lands in the outer catch like before.
+      const safeGet = async <T,>(path: string): Promise<T | null> => {
+        try {
+          return await apiGet<T>(path, { signal });
+        } catch (err) {
+          if (err instanceof ApiError) return null;
+          throw err;
+        }
+      };
+
       try {
-        const [specsRes, libsRes, langsRes, statsRes] = await Promise.all([
-          fetch(`${API_URL}/specs`, { signal }),
-          fetch(`${API_URL}/libraries`, { signal }),
-          fetch(`${API_URL}/languages`, { signal }),
-          fetch(`${API_URL}/stats`, { signal }),
+        const [specsBody, libsBody, langsBody, statsBody] = await Promise.all([
+          safeGet<SpecInfo[] | { specs?: SpecInfo[] }>(endpoints.specs),
+          safeGet<{ libraries?: LibraryInfo[] }>(endpoints.libraries),
+          safeGet<{ languages?: LanguageInfo[] }>(endpoints.languages),
+          safeGet<{ specs: number; plots: number; libraries: number; lines_of_code?: number }>(
+            endpoints.stats
+          ),
         ]);
 
         if (signal.aborted) return;
 
-        if (specsRes.ok) {
-          const data = await specsRes.json();
-          if (!signal.aborted) setSpecsData(Array.isArray(data) ? data : data.specs || []);
-        }
-
-        if (libsRes.ok) {
-          const data = await libsRes.json();
-          if (!signal.aborted) setLibrariesData(data.libraries || []);
-        }
-
-        if (langsRes.ok) {
-          const data = await langsRes.json();
-          if (!signal.aborted) setLanguagesData(data.languages || []);
-        }
-
-        if (statsRes.ok) {
-          const data = await statsRes.json();
-          if (!signal.aborted) setStats(data);
-        }
+        if (specsBody) setSpecsData(Array.isArray(specsBody) ? specsBody : specsBody.specs || []);
+        if (libsBody) setLibrariesData(libsBody.libraries || []);
+        if (langsBody) setLanguagesData(langsBody.languages || []);
+        if (statsBody) setStats(statsBody);
       } catch (err) {
         if (signal.aborted) return;
         console.warn('Initial data load incomplete:', err instanceof Error ? err.message : err);
