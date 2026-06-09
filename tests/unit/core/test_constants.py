@@ -80,8 +80,13 @@ class TestLibrariesMetadata:
             assert lib["framework"] in allowed, f"{lib['id']} has invalid framework {lib['framework']}"
 
     def test_javascript_libraries_are_framework_none(self) -> None:
-        """Phase-1 JavaScript libraries are all framework-agnostic."""
-        for lib_id in ("chartjs", "d3", "echarts"):
+        """JavaScript libraries are all framework-agnostic.
+
+        chartjs/d3/echarts shipped in Phase 1; highcharts migrated Python →
+        JavaScript in Phase 2 (the native highcharts.js outweighs the
+        highcharts-core wrapper ~200×, per library-expansion.md §6).
+        """
+        for lib_id in ("chartjs", "d3", "echarts", "highcharts"):
             lib = next(lib for lib in LIBRARIES_METADATA if lib["id"] == lib_id)
             assert lib["language_id"] == "javascript"
             assert lib["framework"] == "none"

@@ -28,6 +28,11 @@ EXPECTED_BASE_PROMPTS = [
     "default-style-guide.md",
 ]
 
+# Library prompts checked for the Python-style structure (## Import / ## Save /
+# ## Colors). The JavaScript libraries (chartjs, d3, echarts, highcharts) follow
+# a different convention — a mount-node contract, no imports, "## Colors — Imprint
+# palette", "## Output Files" — so they are intentionally excluded here, the same
+# way the Phase-1 JS prompts are. highcharts moved Python → JavaScript in Phase 2.
 EXPECTED_LIBRARY_PROMPTS = [
     "matplotlib.md",
     "seaborn.md",
@@ -36,7 +41,6 @@ EXPECTED_LIBRARY_PROMPTS = [
     "altair.md",
     "plotnine.md",
     "pygal.md",
-    "highcharts.md",
     "letsplot.md",
 ]
 

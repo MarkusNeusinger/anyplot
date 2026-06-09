@@ -43,7 +43,7 @@ export const LIB_TO_LANG: Record<string, string> = {
   d3: 'javascript',
   echarts: 'javascript',
   ggplot2: 'r',
-  highcharts: 'python',
+  highcharts: 'javascript',
   letsplot: 'python',
   makie: 'julia',
   matplotlib: 'python',

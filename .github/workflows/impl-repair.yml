@@ -79,7 +79,7 @@ jobs:
               LANGUAGE="julia"
               EXT=".jl"
               ;;
-            chartjs|d3|echarts)
+            chartjs|d3|echarts|highcharts)
               LANGUAGE="javascript"
               EXT=".js"
               ;;
@@ -116,12 +116,6 @@ jobs:
           uv venv .venv
           source .venv/bin/activate
           uv pip install pillow pyyaml
-
-      - name: Setup Chrome for Highcharts
-        if: inputs.library == 'highcharts'
-        uses: browser-actions/setup-chrome@2e1d749697dd1612b833dba4a722266286fbefcd  # v2
-        with:
-          chrome-version: stable
 
       - name: Setup R + ggplot2
         if: steps.lang.outputs.language == 'r'

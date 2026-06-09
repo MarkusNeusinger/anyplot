@@ -312,7 +312,7 @@ Ranked by `reach × ease-of-integration ÷ duplication-risk`.
 |-------|-------------------------------------|---------------|--------------------------|----------|
 | 0     | —                                   | Python        |  9                       | shipped  |
 | 1     | Chart.js, D3.js, ECharts            | + JavaScript  | 14                       | **in progress** — JS runtime (Node 22 + Playwright render harness), registry, workflows, prompts, and frontend landed; plot implementations generated next via `bulk-generate`. Cumulative count is 14 (the Phase-3/5 R+Julia entries already shipped). |
-| 2     | Highcharts (replaces Python entry)  | —             | 14                       | planned  |
+| 2     | Highcharts (replaces Python entry)  | —             | 14                       | **shipped** (#8242) — Highcharts migrated Python → JavaScript. Executed as a **clean break** (the §6 deprecation-window *fallback*, chosen by the owner for simplicity): the 322 Python `highcharts.py` impls were removed and the canonical entry flipped to the native `highcharts.js` (v12.6.0) on the Node + Playwright harness; JS implementations are recreated gradually via `bulk-generate` / `daily-regen`. Cumulative count stays 14 — a move, not an addition. |
 | 3     | **ggplot2**                         | **+ R**       | **10**                   | **shipped** (Phase 3 was implemented before Phases 1+2; net total was 10 until Phase 5 landed Julia) |
 | 4     | Recharts, Observable Plot           | —             | TBD                      | planned  |
 | 5     | **Makie.jl** (ApexCharts deferred)  | **+ Julia**   | **11**                   | **shipped** (Phase 5 was implemented before Phases 1+2+4 to validate the multi-language pipeline on a second non-Python runtime; ApexCharts split to a later phase) |
@@ -337,8 +337,12 @@ entries.
   metadata flag, not separate languages.
 - **Cross-language libraries** appear once, under the variant with ≥ 3× more
   weekly downloads (else native).
-- **Highcharts** moves from Python to JavaScript. Keep both entries for one
-  release as a deprecation window, then drop the Python entry.
+- **Highcharts** moved from Python to JavaScript (Phase 2, #8242). The §6
+  deprecation window was one option; in practice it shipped as a **clean break**
+  (the documented fallback) — the Python `highcharts-core` impls were dropped and
+  the canonical entry flipped straight to the native `highcharts.js`, with JS
+  implementations recreated gradually rather than dual-serving Python + JS for one
+  release. Old `/{spec}/python/highcharts` deep links fall back to the spec hub.
 - **Licensing**: FOSS-first; libraries with a free-for-private-use tier
   (Highcharts, amCharts) are allowed but tagged and never crowd out FOSS
   alternatives at the same tier.
