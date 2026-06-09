@@ -7,8 +7,8 @@ import Box from '@mui/material/Box';
 import { ThemeToggle } from 'src/components/ThemeToggle';
 import { LANG_EXT, LIB_ABBREV } from 'src/constants';
 import { useAnalytics, useLatestRelease, useTheme } from 'src/hooks';
+import { paths, RESERVED_TOP_LEVEL } from 'src/routes/paths';
 import { colors, typography } from 'src/theme';
-import { RESERVED_TOP_LEVEL } from 'src/utils/paths';
 
 // Symmetric block-comment delimiters used when no language context is in the URL.
 // One is picked on mount so each page load reveals a different classic.
@@ -208,7 +208,7 @@ export function MastheadRule() {
             keepRootMarkerOnXs above). */}
         <Box
           component={RouterLink}
-          to="/"
+          to={paths.home}
           onClick={() => trackEvent('nav_click', { source: 'masthead_logo', target: '/' })}
           sx={{ ...linkSx, display: rootMarkerDisplay }}
         >

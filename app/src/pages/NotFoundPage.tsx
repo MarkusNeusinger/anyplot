@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 
+import { paths } from 'src/routes/paths';
 import { colors, semanticColors, typography } from 'src/theme';
 
 export function NotFoundPage() {
@@ -35,7 +36,7 @@ export function NotFoundPage() {
         </Typography>
         <Box
           component={Link}
-          to="/"
+          to={paths.home}
           aria-label="Go home"
           sx={{
             color: colors.primary,

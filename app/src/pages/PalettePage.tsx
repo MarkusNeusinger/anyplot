@@ -15,6 +15,7 @@ import Tooltip from '@mui/material/Tooltip';
 import { SectionHeader } from 'src/components/SectionHeader';
 import matrixData from 'src/data/paletteMatrices.json';
 import { useAnalytics, useTheme } from 'src/hooks';
+import { paths } from 'src/routes/paths';
 import { colors, fontSize, textStyle, typography } from 'src/theme';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -951,7 +952,7 @@ export function PalettePage() {
   };
 
   useEffect(() => {
-    trackPageview('/palette');
+    trackPageview(paths.palette);
   }, [trackPageview]);
 
   const sortedPalette: Swatch[] = useMemo(

@@ -12,8 +12,8 @@ import Typography from '@mui/material/Typography';
 import { LIB_ABBREV } from 'src/constants';
 import { useTheme } from 'src/hooks/useLayoutContext';
 import { apiGet, endpoints } from 'src/lib/api';
+import { specPath } from 'src/routes/paths';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
-import { specPath } from 'src/utils/paths';
 import { buildSrcSet, getFallbackSrc } from 'src/utils/responsiveImage';
 import { selectPreviewUrl } from 'src/utils/themedPreview';
 

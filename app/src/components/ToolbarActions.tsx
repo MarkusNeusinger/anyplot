@@ -12,6 +12,7 @@ import Box from '@mui/material/Box';
 import Tooltip from '@mui/material/Tooltip';
 
 import type { ImageSize } from 'src/constants';
+import { paths } from 'src/routes/paths';
 import { colors, semanticColors } from 'src/theme';
 
 interface ToolbarActionsProps {
@@ -28,7 +29,7 @@ export function PlotsLink() {
     <Tooltip title="plots.list()">
       <Box
         component={Link}
-        to="/plots"
+        to={paths.plots}
         aria-label="Browse plots"
         sx={{
           display: 'flex',

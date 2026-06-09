@@ -13,9 +13,9 @@ import { ImagesGrid } from 'src/components/ImagesGrid';
 import type { ImageSize } from 'src/constants';
 import { isFiltersEmpty, useAnalytics, useFilterState, useInfiniteScroll } from 'src/hooks';
 import { useAppData, useHomeState } from 'src/hooks';
+import { specPath } from 'src/routes/paths';
 import { colors } from 'src/theme';
 import type { PlotImage } from 'src/types';
-import { specPath } from 'src/utils/paths';
 
 export function PlotsPage() {
   const navigate = useNavigate();
