@@ -113,6 +113,12 @@ jobs:
               LANGUAGE="javascript"
               EXT=".js"
               ;;
+            muix)
+              # MUI X — JavaScript with framework=react, authored as TSX and
+              # bundled through the render harness's esbuild React branch.
+              LANGUAGE="javascript"
+              EXT=".tsx"
+              ;;
             *)
               LANGUAGE="python"
               EXT=".py"
@@ -275,6 +281,7 @@ jobs:
               "chartjs":    "The harness owns exact pixels (Playwright deviceScaleFactor 2 over a fixed mount). Drift means the snippet forced its own canvas size: set `responsive: true` + `maintainAspectRatio: false` and let the canvas fill `#container` — do NOT set canvas width/height. Use `//# anyplot-orientation: square` only for square specs.",
               "d3":         "The harness owns exact pixels (Playwright deviceScaleFactor 2 over a fixed mount). Size the `<svg>` to `window.ANYPLOT_SIZE` (1600×900 landscape / 1200×1200 square) — never hard-code other dimensions. Use `//# anyplot-orientation: square` only for square specs.",
               "echarts":    "The harness owns exact pixels (Playwright deviceScaleFactor 2 over a fixed mount). Call `echarts.init(document.getElementById('container'))` with no explicit width/height so it fills the mount; do not pass a `devicePixelRatio` (the page already runs at 2×). Use `//# anyplot-orientation: square` only for square specs.",
+              "muix":       "The harness owns exact pixels (Playwright deviceScaleFactor 2 over a fixed mount via a MUI ThemeProvider). Size the chart with `width={window.ANYPLOT_SIZE.width}` / `height={window.ANYPLOT_SIZE.height}` (1600×900 landscape / 1200×1200 square) — never hard-code other dimensions. Use `//# anyplot-orientation: square` only for square specs.",
           }
           cause = causes.get(LIBRARY, f"Review `prompts/library/{LIBRARY}.md` 'Canvas — hard rule' section.")
 

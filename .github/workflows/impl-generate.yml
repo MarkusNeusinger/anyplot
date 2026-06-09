@@ -34,6 +34,7 @@ on:
           - chartjs
           - d3
           - echarts
+          - muix
       issue_number:
         description: "Issue number (optional, for tracking)"
         required: false
@@ -130,6 +131,12 @@ jobs:
             chartjs|d3|echarts|highcharts)
               LANGUAGE="javascript"
               EXT=".js"
+              ;;
+            muix)
+              # MUI X — JavaScript with framework=react, authored as TSX and
+              # bundled through the render harness's esbuild React branch.
+              LANGUAGE="javascript"
+              EXT=".tsx"
               ;;
             *)
               LANGUAGE="python"
@@ -601,11 +608,15 @@ jobs:
                 ;;
             esac
           elif [ "$LANGUAGE" = "javascript" ]; then
-            # Catalogue id `chartjs` maps to the npm package `chart.js`; `d3` and
+            # Catalogue id `chartjs` maps to the npm package `chart.js` and
+            # `muix` to the scoped community package `@mui/x-charts`; `d3` and
             # `echarts` match their npm names directly.
             case "$LIBRARY" in
               chartjs)
                 LIBRARY_VERSION=$(get_npm_version "chart.js")
+                ;;
+              muix)
+                LIBRARY_VERSION=$(get_npm_version "@mui/x-charts")
                 ;;
               *)
                 LIBRARY_VERSION=$(get_npm_version "$LIBRARY")
