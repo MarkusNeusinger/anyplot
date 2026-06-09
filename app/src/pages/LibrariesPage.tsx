@@ -12,13 +12,28 @@ import { colors, typography, textStyle } from '../theme';
 
 // Framework filter (per library-expansion.md §6: "all JavaScript libs" vs
 // "React-compatible"). Built generically off LIB_TO_FRAMEWORK so adding a
-// Recharts / Vue / Svelte entry later is a one-line registry change — no UI
-// edit. 'all' shows everything; any other value matches that framework.
-type FrameworkFilter = 'all' | 'react';
+// Recharts / Vue / Svelte entry later is a one-line registry change — the
+// matching filter chip appears here automatically, no UI edit. 'all' shows
+// everything; any other value is a framework id that matches that framework.
+type FrameworkFilter = string;
+
+// Human label per framework; unknown frameworks fall back to "<id>-compatible".
+const FRAMEWORK_FILTER_LABEL: Record<string, string> = {
+  react: 'React-compatible',
+  vue: 'Vue-compatible',
+  svelte: 'Svelte-compatible',
+  angular: 'Angular-compatible',
+};
+
+// Distinct non-"none" frameworks actually present in the registry, in stable
+// order — the data-driven source for the filter chips below.
+const PRESENT_FRAMEWORKS = Array.from(
+  new Set(LIBRARIES.map(name => LIB_TO_FRAMEWORK[name]).filter(fw => fw && fw !== 'none')),
+).sort();
 
 const FILTERS: { id: FrameworkFilter; label: string }[] = [
   { id: 'all', label: 'all libraries' },
-  { id: 'react', label: 'React-compatible' },
+  ...PRESENT_FRAMEWORKS.map(fw => ({ id: fw, label: FRAMEWORK_FILTER_LABEL[fw] ?? `${fw}-compatible` })),
 ];
 
 export function LibrariesPage() {

@@ -34,8 +34,9 @@ class TestSupportedLibraries:
     def test_contains_expected_libraries(self) -> None:
         """Should contain exactly the expected catalog of library IDs.
 
-        9 Python + ggplot2 (R) + makie (Julia) + chartjs/d3/echarts/highcharts
-        (framework-agnostic JavaScript) + muix (React/MUI X JavaScript).
+        8 Python + ggplot2 (R) + makie (Julia) + chartjs/d3/echarts/highcharts
+        (framework-agnostic JavaScript) + muix (React/MUI X JavaScript) = 15.
+        (highcharts moved Python → JavaScript in Phase 2, so Python is now 8.)
         """
         expected = {
             "altair",

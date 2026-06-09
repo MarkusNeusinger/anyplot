@@ -85,6 +85,7 @@ runs:
               width={window.ANYPLOT_SIZE.width}
               height={window.ANYPLOT_SIZE.height}
               colors={t.palette}
+              skipAnimation
               xAxis={[{ scaleType: "band", data: ["a", "b", "c"] }]}
               series={[{ data: [3, 1, 2], label: "demo" }]}
             />
