@@ -4,8 +4,8 @@ import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 
-import { useAnalytics } from '../hooks';
-import { colors, typography } from '../theme';
+import { useAnalytics } from 'src/hooks';
+import { colors, typography } from 'src/theme';
 
 const DEBUG_CLICK_COUNT = 5;
 const DEBUG_CLICK_WINDOW_MS = 800;

@@ -11,11 +11,9 @@ import Slider from '@mui/material/Slider';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 
-import { API_URL } from '../constants';
-import { useAnalytics } from '../hooks';
-import { useTheme } from '../hooks/useLayoutContext';
-import { colors, fontSize, typography } from '../theme';
-import { specPath } from '../utils/paths';
+import { API_URL } from 'src/constants';
+import { useAnalytics } from 'src/hooks';
+import { useTheme } from 'src/hooks/useLayoutContext';
 import {
   buildKNNLinks,
   buildVariantUrl,
@@ -38,7 +36,9 @@ import {
   TAG_CATEGORIES,
   type TagCategory,
   topCategoryValues,
-} from './MapPage.helpers';
+} from 'src/pages/MapPage.helpers';
+import { colors, fontSize, typography } from 'src/theme';
+import { specPath } from 'src/utils/paths';
 
 const NODE_SIZE = 60; // graph-space size of a node — large enough to read the thumbnail without hovering
 const COOLDOWN_TICKS = 300; // simulation lifetime in ticks; the engine cap and alpha-decay below both derive from this so they stop together

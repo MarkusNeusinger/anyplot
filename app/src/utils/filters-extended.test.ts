@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ActiveFilters, FilterCounts } from '../types';
-import { getAvailableValues, getAvailableValuesForGroup, getSearchResults } from './filters';
+import type { ActiveFilters, FilterCounts } from 'src/types';
+import {
+  getAvailableValues,
+  getAvailableValuesForGroup,
+  getSearchResults,
+} from 'src/utils/filters';
 
 const mockFilterCounts: FilterCounts = {
   lang: { python: 28, r: 0 },

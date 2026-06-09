@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { render, screen, userEvent } from '../test-utils';
-import { GridSizeToggle, PlotsLink, ToolbarActions } from './ToolbarActions';
+import { GridSizeToggle, PlotsLink, ToolbarActions } from 'src/components/ToolbarActions';
+import { render, screen, userEvent } from 'src/test-utils';
 
 describe('PlotsLink', () => {
   it('renders a link to /plots', () => {

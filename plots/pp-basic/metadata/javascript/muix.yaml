@@ -1,0 +1,260 @@
+library: muix
+language: javascript
+specification_id: pp-basic
+created: '2026-06-09T22:14:56Z'
+updated: '2026-06-09T22:37:06Z'
+generated_by: claude-sonnet
+workflow_run: 27238962448
+issue: 4587
+language_version: 22.22.3
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pp-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pp-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pp-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pp-basic/javascript/muix/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Correct P-P plot with Weibull plotting positions i/(N+1) and MLE-fitted normal
+    CDF — statistically sound implementation
+  - useDrawingArea hook used to position the 45° reference diagonal precisely within
+    the drawing area coordinate system — idiomatic and distinctive MUI X technique
+  - Informative annotations ('Perfect fit', 'log-normal deviation →') guide the viewer
+    directly to the S-curve deviation insight
+  - Deterministic LCG RNG with fixed seed 42 — browser-safe reproducibility without
+    Date.now() or Math.random()
+  - Both themes render correctly with identical brand-green data colors and theme-adaptive
+    chrome (t.ink / t.inkSoft tokens)
+  - Square canvas correctly chosen per spec's 'square aspect ratio' requirement for
+    the P-P diagnostic plot
+  weaknesses:
+  - 'No alpha/opacity on scatter markers for 200-point dataset — points in the dense
+    S-curve region cluster without transparency; add opacity: 0.7–0.8 to the series
+    config to communicate density visually'
+  - Default MUI X four-sided chart border visible; remove top and right borders via
+    sx prop for style-guide-compliant L-shaped frame
+  - Annotation font sizes at 12–13px CSS are slightly small in the square canvas;
+    increasing to 14px would improve legibility at mobile widths
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "pp-basic · javascript · muix · anyplot.ai" in bold dark text, clearly readable. X-axis label "Theoretical CDF (Normal)" and Y-axis label "Empirical CDF" in dark ink, readable. Tick labels 0.00–1.00 on both axes clearly legible. Annotations "Perfect fit" and "log-normal deviation →" in muted ink, readable though small (12–13px CSS). Legend "Observed (log-normal)" at bottom, readable.
+      Data: 200 scatter points in brand green #009E73; 45° dashed reference diagonal in inkSoft. S-curve deviation visible. Grid lines at 0.15 opacity — subtle.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light text (theme-adaptive t.ink #F0EFE8), clearly readable against dark background. Axis labels and tick labels in light text, all legible. Annotations "Perfect fit" and "log-normal deviation →" in muted light ink, readable. Legend text light-colored. No dark-on-dark failures observed.
+      Data: Scatter points remain brand green #009E73 — identical to light render (colors unchanged between themes, only chrome flipped).
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 20px, axis labels 16px, ticks
+          12px, annotations 12-13px). Readable in both themes. Minor: annotation labels
+          slightly small at 12-13px CSS.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps with other text or data elements. Annotations cleanly
+          positioned.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 'markerSize=6 CSS px for 200 points is appropriate. Points clearly
+          visible. Minor: no alpha blending causes slight crowding in dense mid-range.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series in brand green #009E73. Good contrast on both surfaces.
+          CVD-safe.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas correctly chosen (spec requires square aspect ratio).
+          Well-proportioned, no clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Theoretical CDF (Normal) and Empirical CDF are descriptive. Cumulative
+          probability axes don't need additional units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 brand green. Background #FAF8F1 (light)
+          / #1A1A17 (dark). Theme-adaptive chrome via t.ink/t.inkSoft. Data colors
+          identical across both themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Clearly above defaults: custom SVG overlay for reference diagonal,
+          explicit typography, brand palette. Professional look. Not FiveThirtyEight-level
+          — no spine customization.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid opacity reduced to 0.15 (subtle). Legend at bottom. Default
+          MUI X four-sided border remains — top/right spine removal not applied.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: S-curve deviation clearly visible. 'Perfect fit' and 'log-normal
+          deviation →' annotations guide viewer to key insight. Visual hierarchy present.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct P-P plot: empirical CDF vs theoretical CDF, both axes 0-1,
+          45° reference diagonal, square aspect ratio.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 45° reference line, square aspect ratio, Weibull plotting positions
+          i/(N+1), theoretical CDF with MLE-fitted parameters, both axes 0-1.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis = Theoretical CDF, Y-axis = Empirical CDF. Both axes show
+          full 0-1 range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'pp-basic · javascript · muix · anyplot.ai' matches required
+          format. Legend 'Observed (log-normal)' is descriptive.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: '200 points from log-normal show full P-P plot behavior: near-diagonal
+          at tails, S-curve deviation in center. All aspects of the plot type demonstrated.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Log-normal vs normal distributional comparison is a standard statistical
+          diagnostic scenario. Neutral, science-domain context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Both axes correctly bounded 0-1 (cumulative probabilities). Log-normal
+          deviation magnitude realistic for sigma=0.35.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Utility functions (LCG RNG, Box-Muller, normCDF) and React sub-components
+          (Overlay, ChartTitle) are all justified for the library's architecture.
+          Slightly more complex than minimal skeleton but no unnecessary abstractions.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed seed 42 via LCG RNG. Fully deterministic, browser-safe.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only two imports (ScatterChart, useDrawingArea), both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-structured. LCG + Box-Muller + Abramowitz & Stegun normCDF
+          are appropriate browser-side math implementations. No fake UI or over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Default-exports React component as required by harness. Current MUI
+          X API used.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Correct use of ScatterChart, useDrawingArea hook, slotProps for
+          legend, skipAnimation, window.ANYPLOT_TOKENS/ANYPLOT_SIZE. sx prop for grid
+          opacity override is idiomatic. Minor: custom title via SVG bypasses MUI
+          X title slot.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: useDrawingArea is distinctively MUI X — used to obtain drawing-area
+          coordinates and position custom SVG diagonal and annotations precisely.
+          Real MUI X-specific capability.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - grid-styling

@@ -8,8 +8,8 @@
 
 import { describe, expect, it } from 'vitest';
 
-import type { PlotImage } from '../types';
-import { imagesContentKey } from './useFilterState';
+import { imagesContentKey } from 'src/hooks/useFilterState';
+import type { PlotImage } from 'src/types';
 
 function img(spec_id: string, library: string, extra: Partial<PlotImage> = {}): PlotImage {
   return {

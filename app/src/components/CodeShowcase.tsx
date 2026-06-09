@@ -1,7 +1,7 @@
 import Box from '@mui/material/Box';
 
-import { typography } from '../theme';
-import { SectionHeader } from './SectionHeader';
+import { SectionHeader } from 'src/components/SectionHeader';
+import { typography } from 'src/theme';
 
 export function CodeShowcase() {
   return (

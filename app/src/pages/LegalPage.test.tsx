@@ -1,15 +1,15 @@
 import { fireEvent } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { render, screen } from '../test-utils';
-import { LegalPage } from './LegalPage';
+import { LegalPage } from 'src/pages/LegalPage';
+import { render, screen } from 'src/test-utils';
 
 vi.mock('react-helmet-async', () => ({
   Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 const trackEvent = vi.fn();
-vi.mock('../hooks', () => ({
+vi.mock('src/hooks', () => ({
   useAnalytics: () => ({
     trackPageview: vi.fn(),
     trackEvent: (...args: unknown[]) => trackEvent(...args),

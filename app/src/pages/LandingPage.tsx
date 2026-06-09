@@ -5,19 +5,19 @@ import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 
-import { HeroSection } from '../components/HeroSection';
-import { LibrariesSection } from '../components/LibrariesSection';
-import { NumbersStrip } from '../components/NumbersStrip';
-import { SectionHeader } from '../components/SectionHeader';
-import { GITHUB_URL } from '../constants';
-import { useAnalytics, useAppData } from '../hooks';
-import { type FeaturedImpl, useFeaturedSpecs } from '../hooks/useFeaturedSpecs';
-import { useTheme } from '../hooks/useLayoutContext';
-import { usePlotOfTheDay } from '../hooks/usePlotOfTheDay';
-import { colors, semanticColors, typography } from '../theme';
-import { specPath } from '../utils/paths';
-import { buildSrcSet, getFallbackSrc } from '../utils/responsiveImage';
-import { selectPreviewUrl } from '../utils/themedPreview';
+import { HeroSection } from 'src/components/HeroSection';
+import { LibrariesSection } from 'src/components/LibrariesSection';
+import { NumbersStrip } from 'src/components/NumbersStrip';
+import { SectionHeader } from 'src/components/SectionHeader';
+import { GITHUB_URL } from 'src/constants';
+import { useAnalytics, useAppData } from 'src/hooks';
+import { type FeaturedImpl, useFeaturedSpecs } from 'src/hooks/useFeaturedSpecs';
+import { useTheme } from 'src/hooks/useLayoutContext';
+import { usePlotOfTheDay } from 'src/hooks/usePlotOfTheDay';
+import { colors, semanticColors, typography } from 'src/theme';
+import { specPath } from 'src/utils/paths';
+import { buildSrcSet, getFallbackSrc } from 'src/utils/responsiveImage';
+import { selectPreviewUrl } from 'src/utils/themedPreview';
 
 export function LandingPage() {
   const { librariesData, stats } = useAppData();

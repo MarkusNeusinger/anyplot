@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useLatestRelease } from './useLatestRelease';
+import { useLatestRelease } from 'src/hooks/useLatestRelease';
 
 const CACHE_KEY = 'anyplot:latest-release';
 const ONE_HOUR = 60 * 60 * 1000;

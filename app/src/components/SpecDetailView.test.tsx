@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { ThemeContext, type ThemeContextValue } from '../hooks/useLayoutContext';
-import { render, screen, userEvent } from '../test-utils';
-import type { Implementation } from '../types';
-import { SpecDetailView } from './SpecDetailView';
+import { SpecDetailView } from 'src/components/SpecDetailView';
+import { ThemeContext, type ThemeContextValue } from 'src/hooks/useLayoutContext';
+import { render, screen, userEvent } from 'src/test-utils';
+import type { Implementation } from 'src/types';
 
 const darkThemeValue: ThemeContextValue = {
   mode: 'dark',
@@ -13,7 +13,7 @@ const darkThemeValue: ThemeContextValue = {
   cycle: vi.fn(),
 };
 
-vi.mock('../utils/responsiveImage', () => ({
+vi.mock('src/utils/responsiveImage', () => ({
   buildDetailSrcSet: (url: string, fmt: string) => `${url}-srcset-${fmt}`,
   DETAIL_SIZES: '100vw',
 }));

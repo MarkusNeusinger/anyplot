@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { render, screen } from '../test-utils';
-import { McpPage } from './McpPage';
+import { McpPage } from 'src/pages/McpPage';
+import { render, screen } from 'src/test-utils';
 
 vi.mock('react-helmet-async', () => ({
   Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-vi.mock('../hooks', () => ({
+vi.mock('src/hooks', () => ({
   useAnalytics: () => ({
     trackPageview: vi.fn(),
     trackEvent: vi.fn(),

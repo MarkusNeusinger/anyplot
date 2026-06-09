@@ -8,7 +8,7 @@
  * Principle: always prefer slightly too large over too small (never pixelated).
  */
 
-import type { ImageSize } from '../constants';
+import type { ImageSize } from 'src/constants';
 
 const RESPONSIVE_SIZES = [400, 800, 1200] as const;
 
