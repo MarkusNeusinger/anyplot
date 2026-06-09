@@ -3,9 +3,9 @@ import type { ReactElement, ReactNode } from 'react';
 import { render, type RenderOptions } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
-import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
 
-const theme = createTheme();
+import { theme } from 'src/theme';
 
 function AllProviders({ children }: { children: ReactNode }) {
   return (
