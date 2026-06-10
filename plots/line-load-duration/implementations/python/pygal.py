@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-load-duration: Load Duration Curve for Energy Systems
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 79/100 | Updated: 2026-06-10
@@ -6,6 +6,7 @@ Quality: 79/100 | Updated: 2026-06-10
 
 import os
 
+import cairosvg
 import numpy as np
 import pygal
 from pygal.style import Style
@@ -17,7 +18,6 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint palette — first 3 slots for load regions, next 3 for capacity lines
 IMPRINT_PALETTE = (
     "#009E73",  # brand green — peak load region
     "#C475FD",  # lavender — intermediate load region
@@ -101,10 +101,8 @@ for i, idx in enumerate(indices):
         base_series[i] = load_sampled[i]
         break
 
-# Title — scale font size linearly for long titles
-title_str = (
-    f"Load Duration Curve (Total: {total_energy_twh:.1f} TWh) · line-load-duration · python · pygal · anyplot.ai"
-)
+# Title — total energy moved to in-chart annotation per spec requirement
+title_str = "Load Duration Curve · line-load-duration · python · pygal · anyplot.ai"
 n_chars = len(title_str)
 ratio = 67 / n_chars if n_chars > 67 else 1.0
 title_font_size = max(44, round(66 * ratio))
@@ -203,7 +201,64 @@ for idx in indices:
         x_labels.append("")
 chart.x_labels = x_labels
 
-# Save
-chart.render_to_png(f"plot-{THEME}.png")
+# === SVG post-processing: inject region labels and total energy annotation ===
+# Pygal has no native text-annotation API; add SVG <text> nodes before </svg>.
+# Approximate chart data area (3200×1800 canvas, based on margins and axis space):
+#   X: margin_left(160) + y_title(~60) + y_tick_labels(~180) ≈ 450 left, 3200-145 right
+#   Y: title(~120) + margin_top(60) ≈ 190 top;
+#      1800 - margin_bottom(140) - x_tick(~80) - x_title(~60) - legend(~150) ≈ 1370 bottom
+_XL, _XR = 450, 3055
+_YT, _YB = 190, 1360
+_XW, _YH = _XR - _XL, _YB - _YT
+_MW_MAX = 1350.0
+
+
+def _sx(hour_frac):
+    """Hour fraction [0,1] → SVG x coordinate."""
+    return _XL + hour_frac * _XW
+
+
+def _sy(mw):
+    """MW value → SVG y coordinate (y increases downward)."""
+    return _YT + (1.0 - mw / _MW_MAX) * _YH
+
+
+def _ann(x, y, text, color, anchor="middle"):
+    """SVG <text> element with a PAGE_BG halo stroke for readability on fills."""
+    return (
+        f'<text x="{x:.0f}" y="{y:.0f}" '
+        f'font-family="DejaVu Sans,Helvetica,Arial,sans-serif" '
+        f'font-size="52" font-weight="bold" '
+        f'fill="{color}" stroke="{PAGE_BG}" stroke-width="6" paint-order="stroke fill" '
+        f'text-anchor="{anchor}">{text}</text>'
+    )
+
+
+svg_bytes = chart.render()
+svg_str = svg_bytes.decode("utf-8")
+
+# Label x = midpoint of each region; y = representative load height inside the fill
+peak_mid_frac = (peak_end / 2) / hours
+inter_mid_frac = ((peak_end + base_start) / 2) / hours
+base_mid_frac = ((base_start + hours) / 2) / hours
+
+annotations = "\n".join(
+    [
+        _ann(_sx(peak_mid_frac), _sy(880), "Peak Load", IMPRINT_PALETTE[0]),
+        _ann(_sx(inter_mid_frac), _sy(640), "Intermediate", IMPRINT_PALETTE[1]),
+        _ann(_sx(base_mid_frac), _sy(450), "Base Load", IMPRINT_PALETTE[2]),
+        # Total energy annotation: right-aligned in the upper-right of the data area
+        _ann(_XR - 20, _YT + 75, f"Annual Energy: {total_energy_twh:.1f} TWh", INK, "end"),
+    ]
+)
+
+# Insert annotation block just before the closing </svg> tag
+idx = svg_str.rfind("</svg>")
+svg_modified = svg_str[:idx] + annotations + "\n</svg>"
+
+# Write PNG from modified SVG (cairosvg, same engine used by render_to_png)
+cairosvg.svg2png(bytestring=svg_modified.encode("utf-8"), write_to=f"plot-{THEME}.png")
+
+# HTML interactive output uses the original (unmodified) SVG
 with open(f"plot-{THEME}.html", "wb") as f:
-    f.write(chart.render())
+    f.write(svg_bytes)
