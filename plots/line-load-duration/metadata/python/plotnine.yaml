@@ -1,110 +1,133 @@
 library: plotnine
+language: python
 specification_id: line-load-duration
 created: '2026-03-15T21:41:28Z'
-updated: '2026-03-15T21:56:27Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23119898942
+updated: '2026-06-10T05:00:44Z'
+generated_by: claude-sonnet
+workflow_run: 27253509546
 issue: 4586
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/plotnine/plot.png
-preview_html: null
-quality_score: 94
+language_version: 3.13.13
+library_version: 0.15.5
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Perfect spec compliance with all required features (regions, capacity lines, labels,
-    total energy)
-  - Excellent visual quality with no overlap issues and well-positioned annotations
-  - Strong data storytelling through semantic color coding (warm=urgent peak, cool=stable
-    base)
-  - Idiomatic plotnine usage with grammar-of-graphics patterns for region fill mapping
-  - Professional polish with styled annotation boxes, subtle grid, and refined typography
+  - 'Semantic Imprint palette assignment is well-motivated and correctly executed:
+    base load green = sustainable, intermediate ochre = earth/commodity, peak red
+    = critical demand — matches domain conventions.'
+  - 'Full theme-adaptive chrome: INK tokens used throughout (line color, axis labels,
+    title, tick labels, annotation fills) so both renders look professional.'
+  - geom_ribbon layering with long-format DataFrame is the idiomatic plotnine approach
+    — avoids manual boundary management.
+  - pd.Categorical with ordered=True ensures legend and fill ordering matches load
+    hierarchy (Peak at top, Base Load at bottom).
+  - 'All required spec features present: region shading, capacity tier lines with
+    labeled boxes, direct region labels, total energy annotation.'
   weaknesses:
-  - Peak load reaches only ~1,000 MW vs spec suggested ~1,200 MW
-  - Design excellence is strong but not yet publication-perfect
-  image_description: 'The plot displays a load duration curve for a mid-sized utility
-    on a clean white/light gray background. The x-axis shows "Hours" (0-8,000) and
-    the y-axis shows "Load (MW)" (0-1,200). A bold dark line monotonically decreases
-    from ~1,000 MW at hour 0 to ~450 MW at hour 8,760. Three shaded regions fill the
-    area under the curve: a salmon-red "Peak" region (above 800 MW, leftmost), a light
-    blue "Intermediate" region (between 500-800 MW), and a dark steel-blue "Base Load"
-    region (below 500 MW). Two horizontal dashed lines mark "Base Capacity — 500 MW"
-    and "Intermediate Capacity — 800 MW" with white-background label boxes positioned
-    at ~82% of the x-axis. Region labels ("Peak", "Intermediate", "Base Load") appear
-    in bold italic text with matching colors. A "Total Energy: 6,500 GWh" annotation
-    in a light blue box sits in the upper right. Title reads "line-load-duration ·
-    plotnine · pyplots.ai" in bold dark text. A bottom legend shows "Load Region"
-    with three colored squares for Peak, Intermediate, and Base Load. The layout is
-    16:9 landscape with balanced margins.'
+  - 'Region label text colors in dark mode have slightly reduced contrast: ''Base
+    Load'' in #009E73 rendered on the dark-blended (~#0D4F45) ribbon surface, and
+    ''Intermediate'' in #BD8233 on dark blended ochre (~#6B4A25) — both are low-contrast
+    pairings. Consider adding a subtle text shadow, a very light/dark halo via annotate
+    fill, or slightly increasing the text size for better legibility on dark fills.'
+  - Annotation label sizes (size=3.0mm for capacity labels) are borderline at mobile
+    scale (~400px wide). Consider bumping to 3.5mm to match the region label size
+    (3.5mm) for consistency and better small-screen readability.
+  - Legend retains a visible rectangular border (legend_background with color=INK_SOFT)
+    — the style guide recommends considering removal of legend box frames. Removing
+    the border or using a very subtle border would improve visual cleanliness.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 surface — correct theme background, not pure white.
+      Chrome: Title 'line-load-duration · python · plotnine · anyplot.ai' in bold dark INK (#1A1A17) at 12pt — readable. Axis labels 'Hours' and 'Load (MW)' in bold INK at 10pt — readable. Tick labels in INK_SOFT (#4A4A44) at 8pt — readable. Capacity annotation boxes use INK_SOFT text on ELEVATED_BG (#FFFDF6) fill — readable. Region text labels in their respective Imprint palette colors (bold italic) — readable.
+      Data: Three ribbon fills: Base Load #009E73 (alpha=0.5), Intermediate #BD8233 (alpha=0.5), Peak #AE3030 (alpha=0.5). Black (#1A1A17) monotonically decreasing load curve at size=1.0. Two dashed INK_SOFT capacity tier lines. First series (Base Load) correctly uses #009E73 brand green.
+      Legibility verdict: PASS — all text elements readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 surface — correct dark theme background, not pure black.
+      Chrome: Title in light INK (#F0EFE8) — readable. Axis labels and tick labels in INK_SOFT (#B8B7B0) — readable. Capacity annotation boxes use INK_SOFT text on dark ELEVATED_BG (#242420) fill — readable. Region text labels in their respective Imprint palette colors — visible but slightly reduced contrast against blended ribbon fills (Base Load #009E73 on dark-blended green ~#0D4F45; Intermediate #BD8233 on dark-blended ochre ~#6B4A25). No dark-on-dark failure for structural chrome elements.
+      Data: Same three ribbon fill colors as light render (data colors identical — only chrome flipped). Load curve rendered in near-white #F0EFE8 for strong contrast. Palette consistency between themes confirmed.
+      Legibility verdict: PASS — structural chrome elements fully readable. Minor: region label text colors have somewhat reduced contrast on their respective dark-blended ribbon fills, but remain legible due to bold italic weight.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt, axis
-          text 16pt, base text 14pt, annotations 10-15pt'
+        comment: All primary text readable in both themes. Annotation boxes use size=3.0mm
+          (~8.5pt) adequate at full resolution but borderline at 400px mobile scale.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Capacity labels repositioned to x=82% with centered
-          alignment
+        comment: No overlapping text or data elements across either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Main line bold and visible, shaded regions well-differentiated with
-          alpha=0.5
+        comment: '8,760-point density handled well: geom_ribbon fills with alpha=0.5,
+          geom_line at size=1.0 traces curve cleanly.'
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Red, light blue, dark blue — distinguishable by hue and value, colorblind-safe
+        comment: Imprint palette positions 1, 4, 5 used with justified semantic exception.
+          CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions with plot_margin=0.04, labels well inside canvas
+        comment: Correct 3200x1800 canvas. Title fills ~55-65% of width. Axis labels
+          balanced. No elements cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Hours and Load (MW) are descriptive with units
+        comment: Hours (x) and Load (MW) with correct unit. Title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Base Load) uses #009E73. Semantic ordering justified.
+          Correct backgrounds #FAF8F1/#1A1A17.'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom semantic color palette, styled annotation boxes, intentional
-          typography hierarchy
+        comment: 'Above default: semantic color hierarchy, direct region labels, capacity
+          annotation boxes, energy callout. Largely spec-driven.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: X-grid removed, y-grid subtle alpha=0.15, custom panel background,
-          styled legend
+        comment: theme_minimal removes top/right spines, y-only grid at alpha=0.15.
+          Legend retains visible border box — could be cleaner without it.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Clear visual hierarchy with semantic colors, capacity thresholds,
-          total energy annotation
+        comment: Three regions clearly communicate base/intermediate/peak narrative.
+          Capacity lines guide viewer. Direct labeling and energy annotation efficiently
+          convey engineering story.
     spec_compliance:
       score: 15
       max: 15
@@ -114,28 +137,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct load duration curve with line and filled area regions
+        comment: 'Correct load duration curve: monotonically decreasing line over
+          8,760 hours.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: curve, regions, capacity lines, labels,
-          total energy'
+        comment: Shaded fill regions, dashed capacity tier lines, region labels, total
+          energy annotation — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=rank-ordered hours, Y=load in MW sorted descending
+        comment: 'X: rank-ordered hours 0-8759; Y: load in MW 0-1300. Monotonically
+          decreasing.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend shows Load Region with proper labels
+        comment: 'Title in code: ''line-load-duration · python · plotnine · anyplot.ai''
+          — correct format. Legend shows all three load regions.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -143,21 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all three load regions with realistic curve shape
+        comment: 'All aspects of load duration curve present: sorted profile, load
+          regions, capacity tiers, energy total, 8,760-hour annual coverage.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mid-sized utility with seasonal and diurnal load patterns, neutral
-          energy domain
+        comment: Synthetic mid-sized utility with 400-1200 MW range and realistic
+          seasonal + daily load patterns. Neutral domain.
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Peak reaches ~1000 MW vs spec suggested ~1200 MW, otherwise realistic
-          values
+        comment: Peak 1,200 MW / base 400 MW / 7,100 GWh annual energy all within
+          plausible mid-sized utility parameters.
     code_quality:
       score: 10
       max: 10
@@ -167,49 +194,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports-Data-Plot-Save structure, no functions or classes
+        comment: No functions or classes; linear top-to-bottom structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no extras
+        comment: All imports verified as used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured code with clear sections, appropriate complexity
+        comment: No fake UI. pd.Categorical with ordered=True is idiomatic. REGION_COLORS
+          dict used consistently.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, uses np.trapezoid
+        comment: Saves as plot-{THEME}.png. Uses current plotnine 0.15.5 API.
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Excellent plotnine grammar-of-graphics: aes mappings, layered geoms,
-          scale_fill_manual, theme system'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses annotate label with fill/padding, guide_legend override_aes,
-          pd.Categorical for ordered factors
+        comment: Long-format DataFrame for geom_ribbon is idiomatic ggplot2/plotnine.
+          pd.Categorical ordering, scale_fill_manual with named dict, coord_cartesian
+          — all correct.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: geom_ribbon for stacked area fills, coord_cartesian for y-limit control,
+          guide_legend(nrow=1) for horizontal layout. Solid but doesn't explore faceting
+          or stat_ functions.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -218,7 +248,7 @@ impl_tags:
   - layer-composition
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - alpha-blending
-  - grid-styling
