@@ -110,15 +110,17 @@ export default function Chart() {
   const tickStyle = { fontSize: 12, fill: t.inkSoft };
   const labelStyle = { fontSize: 14, fill: t.ink };
 
+  const axisLineSx = {
+    "& .MuiChartsAxis-line": { stroke: t.grid },
+  };
+
   const xAxisBase = {
     scaleType: "band" as const,
-    categoryGapRatio: 0.82,
+    categoryGapRatio: 0.62,
     tickLabelStyle: tickStyle,
   };
 
   const yAxisBase = {
-    min: -1.0,
-    max: 1.0,
     tickMinStep: 0.25,
     tickLabelStyle: tickStyle,
     labelStyle,
@@ -142,7 +144,7 @@ export default function Chart() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: 19,
+          fontSize: 22,
           fontWeight: 600,
           color: t.ink,
           letterSpacing: 0.15,
@@ -159,10 +161,11 @@ export default function Chart() {
           skipAnimation
           colors={[barColor]}
           xAxis={[{ ...xAxisBase, data: acfLags }]}
-          yAxis={[{ ...yAxisBase, label: "ACF" }]}
+          yAxis={[{ ...yAxisBase, label: "ACF", min: -0.35, max: 1.05 }]}
           series={[{ data: acfData, label: "ACF" }]}
-          margin={{ top: 20, bottom: 28, left: 80, right: 30 }}
+          margin={{ top: 20, bottom: 28, left: 80, right: 65 }}
           slotProps={{ legend: { hidden: true } }}
+          sx={axisLineSx}
         >
           <ChartsReferenceLine
             y={CI}
@@ -191,8 +194,9 @@ export default function Chart() {
           }]}
           yAxis={[{ ...yAxisBase, label: "PACF" }]}
           series={[{ data: pacfData, label: "PACF" }]}
-          margin={{ top: 10, bottom: 50, left: 80, right: 30 }}
+          margin={{ top: 10, bottom: 50, left: 80, right: 65 }}
           slotProps={{ legend: { hidden: true } }}
+          sx={axisLineSx}
         >
           <ChartsReferenceLine y={CI} lineStyle={ciLineStyle} />
           <ChartsReferenceLine y={-CI} lineStyle={ciLineStyle} />
