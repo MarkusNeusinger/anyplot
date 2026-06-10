@@ -31,6 +31,7 @@ const totalWeight = weights.reduce((a, b) => a + b, 0);
 const summaryEffect = studies.reduce((sum, s, i) => sum + weights[i] * s.logOR, 0) / totalWeight;
 
 const maxSE = Math.max(...studies.map(s => s.se)) * 1.15;
+const axisMax = Math.ceil(maxSE * 10) / 10;  // round up to avoid duplicate boundary tick at 0.5
 
 // Funnel boundaries: apex at (summaryEffect, 0), base at SE=maxSE
 const funnelLeft  = [{ x: summaryEffect, y: 0 }, { x: summaryEffect - 1.96 * maxSE, y: maxSE }];
@@ -44,29 +45,31 @@ new Chart(canvas, {
   type: "scatter",
   data: {
     datasets: [
-      // Funnel left boundary — in legend as "95% CI"
+      // Funnel left boundary — in legend as "95% CI", fills toward right boundary
       {
         type: "line",
         label: "95% Confidence Interval",
         data: funnelLeft,
-        borderColor: t.palette[2],
-        backgroundColor: "transparent",
+        borderColor: t.palette[1],
+        backgroundColor: t.palette[1] + "26",
         borderWidth: 2,
         borderDash: [8, 5],
         pointRadius: 0,
         tension: 0,
+        fill: "+1",
       },
-      // Funnel right boundary — hidden from legend
+      // Funnel right boundary — hidden from legend, fill target for left boundary
       {
         type: "line",
         label: "_funnel_right",
         data: funnelRight,
-        borderColor: t.palette[2],
+        borderColor: t.palette[1],
         backgroundColor: "transparent",
         borderWidth: 2,
         borderDash: [8, 5],
         pointRadius: 0,
         tension: 0,
+        fill: false,
       },
       // Pooled effect vertical line
       {
@@ -140,11 +143,12 @@ new Chart(canvas, {
         },
         ticks: { color: t.inkSoft, font: { size: 13 } },
         grid: { color: t.grid },
+        border: { display: false },
       },
       y: {
         reverse: true,
         min: 0,
-        max: maxSE,
+        max: axisMax,
         title: {
           display: true,
           text: "Standard Error",
@@ -153,6 +157,7 @@ new Chart(canvas, {
         },
         ticks: { color: t.inkSoft, font: { size: 13 } },
         grid: { color: t.grid },
+        border: { display: false },
       },
     },
   },
