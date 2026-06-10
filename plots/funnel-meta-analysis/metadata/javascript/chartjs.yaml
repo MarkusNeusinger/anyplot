@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: funnel-meta-analysis
 created: '2026-06-10T04:01:10Z'
-updated: '2026-06-10T04:10:15Z'
+updated: '2026-06-10T04:23:26Z'
 generated_by: claude-sonnet
 workflow_run: 27251990858
 issue: 4590
@@ -15,42 +15,36 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-me
 quality_score: 89
 review:
   strengths:
-  - 'Perfect spec compliance: all funnel plot elements correctly implemented — inverted
-    Y-axis, study scatter, 95% CI funnel lines, pooled effect line with computed value,
-    null effect reference'
-  - Elegant _-prefix legend filter pattern to suppress the duplicate right funnel
-    boundary from the legend without clutter
-  - 'Excellent code quality: inverse-variance weighted pooled effect computed correctly;
-    all data hardcoded for determinism'
-  - Both themes render correctly with fully readable chrome and identical data colors
-  - 'White ring on study dots (borderColor: t.pageBg) adds visual definition — nice
-    theme-adaptive touch'
+  - Complete spec compliance — all five required funnel elements present (study scatter,
+    pooled effect line, funnel CI boundaries, null reference line, inverted y-axis)
+  - 'Elegant use of Chart.js fill: "+1" to fill confidence region between two line
+    datasets'
+  - Legend filter to hide helper _funnel_right dataset is a polished production touch
+  - Inverse-variance weighting computed correctly with pooled value shown in legend
+    label
+  - Theme tokens correctly applied; data colors identical between light and dark renders
   weaknesses:
-  - 'Duplicate Y-axis tick at 0.5: Setting max: maxSE (~0.5175) causes Chart.js to
-    render both the regular 0.5 tick and a boundary tick that also displays as 0.5,
-    creating two visually identical labels at the bottom. Fix: set max: Math.ceil(maxSE
-    * 10) / 10 to round up to 0.6.'
-  - 'Spines not removed: all four chart borders remain visible. Remove top/right borders
-    via scales.x.border.display: false and scales.y.border.display: false (Chart.js
-    4.x) to improve visual refinement.'
-  - 'Palette order deviation: CI lines use palette[2] (#4467A3, blue) but skip palette[1]
-    (#C475FD, lavender). Blue is semantically appropriate for CI boundaries, but canonical
-    palette order is not followed.'
-  - 'DE-01 improvement opportunity: Consider adding a subtle semi-transparent fill
-    polygon between the two funnel CI boundary lines to better visualize the confidence
-    region and lift aesthetic sophistication.'
+  - No marker size variation by study weight — all study points uniformly sized despite
+    the spec mentioning optional sizing by weight or sample size; adding pointRadius
+    proportional to inverse-variance weight would improve both design sophistication
+    and storytelling
+  - No annotations or visual emphasis on asymmetric outlier studies (e.g., logOR ≈
+    −0.05 outside the funnel on the left) to sharpen the publication-bias narrative
+  - 'Top/right border of the chart area still faintly visible — border: { display:
+    false } removes the axis line but the outer chart frame could be suppressed more
+    aggressively for cleaner visual refinement'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — correct theme surface
-      Chrome: Title "funnel-meta-analysis · javascript · chartjs · anyplot.ai" in dark ink, clearly readable. X-axis label "Log Odds Ratio" and Y-axis label "Standard Error" in dark ink, readable. Tick labels in dark-soft color, readable. Legend at bottom with four items. Minor: duplicate "0.5" tick label at Y-axis bottom due to max: maxSE=0.5175 causing Chart.js to render both the 0.5 regular tick and a boundary tick.
-      Data: 15 study scatter points in brand green (#009E73 with ~80% alpha) with white rings. Dashed blue (#4467A3) diagonal funnel lines forming inverted triangle. Solid green (#009E73) vertical pooled effect line at x=0.43. Dashed near-black vertical null effect reference at x=0. First series (studies) is #009E73 brand green.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface, not pure white
+      Chrome: Title "funnel-meta-analysis · javascript · chartjs · anyplot.ai" in bold dark text, clearly visible. Axis labels "Log Odds Ratio" (x) and "Standard Error" (y) in dark ink, readable at 16px CSS. Tick labels in inkSoft (#4A4A44 equivalent) at 13px CSS, readable. Bottom legend in 14px CSS, readable with usePointStyle icons.
+      Data: 15 study points in brand green #009E73 with ~80% opacity and pageBg border rings. Funnel boundaries in lavender #C475FD dashed lines with soft lavender fill (#C475FD at 15% opacity). Pooled effect vertical line in teal #009E73. Null effect dashed line in inkSoft gray.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17) — correct dark theme surface
-      Chrome: Title and all axis labels/ticks rendered in light colors against dark background. No dark-on-dark failures observed. Legend text is light and readable. Grid lines are subtle but visible in theme-adaptive color.
-      Data: All data colors identical to light render — brand green study dots, blue-dashed CI funnel lines, teal pooled effect line. Brand green #009E73 clearly visible on dark background. Same duplicate "0.5" tick issue present.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black
+      Chrome: Title text switches to light/off-white, clearly readable. Axis labels and tick labels are light-colored against the dark background. Legend text is readable. No dark-on-dark issues detected.
+      Data: Study points remain #009E73 brand green — identical to light render, confirming data colors are theme-invariant. Funnel fill appears as dark purple (lavender at 15% opacity over dark surface), visually distinct. Funnel dashed boundary lines visible in lavender. Pooled effect teal line and null effect line clearly visible.
+      Legibility verdict: PASS — all text readable, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
       score: 29
@@ -61,79 +55,76 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 22px, axis labels 16px, ticks
-          13px). Both themes readable. Minor: duplicate 0.5 Y-axis tick creates slight
-          confusion.'
+        comment: 'All font sizes explicitly set; readable in both themes. Minor deduction:
+          14px CSS legend text slightly compact for 3200px output but clearly readable.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps with data or other text. Duplicate ticks are separated,
-          not overlapping.
+        comment: No overlapping text or data elements.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 15 study circles with pointRadius=9 clearly visible; funnel lines
-          and reference lines well-defined. Appropriate for 15-point scatter.
+        comment: Study points at pointRadius=9 well-sized for 15 data points. Funnel
+          lines and reference lines clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used; green and blue are CVD-safe and well-contrasted;
-          no red-green sole signal.
+        comment: Green studies vs. lavender funnel are CVD-distinct. inkSoft null
+          effect line adequate contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Landscape 3200x1800, good proportions, balanced margins, generous
-          padding.
+        comment: Good proportions; funnel centered in canvas, legend at bottom. Canvas
+          gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Log Odds Ratio (X), Standard Error (Y) — descriptive with context.
+        comment: Log Odds Ratio and Standard Error are descriptive and domain-appropriate.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Studies use palette[0] #009E73 (brand green). CI boundaries use
-          palette[2] #4467A3 (blue) — semantically appropriate. Backgrounds: #FAF8F1
-          light / #1A1A17 dark. Data colors identical between themes.'
+        comment: 'First series uses #009E73 (Imprint slot 1). Funnel uses #C475FD
+          (Imprint slot 2). Theme-adaptive chrome correct. Light bg #FAF8F1, dark
+          bg #1A1A17.'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: 'Above library defaults: white ring on study dots, pooled effect
-          value in legend label, elegant legend filter pattern. Thoughtful but not
-          publication-quality.'
+        passed: false
+        comment: Well-configured mixed chart with correct Imprint palette. Reads as
+          a thoughtful implementation but not FiveThirtyEight-level polish. No weight-based
+          marker sizing or annotations.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Theme-adaptive grid via tokens, explicit layout padding, usePointStyle
-          in legend, white edge on markers. Spines (all 4 borders) remain visible
-          — no spine removal.
+        comment: 'border: { display: false } removes axis borders. Token-based subtle
+          grid. usePointStyle and padding=24 on legend. Clearly above defaults.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Funnel structure creates clear visual hierarchy; pooled effect line
-          is a well-defined focal point; study asymmetry to the right of null communicates
-          publication bias.
+        comment: Pooled effect value (0.43) in legend label. Asymmetric scatter visible.
+          Null-effect reference line adds interpretive context. Viewer guided but
+          not actively directed to key insight.
     spec_compliance:
       score: 15
       max: 15
@@ -143,30 +134,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct meta-analysis funnel plot: inverted scatter with funnel
-          CI boundaries.'
+        comment: Correct funnel meta-analysis chart with inverted y-axis, scatter
+          points, funnel boundaries, and reference lines.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Inverted Y-axis (0 at top), study scatter, pooled effect vertical
-          line, pseudo 95% CI funnel lines, null effect reference line at x=0.
+        comment: Y-axis inverted, vertical pooled-effect line, pseudo 95% CI funnel
+          lines, individual study scatter points, null-effect dashed reference line
+          — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: log odds ratio (effect size), Y: standard error (inverted, correct
-          orientation). All 15 studies plotted.'
+        comment: X = log odds ratio, Y = standard error (inverted), 15 studies shown,
+          axes cover full data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: funnel-meta-analysis · javascript · chartjs · anyplot.ai.
-          Legend: 95% Confidence Interval, Pooled effect (0.43), Null effect (0),
-          Studies.'
+        comment: 'Title matches exact required format. Legend labels: 95% Confidence
+          Interval, Pooled effect (0.43), Null effect (0), Studies.'
     data_quality:
       score: 15
       max: 15
@@ -176,22 +167,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All funnel plot features: varying SE across studies, asymmetric
-          scatter, pooled estimate, funnel CI region, null reference.'
+        comment: Shows study scatter, pooled effect, funnel CI envelope, null reference,
+          and visible funnel asymmetry.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral clinical trial meta-analysis (15 RCTs, drug vs placebo, log
-          odds ratios). Real-world scenario, no sensitive content.
+        comment: 15 RCTs comparing drug vs. placebo, log odds ratios and SEs in realistic
+          range. Neutral medical research context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Log ORs 0.15-0.62, SEs 0.11-0.45, pooled effect 0.43 — all realistic
-          for clinical meta-analysis. Inverse-variance weighting computed correctly.
+        comment: logOR values 0.15-0.62 realistic for drug efficacy; SE values 0.11-0.45
+          appropriate for RCT sample sizes.
     code_quality:
       score: 10
       max: 10
@@ -201,63 +192,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; flat data to computation to chart flow.
+        comment: 'Linear script: data → computation → canvas mount → chart config.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded; pooled effect calculation is fully deterministic.
+        comment: Hard-coded deterministic data array; computed values fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; Chart is a global (correct for JS harness).
+        comment: No imports; uses browser globals as required by harness.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Elegant _-prefix convention to hide right funnel boundary from legend;
-          clean inverse-variance weight computation.
+        comment: 'Elegant filter callback to hide helper dataset from legend. fill:
+          +1 for area fill is idiomatic.'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'No save call (JS harness handles it); animation: false, responsive:
-          true, maintainAspectRatio: false all set.'
+        comment: 'Uses //# anyplot-orientation: landscape directive; no savefig calls;
+          Chart.js 4.x API.'
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Good idiomatic Chart.js: mixed dataset types (scatter + line), reverse:
-          true on Y-axis, borderDash for dashed lines, legend filter function. Above
-          default 3.'
+        comment: 'Mixed chart type, fill: +1 between datasets, filter callback for
+          legend, usePointStyle, border: { display: false } — all idiomatic Chart.js
+          v4 patterns.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Uses Chart.js-specific: legend item filter callback, mixed-type
-          datasets, declarative Y-axis reversal. Somewhat distinctive but not uniquely
-          leveraged.'
-  verdict: REJECTED
+        comment: 'fill: +1 fill-between-datasets is a genuinely distinctive Chart.js
+          feature. Mixed scatter/line in single canvas instance. Does not explore
+          custom tooltip formatters or plugin API.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - custom-legend
+  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
