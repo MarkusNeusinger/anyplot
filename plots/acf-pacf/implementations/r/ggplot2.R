@@ -50,6 +50,7 @@ pacf_df <- data.frame(
 )
 df      <- rbind(acf_df, pacf_df)
 df$type <- factor(df$type, levels = c("ACF", "PACF"))
+df$significant <- abs(df$corr) > ci
 
 plot_title <- "acf-pacf · r · ggplot2 · anyplot.ai"
 
@@ -59,9 +60,12 @@ p <- ggplot(df, aes(x = lag, y = corr)) +
   geom_hline(yintercept =  ci, color = INK_MUTED, linetype = "dashed", linewidth = 0.5) +
   geom_hline(yintercept = -ci, color = INK_MUTED, linetype = "dashed", linewidth = 0.5) +
   geom_segment(
-    aes(xend = lag, yend = 0),
-    color     = IMPRINT_PALETTE[1],
-    linewidth = 0.8
+    aes(xend = lag, yend = 0, color = significant),
+    linewidth = 1.2
+  ) +
+  scale_color_manual(
+    values = c("TRUE" = IMPRINT_PALETTE[1], "FALSE" = INK_MUTED),
+    guide  = "none"
   ) +
   facet_wrap(~ type, ncol = 1, scales = "free_y") +
   scale_x_continuous(breaks = seq(0, n_lags, by = 5)) +
@@ -76,7 +80,9 @@ p <- ggplot(df, aes(x = lag, y = corr)) +
     panel.background = element_rect(fill = PAGE_BG,     color = NA),
     panel.grid.major = element_line(color = INK_SOFT,   linewidth = 0.2),
     panel.grid.minor = element_blank(),
-    panel.border     = element_rect(color = INK_SOFT,   fill = NA, linewidth = 0.3),
+    panel.border          = element_blank(),
+    axis.line.x.bottom    = element_line(color = INK_SOFT, linewidth = 0.4),
+    axis.line.y.left      = element_line(color = INK_SOFT, linewidth = 0.4),
     axis.title       = element_text(color = INK,        size = 10),
     axis.text        = element_text(color = INK_SOFT,   size = 8),
     plot.title       = element_text(color = INK,        size = 12,
