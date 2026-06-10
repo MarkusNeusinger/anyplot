@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: scatter-connected-temporal
 created: '2026-06-09T23:41:02Z'
-updated: '2026-06-09T23:48:17Z'
+updated: '2026-06-10T00:01:58Z'
 generated_by: claude-sonnet
 workflow_run: 27242538907
 issue: 4675
@@ -12,49 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/javascript/d3/plot-dark.html
-quality_score: 86
+quality_score: 93
 review:
   strengths:
-  - 'Perfect spec compliance: all four required features (chronological connection,
-    year annotations, temporal color gradient, visible markers) implemented correctly.'
-  - 'Excellent data quality: real-world GDP/life-expectancy scenario with genuine
-    economic events visible in the path shape (2001-02 dot-com dip, 2008-09 financial
-    crisis, 2020 COVID drop), making the chart immediately meaningful.'
-  - Proper Imprint sequential palette (t.seq[0] to t.seq[1] via d3.interpolateRgb)
-    for temporal encoding; fully theme-adaptive chrome via ANYPLOT_TOKENS in both
-    renders.
-  - Clean, deterministic, idiomatic D3 code with no over-engineering; per-segment
-    temporal coloring loop and labelConfig offset array are elegant.
-  - Dynamic title font scaling (Math.max(13, Math.round(22 * 67 / title.length)))
-    prevents title overflow on the long mandated title string.
+  - Sophisticated SVG linearGradient with gradientUnits='userSpaceOnUse' applied as
+    path stroke — correctly encodes temporal direction with an Imprint seq gradient
+    (green→blue) along the actual diagonal trajectory
+  - Color interpolation on markers via d3.interpolateRgb mirrors the path gradient,
+    creating a unified visual metaphor for time
+  - Endpoint circles (r=9) are differentiated from intermediate points (r=5) with
+    ink-colored bold labels — clear visual hierarchy for 1992/2021
+  - Key economic events annotated with dashed leader lines and italic italic text
+    (Financial Crisis, COVID-19), adding narrative value aligned with the spec
+  - 'Full Imprint token usage: pageBg, ink, inkSoft, grid, and t.seq all correctly
+    applied; both themes pass readability checks'
+  - Gradient legend in right margin is compact, informative, and does not overlap
+    data
   weaknesses:
-  - Temporal legend (gradient bar + labels) is placed inside the inner plot area in
-    the upper right, overlapping the data path and endpoint markers. The '1992'/'2021'
-    legend labels sit directly on or adjacent to data path lines near the 2021 endpoint
-    cluster. Move the legend into the right margin (lgX = iw + 12, lgY = ih/2 - lgH/2)
-    and widen margin.right to ~180.
-  - Design storytelling stops at year labels; brief event annotations ('Financial
-    Crisis' near 2009 dip, 'COVID-19' near 2020 dip) styled in t.inkSoft at 11-12px
-    would make the narrative self-explanatory without domain knowledge.
-  - 'LM-02 could be stronger: consider using a d3.line() generator with a linearGradient
-    applied to the path stroke via gradientUnits=''userSpaceOnUse'' instead of per-segment
-    line coloring — a more idiomatic SVG/D3 technique that cannot be replicated in
-    other libraries.'
+  - Annotation and legend text at 11px CSS (22px native) is borderline at mobile/thumbnail
+    scale — consider raising to 12–13px for 'Financial Crisis', 'COVID-19', and 'Temporal
+    direction →' labels
+  - 'LM-02 near-miss: the gradient path technique is strong but no arrowhead is drawn
+    on the path to reinforce direction (spec suggests ''arrow or color gradient''
+    — only gradient used; adding a terminal arrowhead marker would complete the spec''s
+    suggestion and earn full LM-02)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Title "GDP & Life Expectancy · scatter-connected-temporal · javascript · d3 · anyplot.ai" bold centered at top, fully visible. X-axis label "GDP per Capita (USD thousands, 2015 prices)" and Y-axis label "Life Expectancy (years)" both in dark ink, clearly readable. Tick labels ($20k-$55k on X; 75-80 yrs on Y) in dark inkSoft, readable. Year annotations (1992 bold, 2000, 2007, 2009, 2015, 2020, 2021 bold) visible at key data points. Temporal legend gradient bar in upper-right plot area with "Temporal direction →" label and "1992"/"2021" labels.
-      Data: Path colored by Imprint sequential gradient (green #009E73 at 1992 → blue #4467A3 at 2021). Larger circles (r=9) at start (1992) and end (2021), smaller circles (r=5) at intermediate points. Overall trend goes lower-left to upper-right with visible dips at 2001-02, 2008-09, and 2020.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1), correct anyplot light surface.
+      Chrome: Title "GDP & Life Expectancy · scatter-connected-temporal · javascript · d3 · anyplot.ai" in bold dark ink, scaled to ~18px CSS — readable and spans ~75% of plot width. X-axis label "GDP per Capita (USD thousands, 2015 prices)" and Y-axis label "Life Expectancy (years)" in ink at 16px CSS — clear and descriptive. Tick labels "$20k"–"$55k" and "75 yrs"–"80 yrs" at 14px CSS — legible. Annotation text ("Financial Crisis", "COVID-19") at 11px CSS italic in inkSoft — readable at this resolution but borderline at mobile scale.
+      Data: A smooth connected path from 1992 (green, large circle at lower-left) to 2021 (blue, large circle at upper-right), with an SVG linearGradient stroke transitioning from #009E73 (Imprint brand green) to #4467A3 (Imprint blue). Intermediate markers are r=5 circles colored via d3.interpolateRgb. Key year labels (1992, 2000, 2007, 2009, 2015, 2020, 2021) positioned beside relevant points. Dashed leader lines connect to "Financial Crisis" (2009 dip) and "COVID-19" (2020 drop) annotations. Gradient legend bar (150px wide) in right margin with "Temporal direction →" label and year endpoints "1992" / "2021". Grid: subtle on both axes using t.grid token. No top or right spines.
+      Legibility verdict: PASS — all title, axis labels, tick labels, and year annotations are clearly readable against the warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: All text (title, axis labels, tick labels, year annotations, legend text) rendered in light colors (t.ink / t.inkSoft) against the dark background. No dark-on-dark failures. Grid lines remain subtle. All elements clearly legible.
-      Data: Colors are identical to the light render — green-to-blue Imprint sequential gradient unchanged. Both endpoint circles clearly distinguishable. Brand green #009E73 at the 1992 start marker is visible.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17), correct anyplot dark surface.
+      Chrome: Title, axis labels, tick labels, and year/event annotations all render in light ink (#F0EFE8 / #B8B7B0 tokens) — clearly readable against the dark background. No dark-on-dark failure detected: tick labels, year labels, and annotation text all use inkSoft/ink tokens that adapt correctly to the dark theme. Grid lines are subtle with the rgba dark-theme token.
+      Data: Path gradient colors are identical to the light render (green #009E73 → blue #4467A3) as required — only chrome flips, data colors remain constant. Markers appear with the same color interpolation. The gradient legend bar and its labels are correctly visible on the dark surface.
+      Legibility verdict: PASS — all text elements are clearly readable against the near-black background; no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -62,84 +58,79 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (14px ticks, 16px axis labels, 12-13px
-          year annotations, 11-12px legend text, dynamic title scaling). All text
-          readable in both themes. Minor: 11px legend year labels slightly small but
-          readable.'
+        comment: Title, axis labels, tick labels all readable in both themes. Annotation
+          and legend text at 11px CSS is borderline at mobile/thumbnail scale.
       - id: VQ-02
         name: No Overlap
-        score: 4
-        max: 6
-        passed: false
-        comment: Temporal legend gradient bar positioned inside the plot area (upper
-          right) overlaps with data path lines and endpoint markers. The 1992/2021
-          legend labels crowd the same region as the data path near the 2021 endpoint.
-          Text remains legible but overlap is distracting.
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Larger markers (r=9) at endpoints for emphasis, intermediate markers
-          (r=5) visible but small. Lines at stroke-width 2.5 with opacity 0.85 are
-          clear.
+        comment: No text overlaps; year labels positioned with dx/dy offsets; dashed
+          leader lines cleanly separate annotations from data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 30 points (sparse) — r=5 intermediate and r=9 endpoint markers are
+          appropriately prominent. Path stroke at 2.5px is clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential green-to-blue is CVD-safe. pageBg stroke on circles
-          provides definition.
+        comment: imprint_seq (green→blue) is CVD-safe; year labels provide redundant
+          temporal encoding; no red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Generous margins (top 90, right 140, bottom 90, left 110). Good canvas
-          utilization and balanced layout.
+        comment: Canvas gate passed. Good margins (top:90, right:180, bottom:90, left:110).
+          No clipping. Title at ~75% width is expected for long title.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes have descriptive labels with units.
+        comment: 'X: ''GDP per Capita (USD thousands, 2015 prices)'' and Y: ''Life
+          Expectancy (years)'' — descriptive with units. Title format correct.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Uses t.seq[0] (#009E73) to t.seq[1] (#4467A3) via d3.interpolateRgb
-          — correct Imprint sequential cmap. Start color is brand green. Backgrounds
-          #FAF8F1 / #1A1A17. Fully theme-adaptive chrome via ANYPLOT_TOKENS.'
+        comment: 't.seq (imprint_seq: #009E73→#4467A3) used correctly for continuous
+          temporal encoding. Backgrounds #FAF8F1/#1A1A17 correct. Colors identical
+          across themes.'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above a generic default: temporal gradient through the path, larger
-          endpoint markers, year annotations at economically meaningful events. Gradient
-          legend bar adds polish. Missing narrative text annotations that would elevate
-          to editorial quality.'
+        comment: SVG linearGradient with userSpaceOnUse on path stroke is sophisticated;
+          gradient marker interpolation, endpoint differentiation, and dashed annotation
+          leaders show intentional design. Above default (4).
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Only bottom and left axes (no top/right spines). Subtle both-axis
-          grid appropriate for scatter. Clean gradient legend without box frame. Domain
-          lines styled with inkSoft. Good whitespace.
+        comment: L-shaped frame (axisBottom+axisLeft only, no top/right spines), subtle
+          grid with t.grid token, pageBg stroke on markers, rounded legend corners
+          (rx:4). Above default (2).
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Green-to-blue gradient encodes time direction, larger endpoint circles
-          anchor narrative, annotated dips at 2007/2009 and 2020/2021 reveal financial
-          crisis and COVID disruption. Stronger with brief event annotations.
+        comment: Gradient guides viewer from 1992 to 2021; larger endpoints create
+          clear focal points; Financial Crisis and COVID-19 annotations contextualize
+          the economic dips; title anchors the narrative. Above default (2).
     spec_compliance:
       score: 15
       max: 15
@@ -149,28 +140,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Connected scatter with temporal path, correct.
+        comment: Correct connected scatter plot with temporal path; points connected
+          in chronological order with a continuous line.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Chronological connection, key year annotations, temporal color gradient,
-          visible markers at every point — all present.
+        comment: Chronological connection ✓; key time-point labels ✓; color gradient
+          for temporal direction ✓; visible markers at each position ✓.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = GDP per capita, Y = life expectancy, time = year — correct.
+        comment: GDP per capita on X, life expectancy on Y, year as temporal ordering.
+          Full 1992–2021 range shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows {Descriptive Title} · {spec-id} · {language} · {library}
-          · anyplot.ai format. Gradient legend bar with start/end year labels appropriate
-          for single-series temporal encoding.
+        comment: Title 'GDP & Life Expectancy · scatter-connected-temporal · javascript
+          · d3 · anyplot.ai' matches required format. Gradient legend with direction
+          indicator present.
     data_quality:
       score: 15
       max: 15
@@ -180,23 +173,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows full feature set: monotonic overall trend, visible economic-cycle
-          dips (2001-02, 2008-09), COVID disruption (2020), temporal encoding via
-          gradient, start/end emphasis.'
+        comment: Demonstrates temporal path, 2D variable co-evolution, cyclical patterns
+          (dip-recovery at 2001-2003 and 2009-2010), regime changes (COVID-19 2020),
+          and directional trend over 30 years.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: GDP per capita vs. life expectancy for a developed economy 1992-2021
-          is a real-world, neutral, comprehensible scenario popularized in data journalism.
+        comment: GDP per capita ($23k–$52k) and life expectancy (75–80 yrs) are realistic
+          for an advanced economy over 1992–2021. Neutral historical context; economic
+          events are factual.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values ($23k-$52k GDP, 75.3-80.0 yrs LE) factually plausible for
-          a developed country in 2015 USD. COVID dip magnitudes realistic.
+        comment: 30 data points across 30 years — ideal for connected scatter (spec
+          recommends 10–100). Axis domains match data extent with nice() rounding.
     code_quality:
       score: 10
       max: 10
@@ -206,65 +200,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: data → SVG → scales → grid → segments → circles → labels
-          → axes → legend → title. No functions or classes.'
+        comment: No functions or classes; flat procedural D3 script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded deterministic data array, no randomness.
+        comment: All data hardcoded; no randomness; fully deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports needed; d3 is a global per harness contract.
+        comment: No imports needed (d3 is a global); all tokens from window.ANYPLOT_TOKENS.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean idiomatic code. labelConfig array for annotation offsets is
-          tidy. Per-segment coloring loop is clear.
+        comment: Well-organized sections (data, scaffold, scales, gridlines, path,
+          markers, labels, annotations, axes, legend, title). Comment on userSpaceOnUse
+          gradient is informative.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Current D3 7.9.0 API. Harness handles output files.
+        comment: 'Correctly appends single SVG to #container; sizes from window.ANYPLOT_SIZE;
+          harness writes plot-{theme}.png and plot-{theme}.html.'
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: d3.scaleLinear().nice(), d3.axisBottom/Left, d3.line().x().y(), d3.extent(),
+          .datum() for single path, d3.interpolateRgb — all idiomatic D3 patterns.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Correct use of d3.scaleLinear, d3.extent, d3.axisBottom/Left, d3.format,
-          selection API for axis styling. Data-driven .join() for circles. Good idiomatic
-          patterns.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses d3.interpolateRgb for per-segment temporal coloring, SVG defs
-          + linearGradient for legend bar, manual tick/domain selection styling. Somewhat
-          generic; a path-stroke gradient via gradientUnits='userSpaceOnUse' or SVG
-          marker arrowheads would be more distinctly D3.
-  verdict: REJECTED
+        comment: 'SVG defs linearGradient with gradientUnits=''userSpaceOnUse'' for
+          path stroke is a distinctive D3/SVG technique. Gradient stops aligned to
+          start/end data coordinates. Missing: terminal arrowhead marker on path would
+          complete the spec''s ''arrow or gradient'' suggestion.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
-  - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - custom-colormap
+  - gradient-fill
   - alpha-blending
   - edge-highlighting
