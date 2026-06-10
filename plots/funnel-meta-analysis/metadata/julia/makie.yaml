@@ -1,0 +1,249 @@
+library: makie
+language: julia
+specification_id: funnel-meta-analysis
+created: '2026-06-10T04:03:21Z'
+updated: '2026-06-10T04:20:08Z'
+generated_by: claude-sonnet
+workflow_run: 27251918337
+issue: 4590
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Perfect spec compliance — all required funnel plot elements (inverted SE axis,
+    pooled effect line, null reference line, 95% CI funnel, study scatter) implemented
+    correctly
+  - Excellent data realism — antihypertensive RCT meta-analysis with plausible OR
+    and SE ranges and deliberate small-study asymmetry demonstrating publication bias
+  - Both themes render cleanly with full Imprint palette compliance and correct chrome
+    token threading throughout
+  - Idiomatic Makie code with poly! polygon funnel fill and MarkerElement/LineElement
+    custom legend
+  weaknesses:
+  - Annotation text at fontsize=11 is small at mobile widths — consider increasing
+    to 12 or 13
+  - Legend frame slightly heavy relative to the spare spine-minimal design — could
+    reduce frame opacity
+  - 'Asymmetry storytelling could be stronger: consider highlighting study points
+    that fall outside the funnel boundary with a different stroke colour (e.g. amber
+    #DDCC77) to make the publication-bias pattern more immediately visible'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct cream surface
+      Chrome: Title "funnel-meta-analysis · julia · makie · anyplot.ai" clearly readable in dark ink; axis labels "Log Odds Ratio" and "Standard Error" in INK dark; tick labels in INK_SOFT — all readable
+      Data: Study dots in brand green #009E73 with white stroke; pooled effect as solid blue #4467A3 vertical line; null effect as dotted muted line; 95% CI funnel boundary as dashed INK_SOFT diagonal lines; shaded funnel fill at alpha=0.12
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface
+      Chrome: Title and axis labels render in light off-white (INK dark = #F0EFE8); tick labels in INK_SOFT dark (#B8B7B0) — all readable, no dark-on-dark failures; legend box uses elevated dark #242420 background with light text
+      Data: Study dots remain identical #009E73 brand green — same as light render; all reference lines visible and distinguishable; annotation in INK_MUTED (#A8A79F) — slightly dim but legible
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; readable in both themes; minor deduction
+          for annotation fontsize=11 which may be marginal at mobile widths
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 20 study points at markersize=14 with white-stroke edges are clearly
+          prominent
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast; brand green on cream/near-black; no red-green sole-signal
+          issues
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas passes dimension gate; funnel fills axis area cleanly; legend
+          well-placed; balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Log Odds Ratio and Standard Error are fully descriptive for a meta-analysis
+          funnel plot
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Study dots use #009E73 first Imprint slot; pooled line uses Imprint
+          slot 3 #4467A3; chrome tokens theme-adaptive; backgrounds #FAF8F1/#1A1A17
+          correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: L-shaped spine, no grid, inverted funnel shaded
+          region, multi-linestyle reference lines, white-stroke markers; stops short
+          of FiveThirtyEight-level'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No grid correct choice; spines removed; funnel fill at alpha=0.12
+          subtle; legend frame slightly heavy relative to sparse design
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Annotation names the asymmetry finding; clear visual hierarchy; could
+          be stronger by visually distinguishing outlier points outside the CI funnel
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct meta-analysis funnel plot with inverted Y-axis
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: inverted SE axis, pooled effect line,
+          null reference line, 95% CI funnel, individual scatter points'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned; all 20 studies visible; inverted funnel orientation
+          correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches spec-id · julia · makie · anyplot.ai format; legend
+          labels match elements
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all key funnel plot features including asymmetric scatter indicating
+          publication bias
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 20 RCTs antihypertensive vs placebo with cardiovascular events; OR=0.68
+          medically plausible; neutral topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: SE range 0.07-0.54 and log OR range -1.7 to +0.45 realistic for clinical
+          RCT meta-analyses
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: constants -> data -> polygon -> figure -> axis -> geoms
+          -> legend -> save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) at top of file
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all used; no superfluous imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic Julia/Makie; polygon construction from Point2f arrays
+          appropriately terse
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save with correct filename pattern and px_per_unit=2
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expertly uses Makie layout system, CairoMakie primitives, and legend
+          API with MarkerElement/LineElement; colsize! with Relative sizing
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: poly! with Point2f polygon for funnel shading; MarkerElement/LineElement
+          custom legend; yreversed axis; colsize! fractional sizing — distinctively
+          Makie
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
