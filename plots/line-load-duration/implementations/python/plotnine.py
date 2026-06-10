@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-load-duration: Load Duration Curve for Energy Systems
 Library: plotnine 0.15.5 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-10
@@ -203,7 +203,7 @@ plot = (
     )
     + scale_y_continuous(breaks=[0, 200, 400, 600, 800, 1000, 1200], expand=(0.02, 0))
     + coord_cartesian(ylim=(0, PEAK_LOAD + 100))
-    + labs(x="Hours", y="Load (MW)", title="line-load-duration · plotnine · pyplots.ai")
+    + labs(x="Hours", y="Load (MW)", title="line-load-duration · python · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
         figure_size=(8, 4.5),
