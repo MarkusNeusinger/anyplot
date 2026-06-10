@@ -1,7 +1,3 @@
-// anyplot.ai
-// recurrence-basic: Recurrence Plot for Nonlinear Time Series
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 81/100 | Created: 2026-06-10
 //# anyplot-orientation: square
 // anyplot.ai
 // recurrence-basic: Recurrence Plot for Nonlinear Time Series
@@ -9,7 +5,12 @@
 // License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
 // Quality: pending | Created: 2026-06-10
 
-import { ScatterChart } from "@mui/x-charts/ScatterChart";
+import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ScatterPlot } from "@mui/x-charts/ScatterChart";
+import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
+import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
+import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
+import { useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -23,7 +24,7 @@ for (let i = 1; i < N; i++) {
 
 // Time-delay embedding: state[i] = [ts[i], ts[i + tau]] (Takens' theorem)
 const tau = 5;
-const M = N - tau; // 295 embedded state vectors
+const M = N - tau;
 const states = Array.from({ length: M }, (_, i) => [ts[i], ts[i + tau]]);
 
 // Binary recurrence: pairs (i, j) where Euclidean distance < epsilon
@@ -40,8 +41,40 @@ for (let i = 0; i < M; i++) {
   }
 }
 
-// Title layout
-const TITLE_H = 52;
+const TITLE_H = 56;
+
+// Annotated identity line (i = j) — drawn via useDrawingArea hook in SVG space.
+// In MUI X linear scatter axes, data (0,0) maps to SVG (left, top+height) and
+// data (M-1, M-1) maps to SVG (left+width, top), so this diagonal is exact.
+function IdentityLine() {
+  const { left, top, width, height } = useDrawingArea();
+  const labelX = left + width * 0.87;
+  const labelY = top + height * 0.07;
+  return (
+    <g>
+      <line
+        x1={left}
+        y1={top + height}
+        x2={left + width}
+        y2={top}
+        stroke={t.amber}
+        strokeWidth={2}
+        strokeDasharray="9 5"
+        opacity={0.8}
+      />
+      <text
+        x={labelX}
+        y={labelY}
+        fill={t.amber}
+        textAnchor="middle"
+        opacity={0.9}
+        style={{ fontSize: 12, fontFamily: "Inter, system-ui, sans-serif", fontWeight: 500 }}
+      >
+        i = j
+      </text>
+    </g>
+  );
+}
 
 export default function Chart() {
   const W = window.ANYPLOT_SIZE.width;
@@ -68,18 +101,19 @@ export default function Chart() {
           justifyContent: "center",
         }}
       >
-        <span style={{ fontSize: 18, fontWeight: 500, color: t.ink }}>
+        <span style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>
           recurrence-basic · javascript · muix · anyplot.ai
         </span>
       </div>
-      <ScatterChart
+      <ChartContainer
         width={side}
         height={side}
         skipAnimation
         colors={[t.palette[0]]}
-        margin={{ top: 25, bottom: 70, left: 75, right: 20 }}
+        margin={{ top: 15, bottom: 72, left: 80, right: 25 }}
         series={[
           {
+            type: "scatter",
             data: recPts,
             markerSize: 2,
             label: "Recurrent",
@@ -87,26 +121,34 @@ export default function Chart() {
         ]}
         xAxis={[
           {
-            label: "Time Index i",
             min: 0,
             max: M - 1,
+            label: "Time Index i",
             tickLabelStyle: { fontSize: 11 },
             labelStyle: { fontSize: 13 },
           },
         ]}
         yAxis={[
           {
-            label: "Time Index j",
             min: 0,
             max: M - 1,
+            label: "Time Index j",
             tickLabelStyle: { fontSize: 11 },
             labelStyle: { fontSize: 13 },
           },
         ]}
         sx={{
           "& .MuiChartsLegend-root": { display: "none" },
+          "& .MuiChartsAxis-line": { display: "none" },
+          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
         }}
-      />
+      >
+        <ChartsGrid vertical horizontal />
+        <ScatterPlot />
+        <ChartsXAxis />
+        <ChartsYAxis />
+        <IdentityLine />
+      </ChartContainer>
     </div>
   );
 }
