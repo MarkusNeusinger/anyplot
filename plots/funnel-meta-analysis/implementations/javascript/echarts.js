@@ -1,7 +1,7 @@
 // anyplot.ai
 // funnel-meta-analysis: Meta-Analysis Funnel Plot for Publication Bias
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-06-10
+// Library: echarts 5.5.1 | JavaScript 22.22.3
+// Quality: 90/100 | Created: 2026-06-10
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
