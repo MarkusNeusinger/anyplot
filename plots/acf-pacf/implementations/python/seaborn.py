@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 acf-pacf: Autocorrelation and Partial Autocorrelation (ACF/PACF) Plot
-Library: seaborn 0.13.2 | Python 3.13
-Quality: 90/100 | Created: 2026-03-14
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-06-10
 """
 
 import os
