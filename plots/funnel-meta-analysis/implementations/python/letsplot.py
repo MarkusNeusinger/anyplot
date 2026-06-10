@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 funnel-meta-analysis: Meta-Analysis Funnel Plot for Publication Bias
-Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 92/100 | Created: 2026-03-15
+Library: letsplot | Python 3.14.3
+Quality: pending | Updated: 2026-06-10
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -11,10 +13,20 @@ from lets_plot import *
 
 LetsPlot.setup_html()
 
-# Data: Meta-analysis of 15 RCTs comparing drug vs placebo
-# Effect sizes are log odds ratios, null effect at 0
-np.random.seed(42)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID_COLOR = "#D9D7D0" if THEME == "light" else "#3A3A36"
 
+# Imprint palette — first series always #009E73
+BRAND = "#009E73"  # Inside funnel (expected, within confidence limits)
+OUTLIER = "#AE3030"  # Outside funnel — semantic anchor: potential bias / outlier
+
+# Data: Meta-analysis of 15 RCTs comparing drug vs placebo
+# Effect sizes are log odds ratios; null effect at 0
 studies = [
     {"study": "Adams 2015", "effect_size": 0.42, "std_error": 0.18, "n": 120},
     {"study": "Baker 2016", "effect_size": 0.28, "std_error": 0.22, "n": 85},
@@ -35,138 +47,139 @@ studies = [
 
 df = pd.DataFrame(studies)
 
-# Pooled effect estimate (inverse-variance weighted)
-weights = 1 / (df["std_error"] ** 2)
+# Inverse-variance weights and pooled effect estimate
+weights = 1 / df["std_error"] ** 2
 pooled_effect = (df["effect_size"] * weights).sum() / weights.sum()
+df["iw"] = weights
 
-# Classify studies as inside or outside the 95% funnel
-df["weight"] = weights / weights.max() * 8 + 3
-funnel_bound_upper = pooled_effect + 1.96 * df["std_error"]
-funnel_bound_lower = pooled_effect - 1.96 * df["std_error"]
+# Classify studies: inside or outside the 95% funnel boundary
 df["position"] = np.where(
-    (df["effect_size"] >= funnel_bound_lower) & (df["effect_size"] <= funnel_bound_upper),
+    (df["effect_size"] >= pooled_effect - 1.96 * df["std_error"])
+    & (df["effect_size"] <= pooled_effect + 1.96 * df["std_error"]),
     "Inside funnel",
     "Outside funnel",
 )
 
-# Pseudo 95% confidence funnel limits
+# Pseudo 95% confidence funnel boundary
 se_max = df["std_error"].max() + 0.05
 se_range = np.linspace(0, se_max, 200)
 funnel_upper = pooled_effect + 1.96 * se_range
 funnel_lower = pooled_effect - 1.96 * se_range
 
 funnel_df = pd.DataFrame(
-    {
-        "effect_size": np.concatenate([funnel_lower, funnel_upper[::-1]]),
-        "std_error": np.concatenate([se_range, se_range[::-1]]),
-    }
+    {"x": np.concatenate([funnel_lower, funnel_upper[::-1]]), "y": np.concatenate([se_range, se_range[::-1]])}
 )
 
 funnel_lines_df = pd.DataFrame(
     {
-        "effect_size": np.concatenate([funnel_lower, funnel_upper]),
-        "std_error": np.concatenate([se_range, se_range]),
+        "x": np.concatenate([funnel_lower, funnel_upper]),
+        "y": np.concatenate([se_range, se_range]),
         "side": ["lower"] * len(se_range) + ["upper"] * len(se_range),
     }
 )
 
-# Color palette
-blue_main = "#306998"
-orange_accent = "#D4762C"
-gray_light = "#E8E8E8"
-gray_mid = "#B0B0B0"
-gray_dark = "#555555"
+# Pooled OR annotation (single-row data frame for geom_label)
+annotation_df = pd.DataFrame(
+    {"x": [pooled_effect + 0.04], "y": [0.012], "label": [f"Pooled OR = {np.exp(pooled_effect):.2f}"]}
+)
 
-# Plot
+# Top 3 highest-weight inside-funnel studies for labeling
+inside_top = df[df["position"] == "Inside funnel"].nlargest(3, "iw")
+
+title = "funnel-meta-analysis · python · letsplot · anyplot.ai"
+title_size = round(16 * min(1.0, 67 / len(title)))
+
 plot = (
     ggplot()
-    # Funnel confidence region (shaded)
-    + geom_polygon(aes(x="effect_size", y="std_error"), data=funnel_df, fill=blue_main, alpha=0.06)
-    # Funnel boundary lines (95% CI)
+    # Funnel confidence region (shaded polygon)
+    + geom_polygon(aes(x="x", y="y"), data=funnel_df, fill=BRAND, alpha=0.07)
+    # Funnel boundary lines (95% CI dashed)
     + geom_line(
-        aes(x="effect_size", y="std_error", group="side"),
-        data=funnel_lines_df,
-        color=blue_main,
-        size=0.8,
-        linetype="dashed",
-        alpha=0.45,
+        aes(x="x", y="y", group="side"), data=funnel_lines_df, color=BRAND, size=0.8, linetype="dashed", alpha=0.5
     )
-    # Vertical line at pooled effect
-    + geom_vline(xintercept=pooled_effect, color=blue_main, size=1.2, alpha=0.8)
-    # Vertical dashed reference line at null effect (0)
-    + geom_vline(xintercept=0, color=gray_mid, size=0.7, linetype="dashed")
-    # Study points — colored by position, sized by weight, with interactive tooltips
+    # Null effect reference line
+    + geom_vline(xintercept=0, color=INK_MUTED, size=0.6, linetype="dashed", alpha=0.7)
+    # Pooled effect line
+    + geom_vline(xintercept=pooled_effect, color=INK, size=1.1, alpha=0.85)
+    # Study points — sized by inverse-variance weight, colored by classification
     + geom_point(
-        aes(x="effect_size", y="std_error", color="position", size="weight"),
+        aes(x="effect_size", y="std_error", color="position", size="iw"),
         data=df,
         shape=16,
-        alpha=0.85,
+        alpha=0.88,
         tooltips=layer_tooltips()
-        .line("@study")
-        .line("Effect size|@effect_size")
-        .line("Std. error|@std_error")
-        .line("N|@n")
-        .line("@position"),
+        .title("@study")
+        .line("Effect (log OR)|@effect_size{.3f}")
+        .line("Std. error|@std_error{.3f}")
+        .line("Sample size|@n")
+        .line("Status|@position"),
     )
-    + scale_color_manual(values=[blue_main, orange_accent], name="Classification")
-    + scale_size_identity(guide="none")
-    # Study labels for key studies (largest and outliers)
-    + geom_text(
+    + scale_color_manual(values={"Inside funnel": BRAND, "Outside funnel": OUTLIER}, name="Classification")
+    + scale_size(range=[2.0, 7.0], guide="none")
+    # Outlier labels with filled background — right-align Jensen 2020 to prevent canvas overflow
+    + geom_label(
         aes(x="effect_size", y="std_error", label="study"),
-        data=df[df["position"] == "Outside funnel"],
-        color=orange_accent,
-        size=11,
-        nudge_y=-0.025,
+        data=df[df["study"] == "Jensen 2020"],
+        color=OUTLIER,
+        fill=ELEVATED_BG,
+        size=3.2,
+        nudge_y=-0.022,
+        hjust=1.1,
         fontface="bold",
         show_legend=False,
     )
-    + geom_text(
+    + geom_label(
         aes(x="effect_size", y="std_error", label="study"),
-        data=df[df["position"] == "Inside funnel"].nlargest(3, "weight"),
-        color=gray_dark,
-        size=10,
-        nudge_y=-0.02,
+        data=df[df["study"] == "Klein 2020"],
+        color=OUTLIER,
+        fill=ELEVATED_BG,
+        size=3.2,
+        nudge_y=-0.022,
+        hjust=-0.15,
+        fontface="bold",
         show_legend=False,
     )
-    # Annotation: pooled effect value
+    # Top-weight inside-funnel study labels
     + geom_text(
+        aes(x="effect_size", y="std_error", label="study"),
+        data=inside_top,
+        color=INK_SOFT,
+        size=2.8,
+        nudge_y=-0.018,
+        show_legend=False,
+    )
+    # Pooled OR annotation box
+    + geom_label(
         aes(x="x", y="y", label="label"),
-        data=pd.DataFrame(
-            {"x": [pooled_effect + 0.03], "y": [0.005], "label": [f"Pooled OR = {np.exp(pooled_effect):.2f}"]}
-        ),
-        color=blue_main,
-        size=11,
+        data=annotation_df,
+        color=INK,
+        fill=ELEVATED_BG,
+        size=3.5,
         fontface="bold",
         hjust=0,
         show_legend=False,
     )
-    # Inverted y-axis (more precise studies at top)
+    # Inverted y-axis: lower SE (higher precision) at the top
     + scale_y_reverse()
-    # Labels
-    + labs(
-        x="Log Odds Ratio",
-        y="Standard Error (precision \u2192)",
-        title="funnel-meta-analysis \u00b7 letsplot \u00b7 pyplots.ai",
-    )
-    + ggsize(1600, 900)
+    + labs(x="Log Odds Ratio", y="Standard Error (precision ↑)", title=title)
+    + ggsize(800, 450)
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=24, face="bold", color=gray_dark),
-        axis_title=element_text(size=20, color=gray_dark),
-        axis_text=element_text(size=16, color=gray_mid),
+        plot_title=element_text(size=title_size, face="bold", color=INK),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
         panel_grid_major_x=element_blank(),
-        panel_grid_major_y=element_line(color="#F0F0F0", size=0.3),
+        panel_grid_major_y=element_line(color=GRID_COLOR, size=0.3),
         panel_grid_minor=element_blank(),
-        axis_line=element_blank(),
-        legend_position=[0.88, 0.88],
-        legend_title=element_text(size=16, face="bold", color=gray_dark),
-        legend_text=element_text(size=14, color=gray_dark),
-        legend_background=element_rect(fill="white", color=gray_light, size=0.5),
-        plot_background=element_rect(fill="white", color="white"),
-        panel_background=element_rect(fill="white", color="white"),
+        axis_line=element_line(color=INK_SOFT, size=0.4),
+        legend_position=[0.85, 0.82],
+        legend_title=element_text(size=10, face="bold", color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.5),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
     )
 )
 
-# Save
-ggsave(plot, "plot.png", scale=3, path=".")
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.png", scale=4, path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")
