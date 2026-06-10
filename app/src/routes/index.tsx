@@ -9,6 +9,7 @@ import { RouteErrorBoundary } from 'src/components/RouteErrorBoundary';
 import { AppDataProvider } from 'src/layouts/Layout';
 import { RootLayout } from 'src/layouts/RootLayout';
 import { NotFoundPage } from 'src/pages/NotFoundPage';
+import { specPath } from 'src/routes/paths';
 
 const LazyFallback = () => (
   <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
@@ -27,7 +28,7 @@ function SpecLanguageRedirect() {
   if (!specId || !language) return <NotFoundPage />;
   return (
     <Navigate
-      to={{ pathname: `/${specId}`, search: `?language=${encodeURIComponent(language)}` }}
+      to={{ pathname: specPath(specId), search: `?language=${encodeURIComponent(language)}` }}
       replace
     />
   );
