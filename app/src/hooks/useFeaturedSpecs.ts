@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import { API_URL } from 'src/constants';
 import { useAppData } from 'src/hooks/useLayoutContext';
+import { apiGet, endpoints } from 'src/lib/api';
 import type { PlotImage } from 'src/types';
 import { shuffleArray } from 'src/utils/shuffle';
 
@@ -35,10 +35,9 @@ export function useFeaturedSpecs(count: number = 5): FeaturedImpl[] | null {
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`${API_URL}/plots/filter`)
-      .then(r => (r.ok ? r.json() : null))
-      .then((data: { images?: PlotImage[] } | null) => {
-        if (cancelled || !data?.images) return;
+    apiGet<{ images?: PlotImage[] }>(endpoints.plotsFilter())
+      .then(data => {
+        if (cancelled || !data.images) return;
         setImages(data.images);
       })
       .catch(() => {});

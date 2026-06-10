@@ -1,0 +1,266 @@
+library: highcharts
+language: javascript
+specification_id: scatter-connected-temporal
+created: '2026-06-09T23:30:45Z'
+updated: '2026-06-09T23:51:45Z'
+generated_by: claude-sonnet
+workflow_run: 27242126035
+issue: 4675
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/javascript/highcharts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Connected scatter via scatter+lineWidth (preserves data order unlike line series)
+  - Amber semantic anchor used correctly for 1980 stagflation peak marker
+  - 'Per-point marker customization: triangle start, diamond end, enlarged amber peak
+    creates meaningful visual differentiation'
+  - textOutline technique ensures year labels readable in both light and dark themes
+  - Subtitle provides temporal context; combined with start/end markers the direction
+    of time is navigable
+  - Historically accurate US Phillips Curve data (1960-1995) with correct inflation/unemployment
+    values
+  - All token-driven chrome adapts correctly — dark render shows light text on dark
+    background without dark-on-dark failures
+  - Idiomatic scatter+lineWidth technique is the correct Highcharts pattern for connected
+    scatter (line type would sort by x)
+  weaknesses:
+  - No color gradient for temporal progression — spec says consider a light-to-dark
+    gradient to encode time; currently only marker shape (triangle/diamond) signals
+    start/end, which is valid but the gradient would strengthen the temporal narrative
+  - Year labels in the dense 5–6% unemployment zone are closely spaced (1960, 1990,
+    1995 all near x≈5.5–5.6%) — minor visual crowding even though actual pixel overlap
+    is not present
+  - DE-01 could be elevated with additional typographic hierarchy (e.g. bolder title
+    relative to subtitle contrast, or slightly larger subtitle) to improve publication-readiness
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — passes theme check, not pure white
+      Chrome: Title "scatter-connected-temporal · javascript · highcharts · anyplot.ai" in dark ink, fully visible at ~65% of width. Subtitle "US Phillips Curve, 1960 → 1995 · path traces chronological order" in inkSoft. Y-axis title "Inflation Rate (%)" and X-axis title "Unemployment Rate (%)" both with units, clearly readable. Tick labels with % suffix on both axes readable. Year labels (1960, 1965, 1970, 1975, 1985, 1990, 1995) in inkSoft with white textOutline, all visible. "★ Stagflation Peak" label in amber above the 1980 peak marker.
+      Data: Connected scatter path in brand green (#009E73). Markers sized 7-9px radius with pageBg edge stroke. Start marker is a triangle (1960), end marker is a diamond (1995), peak is an enlarged amber circle (1980). The spiral shape of the Phillips Curve is clearly visible.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — passes theme check, not pure black
+      Chrome: Title appears in light ink (#F0EFE8), fully readable on dark surface. Axis titles, tick labels, and year annotation labels all appear in light inkSoft tones — no dark-on-dark failures observed. The amber "★ Stagflation Peak" label is visually distinct on the dark background. Grid lines are subtly visible.
+      Data: Connected scatter path is identical green (#009E73) — same as light render. Peak marker remains amber (#DDCC77). Start/end marker shapes preserved. Data colors are theme-invariant.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures, chrome adapts correctly
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (22px title, 16px axis titles, 14px
+          ticks/labels, 15px year labels). Readable in both themes. Minor: year label
+          fontSize 15px is slightly large in the dense center cluster.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Year labels (1960, 1990, 1995) cluster near x≈5.5% unemployment —
+          different y-values prevent actual overlap but there is minor visual crowding.
+          No text overlaps data elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 36 data points with radius 7-13px markers — appropriately prominent
+          for sparse dataset. lineWidth 2 connects them clearly. Start/end/peak markers
+          are more prominent.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single series (#009E73) with amber accent for peak — CVD-safe combination.
+          No red-green-only distinction.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Plot fills canvas well with generous spacing.
+          Legend disabled (single series). Good proportions.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Unemployment Rate (%) and Inflation Rate (%) — descriptive with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green). Amber (#DDCC77) used semantically
+          for peak/warning role. Background #FAF8F1 light / #1A1A17 dark. All chrome
+          token-driven.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Thoughtful design: amber semantic accent, distinct marker shapes
+          for temporal anchors (triangle/diamond), textOutline for readability, informative
+          subtitle. Clearly above library defaults but not quite publication-ready.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (0.5 width), transparent background, pageBg marker edges,
+          spacing set. Good refinement but default Highcharts axes structure retained.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Stagflation peak is a clear focal point (amber, enlarged, annotated
+          with star). Subtitle explains temporal path. Start/end markers orient the
+          reader. Strong narrative for the Phillips Curve story.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Connected scatter plot correctly implemented using Highcharts scatter
+          type with lineWidth.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Points connected in chronological order ✓, key time points annotated
+          ✓, markers at each position ✓, direction indicators via start/end marker
+          shapes ✓. Missing: no systematic color gradient for temporal progression
+          (spec says ''consider'' — optional but adds value).'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=unemployment, Y=inflation, data ordered temporally (1960-1995).
+          Scatter+lineWidth preserves insertion order.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''scatter-connected-temporal · javascript · highcharts ·
+          anyplot.ai'' — correct format. Legend disabled (single series, appropriate).'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows connected scatter with temporal path, directional markers,
+          annotated key points, the characteristic spiral loop of the Phillips Curve,
+          both cyclical (early period) and structural change (stagflation) patterns.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: US Phillips Curve (1960-1995) is a real, well-known, neutral economic
+          dataset. Neutral macroeconomic historical data.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Historically accurate: 1960s low inflation (~1-1.7%), 1973-1980
+          stagflation climax (13.5%), 1980s disinflation. Values match historical
+          record.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Data → chart. No functions or classes. Clean flat structure.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded deterministic data array. No RNG needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports — uses Highcharts global and ANYPLOT_TOKENS. No unused
+          references.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, idiomatic JS. rawData.map() for per-point construction. Conditional
+          per-point properties are clear and purposeful. No over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Highcharts is an interactive library — harness produces plot-{theme}.png
+          + plot-{theme}.html. No deprecated API usage.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Scatter type with lineWidth is the correct Highcharts idiom for connected
+          scatter (vs line which sorts by x). Per-point marker objects, formatter
+          callbacks, tooltip configuration — all idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: The scatter+lineWidth data-order-preserving pattern is distinctly
+          Highcharts. Per-point marker customization (radius, symbol, fillColor) via
+          nested objects is a Highcharts-specific strength. Custom tooltip and dataLabel
+          formatters leverage Highcharts' rich callback API.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - edge-highlighting

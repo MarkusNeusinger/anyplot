@@ -9,9 +9,9 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
 import { SectionHeader } from 'src/components/SectionHeader';
-import { API_URL } from 'src/constants';
 import { useAnalytics } from 'src/hooks';
 import { useTheme } from 'src/hooks/useLayoutContext';
+import { ApiError, apiGet, endpoints } from 'src/lib/api';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 import { specPath } from 'src/utils/paths';
 import { buildSrcSet, getFallbackSrc } from 'src/utils/responsiveImage';
@@ -112,22 +112,20 @@ export function StatsPage() {
   }, [trackPageview]);
 
   useEffect(() => {
-    fetch(`${API_URL}/insights/dashboard`)
-      .then(r => {
-        if (!r.ok) throw new Error(`${r.status}`);
-        return r.json();
-      })
+    apiGet<DashboardData>(endpoints.insightsDashboard)
       .then(setData)
-      .catch(e => setError(e.message))
+      // Keep the pre-ApiError user-visible string: a bare status code for
+      // HTTP failures, the raw message for network errors.
+      .catch(e => setError(e instanceof ApiError ? `${e.status}` : e.message))
       .finally(() => setLoading(false));
   }, []);
 
   // Visitors load separately so a Plausible outage / missing API key never
-  // blocks the rest of the dashboard from rendering.
+  // blocks the rest of the dashboard from rendering (non-2xx and network
+  // errors both fall through to the empty-points placeholder).
   useEffect(() => {
-    fetch(`${API_URL}/insights/visitors`)
-      .then(r => (r.ok ? r.json() : null))
-      .then((res: VisitorsResponse | null) => setVisitors(res?.points ?? []))
+    apiGet<VisitorsResponse>(endpoints.insightsVisitors)
+      .then(res => setVisitors(res?.points ?? []))
       .catch(() => setVisitors([]));
   }, []);
 
