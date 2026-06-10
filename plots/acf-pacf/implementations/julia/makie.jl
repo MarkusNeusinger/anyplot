@@ -59,13 +59,24 @@ end
 
 conf_bound = 1.96 / sqrt(n_obs)
 acf_lags   = Float64.(0:max_lag)
-pacf_lags  = Float64.(1:max_lag)
 
-# Build linesegments! data: interleaved [x_base, x_tip, ...] pairs per segment
-acf_seg_x  = vcat([[lag, lag] for lag in acf_lags]...)
-acf_seg_y  = vcat([[0.0, v]   for v   in acf_vals]...)
-pacf_seg_x = vcat([[lag, lag] for lag in pacf_lags]...)
-pacf_seg_y = vcat([[0.0, v]   for v   in pacf_vals]...)
+# Build linesegments! data for ACF: interleaved [x_base, x_tip, ...] pairs per segment
+acf_seg_x = vcat([[lag, lag] for lag in acf_lags]...)
+acf_seg_y = vcat([[0.0, v]   for v   in acf_vals]...)
+
+# PACF: split lags into significant (|r| > conf_bound) vs. within-bound for visual hierarchy
+pacf_sig_idx = findall(v -> abs(v) > conf_bound, pacf_vals)
+pacf_ns_idx  = findall(v -> abs(v) <= conf_bound, pacf_vals)
+
+# Muted variant for non-significant PACF lags (same hue, lower opacity)
+GREEN_FULL  = IMPRINT_PALETTE[1]
+GREEN_MUTED = RGBAf(GREEN_FULL.r, GREEN_FULL.g, GREEN_FULL.b, 0.38f0)
+
+function make_segs(idx, vals)
+    xs = vcat([[Float64(i), Float64(i)] for i in idx]...)
+    ys = vcat([[0.0, vals[i]] for i in idx]...)
+    xs, ys
+end
 
 # Figure
 fig = Figure(
@@ -83,6 +94,8 @@ ax_acf = Axis(
     ylabel            = "ACF",
     ylabelsize        = 14,
     ylabelcolor       = INK,
+    xticklabelsize    = 12,
+    yticklabelsize    = 12,
     xticklabelcolor   = INK_SOFT,
     yticklabelcolor   = INK_SOFT,
     xtickcolor        = INK_SOFT,
@@ -93,7 +106,8 @@ ax_acf = Axis(
     leftspinecolor    = INK_SOFT,
     bottomspinecolor  = INK_SOFT,
     xgridvisible      = false,
-    ygridvisible      = false,
+    ygridvisible      = true,
+    ygridcolor        = RGBAf(INK.r, INK.g, INK.b, 0.12f0),
 )
 
 # PACF axis (bottom)
@@ -105,6 +119,8 @@ ax_pacf = Axis(
     ylabelsize        = 14,
     xlabelcolor       = INK,
     ylabelcolor       = INK,
+    xticklabelsize    = 12,
+    yticklabelsize    = 12,
     xticklabelcolor   = INK_SOFT,
     yticklabelcolor   = INK_SOFT,
     xtickcolor        = INK_SOFT,
@@ -115,7 +131,8 @@ ax_pacf = Axis(
     leftspinecolor    = INK_SOFT,
     bottomspinecolor  = INK_SOFT,
     xgridvisible      = false,
-    ygridvisible      = false,
+    ygridvisible      = true,
+    ygridcolor        = RGBAf(INK.r, INK.g, INK.b, 0.12f0),
 )
 
 linkxaxes!(ax_acf, ax_pacf)
@@ -124,22 +141,30 @@ ax_acf.xlabelvisible      = false
 
 # ACF stems, tips, and reference lines
 linesegments!(ax_acf, acf_seg_x, acf_seg_y;
-    color = IMPRINT_PALETTE[1], linewidth = 2.0)
+    color = GREEN_FULL, linewidth = 2.0)
 scatter!(ax_acf, acf_lags, acf_vals;
-    color = IMPRINT_PALETTE[1], markersize = 8, strokewidth = 0)
+    color = GREEN_FULL, markersize = 8, strokewidth = 0)
 hlines!(ax_acf, [0.0]; color = INK_SOFT, linewidth = 1.0)
 hlines!(ax_acf, [conf_bound, -conf_bound];
     color = INK_SOFT, linestyle = :dash, linewidth = 1.5)
 
-# PACF stems, tips, and reference lines
-linesegments!(ax_pacf, pacf_seg_x, pacf_seg_y;
-    color = IMPRINT_PALETTE[1], linewidth = 2.0)
-scatter!(ax_pacf, pacf_lags, pacf_vals;
-    color = IMPRINT_PALETTE[1], markersize = 8, strokewidth = 0)
+# PACF: within-bound lags (muted) drawn first, then significant lags on top
+if !isempty(pacf_ns_idx)
+    ns_sx, ns_sy = make_segs(pacf_ns_idx, pacf_vals)
+    linesegments!(ax_pacf, ns_sx, ns_sy; color = GREEN_MUTED, linewidth = 1.5)
+    scatter!(ax_pacf, Float64.(pacf_ns_idx), pacf_vals[pacf_ns_idx];
+        color = GREEN_MUTED, markersize = 7, strokewidth = 0)
+end
+if !isempty(pacf_sig_idx)
+    sig_sx, sig_sy = make_segs(pacf_sig_idx, pacf_vals)
+    linesegments!(ax_pacf, sig_sx, sig_sy; color = GREEN_FULL, linewidth = 2.5)
+    scatter!(ax_pacf, Float64.(pacf_sig_idx), pacf_vals[pacf_sig_idx];
+        color = GREEN_FULL, markersize = 9, strokewidth = 0)
+end
 hlines!(ax_pacf, [0.0]; color = INK_SOFT, linewidth = 1.0)
 hlines!(ax_pacf, [conf_bound, -conf_bound];
     color = INK_SOFT, linestyle = :dash, linewidth = 1.5)
 
-rowgap!(fig.layout, 1, 8)
+rowgap!(fig.layout, 1, 20)
 
 save("plot-$(THEME).png", fig; px_per_unit = 2)
