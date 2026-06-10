@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: funnel-meta-analysis
 created: '2026-03-15T16:43:21Z'
-updated: '2026-06-10T03:46:07Z'
+updated: '2026-06-10T03:58:51Z'
 generated_by: claude-sonnet
 workflow_run: 27251279025
 issue: 4590
@@ -12,55 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/funnel-me
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - 'Full spec compliance — all required funnel plot elements present: inverted Y-axis,
-    summary effect line, null effect line, pseudo 95% CI funnel shape, scatter by
-    precision tier, outlier annotations'
-  - Near-perfect data quality — 15 realistic RCT studies with plausible log odds ratios
-    and standard errors; deliberate asymmetry in the two outlier studies demonstrates
-    publication bias signal
-  - Perfect code quality — flat script, reproducible (seed=42), clean imports, correct
-    canvas (figsize=(8,4.5), dpi=400, no bbox_inches='tight')
-  - 'Correct Imprint palette assignment: High precision=#009E73 (first), Moderate=#C475FD
-    (second), Low=#4467A3 (third) — canonical order maintained'
-  - Theme-adaptive chrome correctly applied across both renders; no dark-on-dark or
-    light-on-light failures; both renders fully readable
-  - 'Idiomatic seaborn usage: sns.rugplot for marginal effect-size distribution adds
-    genuine analytical value and showcases a seaborn-native feature'
-  - Custom legend built from Line2D handles cleanly represents all plot elements (summary/null
-    lines + precision-tier markers) without relying on auto-legend
+  - Correct inverted-Y funnel plot with all required elements (summary effect line,
+    null reference line, pseudo-95% CI funnel lines, shaded region)
+  - 'Perfect Imprint palette usage: High precision = #009E73 (brand green, semantic
+    quality encoding), Moderate = #C475FD, Low = #4467A3 in canonical order'
+  - Seaborn rugplot for marginal effect size distribution — a distinctive seaborn
+    feature not trivially available in matplotlib
+  - Size encoding by study weight adds a meaningful data dimension with appropriate
+    size range
+  - Outlier study annotations (Lee 2019, Martinez 2020) highlight potential publication
+    bias candidates
+  - Flawless theme adaptation — both light (#FAF8F1) and dark (#1A1A17) renders are
+    clean and fully readable
+  - 'Perfect code quality: seed set, no functions/classes, all imports used, correct
+    savefig usage (no bbox_inches)'
+  - Proportional text sizing with explicit fontsize on all elements
   weaknesses:
-  - '''Martinez 2020'' annotation is offset (10, -3) pts from the rightmost data point,
-    pushing the text very close to the right canvas edge — switch to a left-aligned
-    offset (e.g. xytext=(-75, -3)) or increase x_max padding to keep annotation safely
-    within canvas bounds'
-  - 'Grid is enabled on both axes (axes.grid: True in rc params) — style guide prefers
-    Y-axis-only grid; replace with axes.grid: False and ax.yaxis.grid(True, alpha=0.2,
-    linewidth=0.6) for a cleaner publication look'
-  - 'DE-01: Plot design is clean but not visually sophisticated — consider adding
-    a subtle precision-size legend (to explain the size=weight mapping) or a weighted-mean
-    label near the funnel apex to improve information density'
-  - 'LM-02: Most funnel geometry (fill_betweenx, axvline, dashed boundary lines) is
-    pure matplotlib; seaborn contribution limited to scatterplot + rugplot — incorporating
-    sns.kdeplot for a marginal distribution panel or sns.PairGrid for an embedded
-    marginal would better showcase seaborn''s distinctive features'
+  - Minimum marker size (s=60) is below the recommended 200–400 for sparse data (<30
+    points). While size encodes study weight, the smallest low-precision markers are
+    noticeably small at canvas size and may be hard to see at mobile scale (~400 px).
+    Raise the minimum to sizes=(120, 280) or similar to keep the encoding while ensuring
+    minimum visibility.
+  - 'VQ-03 concern: the 7pt annotation text ("Circle size ∝ study weight", "WM = -0.39")
+    is at the lower end of legibility when the 3200×1800 PNG is scaled to mobile width
+    — consider raising to 8pt or using the INK_MUTED token for consistency.'
+  - 'LM-02 opportunity: the implementation uses rugplot and scatterplot size encoding
+    effectively, but a KDE ridge or additional seaborn-specific feature (e.g. sns.kdeplot
+    on the x-axis distribution, or a regplot confidence band) would push the library-distinctive
+    score higher.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, no pure white.
-      Chrome: Title "funnel-meta-analysis · python · seaborn · anyplot.ai" at fontsize=12 fully visible in dark ink. X-axis label "Log Odds Ratio (Drug vs Placebo)" and Y-axis label "Standard Error" clearly readable at fontsize=10. Tick labels at fontsize=8 readable. Legend (frameon=False) in lower-left shows all 5 entries in dark text, readable.
-      Data: Inverted Y-axis (SE=0 at top, SE~0.55 at bottom) forms correct funnel. Light gray fill for pseudo 95% CI region. Solid dark vertical line at summary effect (~-0.39). Dotted gray vertical line at null effect (0). Scatter points: High precision (teal #009E73, large circles), Moderate precision (lavender #C475FD, medium circles), Low precision (blue #4467A3, small circles). Subtle rug plot marks visible at bottom edge. Italic annotations "Lee 2019" and "Martinez 2020" label the two rightmost outliers. "Martinez 2020" annotation is very close to the right canvas edge but all characters are visible.
-      Legibility verdict: PASS — all text readable; no light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "funnel-meta-analysis · python · seaborn · anyplot.ai" in dark ink at 12pt occupies ~55% of plot width — readable. X-axis label "Log Odds Ratio (Drug vs Placebo)" and Y-axis label "Standard Error" both at 10pt, balanced, clearly readable. Tick labels at 8pt readable. Legend at 8pt (frameon=False) clean, all entries legible. Outlier annotations "Lee 2019" / "Martinez 2020" at 8pt italic readable. Small 7pt annotations ("Circle size ∝ study weight", "WM = -0.39") visible but at the lower boundary of mobile readability.
+      Data: Inverted Y-axis (0.0 at top → 0.6 at bottom). Shaded funnel region (semi-transparent INK_MUTED fill) with dashed CI lines. High-precision studies = large green (#009E73) circles at top; moderate precision = medium lavender (#C475FD) circles; low-precision = small blue (#4467A3) circles at bottom. Solid black vertical line for summary effect (-0.39). Dotted gray vertical line for null effect (0). Rugplot along X-axis at bottom. WM annotation with arrow at funnel apex. Top+right spines removed, Y-axis-only subtle grid.
+      Legibility verdict: PASS — all text readable against light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, no pure black.
-      Chrome: Title and axis labels rendered in light cream-white text, fully legible against dark background. Tick labels in light-gray (INK_SOFT token = #B8B7B0) clearly readable. Legend entries in light text. No dark-on-dark failures observed — all chrome elements flip correctly to light variants.
-      Data: Data colors are identical to light render — teal #009E73, lavender #C475FD, blue #4467A3. Funnel region fill is slightly darker (darker INK_MUTED at alpha=0.10 over dark background). Summary effect line and null effect line render in light ink. "Martinez 2020" and "Lee 2019" annotations visible in muted light color (INK_MUTED = #A8A79F on dark theme).
-      Legibility verdict: PASS — all text readable against dark background; brand green #009E73 clearly visible; no dark-on-dark failures.
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title and all axis labels rendered in light cream (#F0EFE8). Tick labels and legend text in secondary light (#B8B7B0). Annotations in muted light (#A8A79F). Summary effect line appears as a light/cream vertical line. No dark-on-dark failures detected — all chrome tokens correctly flipped for dark theme.
+      Data: Colors identical to light render — #009E73 green, #C475FD lavender, #4467A3 blue. Data colors are theme-invariant as required. Funnel shading and CI lines adapt to dark chrome appropriately.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -68,56 +65,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title (12pt), axis labels (10pt), tick labels (8pt) all readable
-          in both themes. Annotation text at 8pt italic is small but visible at full
-          resolution; may be borderline at 400px mobile width.
+        comment: All font sizes explicitly set. Title 12pt, axis labels 10pt, ticks/legend
+          8pt, annotations 7pt. 7pt annotations marginally small for mobile scale.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Some marker clustering in the moderate-precision group around SE=0.15-0.20
-          but white edgecolors keep individual circles distinguishable. No text overlaps
-          with data.
+        comment: No text overlaps. Point crowding near funnel apex is inherent to
+          the chart type.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Scatter markers well-sized (60-280 range proportional to weight).
-          Rug plot is very subtle (height=0.015) — present but barely visible. Funnel
-          fill clearly visible.
+        comment: Minimum marker size s=60 is below the recommended 200-400 for sparse
+          <30-point data. Weight encoding justifies variation but minimum markers
+          are noticeably small.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Three precision tiers encoded by both color and size — size redundancy
-          aids CVD accessibility. Green/purple/blue palette is generally CVD-safe.
+        comment: CVD-safe Imprint palette positions 1-3. No red-green as sole signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions overall. 'Martinez 2020' annotation extends very
-          close to right canvas edge — tight but no pixel clipping observed. Grid
-          on both axes (minor style issue).
+        comment: Canvas gate passed. Good canvas utilization. No clipping. Title proportional
+          (~55% width).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis 'Log Odds Ratio (Drug vs Placebo)' and Y-axis 'Standard Error'
-          are descriptive. Title follows required format exactly.
+        comment: 'X: ''Log Odds Ratio (Drug vs Placebo)'' — descriptive with measure.
+          Y: ''Standard Error'' — correct.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (High precision). Imprint canonical order maintained.
-          Backgrounds #FAF8F1 (light) / #1A1A17 (dark). Both renders chrome-correct.'
+        comment: 'First series #009E73 (High precision). Imprint positions 1-3 in
+          canonical order. Light bg #FAF8F1, dark bg #1A1A17. Both renders theme-correct.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -125,25 +118,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clean professional styling with Imprint palette, subtle funnel fill,
-          appropriate transparency layers. Custom Line2D legend shows design thought.
-          No size legend explaining weight mapping is a missed opportunity.
+        comment: 'Above-default design: semantic green for high precision, size encoding
+          for weights, rugplot for marginal distribution, multi-layer annotations.
+          Clearly above defaults but not publication-level exceptional.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed with sns.despine(). Legend frameon=False is clean.
-          Italic annotations add refinement. However, both X and Y gridlines are active
-          — style guide prefers Y-axis-only grid.
+        comment: sns.despine, Y-axis-only grid at alpha=0.2, frameon=False legend,
+          white edgecolor on markers, semi-transparent funnel shading. Well-refined.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Inverted Y-axis correctly guides eye to funnel shape. Outlier annotations
-          draw attention to publication bias. Three precision tiers create visual
-          hierarchy. Asymmetric scatter pattern communicates bias signal.
+        comment: Precision-tier color hierarchy, weight-based size variation, outlier
+          annotation drawing attention to bias candidates, WM apex label. Good visual
+          storytelling.
     spec_compliance:
       score: 15
       max: 15
@@ -153,28 +145,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct meta-analysis funnel plot with all required structural elements.
+        comment: 'Correct funnel plot: effect size on X, inverted standard error on
+          Y, funnel shape, correct inversion.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Y-axis inverted, summary effect line, null effect line, pseudo 95%
-          CI funnel, scatter by precision, points sized by weight — all present.
+        comment: Summary effect vertical line, null effect dashed reference, pseudo-95%
+          CI funnel, studies as points, weight-based sizing — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=effect size, Y=standard error (inverted). 15 studies correctly
-          mapped. X-axis range covers full funnel extent.
+        comment: Y-axis inverted (precise studies at top), X = log odds ratio. All
+          15 studies visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'funnel-meta-analysis · python · seaborn · anyplot.ai' matches
-          required format. Legend labels match precision categories.
+        comment: Title 'funnel-meta-analysis · python · seaborn · anyplot.ai' — exact
+          correct format. Legend labels accurate.
     data_quality:
       score: 15
       max: 15
@@ -184,24 +177,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All funnel plot aspects shown: scatter, funnel boundaries, reference
-          lines, precision tiers, weight sizing, outlier annotation, rug plot for
-          marginal distribution.'
+        comment: Shows effect sizes, SE, funnel CI, summary effect, null effect, precision
+          tiers, weight encoding, funnel asymmetry suggesting publication bias.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 15 RCTs comparing drug vs placebo with log odds ratios. Plausible
-          study names and dates. Neutral medical context. No controversial content.
+        comment: 'RCT meta-analysis: drug vs placebo, log odds ratio scale, 15 realistic
+          study names. Two outlier studies demonstrate publication bias. Neutral medical
+          context.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: SE range 0.05-0.50 and effect sizes around -0.35 are realistic for
-          clinical trial meta-analyses. Deliberate outlier bias (+0.25/+0.30) is a
-          realistic teaching example.
+        comment: SE range 0.05-0.50, LOR range -1.5 to 0.6. Realistic for 15-study
+          RCT meta-analysis.
     code_quality:
       score: 10
       max: 10
@@ -211,63 +203,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: 'Linear script: imports → tokens → data → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys (path fix), matplotlib.pyplot, numpy,
-          pandas, seaborn, matplotlib.lines.Line2D.'
+        comment: os, sys, matplotlib.pyplot, numpy, pandas, seaborn, Line2D — all
+          used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. No fake UI or simulated interactivity. Sensible
-          variable naming.
+        comment: Clean, appropriate complexity for the chart. No fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via output_dir path. No bbox_inches='tight'.
-          Correct canvas spec.
+        comment: Saves to plot-{THEME}.png via __file__-relative path. No bbox_inches='tight'.
+          dpi=400.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: sns.scatterplot with hue+size semantics, sns.rugplot for marginal
-          distribution, sns.set_theme for comprehensive theming, sns.despine — all
-          idiomatic seaborn patterns.
+        comment: sns.scatterplot with hue+size, sns.rugplot, sns.set_theme(rc={}),
+          sns.despine, sns.set_context — well-idiomatic seaborn.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: sns.rugplot for marginal effect-size distribution is a genuine seaborn
-          distinctive feature adding analytical value. However, most funnel geometry
-          (fill_betweenx, axvline, boundary lines) is pure matplotlib — seaborn's
-          contribution beyond scatterplot+rugplot is limited.
+        comment: sns.rugplot is distinctly seaborn (not trivially available in bare
+          matplotlib). sns.scatterplot size= with automatic size scaling is seaborn-specific.
+          Could go further with kdeplot or additional seaborn-exclusive features.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
+  - rugplot
   patterns:
   - data-generation
+  - explicit-figure
   dataprep:
   - binning
   styling:
