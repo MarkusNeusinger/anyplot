@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: recurrence-basic
 created: '2026-06-10T02:50:06Z'
-updated: '2026-06-10T02:57:13Z'
+updated: '2026-06-10T03:16:00Z'
 generated_by: claude-sonnet
 workflow_run: 27249605994
 issue: 4592
@@ -12,57 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/recurrenc
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/javascript/highcharts/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance: binary recurrence plot correctly implemented with time-delay
-    embedding (Takens theorem, d=2 tau=1), Euclidean distance computation, and threshold-based
-    binary classification'
-  - Deterministic data generation using logistic map (r=3.82, x0=0.4) explicitly mentioned
-    in spec as an example; visually exposes chaotic block structure, diagonal determinism
-    lines, and laminar regions
-  - Square orientation correctly selected for the symmetric matrix visualization
-  - 'Palette compliance: single series uses t.palette[0] (#009E73 brand green), transparent
-    background adapts correctly to both themes, all chrome tokens properly mapped
-    (t.ink, t.inkSoft, t.grid)'
-  - 'Performance-optimized: turboThreshold: 100000 handles the large dataset, tooltip
-    and hover states explicitly disabled for a clean static render'
-  - Clean flat code structure with no functions or classes; all font sizes explicitly
-    set per guidelines (22px title, 16px axis titles, 14px tick labels)
+  - Amber diagonal line overlay using Highcharts SVG renderer is a creative, spec-correct
+    highlight of self-recurrence that creates a clear focal point
+  - 'Perfect spec compliance: time-delay embedding (d=2, tau=1), Euclidean distance
+    binary threshold, square format, both axes labeled as time indices'
+  - Full Imprint palette compliance with t.palette[0]=#009E73 and theme-adaptive chrome
+    tokens throughout
+  - Informative subtitle explicitly guides the viewer to the key visual patterns (determinism,
+    regime changes)
+  - 'Deterministic logistic map data at r=3.82 (chaotic regime) demonstrates all canonical
+    recurrence plot features: diagonal lines, block structures, and off-diagonal recurrent
+    pairs'
+  - turboThreshold set to 100000 for performance with the large scatter dataset; hover
+    states disabled for cleaner static render
+  - 'Clean KISS code structure: data generation → matrix construction → chart → SVG
+    overlay, no functions or classes'
   weaknesses:
-  - 'DE-01 LOW (4/8): Design is a well-configured default scatter — visually correct
-    but not sophisticated. No visual hierarchy, no emphasis on the diagonal or block
-    structure. Consider upgrading to a distance-based continuous colorAxis variant
-    (imprint_seq stops) or adding a styled reference line along the main diagonal
-    to anchor the viewer.'
-  - 'DE-03 LOW (3/6): The recurrence pattern is visible but the viewer gets no guidance
-    on what to look for. The spec explicitly notes that diagonal lines indicate determinism,
-    block structures signal regime changes — a subtitle or annotation highlighting
-    one of these structural features would lift storytelling significantly.'
-  - 'LM-02 LOW (2/5): The implementation uses Highcharts scatter with turboThreshold
-    and disabled hover, but does not leverage any truly distinctive Highcharts capability.
-    A colorAxis with the imprint_seq gradient would turn this into a distance-based
-    recurrence plot (spec allows it as ''acceptable enhancement'') and would showcase
-    Highcharts'' continuous colorAxis — a feature unique to the library.'
-  - 'VQ-01 minor (7/8): The title is fully readable but the Y-axis label ''Time Index
-    j'' appears slightly under-spaced on the left margin (spacing: [20, 20, 20, 10]
-    gives only 10px left padding). Consider spacing: [20, 20, 20, 20] for balanced
-    breathing room.'
+  - Subtitle font size (13px) is slightly below the recommended 14px tick-label baseline
+    for the CSS mount; consider bumping to 14px for consistent mobile legibility
+  - Marker radius=2 is functional but on the small side for the density; slightly
+    larger radius (2.5-3) with a fractional opacity (0.7-0.8) would give each recurrent
+    point slightly more visual weight without losing structure
+  - 'DE-01/DE-02 could be pushed higher: consider removing the default plotBorderColor,
+    setting explicit gridLineWidth values, and adding a very subtle gridLineColor
+    opacity to further differentiate from the library defaults'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface.
-      Chrome: Title "recurrence-basic · javascript · highcharts · anyplot.ai" in dark bold text (~22px) is clearly readable. X-axis label "Time Index i" and Y-axis label "Time Index j" in secondary dark text (~16px) are readable. Tick labels (0, 10, 20, ..., 190) in ~14px dark text are visible. Subtle grid lines present.
-      Data: Dense field of small square (#009E73 brand green) markers forming the binary recurrence matrix. The characteristic diagonal from (0,0) to (198,198) is clearly filled. Block structures (periodic windows in the chaotic logistic map) are visible as rectangular densely-filled regions. Diagonal bands indicate deterministic structure. Marker density is appropriate for this dataset size.
-      Legibility verdict: PASS — all text is readable against the warm off-white background. No light-on-light issues detected.
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "recurrence-basic · javascript · highcharts · anyplot.ai" at 22px in dark ink, fully visible and occupying ~70% of the plot width. Subtitle at 13px in muted ink below the title, readable. X-axis label "Time Index i" and Y-axis label "Time Index j" at 16px in inkSoft, both clearly visible. Tick labels at 14px on both axes, legible with good contrast against the off-white background.
+      Data: Dense grid of small square markers in Imprint brand green (#009E73), forming a symmetric recurrence matrix with visible block structures (large filled rectangles of recurrent points) and diagonal line patterns. An amber (#DDCC77) diagonal line overlays the main diagonal from (0,0) to (198,198), clearly emphasizing self-recurrence. Subtle grid lines visible in both axes.
+      Legibility verdict: PASS — all text elements are clearly readable against the warm off-white background. No light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface.
-      Chrome: Title in light (#F0EFE8-like) text — clearly readable. Axis labels and tick labels in lighter secondary text — all readable against the dark background. No dark-on-dark failures detected. Grid lines are visible as subtle lighter lines.
-      Data: Green (#009E73) square markers — identical color to the light render, as required. The recurrence pattern (diagonal, block structures, periodic bands) is identical and clearly visible. The brand green reads well on the dark surface.
-      Legibility verdict: PASS — all text is readable against the dark background. No dark-on-dark issues detected.
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title in light ink (#F0EFE8) at 22px, fully visible against the dark background. Subtitle in soft light ink, readable. Axis titles "Time Index i" and "Time Index j" in inkSoft (light variant), both clearly visible. Tick labels in light-toned inkSoft, legible with no dark-on-dark issues.
+      Data: Recurrent point markers in identical Imprint brand green (#009E73) — same color as light render, data colors unchanged. The amber diagonal line remains clearly visible as a bright warm gold against the near-black background. Block structures and diagonal patterns in the recurrence matrix are equally readable. Grid lines subtle against the dark background.
+      Legibility verdict: PASS — all text is light-colored against the dark background. No dark-on-dark failures detected. Brand green #009E73 is clearly visible on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -70,80 +61,80 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (22px title, 16px axis, 14px ticks).
-          Readable in both themes. Minor: left spacing only 10px reduces Y-axis label
-          breathing room slightly.'
+        comment: All font sizes explicitly set (title 22px, subtitle 13px, axis titles
+          16px, ticks 14px); readable in both themes; subtitle slightly below 14px
+          baseline
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element overlap. Dense scatter does not conflict with
-          axis labels.
+        comment: No overlapping text or UI elements in either render
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Marker radius 2 with square symbol is appropriate for thousands of
-          recurrence points. Pattern is clearly visible in both themes.
+        comment: Marker radius=2 appropriate for dense recurrence matrix; amber diagonal
+          line highlights key structural feature; slightly larger radius with opacity
+          would be marginally better
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single series brand green #009E73 is colorblind-safe and has adequate
-          contrast on both backgrounds.'
+        comment: Single-series Imprint green (#009E73) CVD-safe; amber diagonal provides
+          warm contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas (2400x2400) correctly selected for symmetric matrix.
-          Plot fills canvas well. No clipping detected. Canvas gate passed.
+        comment: Square orientation correct for symmetric matrix; balanced margins;
+          plot fills canvas well
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time Index i and Time Index j are descriptive and match spec requirements.
-          Title follows required format.
+        comment: Time Index i / Time Index j descriptive; no units needed for dimensionless
+          indices; title correctly formatted
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First (only) series uses t.palette[0] (#009E73). Background is transparent
-          (adapts to pageBg). Chrome uses t.ink/t.inkSoft/t.grid tokens correctly
-          in both themes.
+        comment: palette[0]=#009E73 used for sole series; backgroundColor transparent
+          with pageBg token; ink/inkSoft/grid tokens throughout; identical data colors
+          in both themes
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured default scatter chart. Correct format and marker
-          choice, but no visual hierarchy, no design flourish beyond palette compliance.
-          Looks like a properly configured library default.
+        passed: true
+        comment: Amber diagonal line is a creative, purposeful design choice beyond
+          defaults; clean composition with subtitle context; above a generic default
+          configuration
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Several thoughtful refinements: tooltip disabled, hover states disabled,
-          legend disabled, subtle grid lines. Some Highcharts defaults still showing
-          (no spine removal configuration).'
+        comment: plotBorderWidth:0, hover states disabled, spacing array applied,
+          token-based colors; clearly refined over defaults but some default grid/border
+          styling remains
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: The recurrence pattern tells a clear story about the chaotic logistic
-          map, but viewer gets no guidance. No subtitle, no annotation highlighting
-          the diagonal structure or block patterns mentioned in the spec.
+        passed: true
+        comment: Subtitle explicitly tells viewer what to look for; amber diagonal
+          creates a focal point; logistic map at r=3.82 (chaotic regime) provides
+          rich visual structure demonstrating spec features
     spec_compliance:
       score: 15
       max: 15
@@ -153,30 +144,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct binary recurrence plot: symmetric matrix with threshold-based
-          classification.'
+        comment: Correct binary recurrence plot implemented via scatter with square
+          markers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: Euclidean distance, binary threshold
-          (eps=0.15), time-delay embedding (d=2 tau=1), filled diagonal, square axes
-          with time index labels.'
+        comment: Time-delay embedding (d=2 tau=1), Euclidean distance, binary threshold
+          (eps=0.15), main diagonal present (amber line), square axes with equal scale
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time index i, Y=time index j, correct. 199 time steps (M=N-1) within
-          200-1000 range.
+        comment: X=time index i, Y=time index j; all recurrent pairs (i,j) plotted;
+          symmetric matrix
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'recurrence-basic · javascript · highcharts · anyplot.ai' matches
-          required format. No legend appropriate for single series.
+        comment: 'Title: recurrence-basic · javascript · highcharts · anyplot.ai —
+          correct format; no legend needed for single series'
     data_quality:
       score: 15
       max: 15
@@ -186,24 +176,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all key aspects: main diagonal, block structures (periodic
-          windows), diagonal bands (determinism), sparse/dense regions revealing chaotic
-          attractor structure.'
+        comment: 'Shows all canonical recurrence plot features: main diagonal, off-diagonal
+          recurrence, block structures (regime clusters), diagonal line patterns (determinism)'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Logistic map with r=3.82 (chaotic regime) explicitly referenced in
-          spec as example. Scientific, neutral context.
+        comment: Logistic map at r=3.82 (chaotic regime) — classic nonlinear dynamics
+          benchmark, real scientific context, neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: N=200 at lower bound of 200-1000 range but produces clear patterns.
-          eps=0.15 gives balanced recurrence rate. d=2 tau=1 appropriate for 1D chaotic
-          series.
+        comment: 200 time steps within recommended 200-1000 range; epsilon=0.15 appropriate
+          for logistic map values in [0,1]
     code_quality:
       score: 10
       max: 10
@@ -213,37 +201,38 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: data generation → distance matrix → chart call. No
-          functions or classes.'
+        comment: 'Linear flow: data generation → embedding → recurrence matrix → chart
+          → SVG diagonal overlay; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Deterministic: fixed logistic map parameters (r=3.82, x0=0.4). No
-          random number generation.'
+        comment: 'Fully deterministic: logistic map from fixed initial condition ts[0]=0.4,
+          r=3.82'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports — Highcharts is a global. All variables used.
+        comment: No import statements; only uses provided globals (window.ANYPLOT_TOKENS,
+          window.Highcharts)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and well-structured. turboThreshold and hover disable are appropriate
-          optimizations. No fake UI.
+        comment: Clean idiomatic JS; appropriate complexity; no over-engineering;
+          SVG renderer usage is justified and well-applied
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct: Highcharts.chart(''container'', ...). Both animation:false
-          set. No explicit width/height. Output naming handled by harness.'
+        comment: Uses Highcharts.chart() with current API; harness handles plot-{theme}.png
+          and plot-{theme}.html output
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -251,22 +240,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Very idiomatic: correct mount-node contract, both animation:false,
-          colors from tokens, transparent background, turboThreshold for large dataset,
-          data as [x,y] pairs for scatter.'
+        comment: animation:false on both chart and plotOptions.series; turboThreshold
+          for large dataset performance; endOnTick:false for tight axes; marker.states.hover.enabled:false;
+          token-based colors throughout
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses turboThreshold (Highcharts-specific performance) and marker
-          state disabling, but no truly distinctive Highcharts feature. A colorAxis
-          with imprint_seq stops would showcase a capability unique to Highcharts.
-  verdict: REJECTED
+        passed: true
+        comment: Uses chart.renderer (Highcharts SVG renderer API) with toPixels()
+          coordinate conversion and seriesGroup for correct z-ordering — Highcharts-specific
+          features not easily replicated in other libraries
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
+  - annotations
   patterns:
   - data-generation
   - matrix-construction
