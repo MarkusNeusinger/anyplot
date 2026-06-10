@@ -1,12 +1,8 @@
 // anyplot.ai
 // recurrence-basic: Recurrence Plot for Nonlinear Time Series
-// Library: echarts 5.5.1 | JavaScript 22.22.3
-// Quality: 85/100 | Created: 2026-06-10
-//# anyplot-orientation: square
-// anyplot.ai
-// recurrence-basic: Recurrence Plot for Nonlinear Time Series
 // Library: echarts 5.5.1 | JavaScript 22
 // Quality: pending | Created: 2026-06-10
+//# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -24,7 +20,7 @@ for (let k = 0; k < 300; k++) {
   lz += dzk * dt;
 }
 
-// Time-delay embedding of the x-component: state(i) = (x[i], x[i + DELAY])
+// Time-delay embedding of x-component: state(i) = (x[i], x[i+DELAY])
 // Implements Takens' theorem reconstruction from a scalar observable
 const DELAY = 8;
 const NPTS = 300;
@@ -44,31 +40,27 @@ for (let k = 0; k < N_TOTAL; k++) {
 const emX = lorenzX.slice(0, NPTS);
 const emY = lorenzX.slice(DELAY, NPTS + DELAY);
 
-// Pairwise Euclidean distances in the 2D embedded state space
+// Pairwise Euclidean distances in 2D embedded state space, normalized to [0, 1]
+// Main diagonal stays 0 (every state recurs with itself — Takens determinism)
 let maxDist = 0;
-const dist = new Float32Array(NPTS * NPTS);
+const rawDist = new Float32Array(NPTS * NPTS);
 for (let i = 0; i < NPTS; i++) {
   for (let j = i + 1; j < NPTS; j++) {
     const dx = emX[i] - emX[j];
     const dy = emY[i] - emY[j];
     const val = Math.sqrt(dx * dx + dy * dy);
-    dist[i * NPTS + j] = val;
-    dist[j * NPTS + i] = val;
+    rawDist[i * NPTS + j] = val;
+    rawDist[j * NPTS + i] = val;
     if (val > maxDist) maxDist = val;
   }
-  // diagonal stays 0: every state recurs with itself
 }
 
-// Binary threshold ε = 12% of maximum observed distance
-const epsilon = maxDist * 0.12;
-
-// Collect [xIndex, yIndex, 1] for every recurrent pair (distance < ε)
+// Full recurrence distance matrix: [col, row, normalizedDist] for all N×N pairs
+// imprint_seq encoding: green (0=identical/recurrent) → blue (1=maximally distant)
 const data = [];
 for (let i = 0; i < NPTS; i++) {
   for (let j = 0; j < NPTS; j++) {
-    if (dist[i * NPTS + j] < epsilon) {
-      data.push([j, i, 1]);
-    }
+    data.push([j, i, rawDist[i * NPTS + j] / maxDist]);
   }
 }
 
@@ -84,7 +76,21 @@ chart.setOption({
     top: 18,
     textStyle: { color: t.ink, fontSize: 22 },
   },
-  grid: { left: 90, right: 18, top: 76, bottom: 82 },
+  // imprint_seq: brand green (near/recurrent) → blue (far/non-recurrent)
+  visualMap: {
+    min: 0,
+    max: 1,
+    show: true,
+    orient: "vertical",
+    right: 20,
+    top: "middle",
+    itemWidth: 16,
+    itemHeight: 160,
+    text: ["Far", "Near"],
+    textStyle: { color: t.inkSoft, fontSize: 12 },
+    inRange: { color: t.seq },
+  },
+  grid: { left: 90, right: 100, top: 76, bottom: 82 },
   xAxis: {
     type: "category",
     data: timeLabels,
@@ -93,7 +99,7 @@ chart.setOption({
     nameGap: 38,
     nameTextStyle: { color: t.inkSoft, fontSize: 16 },
     axisLabel: { color: t.inkSoft, fontSize: 13, interval: 49 },
-    axisLine: { lineStyle: { color: t.inkSoft } },
+    axisLine: { show: false },
     axisTick: { show: false },
     splitLine: { show: false },
   },
@@ -105,7 +111,7 @@ chart.setOption({
     nameGap: 50,
     nameTextStyle: { color: t.inkSoft, fontSize: 16 },
     axisLabel: { color: t.inkSoft, fontSize: 13, interval: 49 },
-    axisLine: { lineStyle: { color: t.inkSoft } },
+    axisLine: { show: false },
     axisTick: { show: false },
     splitLine: { show: false },
   },
@@ -114,7 +120,6 @@ chart.setOption({
       type: "heatmap",
       data: data,
       progressive: 0,
-      itemStyle: { color: t.palette[0] },
       emphasis: { disabled: true },
     },
   ],
