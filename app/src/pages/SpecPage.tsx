@@ -309,7 +309,7 @@ export function SpecPage() {
     if (mode === 'hub') {
       trackPageview();
     } else if (mode === 'detail' && selectedLibrary) {
-      trackPageview(`/${specId}/${urlLanguage}/${selectedLibrary}`);
+      trackPageview(specPath(specId, urlLanguage, selectedLibrary));
     }
   }, [specData, mode, specId, urlLanguage, selectedLibrary, languageFilter, trackPageview]);
 

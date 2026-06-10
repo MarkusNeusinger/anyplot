@@ -108,20 +108,28 @@ uv run ruff check <files> && uv run ruff format <files>
 ```bash
 cd app
 yarn install
-yarn dev               # Development server
-yarn tsc --noEmit      # Type-check only (catches TS6133 unused vars etc.)
+yarn dev               # Development server (TS/ESLint errors show as browser overlay)
+yarn lint              # ESLint (0 errors required)
+yarn fm:check          # Prettier check (fm:fix to write, fix:all for both)
+yarn type-check        # tsc for app AND test files (tsconfig.test.json)
+yarn test              # Vitest
 yarn build             # Production build (runs tsc + vite build)
 ```
 
-**IMPORTANT: Run `yarn tsc --noEmit` (or `yarn build`) before committing frontend changes.**
-Vite's HMR dev server is permissive — it does NOT fail on unused variables, unused imports,
-or other TS strict errors. Cloud Build runs `tsc && vite build` and will fail on any TS6133
-("declared but never read") errors. Catching these locally before `git push` saves a Cloud
-Build round-trip. Common traps:
+**Run the full gate before committing frontend changes:**
+`yarn lint && yarn fm:check && yarn type-check && yarn test`. CI enforces the
+same gates in the `test-frontend` job, and `yarn dev` surfaces TS/ESLint
+errors live via vite-plugin-checker — but Vite HMR itself is permissive, so
+don't rely on the dev server alone. Cloud Build runs `tsc && vite build` and
+fails on any strict-TS error (e.g. TS6133 "declared but never read"). Common traps:
 
 - Removing a prop's usage from a component body but forgetting to remove it from `XxxProps`
 - Removing a feature (e.g. color accents) but leaving the import (`import { colors }`)
 - Changing a hook's shape and leaving a now-unused destructured name
+
+Structure, conventions (src/ alias imports, `paths.*` URLs, `lib/api` client,
+theme tokens), and how to add pages/sections/hooks: see
+[`app/ARCHITECTURE.md`](../../app/ARCHITECTURE.md).
 
 ## Architecture
 
