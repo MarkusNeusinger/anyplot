@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: funnel-meta-analysis
 created: '2026-03-15T16:44:14Z'
-updated: '2026-06-10T03:58:11Z'
+updated: '2026-06-10T04:10:21Z'
 generated_by: claude-sonnet
 workflow_run: 27251419097
 issue: 4590
@@ -12,128 +12,99 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/funnel-me
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/python/bokeh/plot-dark.html
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - 'Perfect spec compliance: all required elements present — inverted SE y-axis,
-    funnel confidence region as shaded patch, summary effect line, null line (dashed),
-    weight-proportional marker sizing, inside/outside funnel color coding'
-  - 'Excellent data quality: realistic drug-vs-placebo RCT meta-analysis scenario
-    with appropriately seeded publication bias simulation; inverse-variance weighting
-    computed correctly'
-  - 'Clean, reproducible code: KISS structure with np.random.seed(42), all imports
-    used, proper ColumnDataSource pattern, Selenium/CDP viewport override for exact
-    canvas sizing'
-  - 'Strong Bokeh idioms: Span for reference lines, Label for annotations, HoverTool
-    for interactive HTML artifact, CDP setDeviceMetricsOverride for pixel-accurate
-    screenshots'
-  - 'Semantic color use: BRAND green (#009E73) for inside-funnel studies, semantic
-    RED (#AE3030) for outside-funnel outliers — correct semantic exception (good/bad
-    encoding), matches Imprint palette rules'
-  - 'Theme-adaptive chrome correctly applied: both renders use proper backgrounds
-    (#FAF8F1 light / #1A1A17 dark), INK and INK_SOFT tokens thread through title,
-    axis labels, tick labels, grid'
+  - 'Excellent spec compliance — all required funnel plot elements present: inverted
+    y-axis, summary line, null reference line, pseudo-95% CI funnel, weight-proportional
+    marker sizing, and inside/outside funnel classification'
+  - Semantic color and shape redundancy (green circles for inside, red diamonds for
+    outside) provides strong CVD accessibility
+  - Proper theme-adaptive chrome with all font sizes explicitly set at correct bokeh
+    pt values
+  - ColumnDataSource with per-glyph visual properties (marker type, size, color from
+    data columns) is idiomatic bokeh usage
+  - HoverTool with per-study tooltip data demonstrates interactive HTML artifact quality
+  - Realistic meta-analysis scenario with plausible log-odds ratios and simulated
+    publication bias
+  - Clean KISS code structure with no over-engineering
   weaknesses:
-  - 'Dark mode funnel fill creates green-on-green contrast issue: fill_color=BRAND
-    (#009E73) at fill_alpha=0.10 over #1A1A17 produces a composite ≈#172723 (dark
-    teal) background inside the funnel; the inside-funnel markers (also BRAND at fill_alpha=0.80)
-    read as ≈#058663 against #172723 — contrast is reduced vs. the light render where
-    the mint-tinted funnel clearly contrasts with the markers. Fix: make the funnel
-    fill_alpha theme-adaptive (e.g., 0.15 in light, 0.05 in dark), or use a different
-    fill color in dark mode that contrasts better with BRAND green markers.'
-  - 'Minor data marker crowding in the high-precision cluster (y≈0.05–0.25, x≈0.10–0.35):
-    6–7 studies pack together with marker sizes 22–52 screen pixels; several marker
-    edges touch. Fix: reduce marker size range to 14–36 px to give breathing room
-    in the dense precision zone while still conveying weight variation.'
-  - 'Red-green as sole hue signal for inside/outside funnel status with no redundant
-    shape encoding — CVD users relying on hue alone may struggle to distinguish the
-    two groups. Fix: add `marker=''diamond''` (or `marker=''triangle''`) for outside-funnel
-    studies so hue and shape together encode the classification.'
-  - 'Legend annotation font sizes at 26pt (≈34.6 source px) fall below the 34pt tick-label
-    recommendation and appear slightly small relative to the rest of the chart''s
-    typography hierarchy. Fix: increase legend Label text_font_size from 26pt to 30pt
-    to tighten the hierarchy gap.'
+  - Funnel fill nearly invisible in dark render (fill_alpha=0.05) — the defining visual
+    element of a funnel plot is effectively invisible in dark mode; consider raising
+    to 0.08-0.10 for dark to retain funnel shape without the green-on-green wash
+  - Summary label uses BLUE (#4467A3) color — on dark backgrounds this medium-dark
+    blue has borderline contrast; consider using INK (fully light) or ELEVATED_BG
+    with border for better readability in dark mode
+  - Legend implemented as manually placed Label annotations rather than a proper legend
+    widget — functional but less polished and harder to maintain
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct Imprint light surface. Border and outer padding match.
-      Chrome: Bold centered title "funnel-meta-analysis · python · bokeh · anyplot.ai" fully visible ~75% plot width. X-axis label "Log Odds Ratio" in italic, Y-axis label "Standard Error" in italic — both dark (#1A1A17), clearly readable. Tick labels in INK_SOFT (#4A4A44), fully readable. Dashed grey null line labeled "Null (0)" and solid blue summary line labeled "Summary: 0.26" both readable near the top. Inline legend annotations "● Inside funnel (12 studies)" in green and "● Outside funnel (3 studies)" in red in lower left — readable but slightly small.
-      Data: Inverted Y-axis (0 at top, 0.55 at bottom) correctly places high-precision studies near the top. BRAND green (#009E73) markers for inside-funnel studies with variable sizes proportional to inverse-variance weights — the heaviest study is a prominent large circle at the top. RED (#AE3030) markers for 3 outside-funnel studies clearly visible. Light mint funnel confidence region (BRAND fill, alpha=0.10) clearly contrasts against off-white background, with dashed green border. Blue vertical summary line (#4467A3) and dashed gray null line at x=0 well-differentiated. Subtle grid lines visible but unobtrusive.
-      Legibility verdict: PASS — all text readable, no dark-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct
+      Chrome: Title "funnel-meta-analysis · python · bokeh · anyplot.ai" in dark INK, clearly readable; Y-axis "Standard Error" and X-axis "Log Odds Ratio" in dark INK, well-proportioned at 42pt; tick labels in INK_SOFT (#4A4A44), readable; "Summary: 0.26" annotation in blue (#4467A3), clearly visible; "Null (0)" label in INK_SOFT, readable
+      Data: Green (#009E73) circles for 12 inside-funnel studies, red (#AE3030) diamonds for 3 outside-funnel studies; funnel filled with semi-transparent green (#009E73 at 0.15 alpha) forming clear inverted triangle; blue solid vertical line at ~0.26 (summary effect); gray dashed vertical line at x=0 (null effect); marker sizes vary by weight (14–36px), clearly distinguishable
+      Legibility verdict: PASS — all text readable, no light-on-light issues, good contrast throughout
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct Imprint dark surface.
-      Chrome: Title in INK (#F0EFE8) — light, clearly readable against dark background. Axis labels and tick labels use INK/INK_SOFT tokens — light-colored, readable. "Summary: 0.26" in blue (#4467A3) and "Null (0)" in INK_SOFT (#B8B7B0) — both readable. Legend annotations readable.
-      Data: BRAND green (#009E73) and RED (#AE3030) marker colors identical to light render (data colors stay constant across themes — correct). Funnel fill at fill_alpha=0.10 over dark background creates a darker composite teal (≈#172723) inside the funnel region, noticeably darker than the surrounding background. Inside-funnel markers (BRAND at alpha=0.80) render as ≈#058663 against the ≈#172723 funnel background — visually distinguishable but with reduced contrast compared to the light render. All 15 markers remain identifiable.
-      Legibility verdict: PASS for chrome (no dark-on-dark text failures). Minor concern: reduced contrast between inside-funnel BRAND markers and the dark teal funnel fill area — markers are visible but the green-on-green effect weakens element visibility in dark mode.
+      Background: Warm near-black (#1A1A17) — correct
+      Chrome: Title in light INK (#F0EFE8), clearly readable; axis labels and tick labels in appropriate light colors (INK and INK_SOFT for dark theme); "Summary: 0.26" in blue (#4467A3) — visible but borderline contrast on dark background; "Null (0)" in INK_SOFT (#B8B7B0), readable; legend annotations ("Inside funnel" in green, "Outside funnel" in red) both readable
+      Data: Data colors identical to light render (#009E73 green circles, #AE3030 red diamonds) — correct; summary line and null line same colors; CRITICAL WEAKNESS: funnel fill essentially invisible (alpha=0.05 is too low for dark mode — the triangular funnel shape that defines this chart type is nearly gone); funnel outline visible as faint dashed green lines, partially salvaging the shape
+      Legibility verdict: PASS with weakness — all text is readable (no dark-on-dark failures), but funnel fill at 0.05 alpha is too low for dark mode, significantly degrading the key visual element
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (50pt title, 42pt axis labels, 34pt
-          ticks, 28pt/26pt annotations). Well-proportioned. Minor deduction: inline
-          legend annotations at 26pt are slightly below the 34pt tick-label tier,
-          creating a noticeable hierarchy gap; could be 30pt.'
+        comment: All font sizes explicitly set (title 50pt, axis labels 42pt, tick
+          labels 34pt, annotation labels 28-30pt); well-proportioned in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'No text element overlap. Minor data marker overlap in the high-precision
-          cluster (y=0.05–0.25): 6–7 studies pack together with large markers (22–52
-          px), several edges touching. White/dark outlines help distinguish them but
-          crowding is visible.'
+        comment: No text overlaps with data or other elements; lower-left annotations
+          and top annotations are spatially separated
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 'All 15 study markers visible and clearly shaped. Marker size variation
-          (22–52 px) effectively encodes study weight. Minor deduction: dark mode
-          funnel fill (BRAND alpha=0.10 over #1A1A17) creates a dark teal composite
-          (≈#172723) that reduces contrast for inside-funnel BRAND markers — still
-          visible but noticeably less crisp than light render.'
+        comment: Scatter markers perfectly visible and well-sized for 15 data points;
+          funnel outline visible in dark mode; funnel fill at 0.05 alpha is essentially
+          invisible in dark render, weakening the defining visual element
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Red (#AE3030) and green (#009E73) used as primary categorical signal
-          for outside/inside funnel. Spatial position (inside/outside visible funnel
-          boundary) provides redundant geometric cue. However, no shape redundancy
-          (all markers are circles), so CVD deuteranopes relying on hue alone may
-          struggle without the funnel boundary reference.
+        comment: Shape redundancy (circle vs diamond) combined with color encoding;
+          Imprint palette green/red are CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200×1800 canvas with correct min_border values (bottom=160, left=180,
-          top=110, right=50). Title ~75% width (expected). Generous whitespace. No
-          overflow or clipping.
+        comment: Canvas gate passed (3200x1800); good use of min_border settings;
+          balanced whitespace; no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title: ''funnel-meta-analysis · python · bokeh · anyplot.ai'' —
-          exact required format. X: ''Log Odds Ratio'', Y: ''Standard Error'' — descriptive
-          and domain-appropriate.'
+        comment: 'X: Log Odds Ratio, Y: Standard Error — descriptive and contextually
+          appropriate for meta-analysis'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series BRAND green (#009E73) correct. RED (#AE3030) as semantic
-          position 5 for ''outside/bad'' is a legitimate semantic exception. Blue
-          (#4467A3) for summary line is Imprint position 3. Backgrounds #FAF8F1 (light)
-          / #1A1A17 (dark) correct. Data colors identical across themes. Theme-adaptive
-          chrome fully applied.'
+        comment: 'First series #009E73 (brand green); red #AE3030 used semantically
+          for outside-funnel (error/concern role); blue #4467A3 for summary line;
+          both backgrounds correct (#FAF8F1 light, #1A1A17 dark)'
     design_excellence:
       score: 13
       max: 20
@@ -143,28 +114,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default (4/8): semantic color coding, inverse-variance weight
-          sizing, funnel shading, differentiated reference lines, explicit annotation
-          hierarchy. Not quite ''strong design'' (6/8): some rough edges (dark mode
-          funnel mass), no distinctive typography polish.'
+        comment: 'Above generic defaults: semantic color mapping, shape redundancy
+          for accessibility, weight-proportional markers, and clean semantic annotations.
+          Not quite FiveThirtyEight-level but intentionally designed.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: subtle grid (alpha=0.12), outline_line_color=None
-          removes box, generous min_border whitespace, clean axis-only frame. Deduction:
-          dark mode funnel creates a heavy teal visual mass that reduces the light/airy
-          feel of the refined chrome.'
+        comment: Grid at 0.12 alpha (very subtle), outline_line_color=None removes
+          outer box, min_border spacing is generous. Good refinement above defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Good storytelling: the funnel asymmetry (3 red outliers on left/small-study
-          side) clearly illustrates simulated publication bias; size encoding shows
-          precision hierarchy; summary + null lines annotated; inverted Y naturally
-          places precise studies at top. Viewer immediately sees the key message.'
+        comment: Semantic coloring (inside=safe green, outside=concern red), labeled
+          summary and null reference lines, asymmetric scatter suggests publication
+          bias — visual hierarchy guides interpretation.
     spec_compliance:
       score: 15
       max: 15
@@ -174,31 +141,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct meta-analysis funnel plot: inverted SE y-axis, effect size
-          x-axis, funnel confidence region, scatter of studies.'
+        comment: 'Correct funnel plot: inverted y-axis (SE 0 at top), scatter of studies,
+          funnel pseudo-CI, summary and null lines'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features: inverted y-axis, funnel pseudo-95% CI, summary
-          effect vertical line, null effect dashed line, weight-proportional marker
-          sizes, inside/outside funnel color classification.'
+        comment: 'All spec features present: inverted y-axis, summary effect line,
+          null reference line, funnel 95% CI, weight-sized markers, inside/outside
+          classification'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=effect sizes (log odds ratios), Y=standard error (inverted). All
-          15 studies plotted. Summary effect (0.26) and null (0) correctly positioned.
+        comment: X=effect_size (log odds ratio), Y=std_error (inverted, 0 at top);
+          all 15 studies visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'funnel-meta-analysis · python · bokeh · anyplot.ai'.
-          Legend via Label annotations with inside/outside study counts — functionally
-          complete.
+        comment: 'Title: ''funnel-meta-analysis · python · bokeh · anyplot.ai'' —
+          correct format; annotations correctly label inside/outside funnel groups
+          with counts'
     data_quality:
       score: 15
       max: 15
@@ -208,25 +175,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all funnel plot aspects: inside/outside funnel studies, asymmetric
-          distribution (publication bias), weight variation via marker sizes, both
-          reference lines.'
+        comment: 'Shows all funnel plot aspects: studies at varying precision levels,
+          some inside/outside funnel, simulated publication bias (small-study effect),
+          weight variation'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 15 RCTs comparing drug vs placebo, log odds ratios with realistic
-          SE ranges (0.05–0.50). Small-study positive bias simulation is methodologically
-          accurate. Neutral scientific context.
+        comment: Meta-analysis of 15 RCTs comparing drug vs placebo with log odds
+          ratios — realistic, neutral medical research scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Log OR summary effect ≈0.26 (moderate effect), SE range 0.05–0.50
-          appropriate for RCTs of varying sizes. Inverse-variance weighting correctly
-          computed.
+        comment: Log-OR range -0.85 to 1.15, SE range 0.05-0.50, summary effect ~0.26
+          — all plausible for a drug-vs-placebo meta-analysis
     code_quality:
       score: 10
       max: 10
@@ -236,64 +201,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Sequential: imports → tokens → data → plot → save. No functions
-          or classes.'
+        comment: Clean imports → data → plot → save structure; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random operations.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, time, Path, numpy, bokeh models, selenium.'
+        comment: All imports used (os, time, Path, numpy, bokeh.io, bokeh.models,
+          bokeh.plotting, selenium)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately complex. HoverTool is genuine Bokeh interactivity,
-          not fake. CDP viewport override is the correct pattern for exact canvas
-          sizing.
+        comment: Clean, well-organized; HoverTool is legitimate interactive feature
+          for bokeh (not fake interactivity); CDP metrics override for accurate screenshots
+          is appropriate
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. No bare plot.png. Current
-          Bokeh API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Excellent Bokeh idioms: ColumnDataSource, Span for reference lines,
-          Label for annotations, p.patch() for polygon funnel, HoverTool, output_file
-          + save + Selenium screenshot pipeline.'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Uses multiple Bokeh-distinctive features: HoverTool with rich multi-field
-          tooltip, Span glyph for vertical reference lines, Label with text_baseline/text_align
-          control, CDP setDeviceMetricsOverride for pixel-accurate viewport. Strong
-          usage above the baseline.'
-  verdict: REJECTED
+        comment: ColumnDataSource with multiple visual-property columns (marker type,
+          size, color from data), Span model for reference lines, Label layout model
+          for annotations — idiomatic bokeh patterns above basic usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: HoverTool with 5 per-study data fields (genuinely interactive in
+          HTML), per-glyph marker_type switching from data column, CDP setDeviceMetricsOverride
+          for accurate screenshot dimensions
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
+  - annotations
   - hover-tooltips
   - html-export
-  - annotations
   patterns:
   - data-generation
   - columndatasource

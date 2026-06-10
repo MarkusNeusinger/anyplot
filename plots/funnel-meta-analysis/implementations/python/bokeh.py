@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 funnel-meta-analysis: Meta-Analysis Funnel Plot for Publication Bias
 Library: bokeh 3.9.1 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-06-10
+Quality: 89/100 | Updated: 2026-06-10
 """
 
 import os
