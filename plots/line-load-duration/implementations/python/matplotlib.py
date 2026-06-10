@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 line-load-duration: Load Duration Curve for Energy Systems
-Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 92/100 | Created: 2026-03-15
+Library: matplotlib | Python 3.13
+Quality: 92/100 | Updated: 2026-06-10
 """
+
+import os
 
 import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
@@ -11,10 +13,22 @@ import numpy as np
 from matplotlib.patches import Patch
 
 
+# Theme
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — semantic assignments for load regions
+COLOR_PEAK = "#AE3030"  # Imprint matte red — peak / critical load
+COLOR_INTER = "#DDCC77"  # Imprint amber anchor — intermediate / caution
+COLOR_BASE = "#4467A3"  # Imprint blue — base load
+
 # Data
 np.random.seed(42)
 hours = 8760
-
 base_load = 400
 peak_load = 1200
 
@@ -40,90 +54,95 @@ intermediate_threshold = 600
 
 peak_end = np.searchsorted(-load_mw, -peak_threshold)
 base_start = np.searchsorted(-load_mw, -intermediate_threshold)
-
 total_energy_gwh = np.trapezoid(load_mw, hour) / 1000
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9))
-fig.set_facecolor("#fafafa")
-ax.set_facecolor("#fafafa")
+title = "line-load-duration · python · matplotlib · anyplot.ai"
+title_n = len(title)
+title_fontsize = max(8, round(12 * 67 / title_n)) if title_n > 67 else 12
 
-# Region fills with colorblind-safe palette
-color_peak = "#C62828"
-color_inter = "#F9A825"
-color_base = "#1565C0"
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-ax.fill_between(hour[: peak_end + 1], load_mw[: peak_end + 1], base_load - 30, color=color_peak, alpha=0.18, zorder=2)
+# Region fills using Imprint semantic palette
+ax.fill_between(hour[: peak_end + 1], load_mw[: peak_end + 1], base_load - 30, color=COLOR_PEAK, alpha=0.18, zorder=2)
 ax.fill_between(
     hour[peak_end : base_start + 1],
     load_mw[peak_end : base_start + 1],
     base_load - 30,
-    color=color_inter,
-    alpha=0.18,
+    color=COLOR_INTER,
+    alpha=0.22,
     zorder=2,
 )
-ax.fill_between(hour[base_start:], load_mw[base_start:], base_load - 30, color=color_base, alpha=0.18, zorder=2)
+ax.fill_between(hour[base_start:], load_mw[base_start:], base_load - 30, color=COLOR_BASE, alpha=0.18, zorder=2)
 
-# Main curve with path effects for depth
-curve_shadow = [pe.SimpleLineShadow(offset=(1.5, -1.5), shadow_color="#00000022", linewidth=4)]
-ax.plot(hour, load_mw, color="#1a1a2e", linewidth=2.8, zorder=5, path_effects=curve_shadow + [pe.Normal()])
+# Main load duration curve
+ax.plot(hour, load_mw, color=INK, linewidth=2.5, zorder=5)
 
-# Capacity tier lines with refined styling
+# Capacity tier dashed lines — staggered x-positions to prevent label crowding
 tier_props = [
-    (peak_threshold, color_peak, "Peak Capacity"),
-    (intermediate_threshold, "#D68F00", "Intermediate Capacity"),
-    (base_load, color_base, "Base Capacity"),
+    (peak_threshold, COLOR_PEAK, "Peak Capacity", 0.62),
+    (intermediate_threshold, COLOR_INTER, "Intermediate Capacity", 0.52),
+    (base_load, COLOR_BASE, "Base Capacity", 0.42),
 ]
-
-for y_val, color, label in tier_props:
-    ax.axhline(y=y_val, color=color, linestyle="--", linewidth=1.2, alpha=0.55, zorder=3)
+for y_val, color, label, x_frac in tier_props:
+    ax.axhline(y=y_val, color=color, linestyle="--", linewidth=0.9, alpha=0.6, zorder=3)
     ax.text(
-        hours * 0.62,
-        y_val + 14,
+        hours * x_frac,
+        y_val + 12,
         f"{label}  {y_val:,} MW",
-        fontsize=14,
+        fontsize=7,
         color=color,
         fontweight="semibold",
-        path_effects=[pe.withStroke(linewidth=3, foreground="#fafafaee")],
+        path_effects=[pe.withStroke(linewidth=2.5, foreground=PAGE_BG)],
         zorder=6,
     )
 
-# Region labels with path effects for legibility
+# Region labels
 region_labels = [
-    (peak_end * 0.45, peak_threshold + 80, "PEAK\nLOAD", color_peak),
-    ((peak_end + base_start) / 2, (peak_threshold + intermediate_threshold) / 2 + 10, "INTERMEDIATE\nLOAD", "#D68F00"),
-    ((base_start + hours) / 2 - 700, (intermediate_threshold + base_load) / 2 + 30, "BASE\nLOAD", color_base),
+    (peak_end * 0.45, peak_threshold + 65, "PEAK\nLOAD", COLOR_PEAK),
+    (
+        (peak_end + base_start) / 2,
+        (peak_threshold + intermediate_threshold) / 2 + 10,
+        "INTERMEDIATE\nLOAD",
+        COLOR_INTER,
+    ),
+    ((base_start + hours) / 2 - 600, (intermediate_threshold + base_load) / 2 + 20, "BASE\nLOAD", COLOR_BASE),
 ]
-
 for x, y, text, color in region_labels:
     ax.text(
         x,
         y,
         text,
-        fontsize=15,
+        fontsize=8,
         fontweight="bold",
         color=color,
         ha="center",
         va="center",
-        alpha=0.7,
+        alpha=0.8,
         linespacing=0.85,
-        path_effects=[pe.withStroke(linewidth=4, foreground="#fafafa")],
+        path_effects=[pe.withStroke(linewidth=2.5, foreground=PAGE_BG)],
         zorder=6,
     )
 
-# Energy annotation with refined box
-energy_text = f"Total Energy\n{total_energy_gwh:,.0f} GWh/year"
+# Total energy annotation
 ax.annotate(
-    energy_text,
+    f"Total Energy\n{total_energy_gwh:,.0f} GWh/year",
     xy=(hours * 0.45, load_mw[int(hours * 0.45)]),
-    xytext=(hours * 0.72, peak_threshold + 60),
-    fontsize=15,
+    xytext=(hours * 0.73, peak_threshold + 55),
+    fontsize=8,
     fontweight="bold",
-    color="#1a1a2e",
+    color=INK,
     ha="center",
     linespacing=1.3,
-    bbox={"boxstyle": "round,pad=0.5", "facecolor": "white", "edgecolor": "#bbbbbb", "linewidth": 1.2, "alpha": 0.92},
-    arrowprops={"arrowstyle": "->", "color": "#888888", "connectionstyle": "arc3,rad=0.2", "linewidth": 1.2},
+    bbox={
+        "boxstyle": "round,pad=0.4",
+        "facecolor": ELEVATED_BG,
+        "edgecolor": INK_SOFT,
+        "linewidth": 0.8,
+        "alpha": 0.92,
+    },
+    arrowprops={"arrowstyle": "->", "color": INK_MUTED, "connectionstyle": "arc3,rad=0.2", "linewidth": 0.8},
     zorder=7,
 )
 
@@ -131,41 +150,43 @@ ax.annotate(
 ax.annotate(
     f"Peak: {load_mw[0]:,.0f} MW",
     xy=(0, load_mw[0]),
-    xytext=(hours * 0.12, load_mw[0] + 25),
-    fontsize=14,
+    xytext=(hours * 0.11, load_mw[0] + 18),
+    fontsize=8,
     fontweight="semibold",
-    color=color_peak,
-    arrowprops={"arrowstyle": "->", "color": color_peak, "linewidth": 1.0},
-    path_effects=[pe.withStroke(linewidth=3, foreground="#fafafa")],
+    color=COLOR_PEAK,
+    arrowprops={"arrowstyle": "->", "color": COLOR_PEAK, "linewidth": 0.7},
+    path_effects=[pe.withStroke(linewidth=2, foreground=PAGE_BG)],
     zorder=7,
 )
 
 # Style
-ax.set_xlabel("Hours of Year (ranked by load)", fontsize=20, labelpad=10)
-ax.set_ylabel("Power Demand (MW)", fontsize=20, labelpad=10)
-ax.set_title("line-load-duration · matplotlib · pyplots.ai", fontsize=24, fontweight="medium", pad=16)
-ax.tick_params(axis="both", labelsize=16)
+ax.set_xlabel("Hours of Year (ranked by load)", fontsize=10, color=INK, labelpad=6)
+ax.set_ylabel("Power Demand (MW)", fontsize=10, color=INK, labelpad=6)
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=10)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 ax.set_xlim(0, hours)
-ax.set_ylim(base_load - 30, peak_load + 80)
+ax.set_ylim(base_load - 30, peak_load + 70)
+
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
-ax.spines["left"].set_color("#cccccc")
-ax.spines["bottom"].set_color("#cccccc")
+ax.spines["left"].set_color(INK_SOFT)
+ax.spines["bottom"].set_color(INK_SOFT)
 
-# FuncFormatter for readable axis ticks
 ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"{x / 1000:.0f}k" if x >= 1000 else f"{x:.0f}"))
 ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: f"{y:,.0f}"))
+ax.yaxis.grid(True, alpha=0.12, linewidth=0.6, color=INK)
 
-ax.yaxis.grid(True, alpha=0.12, linewidth=0.8, color="#999999")
-ax.tick_params(axis="both", colors="#555555")
-
-# Custom legend with region patches
+# Legend
 legend_elements = [
-    Patch(facecolor=color_peak, alpha=0.4, label="Peak Load"),
-    Patch(facecolor=color_inter, alpha=0.4, label="Intermediate Load"),
-    Patch(facecolor=color_base, alpha=0.4, label="Base Load"),
+    Patch(facecolor=COLOR_PEAK, alpha=0.4, label="Peak Load"),
+    Patch(facecolor=COLOR_INTER, alpha=0.4, label="Intermediate Load"),
+    Patch(facecolor=COLOR_BASE, alpha=0.4, label="Base Load"),
 ]
-ax.legend(handles=legend_elements, fontsize=15, loc="upper right", framealpha=0.92, edgecolor="#cccccc", fancybox=True)
+leg = ax.legend(
+    handles=legend_elements, fontsize=8, loc="upper right", framealpha=0.92, edgecolor=INK_SOFT, fancybox=True
+)
+leg.get_frame().set_facecolor(ELEVATED_BG)
+plt.setp(leg.get_texts(), color=INK_SOFT)
 
-plt.tight_layout()
-fig.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor=fig.get_facecolor())
+fig.subplots_adjust(left=0.10, right=0.97, top=0.93, bottom=0.13)
+fig.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
