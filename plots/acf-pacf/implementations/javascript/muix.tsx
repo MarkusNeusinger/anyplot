@@ -1,3 +1,7 @@
+// anyplot.ai
+// acf-pacf: Autocorrelation and Partial Autocorrelation (ACF/PACF) Plot
+// Library: muix 7.29.1 | JavaScript 22.22.3
+// Quality: 84/100 | Created: 2026-06-10
 //# anyplot-orientation: landscape
 // anyplot.ai
 // acf-pacf: Autocorrelation and Partial Autocorrelation (ACF/PACF) Plot
