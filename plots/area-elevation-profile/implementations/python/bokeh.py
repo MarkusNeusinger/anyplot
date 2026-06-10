@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-elevation-profile: Terrain Elevation Profile Along Transect
 Library: bokeh 3.9.1 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-10
@@ -33,14 +33,11 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 
 # Imprint sequential colormap: green (flat) → blue (steep)
-def _lerp_hex(c0, c1, t):
-    r0, g0, b0 = (int(c0[i : i + 2], 16) for i in (1, 3, 5))
-    r1, g1, b1 = (int(c1[i : i + 2], 16) for i in (1, 3, 5))
-    r, g, b = (int(round(a + (b - a) * t)) for a, b in ((r0, r1), (g0, g1), (b0, b1)))
-    return f"#{r:02X}{g:02X}{b:02X}"
-
-
-IMPRINT_SEQ256 = [_lerp_hex("#009E73", "#4467A3", t / 255.0) for t in range(256)]
+# #009E73 → #4467A3: r:0→68, g:158→103, b:115→163
+IMPRINT_SEQ256 = [
+    f"#{int(round(68 * t / 255)):02X}{int(round(158 - 55 * t / 255)):02X}{int(round(115 + 48 * t / 255)):02X}"
+    for t in range(256)
+]
 
 # Data — Alpine hiking trail (120 km) with realistic terrain
 np.random.seed(42)
@@ -64,15 +61,15 @@ elevation = np.maximum(elevation, 450)
 slope = np.gradient(elevation, distance)
 abs_slope = np.abs(slope)
 
-# Landmarks — Swiss Alpine locations along the transect
+# Landmarks — fictional Alpine locations along the transect
 landmarks = [
-    (0.0, "Grindelwald"),
-    (18.5, "Kleine Scheidegg"),
-    (38.0, "Männlichen"),
-    (55.0, "Lauterbrunnen"),
-    (72.0, "Mürren"),
-    (92.0, "Schilthorn"),
-    (120.0, "Kandersteg"),
+    (0.0, "Bergdorf"),
+    (18.5, "Hochalm"),
+    (38.0, "Westgrat"),
+    (55.0, "Talbach"),
+    (72.0, "Mittelalp"),
+    (92.0, "Gipfelhorn"),
+    (120.0, "Waldenfels"),
 ]
 
 landmark_distances = [lm[0] for lm in landmarks]
@@ -137,7 +134,8 @@ hover = HoverTool(
 )
 p.add_tools(hover)
 
-# Landmark vertical markers and labels
+# Landmark vertical markers and labels — peak landmark uses ochre star for climax emphasis
+peak_lm_idx = int(np.argmax(landmark_elevations))
 for i, (lm_dist, lm_elev, lm_name) in enumerate(
     zip(landmark_distances, landmark_elevations, landmark_names, strict=True)
 ):
@@ -168,7 +166,18 @@ for i, (lm_dist, lm_elev, lm_name) in enumerate(
     )
     p.add_layout(label)
 
-    p.scatter(x=[lm_dist], y=[lm_elev], size=22, fill_color="#4467A3", line_color=PAGE_BG, line_width=3)
+    dot_color = "#BD8233" if i == peak_lm_idx else "#4467A3"
+    dot_marker = "star" if i == peak_lm_idx else "circle"
+    dot_size = 30 if i == peak_lm_idx else 22
+    p.scatter(
+        x=[lm_dist],
+        y=[lm_elev],
+        size=dot_size,
+        fill_color=dot_color,
+        line_color=PAGE_BG,
+        line_width=3,
+        marker=dot_marker,
+    )
 
 # Theme-adaptive chrome
 p.background_fill_color = PAGE_BG
