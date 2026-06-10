@@ -7,7 +7,6 @@ using CairoMakie
 using Colors
 using ColorSchemes
 using Random
-using Statistics
 
 Random.seed!(42)
 
@@ -94,6 +93,14 @@ ax = Axis(
 )
 
 heatmap!(ax, 1:n, 1:n, recurrence; colormap = cmap, colorrange = (0.0f0, 1.0f0))
+
+# Annotation: guide the viewer to the key structural insight
+text!(ax, 10.0, 490.0;
+    text = "Diagonal lines\n= determinism",
+    color = INK_SOFT, fontsize = 11,
+    align = (:left, :top))
+arrows!(ax, [90.0], [450.0], [90.0], [-90.0];
+    color = INK_SOFT, linewidth = 1.0, arrowsize = 10.0)
 
 # Save
 save("plot-$(THEME).png", fig; px_per_unit = 2)
