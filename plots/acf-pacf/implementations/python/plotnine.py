@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 acf-pacf: Autocorrelation and Partial Autocorrelation (ACF/PACF) Plot
 Library: plotnine 0.15.5 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-10
@@ -30,6 +30,7 @@ from plotnine import (  # noqa: E402
     geom_hline,
     geom_point,
     geom_segment,
+    geom_vline,
     ggplot,
     guides,
     labs,
@@ -81,6 +82,14 @@ df["significant"] = np.where(np.abs(df["correlation"]) > confidence_bound, "Sign
 # Lag 0 in ACF is always 1.0 by definition — not a meaningful significant lag
 df.loc[(df["panel"] == "ACF") & (df["lag"] == 0), "significant"] = "Non-significant"
 
+# Seasonal lag markers restricted to ACF panel — period-12 structure at lags 12, 24, 36
+seasonal_ann_df = pd.DataFrame(
+    {
+        "xintercept": [12, 24, 36],
+        "panel": pd.Categorical(["ACF", "ACF", "ACF"], categories=["ACF", "PACF"], ordered=True),
+    }
+)
+
 # Title — 41 chars, within 67-char baseline, no font scaling needed
 title = "acf-pacf · python · plotnine · anyplot.ai"
 
@@ -88,6 +97,9 @@ title = "acf-pacf · python · plotnine · anyplot.ai"
 plot = (
     ggplot(df, aes(x="lag", y="correlation", color="significant"))
     + geom_hline(yintercept=0, color=INK_SOFT, size=0.6, alpha=0.8)
+    + geom_vline(
+        data=seasonal_ann_df, mapping=aes(xintercept="xintercept"), color=BRAND, alpha=0.14, size=0.8, linetype="dotted"
+    )
     + geom_hline(yintercept=confidence_bound, linetype="dashed", color=ALARM, size=0.7, alpha=0.65)
     + geom_hline(yintercept=-confidence_bound, linetype="dashed", color=ALARM, size=0.7, alpha=0.65)
     + geom_segment(aes(x="lag", xend="lag", y=0, yend="correlation"), size=1.2)
@@ -110,10 +122,10 @@ plot = (
         axis_title_x=element_text(color=INK, size=10),
         axis_title_y=element_blank(),
         axis_text=element_text(color=INK_SOFT, size=8),
-        plot_title=element_text(color=INK, size=12),
-        strip_background=element_rect(fill=ELEVATED_BG, color="none"),
+        plot_title=element_text(color=INK, size=12, face="bold"),
+        strip_background=element_rect(fill=PAGE_BG, color="none"),
         strip_text=element_text(color=INK, size=10, face="bold"),
-        panel_spacing_y=0.2,
+        panel_spacing_y=0.08,
     )
 )
 
