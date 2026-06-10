@@ -1,7 +1,7 @@
 // anyplot.ai
 // recurrence-basic: Recurrence Plot for Nonlinear Time Series
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-06-10
+// Library: chartjs 4.4.7 | JavaScript 22.22.3
+// Quality: 90/100 | Created: 2026-06-10
 
 //# anyplot-orientation: square
 
