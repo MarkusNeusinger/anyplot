@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 funnel-meta-analysis: Meta-Analysis Funnel Plot for Publication Bias
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-10
@@ -49,6 +49,11 @@ study_upper = summary_effect + 1.96 * std_errors
 study_lower = summary_effect - 1.96 * std_errors
 inside_funnel = (effect_sizes >= study_lower) & (effect_sizes <= study_upper)
 
+# Weight-proportional marker sizing — standard meta-analysis convention (larger = more precise)
+weights = 1 / std_errors**2
+w_min, w_max = weights.min(), weights.max()
+marker_sizes = 80 + (weights - w_min) / (w_max - w_min) * 440  # range: 80–520
+
 # Plot
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
@@ -63,14 +68,14 @@ summary_line = ax.axvline(x=summary_effect, color=INK, linewidth=2.0, alpha=0.85
 summary_line.set_path_effects([pe.Stroke(linewidth=3.5, foreground=PAGE_BG, alpha=0.5), pe.Normal()])
 ax.axvline(x=0, color=INK_SOFT, linewidth=1.5, linestyle=":", alpha=0.6, label="Null effect (OR=1)")
 
-# Studies — color by position relative to funnel
+# Studies — color by funnel position, sized by inverse-variance weight
 ax.scatter(
     effect_sizes[inside_funnel],
     std_errors[inside_funnel],
-    s=240,
+    s=marker_sizes[inside_funnel],
     color=BRAND,
     edgecolors=PAGE_BG,
-    linewidth=1.0,
+    linewidth=0.8,
     zorder=5,
     alpha=0.85,
     label="Inside funnel",
@@ -78,10 +83,10 @@ ax.scatter(
 ax.scatter(
     effect_sizes[~inside_funnel],
     std_errors[~inside_funnel],
-    s=240,
+    s=marker_sizes[~inside_funnel],
     color=RED,
     edgecolors=PAGE_BG,
-    linewidth=1.0,
+    linewidth=0.8,
     zorder=5,
     alpha=0.85,
     marker="D",
@@ -100,7 +105,7 @@ if (~inside_funnel).any():
         "Potential\npublication bias",
         xy=(effect_sizes[target], std_errors[target]),
         xytext=(effect_sizes[target] + 0.35, std_errors[target] + 0.06),
-        fontsize=8,
+        fontsize=9,
         color=RED,
         fontweight="medium",
         ha="left",
@@ -138,5 +143,5 @@ leg.get_frame().set_facecolor(ELEVATED_BG)
 leg.get_frame().set_edgecolor(INK_SOFT)
 plt.setp(leg.get_texts(), color=INK_SOFT)
 
-plt.tight_layout()
+fig.subplots_adjust(left=0.10, right=0.95, top=0.91, bottom=0.13)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
