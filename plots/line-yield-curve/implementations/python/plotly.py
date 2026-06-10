@@ -1,37 +1,43 @@
-""" pyplots.ai
-line-yield-curve: Yield Curve (Interest Rate Term Structure)
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-14
+"""line-yield-curve · python · plotly · anyplot.ai
+Yield Curve (Interest Rate Term Structure)
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
 
-# Data - U.S. Treasury yield curves on three dates showing normal, flat, and inverted shapes
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint palette positions 1-3
+C1 = "#009E73"  # brand green — normal/upward-sloping curve
+C2 = "#C475FD"  # lavender — flat curve
+C3 = "#4467A3"  # blue — inverted curve
+
+# Data - U.S. Treasury yield curves on three dates
 maturity_labels = ["1M", "3M", "6M", "1Y", "2Y", "3Y", "5Y", "7Y", "10Y", "20Y", "30Y"]
 maturity_years = np.array([1 / 12, 0.25, 0.5, 1, 2, 3, 5, 7, 10, 20, 30])
 
 # Normal upward-sloping curve (Jan 2022)
 yields_normal = np.array([0.08, 0.21, 0.44, 0.78, 1.18, 1.42, 1.72, 1.90, 1.98, 2.32, 2.27])
-
 # Flat curve (Jun 2023)
 yields_flat = np.array([5.27, 5.40, 5.47, 5.40, 4.87, 4.49, 4.13, 4.03, 3.84, 4.09, 3.91])
-
 # Inverted curve (Oct 2023)
 yields_inverted = np.array([5.54, 5.55, 5.56, 5.46, 5.05, 4.80, 4.62, 4.65, 4.62, 4.98, 4.81])
 
-# Colorblind-safe palette: steel blue, teal, amber
-colors = ["#306998", "#17BECF", "#BCBD22"]
-markers = ["circle", "diamond", "square"]
-
-# Plot
 fig = go.Figure()
 
 for ydata, name, color, marker in [
-    (yields_normal, "Jan 2022 (Normal)", colors[0], markers[0]),
-    (yields_flat, "Jun 2023 (Flat)", colors[1], markers[1]),
-    (yields_inverted, "Oct 2023 (Inverted)", colors[2], markers[2]),
+    (yields_normal, "Jan 2022 (Normal)", C1, "circle"),
+    (yields_flat, "Jun 2023 (Flat)", C2, "diamond"),
+    (yields_inverted, "Oct 2023 (Inverted)", C3, "square"),
 ]:
     fig.add_trace(
         go.Scatter(
@@ -39,19 +45,20 @@ for ydata, name, color, marker in [
             y=ydata,
             name=name,
             mode="lines+markers",
-            line={"color": color, "width": 4, "shape": "spline"},
-            marker={"size": 12, "symbol": marker, "line": {"width": 1.5, "color": "#FFFFFF"}},
+            line={"color": color, "width": 2.5, "shape": "spline"},
+            marker={"size": 10, "symbol": marker, "line": {"width": 1.5, "color": ELEVATED_BG}},
             hovertemplate="%{text}<br>Yield: %{y:.2f}%<extra>" + name + "</extra>",
             text=maturity_labels,
         )
     )
 
-# Inversion shading - filled region between short-term and long-term yields
+# Inversion shading — band where short-term yields exceed long-term yields
 short_term_max = max(yields_inverted[:4])
 long_term_min = min(yields_inverted[6:])
-fig.add_hrect(y0=long_term_min, y1=short_term_max, fillcolor="rgba(188, 189, 34, 0.08)", line_width=0)
+fig.add_hrect(y0=long_term_min, y1=short_term_max, fillcolor="rgba(68,103,163,0.08)", line_width=0)
 
-# Annotation arrow pointing to the inversion zone
+# Annotation: inversion zone callout (on-chart at 6M maturity)
+# Note: with xaxis.type='log', annotation x values use log10(data_value)
 fig.add_annotation(
     x=np.log10(0.5),
     y=short_term_max,
@@ -60,20 +67,20 @@ fig.add_annotation(
     text="<b>Inversion Zone</b><br><i>Short-term yields exceed<br>long-term yields</i>",
     showarrow=True,
     arrowhead=2,
-    arrowsize=1.5,
-    arrowwidth=2,
-    arrowcolor="#BCBD22",
-    ax=80,
-    ay=-60,
-    font={"size": 16, "color": "#555555"},
+    arrowsize=1.3,
+    arrowwidth=1.5,
+    arrowcolor=C3,
+    ax=85,
+    ay=-55,
+    font={"size": 11, "color": INK_SOFT},
     align="left",
-    bordercolor="#BCBD22",
-    borderwidth=1.5,
-    borderpad=6,
-    bgcolor="rgba(255, 255, 255, 0.9)",
+    bordercolor=C3,
+    borderwidth=1,
+    borderpad=5,
+    bgcolor=ELEVATED_BG,
 )
 
-# Annotation highlighting the spread at 10Y maturity
+# Annotation: basis-point spread between inverted and normal at 10Y
 spread_10y_bps = int(round((yields_inverted[8] - yields_normal[8]) * 100))
 fig.add_annotation(
     x=np.log10(10),
@@ -82,76 +89,76 @@ fig.add_annotation(
     yref="y",
     text=f"<b>+{spread_10y_bps} bps</b><br>at 10Y",
     showarrow=False,
-    font={"size": 15, "color": "#306998"},
-    bgcolor="rgba(255, 255, 255, 0.85)",
+    font={"size": 10, "color": C1},
+    bgcolor=ELEVATED_BG,
     borderpad=4,
 )
 
-# Layout
 fig.update_layout(
+    autosize=False,
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     title={
         "text": (
             "<b>U.S. Treasury Yield Curves</b>"
-            "<br><span style='font-size:18px;color:#888888'>"
-            "line-yield-curve · plotly · pyplots.ai</span>"
+            f"<br><span style='font-size:10px;color:{INK_MUTED}'>"
+            "line-yield-curve · python · plotly · anyplot.ai</span>"
         ),
-        "font": {"size": 28, "color": "#333333"},
+        "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
-        "y": 0.96,
+        "y": 0.97,
+        "yanchor": "top",
     },
     xaxis={
-        "title": {"text": "Maturity", "font": {"size": 22, "color": "#555555"}},
-        "tickfont": {"size": 18, "color": "#555555"},
+        "title": {"text": "Maturity", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "tickvals": maturity_years,
         "ticktext": maturity_labels,
         "type": "log",
         "showgrid": False,
         "showline": True,
-        "linewidth": 1.5,
-        "linecolor": "#CCCCCC",
+        "linewidth": 1,
+        "linecolor": INK_SOFT,
         "zeroline": False,
         "spikemode": "across",
         "spikethickness": 1,
-        "spikecolor": "#AAAAAA",
+        "spikecolor": INK_MUTED,
         "spikedash": "dot",
     },
     yaxis={
-        "title": {"text": "Yield (%)", "font": {"size": 22, "color": "#555555"}},
-        "tickfont": {"size": 18, "color": "#555555"},
+        "title": {"text": "Yield (%)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "ticksuffix": "%",
         "showgrid": True,
         "gridwidth": 1,
-        "gridcolor": "rgba(200, 200, 200, 0.3)",
-        "griddash": "dot",
+        "gridcolor": GRID,
         "showline": True,
-        "linewidth": 1.5,
-        "linecolor": "#CCCCCC",
+        "linewidth": 1,
+        "linecolor": INK_SOFT,
         "zeroline": False,
         "spikemode": "across",
         "spikethickness": 1,
-        "spikecolor": "#AAAAAA",
+        "spikecolor": INK_MUTED,
         "spikedash": "dot",
     },
     legend={
-        "font": {"size": 20},
-        "x": 0.02,
-        "y": 0.98,
-        "xanchor": "left",
-        "yanchor": "top",
-        "bgcolor": "rgba(255, 255, 255, 0.9)",
-        "bordercolor": "rgba(200, 200, 200, 0.5)",
+        "font": {"size": 10, "color": INK_SOFT},
+        "x": 0.99,
+        "y": 0.02,
+        "xanchor": "right",
+        "yanchor": "bottom",
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
         "borderwidth": 1,
         "itemsizing": "constant",
     },
-    template="plotly_white",
-    plot_bgcolor="rgba(250, 250, 252, 1)",
-    margin={"l": 100, "r": 80, "t": 130, "b": 100},
+    margin={"l": 80, "r": 40, "t": 90, "b": 60},
     hovermode="x unified",
-    hoverlabel={"font_size": 16, "namelength": -1},
+    hoverlabel={"font_size": 10, "namelength": -1},
     spikedistance=-1,
 )
 
-# Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
