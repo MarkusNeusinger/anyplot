@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: area-elevation-profile
 created: '2026-03-15T21:51:32Z'
-updated: '2026-06-10T05:59:49Z'
+updated: '2026-06-10T06:14:16Z'
 generated_by: claude-sonnet
 workflow_run: 27255918847
 issue: 4578
@@ -12,45 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-elev
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - 'Full spec compliance: area fill, landmark annotations with dotted indicator lines,
-    vertical exaggeration in subtitle, start/end labeled — all required features present.'
-  - 'Excellent dual-theme adaptation: all chrome tokens respond to ANYPLOT_THEME correctly;
-    dark render with cream line on green terrain is visually striking.'
-  - 'Correct Imprint palette usage: brand green #009E73 as terrain fill is semantically
-    apt; plot backgrounds are precisely #FAF8F1 / #1A1A17.'
-  - 'Idiomatic plotnine: geom_ribbon + coord_cartesian + scale_*_continuous with explicit
-    breaks is expert grammar-of-graphics usage.'
-  - 'Perfect code quality: KISS structure, reproducible seed, all imports used, clean
-    without over-engineering.'
+  - Two-layer geom_ribbon (main fill + narrow shadow band) creates convincing terrain
+    depth with zero extra dependencies
+  - 'PAGE_BG-colored halo line behind the INK profile line adapts correctly: provides
+    contrast against the green fill in light mode, disappears naturally in dark mode
+    where the white INK line already stands out'
+  - Summit vs valley landmark distinction (red AE3030 larger markers vs INK smaller
+    markers) delivers clear visual hierarchy and immediately signals high-point drama
+  - Dynamic title_fontsize calculation ensures the mandated anyplot title never overflows
+    at any character length
+  - 'Theme adaptation is thorough: every chrome element (background, text, grid, axis
+    lines, ticks) routes through INK/INK_SOFT/INK_MUTED tokens — dark render is fully
+    readable with no dark-on-dark failures'
+  - 'spec requirements fully met: start/end labeled, 8 annotated landmarks with dotted
+    vertical guides, vertical exaggeration noted in subtitle'
   weaknesses:
-  - 'DE-03 LOW: Summits (Schilthorn 1,725 m; Jungfraujoch 1,688 m) are not visually
-    differentiated from valley waypoints — identical marker size/color/label style
-    prevents a clear focal point. Fix: give summit markers larger size (e.g., size=5.5)
-    or a distinct Imprint palette color (#AE3030 for peaks above 1,600 m) to emphasize
-    high-point drama.'
-  - 'DE-01 LOW: Terrain fill is solid single-alpha green; a subtle elevation-gradient
-    variant would add aesthetic depth. Fix: stack two geom_ribbon layers (full terrain
-    at alpha=0.55, narrow base shadow at alpha=0.35) to create an elevation-shadow
-    effect in pure plotnine.'
-  - 'DQ-02/DQ-03 MINOR: Synthetic elevation values misalign with famous real-world
-    Swiss peak names (Jungfraujoch is 3,454 m IRL, rendered as 1,688 m). Fix: scale
-    up Gaussian peaks to 2,800-3,200 m range or rename locations to fictional Alpine
-    names.'
+  - 'LM-01 (4/5): Three separate geom_text calls filtered by ha value is functional
+    but could be unified into one call with ha mapped as a data column via aes() if
+    plotnine supports it — minor but noteworthy as it inflates line count'
+  - 'DE-03 (4/6): Story is clear but the plot stops at ''labeled terrain'' — adding
+    a brief annotation at the highest summit (e.g., a subtle fill-colour change or
+    an annotation band for the hardest climb section) would elevate storytelling from
+    good to excellent'
+  - 'VQ-01 (7/8): Landmark text at geom_text size=3.5 mm (≈10 pt) is readable but
+    on the small side for dense clusters like Talboden/Felsalp at km 50–62; bumping
+    to 3.8–4 mm would improve mobile readability without crowding'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct surface color, not pure white.
-      Chrome: Title "area-elevation-profile · python · plotnine · anyplot.ai" in dark ink (#1A1A17), italic subtitle in muted ink (#6B6A63). Axis titles "Distance (km)" and "Elevation (m)" in dark ink (10pt). Tick labels in INK_SOFT (#4A4A44, 8pt). Subtle horizontal grid lines (alpha=0.15) visible. All chrome is dark on light — fully readable.
-      Data: Terrain fill in Imprint brand green #009E73 at alpha=0.65. Profile outline in #1A1A17. Eight landmark markers as solid black dots; dotted vertical indicator lines in INK_SOFT; bold two-line labels (name + elevation). First (and only) data series is #009E73.
-      Legibility verdict: PASS — all text elements clearly readable against warm off-white background.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "area-elevation-profile · python · plotnine · anyplot.ai" in dark INK, proportional (~70% width). Italic subtitle readable. Axis labels "Distance (km)" and "Elevation (m)" at 10pt, clearly visible. Tick labels 8pt, dark on off-white — fully readable. Y-grid subtle alpha 0.15 lines visible but not intrusive.
+      Data: Two-layer green fill (#009E73) with full ribbon + shadow-band ribbon; profile line in dark INK with PAGE_BG-colored halo for contrast against the fill. Valley markers in dark INK (size 3.5), summit markers in #AE3030 matte red (size 5.5) — Steinpass/Windspitze highlighted in red. Eight landmark dotted-line guides and labels visible.
+      Legibility verdict: PASS — all text elements clear against warm off-white background. No light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface color, not pure black.
-      Chrome: Title and subtitle in light adaptive tokens (#F0EFE8 / #A8A79F). Axis titles in #F0EFE8 (INK dark token). Tick labels in #B8B7B0 (INK_SOFT dark token). Grid lines subtle and visible. No dark-on-dark text failures detected.
-      Data: Terrain fill remains identical Imprint brand green #009E73 (same as light render — data colors unchanged). Profile outline flips to #F0EFE8 (cream/white), creating a striking light line on the dark green terrain. Landmark dots also flip to pale #F0EFE8 — clearly visible against the green fill.
-      Legibility verdict: PASS — all text elements clearly readable against warm near-black background; no dark-on-dark failures.
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: All text flipped to light (INK = #F0EFE8 / INK_SOFT = #B8B7B0 / INK_MUTED = #A8A79F). Title, subtitle, axis labels, tick labels, and landmark text all clearly readable against the dark surface. No dark-on-dark failures observed. Subtle Y-grid lines visible.
+      Data: Green terrain fill (#009E73) is identical to light render — correct Imprint palette position 1, theme-invariant. The PAGE_BG halo line becomes invisible on the dark background (intentional — both are near-black), leaving a clean white INK profile line that reads strongly against the dark fill. Summit red markers (#AE3030) remain clearly distinguishable.
+      Legibility verdict: PASS — all chrome elements correctly adapted; green brand color remains highly visible on dark surface.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -61,82 +62,83 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title dynamically scaled (55-char
-          title -> 12pt); axis titles 10pt, tick labels 8pt, annotation labels 3.5mm
-          (~10pt bold). Grindelwald label slightly tight near y-axis but readable.
-          Both themes legible.
+        comment: 'All font sizes explicitly set via theme() and geom_text(size=);
+          proportional and readable in both themes. Minor deduction: landmark labels
+          at 3.5mm are on the small side for the dense km50-62 cluster.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions. Edge labels correctly
-          nudged inward with nudge_x.
+        comment: Eight landmarks well-spaced across 120 km; labels at different label_y
+          heights prevent collision. No visible text-on-text or text-on-data overlap
+          in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Terrain fill, profile line (size=1.2), landmark points (size=3.5),
-          dotted indicator segments all well-sized for 480-point density.
+        comment: Two-layer ribbon fill clearly delineates terrain. Profile line with
+          halo is distinctive. Valley/summit marker sizes (3.5 / 5.5) appropriate
+          for this fill-dominant chart type.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series CVD-safe brand green terrain with dark/light adaptive
-          outline. Good luminance contrast.
+        comment: Green fill vs INK line has high luminance contrast. Summit red vs
+          valley black uses size AND color for redundant encoding — CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 confirmed. Plot occupies ~75% canvas with balanced margins.
-          Nothing cut off.
+        comment: Canvas gate passed (3200x1800). Plot area fills canvas well; balanced
+          margins. expand=(0.03,2) on x-axis gives adequate breathing room at start/end.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Distance (km)'' and ''Elevation (m)'' — descriptive with units.'
+        comment: 'X: ''Distance (km)'', Y: ''Elevation (m)'' — both descriptive with
+          units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Terrain fill is #009E73 (Imprint position 1). Background #FAF8F1
-          light / #1A1A17 dark. All chrome theme-adaptive. Data colors identical across
-          both renders.'
+        comment: 'Primary fill #009E73 (Imprint position 1). Summit markers #AE3030
+          (Imprint position 5, semantic use). Valley markers use theme-adaptive INK
+          (neutral anchor). Backgrounds #FAF8F1 / #1A1A17 correct. Data colors identical
+          across themes; only chrome flips.'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: 'Above well-configured default: alpha-layered terrain fill with contrasting
-          outline is intentional; semantic green is a meaningful choice; dotted landmark
-          indicators are elegant; italic subtitle adds context. Not yet publication-level
-          — composition lacks strong focal point distinguishing summits from valleys.'
+        passed: true
+        comment: Two-layer ribbon fill, PAGE_BG halo line, semantic summit/valley
+          color distinction — all clearly above configured-default level. Strong typography
+          hierarchy. Not quite FiveThirtyEight publication level but genuinely polished.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: 'Explicit refinements: panel border removed, x-axis grid removed,
-          minor grid removed, y-axis grid alpha=0.15 subtle, axis ticks styled per
-          theme, plot_margin=0.04. Above defaults but no additional polish.'
+        passed: true
+        comment: Top/right spines removed; only X axis line retained; Y-only grid
+          at alpha=0.15 (barely perceptible); no tick marks on Y; generous plot_margin=0.04.
+          All explicitly tuned.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Labeled landmarks with elevations guide viewer through trail narrative;
-          vertical exaggeration in subtitle is educational. However, highest peaks
-          (Schilthorn, Jungfraujoch) share identical marker size/color/label style
-          with valley waypoints — no visual emphasis on the high-point drama.
+        passed: true
+        comment: Clear focal points via red summits; dotted guides connect landmarks
+          to terrain; subtitle frames the context. Stops short of analytical storytelling
+          (e.g. climb-difficulty annotation band).
     spec_compliance:
       score: 15
       max: 15
@@ -146,32 +148,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct area/elevation-profile chart with filled terrain silhouette
-          via geom_ribbon.
+        comment: Area elevation profile with filled terrain silhouette — correct type.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Area fill below profile, start/end labeled with elevation, 6 intermediate
-          landmarks with vertical marker lines and labels, vertical exaggeration noted
-          in subtitle.
+        comment: Area fill ✓, start/end labels ✓, landmark vertical guides + text
+          ✓, vertical exaggeration noted in subtitle ✓.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Distance on X, elevation on Y; coord_cartesian clips view without
-          losing data; x-axis spans full 0-120 km range.
+        comment: X=distance (km), Y=elevation (m), all 480 sample points plotted.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'area-elevation-profile · python · plotnine · anyplot.ai'
-          (correct format). No legend (single-series — appropriate).
+        comment: Title 'area-elevation-profile · python · plotnine · anyplot.ai' matches
+          required format. No series legend needed (single-series fill).
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -179,25 +178,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Profile shows ascending terrain, multiple peaks, intervening valleys,
-          smooth transitions, clear start/end anchors. All aspects of elevation-profile
-          plot type demonstrated.
+        comment: 'Varied terrain: steep ascents, gentle valleys, two dramatic summits,
+          8 labeled landmarks including summits, passes, huts, and towns.'
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Real Swiss Alpine location names create recognizable scenario. Minor
-          deduction: synthetic Gaussian profile yields elevations well below real-world
-          values (Jungfraujoch is 3,454 m IRL, rendered as 1,688 m).'
+        comment: Fictional but highly plausible Alpine names; 120 km trail length;
+          realistic elevation range (~580–1,725 m); neutral outdoor recreation scenario.
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 120 km distance plausible for hiking traverse; 480 sample points
-          appropriate density. Elevation range 580-1,725 m is self-consistent but
-          diverges from stated landmark names which have much higher real-world elevations.
+        comment: Base elevation 580 m, peak 1,725 m — realistic mid-Alpine range.
+          Start/end elevations similar (580/620 m). Smooth rolling with controlled
+          peaks via Gaussians.
     code_quality:
       score: 10
       max: 10
@@ -207,64 +204,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> data -> landmarks -> plot -> save. No functions
-          or classes.'
+        comment: 'Linear structure: imports → theme tokens → data generation → landmark
+          prep → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before random data generation.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 17 plotnine imports used; os, numpy, pandas all used.
+        comment: All 16 plotnine imports are used in the plot construction. numpy,
+          pandas, os all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Three geom_text calls for left/center/right alignment is the idiomatic
-          plotnine approach since ha cannot be mapped as an aesthetic. Title scaling
-          formula is compact and correct.
+        comment: Clean, well-commented logic. Three geom_text calls for different
+          alignments is the correct plotnine pattern (ha is not an aesthetic mapping).
+          Dynamic title_fontsize formula is a nice touch.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with verbose=False; correct dpi/width/height/units.
+        comment: plot.save(f'plot-{THEME}.png', dpi=400, width=8, height=4.5, units='in',
+          verbose=False) — correct.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert use of ggplot grammar: geom_ribbon for terrain fill, coord_cartesian
-          (view limits vs scale limits) to preserve data integrity, explicit scale_*_continuous
-          with breaks, layered geoms, full theme() composition.'
+        comment: 'Grammar-of-graphics layer composition (ggplot + multiple geom_*
+          + scale_* + coord_* + labs + theme) is idiomatic. Minor: three geom_text
+          filter calls could potentially be consolidated with a ha data column.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: geom_ribbon is distinctive plotnine/ggplot2 primitive for elevation
-          profiles; coord_cartesian vs scale limits is a library-specific distinction.
-          Could further leverage plotnine's annotate() / geom_label() for richer annotation
-          options.
-  verdict: REJECTED
+        comment: Double geom_ribbon (fill + shadow band) is a plotnine/ggplot2-specific
+          grammar feature for layered fills. The halo line technique (two stacked
+          geom_line at different sizes) is a ggplot idiom not easily replicated in
+          imperative libraries.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - layer-composition
-  - manual-ticks
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - rolling-window
   styling:
   - alpha-blending
+  - grid-styling
