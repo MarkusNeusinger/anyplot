@@ -1,0 +1,261 @@
+library: chartjs
+language: javascript
+specification_id: line-load-duration
+created: '2026-06-10T04:59:30Z'
+updated: '2026-06-10T05:18:14Z'
+generated_by: claude-sonnet
+workflow_run: 27253934387
+issue: 4586
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Perfect spec compliance: all four required features (region fills, capacity dashed
+    lines, region labels, energy annotation) fully implemented'
+  - Custom afterDraw plugin with coordinate mapping, clipping, and rounded pill annotations
+    — well above basic Chart.js usage
+  - 'Intelligent legend filtering: hides fill-only datasets, exposes only the three
+    meaningful legend items'
+  - Semantic color assignment with documented rationale (green=base/stable, blue=intermediate,
+    red=peak/critical)
+  - Fully deterministic data generation producing a realistic, engineering-plausible
+    load duration curve
+  - All chrome (text, grid, annotation backgrounds) correctly uses theme tokens, giving
+    correct adaptation in both renders
+  weaknesses:
+  - 'Chart area box border not removed — Chart.js default rectangular frame around
+    the plot area is visible in both renders; setting borderColor: ''transparent''
+    on the scales or chart border config would align with the style guide''s ''remove
+    top/right spines'' principle'
+  - Energy annotation text (13px) and tick labels (13px) are on the small end for
+    mobile-scaled views; bumping to 14px for both would improve readability at 400px
+    width
+  - Region fill datasets (Base Load, Intermediate Load, Peak Load) are correctly omitted
+    from the legend but their colors are never formally explained in the legend —
+    relying entirely on the pill labels; adding a brief legend entry or keeping the
+    fills with a unified label could improve standalone readability
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1) — correct
+      Chrome: title "line-load-duration · javascript · chartjs · anyplot.ai" in dark ink, readable; axis labels "Duration (hours)" and "Electrical Load (MW)" with units, readable; tick labels (h-suffixed hours, MW-suffixed loads) clearly visible; legend text readable; region pill labels (PEAK, INTERMEDIATE, BASE LOAD) readable; energy annotation box "Total Annual Energy: 5,643 GWh" readable
+      Data: Three fill regions — green (#009E73/palette[0]) for base load, muted blue (#4467A3/palette[2]) for intermediate, light red (#AE3030/palette[4]) for peak; main load curve in near-black (t.ink=#1A1A17); two horizontal dashed capacity lines in green (520 MW) and red (900 MW)
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17) — correct
+      Chrome: title and all labels flip to light off-white (t.ink=#F0EFE8); tick labels use t.inkSoft (#B8B7B0) — all clearly readable against dark background; no dark-on-dark failures observed; annotation box text in t.ink (light) on elevated-dark (#242420) background — readable; region pill labels retain Imprint palette colors on elevated-dark pill backgrounds — readable
+      Data: colors identical to light render — green base, blue intermediate, red/crimson peak fills; main load curve is now near-white (t.ink in dark mode), providing strong contrast against dark background
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Title 22px, axis labels 16px, ticks 13px, pills 15px bold — all
+          readable in both themes. Minor: 13px annotation text slightly small for
+          mobile scaling.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps with data or other text elements. Region pills well-positioned.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Dense 876-point dataset correctly uses pointRadius=0. Fill alpha=0.28
+          allows curve visibility. Lines at 1.5–2.5px are clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette used. Green/blue/red are CVD-distinguishable across
+          different hue families.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Good proportions, right padding (40px) accommodates
+          energy annotation. No clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Duration (hours)'', Y: ''Electrical Load (MW)'' with units.
+          Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First dataset palette[0] (#009E73). Semantic exception: red for
+          peak (critical), blue for intermediate documented in code. Backgrounds #FAF8F1/#1A1A17
+          correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default (4): custom pill annotations with roundRect+clip,
+          intelligent legend filter, semantic colors with documentation, energy annotation
+          box with border. Chart area border not removed reduces polish.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: 'Good: subtle t.grid grid lines, font weight 500 for labels, 32px
+          legend point style. Missing: chart area box border not removed (Chart.js
+          default rectangular frame still visible).'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Strong engineering narrative: three region fills guide eye through
+          load classification, capacity tier lines provide planning reference, total
+          energy annotation provides summary metric.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct load duration curve — monotonically decreasing line with
+          area fills.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All four required features present: region fills, dashed capacity
+          lines, region labels, total energy annotation.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: duration hours 0–8750, Y: load MW 0–1350. Peak ~1200 MW, base
+          ~400 MW as specified.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'line-load-duration · javascript · chartjs · anyplot.ai' correct.
+          Legend shows capacity tier names with MW values.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Demonstrates all aspects: sorted-descending load, three load regions,
+          capacity thresholds, total energy.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Mid-sized utility (peak 1200 MW, base 400 MW) is realistic. 5,643
+          GWh total is consistent. Neutral engineering context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Y-axis max 1350 MW has 12% headroom above peak. X-axis covers full
+          year. Load values plausible for mid-sized utility.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes. rgba() helper is a legitimate one-liner. Custom
+          plugin is the appropriate Chart.js pattern.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: piecewise mathematical formula, no RNG.'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed; Chart and tokens are globals.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. Clean null-value fill gap pattern, proper
+          plugin lifecycle usage. No fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: No filesystem calls. Harness handles output. Chart.js 4.x API used
+          correctly.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Excellent: fill:origin, spanGaps:false, borderDash, pointRadius:0,
+          maintainAspectRatio:false, animation:false, legend filter function — all
+          idiomatic Chart.js 4.x.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: afterDraw plugin with getPixelForValue(), ctx.roundRect(), ctx.clip(),
+          usePointStyle+pointStyleWidth, mixed dataset types (fills+dashes+solid line).
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
