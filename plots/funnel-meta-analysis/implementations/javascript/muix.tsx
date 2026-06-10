@@ -1,8 +1,7 @@
 // anyplot.ai
 // funnel-meta-analysis: Meta-Analysis Funnel Plot for Publication Bias
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-10
+// Library: muix 7.29.1 | JavaScript 22.22.3
+// Quality: 91/100 | Created: 2026-06-10
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
