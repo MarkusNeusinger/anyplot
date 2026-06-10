@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: acf-pacf
 created: '2026-06-10T02:03:27Z'
-updated: '2026-06-10T02:09:45Z'
+updated: '2026-06-10T02:27:20Z'
 generated_by: claude-sonnet
 workflow_run: 27247770776
 issue: 4663
@@ -12,46 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/javascript/chartjs/plot-dark.html
-quality_score: 88
+quality_score: 84
 review:
   strengths:
-  - Semantic positive/negative color encoding (brand green for positive, matte red
-    for negative) adds analytical value beyond single-color implementation
-  - 'AR(2) data choice is pedagogically perfect: demonstrates ACF exponential decay
-    and PACF lag-2 cutoff simultaneously'
-  - Levinson-Durbin PACF recursion computed from scratch — statistically correct and
-    reproducible with fixed-seed LCG
-  - Legend correctly filtered to show only the 95% CI entry, reducing visual noise
-  - Highlighted zero baseline via zeroGridColor callback is a thoughtful chart.js
-    refinement
-  - 'Perfect spec compliance: lag 0 in ACF, PACF starts at lag 1, x-axis title on
-    bottom panel only'
+  - 'Textbook AR(2) dataset demonstrates all key ACF/PACF diagnostic properties: exponential
+    decay, PACF cutoff at model order, lag-0 = 1.0, positive and negative correlations'
+  - Semantic green/red color coding (Imprint palette) for positive/negative correlations
+    is statistically correct and visually clear
+  - Mathematically sound Levinson-Durbin PACF computation and biased ACF estimator
+    — correct statistical implementation
+  - Dual-canvas flex layout cleanly solves Chart.js's lack of native subplot support
+  - All theme tokens correctly applied; both light and dark renders pass theme-readability
+    checks with no chrome failures
+  - Scriptable grid color callback (zero-line highlight via zeroGridColor) is an elegant
+    Chart.js-idiomatic touch
+  - Fixed LCG seed (seed=42) with Box-Muller transform ensures fully deterministic
+    output
   weaknesses:
-  - Chart borders (top and right spines) visible in both renders — remove by setting
-    border display:false on scale configs to lift visual refinement score
-  - Duplicate '95% CI' legend blocks appear above each subplot — suppress legend on
-    the ACF chart (or use plugins.legend.display:false on one chart) and show only
-    one shared legend
-  - Bar thickness of 4px makes near-zero PACF bars (~5-6 source px tall) barely visible
-    — increase barThickness to 6-8 for low-value visibility
-  - Tick font size at 13px CSS fractionally below recommended 14px — bump to 14px
-  - X-axis grid lines present on both charts — consider hiding x-axis grid (grid.display:false
-    on x) to reduce visual noise and improve data-to-ink ratio
+  - 'ACF x-axis uses maxTicksLimit:16 (even lags: 0, 2, 4…) while PACF shows all 30
+    lags — inconsistent tick density between panels makes the shared x-axis harder
+    to read as a unified scale; apply same maxTicksLimit to both x-axes'
+  - Y-axis renders to approximately ±1.5 in practice (Chart.js padding beyond suggestedMin/Max),
+    creating unused vertical space since ACF is all-positive and most PACF values
+    cluster within ±0.15 for lags > 2; tighten suggestedMin to ~-0.4 and suggestedMax
+    to ~1.1
+  - No real-world domain context — data is abstract statistical (AR(2) process) without
+    any label indicating what the time series represents
+  - 'DE-03: No annotation pointing to the key insight that the PACF cutoff at lag
+    2 identifies this as an AR(2) process; a small annotation at lag 2 would elevate
+    storytelling'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct Imprint light surface, not pure white
-      Chrome: Title 'acf-pacf · javascript · chartjs · anyplot.ai' bold centered dark text, clearly readable. Y-axis labels 'ACF' and 'PACF' in dark semi-bold text, readable. X-axis label 'Lag' visible on bottom chart only. Tick labels in dark-soft tone, small (13px CSS) but legible.
-      Data: ACF top panel — bars in brand green (#009E73) for positive values, exponentially decaying from lag 0=1.0. One or two small negative values near lag 26-29 in matte red (#AE3030). PACF bottom panel — prominent green bar at lag 1 (~0.78), smaller at lag 2 (~0.1), remaining mostly near-zero green and occasional small red negative bars. Horizontal dashed CI lines at ~+/-0.127.
-      Legibility verdict: PASS — all text readable against the warm off-white background; no light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "acf-pacf · javascript · chartjs · anyplot.ai" in bold 22px dark text, clearly readable. Y-axis labels "ACF" and "PACF" in 14px/600 weight, readable. X-axis "Lag" label on bottom chart only, 14px/600 weight. Tick labels 14px, clearly readable. 95% CI legend between panels at 13px, readable. All text dark on light background.
+      Data: ACF bars in brand green (#009E73) showing exponential decay from lag 0 (=1.0) through lag 30. PACF bars in green for positive lags 1-2 (significant), red (#AE3030, Imprint palette position 5, semantic negative anchor) for small negative values. Horizontal dashed CI lines at ±0.127. ACF x-axis shows even lags (0, 2, 4…30); PACF shows all lags (1–30).
+      Legibility verdict: PASS — all text clearly readable; no element unreadable.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct Imprint dark surface, not pure black
-      Chrome: Title in light cream text, clearly readable against dark background. Axis labels and tick labels in light-soft tone, all readable. No dark-on-dark failures observed — the implementation correctly threads theme tokens to all chrome elements.
-      Data: Colors are identical to light render — brand green positive bars, matte red negative bars. Data colors unchanged between themes as required by Imprint palette rules. CI dashed lines remain visible on dark background.
-      Legibility verdict: PASS — all text readable against the warm near-black background; no dark-on-dark issues found.
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title light-colored on dark background, clearly readable. Y-axis labels, tick labels, and x-axis label all correctly light-colored. 95% CI legend text light-colored. No dark-on-dark failures observed. Brand green #009E73 clearly visible on dark surface.
+      Data: Colors identical to light render — green bars and red bars are the same hex values. CI dashed lines remain visible. Data presentation unchanged from light to dark (only chrome flips).
+      Legibility verdict: PASS — all text clearly readable against dark background; no dark-on-dark failures; correct theme-adaptive chrome throughout.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -59,52 +63,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (13px ticks, 14px axis titles, 22px
-          title). Readable in both themes. Tick size at 13px CSS slightly below recommended
-          14px.
+        comment: 'All fonts explicitly set (title 22px DOM, axis labels 14px/600,
+          ticks 14px, legend 13px). Minor: ACF x-axis sparse ticks (maxTicksLimit:16)
+          vs PACF all-30-lags creates slight inconsistency.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render.
+        comment: No text or element overlaps in either render.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Significant bars clearly visible. Near-zero PACF bars (~5 source
-          px tall at barThickness:4) are data-accurate but very thin; barThickness
-          6-8 would improve low-value visibility.
+        comment: ACF and significant PACF bars well-sized (barThickness:7). Very small
+          high-lag PACF bars statistically correct but barely visible — not a code
+          defect.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green positive, matte red negative — semantic exception, CVD-safe
-          Imprint members.
+        comment: 'Semantic green/red CVD-safe: bar position (above/below zero) provides
+          redundant encoding.'
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Landscape orientation correct. Generous padding. Two equal-height
-          panes fill canvas well.
+        comment: 'Good flex two-panel layout with generous padding. Minor: y-axis
+          renders to ±1.5 (Chart.js padding beyond suggestedMin/Max), creating unused
+          vertical space for mostly-positive ACF and near-zero PACF data.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: ACF, PACF, and Lag labels correctly placed. X-axis title on bottom
-          chart only (shared-axis convention).
+        comment: '"ACF", "PACF", "Lag" are descriptive and correctly placed.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green first, matte red for negative (semantic exception).
-          Backgrounds #FAF8F1/#1A1A17. Data colors identical across themes; chrome
-          flips correctly.'
+        comment: 'First series #009E73 ✓; red #AE3030 for negative is semantic exception
+          ✓; backgrounds #FAF8F1/#1A1A17 ✓; theme-adaptive chrome both renders ✓.'
     design_excellence:
       score: 12
       max: 20
@@ -114,24 +117,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above well-configured-default (4): semantic positive/negative color
-          encoding adds insight. Not yet publication-ready (6+). Spine removal would
-          lift polish.'
+        comment: Thoughtful semantic coloring, custom DOM title for layout control,
+          clean axis styling. Above well-configured default but not publication-ready.
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: true
-        comment: Filtered legend, highlighted zero-baseline, explicit whitespace.
-          No spine removal — top/right chart borders remain visible.
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Smart AR(2) data choice clearly demonstrates ACF decay and PACF cutoff.
-          Semantic coloring highlights significant bars. Good visual hierarchy from
-          natural data pattern.
+        comment: X-axis grid removed, borders hidden, generous padding, custom zero-line
+          gridline highlight via scriptable callback. Solid refinements above defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: AR(2) data choice perfectly demonstrates diagnostic insight; green/red
+          adds emphasis. No annotation pointing to the key PACF cutoff at lag 2.
     spec_compliance:
       score: 15
       max: 15
@@ -141,31 +142,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Two vertically stacked ACF/PACF panels with vertical stem-style bars
-          from zero baseline.
+        comment: Correct bar-based stem plot in two vertically stacked panels.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: ACF top/PACF bottom, lag 0 in ACF, PACF starts at lag 1, 95% CI dashed
-          lines, 30 lags, y-axes labeled.
+        comment: ACF top/PACF bottom, 95% CI dashed lines, lag 0 in ACF, PACF starts
+          at lag 1, 30 lags, axes labeled.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shows lag numbers; ACF includes lag 0=1.0; PACF lags start
-          at 1. All data visible.
+        comment: X = lag number, Y = correlation value, correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'acf-pacf · javascript · chartjs · anyplot.ai'.
-          Legend filtered to 95% CI only.
+        comment: Title "acf-pacf · javascript · chartjs · anyplot.ai" exact format;
+          95% CI legend correct.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -173,86 +172,86 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full ACF/PACF demonstration with CI bounds, zero baseline, positive/negative
-          distinction, lag 0 handling.
+        comment: AR(2) demonstrates exponential ACF decay, PACF cutoff at model order,
+          lag-0=1.0, positive and negative correlations, significance bands.
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: AR(2) process is canonical, neutral time series example. No controversial
-          content.
+        comment: Plausible neutral statistical time series; slightly abstract without
+          explicit real-world domain label.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: N=240 observations, 30 lags, correlations in [-1,1], CI at +/-0.127
-          — statistically correct.
+        comment: AR(2) with phi1=0.7, phi2=0.2; N=240; all values within [-1, 1] —
+          statistically correct.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Lean helper functions, no classes or over-abstraction.
+        comment: Helper functions (lcgRand, stdNormal, computeACF, computePACF, makePane,
+          ciLine, yAxis) justified by browser LCG requirement and math complexity,
+          but deviate from flat-script KISS ideal.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: LCG with fixed seed 42, completely deterministic.
+        comment: Fixed LCG seed (_seed=42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; all globals (Chart, ANYPLOT_TOKENS) are used.
+        comment: No imports; all globals (Chart, ANYPLOT_TOKENS) used correctly.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean idiomatic JS. Per-bar backgroundColor function is elegant.
-          No fake interactivity.
+        comment: Clean, well-commented; no fake UI elements; appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness handles file output; no filesystem calls needed or present.
+        comment: Correct orientation directive; current Chart.js 4.4.7 API.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Mixed-chart approach (bar + line overlays), per-bar backgroundColor
-          callback, responsive + maintainAspectRatio:false + animation:false pattern,
-          legend filter function.
+        comment: Good use of mixed dataset types (bar+line), scriptable options API,
+          token-based color mapping, responsive/animation:false pattern.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Per-datum backgroundColor function, legend item filter callback,
-          zero-baseline color callback (zeroGridColor). Multi-chart approach on single
-          container.
-  verdict: REJECTED
+        comment: Uses Chart.js-specific scriptable options (grid color callback),
+          legend filter callback, and mixed chart type datasets. Could be replicated
+          with some effort in other libraries.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
   - custom-legend
-  - html-export
   patterns:
   - data-generation
   dataprep:
   - time-series
-  styling: []
+  styling:
+  - grid-styling
