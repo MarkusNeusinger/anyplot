@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: line-load-duration
 created: '2026-03-15T21:43:06Z'
-updated: '2026-06-10T04:44:12Z'
+updated: '2026-06-10T04:55:46Z'
 generated_by: claude-sonnet
 workflow_run: 27253290525
 issue: 4586
@@ -12,94 +12,100 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-load
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/python/plotly/plot-dark.html
-quality_score: 85
+quality_score: 86
 review:
   strengths:
-  - 'Complete spec implementation: all required features (region fills, capacity tier
-    lines, region labels, total energy annotation)'
-  - 'Excellent semantic Imprint palette usage: green=base, blue=intermediate, red=peak
-    is justified and intuitive'
-  - Theme-adaptive chrome correctly implemented in both renders — no dark-on-dark
-    failures
-  - Clean, reproducible code with seed set; idiomatic plotly API throughout
-  - 'Strong data storytelling: region labels placed directly on chart guide the viewer
-    immediately'
+  - 'Complete spec compliance: all required features (fills, dashed capacity lines,
+    region labels, total energy annotation) present and correct'
+  - Semantic palette exception correctly applied — green/blue/red chosen for real-world
+    associations (stable base / cycling intermediate / costly peak), documented in
+    code comments
+  - Theme tokens fully wired through all text elements — dark mode passes without
+    any dark-on-dark failures
+  - Clean, reproducible data generation with realistic seasonal + daily + noise model
+    producing a plausible load profile
+  - HTML export alongside PNG correctly implemented per plotly library requirements
   weaknesses:
-  - '"Base Capacity (550 MW)" add_hline annotation overlaps the legend box in both
-    renders — move legend lower (y=0.15) or shift annotation to annotation_position=bottom
-    right'
-  - Peak load fill opacity (rgba(174,48,48,0.22)) is too low — the peak shaded region
-    is barely visible as a filled zone in the dark render; increase fill opacity to
-    ~0.30-0.35 for peak and intermediate regions
+  - 'Right-side crowding: three add_hline annotation labels and the legend box occupy
+    the same horizontal strip; ''Base Capacity (550 MW)'' annotation sits at or just
+    above the legend box top edge — move legend to x=0.02, y=0.97 (top-left, inside
+    the base load zone) or change annotation_position from ''top right'' to ''right'''
+  - 'Peak fill alpha too low in dark mode: rgba(174,48,48,0.32) on #1A1A17 produces
+    a near-background fill — increase to 0.45-0.50 for dark theme via theme-conditional
+    fillcolor'
+  - Main load curve uses INK (black/white) — consider using INK_SOFT or an explicit
+    Imprint neutral to give the curve slightly more visual identity distinct from
+    axis lines in the light render
+  - No explicit spine removal — adding showline=False on both axes would improve visual
+    cleanliness and raise DE-02
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 (correct)
-      Chrome: Title "line-load-duration · python · plotly · anyplot.ai" centered in dark ink — fully readable. Y-axis "Power Demand (MW)", X-axis "Hours (ranked by load, descending)" readable at 12px. Tick labels at 10px, readable. Region labels ("Peak", "Intermediate", "Base Load") in Imprint colors visible. "Base Capacity (550 MW)" annotation overlaps legend box.
-      Data: Bold black curve monotonically decreasing 1250→350 MW. Green fill (#009E73, 22% alpha) for base load zone (0-550 MW). Blue fill (#4467A3, 22% alpha) for intermediate zone (550-900 MW). Red/pink fill (#AE3030, 22% alpha) for peak zone (900+ MW). Three dashed capacity lines. Total energy callout "7,105 GWh/year".
-      Legibility verdict: PASS (annotation/legend overlap noted but not a readability failure for axis text)
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "line-load-duration · python · plotly · anyplot.ai" in dark INK (#1A1A17) centered at ~70% width. Y-axis label "Power Demand (MW)" and X-axis label "Hours (ranked by load, descending)" in INK color. Tick labels in INK_SOFT (#4A4A44). All readable.
+      Data: Three alpha-blended fills — teal (#009E73 with 0.22 alpha) for base load (0-550 MW), blue-grey (#4467A3 with 0.30 alpha) for intermediate (550-900 MW), pink-red (#AE3030 with 0.32 alpha) for peak (900+ MW). Main load curve is solid black INK line. Three dashed capacity tier lines in matching colors. Region labels "Peak" (red), "Intermediate" (blue), "Base Load" (teal) within zones. Total Energy annotation boxed at center.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 (correct)
-      Chrome: Title and axis labels in light ink (#F0EFE8/#B8B7B0) — clearly readable against dark surface. No dark-on-dark failures. Legend box uses #242420 elevated background. Same annotation/legend overlap recurs.
-      Data: Colors identical to light render (Imprint palette unchanged). Main curve is white/near-white for contrast. Green base fill darkens to rich teal. Blue intermediate fill darkens to deep navy. Red peak fill (22% alpha on dark bg) is very faint — barely distinguishable as a shaded zone; redundant encoding (label + dashed line) compensates.
-      Legibility verdict: PASS (all chrome text light on dark, no failures; peak fill opacity is lowest concern)
+      Background: Warm near-black #1A1A17 — correct theme surface
+      Chrome: Title, axis labels, tick labels all render in light colors (INK=#F0EFE8, INK_SOFT=#B8B7B0). No dark-on-dark failures detected. Legend box uses ELEVATED_BG #242420. Grid uses light rgba grid color.
+      Data: Main load curve is near-white (#F0EFE8) — prominent against dark background. Three fill regions present: base load (dark teal, still distinguishable), intermediate (dark blue-grey, distinguishable), peak (dark red/maroon on near-black — less prominent at 0.32 alpha, slightly under-visible). Data colors are identical to light render — only chrome flipped.
+      Legibility verdict: PASS — all text readable; peak fill region slightly muted in dark mode but not a failure
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 16px, axis labels 12px, ticks
-          10px). Readable in both themes. Minor deduction for annotation/legend overlap
-          affecting readability of Base Capacity label.
+        comment: All font sizes explicitly set (title 16, axis labels 12, ticks 10,
+          annotations 12-14). Both renders fully readable.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: add_hline Base Capacity (550 MW) annotation overlaps with legend
-          box (legend y=0.42, capacity line at 39.3% from bottom) in both renders.
+        passed: true
+        comment: 'Minor crowding: ''Base Capacity (550 MW)'' hline annotation sits
+          adjacent to legend box top edge on the right side.'
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Main curve and fills visible. Peak load fill rgba(174,48,48,0.22)
-          is very faint in dark render; redundant encoding compensates.
+        comment: All elements visible. Peak fill (rgba(174,48,48,0.32)) is slightly
+          under-visible in dark mode — higher alpha recommended.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette with redundant encoding (region labels + dashed lines).
-          Colorblind-safe.
+        comment: Imprint palette semantic assignment (green/blue/red). CVD-safe, good
+          contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Canvas correct 3200x1800. Good proportions. Annotation/legend overlap
-          reduces layout score.
+        comment: Canvas 3200x1800 correct. Minor right-side crowding where legend
+          and capacity annotations compete.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: Hours (ranked by load, descending), Y: Power Demand (MW) — descriptive
-          with units.'
+        comment: 'Y: ''Power Demand (MW)'' with units. X: ''Hours (ranked by load,
+          descending)'' descriptive.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint palette with semantic exception: green=base, blue=intermediate,
-          red=peak. Background #FAF8F1/#1A1A17. Chrome theme-adaptive in both renders.'
+        comment: 'Valid semantic exception: green=base load (pos 1), blue=intermediate
+          (pos 3), red=peak (pos 5). Both theme backgrounds correct. All tokens theme-adaptive.'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -107,23 +113,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful semantic color assignment, filled regions with alpha,
-          annotated capacity tiers, direct region labels. Above default level.
+        comment: 'Above default: deliberate semantic color language with matching
+          fills/lines/labels. Alpha-blended fills professionally done. Not yet publication-quality.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Y-axis grid only (15% opacity), no x-axis grid, theme-adaptive margins,
-          legend with styled border. Annotation overlap and faint peak fill are refinement
-          gaps.
+        comment: Y-axis only grid, custom ticks, ELEVATED_BG callout boxes. No explicit
+          spine removal.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Direct region labels, capacity tier dashed lines, total-energy callout
-          guide viewer through load structure. Clear visual hierarchy.
+        comment: Clear three-layer load zone narrative with capacity context and total
+          energy metric. Good visual hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -133,28 +138,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct load duration curve; monotonically decreasing; hours ranked
-          on x-axis, MW on y-axis.
+        comment: Correct load duration curve with monotonically decreasing sort.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Filled regions, dashed capacity tier lines with labels, direct region
-          annotations, total energy callout — all present.
+        comment: 'All features: three shaded fills, dashed capacity lines with labels,
+          region labels, total energy annotation.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = hours 0-8760; Y = power demand 0-1400 MW; data sorted descending
-          correctly.
+        comment: 'X: hours 0-8760; Y: power demand in MW descending.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels match data series.
+        comment: Title exact required format. Legend lists all four visual elements.
     data_quality:
       score: 15
       max: 15
@@ -164,21 +167,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows peak, intermediate, and base load zones; seasonal + daily cycle
-          variation; 8760-hour annual scale.
+        comment: 'Full coverage: monotonic decrease, three load zones, capacity tiers,
+          total energy, realistic noise model.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mid-sized utility load profile. Neutral engineering domain.
+        comment: Mid-sized utility scenario, peak 1250 MW, base 350 MW. Neutral engineering
+          domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Peak ~1250 MW, base ~350-400 MW, total energy 7105 GWh/year — realistic
-          for a mid-sized utility.
+        comment: 400-1250 MW range, 7105 GWh/year total energy — plausible for mid-sized
+          grid operator.
     code_quality:
       score: 10
       max: 10
@@ -188,8 +192,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → constants → data → plot → annotations → layout
-          → save.'
+        comment: Clean Imports → Tokens → Data → Plot → Save. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -201,20 +204,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly.graph_objects imported and used.
+        comment: os, numpy, plotly.graph_objects — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Idiomatic fill technique with toself, loop over capacity tiers. Clean
-          and readable.
+        comment: Clean, appropriate complexity. For-loop over capacity tiers elegant.
+          np.trapezoid correct for NumPy 2.0+.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png + plot-{THEME}.html. Current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. write_image(width=800,
+          height=450, scale=4) correct.
     library_mastery:
       score: 7
       max: 10
@@ -224,16 +228,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of go.Scatter with fill=toself, add_hline with annotation,
-          add_annotation, hovertemplate, write_image/write_html.
+        comment: go.Scatter fill='toself' for polygon fills, add_hline() convenience
+          API, hovertemplate HTML, hovermode='x'. Idiomatic but verbose concatenation
+          approach.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses plotly-specific add_hline with inline annotations, fill=toself
-          for polygon regions, HTML interactive export alongside PNG, hovertemplate.
-  verdict: REJECTED
+        comment: add_hline() with annotation_text, hovertemplate HTML, hovermode='x'
+          unified hover, HTML export via write_html — all plotly-distinctive features.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -243,7 +248,6 @@ impl_tags:
   - manual-ticks
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
