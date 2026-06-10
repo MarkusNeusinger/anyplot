@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: funnel-meta-analysis
 created: '2026-06-10T03:57:41Z'
-updated: '2026-06-10T04:03:56Z'
+updated: '2026-06-10T04:14:35Z'
 generated_by: claude-sonnet
 workflow_run: 27251845679
 issue: 4590
@@ -15,46 +15,41 @@ preview_html_dark: null
 quality_score: 86
 review:
   strengths:
-  - Correct funnel plot type with inverted Y-axis (SE=0 at top), precise study points,
-    dashed pseudo 95% CI boundaries, and solid pooled effect line — all required features
-    present
-  - 'Perfect spec compliance: null effect dotted line at x=0, funnel polygon fill,
-    pooled effect vertical line, 20 RCTs with realistic antihypertensive trial data'
-  - 'Imprint palette correctly applied: brand green #009E73 for study points, #4467A3
-    (blue) for funnel region — data colors identical across both themes'
-  - 'Complete code quality: set.seed(42), KISS structure, only used imports (ggplot2,
-    ragg), clean R code'
-  - 'Good ggplot2 idiom: layered geom_polygon + geom_line + geom_vline + geom_point
-    composition, scale_y_reverse() for correct funnel orientation'
-  - 'Realistic medical context: 20 RCTs on antihypertensive treatment vs. placebo
-    with plausible log OR values and slight publication bias'
+  - 'Correct funnel plot mechanics: inverted Y-axis via scale_y_reverse(), pseudo
+    95% CI funnel shape (geom_polygon + geom_line), pooled effect line, null reference
+    line — all structurally sound'
+  - 'Imprint palette correctly applied: #009E73 (position 1) for study points, #4467A3
+    (position 3) for funnel region; no palette violations'
+  - 'Full theme-adaptive chrome: all INK/INK_SOFT/INK_MUTED tokens correctly flip
+    between light and dark; pooled effect line in dark render turns near-white through
+    INK token'
+  - 'Realistic, neutral scientific data: antihypertensive RCT meta-analysis with plausible
+    log OR and SE values; funnel asymmetry appropriately suggests publication bias'
+  - 'Clean, minimal code: KISS structure, set.seed(42), only required ggplot2 and
+    ragg imports'
   weaknesses:
-  - 'Grid lines too prominent in both themes: major grid uses full INK color (#1A1A17
-    light / #F0EFE8 dark) at 100% opacity making dark render grid appear as bright
-    white lines — use INK_MUTED or lighter intermediate for major grid (e.g. #6B6A63
-    light / #A8A79F dark) and remove minor grid lines entirely'
-  - Minor grid lines (linewidth=0.2) at nearly the same visual weight as major grid
-    (linewidth=0.3) — these should either be removed or reduced to barely-visible;
-    the 0.1 linewidth delta is insufficient differentiation
-  - 'DE-01 gap: typography lacks intentional hierarchy — title at base_size-derived
-    weight with no bold, could add font weight contrast (bold title) and a subtitle
-    or descriptive suffix to distinguish the title from axis labels more strongly'
-  - Study points near funnel apex (SE~0.1–0.15) have minor spatial overlap — size=3.0
-    is fine but slight jitter or size=3.5 would help the 3–4 closely clustered precision
-    studies at the top to remain individually distinguishable
+  - 'DE-01 capped at ''well-configured default'': shaded funnel region and Imprint
+    palette are good but no exceptional design element (intentional typographic hierarchy,
+    bold focal annotation) pushes to 6-8/8'
+  - 'DE-03 storytelling limited: subtitle explains context in words but no visual
+    emphasis highlights the key insight (asymmetric cluster of studies outside funnel
+    suggesting bias); annotate() arrow or label on asymmetric cluster would sharpen
+    the narrative'
+  - Funnel fill at alpha=0.09 is very subtle and nearly invisible in both renders;
+    slightly increasing to 0.12-0.15 would maintain subtlety while making the funnel
+    region more structurally visible
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "funnel-meta-analysis · r · ggplot2 · anyplot.ai" in dark ink at ~12pt, clearly readable; Y-axis label "Standard Error" and X-axis label "Log Odds Ratio" in dark ink at 10pt, readable; tick labels in INK_SOFT (#4A4A44) at 8pt, readable; caption in INK_MUTED at 7pt bottom-right, readable; grid lines are prominent using full INK (#1A1A17) — darker than ideal but not unreadable
-      Data: 20 study points in Imprint brand green (#009E73) with white stroke edges, size=3; dashed blue (#4467A3) funnel boundary lines; light blue (#4467A3 at alpha=0.09) funnel fill polygon; solid black pooled effect line at x≈0.45; dotted gray null reference line at x=0
-      Layout: Inverted Y-axis correctly places SE=0 at top (most precise studies), SE~0.65 at bottom; funnel apex at top-center near pooled estimate; slight rightward asymmetry in point scatter (publication bias)
-      Legibility verdict: PASS — all text readable; minor point clustering near funnel apex (SE~0.1–0.15)
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title 'funnel-meta-analysis · r · ggplot2 · anyplot.ai' bold dark text at ~65% plot width; axis labels 'Log Odds Ratio' and 'Standard Error' in dark ink; tick labels in dark secondary ink; subtitle and caption all readable
+      Data: Inverted funnel shape with blue (#4467A3) dashed boundary lines and very light shaded region (alpha=0.09); solid black pooled effect vertical line at LOR=0.45; gray dotted null reference line at LOR=0; 20 green (#009E73) study points with page-background strokes; SE=0 at top (most precise studies), SE~0.65 at bottom
+      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in near-white (#F0EFE8) — clearly readable against dark background; axis labels and tick labels in INK_SOFT (#B8B7B0) — readable; caption in INK_MUTED (#A8A79F) — readable; grid lines use full INK (#F0EFE8) at full opacity making them appear as bright white lines — more prominent than ideal in dark mode, but no dark-on-dark failures; no text is dark-on-dark
-      Data: Study points in identical brand green (#009E73) — matches light render exactly; funnel boundary lines in same blue (#4467A3) as light render; pooled effect line is near-white (INK = #F0EFE8 in dark mode); null reference line is light gray (INK_MUTED = #A8A79F)
-      Legibility verdict: PASS — all text readable with no dark-on-dark failures; grid lines are brighter/more prominent than ideal in dark mode due to using full INK token without opacity adjustment
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black
+      Chrome: Title, axis labels, tick labels, subtitle, caption all rendered in light off-white colors via INK/INK_SOFT/INK_MUTED tokens; pooled effect line flips to near-white (#F0EFE8) — very prominent; no dark-on-dark failures detected
+      Data: Study point color #009E73 (brand green) is identical to light render — only chrome flips; funnel boundaries remain clearly visible as blue dashed lines; funnel fill barely perceptible against dark background (expected at alpha=0.09)
+      Legibility verdict: PASS — all text clearly readable against dark background; brand green visible on dark surface
   criteria_checklist:
     visual_quality:
       score: 28
@@ -65,52 +60,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 12pt, axis labels 10pt, tick
-          labels 8pt, caption 7pt), readable in both themes. Minor: 8pt tick labels
-          at the minimum threshold.'
+        comment: All font sizes explicitly set (title=12pt, axis.title=10, axis.text=8,
+          subtitle=9, caption=7); all readable in both themes; title ~65% plot width
+          as expected
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No text overlaps. Minor spatial clustering of 3-4 study points near
-          funnel apex (SE~0.1-0.15) where points nearly touch.
+        comment: Minimal clustering of study points near funnel apex (SE~0.08-0.15)
+          expected for this plot type; all text elements fully separated
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 20 points at size=3, alpha=0.9 well-adapted to moderate density.
-          Funnel lines dashed and clearly visible. Reference lines distinct.
+        comment: 20 study points at size=3.5 alpha=0.9 well-adapted; all structural
+          lines clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'CVD-safe colors: brand green (#009E73) vs blue (#4467A3) funnel.
-          Good luminance contrast in both themes.'
+        comment: 'Single data series in #009E73; CVD-safe; no red-green-only signals'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas, balanced margins, plot fills canvas well, caption
-          positioned bottom-right, no content clipped.
+        comment: Canvas gate passed (3200x1800); good layout utilization; balanced
+          margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Log Odds Ratio and Standard Error are descriptive; units implicit
-          in metric names. Title format correct.
+        comment: Log Odds Ratio and Standard Error are descriptive and domain-appropriate
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green) for study points. Imprint palette
-          position 3 (#4467A3) for funnel. Backgrounds #FAF8F1/#1A1A17 correct. Data
-          colors identical across themes. Chrome adapts correctly.'
+        comment: 'First series #009E73; funnel fill Imprint[3]=#4467A3; backgrounds
+          #FAF8F1/#1A1A17; all chrome theme-adaptive'
     design_excellence:
       score: 11
       max: 20
@@ -119,27 +111,25 @@ review:
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Well-configured plot with thoughtful element choices (funnel fill,
-          dual reference lines, caption) but not publication-ready exceptional design.
-          Typography lacks weight differentiation.
+        passed: true
+        comment: Well-configured implementation with Imprint palette and shaded funnel
+          region, but reads as configured theme_minimal without exceptional typographic
+          hierarchy or bold design choices
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Panel border removed, axis lines set (L-shape). However, grid lines
-          use full INK color at 100% opacity making them prominent, especially in
-          dark mode where INK=#F0EFE8 produces bright white grids. Both major and
-          minor grids shown at similar prominence (0.3 vs 0.2 linewidth).
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Good visual hierarchy: prominent pooled effect line vs. dotted null
-          line vs. study points vs. funnel shape. Asymmetry in point scatter is visible.
-          Dual reference lines add statistical narrative context.'
+        comment: 'Solid refinement: panel border removed, minor grid blanked, major
+          grid at INK_MUTED/0.25 linewidth, generous margins — above defaults'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Subtitle and caption communicate publication bias narrative; funnel
+          shape creates visual hierarchy; but no explicit emphasis to guide viewer
+          to the asymmetry insight
     spec_compliance:
       score: 15
       max: 15
@@ -149,28 +139,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct funnel plot for meta-analysis with inverted Y-axis.
+        comment: Correct funnel plot with inverted Y-axis (scale_y_reverse), funnel
+          boundaries, study points
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: inverted SE axis, pooled effect line, pseudo 95% CI
-          funnel, study points, null reference line. Dotted null line vs dashed spec
-          is an acceptable aesthetic differentiation choice.'
+        comment: 'All required features present: inverted SE axis, X=effect size,
+          pooled effect vertical line, pseudo 95% CI funnel, study points, null reference
+          line at log OR=0'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=log_or, Y=std_error with scale_y_reverse(). All 20 studies visible.
+        comment: X=log_or, Y=std_error (inverted); all 20 studies visible within funnel
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'funnel-meta-analysis · r · ggplot2 · anyplot.ai' correct.
-          No legend needed (single data series).
+        comment: Title format correct; no legend needed for single series
     data_quality:
       score: 15
       max: 15
@@ -180,23 +170,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all funnel plot features: varying precision (8 SE values 0.08-0.63),
-          funnel asymmetry demonstrating publication bias, realistic scatter pattern.'
+        comment: 'Demonstrates all funnel plot aspects: funnel boundaries, study scatter,
+          pooled effect, null reference, funnel asymmetry suggesting publication bias'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Meta-analysis of 20 RCTs on antihypertensive treatment vs. placebo
-          — medically realistic, neutral, comprehensible scenario.
+        comment: Antihypertensive RCT meta-analysis; medically plausible, neutral
+          scientific topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Pooled log OR=0.45 (OR~1.57) plausible for drug trials. SE range
-          0.08-0.63 realistic for varying trial sizes. Slight publication bias encoded
-          naturally.
+        comment: Pooled log OR=0.45 and SE range 0.08-0.63 statistically realistic
+          for 20-study clinical meta-analysis
     code_quality:
       score: 10
       max: 10
@@ -206,32 +195,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean: theme tokens → data → plot → save. No functions or classes.'
+        comment: 'Linear script: tokens -> data -> plot -> save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present.
+        comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ggplot2 and ragg imported, both used.
+        comment: Only ggplot2 and ragg; both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean idiomatic R. Dynamic title_size calculation appropriate. No
-          fake UI elements.
+        comment: Clean idiomatic R; appropriate complexity; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with ragg::agg_png device. Correct.
+        comment: Saves as plot-{THEME}.png via current ggplot2/ragg API
     library_mastery:
       score: 7
       max: 10
@@ -241,21 +229,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good ggplot2 grammar: layered geoms, scale_y_reverse(), expansion()
-          for scale control, theme layering. Missing: could use annotate() for more
-          idiomatic annotation approach.'
+        comment: 'Strong grammar-of-graphics composition: four geom layers, scale_y_reverse(),
+          expansion() for axis padding, clean theme layering on theme_minimal'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Uses ggplot2-specific: scale_y_reverse() for inverted funnel, geom_polygon()
-          for funnel fill, layered grammar composition. Could leverage coord_flip
-          or more sophisticated ggplot2-specific features.'
-  verdict: REJECTED
+        comment: scale_y_reverse() for axis inversion is distinctive ggplot2; expansion()
+          for axis-end padding; geom_polygon() for funnel region — but advanced features
+          like annotate(), coord_cartesian(), stat_function() not leveraged
+  verdict: APPROVED
 impl_tags:
-  dependencies:
-  - ragg
+  dependencies: []
   techniques:
   - layer-composition
   patterns:
