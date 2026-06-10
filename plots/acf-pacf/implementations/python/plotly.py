@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 acf-pacf: Autocorrelation and Partial Autocorrelation (ACF/PACF) Plot
 Library: plotly 6.8.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-10
@@ -92,7 +92,12 @@ hover_tpl = "Lag %{x}<br>Correlation: %{y:.3f}<extra></extra>"
 if acf_sig_x:
     fig.add_trace(
         go.Scatter(
-            x=acf_sig_x, y=acf_sig_y, mode="lines", line={"color": BRAND, "width": 3}, showlegend=False, hoverinfo="skip"
+            x=acf_sig_x,
+            y=acf_sig_y,
+            mode="lines",
+            line={"color": BRAND, "width": 3},
+            showlegend=False,
+            hoverinfo="skip",
         ),
         row=1,
         col=1,
@@ -235,7 +240,7 @@ fig.update_layout(
     template="plotly_white",
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    margin={"l": 90, "r": 50, "t": 130, "b": 70},
+    margin={"l": 90, "r": 50, "t": 130, "b": 100},
     title={
         "text": f"{title_str}<br><sup style='color:{INK_SOFT};font-size:11px'>{subtitle}</sup>",
         "font": {"size": title_size, "color": INK},
@@ -244,10 +249,10 @@ fig.update_layout(
     },
     legend={
         "orientation": "h",
-        "yanchor": "bottom",
-        "y": 1.02,
-        "xanchor": "right",
-        "x": 1,
+        "yanchor": "top",
+        "y": -0.18,
+        "xanchor": "center",
+        "x": 0.5,
         "font": {"size": 10, "color": INK_SOFT},
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
