@@ -1,108 +1,138 @@
 library: matplotlib
+language: python
 specification_id: recurrence-basic
 created: '2026-03-14T22:47:20Z'
-updated: '2026-03-14T23:00:24Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23097948176
+updated: '2026-06-10T02:50:54Z'
+generated_by: claude-sonnet
+workflow_run: 27249111242
 issue: 4592
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/matplotlib/plot.png
-preview_html: null
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 90
 review:
   strengths:
-  - 'Excellent data choice: Lorenz attractor is the canonical recurrence plot example
-    showing periodic transients transitioning to chaos'
-  - Strong data storytelling with annotations identifying dynamical regimes and quantitative
-    RR statistic
-  - Crisp binary rendering using BoundaryNorm + ListedColormap with interpolation=none
-  - 'Complete spec compliance: time-delay embedding, Euclidean distance, binary threshold,
-    square matrix, labeled axes'
-  - Fully deterministic and reproducible via ODE solver with fixed parameters
+  - Lorenz attractor ODE via solve_ivp with proper time-delay embedding (Takens dim=3,
+    τ=5) — scientifically accurate and reproducible
+  - 'Binary colormap uses Imprint brand green #009E73 against PAGE_BG — correct for
+    recurrence plot; single data element needs no legend'
+  - Regime annotations with elevated background boxes (ELEVATED_BG / INK_SOFT adaptive)
+    guide interpretation of periodic transient block and chaotic region
+  - RR=15.0% statistic computed and displayed with branded styling in corner box
+  - 'Both themes render correctly: chrome adapts fully (title, axis labels, tick labels,
+    spines, annotation boxes), data color stays constant #009E73'
+  - 'Perfect spec compliance: square 2400×2400 canvas, aspect=equal, time-delay embedding,
+    Euclidean distance, binary threshold, prominent diagonal'
   weaknesses:
-  - Annotation text for chaotic regime is partially obscured by underlying recurrence
-    points (minor readability issue)
-  image_description: The plot displays a binary recurrence plot for the Lorenz attractor
-    x-component on a square canvas. Both axes are labeled "Time Index" (0–~490). Recurrent
-    state pairs are shown as deep blue (#306998) dots on a light cream (#F5F5F0) background.
-    The main diagonal is prominently filled. A dense blue block in the lower-left
-    corner (~indices 0–120) reveals a periodic transient regime, called out by an
-    orange annotation arrow. Scattered diagonal line segments throughout the middle
-    and upper regions indicate deterministic structure within the chaotic regime,
-    also annotated. A rounded box in the lower-right corner displays "RR = 15.0%".
-    The title "recurrence-basic · matplotlib · pyplots.ai" appears at the top, with
-    an italic subtitle showing embedding parameters (dim=3, τ=5, ε=percentile(15%)).
+  - Annotation text at fontsize=8 in both annotation boxes — borderline readable at
+    mobile scale (~400 px); raise to fontsize=9 for safety
+  - All four spines retained — appropriate for image/matrix plots but removing top+right
+    spines would improve visual refinement; consider keeping all four but lightening
+    the top+right spine color to INK_SOFT at lower linewidth
+  - 'LM-02 not fully maxed: scipy is an external dependency for ODE and distance computation;
+    matplotlib-specific distinctive features (BoundaryNorm+ListedColormap binary colormap)
+    are present but limited to that one element'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 — correct, not pure white
+      Chrome: title "recurrence-basic · python · matplotlib · anyplot.ai" at top in dark ink, fully readable; italic subtitle "Lorenz Attractor x-component | dim=3, τ=5, ε=percentile(15%)" in INK_MUTED; axis labels "Time Index" (both axes) in dark INK at 10pt; tick labels 0–400 at 8pt INK_SOFT — all readable
+      Data: brand green #009E73 recurrent points on warm off-white background; prominent lower-left periodic transient block; diagonal clearly visible; scattered diagonal-band pattern in chaotic region
+      Annotations: "periodic transient" and "chaotic regime" boxes with ELEVATED_BG fill and INK_SOFT border — text at fontsize=8, readable at full resolution but borderline at mobile scale; curved arrow for chaotic regime annotation
+      RR=15.0% stat box in bottom-right corner, brand green bold text on ELEVATED_BG
+      Legibility verdict: PASS (all elements readable at full resolution; annotation text marginally small)
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 — correct, not pure black
+      Chrome: title in light-colored text (F0EFE8), fully visible; subtitle in muted light text; axis labels and tick labels in light tones (B8B7B0 range) — all clearly readable against dark background; no dark-on-dark failures observed
+      Data: brand green #009E73 identical to light render — confirmed; periodic block, diagonal, chaotic scatter all visible; green has excellent contrast against near-black background
+      Annotation boxes: elevated dark background #242420 with lighter border and light text — readable
+      RR box: green text on dark elevated background — visible
+      Legibility verdict: PASS — all text elements are light-colored against dark background; no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: suptitle 24pt, subtitle 13pt, axis
-          labels 20pt, ticks 16pt'
+        comment: Title 12pt, axis labels 10pt, ticks 8pt all readable in both themes;
+          annotation text at fontsize=8 is borderline at mobile scale
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Annotation text for chaotic regime sits over recurrence points; no
-          text-on-text overlap
+        comment: No overlapping elements; annotations well-positioned in unoccupied
+          regions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Binary recurrence points rendered with interpolation=none for crisp
-          pixel display
+        comment: Brand green points on PAGE_BG have excellent contrast; diagonal and
+          block structures clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Two-color scheme (cream + Python Blue) is colorblind-safe with strong
-          contrast
+        comment: 'Binary colormap: single Imprint green on background; sufficient
+          contrast in both themes'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 12x12 figsize fills canvas well, nothing cut off
+        comment: 2400×2400 square canvas correct for symmetric matrix; canvas gate
+          passed; proportions balanced
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Time Index is descriptive and correct for recurrence plots but unitless
+        comment: Both axes labeled Time Index; suptitle in correct format; informative
+          subtitle with embedding parameters
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Recurrent points use #009E73 (Imprint position 1); backgrounds #FAF8F1/#1A1A17
+          correct; binary colormap appropriate for this plot type'
     design_excellence:
-      score: 15
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom colors, BoundaryNorm for crisp binary rendering, muted spines,
-          orange annotations
+        comment: Custom binary colormap with brand green; regime annotations with
+          styled boxes; RR statistic display; clean typography hierarchy — above default
+          but not maximum sophistication
       - id: DE-02
         name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Minor ticks added for detail; no grid (appropriate for image plot);
+          annotation boxes with elevated background; all four spines retained (standard
+          for matrix plots but limits refinement score)
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Thin muted spines, no grid, minor/major ticks configured, custom
-          background
-      - id: DE-03
-        name: Data Storytelling
-        score: 5
-        max: 6
-        passed: true
-        comment: Annotations identify periodic transient and chaotic regime, RR statistic
-          adds quantitative context
+        comment: Regime annotations identify key structural features; RR=15% quantifies
+          density; visual distinction between periodic block and chaotic scatter guides
+          viewer; clear narrative of Lorenz dynamics
     spec_compliance:
       score: 15
       max: 15
@@ -112,26 +142,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct binary recurrence plot from distance matrix with threshold
+        comment: 'Correct recurrence plot: binary threshold, symmetric matrix, square
+          with equal aspect'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Time-delay embedding, Euclidean distance, binary threshold, square
-          plot, labeled axes
+        comment: Time-delay embedding (Takens dim=3 delay=5), Euclidean distance via
+          cdist, binary threshold via percentile, main diagonal present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Both axes correctly represent time indices with origin=lower
+        comment: Both axes are time indices; aspect=equal; 500 points within 200-1000
+          spec range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, no legend needed for binary visualization
+        comment: suptitle matches exact format; no legend appropriate for binary single-series
+          colormap
     data_quality:
       score: 15
       max: 15
@@ -141,22 +174,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows block patterns, diagonal lines, and scattered points revealing
-          multiple recurrence structures
+        comment: Lorenz attractor canonical example; time-delay embedding; percentile
+          threshold; RR stat; periodic transient and chaotic regime both visible
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Lorenz attractor is the canonical dynamical systems example for recurrence
-          analysis
+        comment: Lorenz attractor is the canonical nonlinear recurrence plot example;
+          dim=3 delay=5 are scientifically standard parameters; 15th percentile threshold
+          is in typical range
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 500 points, 15th percentile threshold, embedding dim=3 delay=5 all
-          appropriate
+        comment: 500 points within spec range; RR=15% typical for Lorenz; tick spacing
+          100 appropriate for 0-470 range
     code_quality:
       score: 10
       max: 10
@@ -166,48 +200,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports-Data-Plot-Save flow, no functions or classes
+        comment: No functions or classes; clear linear procedural structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic ODE solver with fixed initial conditions
+        comment: Deterministic Lorenz ODE with fixed initial conditions — reproducible
+          without seed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All 7 imports used: os, matplotlib.pyplot, matplotlib.ticker, numpy,
+          matplotlib.colors (BoundaryNorm/ListedColormap), scipy.integrate, scipy.spatial.distance'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and concise with appropriate complexity
+        comment: Clean organization; no fake UI; appropriate complexity for a recurrence
+          plot
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300 and bbox_inches=tight
+        comment: Saves as plot-{THEME}.png; no bbox_inches=tight on savefig; current
+          matplotlib 3.10 API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses ax.imshow (Axes method); BoundaryNorm+ListedColormap for binary
+          colormap; MultipleLocator+FuncFormatter for tick control; origin=lower for
+          correct matrix orientation
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Proper axes methods, BoundaryNorm+ListedColormap, ticker formatters
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: BoundaryNorm with ListedColormap for binary thresholding, imshow
-          with interpolation=none
+        comment: BoundaryNorm+ListedColormap binary colormap is a matplotlib-specific
+          technique; minor tick locators; ax.annotate with connectionstyle arc; scipy
+          used as external dependency limiting native matplotlib showcase
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -216,7 +257,9 @@ impl_tags:
   - annotations
   - manual-ticks
   patterns:
+  - data-generation
   - matrix-construction
-  dataprep: []
+  dataprep:
+  - binning
   styling:
   - custom-colormap

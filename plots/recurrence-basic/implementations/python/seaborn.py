@@ -1,23 +1,52 @@
-""" pyplots.ai
+""" anyplot.ai
 recurrence-basic: Recurrence Plot for Nonlinear Time Series
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-14
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-06-10
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap, ListedColormap
 from scipy.integrate import solve_ivp
 from scipy.spatial.distance import cdist
 
 
-# Seaborn styling — leverage seaborn's theming system with custom palette
-sns.set_theme(style="white", context="talk", font_scale=1.1)
-custom_palette = sns.color_palette(["#F7F7F2", "#306998"])
-sns.set_palette(custom_palette)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Data - Lorenz attractor x-component
+# Imprint palette — first series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = IMPRINT_PALETTE[0]
+
+# Imprint continuous cmap — sequential for single-polarity distance data
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
+
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Data — Lorenz attractor x-component with 3D time-delay embedding
 sol = solve_ivp(
     lambda t, s: [10.0 * (s[1] - s[0]), s[0] * (28.0 - s[2]) - s[1], s[0] * s[1] - 8.0 / 3.0 * s[2]],
     [0, 50],
@@ -28,113 +57,100 @@ sol = solve_ivp(
 t_eval = np.linspace(5, 50, 500)
 x_series = sol.sol(t_eval)[0]
 
-# Time-delay embedding (Takens' theorem)
 embedding_dim = 3
 delay = 5
 n_embedded = len(x_series) - (embedding_dim - 1) * delay
 embedded = np.column_stack([x_series[i * delay : i * delay + n_embedded] for i in range(embedding_dim)])
 
-# Recurrence matrix (binary)
 distance_matrix = cdist(embedded, embedded, metric="euclidean")
 threshold = 0.15 * np.max(distance_matrix)
 recurrence_matrix = (distance_matrix <= threshold).astype(int)
-
-# Build continuous distance heatmap using seaborn's sequential palette
-# Normalize distances for the color-mapped background layer
 norm_distances = distance_matrix / np.max(distance_matrix)
 
-# Plot — square format for recurrence matrix (12x12 → 3600x3600 at 300dpi)
-fig, ax = plt.subplots(figsize=(12, 12))
+# Square canvas for the symmetric recurrence matrix
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400)
+fig.patch.set_facecolor(PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Layer 1: Distance-based heatmap as subtle background using seaborn's cubehelix palette
-bg_cmap = sns.cubehelix_palette(start=2.2, rot=0.1, light=0.97, dark=0.85, as_cmap=True)
+# Layer 1: Distance background — imprint_seq (sequential, single-polarity)
 sns.heatmap(
-    norm_distances,
-    cmap=bg_cmap,
+    norm_distances, cmap=imprint_seq, cbar=False, square=True, xticklabels=False, yticklabels=False, linewidths=0, ax=ax
+)
+ax.collections[-1].set_alpha(0.18)
+
+# Layer 2: Binary recurrence overlay — seaborn heatmap with mask (seaborn-native)
+rec_cmap = ListedColormap([BRAND])
+rec_cmap.set_bad(color=(0, 0, 0, 0))  # transparent for non-recurrent cells
+sns.heatmap(
+    recurrence_matrix.astype(float),
+    mask=(recurrence_matrix == 0),
+    cmap=rec_cmap,
     cbar=False,
     square=True,
     xticklabels=False,
     yticklabels=False,
     linewidths=0,
     ax=ax,
-    zorder=1,
+    vmin=0,
+    vmax=1,
 )
 
-# Layer 2: Binary recurrence overlay using seaborn's light_palette
-recurrence_cmap = sns.light_palette("#306998", as_cmap=True)
-masked_recurrence = np.ma.masked_where(recurrence_matrix == 0, recurrence_matrix.astype(float))
-ax.pcolormesh(masked_recurrence, cmap=recurrence_cmap, vmin=0, vmax=1, zorder=2)
+# Spines
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.spines["left"].set_color(INK_SOFT)
+ax.spines["bottom"].set_color(INK_SOFT)
 
-# Spine removal — seaborn convention
-sns.despine(ax=ax, left=True, bottom=True)
-
-# Custom tick labels at meaningful positions
+# Tick labels at 6 evenly-spaced positions
 n_ticks = 6
-tick_positions = np.linspace(0, n_embedded - 1, n_ticks)
-tick_labels = [f"{int(v)}" for v in np.linspace(0, n_embedded - 1, n_ticks)]
-ax.set_xticks(tick_positions)
-ax.set_xticklabels(tick_labels, fontsize=16)
-ax.set_yticks(tick_positions)
-ax.set_yticklabels(tick_labels, fontsize=16, rotation=0)
+tick_pos = np.linspace(0, n_embedded, n_ticks)
+tick_lab = [f"{int(v)}" for v in np.linspace(0, n_embedded - 1, n_ticks)]
+ax.set_xticks(tick_pos)
+ax.set_xticklabels(tick_lab, fontsize=8, color=INK_SOFT)
+ax.set_yticks(tick_pos)
+ax.set_yticklabels(tick_lab[::-1], fontsize=8, color=INK_SOFT, rotation=0)
 
-# Labels and title
-ax.set_xlabel("Time Index (embedding steps)", fontsize=20, labelpad=12)
-ax.set_ylabel("Time Index (embedding steps)", fontsize=20, labelpad=12)
-ax.set_title("Lorenz Attractor · recurrence-basic · seaborn · pyplots.ai", fontsize=24, fontweight="medium", pad=20)
+ax.set_xlabel("Time Index (embedding steps)", fontsize=10, color=INK, labelpad=10)
+ax.set_ylabel("Time Index (embedding steps)", fontsize=10, color=INK, labelpad=10)
+title = "Lorenz Attractor · recurrence-basic · python · seaborn · anyplot.ai"
+ax.set_title(title, fontsize=10, fontweight="medium", color=INK, pad=14)
 
-# Recurrence rate as a marginal distribution using seaborn's lineplot
-# Create a small inset showing recurrence density along the time axis
+# Story annotations — guide viewer to key structural features
+_ann = {
+    "fontsize": 7,
+    "color": INK_SOFT,
+    "style": "italic",
+    "bbox": {"facecolor": PAGE_BG, "edgecolor": "none", "alpha": 0.80, "pad": 1.5},
+}
+ax.text(n_embedded * 0.62, n_embedded * 0.56, "← diagonal:\ndeterminism", ha="left", va="center", **_ann)
+ax.text(n_embedded * 0.43, n_embedded * 0.50, "chaotic\ntransition", ha="center", va="center", **_ann)
+
+# Inset: recurrence rate over time — seaborn lineplot (repositioned upper-right)
 recurrence_rate = recurrence_matrix.sum(axis=1) / n_embedded
-ax_inset = fig.add_axes([0.17, 0.52, 0.18, 0.12])
-rate_df = pd.DataFrame({"Time": np.arange(n_embedded), "Recurrence Rate": recurrence_rate})
-sns.lineplot(data=rate_df, x="Time", y="Recurrence Rate", color="#306998", linewidth=1.5, ax=ax_inset)
-ax_inset.fill_between(rate_df["Time"], rate_df["Recurrence Rate"], alpha=0.3, color="#306998")
-ax_inset.set_title("Recurrence Rate", fontsize=10, color="#444444")
+ax_inset = fig.add_axes([0.67, 0.77, 0.22, 0.13])
+ax_inset.set_facecolor(ELEVATED_BG)
+ax_inset.patch.set_alpha(0.93)
+rate_df = pd.DataFrame({"Time": np.arange(n_embedded), "Rate": recurrence_rate})
+sns.lineplot(data=rate_df, x="Time", y="Rate", color=BRAND, linewidth=1.5, ax=ax_inset)
+ax_inset.fill_between(rate_df["Time"], rate_df["Rate"], alpha=0.25, color=BRAND)
+ax_inset.set_title("Recurrence Rate", fontsize=8, color=INK_SOFT)
 ax_inset.set_xlabel("")
 ax_inset.set_ylabel("")
-ax_inset.tick_params(labelsize=8)
+ax_inset.tick_params(labelsize=7, colors=INK_SOFT)
 sns.despine(ax=ax_inset)
-ax_inset.set_facecolor("#FAFAF5")
-ax_inset.patch.set_alpha(0.92)
+ax_inset.spines["left"].set_color(INK_SOFT)
+ax_inset.spines["bottom"].set_color(INK_SOFT)
 
-# Storytelling — annotate key structural features (repositioned to avoid overlap)
-# Diagonal lines = deterministic dynamics — place text in lower-right white space
-ax.annotate(
-    "Diagonal lines\n= determinism",
-    xy=(350, 380),
-    xytext=(430, 465),
-    fontsize=14,
-    color="#306998",
-    fontweight="bold",
-    arrowprops={"arrowstyle": "->", "color": "#306998", "lw": 1.8},
-    ha="center",
-    bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "none", "alpha": 0.9},
-)
-
-# Block clusters = regime recurrence
-ax.annotate(
-    "Block clusters\n= recurring regimes",
-    xy=(70, 70),
-    xytext=(200, 18),
-    fontsize=14,
-    color="#8B4513",
-    fontweight="bold",
-    arrowprops={"arrowstyle": "->", "color": "#8B4513", "lw": 1.8},
-    ha="center",
-    va="center",
-    bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "none", "alpha": 0.85},
-)
-
-# Add a subtle note about the embedding
+# Footnote
 fig.text(
     0.5,
     0.015,
     "3D time-delay embedding (τ=5) · Euclidean distance · ε = 15% of max distance",
     ha="center",
-    fontsize=13,
-    color="#666666",
+    fontsize=8,
+    color=INK_MUTED,
     style="italic",
 )
 
-fig.subplots_adjust(bottom=0.1, left=0.12, right=0.95, top=0.94)
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+fig.subplots_adjust(bottom=0.09, left=0.13, right=0.96, top=0.94)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
