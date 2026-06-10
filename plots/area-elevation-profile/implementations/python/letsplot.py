@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-elevation-profile: Terrain Elevation Profile Along Transect
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-10
@@ -90,7 +90,7 @@ landmark_elevations = [float(np.interp(d, distance, elevation)) for d in landmar
 # Positions 1,3 (Steinberg, Hochwand) go high; 2,4 (Grünsee, Felsentor) go low
 # Last label (Bergdorf Village) is right-aligned (hjust=1) so it doesn't overflow
 nudge_y = [200, 440, 160, 500, 180, 380, 440, 200]
-nudge_x = [-2, -5, 4, -5, 4, 1, 1, 0]
+nudge_x = [-2, -5, 11, -5, 4, 1, 1, 0]
 label_hjust = [0, 0, 0, 0, 0, 0, 0, 1]
 landmarks_df = pd.DataFrame(
     {
@@ -118,7 +118,7 @@ title_str = "Alpine Trail Elevation Profile · area-elevation-profile · python 
 plot = (
     ggplot(df, aes(x="distance", y="elevation"))
     # Terrain silhouette fill
-    + geom_area(fill="#4467A3", alpha=0.12)
+    + geom_area(fill="#4467A3", alpha=0.35)
     # Profile line colored by slope steepness
     + geom_line(
         aes(color="slope_category"),
@@ -171,7 +171,7 @@ plot = (
     # Axis scales
     + scale_x_continuous(name="Distance (km)", breaks=list(range(0, 121, 20)), limits=[-3, 126])
     + scale_y_continuous(
-        name="Elevation (m)", limits=[y_floor, y_max + 600], breaks=list(range(1000, y_max + 600, 200))
+        name="Elevation (m)", limits=[y_floor, y_max + 400], breaks=list(range(1000, y_max + 400, 200))
     )
     + labs(title=title_str, subtitle="120 km Alpine hiking transect — 8 landmarks — vertical exaggeration ~10×")
     # Canvas — hard rule: ggsize(800, 450) + scale=4 → 3200 × 1800 px
