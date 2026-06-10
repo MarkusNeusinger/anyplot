@@ -1,6 +1,6 @@
-"""anyplot.ai
+""" anyplot.ai
 recurrence-basic: Recurrence Plot for Nonlinear Time Series
-Library: plotnine 0.15.3 | Python 3.14.3
+Library: plotnine 0.15.5 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-06-10
 """
 
