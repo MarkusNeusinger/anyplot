@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 area-elevation-profile: Terrain Elevation Profile Along Transect
-Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 85/100 | Updated: 2026-06-10
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-06-10
 """
 
 import os
