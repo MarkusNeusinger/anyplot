@@ -41,15 +41,15 @@ vi.mock('src/hooks', () => ({
 }));
 
 // Mock lazy-loaded components as simple divs
-vi.mock('src/components/SpecTabs', () => ({
+vi.mock('src/sections/spec-detail/SpecTabs', () => ({
   SpecTabs: () => <div data-testid="spec-tabs">SpecTabs</div>,
 }));
 
-vi.mock('src/components/SpecOverview', () => ({
+vi.mock('src/sections/spec-detail/SpecOverview', () => ({
   SpecOverview: () => <div data-testid="spec-overview">SpecOverview</div>,
 }));
 
-vi.mock('src/components/SpecDetailView', () => ({
+vi.mock('src/sections/spec-detail/SpecDetailView', () => ({
   SpecDetailView: () => <div data-testid="spec-detail-view">SpecDetailView</div>,
 }));
 
