@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-load-duration: Load Duration Curve for Energy Systems
 Library: plotly 6.8.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-06-10
@@ -80,7 +80,7 @@ fig.add_trace(
         x=np.concatenate([hours, hours[::-1]]),
         y=np.concatenate([intermediate_top, np.full(8760, base_capacity)]),
         fill="toself",
-        fillcolor="rgba(68,103,163,0.22)",
+        fillcolor="rgba(68,103,163,0.30)",
         line={"width": 0},
         name="Intermediate Load",
         hoverinfo="skip",
@@ -94,7 +94,7 @@ fig.add_trace(
         x=np.concatenate([hours, hours[::-1]]),
         y=np.concatenate([peak_top, np.full(8760, intermediate_capacity)]),
         fill="toself",
-        fillcolor="rgba(174,48,48,0.22)",
+        fillcolor="rgba(174,48,48,0.32)",
         line={"width": 0},
         name="Peak Load",
         hoverinfo="skip",
@@ -193,7 +193,7 @@ fig.update_layout(
     },
     legend={
         "x": 0.75,
-        "y": 0.42,
+        "y": 0.15,
         "font": {"size": 10, "color": INK_SOFT},
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
