@@ -206,7 +206,7 @@ export interface MapForceConfig {
 
 // Static by construction — a single frozen object keeps the identity stable
 // across renders so consumers can safely list it in dependency arrays.
-const FORCE_CONFIG: MapForceConfig = {
+const FORCE_CONFIG: MapForceConfig = Object.freeze({
   cooldownTicks: COOLDOWN_TICKS,
   alphaDecay: COOLDOWN_ALPHA_DECAY,
   alphaMin: COOLDOWN_ALPHA_MIN,
@@ -232,7 +232,7 @@ const FORCE_CONFIG: MapForceConfig = {
     forceCollide<MapNode>(() => NODE_SIZE / 2 + COLLIDE_PADDING).iterations(2),
   createOutlierSquashForce: () =>
     outlierSquashForce(OUTLIER_THRESHOLD_PERCENTILE, OUTLIER_SQUASH_K, OUTLIER_SQUASH_STRENGTH),
-};
+});
 
 export interface UseForceGraphSimulationOptions {
   /**
@@ -523,7 +523,7 @@ export function useForceGraphSimulation({
     tickCountRef.current += 1;
     const PROGRESS_TICK_BATCH = 6;
     if (tickCountRef.current % PROGRESS_TICK_BATCH === 0) {
-      setTickProgress(Math.min(1, tickCountRef.current / COOLDOWN_TICKS));
+      setTickProgress(Math.min(1, tickCountRef.current / FORCE_CONFIG.cooldownTicks));
     }
   };
 
