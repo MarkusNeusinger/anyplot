@@ -1,12 +1,11 @@
 #' anyplot.ai
 #' area-elevation-profile: Terrain Elevation Profile Along Transect
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 88/100 | Created: 2026-06-10
 
 library(ggplot2)
-library(dplyr)
 library(scales)
 library(ragg)
+library(grid)
 
 set.seed(42)
 
@@ -34,6 +33,9 @@ elevation <- pmax(sfn(distance) + noise, 750)
 
 trail <- data.frame(distance = distance, elevation = elevation)
 
+# Valley floor for ribbon base — matches the actual data minimum
+elev_floor <- min(elevation)
+
 # Key landmarks — elevation matched to the noisy profile
 lm_dist <- c(0, 18, 30, 45, 60, 78, 120)
 lm_name <- c("Valley Start", "Fontaine Col", "Aiguille Peak",
@@ -44,19 +46,27 @@ landmarks <- data.frame(
   name      = lm_name,
   distance  = lm_dist,
   elevation = lm_elev,
-  lbl_hjust = c(0, 0, 0, 0, 0, 0, 1)
+  lbl_hjust = c(0, 0, 0, 0, 0, 0, 1),
+  label     = paste0(lm_name, " (", round(lm_elev), "m)")
 )
 
 # --- Title / sizing ---------------------------------------------------------
 TITLE      <- "area-elevation-profile · r · ggplot2 · anyplot.ai"
 title_size <- max(round(12 * min(1, 67 / nchar(TITLE))), 8)
 
+# --- Gradient terrain fill (ggplot2 >= 3.5.0) --------------------------------
+# Gradient from muted deep green at valley floor to bright brand green at peaks
+terrain_fill <- linearGradient(
+  colours = c(scales::alpha("#006B4F", 0.40), scales::alpha("#009E73", 0.65)),
+  y1 = unit(0, "npc"), y2 = unit(1, "npc")
+)
+
 # --- Plot -------------------------------------------------------------------
 p <- ggplot(trail, aes(x = distance)) +
-  # Terrain silhouette — fill from floor to elevation profile
+  # Terrain silhouette — gradient fill from valley floor to profile
   geom_ribbon(
-    aes(ymin = 700, ymax = elevation),
-    fill = IMPRINT_PALETTE[1], alpha = 0.50, color = NA
+    aes(ymin = elev_floor, ymax = elevation),
+    fill = terrain_fill, color = NA
   ) +
   # Profile line
   geom_line(
@@ -74,11 +84,11 @@ p <- ggplot(trail, aes(x = distance)) +
     shape = 21, size = 2.5,
     color = IMPRINT_PALETTE[1], fill = PAGE_BG, stroke = 1.2
   ) +
-  # Landmark labels at 45° angle
+  # Landmark labels with name and elevation at 45° angle
   geom_text(
     data = landmarks,
-    aes(x = distance, y = elevation + 160, label = name, hjust = lbl_hjust),
-    color = INK, size = 2.6, vjust = 0, angle = 45
+    aes(x = distance, y = elevation + 160, label = label, hjust = lbl_hjust),
+    color = INK, size = 3.0, vjust = 0, angle = 45
   ) +
   labs(
     title    = TITLE,
@@ -94,7 +104,7 @@ p <- ggplot(trail, aes(x = distance)) +
     breaks = seq(800, 3200, 200),
     labels = scales::comma
   ) +
-  coord_cartesian(ylim = c(700, 3450)) +
+  coord_cartesian(ylim = c(elev_floor, 3500)) +
   theme_minimal(base_size = 8) +
   theme(
     plot.background    = element_rect(fill = PAGE_BG, color = PAGE_BG),
