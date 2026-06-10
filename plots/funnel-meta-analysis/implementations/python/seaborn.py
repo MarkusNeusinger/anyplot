@@ -1,8 +1,18 @@
-""" pyplots.ai
+""" anyplot.ai
 funnel-meta-analysis: Meta-Analysis Funnel Plot for Publication Bias
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 92/100 | Created: 2026-03-15
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-06-10
 """
+
+import os
+import sys
+
+
+# Remove script directory from sys.path to prevent sibling .py files from
+# shadowing installed packages (e.g. matplotlib.py → import matplotlib conflict)
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+if _script_dir in sys.path:
+    sys.path.remove(_script_dir)
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,12 +21,38 @@ import seaborn as sns
 from matplotlib.lines import Line2D
 
 
-# Seaborn theme and context — use seaborn's palette system for cohesive colors
-funnel_palette = sns.light_palette("#306998", n_colors=6, as_cmap=False)
+# Theme-adaptive chrome tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — canonical order, first series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Seaborn theme with theme-adaptive chrome
 sns.set_theme(
-    style="ticks", rc={"axes.grid": True, "grid.alpha": 0.12, "grid.linewidth": 0.6, "font.family": "sans-serif"}
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK_SOFT,
+        "grid.alpha": 0.2,
+        "grid.linewidth": 0.6,
+        "axes.grid": False,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+        "font.family": "sans-serif",
+    },
 )
-sns.set_context("talk", font_scale=1.05, rc={"lines.linewidth": 2})
+sns.set_context("notebook", font_scale=1.0)
 
 # Data
 np.random.seed(42)
@@ -38,101 +74,136 @@ studies = [
     "Novak 2018",
     "O'Brien 2022",
 ]
-
 n_studies = len(studies)
 true_effect = -0.35
 
 std_errors = np.concatenate(
     [np.random.uniform(0.05, 0.15, 5), np.random.uniform(0.15, 0.30, 6), np.random.uniform(0.30, 0.50, 4)]
 )
-
 effect_sizes = true_effect + np.random.normal(0, 1, n_studies) * std_errors
 effect_sizes[-2] += 0.25
 effect_sizes[-1] += 0.30
 
-summary_effect = np.average(effect_sizes, weights=1 / std_errors**2)
 weights = 1 / std_errors**2
+summary_effect = np.average(effect_sizes, weights=weights)
 
 df = pd.DataFrame({"effect_size": effect_sizes, "std_error": std_errors, "study": studies, "weight": weights})
 
-# Classify studies by precision tier for seaborn hue-based styling
 df["precision"] = pd.cut(
     df["std_error"], bins=[0, 0.15, 0.30, 1.0], labels=["High precision", "Moderate precision", "Low precision"]
 )
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+# Plot — landscape 3200×1800 px (hard rule: figsize=(8, 4.5), dpi=400, no bbox_inches='tight')
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 
 se_range = np.linspace(0, 0.55, 300)
 ci_left = summary_effect - 1.96 * se_range
 ci_right = summary_effect + 1.96 * se_range
 
-ax.fill_betweenx(se_range, ci_left, ci_right, color=funnel_palette[1], alpha=0.25)
-ax.plot(ci_left, se_range, color=funnel_palette[3], linewidth=1.5, linestyle="--", alpha=0.6)
-ax.plot(ci_right, se_range, color=funnel_palette[3], linewidth=1.5, linestyle="--", alpha=0.6)
+# Pseudo 95% CI funnel region
+ax.fill_betweenx(se_range, ci_left, ci_right, color=INK_MUTED, alpha=0.10)
+ax.plot(ci_left, se_range, color=INK_SOFT, linewidth=1.2, linestyle="--", alpha=0.5)
+ax.plot(ci_right, se_range, color=INK_SOFT, linewidth=1.2, linestyle="--", alpha=0.5)
 
-ax.axvline(x=summary_effect, color="#306998", linewidth=2.5, alpha=0.8, label=f"Summary effect ({summary_effect:.2f})")
-ax.axvline(x=0, color="#888888", linewidth=1.5, linestyle=":", alpha=0.5, label="Null effect (0)")
+# Reference lines: summary effect (structural INK neutral) and null effect
+ax.axvline(x=summary_effect, color=INK, linewidth=2.0, alpha=0.85, zorder=4)
+ax.axvline(x=0, color=INK_SOFT, linewidth=1.2, linestyle=":", alpha=0.5, zorder=3)
 
-# Use seaborn scatterplot with hue for precision tiers — distinctive seaborn feature
-tier_palette = sns.color_palette([funnel_palette[5], funnel_palette[3], funnel_palette[2]])
+# Scatter by precision tier — Imprint palette; high precision → green (semantic: quality/good)
+tier_palette = {
+    "High precision": IMPRINT_PALETTE[0],
+    "Moderate precision": IMPRINT_PALETTE[1],
+    "Low precision": IMPRINT_PALETTE[2],
+}
 sns.scatterplot(
     data=df,
     x="effect_size",
     y="std_error",
     hue="precision",
     size="weight",
-    sizes=(120, 470),
+    sizes=(60, 280),
     palette=tier_palette,
     edgecolor="white",
-    linewidth=1.2,
+    linewidth=0.8,
     alpha=0.85,
     zorder=5,
     ax=ax,
     legend=False,
 )
 
-# Seaborn rugplot on x-axis to show effect size distribution — distinctive feature
-sns.rugplot(data=df, x="effect_size", height=0.015, color="#306998", alpha=0.5, ax=ax)
+# Seaborn rugplot for marginal effect size distribution — idiomatic seaborn feature
+sns.rugplot(data=df, x="effect_size", height=0.04, color=INK_SOFT, alpha=0.65, ax=ax)
 
-# Annotate outlier studies (lower-right asymmetric points) to strengthen storytelling
+# Annotate two most imprecise (lower-right outlier) studies
+# Martinez 2020 is rightmost — use left-aligned offset to avoid right canvas edge
 outliers = df.nlargest(2, "std_error")
 for _, row in outliers.iterrows():
+    x_offset = -75 if row["study"] == "Martinez 2020" else 10
     ax.annotate(
         row["study"],
         xy=(row["effect_size"], row["std_error"]),
-        xytext=(12, -4),
+        xytext=(x_offset, -3),
         textcoords="offset points",
-        fontsize=13,
+        fontsize=8,
         fontstyle="italic",
-        color="#555555",
-        alpha=0.9,
+        color=INK_MUTED,
     )
 
-# Style
+# Axis style
 ax.invert_yaxis()
-ax.set_xlabel("Log Odds Ratio (Drug vs Placebo)", fontsize=20)
-ax.set_ylabel("Standard Error", fontsize=20)
-ax.set_title("funnel-meta-analysis · seaborn · pyplots.ai", fontsize=24, fontweight="medium", pad=16)
-ax.tick_params(axis="both", labelsize=16)
+ax.set_xlabel("Log Odds Ratio (Drug vs Placebo)", fontsize=10)
+ax.set_ylabel("Standard Error", fontsize=10)
+ax.set_title(
+    "funnel-meta-analysis · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", pad=10, color=INK
+)
+ax.tick_params(axis="both", labelsize=8)
 
-# Center the funnel by setting symmetric x-limits around the summary effect
-x_margin = max(abs(df["effect_size"].min() - summary_effect), abs(df["effect_size"].max() - summary_effect)) * 1.5
-ax.set_xlim(summary_effect - x_margin, summary_effect + x_margin)
+# X-axis: asymmetric limits covering the full funnel extent at max SE plus data range
+x_min = min(summary_effect - 1.96 * 0.55, df["effect_size"].min()) - 0.08
+x_max = max(summary_effect + 1.96 * 0.55, df["effect_size"].max()) + 0.08
+ax.set_xlim(x_min, x_max)
 
 sns.despine(ax=ax)
 
-legend_elements = [
-    Line2D([0], [0], color="#306998", linewidth=2.5, alpha=0.8, label=f"Summary effect ({summary_effect:.2f})"),
-    Line2D([0], [0], color="#888888", linewidth=1.5, linestyle=":", alpha=0.5, label="Null effect (0)"),
-    Line2D([0], [0], marker="o", color="w", markerfacecolor=funnel_palette[5], markersize=10, label="High precision"),
-    Line2D(
-        [0], [0], marker="o", color="w", markerfacecolor=funnel_palette[3], markersize=9, label="Moderate precision"
-    ),
-    Line2D([0], [0], marker="o", color="w", markerfacecolor=funnel_palette[2], markersize=8, label="Low precision"),
-]
-ax.legend(handles=legend_elements, fontsize=14, frameon=False, loc="lower left")
+# Y-axis-only grid (style guide preference)
+ax.yaxis.grid(True, alpha=0.2, linewidth=0.8, color=INK_SOFT)
+ax.xaxis.grid(False)
 
-# Save
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+# Legend
+legend_elements = [
+    Line2D([0], [0], color=INK, linewidth=2.0, alpha=0.85, label=f"Summary effect ({summary_effect:.2f})"),
+    Line2D([0], [0], color=INK_SOFT, linewidth=1.2, linestyle=":", alpha=0.5, label="Null effect (0)"),
+    Line2D([0], [0], marker="o", color="w", markerfacecolor=IMPRINT_PALETTE[0], markersize=7, label="High precision"),
+    Line2D(
+        [0], [0], marker="o", color="w", markerfacecolor=IMPRINT_PALETTE[1], markersize=6, label="Moderate precision"
+    ),
+    Line2D([0], [0], marker="o", color="w", markerfacecolor=IMPRINT_PALETTE[2], markersize=5, label="Low precision"),
+]
+ax.legend(handles=legend_elements, fontsize=8, frameon=False, loc="lower left")
+
+# Size encoding note and weighted-mean apex label for information density
+ax.text(
+    0.98,
+    0.03,
+    "Circle size ∝ study weight",
+    transform=ax.transAxes,
+    ha="right",
+    va="bottom",
+    fontsize=7,
+    color=INK_MUTED,
+    fontstyle="italic",
+)
+ax.annotate(
+    f"WM = {summary_effect:.2f}",
+    xy=(summary_effect, 0.01),
+    xytext=(summary_effect + 0.12, 0.06),
+    fontsize=7,
+    color=INK_SOFT,
+    arrowprops={"arrowstyle": "-", "color": INK_MUTED, "lw": 0.7},
+)
+
+# Save — no bbox_inches; figsize×dpi produces exact 3200×1800 target
+# Use __file__-relative path so script runs correctly from any working directory
+output_dir = os.path.dirname(os.path.abspath(__file__))
+plt.savefig(os.path.join(output_dir, f"plot-{THEME}.png"), dpi=400, facecolor=PAGE_BG)
+plt.close()
