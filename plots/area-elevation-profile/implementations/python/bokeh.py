@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 area-elevation-profile: Terrain Elevation Profile Along Transect
 Library: bokeh 3.9.1 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-06-10
+Quality: 92/100 | Updated: 2026-06-10
 """
 
 import os

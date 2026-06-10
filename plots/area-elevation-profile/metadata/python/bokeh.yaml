@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: area-elevation-profile
 created: '2026-03-15T21:51:53Z'
-updated: '2026-06-10T05:54:35Z'
+updated: '2026-06-10T06:08:30Z'
 generated_by: claude-sonnet
 workflow_run: 27255759257
 issue: 4578
@@ -12,98 +12,97 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-elev
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/python/bokeh/plot-dark.html
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - Visually polished dual-fill terrain silhouette (green surface + blue depth shadow)
-    goes well beyond a basic line+fill chart.
-  - Slope-coloured multi_line using the Imprint sequential colormap is technically
-    elegant and communicates steepness without an extra axis.
-  - Fully theme-adaptive chrome — both light and dark renders are clean and legible
-    with no dark-on-dark issues.
-  - Landmark annotation system (Span + Label + scatter) is well-implemented and makes
-    the profile readable as a journey narrative.
-  - 'Exemplary Bokeh idiom: ColumnDataSource for all layers, HoverTool with vline
-    mode, HTML + Selenium screenshot pipeline.'
+  - Slope-colored multi_line using imprint_seq creates a visually compelling terrain
+    difficulty narrative — green (flat) to blue (steep)
+  - 'Dual-layer terrain fill (#009E73 at alpha=0.18 + #4467A3 at alpha=0.12) produces
+    a beautiful depth effect for the terrain silhouette'
+  - Ochre star marker for peak summit (Hochalm, highest landmark) creates clear visual
+    hierarchy and focal point
+  - All 7 landmarks annotated with well-positioned bold labels and dashed vertical
+    Span markers; start/end labels correctly aligned left/right
+  - 'Perfect spec compliance: area fill, slope-gradient coloring, landmark annotations,
+    vertical exaggeration note, start/end labeling all present'
+  - 'Theme-adaptive chrome applied correctly throughout — both renders pass readability;
+    data colors (#009E73, #4467A3) are identical across light and dark themes'
   weaknesses:
-  - Synthetic elevation values assigned to real Swiss locations are factually incorrect
-    (Schilthorn shown at 863 m instead of ~2970 m; Männlichen at 1043 m instead of
-    ~2230 m; Lauterbrunnen at 1730 m instead of ~796 m). Either use realistic elevation
-    values for these locations, or use fictional place names to avoid the factual
-    mismatch.
-  - Design storytelling could be pushed slightly further — e.g., a subtle callout
-    or emphasis marking the highest point (the Kleine Scheidegg peak) as the climactic
-    moment of the trail, helping the viewer immediately identify the key insight.
-  - _lerp_hex helper function technically violates the KISS 'no functions' structure;
-    could be inlined as a list comprehension for the 256-stop ramp.
+  - 'Annotation note at 22pt (''Profile color: green (flat) → blue (steep) [Imprint
+    sequential]'') is the smallest text element and may be barely legible when the
+    PNG is scaled to mobile-width thumbnails (~400px) — raise to 24-26pt'
+  - Design excellence is good but not exceptional; the visual composition could benefit
+    from slightly stronger focal emphasis on the highest peak (Hochalm) — for example,
+    a brief explanatory text label or contrasting annotation style distinct from the
+    other landmarks
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 — correct, not pure white
-      Chrome: title "Alpine Trail Profile · area-elevation-profile · python · bokeh · anyplot.ai" is large and bold (~75% canvas width, expected for long format); axis labels "Distance (km)" and "Elevation (m)" clearly readable; tick labels visible; annotation notes (vertical exaggeration, colour encoding) in muted italic at top-left
-      Data: dual varea fills — brand green #009E73 (main terrain fill, alpha=0.18) and blue #4467A3 (depth shadow fill, alpha=0.12); slope-coloured multi_line transitioning green→blue via Imprint sequential; 7 landmark dots in #4467A3 (size=22) with dashed vertical Span lines; bold name+elevation labels at each landmark
-      Legibility verdict: PASS — all text readable against light background; no light-on-light issues
+      Background: Warm off-white (#FAF8F1) — correct, no pure white.
+      Chrome: Title "Alpine Trail Profile · area-elevation-profile · python · bokeh · anyplot.ai" in dark near-black ink at scaled 45pt, occupies ~80% of width — expected for this title length. X-axis label "Distance (km)" and y-axis label "Elevation (m)" in dark INK at 42pt, balanced. Tick labels in INK_SOFT at 34pt, clearly visible. Two annotation notes at 26pt and 22pt in INK_MUTED italic — both readable at full canvas, 22pt note is smallest and may be marginal at mobile scale. All text readable. Legibility verdict: PASS.
+      Data: Green (#009E73) upper area fill (alpha=0.18) over blue (#4467A3) lower depth fill (alpha=0.12) create layered terrain silhouette. Profile line uses slope-colored multi_line segments (imprint_seq: #009E73 green for flat sections → #4467A3 blue for steep sections), line_width=5. 7 landmark dashed vertical lines in INK_SOFT with bold labels (28pt); non-peak dots in #4467A3 (22px circles), peak summit (Hochalm) in #BD8233 ochre star (30px). Data fills the plot area naturally with y_floor at ~750m.
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 — correct, not pure black
-      Chrome: title and axis labels switch to near-white (#F0EFE8), tick labels to #B8B7B0 — all clearly readable; annotation notes visible in muted grey (#A8A79F); no dark-on-dark failures observed; landmark labels render in light colour, readable
-      Data: terrain fills are visually identical to light render (Imprint palette data colours unchanged as required); slope-coloured line retains green→blue encoding; landmark dots retain #4467A3
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues detected
+      Background: Warm near-black (#1A1A17) — correct, no pure black.
+      Chrome: Title in light #F0EFE8 ink at same scaled size — clearly readable against dark surface. Axis labels and tick labels in light INK_SOFT (#B8B7B0) — all visible with no dark-on-dark failures. Annotation notes in #A8A79F (INK_MUTED) — visible against the dark background. No "dark-on-dark" issues detected. Legibility verdict: PASS.
+      Data: Area fills (#009E73 + #4467A3) are identical to light render — colors stay constant across themes as required. The teal-green terrain silhouette reads dramatically against the dark near-black background. Profile slope coloring (imprint_seq) is equally visible. Landmark dots and star marker colors unchanged. Dashed y-grid lines in light #F0EFE8 at alpha=0.12 are subtle and appropriate.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 45pt, axis labels 42pt, tick
-          labels 34pt, landmark labels 28pt, annotations 26/22pt). Well-proportioned
-          in both themes.
+        comment: 'All font sizes explicitly set (title 45pt, axis labels 42pt, tick
+          labels 34pt, landmark labels 28pt). All text readable in both themes. Minor
+          deduction: 22pt annotation note may be marginal at mobile-scale thumbnails.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Landmarks spread across 120km; y-offsets prevent label collisions
-          in both renders.
+        comment: No text overlaps. Landmark labels well-positioned with y_offset=45.
+          Start/end label alignment (left/right) prevents edge crowding.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Dual fills with alpha blending, slope-coloured line, and large landmark
-          dots all clearly visible at data density (~480 points).
+        comment: Profile line at line_width=5 clearly visible. Area fills at alpha=0.18/0.12
+          create distinct layers. Landmark dots at 22-30px prominent. 480-point multi_line
+          renders cleanly.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette (green + blue) is CVD-safe; shape redundancy (line
-          vs fill) supports distinguishability.
+        comment: Imprint palette throughout (CVD-safe). Sequential green-to-blue slope
+          coloring is CVD-safe. No red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Generous min_border settings; right border extended
-          to 300px for end-label. Good canvas utilization.
+        comment: 3200x1800 canvas correct. min_border_* properly set (bottom=160,
+          left=180, top=110, right=300). Good plot fill, balanced margins. Right border
+          extra at 300px provides room for Waldenfels label.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Distance (km) and Elevation (m) with units. Title matches required
-          descriptive+spec-id format.
+        comment: Distance (km) and Elevation (m) — descriptive with units. Title includes
+          descriptive prefix and correct spec-id/language/library/anyplot.ai format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First fill #009E73, depth fill #4467A3, slope line uses Imprint
-          sequential. Backgrounds #FAF8F1 / #1A1A17. Chrome tokens theme-adaptive
-          in both renders.'
+        comment: 'Primary fill #009E73 (brand green). Secondary fill #4467A3 (Imprint
+          pos 3). Profile uses imprint_seq (#009E73 to #4467A3). Backgrounds #FAF8F1
+          light / #1A1A17 dark correct. Theme-adaptive chrome complete.'
     design_excellence:
       score: 14
       max: 20
@@ -113,24 +112,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Dual-fill silhouette + slope-coloured line + landmark system is clearly
-          above defaults. Strong design thinking. Not quite FiveThirtyEight-level
-          publication quality.
+        comment: 'Clearly above defaults: slope-colored multi_line with imprint_seq,
+          dual-layer terrain fill creating depth, ochre star peak marker, thoughtful
+          annotation notes. Strong design well above configured defaults.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Y-axis-only dashed grid at alpha=0.12; outline_line_color=None; left/bottom
-          axes kept. Clean chrome. Could go further (minor tick removal, etc.).
+        comment: All spines removed (outline_line_color=None), y-axis only dashed
+          grid at alpha=0.12, no toolbar, generous margins. Good refinement above
+          minimal defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Slope colour encoding guides viewer to steep sections; landmarks
-          create a journey narrative; annotation explains colour rule. No clear focal
-          point emphasising the key climax (highest peak).
+        comment: Journey narrative via landmark sequence, slope coloring tells terrain
+          difficulty story, peak summit visually emphasized with ochre star + larger
+          dot, vertical exaggeration noted. Clear visual hierarchy guides viewer.
     spec_compliance:
       score: 15
       max: 15
@@ -140,30 +140,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct area-elevation-profile with filled terrain silhouette.
+        comment: Correct area/elevation profile with filled terrain silhouette.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Area fill, start/end labels, intermediate landmarks with vertical
-          markers, exaggeration note, slope gradient colouring, distance/elevation
-          axes with units — all present.
+        comment: Area fill, slope-gradient coloring, landmark annotations with vertical
+          marker lines, start/end labels, vertical exaggeration noted — all spec features
+          present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Distance on x-axis, elevation on y-axis; full 0-120 km range shown.
+        comment: Distance (km) on x-axis, Elevation (m) on y-axis, full 120 km range
+          visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'Alpine Trail Profile · area-elevation-profile · python · bokeh
-          · anyplot.ai' matches required format with optional descriptive prefix.
+        comment: 'Title: ''Alpine Trail Profile · area-elevation-profile · python
+          · bokeh · anyplot.ai'' — descriptive prefix + correct spec-id/language/library
+          format. No legend (single-series visualization, not required).'
     data_quality:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -171,62 +173,60 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: terrain fill, slope-coloured line, start/end
-          labels, intermediate landmarks, exaggeration note, vertical guide lines.'
+        comment: 'Shows all aspects: area fill, slope-colored line, 7 landmarks with
+          vertical markers, start/end labeling, vertical exaggeration, gradient fill
+          depth.'
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Swiss Alpine locations are real and neutral. Minor deduction: synthetic
-          data places Schilthorn (real 2970m) at 863m, making it appear as a valley
-          rather than the highest peak.'
+        comment: Alpine hiking trail (120 km) with fictional German-named locations
+          (Bergdorf, Hochalm, Westgrat, etc.). Neutral, scientifically plausible context.
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 'Synthetic terrain is plausible in range but landmark elevations
-          deviate significantly from reality: Schilthorn 863m vs real 2970m; Männlichen
-          1043m vs real 2230m; Lauterbrunnen 1730m vs real 796m. Real place names
-          require realistic elevations.'
+        passed: true
+        comment: Elevation ~800-2000m for Alpine terrain — geographically accurate.
+          120 km trail length, 250m sampling (480 points) — realistic DEM values.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: _lerp_hex helper function defined at module level. Small and justified
-          but technically violates 'no functions' KISS criterion.
+        passed: true
+        comment: 'Flat script: imports, data, plot, save. No unnecessary functions
+          or classes. sys.path manipulation is documented.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) present.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 8 imports used; no extraneous packages.
+        comment: 'All imports are used: os, sys, time, pathlib, numpy, all bokeh symbols,
+          selenium.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code. sys.path guard is canonical. CDP override is
-          correct. No fake UI.
+        comment: Clean code, appropriate complexity. IMPRINT_SEQ256 generation is
+          compact and correct. CDP override is well-documented.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png via Selenium. Current
-          API. Correct file naming.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Bokeh 3.x API.
     library_mastery:
       score: 9
       max: 10
@@ -236,18 +236,19 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: ColumnDataSource throughout; varea, multi_line, Span, Label models;
-          HoverTool vline mode; output_file+save+Selenium pipeline. Expert high-level
-          API usage.
+        comment: ColumnDataSource throughout, varea for filled areas, multi_line for
+          slope segments, HoverTool with vline mode, Span for vertical lines, Label
+          for annotations — all idiomatic Bokeh patterns.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'multi_line with per-segment hex colours from CDS (Imprint sequential
-          gradient) is distinctly Bokeh. HoverTool + HTML artifact. Span model for
-          dashed verticals. Minor deduction: no ColorBar widget.'
-  verdict: REJECTED
+        comment: multi_line with per-segment color array for slope gradient, HoverTool
+          interactive tooltips in HTML artifact, CDP viewport override for precise
+          canvas, Span for exact vertical landmark markers. Clear Bokeh-specific usage
+          above generic.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
@@ -259,7 +260,8 @@ impl_tags:
   - data-generation
   - columndatasource
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - rolling-window
   styling:
   - alpha-blending
   - custom-colormap
