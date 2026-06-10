@@ -43,3 +43,25 @@ export function langFromPath(pathname: string): string | undefined {
   if (RESERVED_TOP_LEVEL.has(segments[0])) return undefined;
   return segments[1];
 }
+
+/**
+ * Central route registry — the single source of truth for app URLs.
+ * Components navigate via `paths.*` instead of hardcoded strings; spec-detail
+ * URLs go through `specPath` (also exposed as `paths.spec`).
+ */
+export const paths = {
+  home: '/',
+  about: '/about',
+  debug: '/debug',
+  legal: '/legal',
+  libraries: '/libraries',
+  map: '/map',
+  mcp: '/mcp',
+  palette: '/palette',
+  plots: '/plots',
+  plotsSearch: '/plots?focus=search',
+  specs: '/specs',
+  stats: '/stats',
+  plotsFiltered: (param: string, value: string) => `/plots?${param}=${encodeURIComponent(value)}`,
+  spec: specPath,
+} as const;

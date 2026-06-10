@@ -297,7 +297,7 @@ jobs:
           fi
 
           # Reserved spec slugs collide with top-level frontend routes.
-          # Keep this list in sync with `RESERVED_TOP_LEVEL` in app/src/utils/paths.ts.
+          # Keep this list in sync with `RESERVED_TOP_LEVEL` in app/src/routes/paths.ts.
           RESERVED_SLUGS=(plots specs libraries palette about legal mcp stats debug map api og sitemap.xml robots.txt)
           for reserved in "${RESERVED_SLUGS[@]}"; do
             if [[ "$SPEC_ID" == "$reserved" ]]; then

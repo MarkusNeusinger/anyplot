@@ -10,6 +10,7 @@ import { LibraryCard } from 'src/components/LibraryCard';
 import { SectionHeader } from 'src/components/SectionHeader';
 import { LIB_TO_FRAMEWORK, LIBRARIES } from 'src/constants';
 import { useAnalytics, useAppData } from 'src/hooks';
+import { paths } from 'src/routes/paths';
 import { colors, textStyle, typography } from 'src/theme';
 
 // Framework filter (per library-expansion.md §6: "all JavaScript libs" vs
@@ -48,7 +49,7 @@ export function LibrariesPage() {
   const [frameworkFilter, setFrameworkFilter] = useState<FrameworkFilter>('all');
 
   useEffect(() => {
-    trackPageview('/libraries');
+    trackPageview(paths.libraries);
   }, [trackPageview]);
 
   const byId = new Map(librariesData.map(lib => [lib.id, lib]));
@@ -60,7 +61,7 @@ export function LibrariesPage() {
 
   const handleLibraryClick = (name: string) => {
     trackEvent('library_click', { source: 'libraries_page', library: name });
-    navigate(`/plots?lib=${name}`);
+    navigate(paths.plotsFiltered('lib', name));
   };
 
   const handleFilterClick = (id: FrameworkFilter) => {

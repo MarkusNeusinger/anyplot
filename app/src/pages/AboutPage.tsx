@@ -9,6 +9,7 @@ import Link from '@mui/material/Link';
 import { SectionHeader } from 'src/components/SectionHeader';
 import { GITHUB_URL } from 'src/constants';
 import { useAnalytics } from 'src/hooks';
+import { paths } from 'src/routes/paths';
 import { codeBlockStyle, colors, proseLinkStyle, textStyle, typography } from 'src/theme';
 
 const PIPELINE_BLOCK = `// pipeline
@@ -44,7 +45,7 @@ export function AboutPage() {
   const { trackPageview, trackEvent } = useAnalytics();
 
   useEffect(() => {
-    trackPageview('/about');
+    trackPageview(paths.about);
   }, [trackPageview]);
 
   return (
@@ -108,7 +109,7 @@ export function AboutPage() {
             <Box sx={{ ...textStyle, mt: 1 }}>
               see the{' '}
               <Link
-                href="/palette"
+                href={paths.palette}
                 onClick={() =>
                   trackEvent('internal_link', { destination: 'palette', source: 'about' })
                 }
@@ -153,7 +154,7 @@ export function AboutPage() {
               curious about the stack, costs, or analytics? see{' '}
               <Link
                 component={RouterLink}
-                to="/legal#transparency"
+                to={`${paths.legal}#transparency`}
                 onClick={() =>
                   trackEvent('internal_link', {
                     destination: 'legal_transparency',

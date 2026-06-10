@@ -12,6 +12,7 @@ import Typography from '@mui/material/Typography';
 
 import { CONFIG } from 'src/global-config';
 import { NotFoundPage } from 'src/pages/NotFoundPage';
+import { paths } from 'src/routes/paths';
 
 const RELOAD_ATTEMPT_KEY = 'anyplot:chunk-reload-attempt';
 
@@ -175,7 +176,7 @@ export function RouteErrorBoundary() {
         </Button>
         <Button
           component={RouterLink}
-          to="/"
+          to={paths.home}
           variant="outlined"
           startIcon={<HomeIcon />}
           sx={{ textTransform: 'none' }}

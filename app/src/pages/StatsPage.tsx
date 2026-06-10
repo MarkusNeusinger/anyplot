@@ -12,8 +12,8 @@ import { SectionHeader } from 'src/components/SectionHeader';
 import { useAnalytics } from 'src/hooks';
 import { useTheme } from 'src/hooks/useLayoutContext';
 import { ApiError, apiGet, endpoints } from 'src/lib/api';
+import { paths, specPath } from 'src/routes/paths';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
-import { specPath } from 'src/utils/paths';
 import { buildSrcSet, getFallbackSrc } from 'src/utils/responsiveImage';
 import { selectPreviewUrl } from 'src/utils/themedPreview';
 
@@ -108,7 +108,7 @@ export function StatsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    trackPageview('/stats');
+    trackPageview(paths.stats);
   }, [trackPageview]);
 
   useEffect(() => {
@@ -793,7 +793,7 @@ export function StatsPage() {
                       <Link
                         key={tag}
                         component={RouterLink}
-                        to={param ? `/plots?${param}=${encodeURIComponent(tag)}` : '/plots'}
+                        to={param ? paths.plotsFiltered(param, tag) : paths.plots}
                         onClick={() => {
                           if (param)
                             trackEvent('tag_click', { param, value: tag, source: 'stats' });

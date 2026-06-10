@@ -12,6 +12,7 @@ import { NavBar } from 'src/components/NavBar';
 import { useAnalytics } from 'src/hooks';
 import { setAnalyticsAmbientProps } from 'src/hooks/useAnalytics';
 import { useTheme } from 'src/hooks/useLayoutContext';
+import { paths } from 'src/routes/paths';
 
 const containerSx = {
   px: { xs: 2, sm: 4, md: 8, lg: 12 },
@@ -31,7 +32,7 @@ export function RootLayout() {
   const { pathname, hash } = useLocation();
   const navigationType = useNavigationType();
   const { effective } = useTheme();
-  const mastheadSticks = pathname !== '/plots';
+  const mastheadSticks = pathname !== paths.plots;
 
   // Set synchronously during render so the first pageview from a child page's
   // useEffect (which runs before the parent's useEffect) carries the theme prop.

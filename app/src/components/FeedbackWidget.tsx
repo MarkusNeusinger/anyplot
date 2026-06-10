@@ -19,7 +19,7 @@ import Tooltip from '@mui/material/Tooltip';
 import { useAnalytics } from 'src/hooks';
 import { useLocalStorage } from 'src/hooks/useLocalStorage';
 import { apiPost, endpoints } from 'src/lib/api';
-import { RESERVED_TOP_LEVEL } from 'src/utils/paths';
+import { RESERVED_TOP_LEVEL } from 'src/routes/paths';
 
 const MAX_MESSAGE_LENGTH = 500;
 const SESSION_KEY = 'anyplot_feedback_session';

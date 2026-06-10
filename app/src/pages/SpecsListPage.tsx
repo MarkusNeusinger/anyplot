@@ -14,9 +14,9 @@ import { GITHUB_URL } from 'src/constants';
 import { useAnalytics } from 'src/hooks';
 import { useAppData, useHomeState } from 'src/hooks';
 import { ApiError, apiGet, endpoints } from 'src/lib/api';
+import { paths, specPath } from 'src/routes/paths';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 import type { PlotImage } from 'src/types';
-import { specPath } from 'src/utils/paths';
 import { buildSrcSet, getFallbackSrc, SPECS_SIZES } from 'src/utils/responsiveImage';
 
 interface SpecListItem {
@@ -41,7 +41,7 @@ export function SpecsListPage() {
 
   // Track specs page view
   useEffect(() => {
-    trackPageview('/specs');
+    trackPageview(paths.specs);
   }, [trackPageview]);
 
   const [allImages, setAllImages] = useState<PlotImage[]>([]);

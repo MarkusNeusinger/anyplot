@@ -5,6 +5,7 @@ import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 
 import { useAnalytics } from 'src/hooks';
+import { paths } from 'src/routes/paths';
 import { colors, typography } from 'src/theme';
 
 const DEBUG_CLICK_COUNT = 5;
@@ -72,15 +73,15 @@ export function NavBar() {
   }, []);
 
   const handleSearch = () => {
-    trackEvent('nav_click', { source: 'nav_search', target: '/plots?focus=search' });
-    navigate('/plots?focus=search');
+    trackEvent('nav_click', { source: 'nav_search', target: paths.plotsSearch });
+    navigate(paths.plotsSearch);
   };
 
   // 5 rapid clicks on the logo opens /debug.
   // Non-triggering clicks fall through to RouterLink's normal `/` navigation.
   const handleLogoClick = useCallback(
     (e: React.MouseEvent) => {
-      trackEvent('nav_click', { source: 'nav_logo', target: '/' });
+      trackEvent('nav_click', { source: 'nav_logo', target: paths.home });
       if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
       clickCountRef.current += 1;
       if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
@@ -91,7 +92,7 @@ export function NavBar() {
         e.preventDefault();
         clickCountRef.current = 0;
         if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
-        navigate('/debug');
+        navigate(paths.debug);
       }
     },
     [navigate, trackEvent]
@@ -119,7 +120,7 @@ export function NavBar() {
       {/* Logo */}
       <Box
         component={RouterLink}
-        to="/"
+        to={paths.home}
         onClick={handleLogoClick}
         sx={{
           gridArea: 'logo',

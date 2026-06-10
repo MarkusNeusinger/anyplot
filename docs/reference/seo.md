@@ -354,7 +354,7 @@ without the query string.
 ### Reserved Spec Slugs
 
 Spec IDs are top-level path segments, so they must not collide with reserved
-routes. The blocklist is enforced at runtime in `app/src/utils/paths.ts`
+routes. The blocklist is enforced at runtime in `app/src/routes/paths.ts`
 (`RESERVED_TOP_LEVEL`) and at spec creation time in `.github/workflows/spec-create.yml`:
 
 ```
@@ -389,7 +389,7 @@ changing the canonical.
 
 ### Path Utility
 
-Frontend URL generation is centralized in `app/src/utils/paths.ts`:
+Frontend URL generation is centralized in `app/src/routes/paths.ts`:
 - `specPath(specId, language?, library?)` — builds the three-tier URL based on
   which arguments are provided.
 - `langFromPath(pathname)` — extracts the language segment from a path.

@@ -19,6 +19,8 @@ import Tabs from '@mui/material/Tabs';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
+import { paths } from 'src/routes/paths';
+
 const CodeHighlighter = lazy(() => import('src/components/CodeHighlighter'));
 import { apiGet, endpoints } from 'src/lib/api';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
@@ -231,7 +233,7 @@ export function SpecTabs({
   const handleTagClick = useCallback(
     (paramName: string, value: string) => {
       onTrackEvent?.('tag_click', { param: paramName, value, source: 'spec_detail' });
-      navigate(`/plots?${paramName}=${encodeURIComponent(value)}`);
+      navigate(paths.plotsFiltered(paramName, value));
     },
     [navigate, onTrackEvent]
   );

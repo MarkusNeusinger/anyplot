@@ -6,8 +6,8 @@ import { GITHUB_URL } from 'src/constants';
 import { useAnalytics } from 'src/hooks';
 import { useTheme } from 'src/hooks/useLayoutContext';
 import type { PlotOfTheDayData } from 'src/hooks/usePlotOfTheDay';
+import { specPath } from 'src/routes/paths';
 import { colors, typography } from 'src/theme';
-import { specPath } from 'src/utils/paths';
 import { buildSrcSet, getFallbackSrc } from 'src/utils/responsiveImage';
 import { selectPreviewUrl } from 'src/utils/themedPreview';
 

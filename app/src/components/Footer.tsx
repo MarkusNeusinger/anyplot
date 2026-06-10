@@ -4,6 +4,7 @@ import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 
 import { GITHUB_URL } from 'src/constants';
+import { paths } from 'src/routes/paths';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 
 interface FooterProps {
@@ -92,11 +93,11 @@ export function Footer({ onTrackEvent, selectedSpec, selectedLibrary }: FooterPr
         </Link>
       </Box>
       <span>·</span>
-      <Link component={RouterLink} to="/about" onClick={trackInternal('about')} sx={linkSx}>
+      <Link component={RouterLink} to={paths.about} onClick={trackInternal('about')} sx={linkSx}>
         about
       </Link>
       <span>·</span>
-      <Link component={RouterLink} to="/legal" onClick={trackInternal('legal')} sx={linkSx}>
+      <Link component={RouterLink} to={paths.legal} onClick={trackInternal('legal')} sx={linkSx}>
         legal
       </Link>
     </Box>
