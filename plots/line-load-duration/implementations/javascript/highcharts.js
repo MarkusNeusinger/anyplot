@@ -31,6 +31,7 @@ rawLoads.sort((a, b) => b - a);
 // Generation capacity thresholds (MW)
 const BASE_CAP  = 600;
 const INTER_CAP = 900;
+const PEAK_CAP  = 1200;
 
 // Find hour indices where load first drops below each threshold
 const interHour = rawLoads.findIndex(v => v < INTER_CAP);
@@ -84,7 +85,7 @@ Highcharts.chart("container", {
         from: 0, to: interHour, color: "transparent",
         label: {
           text: "Peak Load",
-          style: { color: RED, fontSize: "13px", fontWeight: "700" },
+          style: { color: RED, fontSize: "14px", fontWeight: "700" },
           align: "center", y: 180,
         },
       },
@@ -92,7 +93,7 @@ Highcharts.chart("container", {
         from: interHour, to: baseHour, color: "transparent",
         label: {
           text: "Intermediate Load",
-          style: { color: OCHRE, fontSize: "13px", fontWeight: "700" },
+          style: { color: OCHRE, fontSize: "14px", fontWeight: "700" },
           align: "center", x: -260, y: 360,
         },
       },
@@ -100,7 +101,7 @@ Highcharts.chart("container", {
         from: baseHour, to: 8760, color: "transparent",
         label: {
           text: "Base Load",
-          style: { color: GREEN, fontSize: "13px", fontWeight: "700" },
+          style: { color: GREEN, fontSize: "14px", fontWeight: "700" },
           align: "center", y: 560,
         },
       },
@@ -125,7 +126,7 @@ Highcharts.chart("container", {
         zIndex: 4,
         label: {
           text: "Base capacity — " + BASE_CAP + " MW",
-          style: { color: GREEN, fontSize: "12px", fontWeight: "600" },
+          style: { color: GREEN, fontSize: "13px", fontWeight: "600" },
           align: "right",
           x: -5,
           y: -6,
@@ -139,7 +140,21 @@ Highcharts.chart("container", {
         zIndex: 4,
         label: {
           text: "Intermediate capacity — " + INTER_CAP + " MW",
-          style: { color: OCHRE, fontSize: "12px", fontWeight: "600" },
+          style: { color: OCHRE, fontSize: "13px", fontWeight: "600" },
+          align: "right",
+          x: -5,
+          y: -6,
+        },
+      },
+      {
+        value: PEAK_CAP,
+        color: RED,
+        dashStyle: "Dash",
+        width: 2,
+        zIndex: 4,
+        label: {
+          text: "Peak capacity — " + PEAK_CAP + " MW",
+          style: { color: RED, fontSize: "13px", fontWeight: "600" },
           align: "right",
           x: -5,
           y: -6,
