@@ -1,19 +1,36 @@
-""" pyplots.ai
+"""anyplot.ai
 line-load-duration: Load Duration Curve for Energy Systems
-Library: pygal 3.1.0 | Python 3.14.3
-Quality: 81/100 | Created: 2026-03-15
+Library: pygal | Python 3.13
+Quality: 81/100 | Updated: 2026-06-10
 """
+
+import os
 
 import numpy as np
 import pygal
 from pygal.style import Style
 
 
-# Data - Synthetic annual hourly load profile for a mid-sized utility
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — first 3 slots for load regions, next 3 for capacity lines
+IMPRINT_PALETTE = (
+    "#009E73",  # brand green — peak load region
+    "#C475FD",  # lavender — intermediate load region
+    "#4467A3",  # blue — base load region
+    "#BD8233",  # ochre — base capacity line
+    "#AE3030",  # matte red — intermediate capacity line
+    "#2ABCCD",  # cyan — peak capacity line
+)
+
+# Data — synthetic annual hourly load profile for a mid-sized utility
 np.random.seed(42)
 hours = 8760
 
-# Build realistic load profile: base ~400 MW, peak ~1200 MW
 base_load = 400
 peak_load = 1200
 mid_load = (base_load + peak_load) / 2
@@ -39,15 +56,16 @@ raw_load = mid_load + seasonal + daily + noise
 raw_load = np.clip(raw_load, base_load * 0.9, peak_load * 1.05)
 load_mw = np.sort(raw_load)[::-1]
 
-# Capacity tiers (base at 550 MW so base region is visually wider)
-base_capacity = 550
-intermediate_capacity = 900
+# Capacity tiers — defined by load percentiles for visually balanced regions
+# Peak: top 15% of hours; Base: bottom 40% of hours; Intermediate: the rest
+peak_end = int(0.15 * hours)  # ~1314 hours
+base_start = int(0.60 * hours)  # ~5256 hours
 
-# Region boundaries
-peak_end = int(np.searchsorted(-load_mw, -intermediate_capacity))
-base_start = int(np.searchsorted(-load_mw, -base_capacity))
+# Round capacity MW to nearest 50 for clean engineering annotations
+intermediate_capacity = int(round(float(load_mw[peak_end]) / 50) * 50)
+base_capacity = int(round(float(load_mw[base_start]) / 50) * 50)
 
-# Total energy consumption
+# Total energy consumption (area under curve)
 total_energy_twh = np.trapezoid(load_mw) / 1e6
 
 # Downsample for SVG performance (8760 points too heavy)
@@ -59,7 +77,7 @@ n_pts = len(indices)
 
 load_sampled = [float(load_mw[i]) for i in indices]
 
-# Build three filled region series
+# Build three filled region series (None outside each region)
 peak_series = [None] * n_pts
 inter_series = [None] * n_pts
 base_series = [None] * n_pts
@@ -73,7 +91,7 @@ for i, idx in enumerate(indices):
     else:
         base_series[i] = val
 
-# Ensure continuity at boundaries by overlapping one point
+# Overlap one point at each boundary for visual continuity
 for i, idx in enumerate(indices):
     if idx >= peak_end and inter_series[i] is None and peak_series[i] is not None:
         inter_series[i] = load_sampled[i]
@@ -83,49 +101,51 @@ for i, idx in enumerate(indices):
         base_series[i] = load_sampled[i]
         break
 
-# Custom style - 3 region colors + 3 capacity line colors
+# Title — scale font size linearly for long titles
+title_str = (
+    f"Load Duration Curve (Total: {total_energy_twh:.1f} TWh) · line-load-duration · python · pygal · anyplot.ai"
+)
+n_chars = len(title_str)
+ratio = 67 / n_chars if n_chars > 67 else 1.0
+title_font_size = max(44, round(66 * ratio))
+
+# Style
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#2d2d2d",
-    foreground_strong="#2d2d2d",
-    foreground_subtle="#e8e8e8",
-    colors=("#e74c3c", "#27ae60", "#306998", "#444444", "#7b4173", "#1a1a2e"),
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=IMPRINT_PALETTE,
     font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
     title_font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
-    title_font_size=50,
-    label_font_size=36,
-    major_label_font_size=32,
-    value_font_size=28,
-    legend_font_size=30,
+    title_font_size=title_font_size,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
     legend_font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
     label_font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
     major_label_font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
     value_font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
+    stroke_width=3,
     opacity=0.55,
-    opacity_hover=0.70,
-    guide_stroke_color="#e0e0e0",
-    guide_stroke_dasharray="3,3",
-    stroke_opacity=1.0,
-    stroke_opacity_hover=1.0,
-    tooltip_font_size=26,
-    tooltip_font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
+    opacity_hover=0.75,
+    guide_stroke_color=INK_MUTED,
+    guide_stroke_dasharray="4,4",
 )
 
 # Chart
 chart = pygal.Line(
-    width=4800,
-    height=2700,
-    title=(
-        f"Load Duration Curve (Total Energy: {total_energy_twh:.1f} TWh)"
-        " \u00b7 line-load-duration \u00b7 pygal \u00b7 pyplots.ai"
-    ),
+    width=3200,
+    height=1800,
+    title=title_str,
     x_title="Hours of Year (ranked by demand)",
     y_title="Power Demand (MW)",
     style=custom_style,
     fill=True,
     show_dots=False,
-    stroke_style={"width": 4},
+    stroke_style={"width": 3},
     show_y_guides=True,
     show_x_guides=False,
     show_legend=True,
@@ -142,35 +162,35 @@ chart = pygal.Line(
     truncate_label=10,
 )
 
-# Add filled region series
-chart.add(f"Peak Load (0\u2013{peak_end} hrs)", peak_series, fill=True, stroke_style={"width": 4})
-chart.add(f"Intermediate ({peak_end}\u2013{base_start} hrs)", inter_series, fill=True, stroke_style={"width": 4})
-chart.add(f"Base Load ({base_start}\u2013{hours} hrs)", base_series, fill=True, stroke_style={"width": 4})
+# Load region series (filled)
+chart.add(f"Peak Load (0–{peak_end} hrs)", peak_series, fill=True, stroke_style={"width": 3})
+chart.add(f"Intermediate ({peak_end}–{base_start} hrs)", inter_series, fill=True, stroke_style={"width": 3})
+chart.add(f"Base Load ({base_start}–{hours} hrs)", base_series, fill=True, stroke_style={"width": 3})
 
-# Capacity tier reference lines (horizontal dashed)
-base_line = [base_capacity] * n_pts
-inter_line = [intermediate_capacity] * n_pts
-peak_line = [1200] * n_pts
-
+# Capacity reference lines — wider stroke for prominence against filled regions
 chart.add(
     f"Base Capacity ({base_capacity} MW)",
-    base_line,
+    [base_capacity] * n_pts,
     fill=False,
     show_dots=False,
-    stroke_style={"width": 2, "dasharray": "16, 10"},
+    stroke_style={"width": 4, "dasharray": "16, 8"},
 )
 chart.add(
     f"Intermediate Capacity ({intermediate_capacity} MW)",
-    inter_line,
+    [intermediate_capacity] * n_pts,
     fill=False,
     show_dots=False,
-    stroke_style={"width": 2, "dasharray": "16, 10"},
+    stroke_style={"width": 4, "dasharray": "16, 8"},
 )
 chart.add(
-    "Peak Capacity (1200 MW)", peak_line, fill=False, show_dots=False, stroke_style={"width": 2, "dasharray": "16, 10"}
+    "Peak Capacity (1200 MW)",
+    [1200] * n_pts,
+    fill=False,
+    show_dots=False,
+    stroke_style={"width": 4, "dasharray": "16, 8"},
 )
 
-# X-axis labels at key points
+# X-axis labels at key milestones
 x_labels = []
 for idx in indices:
     if idx == 0:
@@ -184,5 +204,6 @@ for idx in indices:
 chart.x_labels = x_labels
 
 # Save
-chart.render_to_file("plot.html")
-chart.render_to_png("plot.png")
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
