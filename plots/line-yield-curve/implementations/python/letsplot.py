@@ -1,28 +1,43 @@
-""" pyplots.ai
+""" anyplot.ai
 line-yield-curve: Yield Curve (Interest Rate Term Structure)
-Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-14
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-06-10
 """
+
+import os
 
 import pandas as pd
 from lets_plot import *  # noqa: F403
-from lets_plot.export import ggsave as export_ggsave
 
 
 LetsPlot.setup_html()  # noqa: F405
 
-# Data - U.S. Treasury yield curves on three dates
+THEME = os.getenv("ANYPLOT_THEME", "light")
+
+# Theme-adaptive chrome tokens — Imprint palette
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint categorical palette — canonical order, first series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Data — U.S. Treasury yield curves on three dates
 maturities = ["1M", "3M", "6M", "1Y", "2Y", "3Y", "5Y", "7Y", "10Y", "20Y", "30Y"]
 maturity_years = [1 / 12, 0.25, 0.5, 1, 2, 3, 5, 7, 10, 20, 30]
 
 # Normal upward-sloping curve (Jan 2018)
 yields_normal = [1.28, 1.53, 1.72, 1.89, 2.05, 2.19, 2.41, 2.55, 2.66, 2.83, 2.96]
 
-# Inverted curve (Aug 2019 - recession signal)
+# Inverted curve (Aug 2019 — recession signal)
 yields_inverted = [2.09, 2.00, 1.92, 1.75, 1.52, 1.46, 1.44, 1.48, 1.52, 1.77, 1.97]
 
 # Steep post-pandemic curve (Mar 2021)
 yields_steep = [0.03, 0.03, 0.04, 0.07, 0.14, 0.32, 0.83, 1.18, 1.62, 2.19, 2.35]
+
+# Use ordered Categorical so color assignments follow the named order
+DATE_ORDER = ["Jan 2018 (Normal)", "Aug 2019 (Inverted)", "Mar 2021 (Steep)"]
 
 rows = []
 for i in range(len(maturities)):
@@ -52,21 +67,18 @@ for i in range(len(maturities)):
     )
 
 df = pd.DataFrame(rows)
+df["date"] = pd.Categorical(df["date"], categories=DATE_ORDER, ordered=True)
 
-# Inversion region: shade between inverted curve and the 10Y yield baseline
-# Shows where short-term rates exceed the long-term benchmark
+# Inversion region: shade where short-term yields exceed the 10Y baseline
 ten_year_yield = yields_inverted[8]  # 10Y = 1.52%
 inv_mat = [maturity_years[i] for i in range(9)]  # 1M through 10Y
 inv_upper = [yields_inverted[i] for i in range(9)]
 inv_lower = [ten_year_yield] * 9
 inversion_df = pd.DataFrame({"maturity_years": inv_mat, "y_upper": inv_upper, "y_lower": inv_lower})
 
-# Reduce x-axis labels to avoid overlap at short maturities
-tick_positions = [0.25, 1, 2, 5, 10, 20, 30]
-tick_labels = ["3M", "1Y", "2Y", "5Y", "10Y", "20Y", "30Y"]
-
-# Colorblind-safe palette: blue, amber, teal-green
-colors = ["#306998", "#E69F00", "#009E73"]
+# Sparse ticks — removes 3M/1Y crowding at short maturities
+tick_positions = [0.5, 1, 2, 5, 10, 20, 30]
+tick_labels_x = ["6M", "1Y", "2Y", "5Y", "10Y", "20Y", "30Y"]
 
 plot = (
     ggplot()  # noqa: F405
@@ -74,14 +86,14 @@ plot = (
     + geom_ribbon(  # noqa: F405
         data=inversion_df,
         mapping=aes(x="maturity_years", ymin="y_lower", ymax="y_upper"),  # noqa: F405
-        fill="#C44E52",
-        alpha=0.2,
+        fill="#AE3030",
+        alpha=0.18,
     )
-    # Yield curve lines with tooltips
+    # Yield curve lines with interactive tooltips
     + geom_line(  # noqa: F405
         data=df,
         mapping=aes(x="maturity_years", y="yield_pct", color="date"),  # noqa: F405
-        size=2.5,
+        size=1.0,
         tooltips=layer_tooltips()  # noqa: F405
         .line("@date")
         .line("Maturity: @maturity")
@@ -90,36 +102,42 @@ plot = (
     + geom_point(  # noqa: F405
         data=df,
         mapping=aes(x="maturity_years", y="yield_pct", color="date"),  # noqa: F405
-        size=5,
+        size=3.5,
         alpha=0.85,
     )
-    # Annotation for inversion region
+    # Inversion region label — geom_text size is in mm, not pt
     + geom_text(  # noqa: F405
         aes(x="x", y="y", label="label"),  # noqa: F405
-        data=pd.DataFrame({"x": [1.5], "y": [2.18], "label": ["Inversion Region"]}),
-        color="#C44E52",
-        size=12,
+        data=pd.DataFrame({"x": [1.5], "y": [2.15], "label": ["Inversion Region"]}),
+        color="#AE3030",
+        size=4,
         fontface="italic",
     )
-    + scale_color_manual(values=colors)  # noqa: F405
-    + scale_x_continuous(breaks=tick_positions, labels=tick_labels)  # noqa: F405
+    + scale_color_manual(values=IMPRINT_PALETTE[:3])  # noqa: F405
+    + scale_x_continuous(breaks=tick_positions, labels=tick_labels_x)  # noqa: F405
     + labs(  # noqa: F405
-        x="Maturity", y="Yield (%)", title="line-yield-curve · letsplot · pyplots.ai", color=""
+        x="Maturity", y="Yield (%)", title="line-yield-curve · python · letsplot · anyplot.ai", color=""
     )
-    + ggsize(1600, 900)  # noqa: F405
+    + ggsize(800, 450)  # noqa: F405
     + theme_minimal()  # noqa: F405
     + theme(  # noqa: F405
-        axis_text=element_text(size=16),  # noqa: F405
-        axis_title=element_text(size=20),  # noqa: F405
-        plot_title=element_text(size=24),  # noqa: F405
-        legend_text=element_text(size=16),  # noqa: F405
-        legend_position="top",
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),  # noqa: F405
+        panel_background=element_rect(fill=PAGE_BG),  # noqa: F405
+        panel_grid_major_y=element_line(color=INK_SOFT, size=0.2),  # noqa: F405
         panel_grid_major_x=element_blank(),  # noqa: F405
         panel_grid_minor=element_blank(),  # noqa: F405
-        panel_grid_major_y=element_line(color="#E0E0E0", size=0.5),  # noqa: F405
+        axis_title=element_text(color=INK, size=12),  # noqa: F405
+        axis_text=element_text(color=INK_SOFT, size=10),  # noqa: F405
+        axis_line=element_line(color=INK_SOFT),  # noqa: F405
+        plot_title=element_text(color=INK, size=16, face="bold"),  # noqa: F405
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),  # noqa: F405
+        legend_text=element_text(color=INK_SOFT, size=10),  # noqa: F405
+        legend_title=element_text(color=INK),  # noqa: F405
+        panel_border=element_blank(),  # noqa: F405
+        legend_position="top",
     )
 )
 
-# Save
-export_ggsave(plot, "plot.png", path=".", scale=3)
-export_ggsave(plot, "plot.html", path=".")
+# Save PNG (scale=4 → 800×450 × 4 = 3200×1800 px) and HTML for the current theme
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)  # noqa: F405
+ggsave(plot, f"plot-{THEME}.html", path=".")  # noqa: F405
