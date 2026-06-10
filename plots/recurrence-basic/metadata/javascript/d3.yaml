@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: recurrence-basic
 created: '2026-06-10T03:03:30Z'
-updated: '2026-06-10T03:11:36Z'
+updated: '2026-06-10T03:28:16Z'
 generated_by: claude-sonnet
 workflow_run: 27249954093
 issue: 4592
@@ -12,51 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/recurrenc
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/javascript/d3/plot-dark.html
-quality_score: 87
+quality_score: 93
 review:
   strengths:
-  - Correct recurrence plot with proper time-delay embedding (Takens' theorem, τ=3,
-    dim=2) using the chaotic logistic map at r=3.85 — deterministic and scientifically
-    sound
-  - Technically sophisticated use of browser Canvas API (ImageData pixel-fill) embedded
-    as SVG <image> with pixelated rendering — clean canvas+SVG hybrid unique to browser-based
-    D3
-  - 'Excellent palette compliance: Imprint palette[0] (#009E73) for recurrent points,
-    t.pageBg for cell background — data colors identical across both themes, chrome
-    adapts correctly'
-  - Square orientation correctly chosen for a symmetric matrix visualization; both
-    axes labeled 'Time Index (i/j)' as specified
-  - 'All text legibility excellent: explicit font sizes throughout (22px title, 16px
-    axis labels, 14px tick labels), well-proportioned in both renders'
-  - Deterministic data generation (fixed xs[0]=0.5, logistic map) ensures reproducibility;
-    15% recurrence rate produces visually rich quasi-periodic diagonal stripe pattern
+  - 'Correct recurrence plot algorithm: Euclidean distance, time-delay embedding (Takens
+    theorem), 15% threshold — all per spec'
+  - 'Distinctive D3 hybrid pattern: offscreen Canvas for pixel-level raster data +
+    SVG overlay for axes, annotations, and chrome'
+  - Informative structural annotations (main diagonal, parallel stripes) with custom
+    SVG arrowhead leader lines
+  - Epsilon parameter context annotation below x-axis adds analytical transparency
+  - 'Full Imprint palette compliance: palette[0] #009E73 for binary recurrent dots,
+    pageBg for background, theme-adaptive chrome throughout'
+  - Both themes pass readability check cleanly — no dark-on-dark or light-on-light
+    failures
+  - 'Perfect spec compliance: square canvas, equal axis scales, time-delay embedding,
+    deterministic logistic map data'
   weaknesses:
-  - Design Excellence is functional but lacks visual storytelling — no annotations
-    identifying key recurrence structures (main diagonal = identity, parallel diagonals
-    = quasi-periodicity, recurrence period ≈ 12-15 steps visible in stripe spacing)
-  - Missing legend/caption with threshold epsilon value — viewer cannot interpret
-    the recurrence rate without contextual metadata; a small text annotation stating
-    'ε = threshold (15% recurrence rate)' in a corner would add significant analytical
-    value
-  - DE-02 visual refinement is sparse — the matrix visualization could benefit from
-    a subtle thin tick-line style change or a subtle outer glow/contrast enhancement
-    on the border rect to visually separate the axis area from the matrix
-  - 'LM-02 (D3 distinctive features): the Canvas+SVG hybrid is good but the axes are
-    plain D3 defaults; showcasing D3''s unique text-positioning abilities for annotations
-    (d3.annotation-style labels pointing to diagonal structures) would demonstrate
-    stronger library mastery'
+  - 'DE-01 (6/8): Strong design but not yet publication-ready — the annotation system
+    and epsilon caption are well-considered, but the overall aesthetic is minimal
+    (just green dots on background). A color-mapped continuous distance variant as
+    an enhancement (per spec Notes) would elevate to 8.'
+  - 'DE-02 (4/6): Visual refinement is good — no grid, border rect replaces domain
+    lines, clean tick marks. To reach 6, consider slightly warmer annotation typography
+    (e.g. semi-bold on the annotation sub-labels) and tighter right-margin alignment.'
+  - 'DE-03 (4/6): Structural annotations guide the viewer to main diagonal identity
+    and quasi-periodicity stripes. To reach 6, consider a color accent (e.g. amber
+    for the dashed leader lines) or highlighting the epsilon = 0.007 threshold value
+    more prominently.'
+  - 'LM-02 (4/5): The canvas→SVG image hybrid is a sophisticated and genuinely D3-idiomatic
+    pattern for dense pixel data. Could reach 5 by using d3.zoom or d3.brush affordances
+    even in static form (e.g. a brush-style selection box shown as a static annotation
+    region to illustrate the concept).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface (#FAF8F1) — correct, not pure white.
-      Chrome: Title "recurrence-basic · javascript · d3 · anyplot.ai" in bold dark text (~22px) is fully visible and spans ~55% of canvas width. X-axis label "Time Index (i)" and rotated Y-axis label "Time Index (j)" are both clearly readable at ~16px. Tick labels (0, 50, 100, 150, 200, 250) on both axes are crisp at 14px. No dark-on-light contrast failures.
-      Data: Recurrent points rendered in Imprint brand green (#009E73) against the warm off-white background. The symmetric 297×297 binary matrix shows a clear main diagonal (running top-left to bottom-right), multiple parallel diagonal stripes indicating quasi-periodic recurrence in the chaotic logistic map, and a rich structural pattern. The pixelated rendering keeps cell edges crisp. Plot is enclosed by a thin inkSoft border rect; axis domain lines removed (intentional for matrix type).
-      Legibility verdict: PASS — all text readable, no overflow, no clipping.
+      Background: Warm off-white (#FAF8F1) — correctly matches the light theme surface.
+      Chrome: Title "recurrence-basic · javascript · d3 · anyplot.ai" in bold dark ink, clearly readable. Y-axis label "Time Index (j)" rotated vertically, dark; X-axis label "Time Index (i)" horizontal, dark. Tick labels (0, 50, 100, 150, 200, 250) in dark secondary ink on both axes. Italic epsilon annotation "ε = 0.007 · 15% recurrence rate · logistic map r = 3.85, τ = 3" below x-axis ticks, readable. Right-margin structural annotations: "Main diagonal / i = j (identity)" and "Parallel stripes / quasi-periodicity" with dashed leader lines and arrowheads, all dark and readable.
+      Data: Binary recurrence matrix rendered as pixel-level squares. Recurrent pairs shown in Imprint brand green (#009E73). Strong main diagonal fully filled. Multiple parallel diagonal stripes visible throughout the 297×297 matrix — characteristic banding from the chaotic logistic map. Background (non-recurrent) cells are the warm off-white page background.
+      Legibility verdict: PASS — all text elements clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface (#1A1A17) — correct, not pure black.
-      Chrome: Title, axis labels, and tick labels all render in light text (t.ink / t.inkSoft tokens) and are clearly readable against the dark background. No dark-on-dark failures observed — tick labels, axis labels, and title are all distinctly visible.
-      Data: Recurrent points remain in the same Imprint brand green (#009E73) — data colors are identical to the light render. The green stands out well against the near-black background. Non-recurrent cells use t.pageBg (#1A1A17), blending seamlessly with the page surface. The diagonal stripe pattern is clearly visible and matches the light render's structure.
-      Legibility verdict: PASS — all text readable, chrome correctly flipped, data colors unchanged.
+      Background: Warm near-black (#1A1A17) — correctly matches the dark theme surface.
+      Chrome: Title in light cream ink, clearly readable. Y-axis and X-axis labels in light secondary ink, readable. Tick labels in light secondary ink, readable. Epsilon annotation in light secondary ink, readable. Right-margin annotations "Main diagonal" in light primary ink and "i = j (identity)" / "quasi-periodicity" in light secondary ink — all readable. Dashed leader lines rendered in light ink against the dark background.
+      Data: Same Imprint brand green (#009E73) recurrent dots on the dark background — data colors are IDENTICAL to the light render, only chrome flips. The green pops vibrantly on the near-black surface. Diagonal banding structure is fully preserved.
+      Legibility verdict: PASS — all text elements clearly readable against the dark background; no dark-on-dark failures detected. Brand green #009E73 remains strongly visible on both surfaces.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -67,77 +66,83 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (22px title, 16px axis labels, 14px
-          tick labels). Readable in both themes.
+        comment: All font sizes explicitly set (title=22px, axis labels=16px, ticks=14px,
+          annotations=12-13px). Proportions balanced, no overflow. Both themes pass.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element overlap in either render.
+        comment: No text overlaps. Right-margin annotations are well-separated. Leader
+          lines do not conflict with labels.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 'Recurrent pixels in #009E73 clearly visible against both light and
-          dark backgrounds. Pixelated rendering keeps cells crisp.'
+        comment: Pixel-level recurrence dots rendered with pixelated image-rendering
+          for crisp cells. 15% recurrence rate creates clear structural patterns without
+          over-saturation.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single Imprint color (#009E73) with high contrast against both backgrounds.
-          CVD-safe.
+        comment: 'Binary plot: brand green on cream/dark — high luminance contrast,
+          CVD-safe. No red-green ambiguity.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (square 2400x2400). Square orientation appropriate
-          for symmetric matrix. Generous margins.
+        comment: Square canvas (correct for symmetric matrix). Matrix occupies ~75%
+          of canvas area. Right margin used for structural annotations. Bottom margin
+          used for epsilon context annotation. Balanced layout.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time Index (i) for x, Time Index (j) for y — descriptive and correct
-          per spec.
+        comment: Both axes labeled 'Time Index (i/j)'. Title format correct. Epsilon
+          parameter annotation provides additional context.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: palette[0]=#009E73 for data, pageBg for cell background. Both themes
-          correct. No forbidden colormaps.
+        comment: palette[0] (#009E73) used for recurrent dots. pageBg for background
+          (theme-adaptive). inkSoft/ink for chrome. Data colors identical between
+          light and dark renders. Fully compliant.
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Between well-configured default (4) and strong design (6). Clean
-          Imprint usage, sophisticated canvas technique, but no annotations or visual
-          hierarchy beyond the basic matrix.
+        passed: true
+        comment: 'Strong design: right-margin structural annotation system with custom
+          SVG arrowheads, epsilon caption for analytical context, clean pixelated
+          rendering. Clearly above a default. Not yet publication-ready (a color-mapped
+          distance variant would elevate further).'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Domain lines removed in favor of border rect (deliberate, elegant
-          choice for matrix type). No grid (correct). Generous margins. Above minimum
-          customization but not fully polished.
+        passed: true
+        comment: No grid (appropriate for binary matrix). Domain stroke removed; border
+          rect replaces it for clean definition. Thin 1px border. Clean tick marks.
+          Generous margins. Good refinement but annotation typography could be warmer.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Logistic map at r=3.85 creates visually interesting quasi-periodic
-          diagonal stripes. Data choice is intentional. No annotations guiding viewer
-          to key structural insights.
+        passed: true
+        comment: 'Structural annotations actively guide the viewer: main diagonal
+          identity explained, parallel stripes mapped to quasi-periodicity. Epsilon
+          parameter provides analytical transparency. Good storytelling, though a
+          stronger focal emphasis (e.g. colored annotation accent) could push to 6.'
     spec_compliance:
       score: 15
       max: 15
@@ -147,54 +152,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Binary recurrence plot with time-delay embedding — correct chart
-          type.
+        comment: 'Correct recurrence plot: binary distance-threshold matrix, symmetric,
+          main diagonal filled.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Main diagonal present, binary threshold applied, Euclidean distance,
-          time-delay embedding (τ=3, dim=2), square with equal axes.
+        comment: Euclidean distance in embedding space, binary threshold at 15% recurrence
+          rate, time-delay embedding (tau=3, per Takens theorem), square equal-scale
+          axes, main diagonal visible.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Both axes represent time indices. Symmetric matrix. Correct orientation.
+        comment: Both axes show time indices 0..296. Symmetric matrix correctly rendered.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'recurrence-basic · javascript · d3 · anyplot.ai'.
-          No legend needed (single-series binary encoding).
+        comment: 'Title: ''recurrence-basic · javascript · d3 · anyplot.ai'' — exact
+          correct format. No legend needed (binary single-color encoding).'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: Shows main diagonal, off-diagonal recurrences, diagonal line structure
-          indicating quasi-periodicity. No vertical/horizontal lines (laminar states)
-          or block structures visible — data-dependent, not a code flaw.
+        passed: true
+        comment: 'Shows all aspects: main diagonal, parallel offset diagonals (determinism),
+          chaotic structure. All key recurrence plot features visible.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Logistic map in chaotic regime (r=3.85) is a canonical nonlinear
-          dynamics example. Real-world plausible.
+        comment: Logistic map at r=3.85 (chaotic regime) — classic nonlinear dynamics
+          example matching spec suggestion. Educational, neutral, real domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 300 time steps within spec range (200-1000). τ=3 delay and dim=2
-          embedding are physically motivated.
+        comment: '300 post-transient steps (spec: 200-1000). Threshold at 15% recurrence
+          rate — standard practice. tau=3 reasonable for logistic map. Values bounded
+          in [0,1].'
     code_quality:
       score: 10
       max: 10
@@ -204,60 +210,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: data → matrix → canvas → SVG. No functions or classes.'
+        comment: 'Linear structure: data generation → distance matrix → canvas raster
+          → SVG mount → axes → labels → annotations → title. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic logistic map with fixed seed value xs[0]=0.5.
+        comment: 'Fully deterministic: logistic map with fixed initial condition xs[0]=0.5
+          and fixed R=3.85. No RNG needed.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: D3 used as global; no unnecessary imports.
+        comment: D3 is a global — no imports. No unused globals.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-structured. Efficient Float32Array + ImageData approach.
-          No fake UI.
+        comment: Clean, well-named variables. Efficient Float32Array for distance
+          matrix. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Outputs plot-light.png and plot-dark.png (+ HTML). Current D3 API.
+        comment: Harness handles output. D3 7.9.0 API used correctly. square orientation
+          directive present.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert D3: scaleLinear, axisBottom/axisLeft with selectAll customization,
+          transform/translate, defs/marker, window.ANYPLOT_TOKENS token system. Idiomatic
+          throughout.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Strong D3 patterns: selection/append/attr/call, d3.scaleLinear,
-          d3.axisBottom/Left, for-of axis styling. Canvas+SVG hybrid is valid. Slightly
-          below 5 since the matrix cells aren''t D3-bound data.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Browser Canvas API (ImageData pixel-fill) embedded as SVG <image>
-          with pixelated rendering is a D3-specific browser technique. Above default
-          (1) but not using D3's annotation or shape capabilities for labeling.
-  verdict: REJECTED
+        comment: Offscreen Canvas API for pixel-level raster rendering then embedded
+          as SVG image — a canonical advanced D3 pattern for dense data not feasible
+          in other libraries. Custom SVG defs-based arrowhead marker. Hybrid canvas+SVG
+          is genuinely D3-distinctive.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - canvas-pixel-rendering
+  - annotations
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
   dataprep: []
   styling:
   - minimal-chrome
+  - edge-highlighting
