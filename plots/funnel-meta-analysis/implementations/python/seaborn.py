@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 funnel-meta-analysis: Meta-Analysis Funnel Plot for Publication Bias
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-06-10
@@ -43,10 +43,10 @@ sns.set_theme(
         "text.color": INK,
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
-        "grid.color": INK,
-        "grid.alpha": 0.15,
+        "grid.color": INK_SOFT,
+        "grid.alpha": 0.2,
         "grid.linewidth": 0.6,
-        "axes.grid": True,
+        "axes.grid": False,
         "legend.facecolor": ELEVATED_BG,
         "legend.edgecolor": INK_SOFT,
         "font.family": "sans-serif",
@@ -132,15 +132,17 @@ sns.scatterplot(
 )
 
 # Seaborn rugplot for marginal effect size distribution — idiomatic seaborn feature
-sns.rugplot(data=df, x="effect_size", height=0.015, color=INK_SOFT, alpha=0.4, ax=ax)
+sns.rugplot(data=df, x="effect_size", height=0.04, color=INK_SOFT, alpha=0.65, ax=ax)
 
 # Annotate two most imprecise (lower-right outlier) studies
+# Martinez 2020 is rightmost — use left-aligned offset to avoid right canvas edge
 outliers = df.nlargest(2, "std_error")
 for _, row in outliers.iterrows():
+    x_offset = -75 if row["study"] == "Martinez 2020" else 10
     ax.annotate(
         row["study"],
         xy=(row["effect_size"], row["std_error"]),
-        xytext=(10, -3),
+        xytext=(x_offset, -3),
         textcoords="offset points",
         fontsize=8,
         fontstyle="italic",
@@ -163,6 +165,10 @@ ax.set_xlim(x_min, x_max)
 
 sns.despine(ax=ax)
 
+# Y-axis-only grid (style guide preference)
+ax.yaxis.grid(True, alpha=0.2, linewidth=0.8, color=INK_SOFT)
+ax.xaxis.grid(False)
+
 # Legend
 legend_elements = [
     Line2D([0], [0], color=INK, linewidth=2.0, alpha=0.85, label=f"Summary effect ({summary_effect:.2f})"),
@@ -174,6 +180,27 @@ legend_elements = [
     Line2D([0], [0], marker="o", color="w", markerfacecolor=IMPRINT_PALETTE[2], markersize=5, label="Low precision"),
 ]
 ax.legend(handles=legend_elements, fontsize=8, frameon=False, loc="lower left")
+
+# Size encoding note and weighted-mean apex label for information density
+ax.text(
+    0.98,
+    0.03,
+    "Circle size ∝ study weight",
+    transform=ax.transAxes,
+    ha="right",
+    va="bottom",
+    fontsize=7,
+    color=INK_MUTED,
+    fontstyle="italic",
+)
+ax.annotate(
+    f"WM = {summary_effect:.2f}",
+    xy=(summary_effect, 0.01),
+    xytext=(summary_effect + 0.12, 0.06),
+    fontsize=7,
+    color=INK_SOFT,
+    arrowprops={"arrowstyle": "-", "color": INK_MUTED, "lw": 0.7},
+)
 
 # Save — no bbox_inches; figsize×dpi produces exact 3200×1800 target
 # Use __file__-relative path so script runs correctly from any working directory
