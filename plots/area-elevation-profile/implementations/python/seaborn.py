@@ -1,28 +1,51 @@
-""" pyplots.ai
+"""anyplot.ai
 area-elevation-profile: Terrain Elevation Profile Along Transect
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 93/100 | Created: 2026-03-15
+Library: seaborn | Python 3.14
+Quality: 93/100 | Updated: 2026-06-10
 """
+
+import os
 
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap
 
 
-# Seaborn theming and context
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — first categorical series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Imprint sequential cmap for continuous terrain fill and slope-coded markers
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
+
 sns.set_theme(
     style="ticks",
     rc={
-        "axes.facecolor": "#fafaf8",
-        "figure.facecolor": "white",
-        "grid.linestyle": "--",
-        "grid.linewidth": 0.6,
-        "grid.alpha": 0.3,
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "grid.linestyle": "-",
+        "grid.linewidth": 0.5,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
     },
 )
-sns.set_context("talk", font_scale=1.1, rc={"lines.linewidth": 2.5})
 
 # Data
 np.random.seed(42)
@@ -57,100 +80,89 @@ for d in landmarks["distance_km"]:
     landmark_elevations.append(elevation[idx])
 landmarks["elevation_m"] = landmark_elevations
 
-# Gradient fill colors via seaborn palette blending
-gradient_colors = sns.color_palette("blend:#a8c686,#5a8a3c,#306998", n_colors=40)
-elev_min_val, elev_max_val = elevation.min(), elevation.max()
-elev_range = elev_max_val - elev_min_val
-
-# Classify terrain slope for coloring landmarks
 slopes = np.gradient(elevation, distance)
 landmark_slopes = []
 for d in landmarks["distance_km"]:
     idx = np.argmin(np.abs(distance - d))
     landmark_slopes.append(abs(slopes[idx]))
 landmarks["slope"] = landmark_slopes
-slope_palette = sns.color_palette("YlOrRd", n_colors=5)
 slope_max = max(landmark_slopes)
-landmarks["slope_color"] = [slope_palette[min(int(s / slope_max * 4), 4)] for s in landmark_slopes]
 
-# Plot: main profile + marginal elevation KDE
-fig = plt.figure(figsize=(16, 9))
+# Figure layout: main profile + marginal elevation KDE strip
+fig = plt.figure(figsize=(8, 4.5), dpi=400)
 gs = gridspec.GridSpec(1, 2, width_ratios=[20, 1], wspace=0.02)
 ax = fig.add_subplot(gs[0])
 ax_kde = fig.add_subplot(gs[1], sharey=ax)
 
-# Gradient terrain fill
+# Gradient terrain fill — Imprint sequential cmap (green→blue, low→high elevation)
+elev_min_val, elev_max_val = elevation.min(), elevation.max()
+elev_range = elev_max_val - elev_min_val
 y_min = elev_min_val - 0.05 * elev_range
-n_bands = len(gradient_colors)
+n_bands = 40
 for i in range(n_bands):
     band_low = elev_min_val + i / n_bands * elev_range
     band_high = elev_min_val + (i + 1) / n_bands * elev_range
     clipped = np.clip(elevation, band_low, band_high)
     ax.fill_between(
-        distance, np.full_like(distance, band_low), clipped, color=gradient_colors[i], alpha=0.85, linewidth=0
+        distance, np.full_like(distance, band_low), clipped, color=imprint_seq(i / n_bands), alpha=0.8, linewidth=0
     )
-ax.fill_between(
-    distance, y_min, np.full_like(distance, elev_min_val), color=gradient_colors[0], alpha=0.85, linewidth=0
-)
+ax.fill_between(distance, y_min, np.full_like(distance, elev_min_val), color=imprint_seq(0.0), alpha=0.8, linewidth=0)
 
 # Profile line via seaborn lineplot
-sns.lineplot(data=df, x="distance_km", y="elevation_m", ax=ax, color="#306998", linewidth=2.5, legend=False)
+sns.lineplot(data=df, x="distance_km", y="elevation_m", ax=ax, color=IMPRINT_PALETTE[2], linewidth=2.0, legend=False)
 
-# Landmark markers via seaborn scatterplot with hue mapped to slope
-sns.scatterplot(
-    data=landmarks,
-    x="distance_km",
-    y="elevation_m",
-    hue="slope",
-    palette="YlOrRd",
-    ax=ax,
-    s=140,
-    edgecolor="white",
-    linewidth=1.8,
-    zorder=5,
-    legend=False,
-)
+# Landmark markers — slope intensity encoded via Imprint sequential cmap
+for _, lm in landmarks.iterrows():
+    ax.scatter(
+        lm["distance_km"],
+        lm["elevation_m"],
+        color=imprint_seq(lm["slope"] / slope_max),
+        s=90,
+        edgecolor=PAGE_BG,
+        linewidth=1.0,
+        zorder=5,
+    )
 
 # Landmark annotations with smart positioning
 for _, lm in landmarks.iterrows():
-    ax.vlines(lm["distance_km"], y_min, lm["elevation_m"], color="#555555", linewidth=0.8, linestyle=":", alpha=0.5)
+    ax.vlines(lm["distance_km"], y_min, lm["elevation_m"], color=INK_SOFT, linewidth=0.5, linestyle=":", alpha=0.5)
     label_text = f"{lm['name']}\n{int(lm['elevation_m'])} m"
-    y_offset = 60 if lm["elevation_m"] < (elev_max_val - 200) else -120
-    # Shift End Station annotation left to avoid right edge cramping
-    x_offset = -40 if lm["distance_km"] >= total_distance - 1 else (55 if lm["distance_km"] <= 1 else 0)
+    y_offset = 35 if lm["elevation_m"] < (elev_max_val - 200) else -50
+    x_offset = -28 if lm["distance_km"] >= total_distance - 1 else (28 if lm["distance_km"] <= 1 else 0)
     ha = "right" if lm["distance_km"] >= total_distance - 1 else ("left" if lm["distance_km"] <= 1 else "center")
     ax.annotate(
         label_text,
         xy=(lm["distance_km"], lm["elevation_m"]),
         xytext=(x_offset, y_offset),
         textcoords="offset points",
-        fontsize=13,
+        fontsize=7,
         fontweight="bold",
-        color="#333333",
+        color=INK,
         ha=ha,
         va="bottom" if y_offset > 0 else "top",
-        bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "#cccccc", "alpha": 0.9},
+        bbox={"boxstyle": "round,pad=0.25", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.9},
         zorder=6,
     )
 
-# Marginal KDE of elevation distribution (distinctively seaborn)
-sns.kdeplot(y=df["elevation_m"], ax=ax_kde, fill=True, color="#306998", alpha=0.3, linewidth=1.5)
-sns.rugplot(data=landmarks, y="elevation_m", ax=ax_kde, color="#306998", height=0.3, linewidth=2, alpha=0.7)
+# Marginal KDE strip — distinctive seaborn feature showing elevation distribution
+sns.kdeplot(y=df["elevation_m"], ax=ax_kde, fill=True, color=IMPRINT_PALETTE[2], alpha=0.3, linewidth=1.2)
+sns.rugplot(data=landmarks, y="elevation_m", ax=ax_kde, color=IMPRINT_PALETTE[2], height=0.3, linewidth=1.5, alpha=0.7)
 ax_kde.set_xlabel("")
 ax_kde.set_ylabel("")
 ax_kde.tick_params(left=False, labelleft=False, bottom=False, labelbottom=False)
-ax_kde.set_facecolor("#fafaf8")
+ax_kde.set_facecolor(PAGE_BG)
 sns.despine(ax=ax_kde, left=True, bottom=True)
 
 # Style main axes
-ax.set_xlabel("Distance (km)", fontsize=20)
-ax.set_ylabel("Elevation (m)", fontsize=20)
-ax.set_title("area-elevation-profile · seaborn · pyplots.ai", fontsize=24, fontweight="medium", pad=16)
-ax.tick_params(axis="both", labelsize=16)
+title = "area-elevation-profile · python · seaborn · anyplot.ai"
+ax.set_title(title, fontsize=12, fontweight="medium", color=INK, pad=8)
+ax.set_xlabel("Distance (km)", fontsize=10, color=INK)
+ax.set_ylabel("Elevation (m)", fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 ax.yaxis.set_major_locator(plt.MultipleLocator(200))
 ax.xaxis.set_major_locator(plt.MultipleLocator(20))
 sns.despine(ax=ax)
-ax.yaxis.grid(True)
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.5)
 ax.set_xlim(0, total_distance)
 ax.set_ylim(bottom=y_min)
 
@@ -159,12 +171,12 @@ ax.text(
     0.02,
     "Vertical exaggeration ~10×",
     transform=ax.transAxes,
-    fontsize=13,
-    color="#888888",
+    fontsize=7,
+    color=INK_MUTED,
     ha="right",
     va="bottom",
     style="italic",
 )
 
-fig.subplots_adjust(left=0.07, right=0.97, top=0.93, bottom=0.09)
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+fig.subplots_adjust(left=0.07, right=0.97, top=0.92, bottom=0.10)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
