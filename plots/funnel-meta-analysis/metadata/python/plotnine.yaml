@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: funnel-meta-analysis
 created: '2026-03-15T16:43:55Z'
-updated: '2026-06-10T03:58:37Z'
+updated: '2026-06-10T04:09:20Z'
 generated_by: claude-sonnet
 workflow_run: 27251557679
 issue: 4590
@@ -12,41 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/funnel-me
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 90
 review:
   strengths:
-  - Perfect spec compliance — all funnel plot elements present (inverted y-axis, funnel
-    boundaries, pooled effect line, null reference, weighted study points)
-  - Semantic color assignment (green=inside/good, red=outside/bias) is appropriate
-    and well-executed
-  - Realistic meta-analysis scenario with correctly applied publication bias simulation
-  - Clean grammar-of-graphics layer composition idiomatic to plotnine
-  - Complete theme-adaptive chrome — both renders correct and fully legible
+  - 'Full spec compliance: all funnel-plot elements (inverted axis, pseudo-CI bounds,
+    pooled effect line, null reference, weight-sized points) are implemented correctly'
+  - 'Semantic Imprint palette usage: green for inside-funnel, matte-red for bias indicators
+    — semantically motivated and visually intuitive'
+  - Clear publication-bias narrative through targeted annotations and asymmetric data
+    design
+  - Theme-adaptive chrome correct in both renders; no dark-on-dark failures
+  - Inverse-variance weight sizing makes important studies visually prominent
+  - Code is clean, reproducible, and idiomatic plotnine throughout
   weaknesses:
-  - Asymmetry suggests publication bias annotation (at x≈0.63, y=0.50) overlaps with
-    two small study points at SE≈0.45-0.47. Reposition to x=summary_effect+0.45, y=0.54
-    or upper-right area (x=0.7, y=0.08) to avoid data overlap.
-  - 'No shape-based redundant encoding for the green/red CVD dichotomy — add aes(shape=region)
-    + scale_shape_manual(values={Inside funnel: o, Outside funnel: ^}) so the inside/outside
-    distinction is accessible without relying on color alone.'
-  - Grid lines on both axes add visual noise; funnel boundary lines already provide
-    structural guidance. Remove panel_grid_major_x (element_blank()) and keep only
-    y-axis major grid.
+  - Funnel polygon fill (#009E73 @ 8% alpha) becomes nearly invisible on the dark
+    background (#1A1A17); consider using a theme-adaptive alpha value (e.g. 0.12 in
+    dark mode) or INK_MUTED color so the region is perceptible on both surfaces
+  - '"Pooled effect = 0.25" annotation at y=0.01 sits tight against the apex of the
+    funnel and the largest data point, creating minor visual crowding — shifting to
+    y=0.03 or slightly offset from the pooled effect line would add breathing room'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "funnel-meta-analysis · python · plotnine · anyplot.ai" in bold dark ink, spans ~70% of canvas width — fully readable. Axis labels "Log Odds Ratio" (x) and "Standard Error" (y) in dark ink, clearly readable. Tick labels in secondary ink (#4A4A44), all readable. Legend text in secondary ink, readable. Annotation "Asymmetry suggests publication bias" in matte red, readable. "Pooled effect = 0.25" in brand green, readable. "Null" in muted ink, readable.
-      Data: Brand green (#009E73) study points for "Inside funnel" (14 points), matte red (#AE3030) for "Outside funnel" (1 point). Points sized by inverse-variance weight. Funnel polygon fill in very subtle green (alpha=0.08). Dashed boundary lines in secondary ink. Solid brand-green pooled effect line. Dotted muted null reference line.
-      Legibility verdict: PASS — all text elements clearly readable against the warm off-white background.
+      Background: Warm off-white (#FAF8F1) — correct light surface
+      Chrome: Title "funnel-meta-analysis · python · plotnine · anyplot.ai" in bold dark text, clearly readable. Axis labels "Log Odds Ratio" (X) and "Standard Error" (Y) in dark text at 10pt, readable. Tick labels at 8pt in gray (#4A4A44), readable. Legend text at 8pt with elevated-bg box (#FFFDF6), readable. Three annotations: "Null" (INK_MUTED gray), "Pooled effect = 0.25" (brand green), "Asymmetry suggests publication bias" (italic, matte-red) — all readable.
+      Data: Inside-funnel studies in brand green (#009E73) circles sized by inverse-variance weight; outside-funnel outliers in matte-red (#AE3030) triangles. Funnel polygon fill in light green tint (8% alpha). Dashed funnel boundary lines in medium gray. Solid teal pooled-effect vline, dotted gray null vline.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light cream (#F0EFE8) — fully readable against dark background. Axis labels in light ink (#F0EFE8), clearly readable. Tick labels in secondary light ink (#B8B7B0), all readable. Legend text in secondary light ink, readable. "Asymmetry suggests publication bias" annotation in matte red (#AE3030) — visible on dark background, slightly lower contrast but legible. "Pooled effect = 0.25" in brand green, readable. "Null" in muted light ink, readable. No dark-on-dark failures detected.
-      Data: Data colors identical to light render — brand green (#009E73) inside-funnel points, matte red (#AE3030) outside-funnel point. Consistent Imprint palette colors across both themes.
-      Legibility verdict: PASS — all text elements clearly readable against the dark background. No dark-on-dark failures.
+      Background: Warm near-black (#1A1A17) — correct dark surface
+      Chrome: Title, axis labels, tick labels, and legend text all render in light warm tones (#F0EFE8 / #B8B7B0) against the dark background — no dark-on-dark failures detected. All text is readable. Annotations: green pooled-effect label, red asymmetry label, and gray Null label all visible.
+      Data: Data colors identical to light render — same green circles (#009E73) and red triangles (#AE3030). Funnel polygon fill becomes nearly invisible at 8% alpha on the dark background; funnel boundary dashed lines remain clearly visible preserving the funnel shape. Grid lines are subtle light-tinted lines at 12% alpha.
+      Legibility verdict: PASS (minor note: funnel fill region visually absent in dark mode due to low alpha on dark surface — dashed boundaries still show the funnel shape)
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -54,81 +53,79 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; both renders fully legible. Minor:
-          Null and Pooled effect annotations at top of reversed axis area slightly
-          cramped together near y=0.'
+        comment: All font sizes explicitly set (12pt title, 10pt axis labels, 8pt
+          ticks/legend). Proportions good. Slight crowding of Pooled-effect annotation
+          at funnel apex.
       - id: VQ-02
         name: No Overlap
-        score: 4
-        max: 6
-        passed: false
-        comment: Asymmetry suggests publication bias annotation (centered at x≈0.63,
-          y=0.50) overlaps with two small study points at SE≈0.45-0.47, x≈0.63-0.78.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Study points well-sized by inverse-variance weight. Funnel polygon
-          fill at alpha=0.08 appropriately subtle. All reference lines visible in
-          both themes.
+        comment: Mostly clean. Minor crowding between 'Pooled effect' annotation at
+          y=0.01 and the apex data point; no true overlap.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 15 study points sized by weight (2.5-8 range) at alpha=0.85. All
+          clearly visible and well-differentiated.
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Green/red (inside/outside funnel) with implicit positional redundant
-          encoding but no shape differentiation. CVD concern present.
+        comment: Redundant encoding (color + shape) for inside/outside funnel. CVD-safe
+          Imprint colors. Not relying on hue alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Correct landscape 3200x1800. Good margins, legend
-          avoids data region.
+        comment: Canvas gate passed (3200x1800). Well-balanced layout; legend in sparse
+          bottom-left; annotations in upper region.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Log Odds Ratio (x) and Standard Error (y) are descriptive and domain-appropriate.
-          Title format correct.
+        comment: '''Log Odds Ratio'' and ''Standard Error'' are descriptive and domain-appropriate.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (Imprint slot 1). Second category #AE3030 (semantic
-          anchor for bias/error). Backgrounds #FAF8F1/#1A1A17. Theme-adaptive chrome
-          correct in both renders.'
+        comment: 'First series #009E73; outlier series uses semantic matte-red #AE3030
+          (appropriate for bias/error); backgrounds #FAF8F1/#1A1A17; all chrome theme-adaptive
+          in both renders.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above well-configured default: intentional semantic color coding,
-          subtle funnel polygon fill, brand-green pooled effect as visual anchor,
-          italic annotation for bias callout. Annotation overlap creates clutter.'
+        comment: 'Strong design: semantic Imprint coloring, weight-proportioned markers,
+          funnel polygon fill, targeted narrative annotations. Clearly above defaults;
+          not quite publication-grade.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good: theme_minimal removes spines, grid lines subtle at alpha=0.12,
-          custom legend position with styled background, axis_line added. Both-axis
-          grid adds unnecessary noise for a funnel plot.'
+        comment: Y-axis-only horizontal grid at 12% alpha; no minor grids; custom
+          legend box; L-frame axis lines. Funnel fill invisible on dark render is
+          a minor gap.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Good: funnel shape guides viewer, color contrast separates inside/outside,
-          reference lines labeled, size encoding reinforces study weight. Effective
-          narrative despite annotation placement issue.'
+        comment: 'Clear publication-bias narrative: asymmetric scatter by design,
+          red triangles anchor the problem, italic annotation points to insight. Visual
+          hierarchy via color + size.'
     spec_compliance:
       score: 15
       max: 15
@@ -138,31 +135,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct funnel plot: y-axis shows standard error inverted with 0
-          at top, x-axis shows effect size.'
+        comment: 'Correct funnel plot: inverted SE axis, study points, diagonal pseudo-CI
+          bounds, pooled effect line.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: inverted y-axis, pooled effect line,
-          pseudo 95% CI funnel boundaries, weighted study points, null reference line,
-          asymmetry shown.'
+        comment: 'All spec features: inverted Y-axis, pooled effect vline, null reference
+          vline, pseudo 95% CI funnel boundary lines, weight-sized points.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=effect size (log odds ratio), Y=standard error (inverted). All
-          15 study points visible.
+        comment: X=Log Odds Ratio (effect size), Y=Standard Error (inverted), size=inverse-variance
+          weight.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title funnel-meta-analysis · python · plotnine · anyplot.ai matches
-          required format. Legend labels Inside funnel / Outside funnel are clear
-          and match data categories.
+        comment: Title is 'funnel-meta-analysis · python · plotnine · anyplot.ai'.
+          Legend correctly labels Inside/Outside funnel.
     data_quality:
       score: 15
       max: 15
@@ -172,24 +167,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All funnel plot features: studies at multiple precision levels (SE
-          0.05-0.50), study outside funnel, size variation by weight, pooled vs null
-          effect distinction.'
+        comment: Three precision bands, both funnel regions, weight-sized markers,
+          visible asymmetry pattern.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 15 RCTs comparing drug vs placebo with log odds ratios. Realistic
-          meta-analysis with deliberately applied publication bias to imprecise studies.
+        comment: 15 RCTs comparing drug vs placebo with log odds ratios — realistic
+          Cochrane-style meta-analysis.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Log odds ratios -0.55 to 0.78 and standard errors 0.05-0.50 are plausible
-          for clinical trial meta-analysis. Pooled effect 0.25 is a reasonable drug
-          effect size.
+        comment: Log ORs -0.55 to 0.78, SE 0.05 to 0.50, pooled ~0.25. Plausible clinical
+          trial meta-analysis values.
     code_quality:
       score: 10
       max: 10
@@ -199,60 +192,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → funnel geometry → plot → save.
-          No unnecessary functions or classes.'
+        comment: Imports → tokens → data → plot → save. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random operations.
+        comment: np.random.seed(42) set before all random calls.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sys/os needed for path workaround and theme env
-          variable.
+        comment: All plotnine imports used; os/sys used for naming-conflict workaround.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, no over-engineering. sys.path workaround documented
-          with a comment.
+        comment: Clean, well-structured. sys.path manipulation is necessary for plotnine.py
+          filename conflict.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as f'plot-{THEME}.png'. No deprecated API usage.
+        comment: Saves as plot-{THEME}.png using plot.save() with correct dpi/width/height.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Idiomatic grammar of graphics: proper aes() mappings, scale_y_reverse()
-          for axis inversion, pd.Categorical for ordered legend, scale_size_continuous()
-          for weight encoding, scale_color_manual() for semantic palette.'
+        comment: 'Expert grammar-of-graphics: proper aes() per geom, scale_y_reverse(),
+          scale_color_manual + scale_shape_manual for redundant encoding, guides(override_aes)
+          for legend customization.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Grammar of graphics layer composition (polygon + line + points +
-          vlines + annotate) is characteristic of plotnine/ggplot2. scale_y_reverse()
-          and pd.Categorical for legend ordering are plotnine-idiomatic.
-  verdict: REJECTED
+        comment: geom_polygon for funnel fill, 5-layer geom composition, guide_legend(override_aes)
+          — grammar-of-graphics idioms. Partially distinctive (shared with ggplot2).
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
+  - custom-legend
   patterns:
   - data-generation
   dataprep:
