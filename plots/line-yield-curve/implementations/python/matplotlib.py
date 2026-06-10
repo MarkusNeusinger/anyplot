@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-yield-curve: Yield Curve (Interest Rate Term Structure)
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-10
@@ -21,7 +21,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 # #009E73 (brand green) = normal/healthy curve; #AE3030 (matte red) = inverted/recession signal
 BRAND = "#009E73"  # Jan 2022 normal curve — Imprint position 1
 INVERTED_COLOR = "#AE3030"  # Oct 2023 inverted curve — semantic red (recession indicator)
-NORM_COLOR = "#4467A3"  # Jan 2025 normalizing curve — Imprint position 3
+NORM_COLOR = "#C475FD"  # Jan 2025 normalizing curve — Imprint position 2
 
 # Data — U.S. Treasury yield curves across three monetary-policy regimes
 maturities = ["1M", "3M", "6M", "1Y", "2Y", "3Y", "5Y", "7Y", "10Y", "20Y", "30Y"]
@@ -54,7 +54,7 @@ for yields, color, label in curves:
         linewidth=2.5,
         label=label,
         marker="o",
-        markersize=5,
+        markersize=7,
         markeredgecolor=PAGE_BG,
         markeredgewidth=1.0,
     )
