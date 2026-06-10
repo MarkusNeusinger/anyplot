@@ -1,0 +1,257 @@
+library: echarts
+language: javascript
+specification_id: line-load-duration
+created: '2026-06-10T05:12:30Z'
+updated: '2026-06-10T05:30:03Z'
+generated_by: claude-sonnet
+workflow_run: 27254081797
+issue: 4586
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/javascript/echarts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent idiomatic use of ECharts markArea and markLine features for semantic
+    region shading and capacity tier reference lines
+  - 'Full spec compliance: all required features implemented including three load
+    regions, capacity tier dashed lines, direct region labels, and total energy annotation'
+  - Correct Imprint palette usage with semantic color assignments — matte red (palette[4])
+    for peak load, ochre (palette[3]) for intermediate, blue (palette[2]) for base
+    load
+  - Clean theme adaptation with all chrome tokens (t.ink, t.inkSoft, t.grid, t.elevatedBg)
+    properly applied in both light and dark renders
+  - Deterministic LCG seeded RNG for reproducible synthetic load data in the browser
+    context where Math.random() cannot be seeded
+  - 'All text elements explicitly sized with proper typographic hierarchy: title 22px,
+    axis names 16px, tick/annotation labels 13-14px'
+  weaknesses:
+  - Two helper functions (hexAlpha, rnd) break strict KISS structure; hexAlpha conversion
+    could be inlined or precomputed as top-level variables rather than a function
+  - Tick and annotation labels at 13px are slightly below the recommended 14px from
+    the echarts style guide, marginally reducing mobile readability at 400px viewport
+    width
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 surface — correct anyplot light theme background, not pure white
+      Chrome: Title "line-load-duration · javascript · echarts · anyplot.ai" centered in dark ink, clearly readable; Y-axis label "Load (MW)" and X-axis label "Duration (hours per year)" in dark-soft ink; tick labels (300–1,350 on Y, 0–8,760 on X) in dark-soft ink; all text clearly readable against the light background
+      Data: Monotonically decreasing load duration curve in brand green #009E73 (palette[0]); three shaded regions — salmon-pink (matte red palette[4] at 13% alpha) for peak load, warm beige (ochre palette[3] at 13% alpha) for intermediate, light steel-blue (blue palette[2] at 13% alpha) for base load; two horizontal dashed lines at 900 MW ("Intermediate cap: 900 MW") and 600 MW ("Base cap: 600 MW") with labeled pill boxes at right edge; region labels "Peak Load", "Intermediate", "Base Load" in matching palette colors; "Total annual energy: 6.93 TWh" annotation in center-lower area
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 surface — correct anyplot dark theme background, not pure black
+      Chrome: Title in light off-white ink clearly readable; Y-axis and X-axis labels in lighter ink-soft tone; tick labels in light secondary tone; all text clearly readable against the dark background; no dark-on-dark failures observed; dashed line labels ("Intermediate cap: 900 MW", "Base cap: 600 MW") show light text on elevated dark background box — readable
+      Data: Brand green #009E73 load duration curve is identical to the light render — same hue, confirming data colors are unchanged between themes; region fills use the same palette members (matte red, ochre, blue) at 20% alpha in dark mode (slightly higher than 13% in light mode for better contrast visibility); region labels "Peak Load", "Intermediate", "Base Load" in respective palette colors at 85% alpha — all readable against the dark background
+      Legibility verdict: PASS — all text clearly readable against the warm near-black background; chrome correctly flips while data colors remain identical to light render
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicitly set with good hierarchy (title 22px, axis names
+          16px, tick labels 13px); tick labels at 13px slightly below recommended
+          14px, marginally reduces mobile readability
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; region labels, capacity line labels, and
+          energy annotation all clear
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line width 3px appropriate for 8760-point dense dataset; showSymbol:false
+          correct; region fills at low alpha don't obscure the line
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette; three region colors from separate perceptual
+          hue families (red, yellow, blue)
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; generous margins (105/185/88/88); chart fills
+          canvas effectively; no content cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Load (MW)'', X-axis: ''Duration (hours per year)'' — both
+          descriptive with units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Main line uses palette[0]=#009E73 (brand green); region fills use
+          Imprint palette members with semantic justification; transparent background
+          uses pageBg token; all chrome theme-adaptive
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above generic defaults: semantic color choices for regions, subtle
+          fills, professional engineering visualization style with clean layout'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis grid only (no vertical), no tick marks shown, generous whitespace,
+          subtle fill alpha; clearly above minimal defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color-coded regions guide interpretation of peak/intermediate/base
+          load; capacity tier lines provide context; total energy annotation adds
+          quantitative insight; viewer immediately reads the load structure
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct load duration curve: line chart with values sorted descending,
+          monotonically decreasing'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: monotonic curve, three shaded regions,
+          horizontal dashed capacity lines with labels, region labels on plot, total
+          energy annotation'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=duration hours (0-8760), Y=load in MW; data sorted descending;
+          peak ~1200 MW, base ~380 MW
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'line-load-duration · javascript · echarts · anyplot.ai' correct;
+          regions labeled directly on plot (no redundant legend needed)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full 8760-hour annual profile; all three load regions shown; capacity
+          tiers at 600 and 900 MW; total energy calculation
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Mid-sized utility annual load profile; plausible seasonal and daily
+          patterns via LCG-seeded simulation; neutral engineering domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Peak ~1200 MW, base ~380 MW, total 6.93 TWh; load factor ~55% — physically
+          realistic for a mid-sized utility
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Two helper functions (hexAlpha, rnd) break strict KISS; both serve
+          legitimate purposes (RNG seeding, color conversion) but could be inlined
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic LCG with seed 42 ensures reproducible data generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses window globals (echarts, ANYPLOT_TOKENS, ANYPLOT_THEME)
+          appropriately
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized; no fake interactive elements; appropriate
+          complexity for the visualization
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: animation:false set; echarts.init without explicit size; no devicePixelRatio;
+          correct ECharts API usage
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of markLine, markArea, and graphic components — all idiomatic
+          ECharts patterns; showSymbol:false correct for dense data
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: markArea within series for semantic region shading is distinctly
+          ECharts (not easily replicated in other libs); markLine with custom label
+          formatters; graphic component for overlay text annotations
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - sorting
+  styling:
+  - alpha-blending
