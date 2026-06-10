@@ -1,11 +1,13 @@
-""" anyplot.ai
+"""anyplot.ai
 line-yield-curve: Yield Curve (Interest Rate Term Structure)
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-10
 """
 
 import os
+import re
 
+import cairosvg
 import pygal
 from pygal.style import Style
 
@@ -43,7 +45,7 @@ custom_style = Style(
     label_font_size=56,
     major_label_font_size=44,
     legend_font_size=44,
-    value_font_size=36,
+    value_font_size=32,
     tooltip_font_size=28,
     stroke_width=2.5,
     opacity=0.92,
@@ -93,7 +95,7 @@ chart.add("Jan 2021 (Normal)", normal_points, dots_size=7)
 chart.add("Dec 2018 (Flat)", flat_points, dots_size=7)
 chart.add("Mar 2023 (Inverted)", inverted_points, dots_size=7)
 
-# Inversion highlight: 4th Imprint position (ochre) — visually distinct from the blue inverted curve
+# Inversion highlight: 4th Imprint position (ochre) — oversized anchor dots at 2Y and 10Y
 spread_2y10y = 4.60 - 3.58
 inversion_pts = [(2, 4.60), (10, 3.58)]
 chart.add(
@@ -104,8 +106,32 @@ chart.add(
     show_dots=True,
 )
 
-# Save
-chart.render_to_png(f"plot-{THEME}.png")
+# Render SVG for post-processing
+svg_str = chart.render(is_unicode=True)
+
+# 1. Remove pygal's default chart frame border via CSS injection (DE-02 refinement)
+border_css = "  rect.background { stroke: none !important; } .chart-background { stroke: none !important; }\n"
+svg_str = svg_str.replace("</style>", border_css + "  </style>")
+
+# 2. Inject inversion zone shading rectangle (DE-01 / data storytelling enhancement)
+#    Coordinates derived from SVG circle positions (plot group translate: 222,196):
+#      x-scale = 93.14 px/year, x-origin = 48px; y-scale = 221.7 px/%, y-origin = 1243.62px
+#      2Y @ 4.60%: plot-local (234.3, 223.9)  |  10Y @ 3.58%: plot-local (979.4, 450.0)
+#    Semi-transparent ochre box frames the annotated 2Y–10Y spread region
+inversion_zone = (
+    '<rect x="234.3" y="223.9" width="745.1" height="226.1" '
+    'fill="rgba(189,130,51,0.13)" stroke="rgba(189,130,51,0.45)" '
+    'stroke-width="3" stroke-dasharray="12,8" />'
+)
+# Insert after the plot-area background rect (placed inside the plot group → behind data series)
+svg_str = re.sub(
+    r'(<rect x="0" y="0" width="2898" height="1268(?:\.\d+)?" class="background" />)', r"\1\n" + inversion_zone, svg_str
+)
+
+# Save PNG using cairosvg directly (preserves SVG post-processing)
+cairosvg.svg2png(
+    bytestring=svg_str.encode("utf-8"), write_to=f"plot-{THEME}.png", output_width=3200, output_height=1800
+)
 
 with open(f"plot-{THEME}.html", "w") as f:
     f.write(
@@ -119,7 +145,7 @@ with open(f"plot-{THEME}.html", "w") as f:
     </style>
 </head>
 <body>
-    {chart.render(is_unicode=True)}
+    {svg_str}
 </body>
 </html>"""
     )
