@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 recurrence-basic: Recurrence Plot for Nonlinear Time Series
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-10
@@ -79,7 +79,7 @@ ax.annotate(
     fontweight="bold",
     ha="center",
     arrowprops={"arrowstyle": "->", "color": INK_MUTED, "lw": 1.2},
-    bbox={"facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.92, "boxstyle": "round,pad=0.35"},
+    bbox={"facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.92, "boxstyle": "round,pad=0.45"},
 )
 ax.annotate(
     "chaotic regime",
@@ -90,7 +90,7 @@ ax.annotate(
     fontweight="bold",
     ha="center",
     arrowprops={"arrowstyle": "->", "color": INK_MUTED, "lw": 1.2, "connectionstyle": "arc3,rad=0.25"},
-    bbox={"facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.92, "boxstyle": "round,pad=0.35"},
+    bbox={"facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.92, "boxstyle": "round,pad=0.45"},
 )
 
 rr = np.sum(recurrence_matrix) / recurrence_matrix.size * 100
@@ -111,12 +111,12 @@ ax.text(
 fig.suptitle("recurrence-basic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK, y=0.97)
 ax.set_title(
     "Lorenz Attractor x-component  |  dim=3, τ=5, ε=percentile(15%)",
-    fontsize=8,
+    fontsize=9,
     color=INK_MUTED,
     style="italic",
     pad=10,
 )
 
 # Save — figsize=(6,6) dpi=400 → exact 2400×2400 px; no bbox_inches='tight'
-plt.tight_layout(rect=[0, 0, 1, 0.92])
+plt.tight_layout(rect=[0.02, 0.02, 0.98, 0.92])
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
