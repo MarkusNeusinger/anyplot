@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 funnel-meta-analysis: Meta-Analysis Funnel Plot for Publication Bias
 Library: altair 6.2.1 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-06-10
@@ -83,7 +83,7 @@ funnel_df = pd.DataFrame(
     {"se": se_range, "lower": summary_effect - 1.96 * se_range, "upper": summary_effect + 1.96 * se_range}
 )
 
-y_scale = alt.Scale(reverse=True, domain=[se_max, 0])
+y_scale = alt.Scale(domain=[se_max, 0])
 
 # Funnel confidence area fill
 funnel_area = (
@@ -127,6 +127,11 @@ region_color = alt.Color(
     legend=alt.Legend(title=None, orient="bottom-right", labelFontSize=10, symbolSize=100),
 )
 
+# Redundant shape encoding for CVD accessibility (circle vs diamond)
+region_shape = alt.Shape(
+    "region:N", scale=alt.Scale(domain=["Within funnel", "Outside funnel"], range=["circle", "diamond"]), legend=None
+)
+
 points = (
     alt.Chart(df)
     .mark_point(filled=True, stroke="white", strokeWidth=1.5, opacity=0.9)
@@ -134,6 +139,7 @@ points = (
         x=alt.X("effect_size:Q", title="Log Odds Ratio", scale=alt.Scale(domain=[-1.15, 0.35])),
         y=alt.Y("std_error:Q", title="Standard Error", scale=y_scale),
         color=region_color,
+        shape=region_shape,
         size=alt.Size("weight:Q", scale=alt.Scale(range=[160, 520]), legend=None),
         tooltip=[
             alt.Tooltip("study:N", title="Study"),
@@ -171,7 +177,7 @@ chart = (
         gridColor=INK,
         gridOpacity=0.15,
     )
-    .configure_axisX(gridDash=[4, 4])
+    .configure_axisX(grid=False)
     .configure_axisY(grid=False)
     .configure_legend(
         padding=8, cornerRadius=4, fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, labelFontSize=10
