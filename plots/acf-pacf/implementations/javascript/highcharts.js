@@ -1,8 +1,7 @@
 // anyplot.ai
-// acf-pacf: Autocorrelation and Partial Autocorrelation Plot
-// Library: Highcharts 12.6.0 | Node 22
-// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
-// Quality: pending | Created: 2026-06-10
+// acf-pacf: Autocorrelation and Partial Autocorrelation (ACF/PACF) Plot
+// Library: highcharts 12.6.0 | JavaScript 22.22.3
+// Quality: 90/100 | Created: 2026-06-10
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
