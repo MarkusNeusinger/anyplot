@@ -6,7 +6,6 @@
 using CairoMakie
 using Colors
 using Random
-using Statistics
 
 Random.seed!(42)
 
@@ -116,7 +115,7 @@ band!(ax,
     collect(inter_hours),
     zeros(length(inter_hours)),
     load_mw[inter_hours .+ 1];
-    color = RGBAf(IMPRINT_PALETTE[4].r, IMPRINT_PALETTE[4].g, IMPRINT_PALETTE[4].b, 0.20),
+    color = RGBAf(IMPRINT_PALETTE[4].r, IMPRINT_PALETTE[4].g, IMPRINT_PALETTE[4].b, 0.28),
 )
 
 # Base load region (rightmost, always-on) — brand green
@@ -129,8 +128,8 @@ band!(ax,
 
 # Main load duration curve
 lines!(ax, collect(hours), load_mw;
-    color     = IMPRINT_PALETTE[3],
-    linewidth = 2.2,
+    color     = IMPRINT_PALETTE[1],
+    linewidth = 2.5,
 )
 
 # Horizontal dashed capacity tier lines
@@ -173,7 +172,7 @@ text!(ax, (intermediate_end + n_hours) / 2, maximum(load_mw) * 0.92;
 )
 
 # Capacity tier labels on right margin
-label_x = n_hours * 0.98
+label_x = n_hours * 0.94
 text!(ax, label_x, peak_capacity_mw + 12;
     text     = "Peak cap. $(round(Int, peak_capacity_mw)) MW",
     align    = (:right, :bottom),
