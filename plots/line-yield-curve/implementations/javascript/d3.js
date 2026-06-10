@@ -36,7 +36,7 @@ const curves = [
   {
     date: "Jan 2023",
     shape: "Flat",
-    color: t.palette[2],  // blue
+    color: t.palette[2],  // blue — financial convention (yield curves use blue for flat/transitional)
     strokeWidth: 2.5,
     dashArray: "8,5",
     yields: [4.30, 4.65, 4.87, 4.72, 4.41, 4.20, 3.95, 3.82, 3.68, 3.87, 3.74],
@@ -109,6 +109,28 @@ g.append("line")
   .attr("stroke-width", 1)
   .attr("stroke-dasharray", "4,4")
   .attr("opacity", 0.45);
+
+// Label the 10Y reference line at its right endpoint so viewers understand the baseline
+g.append("text").attr("x", iw + 6).attr("y", y(tenYrYield) - 4)
+  .attr("text-anchor", "start").attr("fill", t.palette[4]).attr("opacity", 0.65)
+  .style("font-size", "11px").text("10Y");
+g.append("text").attr("x", iw + 6).attr("y", y(tenYrYield) + 10)
+  .attr("text-anchor", "start").attr("fill", t.palette[4]).attr("opacity", 0.65)
+  .style("font-size", "11px").text("3.96%");
+
+// d3.bisectLeft: find the 2Y maturity index to anchor the inversion annotation
+const matYears = maturities.map(m => m.years);
+const ann2YIdx = d3.bisectLeft(matYears, 2);
+const annPt = invCurve.data[ann2YIdx];
+g.append("text")
+  .attr("x", x(annPt.years))
+  .attr("y", y(annPt.yield) - 14)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.palette[4])
+  .attr("opacity", 0.75)
+  .style("font-size", "11px")
+  .style("font-style", "italic")
+  .text("Inverted");
 
 // --- Curves: lines + data point markers ---
 const lineGen = d3.line()
