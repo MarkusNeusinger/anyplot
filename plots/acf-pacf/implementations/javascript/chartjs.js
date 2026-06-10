@@ -115,9 +115,9 @@ const zeroGridColor = (ctx) => (ctx.tick?.value === 0 ? t.inkSoft : t.grid);
 // Shared y-axis config for both subplots
 function yAxis(label) {
   return {
-    ticks: { color: t.inkSoft, font: { size: 13 }, maxTicksLimit: 7 },
+    ticks: { color: t.inkSoft, font: { size: 14 }, maxTicksLimit: 7 },
     grid: { color: zeroGridColor },
-    border: { color: t.inkSoft },
+    border: { display: false },
     title: {
       display: true,
       text: label,
@@ -150,7 +150,7 @@ new Chart(acfCanvas, {
         data: acfData,
         backgroundColor: acfData.map(stemColor),
         borderWidth: 0,
-        barThickness: 4,
+        barThickness: 7,
       },
       ciLine(MAX_LAG + 1, CI, "95% CI"),
       ciLine(MAX_LAG + 1, -CI, ""),
@@ -162,13 +162,13 @@ new Chart(acfCanvas, {
     animation: false,
     plugins: {
       title: { display: false },
-      legend: legendConfig,
+      legend: { display: false },
     },
     scales: {
       x: {
-        ticks: { color: t.inkSoft, font: { size: 13 }, maxTicksLimit: 16 },
-        grid: { color: t.grid },
-        border: { color: t.inkSoft },
+        ticks: { color: t.inkSoft, font: { size: 14 }, maxTicksLimit: 16 },
+        grid: { display: false },
+        border: { display: false },
         title: { display: false }, // "Lag" label shown on bottom chart only
       },
       y: yAxis("ACF"),
@@ -187,7 +187,7 @@ new Chart(pacfCanvas, {
         data: pacfData,
         backgroundColor: pacfData.map(stemColor),
         borderWidth: 0,
-        barThickness: 4,
+        barThickness: 7,
       },
       ciLine(MAX_LAG, CI, "95% CI"),
       ciLine(MAX_LAG, -CI, ""),
@@ -203,9 +203,9 @@ new Chart(pacfCanvas, {
     },
     scales: {
       x: {
-        ticks: { color: t.inkSoft, font: { size: 13 } },
-        grid: { color: t.grid },
-        border: { color: t.inkSoft },
+        ticks: { color: t.inkSoft, font: { size: 14 } },
+        grid: { display: false },
+        border: { display: false },
         title: {
           display: true,
           text: "Lag",
