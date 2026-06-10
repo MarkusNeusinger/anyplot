@@ -31,7 +31,7 @@ export function LandingPage() {
   }, [trackPageview]);
 
   const handleLibraryClick = (lib: string) => {
-    trackEvent('nav_click', { source: 'library_card', target: '/plots', value: lib });
+    trackEvent('nav_click', { source: 'library_card', target: paths.plots, value: lib });
     navigate(paths.plotsFiltered('lib', lib));
   };
 
@@ -118,7 +118,9 @@ function MapSection({ specCount }: { specCount?: number }) {
         <Box
           component={RouterLink}
           to={paths.map}
-          onClick={() => trackEvent('nav_click', { source: 'map_teaser_preview', target: '/map' })}
+          onClick={() =>
+            trackEvent('nav_click', { source: 'map_teaser_preview', target: paths.map })
+          }
           sx={{
             display: 'block',
             textDecoration: 'none',
@@ -476,7 +478,9 @@ function SpecsSection({
         <Box
           component={RouterLink}
           to={paths.specs}
-          onClick={() => trackEvent('nav_click', { source: 'specs_more_link', target: '/specs' })}
+          onClick={() =>
+            trackEvent('nav_click', { source: 'specs_more_link', target: paths.specs })
+          }
           sx={{
             display: 'inline-block',
             mt: 2.5,

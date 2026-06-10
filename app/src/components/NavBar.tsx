@@ -73,7 +73,7 @@ export function NavBar() {
   }, []);
 
   const handleSearch = () => {
-    trackEvent('nav_click', { source: 'nav_search', target: '/plots?focus=search' });
+    trackEvent('nav_click', { source: 'nav_search', target: paths.plotsSearch });
     navigate(paths.plotsSearch);
   };
 
@@ -81,7 +81,7 @@ export function NavBar() {
   // Non-triggering clicks fall through to RouterLink's normal `/` navigation.
   const handleLogoClick = useCallback(
     (e: React.MouseEvent) => {
-      trackEvent('nav_click', { source: 'nav_logo', target: '/' });
+      trackEvent('nav_click', { source: 'nav_logo', target: paths.home });
       if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
       clickCountRef.current += 1;
       if (clickTimerRef.current) clearTimeout(clickTimerRef.current);

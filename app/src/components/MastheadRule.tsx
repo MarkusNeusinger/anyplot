@@ -209,7 +209,7 @@ export function MastheadRule() {
         <Box
           component={RouterLink}
           to={paths.home}
-          onClick={() => trackEvent('nav_click', { source: 'masthead_logo', target: '/' })}
+          onClick={() => trackEvent('nav_click', { source: 'masthead_logo', target: paths.home })}
           sx={{ ...linkSx, display: rootMarkerDisplay }}
         >
           ~/anyplot.ai
