@@ -1,0 +1,268 @@
+library: echarts
+language: javascript
+specification_id: scatter-connected-temporal
+created: '2026-06-09T23:40:59Z'
+updated: '2026-06-10T00:03:55Z'
+generated_by: claude-sonnet
+workflow_run: 27242620346
+issue: 4675
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/javascript/echarts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - Excellent use of ECharts visualMap with dimension:2 encoding for temporal gradient
+    — the 3rd value in each [x, y, t] data tuple drives color from imprint_seq, which
+    is a distinctively ECharts-native pattern
+  - Terminal markLine arrow at 2023 makes time direction immediately obvious without
+    any labeling
+  - Mixed symbolSize (16 for key years, 8 for others) creates a clear visual hierarchy
+    along the temporal path
+  - All chrome (text, axis, grid) is fully theme-adaptive via t.ink/t.inkSoft/t.grid
+    tokens; both renders are clean and readable
+  - Excellent real-world dataset (CO₂ ppm vs. temperature anomaly 1980–2023) with
+    factually accurate values that tells a compelling climate narrative
+  - 'Clean code structure: flat data → config → setOption, no functions or classes,
+    fully deterministic'
+  weaknesses:
+  - Non-key markers (symbolSize:8) are on the small side for a 44-point connected
+    scatter — the spec sits just at the <50 boundary where the style guide calls for
+    more prominent markers; increase to 10–12 for the intermediary points
+  - 'DE-03 storytelling could be strengthened: a brief annotation (e.g. a text label
+    near 2015–2023 noting ''Acceleration'') or a bolder emphasis on the rightmost
+    cluster would let viewers immediately spot the insight rather than having to trace
+    the path themselves'
+  - 'DE-02 refinement is strong but not yet perfect: both X and Y split-lines are
+    drawn; removing X split-lines (keeping only Y) would clean up the grid for a plot
+    where the primary trend is along Y'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "Temperature Anomaly vs CO₂ · scatter-connected-temporal · javascript · echarts · anyplot.ai" in dark ink at top-center, clearly readable. X-axis name "Atmospheric CO₂ (ppm)" and Y-axis name "Global Temperature Anomaly (°C)" in dark ink, both readable. Tick labels in inkSoft color at fontSize 13, fully legible.
+      Data: Connected scatter path spanning CO₂ 338–421 ppm and temperature anomaly -0.1–1.2 °C. Line and markers colored via imprint_seq gradient: starts at brand green (#009E73) in 1980 and transitions to blue (#4467A3) by 2023. Key year markers (1980, 2000, 2010, 2023) rendered larger (symbolSize 16) with bold year labels; non-key markers smaller (symbolSize 8). A markLine arrow at the 2022→2023 segment indicates time direction.
+      Legibility verdict: PASS — all text is clearly readable against the warm off-white background. No light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface, not pure black.
+      Chrome: Title in light ink (#F0EFE8), clearly readable against the dark background. X/Y axis names in light ink, readable. Tick labels in inkSoft (#B8B7B0), readable. Year labels (1980, 2000, 2010, 2023) in inkSoft bold, readable. Grid lines visible as subtle warm-gray lines.
+      Data: Colors are identical to the light render — imprint_seq gradient from teal-green (1980) to blue (2023). Marker halos use t.pageBg (the dark background color) as borderColor, creating a clean dark-theme halo effect. The markLine arrow is in t.seq[1] blue. No data colors have shifted.
+      Legibility verdict: PASS — all text is clearly readable against the warm near-black background. No dark-on-dark failures observed. The inkSoft tick and year labels provide adequate contrast.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title dynamic (fontsize ~17), axis
+          names 15, tick labels 13, year labels 14 bold. Readable in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Year labels well-positioned (left/top/right) with no overlap against
+          data or each other.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Key-year markers at symbolSize 16 are prominent. Non-key markers
+          at symbolSize 8 are visible but slightly small for a 44-point scatter at
+          the <50 density threshold.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (green-to-blue) is CVD-safe; temporal gradient distinguishable
+          under deuteranopia/protanopia. No red-green sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'grid: {left:110, right:50, top:80, bottom:90} provides generous
+          and balanced margins. Plot fills ~75% of canvas.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Atmospheric CO₂ (ppm)'', Y: ''Global Temperature Anomaly (°C)''
+          — both descriptive with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Sequential temporal gradient via visualMap with t.seq (imprint_seq:
+          #009E73→#4467A3). Single-polarity temporal data — correct cmap choice. Background
+          transparent (renders as #FAF8F1/#1A1A17). Chrome fully theme-adaptive.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: temporal gradient + mixed marker sizes + terminal
+          arrow + theme-adaptive halos places this clearly above defaults. Not quite
+          FiveThirtyEight level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Axis lines and ticks hidden, subtle grid with t.grid token, transparent
+          background, no legend frame. Minor: both X and Y split-lines drawn; removing
+          X would clean further.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Gradient + arrow + year milestones create a clear temporal narrative
+          about climate trajectory. Good visual hierarchy, but no focal-point annotation
+          calling out the recent acceleration.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct connected scatter plot with temporal path using ECharts line
+          type with showSymbol.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Points connected chronologically, key time points annotated (1980/2000/2010/2023),
+          arrow at terminus for time direction, color gradient for temporal progression,
+          visible markers at each position.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: CO₂ ppm (338–421), Y: temperature anomaly (-0.1–1.2°C), 44 annual
+          points 1980–2023 all shown.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'Temperature Anomaly vs CO₂ · scatter-connected-temporal ·
+          javascript · echarts · anyplot.ai' is correct {Descriptive Title}·{spec-id}·{language}·{library}·anyplot.ai
+          format. No legend needed (single continuous series).
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all key aspects: temporal path with directional gradient,
+          milestone markers, connected scatter (not just line or scatter alone), full
+          4-decade dataset capturing non-monotone year-to-year variation.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral, non-controversial scientific scenario (climate metrics).
+          CO₂ and temperature anomaly are factual well-known datasets.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: CO₂ values 338.7–421.1 ppm align with real Mauna Loa measurements
+          for 1980–2023. Temperature anomalies 0.12–1.17°C are consistent with GISS/NOAA
+          records.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat: data arrays → seriesData map → echarts.init → setOption. No
+          functions, no classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully hardcoded deterministic data arrays. No RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only window.ANYPLOT_TOKENS and window.echarts globals used — both
+          required.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, idiomatic JS. seriesData via .map() with per-point encoding
+          is well-structured. No over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness handles plot-{theme}.png and plot-{theme}.html output. Current
+          ECharts API used. animation:false set.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert ECharts patterns: visualMap with dimension encoding, markLine
+          with arrow symbols, per-data-point symbolSize and label in data items array,
+          transparent backgroundColor.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: visualMap dimension:2 for data-driven sequential coloring is distinctly
+          ECharts-native. markLine arrow approach is also library-specific. Combined
+          with per-point label/symbolSize, this is well above generic usage.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - custom-colormap
