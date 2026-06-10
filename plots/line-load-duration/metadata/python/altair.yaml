@@ -1,48 +1,56 @@
 library: altair
+language: python
 specification_id: line-load-duration
 created: '2026-03-15T21:43:45Z'
-updated: '2026-03-15T22:07:43Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23119898937
+updated: '2026-06-10T05:03:34Z'
+generated_by: claude-sonnet
+workflow_run: 27253438199
 issue: 4586
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/altair/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 6.2.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/python/altair/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance: all six specification requirements fully implemented
-    (monotonic curve, shaded regions, capacity tier lines, region labels, energy annotation,
-    professional style)'
-  - Semantic color palette with intentional meaning (purple=peak, golden=intermediate,
-    blue=base) creates strong visual storytelling
-  - Realistic synthetic data with daily, seasonal, and weekday components produces
-    a convincing load profile
-  - Clean code structure with appropriate downsampling for Vega performance
-  - Dual output (static PNG + interactive HTML) leverages Altair strengths
+  - 'Full spec compliance: all five required features (monotonically decreasing curve,
+    three shaded regions, capacity tier reference lines, direct region labels, total
+    energy annotation) correctly implemented.'
+  - 'Imprint palette applied with semantic intent: brand green (#009E73) anchors the
+    peak region, positions 1-3 used in canonical order.'
+  - 'Theme-adaptive chrome throughout: INK/INK_SOFT tokens correctly wired to all
+    non-data elements; dark render passes without dark-on-dark failures.'
+  - 'Real Altair interactivity in HTML: crosshair selection using alt.selection_point(nearest=True,
+    on=''pointerover'') is genuinely declarative, not fake UI.'
+  - Canvas correctly padded to exactly 3200x1800 with PAGE_BG fill using the mandated
+    PIL pad-only block.
+  - 'Efficient data handling: 8760 hours downsampled to ~877 points for Vega performance
+    while preserving exact region boundaries with np.interp.'
   weaknesses:
-  - Y-axis tick density (every 50 MW) creates visual clutter; coarser ticks would
-    be cleaner
-  - Tier labels on the right margin are slightly crowded against the canvas edge
-  - Region data splitting is done manually in numpy rather than using Altair transform_filter
-  image_description: 'The plot displays a load duration curve showing electrical power
-    demand (MW) on the y-axis against ranked hours of the year (0-8,760) on the x-axis.
-    The curve is monotonically decreasing from ~1,250 MW to ~380 MW, rendered as a
-    dark line (#1a1a2e) with strokeWidth 2.5. Three distinct filled regions under
-    the curve represent load zones: purple (#8e44ad) for Peak Load (leftmost, ~0-1,000
-    hours), golden yellow (#f39c12) for Intermediate Load (middle, ~1,000-7,200 hours),
-    and steel blue (#306998) for Base Load (rightmost, ~7,200-8,760 hours). Each region
-    is filled at 55% opacity. Three horizontal dashed lines mark capacity tiers: Peak
-    Capacity (1,100 MW), Intermediate Capacity (900 MW), and Base Capacity (550 MW),
-    with bold labels aligned to the right. Region names appear in italic bold within
-    their respective zones. A bold annotation reads "Total Energy: 7,075 GWh/year"
-    in the lower-center area. The title "line-load-duration · altair · pyplots.ai"
-    is displayed at the top in 28pt font. The grid is very subtle (0.15 opacity) and
-    the view border is removed.'
+  - '"Base Load" region label uses color=#4467A3 (same hue as the base fill) over
+    the darkened base fill in dark mode (~#2F4560 composite). Contrast ratio is marginal
+    — consider using INK_SOFT instead of BASE_COLOR for the Base Load label in dark
+    mode.'
+  - DE-03 storytelling is minimal beyond the required labels — no focal emphasis or
+    visual hierarchy beyond what the spec literally required (e.g., a subtle callout
+    or bold anchor on the curve's inflection point at the peak/intermediate boundary).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm cream #FAF8F1 — correct anyplot light surface, not pure white
+      Chrome: Title "line-load-duration · python · altair · anyplot.ai" in dark ink, clearly readable. Y-axis label "Power Demand (MW)" and X-axis label "Hours of Year (ranked)" at 12px, legible. Tick labels at 10px readable. Capacity tier labels in INK_SOFT (#4A4A44) at far right, readable.
+      Data: Three area fills — green (#009E73, peak, position 1), lavender (#C475FD, intermediate, position 2), blue (#4467A3, base, position 3), all at opacity=0.5. Bold black monotonically decreasing line over fills. Horizontal dashed capacity tier lines at 1100/900/550 MW. Region labels and total energy annotation visible.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black
+      Chrome: Title in near-white (#F0EFE8), readable. Axis labels and tick labels in light gray (INK_SOFT dark = #B8B7B0), readable. Capacity tier labels visible. Minor: "Base Load" region label uses #4467A3 (blue) against the darkened base fill composite (~#2F4560) — lower contrast than other region labels but still visible.
+      Data: All three fill colors identical to light render — #009E73, #C475FD, #4467A3 all unchanged across themes. Main line switches to near-white (#F0EFE8), visible against dark background. No dark-on-dark failures with critical elements.
+      Legibility verdict: PASS (minor note: Base Load label contrast in dark mode suboptimal)
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -50,68 +58,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28, axis 22, ticks 18, annotations
-          18). Y-axis has dense tick marks but all readable.
+        comment: 'All title/axis/tick text readable in both themes. Minor: Base Load
+          region label (#4467A3) over dark base fill in dark mode has marginal contrast.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Tier labels, region labels, and annotations
-          well-separated.
+        comment: No text or data collisions in either render. Capacity tier labels
+          at far right cleanly stacked.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Curve line at strokeWidth 2.5 clearly visible. Area fills at 0.55
-          opacity show regions distinctly.
+        comment: Line at 8 source-px prominent. Area fills at 0.5 opacity clearly
+          visible. All annotations readable.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette positions 1-3. CVD-safe. No red-green sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Purple/golden/blue palette is colorblind-safe with strong luminance
-          contrast.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Plot fills canvas well (~65%). Tier labels on right extend close
-          to edge.
+        comment: Canvas gate passed (3200x1800). Title ~60-65% width. Axis labels
+          balanced. No overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Power Demand (MW), Hours of Year
-          (ranked).'
+        comment: 'Y: Power Demand (MW), X: Hours of Year (ranked). Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Peak=#009E73, Intermediate=#C475FD, Base=#4467A3. Backgrounds #FAF8F1/#1A1A17.
+          Data colors identical across themes.'
     design_excellence:
-      score: 15
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Thoughtful custom palette with semantic color mapping. Professional
-          hierarchy clearly above defaults.
+        comment: Above default. Multi-layer Altair composition with semantic Imprint
+          palette. Professional engineering style.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid (0.15 opacity), view border removed. Y-axis tick density
-          adds some clutter.
+        comment: X-axis grid disabled, Y-axis grid at 0.15 opacity. 50% opacity fills
+          layer cleanly. No top/right spines.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Strong storytelling through color-coded regions, capacity tiers,
-          and energy annotation.
+        passed: false
+        comment: Slightly above default. Fills make segmentation legible; capacity
+          tiers add engineering context. No focal emphasis or visual hierarchy beyond
+          required labels.
     spec_compliance:
       score: 15
       max: 15
@@ -121,28 +135,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct load duration curve with monotonically decreasing sorted
-          data.
+        comment: 'Load duration curve: monotonically decreasing line over sorted 8760-hour
+          annual profile.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: monotonic decrease, shaded regions, dashed
-          capacity lines, region labels, energy annotation, professional style.'
+        comment: 'All five required features present: curve, three shaded regions,
+          capacity tier dashed lines, region labels, total energy annotation.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=ranked hours (0-8760), Y=power demand (MW). Full range visible.
+        comment: 'X: rank-ordered hours 0-8759. Y: MW in descending sort. Full range
+          shown.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format. No legend needed as regions are directly
-          labeled.
+        comment: 'Title: ''line-load-duration · python · altair · anyplot.ai'' correct.
+          Regions labeled directly on plot; no separate legend needed.'
     data_quality:
       score: 15
       max: 15
@@ -152,21 +167,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: clear peak/intermediate/base separation, smooth
-          monotonic decline, realistic load shape.'
+        comment: Full year 8760 hours. All three regions, capacity tiers, and total
+          energy represented.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mid-sized utility with realistic peak, base, and total energy values.
+        comment: Mid-sized utility, peak ~1250 MW, base ~380 MW. Seasonal + diurnal
+          + weekday components. 7075 GWh/yr plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic values for a mid-sized utility. Sensible capacity tier
-          thresholds.
+        comment: MW range 380-1250 appropriate. Y-axis domain 0-1400 with headroom.
+          Capacity tiers at sensible values.
     code_quality:
       score: 10
       max: 10
@@ -176,33 +192,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save flow. No functions or classes.
+        comment: No functions or classes. Direct procedural code.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All three imports (altair, numpy, pandas) are used.
+        comment: os, sys, altair, numpy, pandas, PIL — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. Region splitting is necessary and cleanly
-          implemented.
+        comment: Real Altair interactivity, not fake UI. Mandated PIL pad-only block
+          correctly implemented.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale_factor=3.0. Also generates interactive
-          HTML.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair 6 API.
     library_mastery:
       score: 7
       max: 10
@@ -212,24 +227,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good declarative usage with alt.layer(), proper encoding types, alt.Scale,
-          alt.Axis. Manual data splitting rather than Altair transforms.
+        comment: Proper type annotations, alt.layer() composition, configure_* global
+          theming, alt.value() for pixel placement, alt.condition() for conditional
+          opacity.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Layer composition is idiomatic Altair. Interactive HTML uses selection_point
-          and .interactive() — distinctive Altair features.
+        comment: alt.selection_point(nearest=True, on='pointerover') crosshair, alt.condition()
+          for show/hide, layered area/line/rule in single alt.layer(), interactive
+          HTML export.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - annotations
   - layer-composition
+  - annotations
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - interpolation
   styling:
   - alpha-blending
   - grid-styling
