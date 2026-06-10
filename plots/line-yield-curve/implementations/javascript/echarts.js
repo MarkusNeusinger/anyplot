@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-yield-curve: Yield Curve (Interest Rate Term Structure)
 // Library: echarts 5.5.1 | JavaScript 22.22.3
-// Quality: 87/100 | Created: 2026-06-10
+// Quality: 88/100 | Created: 2026-06-10
 
 const t = window.ANYPLOT_TOKENS;
 
