@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: recurrence-basic
 created: '2026-06-10T02:53:55Z'
-updated: '2026-06-10T03:00:47Z'
+updated: '2026-06-10T03:14:29Z'
 generated_by: claude-sonnet
 workflow_run: 27249743735
 issue: 4592
@@ -12,55 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/recurrenc
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 88
 review:
   strengths:
-  - Correct binary recurrence plot with binary threshold applied at 5th percentile
-    of non-zero distances
-  - Time-delay embedding (Takens theorem, dim=2, delay=5) properly implemented
-  - geom_raster() with interpolate=FALSE is the idiomatic ggplot2 choice for matrix
-    data
-  - Perfect square canvas (2400x2400) with coord_fixed(ratio=1) ensuring equal aspect
-    ratio
-  - 'Proper Imprint palette usage: brand green (#009E73) for recurrent points on PAGE_BG
-    background'
-  - 'Full theme-adaptive chrome: all text/background tokens correctly flip between
-    light and dark'
-  - Clean edge-to-edge matrix rendering with expand=c(0,0) and panel border for context
-  - 'Title format correct: Logistic Map · recurrence-basic · r · ggplot2 · anyplot.ai'
-  - Deterministic logistic map in chaotic regime is directly mentioned in the spec
-    as an example
+  - 'Perfect spec compliance: correctly implements time-delay embedding (Takens theorem),
+    binary threshold via 5th-percentile quantile, square coord_fixed, and visible
+    main diagonal'
+  - 'Excellent dual-theme rendering: non-recurrent cells use PAGE_BG so the matrix
+    background blends seamlessly with the page background in both light and dark themes'
+  - 'Three-layer storytelling: subtitle explains the chaotic regime context, diagonal
+    reference line highlights the Line of Identity, arrow annotation guides the eye
+    to off-diagonal band structure'
+  - geom_raster (not geom_tile) is the correct idiomatic ggplot2 choice for dense
+    equal-cell rasters — demonstrates genuine library knowledge
+  - 'Clean KISS code: logistic map generation, 2D time-delay embedding, and distance
+    thresholding written inline with no abstraction overhead; set.seed(42) ensures
+    reproducibility'
   weaknesses:
-  - library(dplyr) is imported but never used in the script — remove to fix CQ-03
-  - 'Design Excellence is low (9/20): plot is correct but visually basic; no storytelling
-    or aesthetic flourish beyond functional requirements'
-  - 'DE-01: No visual hierarchy or emphasis to make key features stand out — consider
-    a geom_abline(intercept=0, slope=1) diagonal reference line or a subtle continuous
-    distance colormap variant using imprint_seq to add aesthetic depth while staying
-    spec-compliant'
-  - 'DE-03: Data displays correctly but no storytelling — annotate or visually emphasize
-    the deterministic diagonal band structure or regime transitions visible in the
-    logistic map recurrence pattern'
-  - 'LM-02: geom_raster is correct but ggplot2 grammar potential not fully exploited
-    — secondary geom layers (diagonal reference line, highlighted bands) would show
-    more distinctive feature usage'
-  - Tick labels at 8pt may be borderline at mobile scale (2400px image scaled 6x to
-    400px width = approximately 1.3pt visual equivalent)
+  - Annotation text placed at y = n_pts * 0.98 (98% of plot range) is very close to
+    the top border and overlaps slightly with green recurrence dots in the upper-left
+    region — move annotation to y = n_pts * 0.88 or add a filled rect behind the text
+    to separate it from data
+  - Annotation text size = 2.7 (geom scale, approx 7.7pt) is borderline small for
+    mobile viewports at ~400px — increase to size = 3.0-3.2 for better readability
+    at small sizes
+  - 'Design Excellence has room to grow: the aesthetic is clean and intentional but
+    not publication-ready; consider slightly bolder diagonal line (linewidth = 0.7),
+    or a subtle ELEVATED_BG fill box behind the annotation text to give it visual
+    separation from the dot field'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Logistic Map · recurrence-basic · r · ggplot2 · anyplot.ai" in dark near-black text at size 12 — clearly readable. Both "Time Index" axis labels in dark text at size 10 — readable and proportional. Tick labels (50, 100, 150, 200, 250 on both axes) in dark soft (#4A4A44-tone) text at size 8 — readable at full resolution. Thin panel border in INK_SOFT visible.
-      Data: Recurrence dots in brand green (#009E73). Matrix is 295x295 with binary threshold at 5th percentile. Main diagonal clearly visible as a solid green line from bottom-left to top-right. Off-diagonal diagonal band structure visible — characteristic chaotic logistic map pattern with short deterministic diagonal lines. No grid lines (removed) — appropriate for matrix visualization. Edge-to-edge rendering with expand=c(0,0).
-      Legibility verdict: PASS — all text readable in light theme.
+      Background: Warm off-white #FAF8F1 — correctly set, not pure white.
+      Chrome: Title "Logistic Map · recurrence-basic · r · ggplot2 · anyplot.ai" at size 12pt centered, readable. Subtitle "r = 3.9 (chaotic regime) · short diagonal bands signal deterministic recurrence" at size 9pt, clearly readable against light background. Both axis labels "Time Index" at size 10pt visible. Tick labels at size 9pt readable. No dark-on-light failures.
+      Data: Green (#009E73) recurrence dots on warm off-white background — high contrast, clearly visible. Diagonal reference line in blue (#4467A3) runs from lower-left to upper-right, visible. Arrow annotation with "off-diagonal bands = determinism" text in INK_SOFT color, positioned at upper-left corner, slightly close to top border.
+      Annotation overlap: Minor — annotation text at y=98% of range overlaps with a few green dots in the upper-left region, but text remains readable.
+      Legibility verdict: PASS — all text is readable against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black consistent with #1A1A17 — not pure black.
-      Chrome: Title in light (#F0EFE8-tone) text — clearly readable against dark background. Axis labels "Time Index" in light text — readable. Tick labels in lighter secondary text (#B8B7B0-tone) — readable against dark background. Panel border subtly visible. No dark-on-dark failures detected.
-      Data: Recurrence dots are identical green (#009E73) to the light render — data colors unchanged, only chrome flipped. Main diagonal and off-diagonal pattern identical. Brand green #009E73 remains clearly visible on the near-black surface.
-      Legibility verdict: PASS — all text readable in dark theme, no dark-on-dark failures.
+      Background: Warm near-black #1A1A17 — correctly set, not pure black.
+      Chrome: Title and subtitle rendered in light F0EFE8 text — clearly readable against dark background. Axis labels and tick labels in light B8B7B0 (INK_SOFT for dark) — readable. Panel border visible in light gray. No dark-on-dark failures observed.
+      Data: Green (#009E73) recurrence dots identical to light render — colors unchanged between themes as required. Diagonal reference line in blue (#4467A3) visible against dark background. Arrow annotation in B8B7B0 (INK_SOFT dark), text readable.
+      Theme adaptation: Non-recurrent cells use PAGE_BG = #1A1A17, creating seamless background blending — elegant and correct.
+      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -68,74 +64,76 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set. Readable in both themes. Tick labels
-          at 8pt may be borderline at mobile scale (2400px image scaled to 400px width).
+        comment: All font sizes explicitly set (title=12, axis=10, tick=9, subtitle=9);
+          readable in both themes; annotation text size=2.7 geom scale (~7.7pt) is
+          borderline small for mobile
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text or data elements.
+        comment: Annotation text at y=98% of range slightly overlaps green dots in
+          upper-left region; text remains readable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Recurrence dots sized appropriately for a 295x295 matrix. Pattern
-          clearly visible, diagonal prominent.
+        comment: Green recurrence dots clearly visible in both themes; diagonal reference
+          line visible; all elements well-sized
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single data color #009E73 on background. High contrast in both themes.
-          CVD-safe Imprint palette.'
+        comment: Good contrast in both themes; CVD-safe; no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas correct for symmetric matrix. coord_fixed(ratio=1).
-          Clean edge-to-edge rendering. Good margins.
+        comment: Canvas gate passed; square 2400x2400 correct for symmetric matrix;
+          coord_fixed ensures proper aspect ratio; good proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes labeled 'Time Index'. Descriptive title with prefix. Correct
-          format.
+        comment: Both axes labeled 'Time Index' — descriptive and appropriate; title
+          includes descriptive 'Logistic Map' prefix
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 for recurrent points. Backgrounds #FAF8F1 light
-          / #1A1A17 dark. All chrome theme-adaptive.'
+        comment: 'First series = #009E73; background light=#FAF8F1, dark=#1A1A17;
+          all chrome theme-adaptive; data colors identical across themes'
     design_excellence:
-      score: 9
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Well-configured defaults. Clean binary green-on-background design
-          is professional but not visually innovative. No distinctive design flourish.
+        comment: 'Above defaults: no grid (correct for matrix), panel border framing,
+          diagonal LOI reference line, subtitle with context; not publication-ready
+          but clearly intentional design'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Grid removed (appropriate for matrix), panel border retained for
-          matrix context, expand=c(0,0) for edge-to-edge. Above minimal default.
+        comment: All grid lines removed (correct for recurrence matrix), panel border
+          appropriate, adequate whitespace; good refinement without being perfect
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
         passed: true
-        comment: Data displays correctly (chaotic structure visible), descriptive
-          title provides context, but no annotations or emphasis to guide the viewer.
+        comment: 'Three distinct storytelling mechanisms: explanatory subtitle, diagonal
+          LOI reference line, and arrow annotation pointing to off-diagonal band structure'
     spec_compliance:
       score: 15
       max: 15
@@ -145,28 +143,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct binary recurrence plot implementation.
+        comment: 'Correct recurrence plot implementation: binary threshold, symmetric
+          matrix, main diagonal visible'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Main diagonal visible, Euclidean distance, binary threshold, time-delay
-          embedding (dim=2, delay=5), equal axis scales.
+        comment: Time-delay embedding with Takens theorem (dim=2, delay=5), Euclidean
+          distance, binary threshold, square coord_fixed, all diagonal points filled
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Both axes are Time Index 1 to n_pts. coord_fixed(ratio=1) ensures
-          equal scales.
+        comment: Both axes show time indices 1 to ~295; all data visible; symmetric
+          layout correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'Logistic Map · recurrence-basic · r · ggplot2 · anyplot.ai'
-          is correct. No legend (appropriate for binary plot).
+        comment: 'Title: ''Logistic Map · recurrence-basic · r · ggplot2 · anyplot.ai'';
+          legend hidden (guide=''none'') — correct for single binary series'
     data_quality:
       score: 15
       max: 15
@@ -176,24 +175,26 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: binary recurrence, main diagonal, time-delay
-          embedding, chaotic structure with deterministic diagonal bands.'
+        comment: Shows recurrence structure with diagonal bands, main diagonal (LOI),
+          off-diagonal cluster patterns; time-delay embedding captures all dynamical
+          features
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Logistic map in chaotic regime (r=3.9) is a real scientific example
-          explicitly mentioned in the spec.
+        comment: Logistic map at r=3.9 (chaotic regime) is the canonical nonlinear
+          dynamics example; neutral, scientifically grounded
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 295 time steps within recommended 200-1000. 5th percentile epsilon
-          produces meaningful recurrence density.
+        comment: 300 steps within 200-1000 recommended range; r=3.9 is the classic
+          chaotic regime parameter; 5th percentile threshold is a standard recurrence
+          analysis choice
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -201,32 +202,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: theme tokens -> data -> embedding -> distance matrix
-          -> plot -> save.'
+        comment: 'Linear script: imports -> tokens -> data -> embedding -> distances
+          -> plot -> save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present; logistic map is deterministic.
+        comment: set.seed(42) at top; logistic map is deterministic
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: library(dplyr) imported but never used. ggplot2 and ragg are used.
+        passed: true
+        comment: Only library(ggplot2) and library(ragg) — both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately complex. No over-engineering or fake UI.
+        comment: No fake UI; appropriate complexity for recurrence plot calculation;
+          clean loop and matrix operations
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via sprintf. Uses ragg::agg_png device.
+        comment: Saves as plot-{THEME}.png via sprintf; uses ragg::agg_png; current
+          ggplot2 3.5.1 API
     library_mastery:
       score: 7
       max: 10
@@ -236,22 +239,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: geom_raster() for matrix data, coord_fixed(), scale_fill_manual(),
-          expand=c(0,0), theme_minimal() as base. Good idiomatic choices.
+        comment: geom_raster (not geom_tile) for efficient raster; coord_fixed for
+          aspect ratio; scale_fill_manual with guide='none'; theme layering pattern;
+          annotate('segment') with arrow — all idiomatic ggplot2
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: geom_raster(interpolate=FALSE) is the distinctive ggplot2 feature
-          for binary matrix rendering. coord_fixed + expand=c(0,0) combination provides
-          pixel-perfect matrix rendering.
-  verdict: REJECTED
+        comment: geom_raster is ggplot2-specific efficient renderer; coord_fixed is
+          a ggplot2-distinctive feature; grammar-of-graphics factor mapping to fill
+          scale is distinctly ggplot2
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
+  - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
   - matrix-construction
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
