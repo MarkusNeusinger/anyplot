@@ -1,7 +1,7 @@
 # anyplot.ai
 # funnel-meta-analysis: Meta-Analysis Funnel Plot for Publication Bias
 # Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 86/100 | Created: 2026-06-10
+# Quality: 91/100 | Created: 2026-06-10
 
 using CairoMakie
 using Colors
