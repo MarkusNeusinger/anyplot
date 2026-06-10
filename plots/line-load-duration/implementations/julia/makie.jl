@@ -1,7 +1,7 @@
 # anyplot.ai
 # line-load-duration: Load Duration Curve for Energy Systems
-# Library: Makie.jl | Julia 1.11
-# Quality: pending | Created: 2026-06-10
+# Library: makie 0.22.10 | Julia 1.11.9
+# Quality: 85/100 | Created: 2026-06-10
 
 using CairoMakie
 using Colors
