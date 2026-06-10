@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-load-duration: Load Duration Curve for Energy Systems
 Library: altair 6.2.1 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-10
@@ -127,7 +127,7 @@ tier_rules = (
 )
 tier_labels = (
     alt.Chart(tier_df)
-    .mark_text(align="right", dx=-4, dy=-8, fontSize=9, fontWeight="bold", color=INK_SOFT)
+    .mark_text(align="right", dx=-4, dy=-8, fontSize=11, fontWeight="bold", color=INK_SOFT)
     .encode(x=alt.value(614), y=alt.Y("y:Q", scale=Y_DOM), text="label:N")
 )
 
@@ -149,7 +149,7 @@ base_lbl = (
 )
 energy_lbl = (
     alt.Chart(pd.DataFrame({"hour": [5200.0], "load_mw": [220.0], "t": [f"Total energy: {total_gwh:,.0f} GWh/yr"]}))
-    .mark_text(fontSize=9, color=INK_MUTED)
+    .mark_text(fontSize=11, color=INK_SOFT)
     .encode(x="hour:Q", y=alt.Y("load_mw:Q", scale=Y_DOM), text="t:N")
 )
 
@@ -196,6 +196,7 @@ chart = (
         labelFontSize=10,
         titleFontSize=12,
     )
+    .configure_axisX(grid=False)
     .configure_title(color=INK)
     .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
@@ -230,6 +231,7 @@ inter_chart = (
         labelFontSize=10,
         titleFontSize=12,
     )
+    .configure_axisX(grid=False)
     .configure_title(color=INK)
     .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
     .interactive()
