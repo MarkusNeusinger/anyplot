@@ -1,43 +1,58 @@
 library: plotly
+language: python
 specification_id: line-load-duration
 created: '2026-03-15T21:43:06Z'
-updated: '2026-03-15T21:54:29Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23119898938
+updated: '2026-06-10T04:55:46Z'
+generated_by: claude-sonnet
+workflow_run: 27253290525
 issue: 4586
-python_version: 3.14.3
-library_version: 6.6.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/plotly/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.8.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/python/plotly/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - 'Complete spec compliance: all six required features implemented correctly'
-  - Excellent data storytelling through three-zone color coding with immediate visual
-    comprehension
-  - Realistic power system data with plausible MW values and annual energy total
-  - Custom colorblind-safe palette with intentional color hierarchy
-  - Clean, well-structured code with good use of vectorized numpy operations
+  - 'Complete spec compliance: all required features (fills, dashed capacity lines,
+    region labels, total energy annotation) present and correct'
+  - Semantic palette exception correctly applied — green/blue/red chosen for real-world
+    associations (stable base / cycling intermediate / costly peak), documented in
+    code comments
+  - Theme tokens fully wired through all text elements — dark mode passes without
+    any dark-on-dark failures
+  - Clean, reproducible data generation with realistic seasonal + daily + noise model
+    producing a plausible load profile
+  - HTML export alongside PNG correctly implemented per plotly library requirements
   weaknesses:
-  - Minor crowding at top-left where peak capacity annotation meets the y-axis area
-  - Legend and annotation box borders add slight visual clutter
-  image_description: 'The plot displays a load duration curve for a mid-sized electrical
-    utility. A dark navy line (width 3) descends monotonically from ~1250 MW at hour
-    0 to ~350 MW at hour 8760. Three distinct shaded regions fill the area under the
-    curve: a pink/magenta peak load region (above 900 MW, leftmost), a teal/green
-    intermediate load region (550-900 MW, middle), and a steel-blue base load region
-    (below 550 MW, rightmost). Three horizontal dashed lines mark capacity tiers:
-    Peak Capacity (1150 MW) in pink, Intermediate Capacity (900 MW) in teal, and Base
-    Capacity (550 MW) in blue, each with left-aligned labels. Bold region labels ("Peak",
-    "Intermediate", "Base Load") are placed within their respective zones. A bordered
-    annotation box reads "Total Energy: 7,105 GWh/year". The title "line-load-duration
-    · plotly · pyplots.ai" is centered at top. A legend with white background sits
-    in the lower-right quadrant. X-axis: "Hours (ranked by load, descending)" with
-    custom ticks 0-8,760. Y-axis: "Power Demand (MW)" with subtle horizontal gridlines.
-    The plotly_white template provides a clean background.'
+  - 'Right-side crowding: three add_hline annotation labels and the legend box occupy
+    the same horizontal strip; ''Base Capacity (550 MW)'' annotation sits at or just
+    above the legend box top edge — move legend to x=0.02, y=0.97 (top-left, inside
+    the base load zone) or change annotation_position from ''top right'' to ''right'''
+  - 'Peak fill alpha too low in dark mode: rgba(174,48,48,0.32) on #1A1A17 produces
+    a near-background fill — increase to 0.45-0.50 for dark theme via theme-conditional
+    fillcolor'
+  - Main load curve uses INK (black/white) — consider using INK_SOFT or an explicit
+    Imprint neutral to give the curve slightly more visual identity distinct from
+    axis lines in the light render
+  - No explicit spine removal — adding showline=False on both axes would improve visual
+    cleanliness and raise DE-02
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "line-load-duration · python · plotly · anyplot.ai" in dark INK (#1A1A17) centered at ~70% width. Y-axis label "Power Demand (MW)" and X-axis label "Hours (ranked by load, descending)" in INK color. Tick labels in INK_SOFT (#4A4A44). All readable.
+      Data: Three alpha-blended fills — teal (#009E73 with 0.22 alpha) for base load (0-550 MW), blue-grey (#4467A3 with 0.30 alpha) for intermediate (550-900 MW), pink-red (#AE3030 with 0.32 alpha) for peak (900+ MW). Main load curve is solid black INK line. Three dashed capacity tier lines in matching colors. Region labels "Peak" (red), "Intermediate" (blue), "Base Load" (teal) within zones. Total Energy annotation boxed at center.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct theme surface
+      Chrome: Title, axis labels, tick labels all render in light colors (INK=#F0EFE8, INK_SOFT=#B8B7B0). No dark-on-dark failures detected. Legend box uses ELEVATED_BG #242420. Grid uses light rgba grid color.
+      Data: Main load curve is near-white (#F0EFE8) — prominent against dark background. Three fill regions present: base load (dark teal, still distinguishable), intermediate (dark blue-grey, distinguishable), peak (dark red/maroon on near-black — less prominent at 0.32 alpha, slightly under-visible). Data colors are identical to light render — only chrome flipped.
+      Legibility verdict: PASS — all text readable; peak fill region slightly muted in dark mode but not a failure
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -45,67 +60,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
-          18pt, annotations 16-18pt'
+        comment: All font sizes explicitly set (title 16, axis labels 12, ticks 10,
+          annotations 12-14). Both renders fully readable.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Minor crowding at top-left where Peak Capacity annotation meets y-axis
-          upper range
+        comment: 'Minor crowding: ''Base Capacity (550 MW)'' hline annotation sits
+          adjacent to legend box top edge on the right side.'
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Line width 3 is clear, fill regions use appropriate alpha, dashed
-          capacity lines are distinct
+        comment: All elements visible. Peak fill (rgba(174,48,48,0.32)) is slightly
+          under-visible in dark mode — higher alpha recommended.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: 'Custom colorblind-safe palette: magenta, teal, steel-blue. Avoids
-          red-green ambiguity'
+        comment: Imprint palette semantic assignment (green/blue/red). CVD-safe, good
+          contrast.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins, no content cut off
+        comment: Canvas 3200x1800 correct. Minor right-side crowding where legend
+          and capacity annotations compete.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Power Demand (MW) and Hours (ranked by load, descending) - descriptive
-          with units
+        comment: 'Y: ''Power Demand (MW)'' with units. X: ''Hours (ranked by load,
+          descending)'' descriptive.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Valid semantic exception: green=base load (pos 1), blue=intermediate
+          (pos 3), red=peak (pos 5). Both theme backgrounds correct. All tokens theme-adaptive.'
     design_excellence:
-      score: 15
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Strong design with intentional colorblind-safe palette, clear hierarchy,
-          professional engineering-report aesthetic
+        comment: 'Above default: deliberate semantic color language with matching
+          fills/lines/labels. Alpha-blended fills professionally done. Not yet publication-quality.'
       - id: DE-02
         name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Y-axis only grid, custom ticks, ELEVATED_BG callout boxes. No explicit
+          spine removal.
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: plotly_white template, y-axis-only subtle grid, x-grid removed, generous
-          whitespace
-      - id: DE-03
-        name: Data Storytelling
-        score: 5
-        max: 6
-        passed: true
-        comment: Three colored zones immediately communicate load distribution, capacity
-          tier lines create clear reference points
+        comment: Clear three-layer load zone narrative with capacity context and total
+          energy metric. Good visual hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -115,26 +138,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct monotonically decreasing load duration curve
+        comment: Correct load duration curve with monotonically decreasing sort.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: monotonic curve, shaded regions, dashed
-          lines, region labels, energy annotation, professional style'
+        comment: 'All features: three shaded fills, dashed capacity lines with labels,
+          region labels, total energy annotation.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = rank-ordered hours (0-8759), Y = load in MW (descending)
+        comment: 'X: hours 0-8760; Y: power demand in MW descending.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match data accurately
+        comment: Title exact required format. Legend lists all four visual elements.
     data_quality:
       score: 15
       max: 15
@@ -144,22 +167,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Realistic load profile with seasonal variation, daily cycling, summer
-          peak factors, and noise
+        comment: 'Full coverage: monotonic decrease, three load zones, capacity tiers,
+          total energy, realistic noise model.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mid-sized utility scenario with plausible MW values and annual energy
-          total
+        comment: Mid-sized utility scenario, peak 1250 MW, base 350 MW. Neutral engineering
+          domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: MW values, capacity tiers, and annual energy are realistic for power
-          system planning
+        comment: 400-1250 MW range, 7105 GWh/year total energy — plausible for mid-sized
+          grid operator.
     code_quality:
       score: 10
       max: 10
@@ -169,34 +192,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, plot, layout, save. No functions
-          or classes'
+        comment: Clean Imports → Tokens → Data → Plot → Save. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects, both fully used
+        comment: os, numpy, plotly.graph_objects — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, loop for capacity tiers, vectorized numpy
-          operations
+        comment: Clean, appropriate complexity. For-loop over capacity tiers elegant.
+          np.trapezoid correct for NumPy 2.0+.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png (1600x900 scale=3) and plot.html, uses np.trapezoid
-          (current API)
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. write_image(width=800,
+          height=450, scale=4) correct.
     library_mastery:
       score: 7
       max: 10
@@ -206,15 +228,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Figure with add_trace, add_hline with annotation params,
-          update_layout dict syntax
+        comment: go.Scatter fill='toself' for polygon fills, add_hline() convenience
+          API, hovertemplate HTML, hovermode='x'. Idiomatic but verbose concatenation
+          approach.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses hovertemplate, hovermode, HTML export - meaningful but standard
-          Plotly patterns
+        comment: add_hline() with annotation_text, hovertemplate HTML, hovermode='x'
+          unified hover, HTML export via write_html — all plotly-distinctive features.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -228,4 +251,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
