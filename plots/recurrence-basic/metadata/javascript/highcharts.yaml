@@ -1,0 +1,264 @@
+library: highcharts
+language: javascript
+specification_id: recurrence-basic
+created: '2026-06-10T02:50:06Z'
+updated: '2026-06-10T03:16:00Z'
+generated_by: claude-sonnet
+workflow_run: 27249605994
+issue: 4592
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/javascript/highcharts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Amber diagonal line overlay using Highcharts SVG renderer is a creative, spec-correct
+    highlight of self-recurrence that creates a clear focal point
+  - 'Perfect spec compliance: time-delay embedding (d=2, tau=1), Euclidean distance
+    binary threshold, square format, both axes labeled as time indices'
+  - Full Imprint palette compliance with t.palette[0]=#009E73 and theme-adaptive chrome
+    tokens throughout
+  - Informative subtitle explicitly guides the viewer to the key visual patterns (determinism,
+    regime changes)
+  - 'Deterministic logistic map data at r=3.82 (chaotic regime) demonstrates all canonical
+    recurrence plot features: diagonal lines, block structures, and off-diagonal recurrent
+    pairs'
+  - turboThreshold set to 100000 for performance with the large scatter dataset; hover
+    states disabled for cleaner static render
+  - 'Clean KISS code structure: data generation → matrix construction → chart → SVG
+    overlay, no functions or classes'
+  weaknesses:
+  - Subtitle font size (13px) is slightly below the recommended 14px tick-label baseline
+    for the CSS mount; consider bumping to 14px for consistent mobile legibility
+  - Marker radius=2 is functional but on the small side for the density; slightly
+    larger radius (2.5-3) with a fractional opacity (0.7-0.8) would give each recurrent
+    point slightly more visual weight without losing structure
+  - 'DE-01/DE-02 could be pushed higher: consider removing the default plotBorderColor,
+    setting explicit gridLineWidth values, and adding a very subtle gridLineColor
+    opacity to further differentiate from the library defaults'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "recurrence-basic · javascript · highcharts · anyplot.ai" at 22px in dark ink, fully visible and occupying ~70% of the plot width. Subtitle at 13px in muted ink below the title, readable. X-axis label "Time Index i" and Y-axis label "Time Index j" at 16px in inkSoft, both clearly visible. Tick labels at 14px on both axes, legible with good contrast against the off-white background.
+      Data: Dense grid of small square markers in Imprint brand green (#009E73), forming a symmetric recurrence matrix with visible block structures (large filled rectangles of recurrent points) and diagonal line patterns. An amber (#DDCC77) diagonal line overlays the main diagonal from (0,0) to (198,198), clearly emphasizing self-recurrence. Subtle grid lines visible in both axes.
+      Legibility verdict: PASS — all text elements are clearly readable against the warm off-white background. No light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title in light ink (#F0EFE8) at 22px, fully visible against the dark background. Subtitle in soft light ink, readable. Axis titles "Time Index i" and "Time Index j" in inkSoft (light variant), both clearly visible. Tick labels in light-toned inkSoft, legible with no dark-on-dark issues.
+      Data: Recurrent point markers in identical Imprint brand green (#009E73) — same color as light render, data colors unchanged. The amber diagonal line remains clearly visible as a bright warm gold against the near-black background. Block structures and diagonal patterns in the recurrence matrix are equally readable. Grid lines subtle against the dark background.
+      Legibility verdict: PASS — all text is light-colored against the dark background. No dark-on-dark failures detected. Brand green #009E73 is clearly visible on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, subtitle 13px, axis titles
+          16px, ticks 14px); readable in both themes; subtitle slightly below 14px
+          baseline
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or UI elements in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Marker radius=2 appropriate for dense recurrence matrix; amber diagonal
+          line highlights key structural feature; slightly larger radius with opacity
+          would be marginally better
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-series Imprint green (#009E73) CVD-safe; amber diagonal provides
+          warm contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square orientation correct for symmetric matrix; balanced margins;
+          plot fills canvas well
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time Index i / Time Index j descriptive; no units needed for dimensionless
+          indices; title correctly formatted
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: palette[0]=#009E73 used for sole series; backgroundColor transparent
+          with pageBg token; ink/inkSoft/grid tokens throughout; identical data colors
+          in both themes
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Amber diagonal line is a creative, purposeful design choice beyond
+          defaults; clean composition with subtitle context; above a generic default
+          configuration
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: plotBorderWidth:0, hover states disabled, spacing array applied,
+          token-based colors; clearly refined over defaults but some default grid/border
+          styling remains
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle explicitly tells viewer what to look for; amber diagonal
+          creates a focal point; logistic map at r=3.82 (chaotic regime) provides
+          rich visual structure demonstrating spec features
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct binary recurrence plot implemented via scatter with square
+          markers
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Time-delay embedding (d=2 tau=1), Euclidean distance, binary threshold
+          (eps=0.15), main diagonal present (amber line), square axes with equal scale
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time index i, Y=time index j; all recurrent pairs (i,j) plotted;
+          symmetric matrix
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: recurrence-basic · javascript · highcharts · anyplot.ai —
+          correct format; no legend needed for single series'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all canonical recurrence plot features: main diagonal, off-diagonal
+          recurrence, block structures (regime clusters), diagonal line patterns (determinism)'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Logistic map at r=3.82 (chaotic regime) — classic nonlinear dynamics
+          benchmark, real scientific context, neutral domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 200 time steps within recommended 200-1000 range; epsilon=0.15 appropriate
+          for logistic map values in [0,1]
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: data generation → embedding → recurrence matrix → chart
+          → SVG diagonal overlay; no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: logistic map from fixed initial condition ts[0]=0.4,
+          r=3.82'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No import statements; only uses provided globals (window.ANYPLOT_TOKENS,
+          window.Highcharts)
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic JS; appropriate complexity; no over-engineering;
+          SVG renderer usage is justified and well-applied
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Uses Highcharts.chart() with current API; harness handles plot-{theme}.png
+          and plot-{theme}.html output
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: animation:false on both chart and plotOptions.series; turboThreshold
+          for large dataset performance; endOnTick:false for tight axes; marker.states.hover.enabled:false;
+          token-based colors throughout
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses chart.renderer (Highcharts SVG renderer API) with toPixels()
+          coordinate conversion and seriesGroup for correct z-ordering — Highcharts-specific
+          features not easily replicated in other libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling: []
