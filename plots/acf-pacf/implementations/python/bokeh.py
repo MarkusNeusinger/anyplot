@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 acf-pacf: Autocorrelation and Partial Autocorrelation (ACF/PACF) Plot
-Library: bokeh | Python
+Library: bokeh 3.9.1 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-10
 """
 
 import os
