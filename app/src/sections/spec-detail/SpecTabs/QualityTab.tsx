@@ -1,6 +1,7 @@
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Box from '@mui/material/Box';
+import ButtonBase from '@mui/material/ButtonBase';
 import Collapse from '@mui/material/Collapse';
 import Typography from '@mui/material/Typography';
 
@@ -37,14 +38,14 @@ export function QualityTab({
           fontSize: '2rem',
           fontWeight: 700,
           color:
-            qualityScore && qualityScore >= 90
+            qualityScore !== null && qualityScore >= 90
               ? colors.success
-              : qualityScore && qualityScore >= 70
+              : qualityScore !== null && qualityScore >= 70
                 ? colors.warning
                 : colors.error,
         }}
       >
-        {qualityScore ? `${Math.round(qualityScore)}/100` : 'N/A'}
+        {qualityScore !== null ? `${Math.round(qualityScore)}/100` : 'N/A'}
       </Typography>
 
       {/* Criteria Checklist */}
@@ -74,13 +75,18 @@ export function QualityTab({
               return (
                 <Box key={category}>
                   {/* Category header - clickable */}
-                  <Box
+                  <ButtonBase
                     onClick={() => items.length > 0 && onToggleCategory(category)}
+                    disabled={items.length === 0}
+                    disableRipple
+                    aria-expanded={items.length > 0 ? isExpanded : undefined}
                     sx={{
+                      width: '100%',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       mb: 0.5,
+                      textAlign: 'left',
                       cursor: items.length > 0 ? 'pointer' : 'default',
                       '&:hover': items.length > 0 ? { opacity: 0.8 } : {},
                     }}
@@ -111,7 +117,7 @@ export function QualityTab({
                     >
                       {score}/{max}
                     </Typography>
-                  </Box>
+                  </ButtonBase>
                   {/* Progress bar */}
                   <Box
                     sx={{
@@ -213,17 +219,18 @@ export function QualityTab({
       )}
 
       {/* No data message */}
-      {!qualityScore && (!criteriaChecklist || Object.keys(criteriaChecklist).length === 0) && (
-        <Typography
-          sx={{
-            fontFamily: typography.fontFamily,
-            fontSize: '0.85rem',
-            color: 'var(--ink-muted)',
-          }}
-        >
-          No quality data available.
-        </Typography>
-      )}
+      {qualityScore === null &&
+        (!criteriaChecklist || Object.keys(criteriaChecklist).length === 0) && (
+          <Typography
+            sx={{
+              fontFamily: typography.fontFamily,
+              fontSize: '0.85rem',
+              color: 'var(--ink-muted)',
+            }}
+          >
+            No quality data available.
+          </Typography>
+        )}
     </Box>
   );
 }

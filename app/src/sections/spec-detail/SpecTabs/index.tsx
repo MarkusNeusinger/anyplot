@@ -246,7 +246,7 @@ export function SpecTabs({
                 />
               }
               iconPosition="start"
-              label={qualityScore ? `${Math.round(qualityScore)}` : 'Quality'}
+              label={qualityScore !== null ? `${Math.round(qualityScore)}` : 'Quality'}
             />
           )}
         </Tabs>

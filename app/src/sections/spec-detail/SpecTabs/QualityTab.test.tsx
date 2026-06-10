@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { QualityTab } from 'src/sections/spec-detail/SpecTabs/QualityTab';
-import { render, screen, userEvent } from 'src/test-utils';
+import { fireEvent, render, screen, userEvent } from 'src/test-utils';
 
 const criteriaChecklist = {
   visual_quality: {
@@ -56,8 +56,7 @@ describe('QualityTab', () => {
     expect(onToggleCategory).toHaveBeenCalledWith('visual_quality');
   });
 
-  it('does not call onToggleCategory for categories without items', async () => {
-    const user = userEvent.setup();
+  it('disables the header for categories without items', () => {
     const onToggleCategory = vi.fn();
     render(
       <QualityTab
@@ -68,7 +67,9 @@ describe('QualityTab', () => {
       />
     );
 
-    await user.click(screen.getByText('accuracy'));
+    const header = screen.getByText('accuracy').closest('button');
+    expect(header).toBeDisabled();
+    fireEvent.click(screen.getByText('accuracy'));
     expect(onToggleCategory).not.toHaveBeenCalled();
   });
 
