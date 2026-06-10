@@ -6,7 +6,6 @@
 using CairoMakie
 using Colors
 using Random
-using Statistics
 
 Random.seed!(42)
 
@@ -105,6 +104,14 @@ scatter!(ax, effect_sizes, std_errors;
     strokewidth = 1.0,
     strokecolor = PAGE_BG)
 
+# Annotation: small-study asymmetry signals potential publication bias
+text!(ax, funnel_hi[end] - 0.05, max_se_plot * 0.92;
+    text      = "← Asymmetric scatter:\npossible publication bias",
+    align     = (:right, :center),
+    fontsize  = 11,
+    color     = INK_MUTED,
+    font      = :italic)
+
 # Axis limits
 ylims!(ax, (0.0, max_se_plot))
 xlims!(ax, (funnel_lo[end] - 0.08, funnel_hi[end] + 0.08))
@@ -125,7 +132,7 @@ Legend(fig[1, 2],
     framevisible    = true,
     framecolor      = INK_SOFT,
     backgroundcolor = ELEVATED_BG,
-    labelsize       = 11,
+    labelsize       = 13,
     padding         = (12, 12, 10, 10),
     rowgap          = 6,
 )
