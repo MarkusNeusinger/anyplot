@@ -1,47 +1,61 @@
 library: pygal
+language: python
 specification_id: area-elevation-profile
 created: '2026-03-15T21:50:48Z'
-updated: '2026-03-15T22:30:45Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23120069560
+updated: '2026-06-10T06:11:24Z'
+generated_by: claude-sonnet
+workflow_run: 27255999541
 issue: 4578
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/pygal/plot.html
-quality_score: 86
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/python/pygal/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Full spec compliance with all required features (filled silhouette, landmark annotations,
-    vertical lines, exaggeration note)
-  - Outstanding data quality using real Swiss Alpine locations with realistic elevations
-    and terrain variation
-  - Strong design with color-coded landmark types adding semantic depth beyond simple
-    markers
-  - Interactive HTML output alongside PNG showcases pygal native tooltip capabilities
-  - Clean, reproducible code with well-organized SVG post-processing
+  - Semantic color-coding of landmark types using Imprint palette members (red for
+    summit, ochre for passes, lavender for hut, lime for valley, blue for towns) adds
+    visual richness and narrative
+  - 'Full spec compliance: area fill, labeled landmarks, dashed vertical marker lines,
+    exaggeration note, correct axis labeling with units'
+  - Cubic interpolation produces a smooth, natural terrain silhouette
+  - SVG post-processing enables per-point landmark annotation with staggered labels
+    — creative workaround for pygals limited per-point styling API
+  - 'Dual output: interactive HTML tooltips plus static PNG — maximizes pygals capabilities'
+  - 'Theme-adaptive chrome correctly implemented: background, text, grid all flip
+    correctly between light and dark'
+  - Realistic Swiss Alpine context with real place names and plausible terrain shapes
   weaknesses:
-  - Vertical exaggeration note is somewhat faint (light gray italic at font-size 28)
-  - Landmark type color differentiation could be more pronounced in the rendered PNG
-  - Y-axis range extends above the data peak, leaving some unused canvas space
-  image_description: 'The plot displays a terrain elevation profile of the Bernese
-    Oberland Traverse, rendered as a filled area chart using pygal''s XY type. The
-    x-axis shows "Distance (km)" from 0 to 120 km, and the y-axis shows "Elevation
-    (m)" ranging from ~500 to 2,200 m. The terrain silhouette is filled in a muted
-    steel-blue color with subtle transparency (opacity 0.65). Seven landmarks are
-    annotated with orange dots, vertical dashed lines extending to the plot floor,
-    bold colored name labels (color-coded by type: blue for towns, orange for passes,
-    red for summit, green for valley, purple for hut), and gray elevation values beneath
-    each name. Landmarks from left to right: Grindelwald (1100 m), Kleine Scheidegg
-    (1544 m), Lauterbrunnen (774 m), Mürren (2009 m), Blüemlisalp Hut (1365 m), Hohtürli
-    Pass (1580 m), and Kandersteg (889 m). The title reads "Bernese Oberland Traverse
-    · area-elevation-profile · pygal · pyplots.ai". A legend at the bottom shows "Elevation
-    Profile" (blue square) and "Landmarks" (orange square). An italic note in the
-    bottom-right reads "Vertical exaggeration ~10× for terrain visibility". Horizontal
-    dashed grid lines appear on y-axis only. Background is clean white.'
+  - Landmark elevation labels at font-size=30 are slightly small compared to axis
+    tick labels (major_label_font_size=44) — bump to 34-36 for better balance
+  - 'DQ-03: some real-world elevation values are notably off — Kleine Scheidegg rendered
+    at ~1544m vs actual ~2061m; Grindelwald at ~1160m vs actual ~560m — consider using
+    more accurate base elevations for the named locations'
+  - The legend shows Landmarks as a single lavender swatch rather than reflecting
+    the multi-color landmark type encoding — consider removing the Landmarks legend
+    entry or adding a custom legend explaining the color-type mapping
+  - 'LM-02: the SVG post-processing bypasses pygals native API — leveraging pygal-native
+    features more directly (e.g. using add() metadata more idiomatically) would improve
+    library mastery'
+  - Minor label crowding around Blüemlisalp Hut and Hohtürli Pass — their stagger
+    offsets bring them close to the data surface
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: title "Bernese Oberland Traverse · area-elevation-profile · python · pygal · anyplot.ai" fully readable in dark ink at top; Y-axis label "Elevation (m)" and X-axis label "Distance (km)" clearly visible; tick labels (600m–2000m / 0km–120km) readable; vertical exaggeration note in bottom-right corner visible in muted italic style
+      Data: elevation profile filled with brand green #009E73 — smooth cubic terrain silhouette from 0 to 120 km; colored landmark dots (red for Mürren/summit, ochre for passes, blue for towns, lavender for hut, lime for valley) with dashed vertical drop lines; bold colored name labels with muted elevation sub-labels
+      Legibility verdict: PASS — all text elements readable against warm off-white background; no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17) — correct theme surface, not pure black
+      Chrome: title and all axis labels/ticks rendered in light-colored text (cream/off-white); vertical exaggeration note visible in muted light tone; all text clearly legible; no dark-on-dark failures observed
+      Data: elevation profile fill remains brand green #009E73 (identical to light render); landmark dot colors identical (red/ochre/blue/lavender/lime palette members unchanged); dashed marker lines and annotation labels present with same styling as light render
+      Legibility verdict: PASS — all chrome correctly flips to light-on-dark; data colors unchanged across themes
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -49,43 +63,55 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 48, labels 36, major labels
-          34, legend 30, annotation names 32, elevation values 26). Vertical exaggeration
-          note slightly faint.
+        comment: 'Font sizes explicitly set throughout (title 55, label 56, major_label
+          44, legend 44). All text readable in both themes. Minor: landmark sub-labels
+          at size 30 are slightly small relative to tick labels (44) — acceptable
+          but not perfectly balanced.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Well-staggered landmark labels with custom y-offsets. No actual text
-          collision. Minor proximity between some labels.
+        comment: Staggered label offsets prevent most collisions. Minor crowding between
+          Blüemlisalp Hut and Hohtürli Pass labels where they come close to the data
+          surface.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Filled area clearly visible, orange dots (size 16) stand out. Dashed
-          vertical lines appropriately subtle at opacity 0.55.
+        comment: Elevation fill clearly visible. Landmark dots prominent (dots_size=20).
+          Dashed marker lines clearly visible. Cubic interpolation produces clean
+          terrain silhouette.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Good contrast between blue fill and orange dots. Landmark type color
-          differentiation is present but some hues are close in rendered PNG.
+        comment: All landmark colors from Imprint palette. No red-green only signal.
+          Type differentiation uses color + position.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with appropriate margins. Y-axis extends to
-          2200 m but peak is ~2009 m, leaving some unused space.
+        comment: Canvas 3200x1800 (landscape) correct. Plot fills canvas well. Margins
+          generous but not wasteful. Legend at bottom well-positioned. No clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Distance (km) and Elevation (m) — descriptive with units.
+        comment: 'X: ''Distance (km)'', Y: ''Elevation (m)'' — descriptive with units.
+          Title follows {Descriptive} · {spec-id} · {lang} · {lib} · anyplot.ai format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (elevation profile) uses #009E73. Landmark colors are
+          Imprint palette members with semantic exceptions. Background #FAF8F1 light
+          / #1A1A17 dark. Data colors identical across themes.'
     design_excellence:
       score: 14
       max: 20
@@ -95,22 +121,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Strong design with custom color palette for landmark types, refined
-          typography, intentional visual hierarchy. Clearly above defaults.
+        comment: Semantic landmark color-coding by type using Imprint palette is thoughtful
+          and above library defaults. Typography hierarchy (bold names / muted elevation
+          values) adds polish. Terrain silhouette effect is visually compelling.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: X-guides hidden, y-guides with subtle dashed styling, clean white
-          background, custom margins.
+        comment: Y-axis only grid (subtle horizontal guides). Clean fill. Some refinement
+          visible. Pygal frame border remains visible — full spine removal not possible
+          natively. Legend box at bottom is clean.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear traverse narrative with color-coded landmark types adding semantic
-          meaning. Mürren summit creates natural focal point.
+        comment: Color-coded landmark journey (town→pass→valley→summit→hut→pass→town)
+          tells the traverse narrative. Red summit marker at Mürren creates a clear
+          focal point. Visual hierarchy guides the reader through the Alpine traverse.
     spec_compliance:
       score: 15
       max: 15
@@ -120,29 +149,33 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: filled area XY chart creating terrain silhouette effect.'
+        comment: XY chart with fill=True creates correct area/elevation profile chart
+          type.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: filled area, start/end labels, landmark
-          annotations with vertical lines, vertical exaggeration note.'
+        comment: Area fill, landmark annotations with names+elevations, vertical dashed
+          marker lines, start/end labeled, exaggeration note, distance x-axis, elevation
+          y-axis — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = distance (km), Y = elevation (m), correctly mapped.
+        comment: Distance on x-axis (0-120 km), elevation on y-axis (550-2100 m).
+          200 sample points. Correct mapping throughout.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title includes descriptive name, spec-id, library, and pyplots.ai.
-          Legend labels match data series.
+        comment: 'Title: ''Bernese Oberland Traverse · area-elevation-profile · python
+          · pygal · anyplot.ai'' — correct format. Legend shows Elevation Profile
+          and Landmarks.'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -150,22 +183,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multiple peaks, valleys, gradual slopes, steep ascents. Seven landmarks
-          cover all terrain types.
+        comment: Multiple landmark types (town, pass, valley, summit, hut). Varied
+          terrain with climbs/descents/valleys. Realistic 120km Alpine traverse with
+          200 sample points.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real Swiss Alpine locations in the Bernese Oberland with realistic
-          elevation values.
+        comment: Real Swiss Alpine place names (Grindelwald, Kleine Scheidegg, Lauterbrunnen,
+          Mürren, Kandersteg). Neutral hiking context.
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Elevations 650-2100 m and 120 km distance are realistic for multi-day
-          alpine traverse.
+        comment: 'Elevation range 650-2100m is appropriate for Swiss Alps. However,
+          some real-world elevations are notably off: Kleine Scheidegg shown at ~1544m
+          vs actual ~2061m; Grindelwald at ~1160m vs actual ~560m. Values are plausible
+          but not accurate for the named locations.'
     code_quality:
       score: 10
       max: 10
@@ -175,32 +211,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data generation, chart config, data series,
-          SVG post-processing, PNG output.'
+        comment: No functions or classes. Follows imports → data → plot → SVG post-process
+          → save pattern.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set for terrain noise.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: re, xml.etree, cairosvg, numpy, pygal, Style.'
+        comment: 'All imports used: os (theme env), re (SVG parsing), ET (SVG manipulation),
+          cairosvg (PNG render), numpy, pygal, Style.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: SVG post-processing is complex but necessary and well-structured.
+        comment: SVG post-processing is complex but necessary for per-point landmark
+          annotation. Code is clean and well-organized. label_offsets dict is a pragmatic
+          stagger solution.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via cairosvg. Also outputs interactive HTML.
+        comment: Saves plot-{THEME}.png (via cairosvg) and plot-{THEME}.html (via
+          pygal native). Both outputs correct for interactive library.
     library_mastery:
       score: 7
       max: 10
@@ -210,16 +250,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of pygal.XY with fill, custom Style, dict-format data, cubic
-          interpolation, tooltips. Heavy SVG post-processing reduces pygal-native
-          feel.
+        comment: Uses pygal.XY with fill=True, custom Style with all token parameters,
+          cubic interpolation, HTML export, value_formatter and x_value_formatter.
+          Solid idiomatic usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Leverages pygal-distinctive features: interactive HTML with native
-          tooltips, cubic interpolation, fill mode, fancy tooltips, value formatters.'
+        comment: Leverages pygal's cubic interpolation for smooth terrain, native
+          HTML tooltip generation, and area fill — all distinctive pygal features.
+          SVG post-processing goes beyond the library API.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -229,7 +270,7 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
