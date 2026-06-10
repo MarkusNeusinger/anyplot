@@ -1,0 +1,265 @@
+library: ggplot2
+language: r
+specification_id: recurrence-basic
+created: '2026-06-10T02:53:55Z'
+updated: '2026-06-10T03:14:29Z'
+generated_by: claude-sonnet
+workflow_run: 27249743735
+issue: 4592
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - 'Perfect spec compliance: correctly implements time-delay embedding (Takens theorem),
+    binary threshold via 5th-percentile quantile, square coord_fixed, and visible
+    main diagonal'
+  - 'Excellent dual-theme rendering: non-recurrent cells use PAGE_BG so the matrix
+    background blends seamlessly with the page background in both light and dark themes'
+  - 'Three-layer storytelling: subtitle explains the chaotic regime context, diagonal
+    reference line highlights the Line of Identity, arrow annotation guides the eye
+    to off-diagonal band structure'
+  - geom_raster (not geom_tile) is the correct idiomatic ggplot2 choice for dense
+    equal-cell rasters — demonstrates genuine library knowledge
+  - 'Clean KISS code: logistic map generation, 2D time-delay embedding, and distance
+    thresholding written inline with no abstraction overhead; set.seed(42) ensures
+    reproducibility'
+  weaknesses:
+  - Annotation text placed at y = n_pts * 0.98 (98% of plot range) is very close to
+    the top border and overlaps slightly with green recurrence dots in the upper-left
+    region — move annotation to y = n_pts * 0.88 or add a filled rect behind the text
+    to separate it from data
+  - Annotation text size = 2.7 (geom scale, approx 7.7pt) is borderline small for
+    mobile viewports at ~400px — increase to size = 3.0-3.2 for better readability
+    at small sizes
+  - 'Design Excellence has room to grow: the aesthetic is clean and intentional but
+    not publication-ready; consider slightly bolder diagonal line (linewidth = 0.7),
+    or a subtle ELEVATED_BG fill box behind the annotation text to give it visual
+    separation from the dot field'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correctly set, not pure white.
+      Chrome: Title "Logistic Map · recurrence-basic · r · ggplot2 · anyplot.ai" at size 12pt centered, readable. Subtitle "r = 3.9 (chaotic regime) · short diagonal bands signal deterministic recurrence" at size 9pt, clearly readable against light background. Both axis labels "Time Index" at size 10pt visible. Tick labels at size 9pt readable. No dark-on-light failures.
+      Data: Green (#009E73) recurrence dots on warm off-white background — high contrast, clearly visible. Diagonal reference line in blue (#4467A3) runs from lower-left to upper-right, visible. Arrow annotation with "off-diagonal bands = determinism" text in INK_SOFT color, positioned at upper-left corner, slightly close to top border.
+      Annotation overlap: Minor — annotation text at y=98% of range overlaps with a few green dots in the upper-left region, but text remains readable.
+      Legibility verdict: PASS — all text is readable against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correctly set, not pure black.
+      Chrome: Title and subtitle rendered in light F0EFE8 text — clearly readable against dark background. Axis labels and tick labels in light B8B7B0 (INK_SOFT for dark) — readable. Panel border visible in light gray. No dark-on-dark failures observed.
+      Data: Green (#009E73) recurrence dots identical to light render — colors unchanged between themes as required. Diagonal reference line in blue (#4467A3) visible against dark background. Arrow annotation in B8B7B0 (INK_SOFT dark), text readable.
+      Theme adaptation: Non-recurrent cells use PAGE_BG = #1A1A17, creating seamless background blending — elegant and correct.
+      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark issues.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=12, axis=10, tick=9, subtitle=9);
+          readable in both themes; annotation text size=2.7 geom scale (~7.7pt) is
+          borderline small for mobile
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Annotation text at y=98% of range slightly overlaps green dots in
+          upper-left region; text remains readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Green recurrence dots clearly visible in both themes; diagonal reference
+          line visible; all elements well-sized
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast in both themes; CVD-safe; no red-green as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; square 2400x2400 correct for symmetric matrix;
+          coord_fixed ensures proper aspect ratio; good proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes labeled 'Time Index' — descriptive and appropriate; title
+          includes descriptive 'Logistic Map' prefix
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series = #009E73; background light=#FAF8F1, dark=#1A1A17;
+          all chrome theme-adaptive; data colors identical across themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: no grid (correct for matrix), panel border framing,
+          diagonal LOI reference line, subtitle with context; not publication-ready
+          but clearly intentional design'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: All grid lines removed (correct for recurrence matrix), panel border
+          appropriate, adequate whitespace; good refinement without being perfect
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Three distinct storytelling mechanisms: explanatory subtitle, diagonal
+          LOI reference line, and arrow annotation pointing to off-diagonal band structure'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct recurrence plot implementation: binary threshold, symmetric
+          matrix, main diagonal visible'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Time-delay embedding with Takens theorem (dim=2, delay=5), Euclidean
+          distance, binary threshold, square coord_fixed, all diagonal points filled
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Both axes show time indices 1 to ~295; all data visible; symmetric
+          layout correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''Logistic Map · recurrence-basic · r · ggplot2 · anyplot.ai'';
+          legend hidden (guide=''none'') — correct for single binary series'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows recurrence structure with diagonal bands, main diagonal (LOI),
+          off-diagonal cluster patterns; time-delay embedding captures all dynamical
+          features
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Logistic map at r=3.9 (chaotic regime) is the canonical nonlinear
+          dynamics example; neutral, scientifically grounded
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 300 steps within 200-1000 recommended range; r=3.9 is the classic
+          chaotic regime parameter; 5th percentile threshold is a standard recurrence
+          analysis choice
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear script: imports -> tokens -> data -> embedding -> distances
+          -> plot -> save; no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) at top; logistic map is deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only library(ggplot2) and library(ragg) — both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; appropriate complexity for recurrence plot calculation;
+          clean loop and matrix operations
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png via sprintf; uses ragg::agg_png; current
+          ggplot2 3.5.1 API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: geom_raster (not geom_tile) for efficient raster; coord_fixed for
+          aspect ratio; scale_fill_manual with guide='none'; theme layering pattern;
+          annotate('segment') with arrow — all idiomatic ggplot2
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: geom_raster is ggplot2-specific efficient renderer; coord_fixed is
+          a ggplot2-distinctive feature; grammar-of-graphics factor mapping to fill
+          scale is distinctly ggplot2
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
