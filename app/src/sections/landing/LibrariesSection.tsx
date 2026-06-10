@@ -1,8 +1,8 @@
 import Box from '@mui/material/Box';
 
-import { LibraryCard } from 'src/components/LibraryCard';
 import { SectionHeader } from 'src/components/SectionHeader';
 import { LIBRARIES } from 'src/constants';
+import { LibraryCard } from 'src/sections/libraries/LibraryCard';
 import type { LibraryInfo } from 'src/types';
 
 interface LibrariesSectionProps {

@@ -12,7 +12,7 @@ vi.mock('src/utils', () => ({
   getSearchResults: vi.fn(() => []),
 }));
 
-import { FilterBar } from 'src/components/FilterBar';
+import { FilterBar } from 'src/sections/plots-gallery/FilterBar';
 
 // ResizeObserver polyfill
 class MockResizeObserver {

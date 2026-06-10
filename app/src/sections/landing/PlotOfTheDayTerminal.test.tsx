@@ -19,7 +19,7 @@ vi.mock('src/hooks/useLayoutContext', async () => {
   return { ...actual, useTheme: () => ({ isDark: false, toggle: vi.fn() }) };
 });
 
-import { PlotOfTheDayTerminal } from 'src/components/PlotOfTheDayTerminal';
+import { PlotOfTheDayTerminal } from 'src/sections/landing/PlotOfTheDayTerminal';
 
 const potd = {
   spec_id: 'scatter-basic',

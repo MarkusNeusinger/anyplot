@@ -12,7 +12,7 @@ vi.mock('src/hooks', async () => {
   };
 });
 
-import { PlotOfTheDay } from 'src/components/PlotOfTheDay';
+import { PlotOfTheDay } from 'src/sections/landing/PlotOfTheDay';
 
 // Mock sessionStorage
 const sessionStorageMock: Record<string, string> = {};

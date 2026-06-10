@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { SpecDetailView } from 'src/components/SpecDetailView';
 import { ThemeContext, type ThemeContextValue } from 'src/hooks/useLayoutContext';
+import { SpecDetailView } from 'src/sections/spec-detail/SpecDetailView';
 import { render, screen, userEvent } from 'src/test-utils';
 import type { Implementation } from 'src/types';
 
