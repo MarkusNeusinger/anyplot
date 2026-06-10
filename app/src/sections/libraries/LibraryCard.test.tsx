@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { LibraryCard } from 'src/components/LibraryCard';
+import { LibraryCard } from 'src/sections/libraries/LibraryCard';
 import { render, screen, userEvent } from 'src/test-utils';
 
 describe('LibraryCard', () => {

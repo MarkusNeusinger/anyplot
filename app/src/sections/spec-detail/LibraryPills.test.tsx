@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { LibraryPills } from 'src/components/LibraryPills';
+import { LibraryPills } from 'src/sections/spec-detail/LibraryPills';
 import { render, screen, userEvent } from 'src/test-utils';
 
 const mockImplementations = [

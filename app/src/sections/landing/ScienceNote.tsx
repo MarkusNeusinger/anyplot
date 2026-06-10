@@ -2,8 +2,8 @@ import { Link as RouterLink } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 
-import { PaletteStrip } from 'src/components/PaletteStrip';
 import { paths } from 'src/routes/paths';
+import { PaletteStrip } from 'src/sections/landing/PaletteStrip';
 import { colors, typography } from 'src/theme';
 
 export function ScienceNote() {

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { SpecTabs } from 'src/components/SpecTabs';
+import { SpecTabs } from 'src/sections/spec-detail/SpecTabs';
 import { render, screen, userEvent, waitFor } from 'src/test-utils';
 
 // Mock the lazy-loaded CodeHighlighter

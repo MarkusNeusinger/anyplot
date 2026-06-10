@@ -6,12 +6,12 @@ import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 
 import { FeedbackWidget } from 'src/components/FeedbackWidget';
-import { Footer } from 'src/components/Footer';
-import { MastheadRule } from 'src/components/MastheadRule';
-import { NavBar } from 'src/components/NavBar';
 import { useAnalytics } from 'src/hooks';
 import { setAnalyticsAmbientProps } from 'src/hooks/useAnalytics';
 import { useTheme } from 'src/hooks/useLayoutContext';
+import { Footer } from 'src/layouts/Footer';
+import { MastheadRule } from 'src/layouts/MastheadRule';
+import { NavBar } from 'src/layouts/NavBar';
 import { paths } from 'src/routes/paths';
 
 const containerSx = {

@@ -8,12 +8,12 @@ import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Fab from '@mui/material/Fab';
 
-import { FilterBar } from 'src/components/FilterBar';
-import { ImagesGrid } from 'src/components/ImagesGrid';
 import type { ImageSize } from 'src/constants';
 import { isFiltersEmpty, useAnalytics, useFilterState, useInfiniteScroll } from 'src/hooks';
 import { useAppData, useHomeState } from 'src/hooks';
 import { specPath } from 'src/routes/paths';
+import { FilterBar } from 'src/sections/plots-gallery/FilterBar';
+import { ImagesGrid } from 'src/sections/plots-gallery/ImagesGrid';
 import { colors } from 'src/theme';
 import type { PlotImage } from 'src/types';
 

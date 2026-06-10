@@ -12,15 +12,15 @@ vi.mock('src/hooks', async () => {
   };
 });
 
-vi.mock('src/components/PlotOfTheDayTerminal', () => ({
+vi.mock('src/sections/landing/PlotOfTheDayTerminal', () => ({
   PlotOfTheDayTerminal: () => <div data-testid="potd-terminal" />,
 }));
 
-vi.mock('src/components/TypewriterText', () => ({
+vi.mock('src/sections/landing/TypewriterText', () => ({
   TypewriterText: () => <div data-testid="typewriter" />,
 }));
 
-import { HeroSection } from 'src/components/HeroSection';
+import { HeroSection } from 'src/sections/landing/HeroSection';
 
 describe('HeroSection', () => {
   beforeEach(() => {

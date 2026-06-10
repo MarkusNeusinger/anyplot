@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { RelatedSpecs } from 'src/components/RelatedSpecs';
+import { RelatedSpecs } from 'src/sections/spec-detail/RelatedSpecs';
 import { render, screen, waitFor } from 'src/test-utils';
 
 describe('RelatedSpecs', () => {

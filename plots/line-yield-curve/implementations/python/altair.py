@@ -1,24 +1,38 @@
-""" pyplots.ai
+""" anyplot.ai
 line-yield-curve: Yield Curve (Interest Rate Term Structure)
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-14
+Library: altair 6.2.1 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-06-10
 """
+
+import os
 
 import altair as alt
 import pandas as pd
+from PIL import Image
 
 
-# Data - U.S. Treasury yield curves on three dates showing normal, flat, and inverted shapes
+# Theme tokens (Imprint palette — theme-adaptive chrome)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint categorical palette — AE3030 used semantically for the inverted/crisis curve
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+ANYPLOT_AMBER = "#DDCC77"  # warning / caution anchor — inversion region shading
+
+# Data — U.S. Treasury yield curves: normal, inverted, and normalizing periods
 maturities = ["1M", "3M", "6M", "1Y", "2Y", "3Y", "5Y", "7Y", "10Y", "20Y", "30Y"]
 maturity_years = [1 / 12, 0.25, 0.5, 1, 2, 3, 5, 7, 10, 20, 30]
 
-# Jan 2022 - Normal upward-sloping curve (pre-tightening)
+# Jan 2022 — Normal upward-sloping curve (pre-tightening)
 yields_normal = [0.08, 0.21, 0.47, 0.78, 1.18, 1.42, 1.63, 1.78, 1.78, 2.11, 2.07]
 
-# Jul 2023 - Inverted curve (peak inversion)
+# Jul 2023 — Inverted curve (peak inversion; AE3030 = semantic red for recession signal)
 yields_inverted = [5.40, 5.49, 5.52, 5.40, 4.87, 4.56, 4.18, 4.06, 3.96, 4.22, 4.03]
 
-# Jan 2025 - Normalizing curve (post-pivot)
+# Jan 2025 — Normalizing curve (post-pivot)
 yields_normalizing = [4.34, 4.35, 4.30, 4.16, 4.20, 4.25, 4.38, 4.49, 4.58, 4.87, 4.81]
 
 records = []
@@ -53,64 +67,68 @@ for i, mat in enumerate(maturities):
 
 df = pd.DataFrame(records)
 
-# Inversion region shading - where short-term yields exceed long-term yields (Jul 2023)
-# The inverted curve has short-term (1M-1Y) yields above long-term (10Y-30Y) yields
-# Shade the region from 1M to ~7Y where the curve slopes downward
-inversion_df = pd.DataFrame({"x_start": [1 / 12], "x_end": [7], "label": ["Inversion Region"]})
+# Inversion region — amber shading marks where short-term rates exceed long-term rates
+inversion_df = pd.DataFrame({"x_start": [1 / 12], "x_end": [7]})
 
 inversion_shade = (
     alt.Chart(inversion_df)
-    .mark_rect(opacity=0.08, color="#D45B5B")
-    .encode(x=alt.X("x_start:Q"), x2="x_end:Q", y=alt.value(0), y2=alt.value(900))
+    .mark_rect(opacity=0.12, color=ANYPLOT_AMBER)
+    .encode(x=alt.X("x_start:Q"), x2="x_end:Q", y=alt.value(0), y2=alt.value(320))
 )
 
 inversion_label = (
-    alt.Chart(pd.DataFrame({"x": [0.8], "y": [5.85], "text": ["← Inversion Region (short > long)"]}))
-    .mark_text(fontSize=16, align="left", fontStyle="italic", color="#D45B5B", fontWeight="bold")
+    alt.Chart(pd.DataFrame({"x": [0.12], "y": [3.0], "text": ["Inversion Region"]}))
+    .mark_text(fontSize=16, align="left", fontStyle="italic", color=ANYPLOT_AMBER, fontWeight="bold")
     .encode(x="x:Q", y="y:Q", text="text:N")
 )
 
-# Colorblind-safe palette: blue, orange, teal
-colors = ["#306998", "#E8871E", "#3B9AB2"]
+# Series colors — Imprint: green=normal growth, red=inversion/crisis, blue=normalizing
 date_order = ["Jan 2022 (Normal)", "Jul 2023 (Inverted)", "Jan 2025 (Normalizing)"]
+colors = [IMPRINT_PALETTE[0], IMPRINT_PALETTE[4], IMPRINT_PALETTE[2]]  # #009E73, #AE3030, #4467A3
 
-# Annotation for the peak inversion point
+# Peak annotation for the inverted curve
 peak_annotation = (
     alt.Chart(pd.DataFrame({"x": [0.5], "y": [5.52], "text": ["Peak: 5.52%"]}))
-    .mark_text(fontSize=15, align="left", dx=12, dy=-8, color="#E8871E", fontWeight="bold")
+    .mark_text(fontSize=16, align="left", dx=10, dy=-10, color=IMPRINT_PALETTE[4], fontWeight="bold")
     .encode(x="x:Q", y="y:Q", text="text:N")
 )
 
-# Shared axis config
+# Title — scaled from default 16px for 76-char string (floor 11)
+title_str = "U.S. Treasury Yield Curves · line-yield-curve · python · altair · anyplot.ai"
+title_fontsize = max(11, round(16 * 67 / len(title_str)))
+
+# Axis encoding
 x_axis = alt.X(
     "maturity_years:Q",
     title="Maturity (Years)",
     scale=alt.Scale(type="log", domain=[0.08, 35]),
     axis=alt.Axis(
-        labelFontSize=18,
-        titleFontSize=22,
         values=[1 / 12, 0.25, 0.5, 1, 2, 3, 5, 7, 10, 20, 30],
-        labelExpr="datum.value < 0.09 ? '1M' : datum.value < 0.3 ? '3M' : datum.value < 0.6 ? '6M' : datum.value + 'Y'",
+        labelExpr=(
+            "datum.value < 0.09 ? '1M' : datum.value < 0.3 ? '3M' : datum.value < 0.6 ? '6M' : datum.value + 'Y'"
+        ),
     ),
 )
 
 y_axis = alt.Y(
-    "yield_pct:Q", title="Yield (%)", scale=alt.Scale(domain=[0, 6]), axis=alt.Axis(labelFontSize=18, titleFontSize=22)
+    "yield_pct:Q",
+    title="Yield (%)",
+    scale=alt.Scale(domain=[0, 5.9]),  # tightened from [0, 6] for better canvas utilisation
 )
 
 color_enc = alt.Color(
     "date:N",
     scale=alt.Scale(domain=date_order, range=colors),
     legend=alt.Legend(
-        title=None, labelFontSize=18, labelLimit=300, orient="top-right", symbolStrokeWidth=4, symbolSize=200
+        title=None, labelFontSize=10, labelLimit=300, orient="top-right", symbolStrokeWidth=3, symbolSize=100
     ),
     sort=date_order,
 )
 
-# Plot layers
+# Plot layers: inversion shade + lines + points + annotation labels
 line = (
     alt.Chart(df)
-    .mark_line(strokeWidth=4)
+    .mark_line(strokeWidth=3)
     .encode(
         x=x_axis, y=y_axis, color=color_enc, tooltip=["maturity:N", "yield_pct:Q", "date:N"], order="maturity_years:Q"
     )
@@ -118,7 +136,7 @@ line = (
 
 points = (
     alt.Chart(df)
-    .mark_point(size=150, filled=True)
+    .mark_point(size=100, filled=True)
     .encode(
         x="maturity_years:Q",
         y="yield_pct:Q",
@@ -127,19 +145,51 @@ points = (
     )
 )
 
+# Canvas: landscape inner view 620×320, scale_factor=4.0 → PIL-padded to exactly 3200×1800
+TW, TH = 3200, 1800
+
 chart = (
     (inversion_shade + line + points + inversion_label + peak_annotation)
     .properties(
-        width=1600,
-        height=900,
-        title=alt.Title(
-            "U.S. Treasury Yield Curves · line-yield-curve · altair · pyplots.ai", fontSize=28, anchor="middle"
-        ),
+        width=620, height=320, background=PAGE_BG, title=alt.Title(title_str, fontSize=title_fontsize, anchor="middle")
     )
-    .configure_axis(gridOpacity=0.2, gridDash=[4, 4])
-    .configure_view(strokeWidth=0)
+    .configure_view(fill=PAGE_BG, stroke=None, strokeWidth=0)
+    .configure_title(color=INK)
+    .configure_axis(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.12,
+        gridDash=[4, 4],
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=10,
+        titleFontSize=12,
+    )
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=10,
+        titleFontSize=10,
+    )
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.0)
-chart.interactive().save("plot.html")
+# Save PNG then pad to exact 3200×1800 target
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+# Save interactive HTML
+chart.interactive().save(f"plot-{THEME}.html")

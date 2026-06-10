@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { Footer } from 'src/components/Footer';
+import { Footer } from 'src/layouts/Footer';
 import { render, screen, userEvent } from 'src/test-utils';
 
 describe('Footer', () => {
