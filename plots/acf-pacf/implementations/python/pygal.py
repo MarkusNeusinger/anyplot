@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 acf-pacf: Autocorrelation and Partial Autocorrelation (ACF/PACF) Plot
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 76/100 | Updated: 2026-06-10
@@ -102,7 +102,6 @@ common_config = {
     "show_minor_x_labels": False,
     "x_labels_major_every": 4,
     "rounded_bars": 2,
-    "y_labels_major_count": 4,
 }
 
 # ACF chart (top panel)
@@ -116,6 +115,7 @@ acf_chart = pygal.Bar(
     range=(acf_min, acf_max),
 )
 acf_chart.x_labels = [str(i) for i in range(n_lags + 1)]
+acf_chart.y_labels = [-0.4, -0.2, 0.0, 0.5, 1.0]
 acf_chart.add(
     "ACF",
     [{"value": round(v, 4), "color": HIGHLIGHT_COLOR if abs(v) > conf_bound else MUTED_BAR_COLOR} for v in acf_values],
@@ -126,6 +126,7 @@ pacf_chart = pygal.Bar(
     **common_config, x_title="Lag", y_title="PACF", title="", margin_bottom=70, margin_top=5, range=(pacf_min, pacf_max)
 )
 pacf_chart.x_labels = [str(i) for i in range(1, n_lags + 1)]
+pacf_chart.y_labels = [-0.4, -0.2, 0.0, 0.5, 1.0]
 pacf_chart.add(
     "PACF",
     [
