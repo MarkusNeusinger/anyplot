@@ -34,11 +34,6 @@ for (let i = 0; i <= 160; i++) {
   profileData.push([d, Math.round(base + tex)]);
 }
 
-// Elevation lookup: nearest sample at given distance
-function elevAt(dist) {
-  return profileData[Math.min(Math.round(dist / 0.5), 160)][1];
-}
-
 // Key landmarks along the traverse
 const landmarks = [
   { name: 'Northern Pass · 2280 m',  dist: 13 },
@@ -73,12 +68,14 @@ chart.setOption({
 
   title: {
     text: titleStr,
+    subtext: '~16× vertical exaggeration',
+    subtextStyle: { color: t.inkSoft, fontSize: 12 },
     left: 'center',
     top: 18,
     textStyle: { color: t.ink, fontSize: titleSize, fontWeight: '500' }
   },
 
-  grid: { left: 110, right: 55, top: 82, bottom: 90 },
+  grid: { left: 110, right: 55, top: 100, bottom: 90 },
 
   xAxis: {
     type: 'value',
@@ -124,16 +121,16 @@ chart.setOption({
         label: { show: false },
         data: landmarks.map(lm => [
           { coord: [lm.dist, 420] },
-          { coord: [lm.dist, elevAt(lm.dist) - 40] }
+          { coord: [lm.dist, profileData[Math.min(Math.round(lm.dist / 0.5), 160)][1] - 40] }
         ])
       }
     },
-    // Landmark labels: small dots with text above the profile line
+    // Landmark dots with labels above the profile line
     {
       type: 'scatter',
       data: landmarks.map(lm => ({
         name: lm.name,
-        value: [lm.dist, elevAt(lm.dist) + 80]
+        value: [lm.dist, profileData[Math.min(Math.round(lm.dist / 0.5), 160)][1] + 80]
       })),
       symbol: 'circle',
       symbolSize: 5,
@@ -143,7 +140,7 @@ chart.setOption({
         position: 'top',
         formatter: '{b}',
         color: t.ink,
-        fontSize: 11
+        fontSize: 13
       },
       z: 10
     },
