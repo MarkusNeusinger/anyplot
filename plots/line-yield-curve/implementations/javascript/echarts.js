@@ -72,9 +72,10 @@ chart.setOption({
 
   grid: {
     left: 100,
-    right: 70,
+    right: 110,
     top: 90,
     bottom: 110,
+    borderWidth: 0,
   },
 
   tooltip: {
@@ -120,6 +121,7 @@ chart.setOption({
         if (Math.abs(lv + 1) < 0.05) return "1M";   // 0.1 yr ≈ 1.2 months
         if (Math.abs(lv)     < 0.05) return "1Y";
         if (Math.abs(lv - 1) < 0.05) return "10Y";
+        if (val >= 25) return "30Y";
         return "";
       },
     },
@@ -156,6 +158,7 @@ chart.setOption({
       itemStyle: { color: t.palette[0] },
       symbol: "circle",
       symbolSize: 10,
+      endLabel: { show: true, formatter: "{a}", color: t.palette[0], fontSize: 13, fontWeight: "bold" },
     },
     // Flattening curve — Jul 2022 (short end rising, long end flat)
     {
@@ -166,6 +169,7 @@ chart.setOption({
       itemStyle: { color: t.palette[1] },
       symbol: "circle",
       symbolSize: 10,
+      endLabel: { show: true, formatter: "{a}", color: t.palette[1], fontSize: 13, fontWeight: "bold" },
     },
     // Inverted curve — Mar 2023, with 1Y–10Y inversion zone shaded
     {
@@ -176,11 +180,12 @@ chart.setOption({
       itemStyle: { color: t.palette[2] },
       symbol: "circle",
       symbolSize: 10,
+      endLabel: { show: true, formatter: "{a}", color: t.palette[2], fontSize: 13, fontWeight: "bold" },
       markArea: {
         silent: true,
         itemStyle: {
           color: t.palette[2],
-          opacity: 0.08,
+          opacity: 0.14,
         },
         data: [[
           { xAxis: 1, name: "Inversion Zone" },
