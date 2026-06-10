@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 funnel-meta-analysis: Meta-Analysis Funnel Plot for Publication Bias
 Library: plotly 6.8.0 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-06-10
@@ -152,6 +152,7 @@ if inside_funnel.any():
             mode="markers",
             marker={
                 "size": marker_sizes[inside_funnel],
+                "symbol": "circle",
                 "color": BRAND,
                 "line": {"color": "#006B4E", "width": 1.5},
                 "opacity": 0.88,
@@ -183,6 +184,7 @@ if outside_funnel.any():
             mode="markers",
             marker={
                 "size": marker_sizes[outside_funnel],
+                "symbol": "diamond",
                 "color": RED,
                 "line": {"color": "#7A1F1F", "width": 1.5},
                 "opacity": 0.88,
@@ -239,13 +241,13 @@ fig.update_layout(
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
         "font": {"size": 10, "color": INK_SOFT},
-        "x": 0.98,
-        "y": 0.02,
-        "xanchor": "right",
-        "yanchor": "bottom",
+        "x": 0.02,
+        "y": 0.98,
+        "xanchor": "left",
+        "yanchor": "top",
     },
     hovermode="closest",
-    margin={"l": 80, "r": 40, "t": 50, "b": 60},
+    margin={"l": 80, "r": 40, "t": 80, "b": 60},
 )
 
 # Direction annotations
@@ -317,7 +319,7 @@ fig.add_annotation(
     xref="paper",
     y=1.0,
     yref="paper",
-    text="Asymmetry at low precision (wide SE) suggests possible publication bias  •  Red markers outside 95% CI",
+    text="Asymmetry at low precision (wide SE) suggests possible publication bias  •  Red ◆ outside 95% CI, green ● inside",
     showarrow=False,
     font={"size": 10, "color": INK_MUTED},
     xanchor="center",
