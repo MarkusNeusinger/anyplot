@@ -1,0 +1,277 @@
+library: echarts
+language: javascript
+specification_id: funnel-meta-analysis
+created: '2026-06-10T04:07:04Z'
+updated: '2026-06-10T04:16:16Z'
+generated_by: claude-sonnet
+workflow_run: 27252130054
+issue: 4590
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/javascript/echarts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Correct funnel plot with inverted Y-axis (SE at top, increases downward) — all
+    reference elements present and correctly positioned
+  - 'Precision-weighted marker sizing (inverse variance: 1/SE²) adds a meaningful
+    data-driven encoding layer'
+  - 'Excellent theme adaptation: transparent background inherits pageBg, t.ink/t.inkSoft/t.grid
+    tokens applied throughout'
+  - 'Clean ECharts-idiomatic code: markLine used elegantly for funnel boundaries and
+    reference lines; dummy series for legend icons is the canonical ECharts workaround'
+  - Realistic medical research context (18 RCTs, drug vs. placebo) with plausible
+    log odds ratios and standard errors
+  - 'All required spec features present: inverted Y-axis, vertical summary effect
+    line, dashed pseudo 95% CI funnel boundaries, null effect reference line'
+  - 'animation: false set correctly; echarts.init without explicit size or devicePixelRatio
+    — follows ECharts harness contract'
+  weaknesses:
+  - 'DE-02: No explicit fill/area highlight for the funnel confidence region — a semi-transparent
+    area under the CI dashed bounds would strengthen the visual communication of the
+    funnel shape'
+  - 'DE-01: Design is clean and professional but not exceptional — could be elevated
+    by adding a shaded confidence band fill, or annotating a few high-leverage studies'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm cream off-white, clearly #FAF8F1 — not pure white.
+      Chrome: Title "funnel-meta-analysis · javascript · echarts · anyplot.ai" in bold dark text (~65% canvas width), readable. Subtext "Drug vs. Placebo RCTs — 18 studies" visible below. Y-axis label "Standard Error" and X-axis label "Log Odds Ratio" in inkSoft color, both readable. Tick labels (0.00 to 0.55 on Y, -1.7 to 0.8 on X) in soft dark text at 13px CSS (26 rendered px), clearly readable. Grid lines are subtle (15% opacity), non-dominant.
+      Data: 18 scatter points in brand green #009E73, sized by precision weight (inverse variance) — large dots near top (high-precision studies) and small dots at the bottom (low-precision). Solid dark vertical line at summary effect (−0.43). Dashed blue (#4467A3) diagonal lines forming the funnel (pseudo 95% CI). Dashed soft vertical line at null effect (0). Legend at bottom: Studies (green circle), Summary effect (−0.43) (solid line), 95% CI bounds (dashed blue line), Null effect (0) (dashed soft line).
+      Legibility verdict: PASS — all text clearly readable against warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, clearly #1A1A17 — not pure black.
+      Chrome: Title and subtext in light (#F0EFE8) text — clearly readable against dark background. Y-axis and X-axis labels in light soft color (#B8B7B0), readable. Tick labels in same soft light color, readable. Grid lines subtle (15% opacity). No dark-on-dark text failures observed.
+      Data: Same 18 green scatter points as light render — data colors identical (#009E73). Summary effect line now appears white/light (t.ink on dark = #F0EFE8), clearly visible. Dashed blue CI bounds (#4467A3) identical to light render. Null effect dashed line in soft light color. Legend text in soft light color, readable.
+      Legibility verdict: PASS — all text readable against warm near-black background. No dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set via t.ink/t.inkSoft. Title 22px, axis
+          labels 14px, tick labels/legend 13px CSS (44/28/26 rendered px). Readable
+          in both themes. Minor deduction: tick labels at 13px CSS are at the lower
+          end but remain clearly readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps with other text or data elements. 18 scatter points
+          well-distributed without significant collision.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Precision-weighted symbol sizing (8-24px CSS range) appropriate for
+          18 data points. High-precision studies large and prominent at top; low-precision
+          small at bottom. Alpha 0.85 for slight blending without loss of visibility.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 for studies, blue #4467A3 for CI bounds — distinct
+          under CVD. Reference lines use ink/inkSoft (theme-adaptive neutrals). No
+          red-green sole signal.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Generous margins (left:100, right:70, top:115,
+          bottom:110 CSS px). Legend at bottom with room. No overflow or clipping.
+          Good canvas utilization.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X-axis: ''Log Odds Ratio'' (descriptive for meta-analysis context).
+          Y-axis: ''Standard Error'' (correct for funnel plot). Title follows spec-id
+          format correctly.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Studies use t.palette[0] = #009E73 (brand green). CI bounds use
+          t.palette[2] = #4467A3. Background transparent (inherits pageBg from theme).
+          Data colors identical between light and dark renders. Theme-adaptive chrome
+          correctly applied via all t.* tokens.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above configured defaults: precision-weighted symbol sizing adds
+          intentional data-driven hierarchy, subtext provides context, distinct visual
+          treatments (solid vs. dashed lines, different widths) differentiate elements.
+          Not yet at FiveThirtyEight/publication level — no shaded confidence region,
+          no study labels.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: t.grid token used for subtle grid lines (15% opacity). Axes are L-shaped
+          by ECharts defaults. Adequate margins. No excessive chartjunk. But no exceptional
+          refinement — default legend styling, no spine customization explicitly.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Funnel shape immediately communicates the statistical concept. Summary
+          effect line is the clear focal point (solid, prominent). Size encoding guides
+          eye to high-precision studies. Null effect reference provides essential
+          context. Asymmetry pattern visible (studies cluster left of null). Subtitle
+          adds domain context.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct meta-analysis funnel plot with inverted Y-axis (SE=0 at top,
+          increases downward via inverse:true).
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: inverted Y-axis ✓, vertical summary effect line
+          ✓, pseudo 95% CI diagonal bounds ✓, scatter points ✓, null effect reference
+          line ✓, precision weighting (size) ✓.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=effect size (log odds ratio), Y=standard error (inverted), marker
+          size=inverse variance (1/SE²). All 18 studies plotted.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''funnel-meta-analysis · javascript · echarts · anyplot.ai''
+          — correct format. Legend: Studies/Summary effect/95% CI bounds/Null effect
+          — clear and informative.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all funnel plot aspects: scatter of studies, precision weighting,
+          asymmetry (suggesting publication bias), summary effect, null reference,
+          95% CI funnel.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 18 RCTs comparing drug vs. placebo — neutral medical research context.
+          Log odds ratios and standard errors with plausible ranges.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: LOR range -0.12 to -0.71 (OR 0.49-0.89) realistic for effective drug.
+          SE range 0.08-0.45 realistic for varying RCT sizes. Summary effect -0.43
+          (OR≈0.65) plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat structure: Data → Init → Option. No classes or external functions.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Data hard-coded as literal array — fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports. Uses only window.ANYPLOT_TOKENS and window.echarts globals
+          as required.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and well-organized. symbolSize arrow function for precision
+          weighting is appropriately concise. Dummy series for legend is canonical
+          ECharts pattern, not a hack. No fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: echarts.init without explicit size or devicePixelRatio. animation:false
+          set. Correct ECharts harness contract followed.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert ECharts usage: markLine for funnel boundaries and reference
+          lines (elegant use of a distinctive ECharts feature), symbolSize function
+          for data-driven sizing, tooltip formatter for custom display, proper use
+          of window.ANYPLOT_TOKENS throughout.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: markLine used creatively for both funnel CI boundaries and vertical
+          reference lines — an ECharts-specific idiom. Precision-weighted symbolSize
+          via function. Multiple series types composited (scatter + dummy line series
+          for legend). Good ECharts distinctiveness, not quite 5/5 as markLine-for-lines
+          has equivalents in other JS chart libraries.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  - custom-legend
+  - hover-tooltips
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
