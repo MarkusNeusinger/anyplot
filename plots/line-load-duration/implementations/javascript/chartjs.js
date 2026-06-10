@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-load-duration: Load Duration Curve for Energy Systems
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-06-10
+// Library: chartjs 4.4.7 | JavaScript 22.22.3
+// Quality: 78/100 | Created: 2026-06-10
 
 const t = window.ANYPLOT_TOKENS;
 
