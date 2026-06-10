@@ -16,29 +16,51 @@ const hours = Array.from({ length: N_HOURS }, (_, i) => i);
 const loadMW = hours.map(h => 400 + 800 * Math.pow(1 - h / (N_HOURS - 1), 0.65));
 
 // Decompose into three stacked bands
-const baseData  = hours.map(() => 400);                                       // base: constant 400 MW floor
-const interData = hours.map(h => Math.min(Math.max(loadMW[h] - 400, 0), 400)); // 400–800 MW band
-const peakData  = hours.map(h => Math.max(loadMW[h] - 800, 0));               // >800 MW peak only
+const baseData  = hours.map(() => 400);
+const interData = hours.map(h => Math.min(Math.max(loadMW[h] - 400, 0), 400));
+const peakData  = hours.map(h => Math.max(loadMW[h] - 800, 0));
 
-// Total annual energy consumption (MWh → TWh)
 const totalEnergyTWh = (loadMW.reduce((s, v) => s + v, 0) / 1e6).toFixed(2);
 
-// Title: 48 chars < 67 baseline — default 22 px, no scaling needed
 const TITLE = "line-load-duration · javascript · muix · anyplot.ai";
+
+// Chart margins — declared once, shared by LineChart and the annotation overlay
+const MARGIN = { top: 20, right: 130, bottom: 72, left: 80 };
+const Y_MAX = 1280;
+const X_MAX = N_HOURS - 1;
+
+// Convert data-space coordinates to CSS px within the chart container
+function toPixel(x, y, cW, cH) {
+  const dw = cW - MARGIN.left - MARGIN.right;
+  const dh = cH - MARGIN.top - MARGIN.bottom;
+  return {
+    left: MARGIN.left + (x / X_MAX) * dw,
+    top:  MARGIN.top  + (1 - y / Y_MAX) * dh,
+  };
+}
 
 // --- Component (default-exported; harness mounts it with no props) -----------
 export default function Chart() {
   const W = window.ANYPLOT_SIZE.width;
   const H = window.ANYPLOT_SIZE.height;
 
-  // Fixed-height header (title) and footer (energy annotation); chart fills the rest
   const HEADER_H = 50;
   const FOOTER_H = 28;
   const PAD_TOP  = 20;
   const PAD_BOT  = 12;
-  const PAD_H    = 48; // left + right padding on wrapper
+  const PAD_H    = 48;
   const chartW   = W - PAD_H;
   const chartH   = H - PAD_TOP - HEADER_H - FOOTER_H - PAD_BOT;
+
+  // Labels placed at representative (x, y) data coords inside each band
+  // Base band: 0–400 MW (y=200 at x=7000 → far-right flat region)
+  // Intermediate band: 400–800 MW (y=600 at x=5000 → saturated mid-band)
+  // Peak band: >800 MW (y=950 at x=1500 → steep left portion)
+  const bandLabels = [
+    { x: 7000, y: 200, text: "Base Load"    },
+    { x: 5000, y: 600, text: "Intermediate" },
+    { x: 1500, y: 950, text: "Peak Load"    },
+  ];
 
   return (
     <div style={{
@@ -63,76 +85,115 @@ export default function Chart() {
         {TITLE}
       </div>
 
-      {/* Stacked-area line chart — three bands sum to the load duration curve */}
-      <LineChart
-        width={chartW}
-        height={chartH}
-        skipAnimation
-        colors={[t.palette[0], t.palette[1], t.palette[2]]}
-        xAxis={[{
-          data: hours,
-          label: "Hours in a Year (sorted by descending load)",
-          min: 0,
-          max: N_HOURS - 1,
-          tickInterval: [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000],
-        }]}
-        yAxis={[{
-          label: "Power Demand (MW)",
-          min: 0,
-          max: 1280,
-        }]}
-        series={[
-          {
-            data: baseData,
-            area: true,
-            stack: "load",
-            label: "Base Load (< 400 MW)",
-            showMark: false,
-            curve: "linear",
-          },
-          {
-            data: interData,
-            area: true,
-            stack: "load",
-            label: "Intermediate Load (400–800 MW)",
-            showMark: false,
-            curve: "linear",
-          },
-          {
-            data: peakData,
-            area: true,
-            stack: "load",
-            label: "Peak Load (> 800 MW)",
-            showMark: false,
-            curve: "linear",
-          },
-        ]}
-        sx={{
-          "& .MuiLineElement-root": { strokeWidth: 0 },
-          "& .MuiAreaElement-root": { fillOpacity: 0.85 },
-        }}
-        slotProps={{
-          legend: {
-            position: { vertical: "top", horizontal: "right" },
-          },
-        }}
-      >
-        {/* Horizontal dashed lines at capacity tier boundaries */}
-        <ChartsReferenceLine
-          y={400}
-          label="Base capacity: 400 MW"
-          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "8 4", strokeWidth: 1.5 }}
-          labelStyle={{ fontSize: 12, fill: t.inkSoft }}
-          labelAlign="end"
-        />
-        <ChartsReferenceLine
-          y={800}
-          label="Intermediate capacity: 800 MW"
-          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "8 4", strokeWidth: 1.5 }}
-          labelStyle={{ fontSize: 12, fill: t.inkSoft }}
-          labelAlign="end"
-        />
-      </LineChart>
+      {/* Stacked-area chart with region-label overlay */}
+      <div style={{ position: "relative", width: chartW, height: chartH, flexShrink: 0 }}>
+        <LineChart
+          width={chartW}
+          height={chartH}
+          margin={MARGIN}
+          skipAnimation
+          grid={{ horizontal: true }}
+          colors={[t.palette[0], t.palette[1], t.palette[2]]}
+          xAxis={[{
+            data: hours,
+            label: "Hours in a Year (sorted by descending load)",
+            min: 0,
+            max: X_MAX,
+            tickInterval: [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000],
+            tickLabelStyle: { fontSize: 13 },
+          }]}
+          yAxis={[{
+            label: "Power Demand (MW)",
+            min: 0,
+            max: Y_MAX,
+            tickLabelStyle: { fontSize: 13 },
+          }]}
+          series={[
+            {
+              data: baseData,
+              area: true,
+              stack: "load",
+              label: "Base Load (< 400 MW)",
+              showMark: false,
+              curve: "linear",
+            },
+            {
+              data: interData,
+              area: true,
+              stack: "load",
+              label: "Intermediate Load (400–800 MW)",
+              showMark: false,
+              curve: "linear",
+            },
+            {
+              data: peakData,
+              area: true,
+              stack: "load",
+              label: "Peak Load (> 800 MW)",
+              showMark: false,
+              curve: "linear",
+            },
+          ]}
+          sx={{
+            "& .MuiLineElement-root":  { strokeWidth: 0 },
+            "& .MuiAreaElement-root":  { fillOpacity: 0.82 },
+            "& .MuiChartsGrid-line":   { stroke: t.grid, strokeOpacity: 0.5, strokeDasharray: "4 3" },
+            "& .MuiChartsAxis-line":   { stroke: t.inkSoft, strokeOpacity: 0.3 },
+            "& .MuiChartsAxis-tick":   { stroke: t.inkSoft, strokeOpacity: 0.3 },
+          }}
+          slotProps={{
+            legend: {
+              position: { vertical: "top", horizontal: "right" },
+              itemMarkWidth: 14,
+              itemMarkHeight: 14,
+              markGap: 6,
+              itemGap: 12,
+            },
+          }}
+        >
+          {/* Horizontal dashed lines at capacity tier boundaries */}
+          <ChartsReferenceLine
+            y={400}
+            label="Base capacity: 400 MW"
+            lineStyle={{ stroke: t.inkSoft, strokeDasharray: "8 4", strokeWidth: 1.5 }}
+            labelStyle={{ fontSize: 12, fill: t.inkSoft }}
+            labelAlign="end"
+          />
+          <ChartsReferenceLine
+            y={800}
+            label="Intermediate capacity: 800 MW"
+            lineStyle={{ stroke: t.inkSoft, strokeDasharray: "8 4", strokeWidth: 1.5 }}
+            labelStyle={{ fontSize: 12, fill: t.inkSoft }}
+            labelAlign="end"
+          />
+        </LineChart>
+
+        {/* Direct in-band region labels — spec requires labeling each band on the plot */}
+        {bandLabels.map(({ x, y, text }) => {
+          const pos = toPixel(x, y, chartW, chartH);
+          return (
+            <div
+              key={text}
+              style={{
+                position: "absolute",
+                left: pos.left,
+                top: pos.top,
+                transform: "translate(-50%, -50%)",
+                color: t.ink,
+                fontSize: 15,
+                fontWeight: 700,
+                fontFamily: "sans-serif",
+                pointerEvents: "none",
+                textShadow: `0 0 8px ${t.pageBg}, 0 0 8px ${t.pageBg}`,
+                letterSpacing: "0.04em",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {text}
+            </div>
+          );
+        })}
+      </div>
 
       {/* Total energy annotation */}
       <div style={{
