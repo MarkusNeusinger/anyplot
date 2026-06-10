@@ -1,100 +1,158 @@
 library: plotly
+language: python
 specification_id: acf-pacf
 created: '2026-03-14T22:18:42Z'
-updated: '2026-03-14T22:37:22Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23097477554
+updated: '2026-06-10T02:01:48Z'
+generated_by: claude-sonnet
+workflow_run: 27247137183
 issue: 4663
-python_version: 3.14.3
-library_version: 6.6.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/plotly/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 6.8.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/python/plotly/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Perfect spec compliance with all required features (stem lines, confidence bands,
-    lag 0 in ACF, PACF from lag 1)
-  - 'Excellent data choice: AR(2) process creates textbook-quality ACF/PACF demonstration'
-  - Strong visual hierarchy through significant/non-significant color and size differentiation
-  - Good use of Plotly interactivity (hover tooltips, spike lines, HTML export)
-  - All font sizes explicitly set and well-calibrated for output resolution
+  - 'Excellent significant/non-significant visual encoding: green (#009E73) stems+markers
+    vs muted grey creates immediate visual hierarchy that guides the viewer to meaningful
+    lags'
+  - 'Perfect spec compliance: ACF top / PACF bottom with shared x-axis, lag-0 in ACF,
+    PACF starting at lag 1, 95% confidence band as filled polygon with dashed border,
+    35 lags in correct range'
+  - 'Idiomatic Plotly usage: make_subplots with shared_xaxes, None-separator multi-segment
+    line trick for efficient stem rendering, hover templates with <extra></extra>,
+    spike lines across both subplots'
+  - 'Full theme adaptation: all chrome tokens (title, axis labels, tick labels, legend,
+    grid, backgrounds, confidence band fill) correctly switch between #FAF8F1 / #1A1A17
+    surfaces with no dark-on-dark failures'
+  - Correct and self-contained PACF implementation via Durbin-Levinson recursion —
+    no external statsmodels dependency required
+  - Clean KISS code structure with seed for reproducibility, no unused imports, no
+    functions or classes
+  - Descriptive axis labels with units ('ACF (correlation)', 'PACF (correlation)',
+    'Lag (periods)') and a realistic AR(2) context subtitle
   weaknesses:
-  - Per-stem loop is verbose due to Plotly lacking native stem plot support
-  - Design could push further toward publication-ready with more refined grid handling
+  - 'DE-01 moderate (5/8): The visualization uses template=''plotly_white'' as base
+    — top/right axis lines remain visible rather than applying the style-guide''s
+    L-shaped or spine-free aesthetic; removing or muting the top/right axis lines
+    would improve polish'
+  - 'DE-02 (4/6): Axes retain plotly_white default frame; spines (top/right plot borders)
+    are not removed — applying showline=False to the top and right bounding lines
+    of each subplot would add visual refinement'
+  - 'LM-02 (4/5): Hover and spike functionality is present but the spike lines apply
+    a uniform style across both subplots; a crossfilter-style shared spike linking
+    (spikemode=''across+toaxis'') or custom hoverinfo aggregating both ACF and PACF
+    values at the same lag would demonstrate deeper Plotly mastery'
+  - 'VQ-01 minor (7/8): Subplot annotation titles at 13px are slightly closer in weight
+    to the 12px axis labels than ideal — bumping subplot annotation fonts to 14px
+    would better reinforce the panel title / axis label hierarchy'
   image_description: |-
-    The plot displays two vertically stacked subplots on a light gray (#FAFBFC) background. The top subplot shows the Autocorrelation Function (ACF) and the bottom shows the Partial Autocorrelation Function (PACF) for a simulated AR(2) monthly retail sales process. The main title reads "acf-pacf · plotly · pyplots.ai" in dark navy (~28pt), with a gray subtitle "Monthly Retail Sales — AR(2) Process (n=200, φ₁=0.7, φ₂=−0.3)". Each subplot has its own subtitle ("Autocorrelation (ACF)" and "Partial Autocorrelation (PACF)") in medium gray.
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "Monthly Retail Sales · acf-pacf · python · plotly · anyplot.ai" centered in dark ink (#1A1A17), subtitle in soft muted tone. Subplot titles "Autocorrelation (ACF)" and "Partial Autocorrelation (PACF)" in INK_SOFT above each panel. Y-axis labels "ACF (correlation)" and "PACF (correlation)" in dark ink. X-axis label "Lag (periods)" in dark ink. Tick labels in INK_SOFT. Legend box at bottom with ELEVATED_BG fill and INK_SOFT border. All text clearly readable.
+      Data: Significant lags rendered in brand green #009E73 (vertical stems width=3 + circular markers size=12 with white edge). Non-significant lags in muted grey (#6B6A63) with stems width=2 + markers size=9 with white edge. 95% confidence band as filled polygon (low-opacity grey fill, dashed grey border). Zero baseline as subtle INK_SOFT line. ACF lag-0 = 1.0 prominent; AR(2) pattern visible with decay. PACF shows clear cutoff at lag 2.
+      Legibility verdict: PASS — all text readable, proper hierarchy, no overflow or overlap
 
-    Vertical stem lines extend from zero to each correlation value. Significant lags are rendered in orange-red (#E8590C) with larger markers (size 13, white edge), while non-significant lags appear in muted gray (#94A3B8) with smaller markers (size 10). A light shaded band with dashed borders marks the 95% confidence interval (±1.96/√200 ≈ ±0.139). The ACF subplot shows lag 0 at 1.0, lag 1 ~0.5, then decay with lags 3 and 5 slightly below the confidence bound. The PACF shows a sharp cutoff after lag 2 (lag 1 ~0.48, lag 2 ~-0.33), consistent with an AR(2) process. A horizontal legend at top-right shows "Significant", "Non-significant", and "95% Confidence". X-axis labeled "Lag (periods)", Y-axes labeled "ACF (correlation)" and "PACF (correlation)".
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: All text tokens correctly flipped — title in #F0EFE8, axis labels and tick labels in #B8B7B0/INK_SOFT equivalents. Subplot titles in soft light tone. Legend box uses dark ELEVATED_BG (#242420). Grid uses light-on-dark rgba. No dark-on-dark failures observed — every text element is clearly visible against the dark background.
+      Data: Data colors are identical to light render — significant lags still in #009E73 green, non-significant in adapted muted grey. Confidence band fill/border adapt via rgba opacity. Zero baseline adapts to INK_SOFT dark token. Green stems stand out clearly against the dark background.
+      Legibility verdict: PASS — all text readable in dark theme, no dark-on-dark failures, brand green #009E73 clearly visible
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
-          18pt, subplot titles 20pt, legend 16pt'
+        comment: 'All font sizes explicitly set (title adaptive 16px, subplot annotations
+          13px, axis labels 12px, ticks 10px, legend 10px). Both themes fully readable.
+          Minor: subplot annotation titles at 13px only 1px above axis label 12px
+          — slightly weak panel title hierarchy.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: No text overlaps. Stems and markers well-separated. Legend below
+          plot does not overlap data. Subplot titles clear of data areas.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stem width=3, markers differentiated by size (13 vs 10) with white
-          edges
+        comment: Significant markers size=12 with white edge excellent visibility.
+          Non-significant size=9 appropriately secondary. Stem widths 3 (significant)
+          vs 2 (non-significant) reinforce hierarchy. Confidence band fill + dashed
+          border clearly visible in both themes.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Orange-red vs muted gray is colorblind-safe with strong luminance
-          contrast
+        comment: Green (#009E73) vs muted grey is CVD-safe contrast pair. Not a red-green
+          pair. White marker edges add additional definition. Good luminance contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Both subplots fill canvas well with balanced margins
+        comment: 3200x1800 canvas confirmed (width=800, height=450, scale=4). Margins
+          l=90, r=50, t=130, b=100 generous and balanced. Two subplots with vertical_spacing=0.10
+          — good breathing room. Legend at bottom well-positioned.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with context: ACF (correlation), PACF (correlation),
-          Lag (periods)'
+        comment: 'Y-axes: ''ACF (correlation)'' and ''PACF (correlation)'' — descriptive
+          with units. X-axis: ''Lag (periods)'' — descriptive with units. Title includes
+          descriptive prefix and correct anyplot format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Significant lags use #009E73 (Imprint position 1) correctly. Non-significant
+          uses INK_MUTED semantic anchor (theme-adaptive muted) — correct usage. Background
+          #FAF8F1 / #1A1A17 confirmed. All chrome theme-adaptive. Data colors identical
+          between light and dark renders.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Thoughtful orange/gray palette with intentional hierarchy, white
-          marker edges, shaded confidence bands
+        comment: 'Above defaults: intentional significant/non-significant visual hierarchy,
+          white marker edges for definition, soft confidence band fills, adaptive
+          subtitle with parameter info, length-adaptive title. Template=''plotly_white''
+          base limits full score — top/right axis lines visible.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: plotly_white template, subtle grid lines, custom background, x-axis
-          grid disabled
+        comment: Y-grid only (x-grid off), subtle gridcolor at 15% opacity, legend
+          with ELEVATED_BG and border, subplot title muted color. Good refinement
+          but top/right spines from plotly_white default not explicitly removed —
+          full spine cleanup would push to 6/6.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: AR(2) data creates clear narrative with PACF cutoff at lag 2, color
-          coding guides viewer
+        comment: 'Clear visual hierarchy: green significant vs grey non-significant
+          creates immediate focal points. AR(2) pattern story (decay in ACF, cutoff
+          at lag 2 in PACF) is visually unmistakable. Subtitle explains the process
+          parameters. Viewer understands the ARIMA model order at a glance.'
     spec_compliance:
       score: 15
       max: 15
@@ -104,26 +162,34 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: ACF and PACF as stem plots in two vertically stacked subplots
+        comment: Correct ACF/PACF stem plot with two vertically stacked subplots sharing
+          x-axis. Vertical stem lines (not filled bars) from zero baseline. Exactly
+          matches spec description.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: stem lines, confidence bands, lag 0 in
-          ACF, PACF from lag 1, shared x-axis, 35 lags'
+        comment: ACF top / PACF bottom ✓. Stem lines from zero ✓. 95% CI dashed horizontal
+          lines (as filled polygon with dashed border) ✓. Lag 0 in ACF (=1.0) ✓. PACF
+          from lag 1 ✓. 35 lags (within 30-40 range) ✓. X-axis 'Lag' ✓. Y-axes 'ACF'
+          and 'PACF' ✓.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=lag number, Y=correlation values, full range shown
+        comment: X-axis shows lag numbers 0-35. Y-axes show correlation values -1
+          to 1. ACF top, PACF bottom. Shared x-axis correctly implemented via shared_xaxes=True.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format, legend labels are descriptive
+        comment: 'Title ''Monthly Retail Sales · acf-pacf · python · plotly · anyplot.ai''
+          matches {Descriptive Title} · {spec-id} · {language} · {library} · anyplot.ai
+          format. Legend labels: ''Significant'', ''Non-significant'', ''95% Confidence''
+          — correct and informative.'
     data_quality:
       score: 15
       max: 15
@@ -133,24 +199,28 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'AR(2) shows all key features: ACF decay, PACF cutoff, positive and
-          negative correlations'
+        comment: 'Shows all ACF/PACF features: ACF decay pattern, PACF cutoff at lag
+          2 (AR(2) signature), significant vs non-significant distinction, confidence
+          band, zero baseline, lag-0=1.0 in ACF. Full feature coverage.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly Retail Sales is a real-world neutral scenario with realistic
-          AR coefficients
+        comment: Monthly retail sales is a neutral, comprehensible real-world scenario.
+          AR(2) process with specific coefficients (φ₁=0.7, φ₂=−0.3) provides a realistic
+          time series model. Subtitle explains the generative process clearly.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: n=200 within recommended range, correlations in [-1,1], confidence
-          bounds correct
+        comment: n=200 observations (within 100-500 recommended range). 35 lags (within
+          30-40 range). Confidence bound ≈0.139 (1.96/√200) — mathematically correct.
+          Correlation values within [-1, 1]. AR(2) coefficients are realistic and
+          stationary.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -158,49 +228,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, ACF, PACF, plot, save'
+        comment: Clean Imports → Theme tokens → Data generation → ACF/PACF computation
+          → Stem coordinate building → Plot construction → Layout → Save. No functions
+          or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at start
+        comment: np.random.seed(42) present. Deterministic AR(2) simulation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Three imports, all used
+        comment: 'All 4 imports used: os (ANYPLOT_THEME), numpy (data/computation),
+          plotly.graph_objects (traces), plotly.subplots (make_subplots). No unused
+          imports.'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Per-stem loop creating individual traces is verbose, though a Plotly
-          limitation
+        passed: true
+        comment: Clever None-separator technique for multi-segment stem lines. Durbin-Levinson
+          recursion correctly implemented inline. Conditional trace addition (if acf_sig_x:).
+          Length-adaptive title formula. Appropriate complexity for the plot type.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct dimensions, also exports HTML
+        comment: Saves plot-{THEME}.png with autosize=False, correct width=800/height=450/scale=4.
+          Also saves plot-{THEME}.html appropriate for interactive Plotly library.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: make_subplots with shared_xaxes=True, subplot_titles. go.Scatter
+          with fill='toself' for confidence polygon. None-separator multi-segment
+          lines (idiomatic Plotly pattern). hovertemplate with <extra></extra> to
+          suppress trace name. update_xaxes/update_yaxes per row. Spike lines configuration.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good use of make_subplots, go.Scatter, hovertemplate, update methods
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Hover tooltips, spike lines, HTML export, fill=toself for confidence
-          regions
+        comment: 'Plotly-distinctive: hover tooltips showing lag and correlation,
+          HTML export for interactive exploration, spike lines (showspikes=True, spikemode=''across'')
+          enabling cross-subplot lag tracking, filled polygon confidence band. Minor
+          gap: both subplots share the same spike config but don''t aggregate values
+          at the same lag in a single hover — a crossfilter-style unified hover tooltip
+          would max this score.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -210,9 +293,9 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
+  - matrix-construction
   - iteration-over-groups
-  dataprep:
-  - autocorrelation
+  dataprep: []
   styling:
   - edge-highlighting
-  - grid-styling
+  - alpha-blending
