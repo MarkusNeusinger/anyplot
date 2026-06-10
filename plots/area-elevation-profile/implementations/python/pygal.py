@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-elevation-profile: Terrain Elevation Profile Along Transect
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-10
@@ -62,8 +62,8 @@ for lm in landmarks:
     idx = np.argmin(np.abs(distances_km - lm["km"]))
     lm["elev"] = float(elevation_m[idx])
 
-# Title length: 71 chars → fontsize = round(66 × 67 / 71) = 62
-TITLE = "Bernese Oberland Traverse · area-elevation-profile · pygal · anyplot.ai"
+# Title length: 80 chars → fontsize = round(66 × 67 / 80) = 55
+TITLE = "Bernese Oberland Traverse · area-elevation-profile · python · pygal · anyplot.ai"
 
 custom_style = Style(
     background=PAGE_BG,
@@ -74,7 +74,7 @@ custom_style = Style(
     colors=IMPRINT_PALETTE,
     font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
     title_font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
-    title_font_size=62,
+    title_font_size=55,
     label_font_size=56,
     major_label_font_size=44,
     value_font_size=36,
@@ -228,9 +228,9 @@ for i, circle in enumerate(circles[: len(landmarks)]):
     # Elevation value — muted secondary label below name
     elev_el = ET.SubElement(parent_elem, f"{ns}text")
     elev_el.set("x", f"{cx + dx:.1f}")
-    elev_el.set("y", f"{cy + y_off + 28:.1f}")
+    elev_el.set("y", f"{cy + y_off + 32:.1f}")
     elev_el.set("text-anchor", anchor)
-    elev_el.set("font-size", "26")
+    elev_el.set("font-size", "30")
     elev_el.set("font-family", "DejaVu Sans, Helvetica, Arial, sans-serif")
     elev_el.set("fill", INK_MUTED)
     elev_el.text = f"{lm['elev']:.0f} m"
