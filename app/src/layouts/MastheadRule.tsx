@@ -7,7 +7,7 @@ import Box from '@mui/material/Box';
 import { ThemeToggle } from 'src/components/ThemeToggle';
 import { LANG_EXT, LIB_ABBREV } from 'src/constants';
 import { useAnalytics, useLatestRelease, useTheme } from 'src/hooks';
-import { paths, RESERVED_TOP_LEVEL } from 'src/routes/paths';
+import { paths, RESERVED_TOP_LEVEL, specPath } from 'src/routes/paths';
 import { colors, typography } from 'src/theme';
 
 // Symmetric block-comment delimiters used when no language context is in the URL.
@@ -85,13 +85,13 @@ function pathSegments(pathname: string): Segment[] {
   const [specId, language, library] = parts;
   const segs: Segment[] = [];
   if (language) {
-    segs.push({ label: specId, to: `/${specId}` });
+    segs.push({ label: specId, to: specPath(specId) });
   } else {
     segs.push({ label: specId });
   }
   if (language) {
     if (library) {
-      segs.push({ label: language, to: `/${specId}/${language}`, short: LANG_EXT[language] });
+      segs.push({ label: language, to: specPath(specId, language), short: LANG_EXT[language] });
       segs.push({ label: library, short: LIB_ABBREV[library] });
     } else {
       segs.push({ label: language, short: LANG_EXT[language] });
