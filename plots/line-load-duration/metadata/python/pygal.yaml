@@ -1,43 +1,58 @@
 library: pygal
+language: python
 specification_id: line-load-duration
 created: '2026-03-15T21:42:27Z'
-updated: '2026-03-15T22:30:35Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23119898935
+updated: '2026-06-10T05:12:20Z'
+generated_by: claude-sonnet
+workflow_run: 27253577819
 issue: 4586
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/pygal/plot.html
-quality_score: 81
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/python/pygal/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - 'Complete spec compliance with all required features: shaded regions, capacity
-    lines, region labels, total energy annotation'
-  - Excellent realistic data generation with seasonal and daily load patterns
-  - Smart SVG downsampling (step=15) for performance with 8760 data points
-  - Clean well-structured code with good pygal Style system usage
-  - Good data storytelling with capacity tiers and region labels
+  - 'All six spec requirements implemented: three filled load regions, horizontal
+    dashed capacity tier lines, direct region labels on plot, total energy annotation,
+    monotonically decreasing curve, and 8760-hour dataset'
+  - 'Perfect code quality: clean flat structure, reproducible (seed=42), all imports
+    used, idiomatic pygal SVG post-processing for text annotations'
+  - Realistic engineering data with domain-plausible values (peak ~1200 MW, base ~400
+    MW, 7.3 TWh annual energy) using correct seasonal + daily load profiles
+  - 'Correct Imprint palette in canonical order across all 6 series; backgrounds #FAF8F1
+    / #1A1A17 correct in both themes'
+  - SVG halo stroke (PAGE_BG, stroke-width=6) on region labels ensures readability
+    against colored fills in both themes; downsampling (step=15) for SVG performance
+    is a good engineering tradeoff
   weaknesses:
-  - Red and green primary region colors creates colorblind accessibility issue
-  - Base Load region is narrow limiting visual prominence
-  - Capacity dashed lines could be more prominent against filled regions
-  image_description: 'The plot displays a load duration curve for a mid-sized utility
-    on a white background. Three filled regions with semi-transparency are visible:
-    Peak Load (salmon/red, 0–3277 hrs) on the left with a steep initial decline, Intermediate
-    (green/teal, 3277–8332 hrs) forming the bulk of the curve in the middle, and Base
-    Load (blue, 8332–8760 hrs) as a narrower region on the far right. Three horizontal
-    dashed capacity reference lines cross the chart at 550 MW (Base Capacity), 900
-    MW (Intermediate Capacity), and 1200 MW (Peak Capacity). Bold text labels "Peak
-    Load", "Intermediate", and "Base" are positioned directly on the chart within
-    their respective regions. The title reads "Load Duration Curve (Total Energy:
-    7.3 TWh) · line-load-duration · pygal · pyplots.ai". X-axis: "Hours of Year (ranked
-    by demand)" from 0 to 8760. Y-axis: "Power Demand (MW)" from 0 to ~1,350 MW. A
-    six-entry legend at the bottom lists all series with descriptive labels including
-    hour ranges and MW values. Subtle dashed horizontal grid lines are present.'
+  - '"Base Load" region annotation uses palette color #4467A3 (blue) as fill color
+    on the dark-blue base load region in dark mode — reduced text-to-fill contrast;
+    using the INK token (#F0EFE8) for region label text in dark mode would improve
+    legibility'
+  - Dashed capacity reference lines use stroke-width=4 on a 3200px canvas — slightly
+    thin against the semi-transparent 0.55-opacity filled regions; increasing to stroke-width=6
+    or 8 would improve their visual prominence
+  - Six-entry bottom legend is somewhat compact; consider shortening label text (e.g.
+    "Peak (0–1314 hrs)" instead of full form) or a horizontal single-row arrangement
+    to reduce density
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface.
+      Chrome: Title "Load Duration Curve · line-load-duration · python · pygal · anyplot.ai" is fully readable in dark ink at the top. Y-axis label "Power Demand (MW)" and X-axis label "Hours of Year (ranked by demand)" are clearly visible. Tick labels (200, 400, …, 1200 MW on Y; 0, 1000, …, 8760 on X) are readable. Subtle horizontal Y-grid lines present.
+      Data: Three filled regions in canonical Imprint order — green (#009E73) peak load (0–1314 hrs), lavender (#C475FD) intermediate (1314–5256 hrs), blue (#4467A3) base load (5256–8760 hrs), all at 55% opacity. Three dashed horizontal capacity reference lines: ochre (#BD8233) base capacity at 800 MW, matte red (#AE3030) intermediate at 1000 MW, cyan (#2ABCCD) peak at 1200 MW. Region labels ("Peak Load", "Intermediate", "Base Load") appear as bold text with cream halo strokes on the respective fills. "Annual Energy: 7.3 TWh" annotation in upper right. Six-entry legend in two rows at bottom.
+      Legibility verdict: PASS — all text elements are readable against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface.
+      Chrome: Title, axis labels, tick labels all adapt to light text on dark background — fully readable. Y-grid lines are subtle. "Annual Energy: 7.3 TWh" annotation is in light ink and readable in upper right.
+      Data: Imprint palette data colors are identical to light render — green, lavender, blue filled regions and ochre/red/cyan dashed lines maintain same hex values. The 55% opacity fills blend differently over the dark background (slightly darker appearance) but no palette violation — underlying colors are correct. Region labels use the same palette colors as fill text with a dark (#1A1A17) halo stroke. "Peak Load" (green) and "Intermediate" (lavender) labels are clearly readable. "Base Load" (blue text on dark blue fill) has marginally reduced contrast but remains legible due to the bold weight and halo stroke.
+      Legibility verdict: PASS — all text elements are readable. Minor note: "Base Load" label contrast could be improved in dark mode (blue on dark blue), but the halo stroke makes it legible.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -45,40 +60,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=50, label=36, major_label=32,
-          legend=30). All text readable.
+        comment: 'All font sizes explicitly set; title, axis labels, and tick labels
+          readable in both themes. Minor: "Base Load" annotation (blue text on dark
+          blue fill) has slightly reduced contrast in dark mode, but halo stroke keeps
+          it legible.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Legend well-spaced, labels clear.
+        comment: No overlapping text or data elements; legend with 6 entries in 2
+          rows fits cleanly.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Peak and Intermediate regions visible. Base Load narrow. Capacity
-          dashed lines subtle.
+        passed: true
+        comment: Three filled regions clearly visible; three dashed capacity lines
+          are distinct but stroke-width=4 is slightly thin on a 3200px canvas against
+          the semi-transparent fills.
       - id: VQ-04
         name: Color Accessibility
         score: 2
-        max: 4
-        passed: false
-        comment: Red and green as primary region colors is a red-green colorblind
-          issue.
+        max: 2
+        passed: true
+        comment: Imprint palette; no red-green sole-signal pairs; CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization with appropriate margins.
+        comment: Canvas 3200x1800 correct; good margin configuration; bottom legend
+          is slightly compact with 6 entries but does not cut off data area severely.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units on both axes.
+        comment: Y-axis 'Power Demand (MW)' with units; X-axis 'Hours of Year (ranked
+          by demand)'; title uses correct {Descriptive} · {spec-id} · python · pygal
+          · anyplot.ai format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green); 6 series in canonical Imprint
+          order; backgrounds #FAF8F1 light / #1A1A17 dark; chrome adapts correctly
+          in both renders.'
     design_excellence:
       score: 12
       max: 20
@@ -88,22 +117,28 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom palette, custom font family, styled dashed lines. Above defaults.
+        comment: 'Above defaults: intentional three-region color hierarchy, 55% opacity
+          for depth, SVG halo annotations, dashed capacity lines with distinct palette
+          colors. Not quite publication-ready (pygal chrome limits full control) but
+          clearly designed.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: White background, subtle dashed grid, x-guides hidden, custom margins.
+        comment: Y-only grid; font family specified; generous margins configured;
+          inherent pygal SVG frame chrome cannot be fully removed vs matplotlib-class
+          control.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear visual hierarchy with region labels, capacity tiers, and total
-          energy annotation.
+        comment: Three-region segmentation with direct labels guides viewer through
+          peak/intermediate/base load story; capacity reference lines add engineering
+          context; total energy annotation quantifies the area under the curve.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -111,48 +146,58 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct load duration curve with fill, monotonically decreasing.
+        comment: Correct monotonically decreasing load duration curve with filled
+          regions.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: All features present. On-chart labels could be more prominent.
+        comment: 'All required: three shaded load regions, horizontal dashed capacity
+          tiers with labels, direct region labels on plot, total energy annotation.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=ranked hours, Y=power demand. Correct mapping.
+        comment: X-axis hours 0-8760 ranked by demand; Y-axis power in MW; peak ~1200
+          MW, base ~400 MW; all 8760 data points covered (downsampled for SVG performance).
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows required format with total energy. Legend labels descriptive.
+        comment: Title 'Load Duration Curve · line-load-duration · python · pygal
+          · anyplot.ai' correct; legend labels are descriptive with hour ranges and
+          MW values.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows all three load regions with realistic proportions.
+        comment: 'Shows all load duration curve features: monotone descending curve,
+          three regional fills, capacity tier annotations, area-under-curve energy
+          calculation.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mid-sized utility load profile. Neutral energy domain. Plausible
-          values.
+        comment: Mid-sized utility with realistic peak 1200 MW, base 400 MW; seasonal
+          + daily load model; 7.3 TWh annual energy is plausible for a utility of
+          this scale.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 8760 hours, 400-1200 MW, 7.3 TWh. All realistic.
+        comment: Engineering-realistic MW values; Y-axis 0-1350 MW; X-axis 0-8760
+          hours; load factor and regional proportions (15% peak, 45% intermediate,
+          40% base) are domain-appropriate.
     code_quality:
       score: 10
       max: 10
@@ -162,31 +207,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow. No functions or classes.
+        comment: Minimal helper functions (_sx, _sy, _ann) strictly required for SVG
+          post-processing; otherwise flat linear flow (imports → data → style → chart
+          → render → annotate → save).
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set; deterministic synthetic data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, pygal, Style.'
+        comment: All five imports (os, cairosvg, numpy, pygal, Style) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized with pragmatic downsampling and clean boundary logic.
+        comment: SVG post-processing is the correct pygal approach for text annotations;
+          appropriate complexity for the task; no over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png. Uses current API including np.trapezoid.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current pygal 3.1.0
+          API.
     library_mastery:
       score: 7
       max: 10
@@ -196,25 +245,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of pygal.Line with per-series fill, Style system, stroke_style,
-          value_formatter.
+        comment: Correct use of pygal.Line with fill=True, multi-series approach,
+          Style object for all theme tokens, custom x_labels, value_formatter, legend_at_bottom.
+          Above default usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: SVG-native rendering, dual HTML+PNG export, per-series fill/stroke
-          overrides.
-  verdict: REJECTED
+        comment: SVG post-processing for text annotations leverages pygal's SVG output
+          format; HTML interactive output is pygal's primary differentiator; multi-filled-series
+          segmentation is a distinctive pygal line chart technique.
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - cairosvg
   techniques:
+  - annotations
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - sorting
+  dataprep: []
   styling:
   - alpha-blending
-  - grid-styling

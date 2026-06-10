@@ -1,0 +1,247 @@
+library: muix
+language: javascript
+specification_id: line-load-duration
+created: '2026-06-10T05:01:55Z'
+updated: '2026-06-10T05:22:36Z'
+generated_by: claude-sonnet
+workflow_run: 27254155899
+issue: 4586
+language_version: 22.22.3
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/javascript/muix/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'All spec requirements fully implemented: three shaded load regions, capacity
+    reference lines, direct band labels, and total energy annotation.'
+  - Correct Imprint palette in canonical order; both themes render accurately with
+    no dark-on-dark failures.
+  - Deterministic synthetic data with a realistic power-law LDC curvature.
+  - ChartsReferenceLine used natively, demonstrating knowledge of MUI X reference-line
+    API.
+  - Right margin intentionally sized (130 px) to accommodate reference-line label
+    text without clipping.
+  weaknesses:
+  - Dashed grid lines (strokeDasharray 4 3) deviate from style-guide recommendation
+    of solid thin lines at 15-25% opacity; replace with solid horizontal grid lines.
+  - toPixel() helper function adds a KISS violation; could be inlined or replaced
+    with MUI X SVG text primitives.
+  - Title fontsize 22 px produces ~40% title width for this 51-char spec-id; bumping
+    to 24-26 px would bring it closer to the 50-70% target range.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light surface
+      Chrome: Title "line-load-duration · javascript · muix · anyplot.ai" in dark text, clearly readable. Axis labels "Hours in a Year (sorted by descending load)" and "Power Demand (MW)" readable. Tick labels at 13px, readable. Reference-line labels on right edge, small but legible. Legend at top right, readable.
+      Data: Stacked area chart with three bands — base load (brand green #009E73, bottom, flat at 400 MW), intermediate load (lavender #C475FD, middle), peak load (blue #4467A3, top, tapering to zero ~hour 2500). Two dashed horizontal reference lines at 400 MW and 800 MW. Direct band labels ("Base Load", "Intermediate", "Peak Load") centered in each region. Footer: "Total annual energy consumption: 7.75 TWh".
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface
+      Chrome: Title and all axis labels appear in light-colored text, clearly readable against the dark surface. Band labels, reference line labels, legend, and footer all legible. No dark-on-dark failures observed.
+      Data: Data colors identical to light render — green base, lavender intermediate, blue peak. Imprint palette data colors unchanged across themes as required. Reference lines and band labels still visible.
+      Legibility verdict: PASS — all text clearly readable against the near-black background; no dark-on-dark issues.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title at ~40% width is slightly under
+          50% lower bound for shorter titles but not overflow-worthy
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Band labels, reference labels, and legend occupy separate spatial
+          zones
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Stacked area fills clearly differentiated; fillOpacity 0.82 appropriate
+          for 8760-point density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette with clear luminance contrast between bands
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; generous right margin accommodates reference
+          labels; footer uses space efficiently
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: Hours in a Year (sorted by descending load); Y: Power Demand
+          (MW) — both with units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #C475FD, third #4467A3; backgrounds
+          #FAF8F1 light / #1A1A17 dark; data colors identical across themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: Imprint palette, strokeWidth:0 for pure area fills,
+          fillOpacity 0.82, direct band labels in data space, custom margins — thoughtful
+          but not FiveThirtyEight-level'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good: area transparency, reduced axis-line/tick opacity (0.3), horizontal-only
+          grid. Dashed grid deviates from style-guide solid-lines recommendation.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Stacked bands communicate three load regimes; reference lines support
+          generation-mix narrative; direct labels guide viewer; total energy adds
+          quantitative context
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Stacked area with monotonically decreasing envelope — correct LDC
+          representation with shaded regions
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Three shaded regions, two capacity reference lines (400/800 MW),
+          direct band annotations, total energy footer
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: rank-ordered hours 0-8759; Y: MW 0-1280; stacking correctly decomposes
+          load'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: line-load-duration · javascript · muix · anyplot.ai; legend
+          labels include MW thresholds'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all LDC features: monotonic decrease, steep peak region, gradual
+          transition, flat base tail, three regime decomposition'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Mid-sized utility power systems planning scenario; neutral and realistic
+          domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1200 MW peak / 400 MW base realistic for mid-sized utility; power-law
+          curvature (0.65) authentic; 7.75 TWh total consistent with average load
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Has toPixel() helper function beyond required React component; minor
+          KISS deviation but necessary for overlay positioning
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: pure mathematical formula, no RNG'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: LineChart and ChartsReferenceLine — both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean React component, appropriate complexity, no fake UI elements
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct default-export component pattern; harness owns PNG/HTML output
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: skipAnimation, slotProps.legend, sx with MUI class selectors, window.ANYPLOT_TOKENS/SIZE,
+          default-export component pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: ChartsReferenceLine (MUI X-specific), area series stack property,
+          sx targeting MuiLineElement-root / MuiAreaElement-root / MuiChartsGrid-line
+          internal class names
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
