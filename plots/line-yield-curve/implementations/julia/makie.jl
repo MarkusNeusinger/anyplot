@@ -82,7 +82,21 @@ ax = Axis(
 )
 
 # Inversion shading (amber warning zone where short-term yields exceed long-term)
-band!(ax, inv_x, inv_lower, inv_upper; color = (ANYPLOT_AMBER, 0.25))
+band!(ax, inv_x, inv_lower, inv_upper; color = (ANYPLOT_AMBER, 0.30))
+
+# Inversion zone label (inside the amber band, between inv_lower and inv_upper at 7Y)
+text!(ax, [7.0], [4.55];
+    text      = ["Inverted zone"],
+    color     = ANYPLOT_AMBER,
+    fontsize  = 11,
+    align     = (:center, :center))
+
+# Jan 2021 near-zero annotation in the empty band between the two clusters
+text!(ax, [2.5], [2.2];
+    text      = ["COVID-era near-zero rates"],
+    color     = INK_SOFT,
+    fontsize  = 10,
+    align     = (:left, :center))
 
 # Yield curves
 scatterlines!(ax, maturity_years, yields_jan2021;
