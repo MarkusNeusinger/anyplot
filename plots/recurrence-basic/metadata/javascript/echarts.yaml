@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: recurrence-basic
 created: '2026-06-10T03:05:39Z'
-updated: '2026-06-10T03:14:09Z'
+updated: '2026-06-10T03:26:41Z'
 generated_by: claude-sonnet
 workflow_run: 27250022654
 issue: 4592
@@ -12,134 +12,116 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/recurrenc
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/javascript/echarts/plot-dark.html
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance: binary threshold recurrence plot with time-delay embedding
-    (Takens), Euclidean distance, square canvas, correct axis labeling'
-  - Deterministic Lorenz attractor data generation with burn-in and standard parameters
-    (σ=10, ρ=28, β=8/3) — scientifically correct and realistic
-  - 'Full Imprint palette compliance: first series uses #009E73, transparent background
-    surfaces theme-adaptive pageBg, all chrome tokens wired correctly'
-  - All font sizes explicitly set (title 22px, axis names 16px, tick labels 13px)
-    — readable in both themes with no clipping or overlap
-  - 'Clean KISS code structure: linear flow, well-placed scientific comments (Takens
-    theorem, Lorenz params), no extraneous abstraction'
-  - 'Theme adaptation is correct: t.ink for title, t.inkSoft for axis labels/ticks
-    — no dark-on-dark failures in dark render'
+  - 'Complete spec compliance: time-delay embedding (Takens'' theorem), Euclidean
+    distance, symmetric matrix, main diagonal all correctly implemented'
+  - Physically correct Lorenz attractor with canonical parameters (sigma=10, rho=28,
+    beta=8/3) and proper 300-step burn-in period
+  - Correct imprint_seq palette (green=recurrent/near, blue=distant) — semantically
+    meaningful and brand-compliant continuous colormap
+  - Both themes render cleanly with proper chrome adaptation; no legibility failures
+    in either light or dark render
+  - 'Clean minimal design: axis lines, axis ticks, and split lines all hidden; heatmap
+    fills the square canvas without clutter'
+  - Fully deterministic and reproducible — fixed initial conditions, no RNG, pure
+    numerical Lorenz integration
   weaknesses:
-  - 'DE-01 DEFAULT (4/8): The plot looks like a well-configured ECharts heatmap with
-    no exceptional design choices beyond the mandatory palette. Consider whether the
-    axis lines themselves should be removed entirely (leaving only the data matrix)
-    or whether a subtle outer border could frame the matrix more elegantly'
-  - 'DE-03 LOW (2/6): No visual hierarchy or data storytelling. The spec explicitly
-    mentions the main diagonal indicates determinism and block structures signal regime
-    changes — these insights should be made visible. Consider: (a) lowering epsilon
-    from 12% to 8-9% of maxDist so the main diagonal stands out as a distinct line
-    rather than merging into large blobs, OR (b) drawing a contrasting overlay line
-    along i==j after the heatmap, OR (c) adding a brief annotation naming the large
-    central recurrence cluster as the ''chaotic attractor nucleus'''
-  - 'DQ-01 SUBTLE (5/6): The main diagonal (i==j, always recurrent) is mathematically
-    present in the data but visually blends into the large central blob around time
-    140-160. A real recurrence plot should show a clear continuous diagonal line from
-    (0,0) to (N,N). Reduce epsilon to ~8% of maxDist to sharpen the diagonal and make
-    shorter-time diagonal lines more distinct'
-  - 'LM-02 MODERATE (2/5): The implementation uses progressive:0 and emphasis.disabled
-    but does not leverage ECharts'' more distinctive capabilities. Consider using
-    a visualMap component to show continuous normalized distances (instead of binary),
-    which would use the imprint_seq colormap (t.seq) and produce a richer, more informative
-    recurrence distance matrix'
+  - 'Colorbar labels (''Far''/''Near'') use fontSize: 12 which is slightly small at
+    2400x2400 canvas — increase to 14-15 for better legibility'
+  - 'DE-03 is modest: no annotation or emphasis element guides the viewer to the most
+    interesting structural features (main diagonal, block transitions) — a brief subtitle
+    or small annotation would lift storytelling'
+  - LM-02 is solid but not exceptional; no use of ECharts-specific enhancements such
+    as advanced visualMap itemStyle beyond the minimal inRange color stops
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — correct, not pure white
-      Chrome: Title "recurrence-basic · javascript · echarts · anyplot.ai" in dark bold text, centered, spanning ~60-65% of canvas width — fully readable. Both axes labeled "Time Index" in medium-weight dark gray — readable. Tick labels (0, 50, 100, 150, 200, 250) in dark gray on both axes — readable and not overlapping (interval=49 prevents crowding).
-      Data: Brand green (#009E73) recurrence cells on warm off-white background. The Lorenz attractor pattern is clearly visible: diagonal-trending clusters, a large dense recurrence blob centered around time index 140-160 on both axes (characteristic chaotic attractor nucleus), scattered diagonal bands indicating deterministic recurrence, and isolated cluster patches. The main diagonal runs from (0,0) to (299,299) but is visually merged into the central blob and not distinctly visible as a standalone line.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no dark-on-dark issues, no overflow or clipping.
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "recurrence-basic · javascript · echarts · anyplot.ai" centered, dark text, fully readable. Both "Time Index" axis labels (x and y) clearly legible. Tick labels at 0, 50, 100, 150, 200, 250 on both axes — dark text, readable. Colorbar "Far"/"Near" labels visible but slightly small (fontSize: 12).
+      Data: imprint_seq colormap — brand green (#009E73) for near/recurrent states, blue (#4467A3) for far/distant states. 300x300 pairwise distance matrix of Lorenz attractor x-component via time-delay embedding. Clear block structures and diagonal bands visible. Main diagonal (distance=0) present as bright-green band.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17) — correct, not pure black
-      Chrome: Title and axis labels rendered in light gray/off-white text — all readable against the dark background. No dark-on-dark failures observed. Tick labels in light gray (t.inkSoft) — fully legible.
-      Data: Brand green (#009E73) cells are identical to the light render — same pattern, same color, only the background and chrome flipped. The green stands out well against the dark background with excellent contrast.
-      Legibility verdict: PASS — all text is clearly readable against the dark background. No "dark text on dark background" failures. Data colors are identical to the light render as required.
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title, axis labels, tick labels, and colorbar labels all rendered in light tones against the dark background. No dark-on-dark failures observed. All text is clearly readable.
+      Data: Identical color pattern to light render — same green-to-blue imprint_seq encoding. Data colors are theme-independent as required. Brand green #009E73 clearly visible as the "Near" anchor of the color scale.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis names 16px, tick
-          labels 13px). Well-proportioned in both renders.
+        comment: 'Title, axis labels, and tick labels all readable in both themes.
+          Colorbar Far/Near labels (fontSize: 12) slightly small but legible.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. interval:49 prevents tick-label crowding.
+        comment: No text collisions; colorbar does not overlap heatmap area.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 'Heatmap cells clearly visible in both themes. Brand green #009E73
-          has excellent contrast on both backgrounds.'
+        comment: All 300x300 heatmap cells render correctly; green-to-blue contrast
+          is clear.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand-green color on neutral backgrounds — CVD-safe, high
-          contrast.
+        comment: imprint_seq (green to blue) is CVD-safe; no red-green-only encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square orientation correct for recurrence matrix. Good margins (left:90,
-          right:18, top:76, bottom:82). Canvas utilization excellent.
+        comment: Square canvas, canvas gate passed, adequate margins, nothing clipped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes labeled 'Time Index'. Title follows exact required format.
+        comment: Both axes labeled Time Index; title correctly formatted.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First (only) series uses t.palette[0]=#009E73. Background transparent
-          (surfaces pageBg). All chrome tokens correctly applied. Identical data colors
-          in both renders.
+        comment: Uses t.seq (imprint_seq) for continuous data. Background transparent.
+          Chrome adapts between themes.
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured ECharts heatmap. Correct palette usage and layout,
-          but no exceptional design choices beyond the mandatory Imprint palette.
+        passed: true
+        comment: Correct imprint_seq palette, semantically appropriate encoding, clean
+          typography, domain sophistication in data generation.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Grid removed, axis ticks removed, clean composition. Good baseline
-          refinement but no extra polish.
+        passed: true
+        comment: Axis lines, axis ticks, split lines all explicitly hidden. Clean
+          minimal heatmap design.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Data is displayed accurately but without emphasis. The main diagonal
-          (determinism indicator) and large recurrence cluster (attractor nucleus)
-          are scientifically significant but unnamed and not visually distinguished.
+        comment: Near/Far colorbar labels provide semantic orientation. Lorenz dynamics
+          create meaningful patterns. No additional annotations or focal-point emphasis.
     spec_compliance:
       score: 15
       max: 15
@@ -149,55 +131,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Binary recurrence plot implemented as a heatmap. Square canvas. Both
-          axes represent time indices.
+        comment: Distance-based recurrence matrix; continuous-distance variant explicitly
+          permitted by spec.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Binary threshold (epsilon=12% maxDist), Euclidean distance, time-delay
-          embedding (Takens, DELAY=8), main diagonal included, 300 time steps.
+        comment: Time-delay embedding (Takens DELAY=8, 2D state space), Euclidean
+          distance, symmetric matrix, main diagonal present (distance=0), square aspect
+          ratio.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Both X and Y axes represent time indices. Symmetric matrix. Equal
-          axis scales.
+        comment: Both axes map to time index 0-299; color maps to normalized distance.
+          300 time steps within 200-1000 recommended range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'recurrence-basic · javascript · echarts · anyplot.ai'.
-          No legend appropriate for binary single-color plot.
+        comment: Title is 'recurrence-basic · javascript · echarts · anyplot.ai';
+          colorbar labels Near/Far match semantic intent.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows chaotic structure, diagonal patterns, block structures. Main
-          diagonal is present but visually blends into the central blob. Epsilon at
-          12% maxDist is slightly too high — diagonal not distinctly visible.
+        comment: Main diagonal, block structures (regime changes), deterministic diagonal
+          bands, symmetric matrix all present.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Lorenz attractor with standard parameters (σ=10, ρ=28, β=8/3) — canonical
-          example of deterministic chaos, scientifically accurate and relevant.
+        comment: Lorenz attractor with canonical parameters (sigma=10, rho=28, beta=8/3)
+          and proper 300-step burn-in.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 300 time steps (within spec range 200-1000), 300-step burn-in, DELAY=8,
-          dt=0.02 — all scientifically appropriate for Lorenz dynamics.
+        comment: 300 time steps, DELAY=8 embedding delay, Float32Array for 90000-cell
+          matrix.
     code_quality:
       score: 10
       max: 10
@@ -207,37 +189,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: burn-in → data generation → distance matrix → threshold
-          → setOption. No functions/classes.'
+        comment: Flat procedural script; no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic Lorenz computation with fixed initial conditions
-          and parameters.
+        comment: 'Deterministic: fixed initial conditions (lx=1.0, ly=0.0, lz=0.0),
+          no RNG.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only window.ANYPLOT_TOKENS and echarts global used — both necessary.
+        comment: No imports; uses only globals (echarts, window.ANYPLOT_TOKENS).
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-commented (Takens theorem, Lorenz parameters, burn-in purpose).
-          Appropriate complexity. Float32Array for performance. No over-engineering.
+        comment: Float32Array for performance on 90k elements; clear variable naming.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct echarts.init pattern, animation:false, no explicit size/DPR.
-          Harness handles PNG+HTML output.
+        comment: Follows harness contract correctly; no explicit file writes.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -245,25 +224,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic ECharts heatmap with category axes for matrix visualization.
-          emphasis.disabled and progressive:0 show ECharts knowledge. Clean setOption
-          call.
+        comment: heatmap series, visualMap for continuous color, category axes, progressive:0
+          for full render, emphasis.disabled for static output.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Uses progressive:0 and emphasis.disabled (ECharts-specific). The
-          category-axis heatmap pattern for a matrix is a natural ECharts approach.
-          But no visualMap component, no continuous coloring, no use of t.seq for
-          distance visualization.
-  verdict: REJECTED
+        comment: ECharts visualMap with inRange color for continuous data; proper
+          [col,row,value] heatmap format; progressive rendering control. Solid but
+          not highly advanced.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
+  - colorbar
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
-  dataprep: []
-  styling: []
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
+  - minimal-chrome
