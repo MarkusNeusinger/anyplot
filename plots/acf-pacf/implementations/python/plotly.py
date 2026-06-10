@@ -1,15 +1,33 @@
-""" pyplots.ai
+""" anyplot.ai
 acf-pacf: Autocorrelation and Partial Autocorrelation (ACF/PACF) Plot
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-14
+Library: plotly 6.8.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-06-10
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 
-# Data — simulate monthly retail sales with AR(2) structure
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint palette — position 1 for significant lags
+BRAND = "#009E73"
+
+# Confidence band fill/border (INK_MUTED at low opacity)
+band_fill = "rgba(107,106,99,0.12)" if THEME == "light" else "rgba(168,167,159,0.12)"
+band_border = "rgba(107,106,99,0.40)" if THEME == "light" else "rgba(168,167,159,0.40)"
+
+# Data — monthly retail sales AR(2) process
 np.random.seed(42)
 n_obs = 200
 ar1_coeff, ar2_coeff = 0.7, -0.3
@@ -45,14 +63,19 @@ lags_acf = np.arange(0, n_lags + 1)
 lags_pacf = np.arange(1, n_lags + 1)
 pacf_plot = pacf_values[1:]
 
-# Classify significant lags
 acf_significant = np.abs(acf_values) > conf_bound
 pacf_significant = np.abs(pacf_plot) > conf_bound
 
-# Colors
-sig_color = "#E8590C"
-nonsig_color = "#94A3B8"
-band_color = "rgba(148, 163, 184, 0.15)"
+# Build stem coords using None separators (one trace per class, not per stem)
+acf_sig_x, acf_sig_y, acf_nsig_x, acf_nsig_y = [], [], [], []
+for lag, val, sig in zip(lags_acf, acf_values, acf_significant, strict=False):
+    (acf_sig_x if sig else acf_nsig_x).extend([int(lag), int(lag), None])
+    (acf_sig_y if sig else acf_nsig_y).extend([0, float(val), None])
+
+pacf_sig_x, pacf_sig_y, pacf_nsig_x, pacf_nsig_y = [], [], [], []
+for lag, val, sig in zip(lags_pacf, pacf_plot, pacf_significant, strict=False):
+    (pacf_sig_x if sig else pacf_nsig_x).extend([int(lag), int(lag), None])
+    (pacf_sig_y if sig else pacf_nsig_y).extend([0, float(val), None])
 
 # Plot
 fig = make_subplots(
@@ -65,77 +88,95 @@ fig = make_subplots(
 
 hover_tpl = "Lag %{x}<br>Correlation: %{y:.3f}<extra></extra>"
 
-# ACF stems and markers (row 1)
-for i, lag in enumerate(lags_acf):
-    color = sig_color if acf_significant[i] else nonsig_color
+# ACF stems (row 1)
+if acf_sig_x:
     fig.add_trace(
         go.Scatter(
-            x=[lag, lag],
-            y=[0, acf_values[i]],
+            x=acf_sig_x,
+            y=acf_sig_y,
             mode="lines",
-            line={"color": color, "width": 3},
+            line={"color": BRAND, "width": 3},
             showlegend=False,
             hoverinfo="skip",
         ),
         row=1,
         col=1,
     )
-
-sig_mask_acf = acf_significant
-if np.any(sig_mask_acf):
+if acf_nsig_x:
     fig.add_trace(
         go.Scatter(
-            x=lags_acf[sig_mask_acf],
-            y=acf_values[sig_mask_acf],
-            mode="markers",
-            marker={"size": 13, "color": sig_color, "line": {"color": "white", "width": 2}},
-            name="Significant",
-            showlegend=True,
-            hovertemplate=hover_tpl,
-        ),
-        row=1,
-        col=1,
-    )
-if np.any(~sig_mask_acf):
-    fig.add_trace(
-        go.Scatter(
-            x=lags_acf[~sig_mask_acf],
-            y=acf_values[~sig_mask_acf],
-            mode="markers",
-            marker={"size": 10, "color": nonsig_color, "line": {"color": "white", "width": 1.5}},
-            name="Non-significant",
-            showlegend=True,
-            hovertemplate=hover_tpl,
-        ),
-        row=1,
-        col=1,
-    )
-
-# PACF stems and markers (row 2)
-for i, lag in enumerate(lags_pacf):
-    color = sig_color if pacf_significant[i] else nonsig_color
-    fig.add_trace(
-        go.Scatter(
-            x=[lag, lag],
-            y=[0, pacf_plot[i]],
+            x=acf_nsig_x,
+            y=acf_nsig_y,
             mode="lines",
-            line={"color": color, "width": 3},
+            line={"color": INK_MUTED, "width": 2},
+            showlegend=False,
+            hoverinfo="skip",
+        ),
+        row=1,
+        col=1,
+    )
+if np.any(acf_significant):
+    fig.add_trace(
+        go.Scatter(
+            x=lags_acf[acf_significant],
+            y=acf_values[acf_significant],
+            mode="markers",
+            name="Significant",
+            marker={"size": 12, "color": BRAND, "line": {"color": PAGE_BG, "width": 2}},
+            hovertemplate=hover_tpl,
+        ),
+        row=1,
+        col=1,
+    )
+if np.any(~acf_significant):
+    fig.add_trace(
+        go.Scatter(
+            x=lags_acf[~acf_significant],
+            y=acf_values[~acf_significant],
+            mode="markers",
+            name="Non-significant",
+            marker={"size": 9, "color": INK_MUTED, "line": {"color": PAGE_BG, "width": 1.5}},
+            hovertemplate=hover_tpl,
+        ),
+        row=1,
+        col=1,
+    )
+
+# PACF stems (row 2)
+if pacf_sig_x:
+    fig.add_trace(
+        go.Scatter(
+            x=pacf_sig_x,
+            y=pacf_sig_y,
+            mode="lines",
+            line={"color": BRAND, "width": 3},
             showlegend=False,
             hoverinfo="skip",
         ),
         row=2,
         col=1,
     )
-
+if pacf_nsig_x:
+    fig.add_trace(
+        go.Scatter(
+            x=pacf_nsig_x,
+            y=pacf_nsig_y,
+            mode="lines",
+            line={"color": INK_MUTED, "width": 2},
+            showlegend=False,
+            hoverinfo="skip",
+        ),
+        row=2,
+        col=1,
+    )
 if np.any(pacf_significant):
     fig.add_trace(
         go.Scatter(
             x=lags_pacf[pacf_significant],
             y=pacf_plot[pacf_significant],
             mode="markers",
-            marker={"size": 13, "color": sig_color, "line": {"color": "white", "width": 2}},
-            name="Significant",
             showlegend=False,
+            marker={"size": 12, "color": BRAND, "line": {"color": PAGE_BG, "width": 2}},
             hovertemplate=hover_tpl,
         ),
         row=2,
@@ -147,16 +188,15 @@ if np.any(~pacf_significant):
             x=lags_pacf[~pacf_significant],
             y=pacf_plot[~pacf_significant],
             mode="markers",
-            marker={"size": 10, "color": nonsig_color, "line": {"color": "white", "width": 1.5}},
-            name="Non-significant",
             showlegend=False,
+            marker={"size": 9, "color": INK_MUTED, "line": {"color": PAGE_BG, "width": 1.5}},
             hovertemplate=hover_tpl,
         ),
         row=2,
         col=1,
     )
 
-# Shaded confidence bands and zero lines for both subplots
+# Confidence bands and zero baselines
 for row in [1, 2]:
     x_start, x_end = (0, n_lags) if row == 1 else (1, n_lags)
     fig.add_trace(
@@ -164,8 +204,8 @@ for row in [1, 2]:
             x=[x_start, x_end, x_end, x_start],
             y=[conf_bound, conf_bound, -conf_bound, -conf_bound],
             fill="toself",
-            fillcolor=band_color,
-            line={"color": "rgba(148, 163, 184, 0.4)", "width": 1, "dash": "dash"},
+            fillcolor=band_fill,
+            line={"color": band_border, "width": 1, "dash": "dash"},
             showlegend=(row == 1),
             name="95% Confidence",
             hoverinfo="skip",
@@ -178,7 +218,7 @@ for row in [1, 2]:
             x=[x_start, x_end],
             y=[0, 0],
             mode="lines",
-            line={"color": "#CBD5E1", "width": 1},
+            line={"color": INK_SOFT, "width": 1.5},
             showlegend=False,
             hoverinfo="skip",
         ),
@@ -186,61 +226,74 @@ for row in [1, 2]:
         col=1,
     )
 
+# Title (length-adaptive font size)
+title_str = "Monthly Retail Sales · acf-pacf · python · plotly · anyplot.ai"
+subtitle = "AR(2) Process (n=200, φ₁=0.7, φ₂=−0.3)"
+n = len(title_str)
+title_size = round(16 * (67 / n)) if n > 67 else 16
+
 # Layout
 fig.update_layout(
+    autosize=False,
+    width=800,
+    height=450,
+    template="plotly_white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    margin={"l": 90, "r": 50, "t": 130, "b": 100},
     title={
-        "text": (
-            "acf-pacf · plotly · pyplots.ai"
-            "<br><sup style='color:#64748B;font-size:16px'>"
-            "Monthly Retail Sales — AR(2) Process (n=200, φ₁=0.7, φ₂=−0.3)"
-            "</sup>"
-        ),
-        "font": {"size": 28, "color": "#1E293B"},
+        "text": f"{title_str}<br><sup style='color:{INK_SOFT};font-size:11px'>{subtitle}</sup>",
+        "font": {"size": title_size, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
-    template="plotly_white",
-    plot_bgcolor="#FAFBFC",
-    paper_bgcolor="#FFFFFF",
-    margin={"l": 90, "r": 50, "t": 120, "b": 70},
-    height=900,
-    width=1600,
-    legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1, "font": {"size": 16}},
-    hoverlabel={"font_size": 16},
+    legend={
+        "orientation": "h",
+        "yanchor": "top",
+        "y": -0.18,
+        "xanchor": "center",
+        "x": 0.5,
+        "font": {"size": 10, "color": INK_SOFT},
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
+    },
+    hoverlabel={"font_size": 13},
 )
 
-# Style subplot titles
+# Subplot title font
 for annotation in fig.layout.annotations:
-    annotation.font = {"size": 20, "color": "#475569"}
+    annotation.font = {"size": 13, "color": INK_SOFT}
 
 # Y-axes
 for row, label in [(1, "ACF (correlation)"), (2, "PACF (correlation)")]:
     fig.update_yaxes(
         title_text=label,
-        title_font={"size": 22, "color": "#334155"},
-        tickfont={"size": 18, "color": "#64748B"},
+        title_font={"size": 12, "color": INK},
+        tickfont={"size": 10, "color": INK_SOFT},
         showgrid=True,
-        gridcolor="rgba(0,0,0,0.05)",
-        gridwidth=1,
+        gridcolor=GRID,
         zeroline=False,
+        showline=True,
+        linecolor=INK_SOFT,
         row=row,
         col=1,
     )
 
-# X-axes
+# X-axes (global then row-specific)
 fig.update_xaxes(
-    title_text="Lag (periods)",
-    title_font={"size": 22, "color": "#334155"},
-    tickfont={"size": 18, "color": "#64748B"},
+    tickfont={"size": 10, "color": INK_SOFT},
+    linecolor=INK_SOFT,
     showgrid=False,
-    row=2,
-    col=1,
+    showspikes=True,
+    spikecolor=INK_MUTED,
+    spikethickness=1,
+    spikedash="dot",
+    spikemode="across",
 )
-fig.update_xaxes(showgrid=False, tickfont={"size": 18, "color": "#64748B"}, row=1, col=1)
-
-# Spike lines for cross-subplot reference
-fig.update_xaxes(showspikes=True, spikecolor="#94A3B8", spikethickness=1, spikedash="dot", spikemode="across")
+fig.update_xaxes(showline=True, title_text="Lag (periods)", title_font={"size": 12, "color": INK}, row=2, col=1)
+fig.update_xaxes(showline=False, row=1, col=1)
 
 # Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
