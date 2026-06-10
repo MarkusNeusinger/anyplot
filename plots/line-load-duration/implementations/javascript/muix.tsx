@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-load-duration: Load Duration Curve for Energy Systems
 // Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 85/100 | Created: 2026-06-10
+// Quality: 88/100 | Created: 2026-06-10
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 
