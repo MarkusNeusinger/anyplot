@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 funnel-meta-analysis: Meta-Analysis Funnel Plot for Publication Bias
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-10
@@ -20,7 +20,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Imprint palette — first categorical series always #009E73
 IMPRINT_GREEN = "#009E73"  # position 1 — high-precision studies
-IMPRINT_BLUE = "#4467A3"  # position 3 — low-precision studies
+IMPRINT_LAVENDER = "#C475FD"  # position 2 — low-precision studies
 
 # Data: 15 RCTs comparing drug vs placebo (log odds ratios)
 np.random.seed(42)
@@ -70,7 +70,7 @@ custom_style = Style(
         INK,  # 2: Pooled effect line (structural reference)
         INK_SOFT,  # 3: Null effect line (structural reference)
         IMPRINT_GREEN,  # 4: High-precision studies — Imprint position 1
-        IMPRINT_BLUE,  # 5: Low-precision studies — Imprint position 3
+        IMPRINT_LAVENDER,  # 5: Low-precision studies — Imprint position 2
     ),
     title_font_size=66,
     label_font_size=56,
@@ -100,7 +100,7 @@ chart = pygal.XY(
     stroke=False,
     show_y_guides=True,
     show_x_guides=False,
-    margin=80,
+    margin=120,
     inverse_y_axis=True,
     truncate_legend=-1,
     x_value_formatter=lambda x: f"{x:.2f}",
