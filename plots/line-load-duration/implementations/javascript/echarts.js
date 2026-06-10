@@ -4,6 +4,25 @@
 // Quality: 87/100 | Created: 2026-06-10
 
 const t = window.ANYPLOT_TOKENS;
+const isDark = window.ANYPLOT_THEME === "dark";
+
+// Convert hex palette entry to rgba string
+function hexAlpha(hex, alpha) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// Region fill alpha — higher in dark mode to preserve contrast
+const fillAlpha = isDark ? 0.20 : 0.13;
+const peakFill  = hexAlpha(t.palette[4], fillAlpha);   // matte red #AE3030
+const interFill = hexAlpha(t.palette[3], fillAlpha);   // ochre     #BD8233
+const baseFill  = hexAlpha(t.palette[2], fillAlpha);   // blue      #4467A3
+
+const peakLabel  = hexAlpha(t.palette[4], 0.85);
+const interLabel = hexAlpha(t.palette[3], 0.85);
+const baseLabel  = hexAlpha(t.palette[2], 0.85);
 
 // Deterministic LCG random number generator (seed 42)
 let _s = 42;
@@ -91,7 +110,7 @@ chart.setOption({
             label: {
                 show: true,
                 position: "end",
-                fontSize: 12,
+                fontSize: 13,
                 color: t.inkSoft,
                 backgroundColor: t.elevatedBg,
                 padding: [3, 7],
@@ -107,15 +126,15 @@ chart.setOption({
             silent: true,
             data: [
                 [
-                    { xAxis: 0,       itemStyle: { color: "rgba(174,48,48,0.12)"  } },
+                    { xAxis: 0,        itemStyle: { color: peakFill  } },
                     { xAxis: peakEnd }
                 ],
                 [
-                    { xAxis: peakEnd,  itemStyle: { color: "rgba(189,130,51,0.11)" } },
+                    { xAxis: peakEnd,  itemStyle: { color: interFill } },
                     { xAxis: interEnd }
                 ],
                 [
-                    { xAxis: interEnd, itemStyle: { color: "rgba(68,103,163,0.13)" } },
+                    { xAxis: interEnd, itemStyle: { color: baseFill  } },
                     { xAxis: 8760 }
                 ],
             ]
@@ -127,19 +146,19 @@ chart.setOption({
             type: "text",
             left: "9%",
             top: "48%",
-            style: { text: "Peak Load",    fontSize: 15, fontWeight: "bold", fill: "rgba(174,48,48,0.85)"  }
+            style: { text: "Peak Load",    fontSize: 15, fontWeight: "bold", fill: peakLabel  }
         },
         {
             type: "text",
             left: "38%",
             top: "58%",
-            style: { text: "Intermediate", fontSize: 15, fontWeight: "bold", fill: "rgba(189,130,51,0.85)" }
+            style: { text: "Intermediate", fontSize: 15, fontWeight: "bold", fill: interLabel }
         },
         {
             type: "text",
             left: "73%",
             top: "73%",
-            style: { text: "Base Load",    fontSize: 15, fontWeight: "bold", fill: "rgba(68,103,163,0.85)" }
+            style: { text: "Base Load",    fontSize: 15, fontWeight: "bold", fill: baseLabel  }
         },
         {
             type: "text",
