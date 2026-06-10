@@ -1,7 +1,7 @@
 // anyplot.ai
 // acf-pacf: Autocorrelation and Partial Autocorrelation (ACF/PACF) Plot
 // Library: echarts 5.5.1 | JavaScript 22.22.3
-// Quality: 87/100 | Created: 2026-06-10
+// Quality: 88/100 | Created: 2026-06-10
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
