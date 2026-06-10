@@ -6,11 +6,11 @@ import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 
-import { LibraryCard } from 'src/components/LibraryCard';
 import { SectionHeader } from 'src/components/SectionHeader';
 import { LIB_TO_FRAMEWORK, LIBRARIES } from 'src/constants';
 import { useAnalytics, useAppData } from 'src/hooks';
 import { paths } from 'src/routes/paths';
+import { LibraryCard } from 'src/sections/libraries/LibraryCard';
 import { colors, textStyle, typography } from 'src/theme';
 
 // Framework filter (per library-expansion.md §6: "all JavaScript libs" vs

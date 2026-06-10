@@ -42,15 +42,15 @@ vi.mock('react-helmet-async', () => ({
   ),
 }));
 
-vi.mock('src/components/FilterBar', () => ({
+vi.mock('src/sections/plots-gallery/FilterBar', () => ({
   FilterBar: () => <div data-testid="filterbar">FilterBar</div>,
 }));
 
-vi.mock('src/components/ImagesGrid', () => ({
+vi.mock('src/sections/plots-gallery/ImagesGrid', () => ({
   ImagesGrid: () => <div data-testid="images-grid">ImagesGrid</div>,
 }));
 
-vi.mock('src/components/Footer', () => ({
+vi.mock('src/layouts/Footer', () => ({
   Footer: () => <div data-testid="footer">Footer</div>,
 }));
 

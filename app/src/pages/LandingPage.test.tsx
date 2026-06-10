@@ -49,11 +49,11 @@ vi.mock('react-router-dom', async () => {
   return { ...actual, useNavigate: () => navigate };
 });
 
-vi.mock('src/components/HeroSection', () => ({
+vi.mock('src/sections/landing/HeroSection', () => ({
   HeroSection: () => <div data-testid="hero" />,
 }));
 
-vi.mock('src/components/NumbersStrip', () => ({
+vi.mock('src/sections/landing/NumbersStrip', () => ({
   NumbersStrip: () => <div data-testid="numbers" />,
 }));
 
