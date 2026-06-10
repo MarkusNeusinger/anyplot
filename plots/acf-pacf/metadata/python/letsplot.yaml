@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: acf-pacf
 created: '2026-03-14T22:20:10Z'
-updated: '2026-06-10T02:00:13Z'
+updated: '2026-06-10T02:17:06Z'
 generated_by: claude-sonnet
 workflow_run: 27247559914
 issue: 4663
@@ -12,56 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/python/letsplot/plot-dark.html
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - Correct ACF/PACF stem plot with two stacked facet panels sharing the lag x-axis
-  - Effective color encoding of significant vs non-significant lags using brand green
-    (#009E73) and muted gray — adds analytical storytelling without annotation
-  - All five theme-adaptive chrome tokens correctly applied in both light and dark
-    renders — no dark-on-dark failures
-  - Seasonal pattern at lag 12 is clearly visible in ACF panel, demonstrating realistic
-    airline-style time series data
-  - 95% CI dashed lines, lag-0 ACF=1.0, PACF starting from lag 1 — all spec requirements
-    met
-  - 'Perfect code structure: KISS, seed set, clean imports, correct plot-{THEME}.png
-    + HTML output files'
-  - Statsmodels ACF/PACF computation is idiomatic and correct for this plot type
+  - Excellent significant/non-significant visual hierarchy using both color (#009E73
+    vs INK_MUTED) and size (thick/thin stems, large/small points) — immediately guides
+    the eye to significant autocorrelations
+  - 'Full Imprint theme-adaptive chrome: all colors correctly flip between light (#FAF8F1)
+    and dark (#1A1A17) backgrounds; no dark-on-dark or light-on-light failures'
+  - Correct faceted ACF/PACF layout via facet_wrap with bold strip labels; ACF includes
+    lag 0, PACF starts from lag 1 per spec
+  - 95% CI shown via both dashed horizontal lines and a subtle geom_ribbon band —
+    dual encoding adds clarity
+  - Seasonal autocorrelation pattern clearly visible with periodic green spikes at
+    lags 12, 24, 36 in ACF panel
+  - 'Idiomatic lets-plot grammar with comprehensive theme customization: x-grid removed,
+    y-grid only, panel border removed, elevated strip backgrounds'
+  - Generates both PNG and HTML output; seed-reproducible synthetic data with realistic
+    airline-style seasonality
   weaknesses:
-  - 'Design sophistication (DE-01): plot is a well-configured default — the color-significance
-    encoding is a good touch but not enough to elevate beyond 4/8. Consider intentional
-    visual hierarchy beyond just color coding: e.g., slightly bolder stem lines for
-    significant lags, or a subtle shaded confidence band instead of just dashed lines.'
-  - 'Visual refinement (DE-02): all four panel borders are visible on each facet panel
-    (default lets-plot facet style). Remove the top and right panel borders by adding
-    panel_border=element_blank() or equivalent to give an L-shaped frame consistent
-    with the anyplot style guide.'
-  - 'Library mastery (LM-02): the implementation uses grammar-of-graphics patterns
-    available in any ggplot-style library. A more distinctive lets-plot approach could
-    leverage lets-plot''s built-in theme presets or its unique faceting options to
-    set it apart from a plotnine equivalent.'
-  - Strip text (facet labels) at size=12 is slightly small relative to the panel content
-    — increasing to size=14 would make the 'ACF' / 'PACF' panel headers more prominent
-    and readable at mobile widths.
-  - The y-axis label 'Correlation' is correct but the spec explicitly calls for labeling
-    each y-axis as 'ACF' and 'PACF' respectively. The facet strips currently carry
-    those labels; individual y-axis labels per panel would satisfy the spec more precisely
-    — though this is a minor point since the facet design is standard practice.
+  - 'Confidence band (geom_ribbon fill=INK_SOFT alpha=0.1) is nearly invisible in
+    the dark render — INK_SOFT is #B8B7B0 on #1A1A17 background at 10% opacity fades
+    almost completely; consider alpha=0.15 or a theme-adaptive fill that remains perceptible
+    in dark mode'
+  - Y-axis label is 'Correlation' instead of per-panel 'ACF'/'PACF' as specified in
+    the spec — compensated by bold facet strip labels but technically diverges from
+    spec wording
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — correct Imprint light surface.
-      Chrome: Title "acf-pacf · python · letsplot · anyplot.ai" centered in dark ink (#1A1A17), clearly readable. Axis label "Correlation" on the left and "Lag" on the bottom visible in dark ink. Tick labels in INK_SOFT dark gray, all legible. Facet strip labels "ACF" and "PACF" in bold dark ink on slightly elevated strip background. Legend at bottom with "Significant" (green) and "Non-significant" (gray) items on elevated background box.
-      Data: Significant lags rendered as brand green (#009E73) vertical segments with circular endpoints. Non-significant lags in muted gray (#6B6A63). Dashed horizontal confidence interval lines at ±1.96/sqrt(200) ≈ ±0.139. Zero baseline as solid line. Lag 0 in ACF shows correlation=1.0. PACF starts at lag 1. Seasonal pattern at multiples of lag 12 clearly visible in ACF.
-      Legibility verdict: PASS — all text clearly readable against light background, no light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct Imprint surface color, not pure white
+      Chrome: Title "acf-pacf · python · letsplot · anyplot.ai" centered in dark ink, readable; axis label "Correlation" (y) and "Lag" (x) in dark ink; tick labels in INK_SOFT gray; facet strip labels "ACF" and "PACF" in bold dark text on slightly elevated off-white (#FFFDF6) strip with subtle border — all clearly readable against light background
+      Data: Two stacked panels — ACF (top) and PACF (bottom). Significant stems in brand green (#009E73) with size=2.0 stems and size=3.5 points; non-significant stems in muted gray with thinner lines and smaller points. 95% CI shown as dashed gray horizontal lines with subtle gray shaded ribbon between. Lag 0 in ACF reaches 1.0 (gray/non-significant by code design). Seasonal pattern clearly visible with green spikes at lags 12, 24, 36. PACF shows significant lags at 1-4 and 6-8, then scattered significant lags.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black consistent with #1A1A17 — correct Imprint dark surface.
-      Chrome: Title in light cream (#F0EFE8), clearly readable. Axis labels and tick labels in light gray (INK_SOFT dark mode = #B8B7B0), readable against dark background. Facet strip labels "ACF" and "PACF" appear in light text on dark elevated strip background (#242420) — no dark-on-dark failure. Legend text in light gray, legend box with dark elevated background.
-      Data: Data colors are identical to light render — brand green significant stems, muted gray non-significant stems. Confidence interval dashed lines in lighter gray (INK_MUTED dark mode). The data layer is theme-independent as required.
-      Legibility verdict: PASS — all text readable against dark background. No dark-on-dark failures detected.
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface, not pure black
+      Chrome: Title visible in light (#F0EFE8) text; axis labels and tick labels rendered in appropriate light tones (INK/INK_SOFT dark-theme values); facet strip labels "ACF" and "PACF" bold and readable in light text on dark elevated strip (#242420); no dark-on-dark text failures observed; confidence interval dashed lines visible as lighter dashes
+      Data: Data colors (green #009E73, muted gray) are identical to light render — only chrome elements flip. The CI ribbon (fill=INK_SOFT/#B8B7B0 alpha=0.1) is very faint but marginally visible. All stems and points retain their green/gray distinction. Legend at bottom shows "Significant" (green dot) and "Non-significant" (gray dot) with readable light text.
+      Legibility verdict: PASS — all text readable; minor note: CI ribbon is nearly invisible in dark mode due to low alpha, but this is a minor refinement point rather than a legibility failure
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -69,84 +60,77 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=16, axis=12, ticks=10, strip=12).
-          Well-readable in both themes. Minor deduction: strip labels at size=12 could
-          be slightly larger for panel prominence at mobile scale.'
+        comment: 'Font sizes explicitly set (title=16, axis=12, text=10). All text
+          readable in both themes. Strip labels bold and clear. Minor: CI ribbon very
+          faint in dark render.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps detected in either render across 36+ lag stems in
-          two panels.
+        comment: No overlapping text or data elements. 36 lags well-spaced.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Segment size=1.5 and point size=2.5 at scale=4 render clearly. Significant
-          stems prominent in green; near-zero non-significant stems are intentionally
-          small, correctly representing small correlations.
+        comment: Significant stems clearly visible; non-significant stems appropriately
+          subtle. CI band nearly invisible in dark render (alpha=0.1 too low).
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green (#009E73) vs muted gray — distinguishable under CVD and by
-          luminance. No red-green sole-signal issue.
+        comment: Imprint palette used. Green/gray is CVD-safe combination.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Two equal-height panels fill canvas well. Legend at bottom appropriately
-          sized. No overflow or content cutoff.
+        comment: ggsize(800,450) × scale=4 = 3200×1800 correct. Two-panel layout well-proportioned.
+          No overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''Lag'', Y-axis: ''Correlation'', panel labels: ''ACF''
-          / ''PACF''. Title format correct.'
+        comment: Title correct format. Lag/Correlation labels descriptive. ACF/PACF
+          panel labels prominent.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series in brand green #009E73. Non-significant uses INK_MUTED
-          (muted semantic anchor — correct). Backgrounds #FAF8F1 / #1A1A17. Chrome
-          fully theme-adaptive in both renders.'
+        comment: 'First series #009E73. INK_MUTED for non-significant (theme-adaptive
+          muted anchor). Backgrounds #FAF8F1/#1A1A17. Both themes correct.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured library default. The significance color encoding
-          is a thoughtful touch above minimum, but not publication-level sophistication.
-          No exceptional typography choices, hierarchical emphasis beyond color, or
-          visual elegance beyond clean defaults.
+        passed: true
+        comment: 'Intentional visual hierarchy: significant/non-significant differentiated
+          by both color and size. Confidence band adds context. Clean faceted design
+          with elevated strip backgrounds. Above default (4) due to deliberate design
+          thinking.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Subtle y-axis-only grid is good. X-axis grid removed. Minor grid
-          removed. However, all 4 panel borders are visible (default facet style)
-          — the spec/style guide prefers L-shaped or minimal spines. Legend box is
-          styled. Whitespace is adequate but not generous.
+        passed: true
+        comment: theme_minimal() base. X-grid removed, y-grid only. Panel border removed.
+          Elevated strip backgrounds with subtle border. Clean axis lines.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: The significant/non-significant color encoding actively guides the
-          viewer to analytically meaningful lags — this is genuine visual storytelling
-          for ACF/PACF. The seasonal pattern at lag 12 is clearly visible. Good, though
-          not exceptional (no annotation of the seasonal period or AR order insight).
+        passed: true
+        comment: Significant/non-significant color coding immediately guides viewer.
+          Seasonal periodicity in ACF clearly visible at lags 12, 24, 36. PACF AR
+          structure visible. No annotations to interpret patterns.
     spec_compliance:
       score: 15
       max: 15
@@ -156,29 +140,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ACF/PACF stem plot with geom_segment + geom_point in two
-          stacked facet panels.
+        comment: Correct ACF/PACF stem plot using geom_segment + geom_point from zero
+          baseline.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: ACF top, PACF bottom, shared x-axis, stem lines from zero, 95% CI
-          dashed lines, lag 0 included in ACF, PACF from lag 1, 36 lags shown.
+        comment: ACF top, PACF bottom. Stems from zero. 95% CI dashed lines. Lag 0
+          in ACF (value=1.0). PACF starts lag 1. 36 lags shown.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=lag, Y=correlation value. ACF includes lag 0=1.0. PACF starts from
-          lag 1.
+        comment: X=lag, Y=correlation. All data within axis bounds.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''acf-pacf · python · letsplot · anyplot.ai'' — correct format.
-          Legend: ''Significant'' / ''Non-significant'' — descriptive and accurate.'
+        comment: 'Title: ''acf-pacf · python · letsplot · anyplot.ai''. Legend: Significant/Non-significant.'
     data_quality:
       score: 15
       max: 15
@@ -188,23 +170,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both ACF and PACF, significant and non-significant lags, seasonal
-          structure, trend component. ACF decay pattern and PACF cutoff both visible.
+        comment: Shows ACF and PACF with seasonal patterns, CI, significance highlighting
+          — full feature coverage.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly airline-style passenger series with trend and seasonality
-          — realistic and neutral domain. Code comment explains the context.
+        comment: Airline-style monthly series with trend and seasonality — real-world
+          plausible and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 observations (within spec's 100-500 recommendation), 36 lags
-          (within 30-40 recommendation), seasonal period 12 appropriate for monthly
-          data.
+        comment: 200 obs, 36 lags. Correlation in [-1,1]. Values and scale appropriate.
     code_quality:
       score: 10
       max: 10
@@ -214,56 +194,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports → Tokens → Data → Plot → Save structure. No functions
-          or classes.
+        comment: No functions or classes. Clean flat structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imported symbols are used: os, numpy, pandas, all lets_plot
-          elements, statsmodels acf/pacf.'
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic dataframe-based approach. Appropriate complexity
-          for the visualization.
+        comment: Clean separation of sig/nonsig dataframes for visual hierarchy. Good
+          use of geom_ribbon for CI band.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with correct API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html.
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Expertly uses grammar-of-graphics: ggplot + geom_* + facet_wrap
-          + scale_color_manual + theme with element_* + ggsave. Idiomatic lets-plot
-          approach.'
+        comment: facet_wrap for multi-panel, geom_segment+geom_point for lollipop
+          stems, geom_ribbon for CI band, scale_color_manual for categories, full
+          theme customization. Very idiomatic grammar-of-graphics.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: HTML export (interactive output) and faceting with custom strip theming
-          are somewhat distinctive, but the overall pattern closely mirrors what ggplot2/plotnine
-          would produce. No feature that's meaningfully unique to lets-plot's Python
-          implementation.
-  verdict: REJECTED
+        passed: true
+        comment: HTML export via ggsave is a distinctive lets-plot feature. Multi-layer
+          composition with separate significant/non-significant datasets is leveraged
+          well. No use of lets-plot-specific interactive features beyond HTML export.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - statsmodels
@@ -276,4 +253,4 @@ impl_tags:
   dataprep:
   - time-series
   styling:
-  - grid-styling
+  - alpha-blending
