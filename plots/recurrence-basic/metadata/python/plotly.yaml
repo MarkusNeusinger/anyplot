@@ -1,43 +1,56 @@
 library: plotly
+language: python
 specification_id: recurrence-basic
 created: '2026-03-14T22:46:47Z'
-updated: '2026-03-14T23:17:57Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23097948232
+updated: '2026-06-10T03:01:27Z'
+generated_by: claude-sonnet
+workflow_run: 27249256819
 issue: 4592
-python_version: 3.14.3
-library_version: 6.6.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/plotly/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 6.8.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/python/plotly/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Scientifically rigorous Lorenz attractor with proper ODE integration and Takens
-    time-delay embedding
-  - Excellent layout with marginal time series panel providing crucial context
-  - Cohesive design with custom blue palette, serif typography, and clean backgrounds
-  - 'Good use of plotly-specific features: hover tooltips, HTML export, constrained
-    square axes'
-  - Clean well-structured code with appropriate complexity
+  - Correct recurrence plot using binary threshold on Lorenz attractor with time-delay
+    embedding (Takens theorem)
+  - 'Excellent data storytelling: two-panel layout with marginal time series provides
+    temporal context for the recurrence matrix'
+  - Full Imprint palette compliance — BRAND green for time series, Imprint blue for
+    recurrent points, correct theme backgrounds in both renders
+  - 'Spec fully satisfied: main diagonal present, square aspect ratio enforced via
+    scaleanchor, axes correctly labeled as time indices'
+  - Deterministic ODE data (Lorenz with fixed ICs) — no seed needed; the subtitle
+    explains the diagonal lines to the viewer
   weaknesses:
-  - 3-stop colorscale on binary data creates slight visual ambiguity at cell boundaries
-  - Initial Lorenz transient creates a dense block in upper-left that slightly dominates
-    the view
-  image_description: The plot displays a recurrence matrix for a Lorenz attractor
-    x-component as a heatmap in deep blue tones on a light background. The main panel
-    is square with axes labeled "Time Index (i)" (x-axis) and "Time Index (j)" (y-axis,
-    reversed), spanning 0-500. The main diagonal is clearly visible as a continuous
-    dark line. Diagonal line segments parallel to the main diagonal reveal deterministic
-    chaotic dynamics, while block-like structures (notably a dense region in the upper-left
-    for indices 0-100) indicate regime behavior during the initial transient. Above
-    the recurrence matrix, a smaller marginal panel shows the original Lorenz x(t)
-    time series as a blue line with a light blue fill-to-zero, oscillating between
-    roughly -15 and 20. The title reads "recurrence-basic · plotly · pyplots.ai" with
-    a subtitle explaining the diagonal lines. Typography uses Palatino/Georgia serif.
-    The overall palette is a cohesive blue monochrome scheme on an off-white background.
+  - 'BLUE data color changes between themes (#4467A3 light → #6688CC dark), violating
+    the Imprint rule that data-color positions must be identical across themes — use
+    a fixed #4467A3 in both and rely on the theme-correct background to provide sufficient
+    contrast'
+  - Constrained square matrix leaves noticeable empty space to the right of the recurrence
+    panel; consider using scaleratio and domain constraints to distribute whitespace
+    more evenly or switch to a tighter margin
+  - 'LM-02 below ceiling: no rangeslider, animation frame, or cross-filter interactivity
+    that would demonstrate Plotly-distinctive features beyond subplots + heatmap'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Layout: Two-panel figure. Top panel (15% height) shows Lorenz x(t) time series; bottom panel (85% height) shows the 490×490 binary recurrence matrix.
+      Chrome: Title "recurrence-basic · python · plotly · anyplot.ai" in dark INK (#1A1A17) at 16px; subtitle "Lorenz attractor recurrence plot — diagonal lines reveal deterministic chaotic dynamics" in INK_SOFT at 12px. Both fully readable. Axis labels "Time Index (i)", "Time Index (j)", "x(t)" in dark INK at 12px. Tick labels in INK_SOFT at 10px.
+      Data: Time series rendered in BRAND green (#009E73) with a light green fill (rgba fill). Recurrent points in Imprint blue (#4467A3) against the off-white background — non-recurrent cells blend with background (PAGE_BG). Clear diagonal line structure visible, indicating Lorenz determinism. Block structures visible.
+      Legibility verdict: PASS — all text is clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title and subtitle appear in light INK (#F0EFE8) — fully readable. Axis labels in F0EFE8. Tick labels in INK_SOFT (#B8B7B0). No dark-on-dark failures detected.
+      Data: Time series still in BRAND green (#009E73) — identical to light render. Recurrent points appear in a lightened blue (#6688CC rather than #4467A3 used in light) — the BLUE token changes between themes, which VIOLATES the Imprint rule that data colors must be identical across themes. The structure of the recurrence matrix is still clearly visible.
+      Legibility verdict: PASS — all text is readable against the dark background. However, the heatmap data color changes between themes (VQ-07 partial deduction).
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -45,64 +58,82 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=28, labels=22, ticks=18). Subtitle
-          slightly small but readable.
+        comment: 'All font sizes explicitly set (title=16px, axis labels=12px, ticks=10px).
+          All text readable in both themes. Minor: Plotly auto-range pads x-axis to
+          -100 which is slightly confusing for time indices'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements anywhere.
+        comment: No text or data overlaps in either render
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Recurrence patterns clearly visible. 3-stop colorscale on binary
-          data creates slight ambiguity at boundaries.
+        comment: Recurrent points clearly visible as blue. Time series clearly visible
+          in green. Dense 490x490 matrix renders individual cells very small but overall
+          pattern is clear
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue monochromatic scheme is fully colorblind-safe.
+        comment: BRAND green and Imprint blue provide good contrast. CVD-safe Imprint
+          palette used
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Square format correct. Marginal panel makes excellent use of space.
+        comment: Square 2400x2400 canvas appropriate for symmetric recurrence plot.
+          Constrained square matrix leaves noticeable empty space to the right of
+          the matrix panel
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels. Time indices are unitless by nature.
+        comment: Title correct format. Axes labeled 'Time Index (i)', 'Time Index
+          (j)', 'x(t)' — all descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'BLUE data color changes between themes: #4467A3 (light) vs #6688CC
+          (dark). This violates the Imprint rule that data-color positions must be
+          identical across themes. Time series correctly uses #009E73 in both themes.
+          Backgrounds correct (#FAF8F1 / #1A1A17)'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom Palatino font, cohesive blue palette, off-white background,
-          marginal panel layout.
+        comment: Two-panel layout with marginal time series is sophisticated. Palatino
+          serif font adds elegance. Fill area and subtle alpha on time series. Clearly
+          above defaults but not FiveThirtyEight-level
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Grid removed, plotly_white template, clean backgrounds, generous
-          margins.
+        comment: No grid lines, clean composition. linecolor on axes is a subtle refinement.
+          Appropriate for enclosed heatmap grid (all 4 borders kept per style guide
+          exception). Generous margins
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Marginal time series provides crucial context. Subtitle explains
-          diagonal lines. Clear visual hierarchy.
+        comment: 'Two-panel layout explicitly tells a story: time series above contextualizes
+          the recurrence below. Subtitle guides viewer to the key insight (diagonal
+          lines = determinism). Good visual hierarchy'
     spec_compliance:
       score: 15
       max: 15
@@ -112,26 +143,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct binary recurrence matrix as heatmap.
+        comment: Correct recurrence plot with binary threshold matrix. Square symmetric
+          matrix with time indices on both axes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Main diagonal, binary threshold, time-delay embedding, dark-on-light,
-          square aspect.
+        comment: Binary recurrence matrix via Euclidean distance + threshold. Time-delay
+          embedding (Takens theorem, dim=3, delay=5). Main diagonal present. Square
+          with equal axis scales. Color-mapped (binary). Spec allows 'color-mapped
+          variant' which is implemented
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Both axes correctly show time indices with 1:1 aspect ratio.
+        comment: X = Time Index (i), Y = Time Index (j). Both axes show the same range
+          for the symmetric matrix
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No legend needed for single heatmap.
+        comment: Title is exactly 'recurrence-basic · python · plotly · anyplot.ai'.
+          No legend needed for binary heatmap
     data_quality:
       score: 14
       max: 15
@@ -141,21 +177,23 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows diagonal lines, block structures, off-diagonal recurrence.
-          Dense upper-left block from transient slightly dominates.
+        comment: Shows diagonal lines (determinism), block structures (regime changes).
+          Main diagonal present. Time series context adds coverage. Laminar state
+          vertical/horizontal lines less prominent
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Lorenz attractor is the canonical example from the specification.
+        comment: Lorenz attractor with canonical parameters (sigma=10, rho=28, beta=8/3).
+          Transient removed correctly. Highly relevant nonlinear dynamics context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 500 time points, embedding dim=3, delay=5, 15th percentile threshold
-          all appropriate.
+        comment: 500 time steps post-transient, 15th percentile threshold (~15% recurrence
+          rate), embedding dim=3 and delay=5 appropriate for Lorenz
     code_quality:
       score: 10
       max: 10
@@ -165,33 +203,38 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, embedding, plotting, save.'
+        comment: 'Linear structure: imports → data (ODE) → embedding → distance →
+          plot → save. No functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) and deterministic ODE integration.
+        comment: Deterministic ODE with fixed initial conditions [1.0, 1.0, 1.0].
+          No randomness, no seed needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: 'All imports used: os, sys, numpy, plotly.graph_objects, make_subplots,
+          scipy.integrate, scipy.spatial.distance'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity.
+        comment: Clean Pythonic code. sys.path fix for self-shadowing is necessary
+          and documented. No fake UI elements
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png (3600x3600) and plot.html. Current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Plotly API
+          used
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -199,13 +242,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Heatmap, go.Scatter, make_subplots, update methods.
+        comment: Correct use of make_subplots with shared_xaxes, go.Heatmap, go.Scatter.
+          scaleanchor/scaleratio/constrain for equal aspect ratio is an advanced idiomatic
+          pattern
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Hover templates, scaleanchor, make_subplots marginal, HTML export.
+        comment: Uses scaleanchor for enforced square aspect ratio (Plotly-distinctive),
+          subplots with shared axes, and interactive hovertemplate. No rangeslider,
+          animation or cross-filter that would push this higher
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -217,6 +264,8 @@ impl_tags:
   patterns:
   - data-generation
   - matrix-construction
-  dataprep: []
+  dataprep:
+  - interpolation
   styling:
   - custom-colormap
+  - alpha-blending

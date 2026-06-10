@@ -1,0 +1,248 @@
+library: makie
+language: julia
+specification_id: recurrence-basic
+created: '2026-06-10T03:01:46Z'
+updated: '2026-06-10T03:20:34Z'
+generated_by: claude-sonnet
+workflow_run: 27249813950
+issue: 4592
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - 'Strong spec compliance — all required features present: binary threshold recurrence
+    plot, Euclidean distance, 3D Lorenz state embedding, DataAspect() for square matrix'
+  - Excellent data choice — Lorenz attractor is the canonical example for recurrence
+    plots, showing clear diagonal determinism bands
+  - Full theme-adaptive chrome — all text colors, spines, axis elements properly flip
+    between light and dark renders
+  - Meaningful annotation with arrow guides the viewer to the key structural insight
+  - Custom cgrad([PAGE_BG, IMPRINT_PALETTE[1]]) is clever — non-recurrent background
+    blends into page surface, recurrent points use brand green
+  - 'Clean code: no wrappers, reproducible seed, no unused imports'
+  - DataAspect() and grid-off are precisely the right choices for a dense symmetric
+    heatmap
+  weaknesses:
+  - Annotation text at fontsize=11 is small (22 source px at px_per_unit=2); tertiary
+    text should be at least 12–13 to maintain readability at thumbnail sizes
+  - Design Excellence is solid but not exceptional — no typographic hierarchy beyond
+    defaults, no additional storytelling elements (e.g. a colorbar for the distance
+    variant or block annotations for regime changes)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "recurrence-basic · julia · makie · anyplot.ai" bold dark text, clearly readable. Axis labels "Time Index" (both X and Y) dark and legible. Tick labels 100–200–300–400–500 in INK_SOFT dark grey, readable. Annotation "Diagonal lines = determinism" with arrow in upper-left in small but legible dark grey text. Top/right spines removed; left/bottom spines in INK_SOFT. Grid disabled (appropriate for dense heatmap).
+      Data: Recurrence patches in Imprint brand green (#009E73) on cream background. Diagonal band patterns characteristic of Lorenz attractor clearly visible. Main diagonal and off-diagonal recurrence bands are prominent.
+      Legibility verdict: PASS — all text readable against light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light (#F0EFE8) bold text, readable. Axis labels "Time Index" in light color, legible. Tick labels in INK_SOFT light grey (#B8B7B0), readable and high-contrast against near-black background. Annotation "Diagonal lines = determinism" in light grey, readable. No dark-on-dark failures.
+      Data: Same brand green (#009E73) recurrence patches — identical to light render. Colors unchanged between themes as required.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title/axis labels/tick labels all clearly sized and readable in both
+          themes. Annotation text at fontsize=11 is slightly small for thumbnails.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps with data or other text. Annotation and arrow well-positioned.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Recurrence patches in brand green are clearly visible on both surfaces.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Binary single-color (green vs background) — highly accessible, no
+          CVD issues.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas (2400x2400) correct for symmetric matrix. DataAspect()
+          ensures perfect 1:1 proportions.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches required format. Both axes correctly labeled 'Time
+          Index'.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Background #FAF8F1/#1A1A17 correct. Recurrent color is Imprint position
+          1 (#009E73). Custom cgrad from page background to brand green is appropriate
+          for binary heatmap.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above-default: clean composition, DataAspect for perfect square
+          matrix, smart colormap (non-recurrent blends into background). No exceptional
+          typographic hierarchy beyond spec defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, grid disabled (correct for dense heatmap),
+          clean margins. Solid refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Arrow annotation guiding to diagonal structure adds genuine storytelling.
+          Lorenz attractor data shows clear recurrence patterns.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Binary recurrence plot implemented as heatmap with threshold-based
+          binary matrix.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Main diagonal present, Euclidean distance used, binary threshold
+          applied, DataAspect for square plot, both axes labeled as time indices,
+          500 steps within 200-1000 range.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Lorenz attractor x-component with full 3D state space embedding.
+          Symmetric matrix correctly represented.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'recurrence-basic · julia · makie · anyplot.ai' matches required
+          format. No legend needed for binary single-color plot.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows diagonal structure (determinism), off-diagonal patterns (recurrences),
+          characteristic Lorenz attractor block structures.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Lorenz attractor is the canonical example for recurrence plots in
+          nonlinear dynamics research.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 500 time steps after 1500-step transient. Threshold at 10th percentile
+          gives ~10% recurrence rate — standard practice.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean sequential script, no wrapper functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) present. Lorenz integration is deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All four imports (CairoMakie, Colors, ColorSchemes, Random) are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI. Clean idiomatic Julia. Distance loop is verbose but clear.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png. Uses modern `size` parameter (not deprecated
+          `resolution`).
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper heatmap!, DataAspect(), cgrad, text!, arrows! — all idiomatic
+          Makie. Uses modern size parameter.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: DataAspect() is distinctively Makie for ensuring square symmetric
+          matrix. arrows!() annotation system is a Makie-specific feature.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
