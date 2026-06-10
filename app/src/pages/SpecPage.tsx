@@ -16,8 +16,8 @@ import { useAnalytics, useCodeFetch } from 'src/hooks';
 import { useAppData } from 'src/hooks';
 import { ApiError, apiGet, apiUrl, endpoints } from 'src/lib/api';
 import { NotFoundPage } from 'src/pages/NotFoundPage';
+import { paths, specPath } from 'src/routes/paths';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
-import { specPath } from 'src/utils/paths';
 
 const SpecTabs = lazy(() => import('src/components/SpecTabs').then(m => ({ default: m.SpecTabs })));
 const SpecOverview = lazy(() =>
@@ -372,7 +372,7 @@ export function SpecPage() {
         </Typography>
         <Button
           component={Link}
-          to="/"
+          to={paths.home}
           startIcon={<ArrowBackIcon />}
           sx={{ color: colors.primary }}
         >

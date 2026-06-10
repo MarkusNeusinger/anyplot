@@ -6,6 +6,7 @@ import { PlotOfTheDayTerminal } from 'src/components/PlotOfTheDayTerminal';
 import { TypewriterText } from 'src/components/TypewriterText';
 import { useAnalytics } from 'src/hooks';
 import type { PlotOfTheDayData } from 'src/hooks/usePlotOfTheDay';
+import { paths } from 'src/routes/paths';
 import { colors, typography } from 'src/theme';
 
 interface HeroSectionProps {
@@ -170,11 +171,13 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
           }}
         >
           <PrimaryCta
-            to="/plots"
+            to={paths.plots}
             subject="plots"
             verb="browse"
             ariaLabel="Browse plots"
-            onClick={() => trackEvent('nav_click', { source: 'hero_cta_browse', target: '/plots' })}
+            onClick={() =>
+              trackEvent('nav_click', { source: 'hero_cta_browse', target: paths.plots })
+            }
           />
           <Box
             aria-hidden="true"
@@ -189,11 +192,11 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
           </Box>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
             <SecondaryLink
-              to="/mcp"
+              to={paths.mcp}
               subject="mcp"
               verb="connect"
               ariaLabel="Connect via MCP"
-              onClick={() => trackEvent('nav_click', { source: 'hero_mcp', target: '/mcp' })}
+              onClick={() => trackEvent('nav_click', { source: 'hero_mcp', target: paths.mcp })}
             />
             <SecondaryLink
               href="https://github.com/MarkusNeusinger/anyplot"

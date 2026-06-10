@@ -3,6 +3,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import Box from '@mui/material/Box';
 
 import { PaletteStrip } from 'src/components/PaletteStrip';
+import { paths } from 'src/routes/paths';
 import { colors, typography } from 'src/theme';
 
 export function ScienceNote() {
@@ -94,7 +95,7 @@ export function ScienceNote() {
 
         <Box
           component={RouterLink}
-          to="/palette"
+          to={paths.palette}
           sx={{
             display: 'inline-block',
             mt: 3,

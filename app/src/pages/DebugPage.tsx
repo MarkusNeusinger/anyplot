@@ -14,9 +14,9 @@ import { SectionHeader } from 'src/components/SectionHeader';
 import { DEBUG_API_URL, LIB_ABBREV, LIB_TO_LANG, LIBRARIES } from 'src/constants';
 import { useCopyCode } from 'src/hooks';
 import { fetchWithAuth } from 'src/lib/api';
+import { specPath } from 'src/routes/paths';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 import { buildClaudePrompt } from 'src/utils/claudePrompt';
-import { specPath } from 'src/utils/paths';
 
 // ============================================================================
 // Types

@@ -14,8 +14,8 @@ import { useAnalytics, useAppData } from 'src/hooks';
 import { type FeaturedImpl, useFeaturedSpecs } from 'src/hooks/useFeaturedSpecs';
 import { useTheme } from 'src/hooks/useLayoutContext';
 import { usePlotOfTheDay } from 'src/hooks/usePlotOfTheDay';
+import { paths, specPath } from 'src/routes/paths';
 import { colors, semanticColors, typography } from 'src/theme';
-import { specPath } from 'src/utils/paths';
 import { buildSrcSet, getFallbackSrc } from 'src/utils/responsiveImage';
 import { selectPreviewUrl } from 'src/utils/themedPreview';
 
@@ -31,8 +31,8 @@ export function LandingPage() {
   }, [trackPageview]);
 
   const handleLibraryClick = (lib: string) => {
-    trackEvent('nav_click', { source: 'library_card', target: '/plots', value: lib });
-    navigate(`/plots?lib=${encodeURIComponent(lib)}`);
+    trackEvent('nav_click', { source: 'library_card', target: paths.plots, value: lib });
+    navigate(paths.plotsFiltered('lib', lib));
   };
 
   return (
@@ -117,8 +117,10 @@ function MapSection({ specCount }: { specCount?: number }) {
 
         <Box
           component={RouterLink}
-          to="/map"
-          onClick={() => trackEvent('nav_click', { source: 'map_teaser_preview', target: '/map' })}
+          to={paths.map}
+          onClick={() =>
+            trackEvent('nav_click', { source: 'map_teaser_preview', target: paths.map })
+          }
           sx={{
             display: 'block',
             textDecoration: 'none',
@@ -475,8 +477,10 @@ function SpecsSection({
       {specCount != null && featured && featured.length < specCount && (
         <Box
           component={RouterLink}
-          to="/specs"
-          onClick={() => trackEvent('nav_click', { source: 'specs_more_link', target: '/specs' })}
+          to={paths.specs}
+          onClick={() =>
+            trackEvent('nav_click', { source: 'specs_more_link', target: paths.specs })
+          }
           sx={{
             display: 'inline-block',
             mt: 2.5,

@@ -30,6 +30,7 @@ export default defineConfig({
         'src/components/**/*.tsx',
         'src/pages/**/*.tsx',
         'src/constants/**/*.ts',
+        'src/routes/**/*.ts',
         'src/theme/**/*.ts',
         'src/types/**/*.ts',
       ],
