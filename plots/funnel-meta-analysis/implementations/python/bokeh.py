@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 funnel-meta-analysis: Meta-Analysis Funnel Plot for Publication Bias
 Library: bokeh 3.9.1 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-10
@@ -49,13 +49,14 @@ summary_effect = np.sum(weights * effect_sizes) / np.sum(weights)
 
 # Marker sizes proportional to study weight (inverse variance)
 normalized_weights = weights / weights.max()
-marker_sizes = 22 + normalized_weights * 30  # range 22–52 px
+marker_sizes = 14 + normalized_weights * 22  # range 14–36 px (tighter to reduce crowding)
 
-# Inside/outside funnel classification (semantic coloring)
+# Inside/outside funnel classification (semantic coloring + shape redundancy for CVD)
 expected_lower = summary_effect - 1.96 * std_errors
 expected_upper = summary_effect + 1.96 * std_errors
 outside_funnel = (effect_sizes < expected_lower) | (effect_sizes > expected_upper)
 marker_colors = np.where(outside_funnel, RED, BRAND)
+marker_types = np.where(outside_funnel, "diamond", "circle")
 
 # Funnel pseudo-95% confidence limits
 se_range = np.linspace(0, 0.55, 100)
@@ -74,6 +75,7 @@ source = ColumnDataSource(
         "marker_size": marker_sizes,
         "marker_color": marker_colors.tolist(),
         "status": ["Outside funnel" if o else "Inside funnel" for o in outside_funnel],
+        "marker_type": marker_types.tolist(),
     }
 )
 
@@ -97,11 +99,12 @@ p = figure(
 # Funnel confidence region (pseudo 95% CI shaded area)
 funnel_xs = np.concatenate([lower_limit, upper_limit[::-1]]).tolist()
 funnel_ys = np.concatenate([se_range, se_range[::-1]]).tolist()
+FUNNEL_ALPHA = 0.15 if THEME == "light" else 0.05  # lower alpha in dark avoids green-on-green contrast
 p.patch(
     funnel_xs,
     funnel_ys,
     fill_color=BRAND,
-    fill_alpha=0.10,
+    fill_alpha=FUNNEL_ALPHA,
     line_color=BRAND,
     line_alpha=0.45,
     line_width=2.5,
@@ -116,11 +119,12 @@ p.add_layout(
     Span(location=0, dimension="height", line_color=INK_SOFT, line_width=2.5, line_dash="dashed", line_alpha=0.70)
 )
 
-# Study scatter — sized by inverse-variance weight
+# Study scatter — sized by weight, shaped by funnel status (circle=inside, diamond=outside)
 scatter = p.scatter(
     x="effect_size",
     y="std_error",
     source=source,
+    marker="marker_type",
     size="marker_size",
     fill_alpha=0.80,
     fill_color="marker_color",
@@ -176,7 +180,7 @@ p.add_layout(
         x=-0.80,
         y=0.47,
         text=f"● Inside funnel ({n_studies - n_outside} studies)",
-        text_font_size="26pt",
+        text_font_size="30pt",
         text_color=BRAND,
         text_align="left",
         text_baseline="middle",
@@ -186,8 +190,8 @@ p.add_layout(
     Label(
         x=-0.80,
         y=0.52,
-        text=f"● Outside funnel ({n_outside} studies)",
-        text_font_size="26pt",
+        text=f"◆ Outside funnel ({n_outside} studies)",
+        text_font_size="30pt",
         text_color=RED,
         text_align="left",
         text_baseline="middle",
