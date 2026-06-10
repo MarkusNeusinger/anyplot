@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: acf-pacf
 created: '2026-03-14T22:18:48Z'
-updated: '2026-06-10T02:01:29Z'
+updated: '2026-06-10T02:12:27Z'
 generated_by: claude-sonnet
 workflow_run: 27247342539
 issue: 4663
@@ -12,49 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - Perfect Visual Quality — all font sizes explicitly set, no overlap, good element
-    visibility in both themes
-  - 'Semantic color encoding: brand green (#009E73) for significant lags, muted gray
-    for non-significant — creates instant visual hierarchy'
-  - Correct Imprint palette with full theme-adaptive chrome (title, ticks, grid, strip
-    labels) in both light and dark renders
-  - 'All spec-required features present: ACF top / PACF bottom, stem lines, 95% CI
-    dashed bounds, lag 0 in ACF, PACF from lag 1, 36 lags'
-  - Clean idiomatic plotnine grammar — facet_wrap with ordered categorical panel,
-    layer composition (geom_segment + geom_point + geom_hline), guides suppression
-  - Realistic monthly temperature data with clear seasonality (period-12 spikes in
-    ACF) and AR(1) structure (decaying early PACF)
-  - 'Semantic use of #AE3030 for confidence bounds — appropriate alert/threshold role
-    for matte red anchor'
+  - Full visual quality with all font sizes explicitly set and both themes rendering
+    cleanly — no dark-on-dark failures
+  - Semantic color coding distinguishes significant from non-significant lags immediately,
+    creating a clear visual hierarchy without a legend
+  - Seasonal period markers (vertical dotted lines at lags 12, 24, 36) enrich the
+    ACF panel with interpretive context beyond what the spec requires
+  - 'Perfect spec compliance: lag 0 in ACF only, PACF from lag 1, 95% CI dashed lines,
+    36 lags, shared x-axis via faceting'
+  - 'Idiomatic plotnine usage: facet_wrap with free_y scales, pd.Categorical for panel
+    ordering, panel-specific geom_vline with data= parameter'
   weaknesses:
-  - 'DE-01: Aesthetic sophistication sits at ''well-configured default'' level — title
-    uses weight=''regular'' and could be bold, no deliberate typographic hierarchy
-    between title vs strip vs tick labels beyond size differences; add plot_title=element_text(face=''bold'')
-    and consider a stronger weight for strip labels'
-  - 'DE-02: Visual refinement is good but not complete — panel_background matches
-    plot_background which is correct, but the strip_background=ELEVATED_BG makes a
-    subtle but unpolished contrast; consider making strip_background=PAGE_BG with
-    a bottom border line for cleaner separation, and tighten panel_spacing_y from
-    0.2 to ~0.1 to reduce gap between panels'
-  - 'DE-03: The significance coloring creates hierarchy but the storytelling could
-    be more intentional — the period-12 seasonal pattern in ACF (major spikes at lags
-    12, 24, 36) is the key feature of this data; a subtle annotation or different
-    emphasis on those lags would strengthen the narrative'
+  - 'DE-01 ceiling at 5/8: the design is intentional and above defaults but lacks
+    the visual polish that would push it to strong design — e.g., no custom typography
+    weight hierarchy beyond bold strip labels, no subtle annotation note about what
+    the seasonal markers represent'
+  - 'LM-02 at 3/5: the panel-specific geom_vline technique is distinctive, but the
+    overall approach remains close to what ggplot2 would produce; more plotnine-idiomatic
+    fine-tuning (e.g., explicit theme element_line for axis spines) could differentiate
+    it further'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface, no pure white.
-      Chrome: Title "acf-pacf · python · plotnine · anyplot.ai" at top in dark ink — readable. Strip labels "ACF" and "PACF" in bold dark ink — readable. X-axis label "Lag" in dark ink — readable. Tick labels (0, 6, 12…36 on x; values on y) in INK_SOFT gray — readable.
-      Data: ACF panel (top) shows lollipop stems from zero baseline; significant lags in brand green #009E73, non-significant in muted gray. Lag 0 rendered gray (by design — always 1.0, excluded from significance). Dashed red (#AE3030) confidence bounds at ±0.127. Strong periodic spikes at lags ~6, 12, 18, 24, 30, 36 reflecting seasonal period-12 and period-6 components. PACF panel (bottom) shows early significant green spikes (lags 1, 5, 6, 7) reflecting AR structure, remaining lags mostly gray within bounds.
-      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
+      Background: Warm off-white #FAF8F1 — not pure white, correct Imprint surface
+      Chrome: Title "acf-pacf · python · plotnine · anyplot.ai" in dark #1A1A17 bold at ~55% width; strip labels "ACF" / "PACF" bold and clear; axis tick labels in #4A4A44 (INK_SOFT); x-axis "Lag" label clearly readable — all dark text on light surface
+      Data: Significant lags in #009E73 brand green; non-significant in muted gray; confidence bounds as red (#AE3030) dashed horizontal lines; subtle dotted green verticals at lags 12/24/36 in ACF panel; lag 0 correctly at 1.0 and colored gray
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface, no pure black.
-      Chrome: Title in light #F0EFE8 — readable against dark background. Strip labels "ACF" / "PACF" in bold light ink — readable. X-axis label "Lag" in light ink — readable. Tick labels in #B8B7B0 secondary ink — readable. No dark-on-dark failures detected.
-      Data: Data colors identical to light render — significant lags in brand green #009E73, non-significant in adaptive muted gray. Dashed confidence bounds in #AE3030. The contrast between green lags and the dark background is strong and clear.
-      Legibility verdict: PASS — all text clearly readable against the warm near-black background. No dark-on-dark issues. Data colors unchanged from light render.
+      Background: Warm near-black #1A1A17 — not pure black, correct Imprint surface
+      Chrome: Title and strip labels in light cream #F0EFE8; tick labels and axis labels in light gray #B8B7B0 — all light text on dark surface; no dark-on-dark failures detected
+      Data: Colors identical to light render — #009E73 for significant lags, muted gray for non-significant, #AE3030 dashed confidence bounds; seasonal markers at same alpha; visually indistinguishable from light render in terms of data encoding
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -65,81 +56,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=12, axis_title_x=10, axis_text=8,
-          strip_text=10). Readable in both themes at full resolution and mobile width.
+        comment: All font sizes explicitly set (title=12, axis_title_x=10, strip_text=10,
+          axis_text=8); well-proportioned in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements — stems, points, labels, and confidence lines
-          all clearly separated.
+        comment: No overlapping text or data elements in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Segments size=1.2, points size=3.0 — well-adapted to 37-lag density.
-          Significant vs non-significant clearly distinguishable.
+        comment: Lollipop stems (size=1.2) and points (size=3.0) well-adapted to 36-lag
+          density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green (#009E73) vs muted gray — good luminance contrast, CVD-safe.
-          Red confidence bounds add redundant threshold signal.
+        comment: Green vs muted gray with adequate luminance separation; CVD-safe
+          via Imprint palette
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Two-panel layout fills 3200x1800 canvas proportionally. Panels balanced,
-          margins appropriate.
+        comment: Two-panel layout fills 3200x1800 canvas well; balanced margins; no
+          clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis 'Lag' descriptive. Y-axes labeled via strip labels 'ACF' and
-          'PACF' — effective for this faceted layout. Title correct format.
+        comment: X-axis Lag present; ACF/PACF strip labels per spec convention; correct
+          title format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Significant lags in #009E73 (first/only series). Non-significant
-          in theme-adaptive muted (INK_MUTED). Confidence bounds in #AE3030 semantic
-          red. Backgrounds #FAF8F1/#1A1A17 correct. Chrome adaptive in both themes.'
+        comment: 'Significant lags #009E73; semantic red #AE3030 for CI bounds; backgrounds
+          #FAF8F1/#1A1A17 correct; all chrome theme-adaptive'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: 'Well-configured above defaults — semantic color encoding for significance
-          is thoughtful. But lacks publication-ready polish: title is regular weight
-          (not bold), typographic hierarchy between title/strip/tick could be stronger,
-          no deliberate whitespace distribution.'
+        passed: true
+        comment: 'Above defaults: intentional semantic color coding, semantic red
+          for thresholds, seasonal period markers — deliberate design thinking'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: 'Good refinement: Y-only grid at 12% alpha, no x-grid, elevated strip
-          backgrounds, zero baseline hline. panel_spacing_y=0.2 creates some gap between
-          panels. Not fully polished — strip background creates subtle contrast against
-          panel background.'
+        passed: true
+        comment: X-axis grid removed, Y-axis grid subtle (size=0.2 alpha=0.12), strip
+          background matches panel, tight panel spacing, legend hidden
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Good visual hierarchy through significance coloring. The seasonal
-          period-12 pattern in ACF and AR(1) structure in PACF are clearly visible.
-          More intentional emphasis on key structural features would improve the narrative.
+        passed: true
+        comment: 'Clear narrative: seasonal autocorrelation at lags 12/24/36 and AR(1)
+          in PACF; significance coloring creates immediate visual hierarchy'
     spec_compliance:
       score: 15
       max: 15
@@ -149,30 +133,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ACF/PACF stem/lollipop plots in stacked subplots. Both panels
-          present.
+        comment: Correct ACF+PACF stem/lollipop in two vertically stacked subplots
+          with shared x-axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: ACF top, PACF bottom, shared x-axis, vertical stem
-          lines, 95% CI dashed bounds, lag 0 in ACF, PACF from lag 1, x=''Lag'', y=''ACF''/''PACF''
-          (strip labels), 36 lags.'
+        comment: Vertical stems from zero; 95% CI dashed lines; lag 0 in ACF only;
+          PACF from lag 1; 36 lags
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=lag (0-36), Y=correlation value. Both panels show full range.
+        comment: X=lag number, Y=correlation; all lags visible; shared x-axis via
+          facet_wrap
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'acf-pacf · python · plotnine · anyplot.ai' — correct format.
-          Legend suppressed via guides(color='none') — appropriate since strip labels
-          serve as identifiers.
+        comment: Title 'acf-pacf · python · plotnine · anyplot.ai' correct; legend
+          hidden (appropriate for diagnostic plot)
     data_quality:
       score: 15
       max: 15
@@ -182,23 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: strong significant lags (green), non-significant
-          lags (gray), lag 0=1.0, seasonal periodic spikes at 6/12/18/24/30/36, AR(1)
-          structure in PACF.'
+        comment: Demonstrates lag-0 anchor, seasonal spikes at multiples of 12, AR(1)
+          decay in PACF, mix of significant/non-significant lags
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly temperature with seasonal and AR(1) components — realistic
-          climate time series, neutral domain, real-world plausible structure.
+        comment: Monthly temperature time series with annual seasonality and AR(1)
+          — realistic, neutral, 240 observations (20 years)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: ACF and PACF values in [-1, 1] range. Seasonal amplitude, AR coefficient,
-          and noise levels are realistic for temperature data.
+        comment: Correlations bounded [-1,1]; CI at ±1.96/sqrt(240) physically correct;
+          period-12 seasonal structure realistic for monthly climate
     code_quality:
       score: 10
       max: 10
@@ -208,66 +190,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports → data → compute → dataframe → plot → save.
-          sys.path manipulation is justified by naming conflict (script named plotnine.py).'
+        comment: 'Linear flow: imports→tokens→data→ACF/PACF→DataFrame→plot→save; no
+          functions/classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before data generation.
+        comment: np.random.seed(42) set before all stochastic operations
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. sys/os needed for path workaround.
+        comment: All imported names used; statsmodels acf/pacf used; os/sys used for
+          path workaround
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity. No fake functionality. Significance
-          classification is clean.
+        comment: Clean Pythonic code; sys.path workaround documented; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=400, width=8, height=4.5 — correct
-          canvas.
+        comment: Saves as plot-{THEME}.png with correct dpi/width/height parameters
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Very idiomatic plotnine grammar: facet_wrap with ordered categorical,
-          layer composition (geom_hline + geom_segment + geom_point), scale_color_manual,
-          guides(color=''none''), scale_x_continuous with breaks.'
+        comment: Expertly uses facet_wrap with scales=free_y, pd.Categorical for panel
+          ordering, data= parameter in geom_vline, guides(color=none)
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses plotnine's grammar-of-graphics faceting with ordered pd.Categorical
-          for panel ordering — distinctive to ggplot-style libraries. Layer composition
-          approach for lollipop stems is idiomatic ggplot2 pattern.
-  verdict: REJECTED
+        comment: Free-scale faceting, ordered pd.Categorical, panel-specific data
+          injection via geom_vline(data=) — moderately distinctive but approach transfers
+          to ggplot2
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - statsmodels
   techniques:
   - faceting
   - layer-composition
-  - manual-ticks
   patterns:
   - data-generation
   dataprep:
   - time-series
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling

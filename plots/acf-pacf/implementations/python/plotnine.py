@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 acf-pacf: Autocorrelation and Partial Autocorrelation (ACF/PACF) Plot
 Library: plotnine 0.15.5 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-06-10
+Quality: 91/100 | Updated: 2026-06-10
 """
 
 import os
