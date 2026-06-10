@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: line-yield-curve
 created: '2026-06-10T01:01:41Z'
-updated: '2026-06-10T01:09:08Z'
+updated: '2026-06-10T01:26:18Z'
 generated_by: claude-sonnet
 workflow_run: 27245496130
 issue: 4664
@@ -12,55 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-yiel
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/javascript/d3/plot-dark.html
-quality_score: 88
+quality_score: 93
 review:
   strengths:
-  - 'Perfect spec compliance: log x-axis for maturity spacing, multiple yield curve
-    shapes (normal/flat/inverted), inversion zone shading as required'
-  - 'Semantically justified palette: brand green (#009E73) for normal curve, matte
-    red (#AE3030) for inverted/recession-signal curve — communicates economic meaning
-    through color'
-  - 'Idiomatic D3 usage: d3.area() for inversion zone, d3.curveCatmullRom for smooth
-    interpolation, d3.scaleLog() with custom tick format function'
-  - 'Full theme-adaptive chrome: t.ink, t.inkSoft, t.grid, t.pageBg, t.elevatedBg
-    all correctly wired in both light and dark renders'
-  - 'Redundant encoding: dashed line for Jan 2023 flat curve provides CVD-safe differentiation
-    beyond color alone'
-  - 'Data quality: historically accurate U.S. Treasury yield levels for 2022–2023
-    with appropriate spread between normal, flat, and inverted shapes'
+  - Semantic color assignments (green=Normal/growth, matte-red=Inverted/recession
+    signal) add financial meaning without needing explanation
+  - Log-scale x-axis correctly compresses clustered short-end maturities to reflect
+    real term structure spacing — domain knowledge applied
+  - Inversion zone shading via d3.area() with independent y0/y1 baselines creates
+    immediate visual emphasis on the key economic phenomenon
+  - 'Historically accurate U.S. Treasury data at real dates showing genuinely distinct
+    curve shapes: near-zero Jan 2022, transitional Jan 2023, peak inversion Jul 2023'
+  - 'Idiomatic D3 throughout: curveCatmullRom.alpha(0.5) for smooth financial curves,
+    d3.bisectLeft for data-driven annotation placement, custom tick format mapping
+    maturity years to labels'
+  - 'Full spec compliance: multi-curve comparison, inversion region shaded, log scale,
+    maturity tick labels, legend with date and shape descriptors'
   weaknesses:
-  - 'Design polish gap: inversion zone shading is present but the dashed reference
-    line (tenYrYield baseline) has no label — adding a small annotation like ''3.96%
-    (10Y)'' or a right-edge tick label would clarify what the reference line represents'
-  - 'Palette ordering: second series uses palette[2] (#4467A3 blue) instead of palette[1]
-    (#C475FD lavender), skipping the canonical order without a clear semantic exception.
-    Financial convention (blue for bonds) is plausible but not documented in the style
-    guide''s semantic exception list — prefer canonical order or add a comment justifying
-    the skip'
-  - 'Legend placement is functional but slightly crowded in the upper-right — legend
-    labels ''Jan 2022 — Normal'' etc. are good but the legend box could benefit from
-    slightly more padding (legPad: 14 is tight at 225px width)'
-  - 'DE-03 storytelling could be enhanced: the inversion crossing point (where Jul
-    2023 curve first dips below the 10Y baseline) has no visual anchor — a small annotation
-    dot or inline curve label would make the recession narrative immediately obvious
-    without requiring the viewer to find it'
-  - 'LM-02 D3 distinctive features underutilized: the implementation uses standard
-    D3 building blocks but misses opportunities like d3.bisect for annotation positioning,
-    d3.pointer for event-driven interaction stubs, or path.node().getTotalLength()
-    for dash-offset animation setup (even if static, documenting it as prep for interactivity
-    would showcase library depth)'
+  - Annotation text ('Inverted', '10Y', '3.96%') at 11px CSS is below the recommended
+    14px minimum and will be very small at mobile widths (~400px); raise to 13-14px
+  - Right-side reference labels ('10Y' / '3.96%') placed at iw+6 from the inner group
+    sit just outside the plot area boundary; increase margin.right from 60 to 80-100px
+    so they have proper breathing room and don't risk canvas edge clipping
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "line-yield-curve · javascript · d3 · anyplot.ai" bold centered at top, fully readable in dark ink. Y-axis label "Yield (%)" rotated, X-axis label "Maturity" centered below x-axis — both clearly readable. Tick labels at 1M–30Y on x-axis and 0.0%–6.0% on y-axis all legible. Horizontal gridlines subtle.
-      Data: Three curves clearly visible — (1) green (#009E73) solid upward-sloping "Jan 2022 — Normal" curve from ~0.05% at 1M to ~2.22% at 30Y; (2) blue (#4467A3) dashed near-flat "Jan 2023 — Flat" curve from ~4.30% at 1M declining to ~3.74% at 30Y; (3) matte red (#AE3030) solid inverted "Jul 2023 — Inverted" curve from ~5.50% at 1M declining to ~3.82% at 30Y. Inversion zone shaded in light red between the inverted curve and the 10Y yield baseline (~3.96%). Dashed red reference line at 3.96%. Small circles on each data point. Inset legend upper-right with line samples and labels.
-      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "line-yield-curve · javascript · d3 · anyplot.ai" at 22px CSS centered at top, clearly readable in dark ink. Axis labels "Maturity" (x) and "Yield (%)" (y) at 16px CSS, readable. Tick labels at 14px CSS on both axes, readable. Legend text at 14px CSS inside elevated-background inset box, readable. Secondary annotations ("Inverted" italic, "10Y", "3.96%") at 11px CSS — visible but small.
+      Data: Three curves with Imprint palette — Jan 2022 Normal in brand green (#009E73), Jan 2023 Flat in blue (#4467A3) with dashed stroke, Jul 2023 Inverted in matte red (#AE3030). Inversion zone filled with 9% opacity red area. Reference line at 3.96% 10Y yield in dashed matte red. Data point markers r=4 with pageBg stroke on each curve.
+      Legibility verdict: PASS — all primary text clearly readable; minor note on 11px annotation size
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
-      Chrome: Title visible in light text (#F0EFE8) against dark background. Tick labels, axis labels, and legend text all rendered in light gray/soft tones — no dark-on-dark failures observed. Gridlines subtle with appropriate low-opacity stroke.
-      Data: Colors identical to light render — green, blue, matte red — confirming only chrome flipped. Inversion shading still visible as a dark-red tinted region. Reference line and data point circles all readable. Legend box uses elevated dark background (#242420) with light text.
-      Legibility verdict: PASS — all text clearly readable against the warm near-black background. No dark-on-dark failures.
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title, axis labels, and tick labels render in light inkSoft tones, clearly readable against the dark background. Legend box uses elevated dark bg (#242420) with light text — readable. No dark-on-dark failures detected. The "Inverted" annotation in matte red is slightly harder to see against the dark inversion shading zone but remains legible.
+      Data: Colors are identical to light render — brand green (#009E73), blue (#4467A3), matte red (#AE3030) are unchanged between themes; only chrome (background, text, grid, legend box) flipped. Inversion shading and reference line behave correctly in dark theme.
+      Legibility verdict: PASS — all text readable; data colors consistent with light render
   criteria_checklist:
     visual_quality:
       score: 29
@@ -71,85 +56,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis labels 16px, ticks
-          14px, legend 14px). All text readable in both themes. Axis labels at 16px
-          are one notch above the 14px guide recommendation for short labels, but
-          proportions are not disproportionate.
+        comment: 'All primary sizes explicitly set (22px title, 16px axis labels,
+          14px ticks/legend). Minor deduction: secondary annotations at 11px CSS below
+          14px minimum.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements. Legend inset upper-right does
-          not overlap data region. Tick labels well-spaced on log x-axis.
+        comment: No text collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All three curves clearly visible with distinct colors and line styles.
-          Data point markers (r=4 circles) visible at each maturity. Inversion shading
-          visible with appropriate opacity (0.09).
+        comment: Lines at 2.5px stroke with pageBg-stroked markers clearly visible;
+          r=4 markers well-matched to data density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint palette. Dashed line for Jan 2023 provides redundant
-          encoding beyond color. Good luminance contrast between all three series.
+        comment: Imprint palette (CVD-safe); dash pattern on Jan 2023 Flat curve provides
+          redundant encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Good margins (80/60/85/90). Plot occupies ~60-70%
-          of canvas. No clipping or overflow.
+        comment: Canvas gate passed; balanced margins; inset legend does not obstruct
+          data
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Yield (%)' includes units. X-axis 'Maturity' is descriptive.
-          Y-axis ticks show '%' formatting.
+        comment: Maturity (x), Yield (%) (y) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green). Matte red (#AE3030) for inverted
-          curve is a justified semantic exception (recession/inversion signal). Warm
-          off-white light background, warm near-black dark background. Chrome adapts
-          correctly in both renders.'
+        comment: 'First series #009E73; semantic exceptions justified (green=growth,
+          red=recession signal); correct backgrounds; chrome correctly flips'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above well-configured defaults: inversion zone shading adds depth,
-          log scale shows financial expertise, semantic red communicates recession
-          risk, marker dots with pageBg stroke add polish. Not quite FiveThirtyEight-level
-          — no direct annotations, no typography variation, the reference line has
-          no label.'
+        comment: 'Clearly above defaults: semantic colors, log scale, CatmullRom interpolation,
+          pageBg-stroked markers, elevated legend'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Horizontal-only gridlines appropriate for financial chart. No top/right
-          spines. Generous whitespace. Subtle legend border. Clean overall composition.
+        comment: Horizontal-only gridlines, elevated legend bg, opacity management.
+          Domain axis lines still present; right-side labels add minor visual noise.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 'Inversion zone shading highlights the key economic signal. Semantic
-          red for recession curve guides the viewer. Dashed line differentiates the
-          flat curve. Missing: the inversion crossing point has no annotation/anchor,
-          and the reference line at 3.96% is unlabeled.'
+        comment: 'Strong narrative: three shapes illustrate 2022-2023 rate cycle,
+          inversion shading draws attention to key phenomenon, semantic colors reinforce
+          reading'
     spec_compliance:
       score: 15
       max: 15
@@ -159,58 +134,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-curve line chart showing yield term structure with
-          multiple snapshot dates.
+        comment: Multi-line yield curve — correct chart type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple curves (3), inversion zone shaded, maturity_years used for
-          x-axis positioning with maturity labels as tick marks, log scale for proper
-          spacing.
+        comment: ≥2 curves, inversion region shaded, log scale, maturity tick labels,
+          legend with dates
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: maturity_years on x-axis for proper spacing; maturity labels as tick
-          marks; yield_pct on y-axis with % formatting.
+        comment: maturity_years on log x-axis, maturity labels on ticks, yield_pct
+          on y-axis, all 11 maturities
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'line-yield-curve · javascript · d3 · anyplot.ai' matches required
-          format. Legend shows date and curve shape for each series.
+        comment: Title matches required format; legend shows date + curve shape
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Shows all three canonical yield curve shapes (normal, flat, inverted).
-          All 11 maturity points per curve. Inversion zone highlighted. Minor: the
-          ''flat'' curve (Jan 2023) is actually slightly inverted, not truly flat
-          — though historically accurate.'
+        comment: 'All three canonical yield curve shapes: normal upward, flat, inverted'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: U.S. Treasury yield curve data. Historically accurate dates (Jan
-          2022, Jan 2023, Jul 2023) with yield levels matching real market conditions.
-          Neutral financial context.
+        comment: U.S. Treasury data at specific historical dates; neutral financial
+          topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0–6% yield range is realistic for U.S. Treasury data in 2022–2023.
-          Log x-axis correctly reflects the non-linear time structure of bond maturities.
+        comment: 'Values historically accurate: near-zero Jan 2022, 3.7-4.9% Jan 2023,
+          3.82-5.53% Jul 2023'
     code_quality:
       score: 10
       max: 10
@@ -220,66 +188,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'No functions or classes. Straightforward procedural flow: data →
-          SVG → scales → grid → shading → curves → axes → legend → title.'
+        comment: 'Flat script: data → SVG → scales → gridlines → shading → curves
+          → axes → legend → title'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hard-coded in arrays. Fully deterministic output.
+        comment: Fully hardcoded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports. Only uses d3 global and ANYPLOT_* window globals as specified
-          by the harness contract.
+        comment: No explicit imports; d3 is global in harness
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured, appropriate complexity for a multi-curve financial
-          chart. No fake UI elements. Good use of forEach for DRY curve rendering.
+        comment: Clean D3 idioms; no over-engineering; no fake interactive elements
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness handles file output. Current D3 7.9.0 API used throughout.
+        comment: D3 harness generates plot-light.png/dark.png automatically
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Exemplary: d3.scaleLog, d3.line + d3.area with curveCatmullRom.alpha(0.5),
+          d3.axisBottom/Left with custom tickValues/tickFormat, d3.bisectLeft for
+          annotation'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: d3.scaleLog, d3.line, d3.area, d3.curveCatmullRom, proper D3 axis
-          construction, data binding with .datum(). Custom tick values with tickFormat
-          function. Well above minimal usage.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: d3.area() for inversion zone shading, d3.curveCatmullRom.alpha(0.5)
-          for smooth interpolation, d3.scaleLog() with custom tick placement for financial
-          maturity axis. These are genuine D3-specific techniques, but the implementation
-          doesn't push into more advanced D3 territory (e.g., d3.bisect, path interpolation,
-          enter/update/exit pattern for multi-series).
-  verdict: REJECTED
+        comment: 'D3-specific: area generator with independent y0/y1 baselines, CatmullRom
+          interpolation, bisection-based annotation, log scale with custom tick mapping.
+          One point held: could be approximated in other SVG libraries.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
+  - annotations
   - custom-legend
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
