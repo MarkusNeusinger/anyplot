@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 funnel-meta-analysis: Meta-Analysis Funnel Plot for Publication Bias
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 91/100 | Updated: 2026-06-10
+Library: plotly 6.8.0 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-06-10
 """
 
 import os
