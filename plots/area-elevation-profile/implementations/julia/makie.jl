@@ -16,6 +16,7 @@ const ELEVATED_BG = THEME == "light" ? colorant"#FFFDF6" : colorant"#242420"
 const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 const INK_MUTED   = THEME == "light" ? colorant"#6B6A63" : colorant"#A8A79F"
+const FILL_ALPHA  = THEME == "light" ? 0.28f0 : 0.42f0
 
 const IMPRINT_PALETTE = [
     colorant"#009E73",  # 1 — brand green (first series, always)
@@ -119,15 +120,15 @@ ax = Axis(
     limits             = (0.0, 82.0, 500.0, 3700.0),
 )
 
-# Filled terrain silhouette (Imprint brand green, low alpha)
+# Filled terrain silhouette (Imprint brand green; alpha higher on dark for equal visual weight)
 band!(ax, distance, fill(500.0, n), elevation;
-      color = RGBAf(IMPRINT_PALETTE[1].r, IMPRINT_PALETTE[1].g, IMPRINT_PALETTE[1].b, 0.28))
+      color = RGBAf(IMPRINT_PALETTE[1].r, IMPRINT_PALETTE[1].g, IMPRINT_PALETTE[1].b, FILL_ALPHA))
 
 # Profile line
 lines!(ax, distance, elevation;
        color = IMPRINT_PALETTE[1], linewidth = 2.5)
 
-# Landmark annotations
+# Landmark annotations — Summit Peak gets extra emphasis as the highest point
 for i in 1:length(lm_dists)
     d    = lm_dists[i]
     name = lm_labels[i]
@@ -135,21 +136,25 @@ for i in 1:length(lm_dists)
     off  = lm_offsets[i]
     va   = lm_valigns[i]
 
+    is_summit = (name == "Summit Peak")
+    msize     = is_summit ? 13 : 9
+    mstroke   = is_summit ? 2.5f0 : 1.5f0
+
     # Connector line from terrain point to label position
     lines!(ax, [d, d], [elev, elev + off];
            color = RGBAf(INK_MUTED.r, INK_MUTED.g, INK_MUTED.b, 0.5),
            linewidth = 0.8)
 
-    # Dot marker at elevation
+    # Dot marker at elevation (Summit Peak larger for focal hierarchy)
     scatter!(ax, [d], [elev];
-             color = IMPRINT_PALETTE[1], markersize = 9,
-             strokecolor = PAGE_BG, strokewidth = 1.5)
+             color = IMPRINT_PALETTE[1], markersize = msize,
+             strokecolor = PAGE_BG, strokewidth = mstroke)
 
-    # Label: name + elevation
+    # Label: name + elevation; 13 pt for mobile readability
     text!(ax, d, elev + off;
           text     = "$(name)\n$(round(Int, elev)) m",
           align    = (lm_haligns[i], va),
-          fontsize = 10,
+          fontsize = 13,
           color    = INK_SOFT)
 end
 
@@ -157,7 +162,7 @@ end
 text!(ax, 80.0, 540.0;
       text     = "VE ≈ 15×",
       align    = (:right, :bottom),
-      fontsize = 10,
+      fontsize = 13,
       color    = INK_MUTED)
 
 save("plot-$(THEME).png", fig; px_per_unit = 2)
