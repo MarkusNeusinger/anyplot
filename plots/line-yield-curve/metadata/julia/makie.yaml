@@ -1,0 +1,242 @@
+library: makie
+language: julia
+specification_id: line-yield-curve
+created: '2026-06-10T00:55:02Z'
+updated: '2026-06-10T01:12:35Z'
+generated_by: claude-sonnet
+workflow_run: 27245349640
+issue: 4664
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Historically accurate U.S. Treasury yield data (Jan 2021/Oct 2022/Jul 2023) covers
+    all three canonical curve shapes — normal, flat, inverted
+  - Amber band! inversion zone is semantically correct (warning/caution anchor) and
+    immediately draws the eye
+  - Log-scale x-axis with custom maturity string tick labels is the correct financial-chart
+    choice
+  - All theme chrome tokens correctly propagated — both renders pass legibility checks
+    with no dark-on-dark failures
+  - 'Clean Makie idioms: scatterlines!, band!, axislegend, xscale = log10'
+  weaknesses:
+  - Inverted zone amber text (#DDCC77) on amber 30%-alpha band in light render has
+    borderline contrast — change label color to INK_SOFT or position the label just
+    above/below the band rather than inside it
+  - DE-01 held back by limited typographic hierarchy — legend labels are visually
+    equal weight; a bolder annotation on the inverted curve would elevate storytelling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 — correct
+      Chrome: title "U.S. Treasury Yields · line-yield-curve · julia · makie · anyplot.ai" in dark ink, readable; axis labels "Maturity" and "Yield (%)" in dark ink, readable; tick labels in INK_SOFT (#4A4A44), readable
+      Data: three yield curves — Jan 2021 in #009E73 (brand green, near-zero COVID era), Oct 2022 in #C475FD (lavender, flat post-hike), Jul 2023 in #4467A3 (blue, inverted). Amber band (#DDCC77 at 30% alpha) shades inversion zone from ~2Y to 30Y. "Inverted zone" label inside band in amber — slightly low contrast against amber-tinted band. "COVID-era near-zero rates" annotation in INK_SOFT — clearly readable. Legend at top-right with elevated background.
+      Legibility verdict: PASS (minor: amber-on-amber band text contrast marginally low)
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 — correct
+      Chrome: title and axis labels in #F0EFE8 (near-white), clearly readable; tick labels in #B8B7B0 (light grey), clearly readable; no dark-on-dark failures detected
+      Data: colors identical to light render — green, lavender, blue curves unchanged (data colors are theme-independent as required). Amber band appears as darker olive/khaki on dark surface. Legend background uses #242420 elevated color.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set; adaptive title sizing used. Minor:
+          amber text on amber band has slightly reduced contrast in light render.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Three curves with scatterlines markersize=10, linewidth=2.5 clearly
+          visible at sparse density.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint positions 1-3 (green/lavender/blue) are CVD-safe and perceptually
+          distinct.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 correct. Good margins, legend well-placed, log scale
+          correct.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: Maturity, Y: Yield (%). Title has descriptive prefix.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Imprint order 1-3, amber for inversion band
+          (semantic anchor), correct backgrounds, chrome correct in both themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: log scale, amber band, adaptive title. Not quite
+          at strong-design level — limited typographic hierarchy.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, y-only grid at 12% alpha, legend with elevated
+          background and 0.5pt frame.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Three-period narrative clear, amber focal band draws eye to inversion,
+          contextual annotations add meaning.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Yield curve (line+scatter) on log-scale maturity axis.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Multi-curve, log x-scale, maturity string tick labels, inversion
+          shading, dated legend all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: maturity_years (log), tick labels = maturity strings. Y: yield_pct.
+          All 11 maturities x 3 curves.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: U.S. Treasury Yields · line-yield-curve · julia · makie ·
+          anyplot.ai. Legend: Jan 2021 (normal), Oct 2022 (flat), Jul 2023 (inverted).'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All yield curve shapes covered: normal, flat, inverted. Full 1M-30Y
+          spectrum.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real U.S. Treasury yield snapshots on actual dates, historically
+          accurate, neutral financial topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Yield range 0-6.4% correct for post-COVID rate cycle. Maturity range
+          1M-30Y standard. Values match historical levels.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: tokens → data → plot → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) present.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all used, none superfluous.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality, clear purposeful comments.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png. Uses size = (1600, 900) — correct Makie
+          0.22 API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: scatterlines!, band!, axislegend, xticks tuple syntax, xscale=log10,
+          RGBAf() — all idiomatic Makie patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: band! is genuinely Makie-specific. scatterlines! and axislegend also
+          distinctive. No layout-level Makie primitives (Label, custom Legend handles).
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

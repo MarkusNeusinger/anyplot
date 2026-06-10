@@ -5,9 +5,6 @@ import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 
-import { HeroSection } from 'src/components/HeroSection';
-import { LibrariesSection } from 'src/components/LibrariesSection';
-import { NumbersStrip } from 'src/components/NumbersStrip';
 import { SectionHeader } from 'src/components/SectionHeader';
 import { GITHUB_URL } from 'src/constants';
 import { useAnalytics, useAppData } from 'src/hooks';
@@ -15,6 +12,9 @@ import { type FeaturedImpl, useFeaturedSpecs } from 'src/hooks/useFeaturedSpecs'
 import { useTheme } from 'src/hooks/useLayoutContext';
 import { usePlotOfTheDay } from 'src/hooks/usePlotOfTheDay';
 import { paths, specPath } from 'src/routes/paths';
+import { HeroSection } from 'src/sections/landing/HeroSection';
+import { LibrariesSection } from 'src/sections/landing/LibrariesSection';
+import { NumbersStrip } from 'src/sections/landing/NumbersStrip';
 import { colors, semanticColors, typography } from 'src/theme';
 import { buildSrcSet, getFallbackSrc } from 'src/utils/responsiveImage';
 import { selectPreviewUrl } from 'src/utils/themedPreview';
