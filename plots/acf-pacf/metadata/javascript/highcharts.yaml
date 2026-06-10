@@ -1,0 +1,251 @@
+library: highcharts
+language: javascript
+specification_id: acf-pacf
+created: '2026-06-10T01:52:55Z'
+updated: '2026-06-10T02:01:29Z'
+generated_by: claude-sonnet
+workflow_run: 27247488294
+issue: 4663
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Excellent data choice: AR(2) process with Durbin-Levinson PACF computation —
+    correct statistics, pedagogically clear'
+  - Expert multi-yAxis subplot layout using Highcharts' percentage-based top/height
+    positioning
+  - 'Informative subtitle adds context: AR(2) process, N=300, CI explanation'
+  - Amber 95% CI bounds labeled on the right edge — functional and visually informative
+  - Stem+dot effect using column+scatter mixed series is an elegant Highcharts pattern
+  - Fully deterministic via LCG seed=42; complete theme-adaptive chrome using all
+    ANYPLOT_TOKENS
+  - Both light and dark renders look professional with identical data colors and correct
+    chrome
+  weaknesses:
+  - 'PACF uses t.palette[2] (#4467A3 blue) instead of canonical next position t.palette[1]
+    (#C475FD lavender) — fix by changing color: t.palette[2] to color: t.palette[1]
+    in both PACF series'
+  - Helper functions (makeLCG, makeNormal, computeACF, computePACF) break the KISS
+    structure rule, though justified by JS browser runtime constraints
+  - 'Design Excellence headroom: could annotate significant lag positions (lag 1 and
+    lag 2 in PACF) to make AR(2) order identification more explicit'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "acf-pacf · javascript · highcharts · anyplot.ai" in dark ink (#1A1A17) at 22px; subtitle in soft dark ink at 13px; axis labels "ACF", "PACF", "Lag" in inkSoft at 16px; tick labels at 12-13px — all clearly readable
+      Data: ACF panel uses brand green #009E73 (palette[0]) stems and dots; PACF panel uses Imprint blue #4467A3 (palette[2]) stems and dots; 95% CI bounds shown as amber (#DDCC77) dashed horizontal lines; "95% CI" label on right edge of upper ACF CI line
+      ACF: lag 0 = 1.0, lag 1 ≈ 0.55, geometric decay toward zero — characteristic AR process pattern
+      PACF: lag 1 ≈ 0.56 (significant), lag 2 ≈ -0.20 (significant, below lower CI), remaining lags within bounds — correctly identifies AR(2) order
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title, subtitle, axis labels, tick labels all rendered in light ink against dark background — no dark-on-dark failures; "95% CI" amber label remains visible
+      Data: Data colors identical to light render — ACF still brand green #009E73, PACF still Imprint blue #4467A3, CI bounds still amber #DDCC77; confirms data colors are theme-invariant
+      Grid: Subtle low-contrast grid lines visible without competing with data
+      Legibility verdict: PASS — all text readable against dark background; theme-adaptive tokens correctly applied throughout
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis labels 16px, ticks
+          12-13px); well-proportioned in both renders
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-to-text or text-to-data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Stems (pointWidth:2) intentionally thin per stem-plot style; dots
+          at radius 4 mark endpoints; amber CI lines prominent
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green and Imprint blue CVD-safe; amber anchor CVD-safe; no
+          red-green-only distinction
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; two-panel layout fills canvas well; no overflow
+          or clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Lag, ACF, PACF all descriptive and correctly placed
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: First series (ACF) correctly uses palette[0]=#009E73; PACF uses palette[2]=#4467A3
+          instead of canonical palette[1]=#C475FD; no semantic justification for skipping
+          canonical order
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Clearly above defaults: subtitle with context, labeled CI bounds,
+          dots at stem tips, distinct panel colors; not quite publication-ready'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Full theme-adaptive token usage; subtle grid; no unnecessary legend;
+          clean panel spacing
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: AR(2) data choice is pedagogically excellent; CI bounds guide eye
+          to significant lags; subtitle contextualizes; could add annotations for
+          lag order identification
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct two-panel ACF/PACF stem plot with CI bounds
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: ACF top, PACF bottom, shared x-axis, stems from baseline, 95% CI,
+          lag 0 in ACF, PACF from lag 1, 35 lags
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis Lag 0-35, y-axes ACF and PACF, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is exactly 'acf-pacf · javascript · highcharts · anyplot.ai';
+          no legend (appropriate)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: AR(2) demonstrates both ACF geometric decay and PACF sharp cutoff
+          at order 2; all ACF/PACF features covered
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'AR(2): X_t = 0.7X_{t-1} - 0.2X_{t-2} + eps_t, N=300; scientifically
+          neutral, educationally valuable'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: N=300 within recommended 100-500; 35 lags; CI=1.96/sqrt(300)≈0.113
+          analytically correct
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: Four helper functions (makeLCG, makeNormal, computeACF, computePACF)
+          break KISS; necessary given JS browser constraints but deducted
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: LCG with seed=42 + Box-Muller; fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only window.ANYPLOT_TOKENS and window.Highcharts globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean code; Durbin-Levinson PACF correct; enableMouseTracking:false
+          and tooltip:disabled appropriate
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Highcharts.chart('container',...) with animation:false and no explicit
+          width/height — correct harness contract
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert multi-yAxis subplot layout; plotLines per yAxis for CI; column+scatter
+          mixed series for stem+dot; all idiomatic Highcharts patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Multi-yAxis top/height percentage layout; plotLines with dashStyle
+          and label objects; column+scatter per-yAxis combination — distinctly Highcharts
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - autocorrelation
+  styling: []
