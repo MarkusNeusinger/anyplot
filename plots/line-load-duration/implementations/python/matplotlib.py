@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-load-duration: Load Duration Curve for Energy Systems
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-06-10
+Quality: 90/100 | Updated: 2026-06-10
 """
 
 import os
