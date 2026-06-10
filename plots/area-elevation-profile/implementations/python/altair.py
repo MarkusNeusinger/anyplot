@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-elevation-profile: Terrain Elevation Profile Along Transect
 Library: altair 6.2.1 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-10
@@ -128,7 +128,7 @@ lm_mid = landmarks[(landmarks["distance"] > 0) & (landmarks["distance"] < 120)]
 lm_mid_low = lm_mid[lm_mid["elevation"] < 1500]
 lm_mid_high = lm_mid[lm_mid["elevation"] >= 1500]
 
-_kw = {"fontSize": 14, "fontWeight": "bold", "lineBreak": "\n", "lineHeight": 18, "color": INK}
+_kw = {"fontSize": 12, "fontWeight": "bold", "lineBreak": "\n", "lineHeight": 16, "color": INK}
 
 label_start = (
     alt.Chart(lm_start)
@@ -169,7 +169,7 @@ chart = (
             color=INK,
         ),
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
+    .configure_view(fill=PAGE_BG, stroke=None)
     .configure_axis(
         labelFontSize=10,
         titleFontSize=12,
@@ -180,6 +180,7 @@ chart = (
         labelColor=INK_SOFT,
         titleColor=INK,
     )
+    .configure_axisX(grid=False)
     .configure_title(color=INK)
     .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
