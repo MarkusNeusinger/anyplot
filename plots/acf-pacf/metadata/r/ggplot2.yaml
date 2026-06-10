@@ -1,0 +1,252 @@
+library: ggplot2
+language: r
+specification_id: acf-pacf
+created: '2026-06-10T01:54:24Z'
+updated: '2026-06-10T02:11:50Z'
+generated_by: claude-sonnet
+workflow_run: 27247629569
+issue: 4663
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Significant-lag color coding (green=#009E73 vs gray INK_MUTED) elegantly tells
+    the ACF/PACF story at a glance
+  - Correct facet_wrap design with free_y scales and clearly labeled strips
+  - 'Full spec compliance: lag 0 in ACF, PACF from lag 1, correct CI formula, 36 lags'
+  - AR(2) synthetic data with phi1=0.7, phi2=-0.3 produces textbook-quality ACF/PACF
+    patterns
+  - 'Proper theme-adaptive chrome: L-shaped spines, subtle grid, ELEVATED_BG strip
+    backgrounds'
+  - 'Perfect code structure: KISS, set.seed(42), clean imports, correct linewidth
+    API'
+  weaknesses:
+  - Stem linewidth=1.2 is thin for a 3200x1800 canvas — non-significant bars are very
+    short and barely readable; increase to linewidth=1.6-2.0 for better visibility
+  - 'DE-01 could be stronger: the strip border (INK_SOFT on strip.background) creates
+    a noticeable box frame that is slightly heavy — consider element_rect(fill=ELEVATED_BG,
+    color=NA) to remove the border for a cleaner look'
+  - 'LM-02: the implementation does not exploit ggplot2 grammar beyond faceting +
+    geom_segment; consider using ggplot2-idiomatic stat_function or annotate for the
+    CI band to distinguish it from a plain geom_hline'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface
+      Chrome: Title "acf-pacf · r · ggplot2 · anyplot.ai" in dark ink (#1A1A17) at top-left; Y-axis label "Autocorrelation" and X-axis label "Lag" in dark ink — all clearly readable. Tick labels in INK_SOFT (#4A4A44) at 8pt — readable. Facet strip labels "ACF" and "PACF" bold in dark ink on elevated cream (#FFFDF6) strip background with INK_SOFT border.
+      Data: Significant lags in brand green #009E73; non-significant lags in muted gray (INK_MUTED). Dashed CI lines in INK_MUTED. Lag 0 in ACF reaches 1.0 (green); lag 1 in ACF (~0.5) and lag 2 in ACF (~-0.13, just outside CI) are green; PACF shows lag 1 (~0.47) and lag 2 (~-0.30) as significant green. Grid lines subtle, L-shaped spines.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface
+      Chrome: Title in light ink (#F0EFE8) — clearly readable against dark background. Y and X axis labels in light ink. Tick labels in INK_SOFT (#B8B7B0) — clearly readable. Facet strips use ELEVATED_BG (#242420) with INK_SOFT border; strip text in light INK — readable. Grid lines in INK_SOFT at linewidth=0.2 — subtle white-ish lines visible against dark background.
+      Data: Significant lags identical brand green #009E73 — same as light render, correct. Non-significant lags in lighter gray (INK_MUTED #A8A79F). Dashed CI lines in lighter gray. All data colors identical to light render — only chrome flipped.
+      Legibility verdict: PASS — no dark-on-dark failures, all text readable against near-black background, brand green clearly visible
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title=12, axis.title=10, axis.text=8,
+          strip.text=10); readable in both themes. Minor: stem linewidth=1.2 slightly
+          thin for canvas size but text is fine.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Significant stems clearly visible in green; non-significant stems
+          thin at linewidth=1.2 on a 3200x1800 canvas — visible but not optimally
+          sized for the resolution
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green (#009E73) vs gray (INK_MUTED) is CVD-safe and clearly distinguishable
+          without relying on hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Two-panel facet layout fills canvas well, balanced margins, no wasted
+          space
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Autocorrelation''; X-axis: ''Lag''; title matches required
+          format; facet strips label ACF/PACF panels'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First/significant series uses #009E73; backgrounds #FAF8F1 (light)
+          / #1A1A17 (dark); data colors identical across themes; chrome theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional semantic color use (significant=green, non-significant=gray),
+          clean facet strips with elevated backgrounds — above defaults but not publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped spines, minor grid removed, subtle major grid at linewidth=0.2;
+          strip border (INK_SOFT) slightly heavy
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color coding of significant vs non-significant lags creates clear
+          visual hierarchy; AR(2) patterns (decaying ACF, PACF cutoff at lag 2) tell
+          a textbook-quality story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: ACF top + PACF bottom via facet_wrap; vertical stems from zero; shared
+          x-axis; dashed CI lines
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Lag 0 in ACF; PACF from lag 1; CI at ±1.96/sqrt(300); 36 lags (within
+          30-40 range)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=lag numbers, Y=correlation values; both panels correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'acf-pacf · r · ggplot2 · anyplot.ai' matches required format;
+          no legend needed (guide='none' appropriate)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows ACF decay + PACF cutoff; significant and non-significant lags;
+          300 observations (within recommended range)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: AR(2) synthetic series — standard time series example appropriate
+          for ACF/PACF demonstration
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct AR(2) parameters; ACF lag 0=1.0; CI at ±1.96/sqrt(300)≈±0.113
+          — mathematically correct
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear structure: imports → tokens → data → plot → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported — both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Idiomatic use of geom_segment + aes(color=significant); no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-%s.png; uses linewidth (not deprecated size) for ggplot2
+          ≥3.4
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Grammar-of-graphics approach: aesthetic mapping of significance
+          boolean to color; facet_wrap with free_y; proper theme layering'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses ggplot2-distinctive aesthetic mapping (aes(color=significant))
+          and faceting with scale independence — recognizable grammar approach, though
+          could go further
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - ragg
+  techniques:
+  - faceting
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - grid-styling
