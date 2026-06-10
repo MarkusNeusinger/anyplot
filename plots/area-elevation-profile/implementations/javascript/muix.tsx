@@ -1,3 +1,7 @@
+// anyplot.ai
+// area-elevation-profile: Terrain Elevation Profile Along Transect
+// Library: muix 7.29.1 | JavaScript 22.22.3
+// Quality: 90/100 | Created: 2026-06-10
 //# anyplot-orientation: landscape
 // anyplot.ai
 // area-elevation-profile: Terrain Elevation Profile Along Transect
