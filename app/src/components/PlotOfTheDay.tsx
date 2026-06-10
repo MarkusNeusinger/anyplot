@@ -9,9 +9,10 @@ import IconButton from '@mui/material/IconButton';
 import Link from '@mui/material/Link';
 import Typography from '@mui/material/Typography';
 
-import { API_URL, GITHUB_URL } from 'src/constants';
+import { GITHUB_URL } from 'src/constants';
 import { useAnalytics } from 'src/hooks';
 import { useTheme } from 'src/hooks/useLayoutContext';
+import { apiGet, endpoints } from 'src/lib/api';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 import { specPath } from 'src/utils/paths';
 import { buildSrcSet, getFallbackSrc } from 'src/utils/responsiveImage';
@@ -49,11 +50,7 @@ export function PlotOfTheDay() {
 
   useEffect(() => {
     if (dismissed) return;
-    fetch(`${API_URL}/insights/plot-of-the-day`)
-      .then(r => {
-        if (!r.ok) throw new Error();
-        return r.json();
-      })
+    apiGet<PlotOfTheDayData>(endpoints.plotOfTheDay)
       .then(setData)
       .catch(() => {})
       .finally(() => setLoading(false));

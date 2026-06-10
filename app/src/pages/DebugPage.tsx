@@ -13,6 +13,7 @@ import Typography from '@mui/material/Typography';
 import { SectionHeader } from 'src/components/SectionHeader';
 import { DEBUG_API_URL, LIB_ABBREV, LIB_TO_LANG, LIBRARIES } from 'src/constants';
 import { useCopyCode } from 'src/hooks';
+import { fetchWithAuth } from 'src/lib/api';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 import { buildClaudePrompt } from 'src/utils/claudePrompt';
 import { specPath } from 'src/utils/paths';
@@ -236,13 +237,6 @@ const clearAdminToken = (): void => {
   }
 };
 
-const adminFetch = (url: string, token: string, init: RequestInit = {}): Promise<Response> => {
-  const headers: Record<string, string> = { ...((init.headers as Record<string, string>) || {}) };
-  if (token) headers['X-Admin-Token'] = token;
-  if (init.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
-  return fetch(url, { credentials: 'include', ...init, headers });
-};
-
 export function DebugPage() {
   const [data, setData] = useState<DebugStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -276,7 +270,7 @@ export function DebugPage() {
   }
 
   useEffect(() => {
-    adminFetch(`${DEBUG_API_URL}/debug/status`, adminToken)
+    fetchWithAuth(`${DEBUG_API_URL}/debug/status`, adminToken)
       .then(async r => {
         // Reaching here means the fetch promise resolved (the response may
         // still be 401/403/503 — those are handled below). Clear the one-shot
@@ -345,7 +339,7 @@ export function DebugPage() {
     const tick = async () => {
       const started = performance.now();
       try {
-        const r = await adminFetch(`${DEBUG_API_URL}/debug/ping`, adminToken);
+        const r = await fetchWithAuth(`${DEBUG_API_URL}/debug/ping`, adminToken);
         const totalMs = performance.now() - started;
         if (!r.ok) throw new Error(`${r.status}`);
         const json: { database_connected: boolean } = await r.json();
@@ -373,15 +367,15 @@ export function DebugPage() {
     let cancelled = false;
     const qs = feedbackStatusFilter ? `?status=${feedbackStatusFilter}&limit=50` : '?limit=50';
     Promise.all([
-      adminFetch(
+      fetchWithAuth(
         `${DEBUG_API_URL}/debug/feedback/top?reaction=thumbs_up&limit=15`,
         adminToken
       ).then(r => (r.ok ? (r.json() as Promise<FeedbackTopPage[]>) : [])),
-      adminFetch(
+      fetchWithAuth(
         `${DEBUG_API_URL}/debug/feedback/top?reaction=thumbs_down&limit=15`,
         adminToken
       ).then(r => (r.ok ? (r.json() as Promise<FeedbackTopPage[]>) : [])),
-      adminFetch(`${DEBUG_API_URL}/debug/feedback/messages${qs}`, adminToken).then(r =>
+      fetchWithAuth(`${DEBUG_API_URL}/debug/feedback/messages${qs}`, adminToken).then(r =>
         r.ok ? (r.json() as Promise<FeedbackMessageItem[]>) : []
       ),
     ])
@@ -404,7 +398,7 @@ export function DebugPage() {
     const prev = feedbackMessages;
     setFeedbackMessages(prev.map(m => (m.id === id ? { ...m, status: newStatus } : m)));
     try {
-      const r = await adminFetch(`${DEBUG_API_URL}/debug/feedback/${id}`, adminToken, {
+      const r = await fetchWithAuth(`${DEBUG_API_URL}/debug/feedback/${id}`, adminToken, {
         method: 'PATCH',
         body: JSON.stringify({ status: newStatus }),
       });
