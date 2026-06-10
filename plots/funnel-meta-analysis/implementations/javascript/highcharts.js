@@ -1,6 +1,7 @@
 // anyplot.ai
 // funnel-meta-analysis: Meta-Analysis Funnel Plot for Publication Bias
-// Library: highcharts 12.6.0 | JavaScript 22.22.3
+// Library: Highcharts 12.6.0 | Node 22
+// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
 // Quality: 82/100 | Created: 2026-06-10
 
 const t = window.ANYPLOT_TOKENS;
@@ -27,6 +28,7 @@ Highcharts.chart("container", {
     type: "scatter",
     backgroundColor: "transparent",
     animation: false,
+    plotBorderWidth: 0,
     style: { fontFamily: "inherit" }
   },
   credits: { enabled: false },
@@ -47,37 +49,10 @@ Highcharts.chart("container", {
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
     gridLineColor: t.grid,
-    gridLineWidth: 1,
+    gridLineWidth: 0.5,
     min: -1.6,
     max: 2.2,
-    labels: { style: { color: t.inkSoft, fontSize: "14px" } },
-    plotLines: [
-      {
-        value: 0,
-        dashStyle: "ShortDash",
-        color: t.inkSoft,
-        width: 2,
-        zIndex: 2,
-        label: {
-          text: "Null (OR = 1)",
-          verticalAlign: "top",
-          y: -8,
-          style: { color: t.inkSoft, fontSize: "12px" }
-        }
-      },
-      {
-        value: pooledEffect,
-        color: t.ink,
-        width: 2,
-        zIndex: 2,
-        label: {
-          text: "Pooled OR = 1.49",
-          verticalAlign: "top",
-          y: -8,
-          style: { color: t.ink, fontSize: "12px" }
-        }
-      }
-    ]
+    labels: { style: { color: t.inkSoft, fontSize: "14px" } }
   },
   yAxis: {
     title: {
@@ -90,6 +65,7 @@ Highcharts.chart("container", {
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
     gridLineColor: t.grid,
+    gridLineWidth: 0.5,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } }
   },
   legend: {
@@ -107,7 +83,7 @@ Highcharts.chart("container", {
   series: [
     {
       type: "scatter",
-      name: "Studies (n = 18)",
+      name: "Studies (n = 18)",
       data: studies,
       color: t.palette[0],
       marker: {
@@ -115,7 +91,40 @@ Highcharts.chart("container", {
         symbol: "circle",
         lineColor: t.pageBg,
         lineWidth: 1.5
-      }
+      },
+      zIndex: 5
+    },
+    {
+      // Pooled effect as a series for full lineWidth and label control
+      type: "line",
+      name: "Pooled OR = 1.49",
+      data: [
+        {
+          x: pooledEffect,
+          y: 0,
+          dataLabels: {
+            enabled: true,
+            format: "Pooled OR = 1.49",
+            rotation: 0,
+            align: "left",
+            x: 6,
+            y: 18,
+            style: {
+              color: t.ink,
+              fontSize: "11px",
+              fontWeight: "700",
+              textOutline: "none"
+            }
+          }
+        },
+        { x: pooledEffect, y: seMax }
+      ],
+      color: t.ink,
+      lineWidth: 3,
+      dashStyle: "Solid",
+      marker: { enabled: false },
+      enableMouseTracking: false,
+      zIndex: 4
     },
     {
       type: "line",
@@ -125,18 +134,51 @@ Highcharts.chart("container", {
       lineWidth: 1.5,
       dashStyle: "Dash",
       marker: { enabled: false },
-      enableMouseTracking: false
+      enableMouseTracking: false,
+      zIndex: 3
     },
     {
       type: "line",
-      name: "95% CI (right)",
       data: funnelRight,
       color: t.inkSoft,
       lineWidth: 1.5,
       dashStyle: "Dash",
       marker: { enabled: false },
       enableMouseTracking: false,
-      showInLegend: false
+      showInLegend: false,
+      zIndex: 3
+    },
+    {
+      // Null reference as a series for label control — no legend entry
+      type: "line",
+      data: [
+        {
+          x: 0,
+          y: 0,
+          dataLabels: {
+            enabled: true,
+            format: "Null (OR = 1)",
+            rotation: 0,
+            align: "right",
+            x: -6,
+            y: 18,
+            style: {
+              color: t.inkSoft,
+              fontSize: "11px",
+              fontWeight: "400",
+              textOutline: "none"
+            }
+          }
+        },
+        { x: 0, y: seMax }
+      ],
+      color: t.inkSoft,
+      lineWidth: 1.5,
+      dashStyle: "ShortDash",
+      marker: { enabled: false },
+      enableMouseTracking: false,
+      showInLegend: false,
+      zIndex: 2
     }
   ]
 });
