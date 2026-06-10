@@ -1,108 +1,128 @@
 library: altair
+language: python
 specification_id: funnel-meta-analysis
 created: '2026-03-15T16:43:50Z'
-updated: '2026-03-15T16:57:08Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23114663061
+updated: '2026-06-10T04:06:26Z'
+generated_by: claude-sonnet
+workflow_run: 27251487487
 issue: 4590
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/altair/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 6.2.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/python/altair/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent data storytelling through inside/outside funnel color classification
-    — immediately communicates publication bias
-  - Complete spec compliance with all required features (summary line, null line,
-    funnel bounds, sized points)
-  - Informative subtitle that reinforces the visual narrative
-  - Clean, well-structured code with clear section organization
-  - Thoughtful color palette with Python Blue + orange accent and subtle funnel shading
+  - 'Perfect spec compliance: inverted Y-axis, pseudo 95% CI funnel, summary effect
+    line, null reference line, weight-based point sizing — all present'
+  - 'Semantic Imprint color assignment: green (within = typical/ok) and matte red
+    (outside = potential bias) with redundant circle/diamond shape encoding for CVD
+    safety'
+  - Subtitle narrates the insight directly, elevating the plot beyond a bare data
+    display
+  - Both themes render correctly with proper chrome token propagation throughout all
+    chart elements
+  - Clean idiomatic Altair code with correct PAD-only canvas handling (no cropping)
   weaknesses:
-  - Point sizes could be slightly larger to better fill the canvas at this resolution
-  - Lower portion of plot (SE 0-0.08) is empty space with no data, slightly reducing
-    canvas efficiency
-  image_description: 'The plot displays a meta-analysis funnel plot with "Log Odds
-    Ratio" on the X-axis (range ~-1.20 to 0.40) and "Standard Error" on the Y-axis
-    (inverted, 0 at bottom to 0.30 at top). A solid blue vertical line marks the summary
-    effect at approximately -0.37. A dashed gray vertical line marks the null effect
-    at 0. The funnel shape is formed by dashed blue diagonal lines emanating from
-    the summary effect at SE=0, with a very subtle light blue shaded area filling
-    the funnel region. Fifteen study points are plotted, color-coded: blue circles
-    for "Within funnel" (12 studies) and orange circles for "Outside funnel" (3 studies
-    — one large-SE study at top-left ~(-1.05, 0.28), one at ~(-0.85, 0.24), and one
-    precise study at ~(-0.08, 0.10) on the right). Points vary in size by inverse-variance
-    weight. The legend is positioned at the bottom-right. Title reads "funnel-meta-analysis
-    · altair · pyplots.ai" with a descriptive subtitle. The overall layout is clean
-    with subtle dashed grid on X-axis only and no Y-axis grid.'
+  - 'configure_view(stroke=INK_SOFT) creates a full rectangular border box around
+    the plot — style guide recommends removing top/right spines (L-frame) or all borders.
+    Fix: set stroke=None or stroke="transparent" in configure_view() to remove the
+    box.'
+  - VQ-01 tick labels at labelFontSize=10 are at the lower bound for mobile readability;
+    consider raising to 11 for slightly better small-screen legibility.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "funnel-meta-analysis · python · altair · anyplot.ai" in dark ink, clearly visible. Subtitle in soft ink, readable. Y-axis label "Standard Error" and X-axis label "Log Odds Ratio" in INK color, readable. Tick labels in INK_SOFT, all legible. Legend in bottom-right with elevated #FFFDF6 fill and rounded corners.
+      Data: Brand green #009E73 circles for "Within funnel" studies (12 points). Matte red #AE3030 diamonds for "Outside funnel" studies (3 points). Size varies by precision weight. Funnel dashed blue lines, semi-transparent blue fill area, solid blue summary effect line, grey dashed null line at x=0.
+      Legibility verdict: PASS — all text is readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and subtitle in light warm-off-white (#F0EFE8), clearly readable against dark background. Axis labels and tick labels use INK_SOFT token (#B8B7B0), fully legible. Legend uses elevated #242420 fill. No dark-on-dark text failures observed.
+      Data: Colors are IDENTICAL to light render — green circles and red diamonds show the same #009E73 and #AE3030 hues. Only the chrome (background, text, legend box) flips between themes.
+      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, subtitle 16pt, axis titles
-          22pt, tick labels 18pt, legend labels 16pt'
+        comment: 'All font sizes explicitly set (title=16, axis=12, tick=10); readable
+          in both themes; minor: tick labels at 10 are at the lower bound for mobile
+          scaling'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements
+        comment: No overlapping elements in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Points well-sized (120-450 range by weight) with white stroke; slightly
-          small for canvas size
+        comment: 15 study points well-sized; size variation by precision weight clearly
+          visible; funnel lines and shaded area distinct
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Redundant shape encoding (circle vs diamond) makes green/red CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue and orange provide strong colorblind-safe contrast
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good layout; some empty space in high-precision region
+        comment: 3200x1800 canvas correct; good proportions; legend in-plot bottom-right
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Log Odds Ratio and Standard Error'
+        comment: Log Odds Ratio and Standard Error are descriptive and domain-appropriate
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 first series; matte red #AE3030 as semantic
+          anchor for bias; correct backgrounds; both themes correct'
     design_excellence:
-      score: 15
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Strong design with Python Blue + orange palette, white stroke on
-          points, subtle funnel fill
+        comment: 'Above default: semantic color assignment, redundant shape encoding,
+          size encoding by weight, subtle funnel fill. Not top-tier due to full box
+          border.'
       - id: DE-02
         name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Grid removed from both axes; legend styled with rounded corners.
+          Deduction: configure_view(stroke=INK_SOFT) creates full rectangular border
+          box — style guide recommends L-frame or no frame.'
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: View stroke removed, X-axis grid subtle dashed, Y-axis grid disabled
-      - id: DE-03
-        name: Data Storytelling
-        score: 5
-        max: 6
-        passed: true
-        comment: Inside/outside funnel classification with color coding immediately
-          communicates publication bias
+        comment: Subtitle explicitly interprets visual; color+shape dual encoding
+          guides viewer to outliers; size communicates precision; leftward asymmetry
+          visually apparent.
     spec_compliance:
       score: 15
       max: 15
@@ -112,26 +132,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct funnel plot for meta-analysis
+        comment: Correct funnel plot with inverted Y-axis (SE=0 at top)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: inverted Y-axis, summary line, funnel bounds,
-          sized points, null reference line'
+        comment: 'All required: inverted Y-axis, summary effect line, pseudo 95% CI
+          bounds, weight-sized points, null reference line at x=0'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = log OR, Y = SE inverted. Correct mapping
+        comment: Effect size on X, standard error on Y, all 15 studies shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels clear
+        comment: Title matches required format exactly; legend labels clear and matching
+          data
     data_quality:
       score: 15
       max: 15
@@ -141,21 +162,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows inside/outside funnel, varying precision, clear asymmetry pattern
+        comment: Studies inside and outside funnel; varying precision levels; clear
+          asymmetry
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 15 RCTs with realistic study names, log odds ratios, and standard
-          errors
+        comment: 15 named RCTs (Adams 2016, Baker 2017, etc.) comparing drug vs placebo
+          with log ORs; realistic and neutral medical context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Log ORs [-1.05, -0.08] and SEs [0.09, 0.28] realistic for clinical
-          meta-analysis
+        comment: Log OR range (-0.08 to -1.05) and SE range (0.09 to 0.28) realistic
+          for meta-analytic data
     code_quality:
       score: 10
       max: 10
@@ -165,7 +187,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow with no functions or classes
+        comment: 'Linear flat structure: imports → theme tokens → data → layers →
+          chart → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -177,19 +200,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas — all used
+        comment: All imports used; sys path fix necessary for Altair self-import collision
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized with clear section comments
+        comment: Well-organized; idiomatic layer composition; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html with current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Altair API;
+          PIL PAD-only to target canvas
     library_mastery:
       score: 7
       max: 10
@@ -199,18 +223,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good declarative grammar: alt.layer(), proper encoding types, alt.Scale,
-          configure_* chain'
+        comment: Good use of alt.layer(), proper Q/N encoding types, alt.Scale for
+          domains, alt.Title with subtitle, alt.Tooltip with format strings
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Interactive tooltips, transform_fold, layer composition with detail
-          encoding
+        comment: Uses transform_fold to create area from two bound columns (distinctly
+          Vega-Lite), declarative alt.layer() composition, native Altair tooltips
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
   - hover-tooltips
@@ -220,5 +245,4 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
   - edge-highlighting
