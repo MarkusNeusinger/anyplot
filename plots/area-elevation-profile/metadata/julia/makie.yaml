@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: area-elevation-profile
 created: '2026-06-10T06:06:38Z'
-updated: '2026-06-10T06:13:41Z'
+updated: '2026-06-10T06:23:23Z'
 generated_by: claude-sonnet
 workflow_run: 27256310300
 issue: 4578
@@ -12,121 +12,116 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-elev
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 90
 review:
   strengths:
-  - 'Perfect spec compliance: filled silhouette, all required landmarks, start/end
-    labels, VE annotation'
-  - 'Complete theme adaptation: all chrome tokens properly flip between light and
-    dark with no dark-on-dark failures'
-  - Clean use of band! (Makie-idiomatic area fill) combined with lines! for the profile
-    overlay
-  - Realistic alpine terrain data with Gaussian smoothing for natural micro-texture
-  - White/page stroke on landmark markers provides clean definition against the terrain
-    fill
-  - Six well-positioned landmark annotations with correctly offset labels
+  - 'Perfect spec compliance: filled silhouette, landmark annotations with connector
+    lines, VE note, and start/end labels all present'
+  - Both light and dark renders are fully theme-correct and readable; no dark-on-dark
+    failures detected
+  - Summit Peak receives intentional visual hierarchy via larger marker (size 13 vs
+    9) and taller connector, creating a clear focal point
+  - Idiomatic use of band!() for terrain silhouette — the correct Makie primitive
+    for this plot type
+  - Realistic alpine traverse scenario with plausible French/English mountain naming;
+    neutral geography context
   weaknesses:
-  - Landmark annotation text at fontsize=10 (effective 20 source px) is too small
-    for mobile readability — at 400 px display width these drop to ~2.5 source px.
-    Increase to fontsize=13-14 for landmark labels and the VE note.
-  - 'Dark render terrain fill (28% alpha green over #1A1A17) is quite dim — the silhouette
-    effect loses impact in dark mode. Use theme-conditional alpha: ~0.28 light, ~0.42
-    dark.'
-  - Summit Peak has no additional visual emphasis over other landmarks despite being
-    the highest point — consider a larger marker (size 12 vs 9) or distinct styling
-    to create focal hierarchy.
+  - Helper functions lerp_elev and gauss_smooth break the flat KISS Imports→Data→Plot→Save
+    structure — consider inlining or using simpler parameterized noise without named
+    functions
+  - Trail End label at x=80 with right-alignment is tight against the right axis boundary
+    — extend x-axis limit from 82.0 to 84.0 to give the label more breathing room
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct
-      Chrome: Title "area-elevation-profile · julia · makie · anyplot.ai" in dark ink — readable. Axis labels "Elevation (m)" and "Distance (km)" in dark ink — readable. Tick labels in dark secondary ink (#4A4A44) — readable. Y-grid subtle at 12% alpha.
-      Data: Terrain fill in Imprint brand green (#009E73) at 28% alpha. Solid profile line in #009E73 (linewidth 2.5). Six landmark markers (dot, size 9, white stroke). Thin muted connector lines. All data elements clearly distinguishable from background.
-      Legibility verdict: PASS — all text readable. NOTE: annotation fontsize=10 (~20 source px) is small; marginal at 400 px mobile width.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "area-elevation-profile · julia · makie · anyplot.ai" in dark ink, well-centered. Axis labels "Distance (km)" and "Elevation (m)" in dark INK, proportional at 14pt. Tick labels in INK_SOFT (dark-ish) at 12pt — all readable. Horizontal-only y-grid lines subtle. L-shaped spines (top/right removed).
+      Data: Semi-transparent brand-green (#009E73, ~28% alpha) filled area below the solid #009E73 profile line. Six landmark annotations (Trailhead 983m, First Pass 2753m, Summit Peak 3221m, Col de Neige 2597m, Grand Col 2888m, Trail End 1039m) with thin connector lines and INK_SOFT text. VE ≈ 15× note bottom-right in INK_MUTED. First (and only) series is #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct
-      Chrome: Title and axis labels in light ink (#F0EFE8) — readable. Tick labels in light secondary ink (#B8B7B0) — readable. Landmark annotation text in muted light token (#A8A79F) — readable. No dark-on-dark failures detected.
-      Data: Terrain fill color identical to light render (#009E73) but 28% alpha over dark background produces darker greenish fill — silhouette effect is dimmer than light render. Profile line (#009E73) remains bright and clearly visible. Marker and connector colors identical to light render.
-      Legibility verdict: PASS — all text readable. MINOR: terrain fill alpha too low for dark background; consider 0.40-0.45 for equivalent visual weight.
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and axis labels in light #F0EFE8 (INK on dark). Tick labels in #B8B7B0 (INK_SOFT on dark). Connector lines in muted light tone. All text clearly readable against dark background. No dark-on-dark failures. Grid lines appear as subtle lighter-toned horizontal rules.
+      Data: Same #009E73 profile line; fill uses higher alpha (~42%) for a richer deep-green silhouette. Data colors identical to light render — only chrome has flipped. Brand green #009E73 clearly visible against the dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: Title/axis/tick text well-sized and readable in both themes. Landmark
-          annotations at fontsize=10 (20 source px) too small for mobile readability
-          at 400 px width (~2.5 px).
+        comment: All sizes explicitly set; proportions balanced. Trail End label at
+          x=80 sits close to the right axis boundary but fully visible.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All landmark labels well-positioned with no collisions. Col de Neige
-          uses negative offset cleanly.
+        comment: No overlap; Col de Neige floats cleanly below the terrain line; all
+          landmark labels clear.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Profile line and markers clearly visible in both themes. Filled area
-          at 28% alpha is dim on dark background; silhouette effect reduced in dark
-          render.
+        comment: Profile line (linewidth=2.5) and landmark markers (size 9–13) well-adapted
+          to 320-point density.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single series, brand green #009E73, adequate contrast on both backgrounds.'
+        comment: Single-series Imprint green; CVD-safe; full contrast via INK/INK_SOFT
+          tokens.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Title ~65% plot width. Good proportions,
-          no overflow.
+        comment: Canvas gate passed (3200x1800). Chart fills ~70% of canvas height
+          with generous margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Elevation (m) and Distance (km) with units. Correct title format.
+        comment: Distance (km) and Elevation (m) with correct units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 throughout. Backgrounds #FAF8F1 light / #1A1A17
-          dark. All chrome tokens theme-adaptive.'
+        comment: 'First series #009E73; backgrounds #FAF8F1 (light) / #1A1A17 (dark);
+          fully theme-adaptive chrome in both renders.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above default: spines removed, y-grid only at 12% alpha, white marker
-          strokes, muted connector lines. No gradient coloring; all landmarks equal
-          visual weight.'
+        comment: 'Strong design: theme-differentiated fill alpha, Summit Peak emphasis,
+          clean L-shaped frame — clearly above library defaults.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: L-shaped spine frame, subtle y-grid, muted connector lines, white/page
-          stroke edge highlighting.
+        comment: Top/right spines removed; y-only grid; explicit spine colors; transparent
+          connector lines (0.5 alpha). Tick marks retained; minor spacing opportunities
+          remain.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Trail narrative coherent, VE annotation present. No visual hierarchy
-          among landmarks — Summit Peak has no additional emphasis.
+        passed: true
+        comment: 'Visual hierarchy guides viewer: Summit Peak as focal apex; Trailhead/Trail
+          End as journey endpoints; terrain texture adds realism.'
     spec_compliance:
       score: 15
       max: 15
@@ -136,26 +131,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct area/line chart with filled terrain silhouette.
+        comment: Correct filled elevation profile (band + line = terrain silhouette).
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Area fill, start/end labeled, landmarks with connector lines, VE
-          factor noted.
+        comment: Filled silhouette, start/end labels, landmark annotations with connector
+          lines, VE noted (VE ≈ 15×).
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: distance km 0-80, Y: elevation m 983-3221. Both axes with units.'
+        comment: Distance on x, Elevation on y; full 0–80 km range visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches format. No legend for single series (appropriate).
+        comment: Title matches required format. No legend (single series — correct).
     data_quality:
       score: 15
       max: 15
@@ -165,22 +160,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Terrain profile, filled silhouette, 6 landmarks, dot markers, connector
-          lines, VE note, 320 sample points.
+        comment: Multi-peak traverse with ascent, descent, col/saddles, terrain texture
+          — all elevation-profile aspects present.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Fictional alpine traverse (80 km, 950-3221 m) with French alpine
-          naming. Plausible and neutral.
+        comment: Fictional alpine route with plausible French/English mountain names;
+          neutral hiking/geography context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic alpine elevation range. VE ~15x plausible. 320 sample points
-          within spec 50-500.
+        comment: 80 km traverse, 983–3221 m elevation range — realistic for an alpine
+          traverse.
     code_quality:
       score: 9
       max: 10
@@ -189,52 +184,51 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        passed: true
-        comment: Helper functions lerp_elev and gauss_smooth each used once; justified
-          but add complexity above pure KISS.
+        passed: false
+        comment: Two helper functions (lerp_elev, gauss_smooth) break the flat Imports→Data→Plot→Save
+          pattern.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) present.
+        comment: Random.seed!(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random — all used.
+        comment: CairoMakie, Colors, Random — all three used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized sections, no fake UI, named constants.
+        comment: Clean, well-commented code explaining design decisions. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-$(THEME).png, no bare plot.png.
+        comment: Saves as plot-$(THEME).png; uses current size= API.
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct use of band!, lines!, scatter!, text!. Proper axis property
-          names. RGBAf for semi-transparent colors. colorant string from Colors.jl.
+        comment: band!(), lines!(), scatter!(), text!() composited on a single Axis
+          — textbook idiomatic CairoMakie.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: band! is the key Makie-specific primitive for area fills. RGBAf alpha
-          and text align tuple system idiomatic. No advanced features like recipes
-          or theme system.
+        passed: true
+        comment: band!() for terrain silhouette is distinctively Makie; RGBAf() type-safe
+          alpha color construction leverages Makie's color system.
   verdict: APPROVED
 impl_tags:
   dependencies: []
