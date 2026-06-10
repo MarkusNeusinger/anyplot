@@ -1,42 +1,55 @@
 library: pygal
+language: python
 specification_id: recurrence-basic
 created: '2026-03-14T22:46:54Z'
-updated: '2026-03-14T23:18:19Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23097948367
+updated: '2026-06-10T03:14:16Z'
+generated_by: claude-sonnet
+workflow_run: 27249534552
 issue: 4592
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/pygal/plot.html
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/python/pygal/plot-dark.html
 quality_score: 86
 review:
   strengths:
-  - 'Excellent data choice: Lorenz attractor with time-delay embedding produces rich
-    recurrence structure showing determinism, regime changes, and varying dynamics'
-  - Professional visual design with custom blue sequential colormap, clean typography,
-    and well-placed annotations that guide interpretation
-  - Full spec compliance including color-mapped distance variant and all required
-    features
-  - Creative use of pygal extensibility through custom Graph subclass for a non-standard
-    chart type
+  - 'Excellent use of imprint_seq colormap (#009E73 → #4467A3) to display distance
+    bins — continuous distance information is preserved rather than collapsing to
+    binary recurrence'
+  - Proper time-delay embedding (Takens theorem) with emb_dim=3, emb_delay=5 using
+    Lorenz attractor — scientifically correct and produces rich visual patterns
+  - 'Perfect spec compliance: square 2400×2400 canvas, both axes labeled Time Index,
+    main diagonal visible, ~15% recurrence rate threshold, 220 embedded points'
+  - 'Theme-adaptive chrome fully implemented: background, foreground, and text tokens
+    all branch on ANYPLOT_THEME; dark render shows clean light text on near-black
+    surface'
+  - 'Complete pygal output: both PNG and HTML interactive files saved for both themes'
+  - Reproducible with np.random.seed(42); KISS structure with no functions or classes
   weaknesses:
-  - 'Code complexity: custom Graph subclass and sys.path hack reduce code quality
-    scores'
-  - Near-threshold cells are very faint and barely distinguishable from background
-  - Some wasted canvas space between main plot and colorbar
-  image_description: 'The plot displays a square recurrence plot for a Lorenz attractor
-    time series with both axes labeled "Time Index (steps)" ranging from 0 to ~290.
-    The main diagonal runs clearly from top-left to bottom-right in dark blue. Recurrent
-    state pairs are shown as blue cells on a light blue-gray background, with color
-    intensity varying by Euclidean distance — darker blue for closer states, lighter
-    for states near the threshold. A vertical colorbar on the right maps "Euclidean
-    Distance" from 0.0 (dark blue) to ~9.8 (white). Three red italic annotations with
-    dashed leader lines highlight key features: "Diagonal lines (determinism)" near
-    the top-left, "Main diagonal" at center, and "Block cluster (regime change)" in
-    the lower-right quadrant. The title reads "recurrence-basic · pygal · pyplots.ai"
-    at the top. Tick marks appear at intervals of 50 along both axes. The overall
-    layout is clean and professional with a white background.'
+  - Legend positioned in the upper-left corner overlaps with recurrence data points
+    — pygal places the legend inside the plot area by default; consider using legend_at_bottom=True
+    or legend_at_bottom_columns to move it below the chart
+  - 'DE-02 Visual Refinement: pygal''s default chart renders with all four box-frame
+    spines and visible inner borders; no attempt to minimise chrome via available
+    Style properties'
+  - 'DE-03 Data Storytelling: distance bin labels (''Distance bin 1'' through ''Distance
+    bin 5'') are generic — labeling them with their distance ranges (e.g., ''0–20%'',
+    ''20–40%'') would communicate the gradient structure more informatively'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot cream surface, not pure white.
+      Chrome: Title "recurrence-basic · python · pygal · anyplot.ai" is dark and clearly readable at the top. Both axis labels "Time Index" are dark text and easily legible. Tick labels (numeric 0–210) are dark and readable against the light background. Grid lines are subtle dotted lines appropriate for a matrix-type visualization.
+      Data: 5 distance bins rendered as scatter points using imprint_seq colormap — Bin 1 is bright teal-green (#009E73, nearest recurrences), progressing to Bin 5 blue (#4467A3, farthest recurrences within threshold). The main diagonal (top-left to bottom-right due to y-flip) is clearly visible. Block structures indicating regime changes are prominent (e.g., upper-right and lower-left quadrant clusters at t≈160–210 and t≈50–80). Diagonal parallel lines indicate periodic/deterministic segments. The 5-bin sequential colormap makes the density gradient of recurrence states visually clear.
+      Legend: 5 legend entries in upper-left, partially overlapping with recurrence data points in the upper-left quadrant.
+      Legibility verdict: PASS — all text is clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black.
+      Chrome: Title text is light-colored and clearly visible against the dark background. Axis labels "Time Index" are light and readable. Tick labels (0–210 on both axes) are light-colored — no dark-on-dark failure. Legend text is light against the dark background.
+      Data: Identical data colors to the light render — Bin 1 green (#009E73) through Bin 5 blue (#4467A3) — only chrome flips. The green and blue dots are clearly visible against the dark surface. Recurrence structure (diagonal, blocks, diagonal lines) is just as clear as in the light render.
+      Legibility verdict: PASS — all text is clearly readable against the warm near-black background. No dark-on-dark text failures observed.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -47,69 +60,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=58, axis titles=46, ticks=34,
-          annotations=32, colorbar=30). Annotation labels slightly small relative
-          to axis titles.
+        comment: 'Title, axis labels, and tick labels all readable in both themes.
+          Minor: legend text small but still legible.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text elements. Annotations well-positioned with leader
-          lines.
+        comment: Legend in upper-left partially overlaps recurrence data points —
+          pygal default legend placement inside plot area.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Recurrence cells visible with good color contrast. Near-threshold
-          cells are very faint.
+        comment: 5 distance bins clearly differentiated with sequential colormap.
+          Dots size 4 appropriate for ~6600 recurrent pairs.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (#009E73→#4467A3) is colorblind-safe; no red-green-only
+          encoding.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue sequential colormap is colorblind-safe. Red annotations provide
-          strong contrast.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Square layout appropriate. Some wasted space between colorbar and
-          main plot.
+        comment: Square 2400×2400 canvas correct for symmetric matrix plot. Good proportions.
+          No text overflow.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes labeled 'Time Index (steps)' with units. Colorbar labeled
-          'Euclidean Distance'.
+        comment: Both axes labeled 'Time Index'; title in correct format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Uses imprint_seq sequential colormap (#009E73→#4467A3). Background
+          #FAF8F1/#1A1A17 correct. Data colors identical across both themes.'
     design_excellence:
-      score: 16
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom blue sequential colormap, thoughtful dark color scheme, red
-          annotation accents. Professional appearance above defaults.
+        comment: 'Above default (4→5): sequential colormap binning preserves continuous
+          distance information elegantly. Good palette choice.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Default pygal chrome removed, custom tick marks, clean border, graduated
-          colorbar. Good refinement.
+        passed: false
+        comment: 'Above default (2→3): grid is appropriate for matrix plot. However,
+          full box-frame spines present; no chrome minimization.'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Annotations guide viewer to understand determinism, self-recurrence,
-          and regime changes. Color gradient adds analytical depth.
+        comment: 'Above default (2→4): the 5-bin gradient effectively communicates
+          distance structure; block structures and diagonal lines guide the eye through
+          the Lorenz dynamics. Generic bin labels reduce score.'
     spec_compliance:
       score: 15
       max: 15
@@ -119,26 +138,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct recurrence plot with distance matrix and threshold.
+        comment: Correct recurrence plot — distance-based variant explicitly allowed
+          by spec.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: distance matrix, threshold, time-delay embedding,
-          color-mapped variant, square plot.'
+        comment: Main diagonal visible; Euclidean distance; time-delay embedding (emb_dim=3,
+          emb_delay=5); ~15% recurrence threshold; 220 embedded steps.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Both axes correctly represent time indices.
+        comment: Both axes are time indices 0–210; recurrent pairs correctly plotted
+          as scatter.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No legend needed for single-visualization plot.
+        comment: Title 'recurrence-basic · python · pygal · anyplot.ai' correct. Legend
+          shows 5 distance bins.
     data_quality:
       score: 15
       max: 15
@@ -148,57 +170,58 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Lorenz attractor exhibits all key recurrence features: diagonal
-          lines, block structures, varying density.'
+        comment: Shows diagonal (self-recurrence), block structures (regime changes),
+          and diagonal lines (determinism) — all canonical recurrence plot features.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Lorenz attractor is a classic dynamical system. Neutral scientific
-          context.
+        comment: Lorenz attractor is the canonical example for recurrence plots; scientifically
+          appropriate and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 300 time steps, 15% recurrence rate, standard embedding parameters.
+        comment: 220 embedded points provides clear patterns without over-density;
+          15% recurrence rate is standard.
     code_quality:
-      score: 6
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Uses RecurrencePlotChart class extending Graph. Violates flat-script
-          KISS pattern, though justified by pygal architecture.
+        passed: true
+        comment: No functions or classes; clean top-level procedural code.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. solve_ivp with RK45 is deterministic.
+        comment: np.random.seed(42) set; ODE solution is deterministic.
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: sys import used solely for path manipulation hack.
+        passed: true
+        comment: 'All imports used: numpy, scipy.integrate, scipy.spatial.distance,
+          os, sys, pathlib, pygal, pygal.style.'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: sys.path manipulation is a code smell. Class well-organized but overall
-          complexity high.
+        passed: true
+        comment: Clean sequential colormap construction; clear binning logic; no fake
+          interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via render_to_png. Also generates SVG and HTML.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
     library_mastery:
       score: 7
       max: 10
@@ -208,27 +231,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Properly extends Graph with _plot() and _compute(). Uses internal
-          APIs: svg.node(), self.view, self.nodes.'
+        comment: Correct use of pygal.XY, Style object for all theme tokens, render_to_png
+          and render() for both outputs.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom Graph subclass leveraging pygal SVG engine. HTML embed with
-          render(is_unicode=True) is pygal-specific.
-  verdict: REJECTED
+        comment: HTML interactive output leverages pygal's unique interactivity; custom
+          Style with full imprint_seq colormap is good usage.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
-  - annotations
-  - colorbar
-  - manual-ticks
   - html-export
   patterns:
   - data-generation
   - matrix-construction
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - binning
   styling:
   - custom-colormap
