@@ -15,7 +15,7 @@ Almost every finding you emit is `DIMENSION: looks`. Tag the rare exception accu
 - **Exemplary gap**: what would a best-in-class product site have here that anyplot lacks (a polished design system, motion/micro-interactions, a cohesive empty-state language)? Emit high-value gaps as `looks` findings.
 
 **How to work:**
-1. Glob `app/src/theme/**`, `app/src/components/**`, `app/src/pages/**`, `app/src/styles/**`
+1. Glob `app/src/theme/**`, `app/src/components/**`, `app/src/sections/**`, `app/src/layouts/**`, `app/src/pages/**`, `app/src/styles/**`
 2. Read the theme definition(s) and `useThemeMode` to learn the token system and how light/dark are derived
 3. Grep for hardcoded visual values that bypass the theme: `#[0-9a-fA-F]{3,8}`, `rgb\(`, `style=\{\{`, `px`-literal sizing in `sx`, `color:\s*['"]`, `backgroundColor`
 4. Read a representative set of pages/components to see how consistently theme tokens vs. literals are used

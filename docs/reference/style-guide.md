@@ -446,7 +446,7 @@ It does **not** appear in:
 - Static (non-cursor, non-status) decorative dots or glyphs
 - **Default colour on in-prose links** (see below)
 
-**In-prose link treatment.** Links inside body text default to `--ink-soft` with a 1px `--rule` underline (via `text-decoration`). On hover the colour flips to `--imprint-green` and the underline thickens to `currentColor`. Do **not** set `color: colors.primary` as the default on inline links — brand green stays a signal colour that only appears on interaction. The reusable sx object is exported from `app/src/theme/index.ts` as `proseLinkStyle`; import it everywhere a contextual link lives in prose (About, Legal, MCP, Palette, Stats).
+**In-prose link treatment.** Links inside body text default to `--ink-soft` with a 1px `--rule` underline (via `text-decoration`). On hover the colour flips to `--imprint-green` and the underline thickens to `currentColor`. Do **not** set `color: colors.primary` as the default on inline links — brand green stays a signal colour that only appears on interaction. The reusable sx object is exported from `app/src/theme/tokens.ts` (re-exported via `src/theme`) as `proseLinkStyle`; import it everywhere a contextual link lives in prose (About, Legal, MCP, Palette, Stats).
 
 ```ts
 import { proseLinkStyle } from '../theme';
@@ -1193,7 +1193,7 @@ For CSS:
 The design system is implemented across:
 
 - **HTML reference (full mockup)**: `mockups/landing.html` — single-file reference with all sections, SVG plots, and animations
-- **Theme tokens (frontend)**: `app/src/theme/index.ts` and `app/src/main.tsx` — MUI theme exports for colors, typography, spacing, headingStyle, subheadingStyle, textStyle, tableStyle, codeBlockStyle
+- **Theme tokens (frontend)**: `app/src/theme/tokens.ts` (design tokens: colors, typography, spacing, headingStyle, subheadingStyle, textStyle, tableStyle, codeBlockStyle) and `app/src/theme/create-theme.ts` (MUI theme composition); both re-exported via `src/theme`
 - **Palette (Python library)**: `anyplot.palette` — see §9.5
 
 **Reference CSS skeleton:**
