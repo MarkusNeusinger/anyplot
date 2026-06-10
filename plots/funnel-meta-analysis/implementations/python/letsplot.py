@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 funnel-meta-analysis: Meta-Analysis Funnel Plot for Publication Bias
-Library: letsplot | Python 3.14.3
-Quality: pending | Updated: 2026-06-10
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-10
 """
 
 import os
