@@ -1,44 +1,55 @@
 library: matplotlib
+language: python
 specification_id: acf-pacf
 created: '2026-03-14T22:17:36Z'
-updated: '2026-03-14T22:40:12Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23097477555
+updated: '2026-06-10T01:43:44Z'
+generated_by: claude-sonnet
+workflow_run: 27246993179
 issue: 4663
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/matplotlib/plot.png
-preview_html: null
-quality_score: 90
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
 review:
   strengths:
-  - Excellent significance-based color encoding (dark/light blue) clearly distinguishes
-    meaningful lags from noise
-  - Well-placed annotation with curved arrow highlighting the 12-month seasonal cycle
-    adds genuine data storytelling
-  - LineCollection for color-coded stems is a creative, idiomatic matplotlib approach
-  - 'Clean visual refinement: spine removal, subtle grid, off-white background, white-edged
-    markers'
-  - Classic airline-passenger-style data generates textbook ACF/PACF patterns ideal
-    for demonstration
+  - LineCollection used for efficient multi-segment stem rendering — genuinely idiomatic
+    matplotlib for this pattern
+  - Significance encoding through both color (#009E73 vs INK_MUTED) and marker size
+    creates clear visual hierarchy
+  - Arrow annotation for the 12-month seasonal cycle adds real insight beyond decorative
+    elements
+  - 'Full theme-adaptive chrome: title, axis labels, tick params, legend frame, spines,
+    and annotation all use the correct INK/INK_SOFT/ELEVATED_BG tokens — both renders
+    are clean'
+  - Confidence band using fill_between with low alpha adds polish without visual noise
+  - PACF correctly starts from lag 1; ACF includes lag 0 at exactly 1.0 — spec-compliant
+    detail
+  - savefig uses no bbox_inches='tight' — correct 3200×1800 canvas preserved
+  - statsmodels acf/pacf with alpha=0.05 is the right statistical approach
   weaknesses:
-  - Annotation font size (13pt) is slightly small relative to other text elements
-  - No visual legend for the significant/insignificant color distinction
-  image_description: The plot displays two vertically stacked subplots sharing an
-    x-axis labeled "Lag" (0–36). The top subplot shows ACF values and the bottom shows
-    PACF values. Vertical stem lines extend from a zero baseline to each correlation
-    value, with dark blue (#306998) stems for statistically significant lags and light
-    blue (#a8c4d8) for insignificant ones. Circular dot markers cap each stem, with
-    larger markers (white-edged) on significant lags. Dashed brown/tan horizontal
-    lines mark the 95% confidence bounds (~±0.14), with a very subtle shaded band
-    between them. The ACF plot features an annotation with a curved arrow pointing
-    to lag 12 reading "12-month seasonal cycle." The ACF values show slow decay from
-    1.0 at lag 0 with periodic peaks at lags 12, 24, 36 — characteristic of trended
-    seasonal data. The PACF shows a sharp spike at lag 1 (~0.91) with significant
-    negative values at lags 2–3 and periodic spikes at seasonal lags. Top and right
-    spines are removed, a subtle y-axis grid is present, and the background is off-white
-    (#fafbfd). Title reads "acf-pacf · matplotlib · pyplots.ai" in dark gray at the
-    top.
+  - Annotation text for '12-month seasonal cycle' is at fontsize=8 — borderline readable
+    at thumbnail sizes; consider bumping to 9pt
+  - PACF subplot has no legend of its own and no contextual annotation, leaving the
+    bottom panel slightly bare compared to the annotated ACF panel — a brief text
+    note or second annotation would improve symmetry
+  - Annotation xytext placement (20, acf_values[12]+0.20) is hardcoded and could overlap
+    the legend in edge cases where acf_values[12] is high; a relative offset would
+    be more robust
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "acf-pacf · python · matplotlib · anyplot.ai" in dark ink at 12pt — clearly readable. Y-axis labels "ACF" and "PACF" at 10pt readable. X-axis "Lag" at 10pt readable. Tick labels at 8pt readable. Legend text in INK_SOFT readable. Annotation "12-month seasonal cycle" in brand green at 8pt — small but readable.
+      Data: Significant lag stems and dots in brand green (#009E73); insignificant in muted gray. Dashed confidence bound lines in INK_SOFT with subtle fill_between band. Arrow annotation pointing to lag 12 in ACF panel. PACF panel shows strong AR(1) signature with cutoff after lag 1-2.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light cream (#F0EFE8 equivalent) — clearly readable against dark bg. Y-axis labels, X-axis label, tick labels all rendered in light gray (INK_SOFT dark token) — all readable. Legend text in light gray. Annotation text in brand green — still readable. Legend frame uses ELEVATED_BG (#242420) — subtle elevation.
+      Data: Data colors identical to light render — brand green (#009E73) for significant, muted gray for insignificant. Confidence band subtle but visible. No dark-on-dark failure detected.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
       score: 29
@@ -49,43 +60,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          annotation 13pt. All readable; annotation slightly small.'
+        comment: All text explicitly sized and readable in both themes; annotation
+          at 8pt is borderline small
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Annotation positioned cleanly between
-          title and data.
+        comment: No text or element overlaps in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stem linewidth 2.8 and marker sizes s=64/44 well-suited for 37 lags.
+        comment: Stems at linewidth=2.5 and dots at s=48/34 clearly visible for 37-lag
+          dataset
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Two-tone blue palette is colorblind-safe. Brown confidence bounds
-          provide contrast.
+        comment: Green/gray distinction reinforced by size difference; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Two subplots fill 16:9 canvas well with balanced margins.
+        comment: 3200x1800 canvas correct, two-panel layout well-proportioned, no
+          overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: ACF, PACF, and Lag are standard descriptive labels for this plot
-          type.
+        comment: Title correct format; ACF/PACF/Lag axis labels appropriate and descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 for significant lags; INK_MUTED for insignificant;
+          PAGE_BG #FAF8F1/#1A1A17 correct'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -93,22 +110,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom two-tone blue palette with significance encoding, off-white
-          background, annotation with curved arrow. Strong design above defaults.
+        comment: 'Intentional design: significance color+size hierarchy, arrow annotation
+          for genuine insight, custom legend — above default 4'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed, remaining spines thinned/grayed, subtle y-axis grid,
-          generous whitespace.
+        comment: Top/right spines removed, subtle y-grid, confidence band fill polish,
+          consistent cross-subplot styling — above default 2
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Annotation at lag 12 creates focal point. Significance color-coding
-          guides viewer. Good hierarchy.
+        comment: Seasonal cycle annotation adds genuine insight; significance encoding
+          guides ARIMA interpretation — above default 2
     spec_compliance:
       score: 15
       max: 15
@@ -118,51 +135,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: ACF/PACF stem plots in two vertically stacked subplots
-          with shared x-axis.'
+        comment: Correct ACF/PACF stem plots in two vertically stacked subplots
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: stems from zero, confidence bounds, lag 0 in ACF,
-          PACF from lag 1, 36 lags.'
+        comment: 'All spec features: ACF top/PACF bottom, stem lines, dashed CI, lag
+          0 in ACF, PACF from lag 1, 36 lags'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Lag, Y=ACF/PACF. All data visible.
+        comment: X=lag number, Y=correlation value, shared x-axis, full data range
+          shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. No legend needed per spec.
+        comment: Title 'acf-pacf · python · matplotlib · anyplot.ai' correct; Significant/Insignificant
+          legend appropriate
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows slow ACF decay, seasonal peaks at 12/24/36, sharp PACF cutoff,
-          positive and negative PACF values.
+        comment: Both ACF and PACF, confidence interval, significance classification,
+          lag 0 treatment, seasonal pattern visible
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Airline-style monthly passenger data is classic, neutral, real-world
-          scenario.
+        comment: Airline-style monthly passengers with trend+seasonality — realistic,
+          neutral, spec-consistent example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 observations, realistic ACF/PACF patterns in [-1, 1] range.
+        comment: '200 observations (spec: 100-500), 36 lags (spec: 30-40), correlation
+          values -0.3 to 1.0 sensible'
     code_quality:
       score: 10
       max: 10
@@ -172,50 +191,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, compute, plot, save. No functions/classes.'
+        comment: No functions or classes; clean top-level procedural code
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) — fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: plt, np, LineCollection, statsmodels acf/pacf.'
+        comment: All 5 imports (os, matplotlib.pyplot, numpy, LineCollection, Line2D,
+          statsmodels) are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. LineCollection usage is elegant. Repeated
-          sections natural for two-subplot layout.
+        comment: Appropriate complexity; parallel ACF/PACF construction; no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, bbox_inches=tight. Current API.
+        comment: Saves as plot-{THEME}.png with no bbox_inches='tight'; current matplotlib
+          API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Axes methods throughout; LineCollection for batch segments; fig.suptitle;
+          subplots_adjust; sharex=True
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Axes methods throughout, LineCollection for efficient stem rendering,
-          subplots with sharex.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: LineCollection for per-stem color coding is distinctive matplotlib;
-          basic stem() cannot achieve this.
+        comment: LineCollection, fill_between, custom Line2D legend handles, sharex
+          — genuinely distinctive matplotlib features
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -223,10 +243,11 @@ impl_tags:
   techniques:
   - subplots
   - annotations
+  - custom-legend
   patterns:
   - data-generation
+  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling
