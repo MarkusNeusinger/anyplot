@@ -1,8 +1,11 @@
-""" pyplots.ai
+"""anyplot.ai
 line-load-duration: Load Duration Curve for Energy Systems
-Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-15
+Library: letsplot | Python 3.13
+Quality: pending | Updated: 2026-06-10
 """
+
+import os
+import shutil
 
 import numpy as np
 import pandas as pd
@@ -32,11 +35,23 @@ from lets_plot.export import ggsave
 
 LetsPlot.setup_html()
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — semantic exception applies for load regions:
+# base load (reliable/always-on) → green, intermediate → ochre, peak (costly/intensive) → matte red
+COLOR_BASE = "#009E73"  # Imprint position 1 — reliable, continuous generation
+COLOR_INTER = "#BD8233"  # Imprint position 4 — variable middle-tier generation
+COLOR_PEAK = "#AE3030"  # Imprint position 5 — semantic red for high-cost peak demand
+
 # Data: Synthetic annual hourly load profile for a mid-sized utility
 np.random.seed(42)
 hours = np.arange(8760)
-
-# Build realistic hourly load with daily and seasonal patterns
 hour_of_day = hours % 24
 day_of_year = hours // 24
 
@@ -49,21 +64,16 @@ noise = np.random.normal(0, 40, 8760)
 hourly_load = base_load + seasonal_component + daily_pattern + noise
 hourly_load = np.clip(hourly_load, 350, 1250)
 
-# Sort descending to create load duration curve
+# Sort descending to create the load duration curve
 load_sorted = np.sort(hourly_load)[::-1]
 rank_hours = np.arange(8760)
 
-# Define load regions
 peak_threshold = 900
 intermediate_threshold = 550
 
-# Total energy (area under curve) in GWh
 total_energy_gwh = np.sum(load_sorted) / 1000
 
-# Create non-overlapping ribbon regions using ymin/ymax
-# Peak region: from peak_threshold up to curve (only where curve > peak_threshold)
-# Intermediate region: from intermediate_threshold up to min(curve, peak_threshold)
-# Base region: from 0 up to min(curve, intermediate_threshold)
+# Non-overlapping ribbon regions
 peak_ymin = np.full(8760, peak_threshold, dtype=float)
 peak_ymax = np.where(load_sorted > peak_threshold, load_sorted, peak_threshold)
 
@@ -84,17 +94,20 @@ df_inter = pd.DataFrame(
 df_base = pd.DataFrame(
     {"hour": rank_hours, "ymin": base_ymin, "ymax": base_ymax, "load_mw": load_sorted, "region": "Base Load"}
 )
-
-# Main curve dataframe
 df_line = pd.DataFrame({"hour": rank_hours, "load_mw": load_sorted})
 
-# Label positions for region annotations
-peak_hours = int(np.sum(load_sorted > peak_threshold))
-intermediate_hours = int(np.sum(load_sorted > intermediate_threshold))
+peak_hours_count = int(np.sum(load_sorted > peak_threshold))
+intermediate_hours_count = int(np.sum(load_sorted > intermediate_threshold))
+load_factor = np.mean(load_sorted) / np.max(load_sorted) * 100
 
+# Region label positions (center of each shaded band)
 df_labels = pd.DataFrame(
     {
-        "hour": [peak_hours / 2, (peak_hours + intermediate_hours) / 2, (intermediate_hours + 8760) / 2],
+        "hour": [
+            peak_hours_count / 2,
+            (peak_hours_count + intermediate_hours_count) / 2,
+            (intermediate_hours_count + 8760) / 2,
+        ],
         "load_mw": [
             (np.max(load_sorted) + peak_threshold) / 2,
             (peak_threshold + intermediate_threshold) / 2,
@@ -104,29 +117,39 @@ df_labels = pd.DataFrame(
     }
 )
 
-# Compute storytelling metrics
-peak_load_hours = int(np.sum(load_sorted > peak_threshold))
-load_factor = np.mean(load_sorted) / np.max(load_sorted) * 100
-
-# Energy annotation with load factor
+# Energy summary annotation in upper-right empty space
 df_energy = pd.DataFrame(
     {
         "hour": [5800],
-        "load_mw": [1180],
-        "label": [f"Total Energy: {total_energy_gwh:,.0f} GWh/year\nLoad Factor: {load_factor:.0f}%"],
+        "load_mw": [1170],
+        "label": [f"Total energy: {total_energy_gwh:,.0f} GWh/yr\nLoad factor: {load_factor:.0f}%"],
     }
 )
 
-# Color palette
-colors = {"Peak Load": "#D94F4F", "Intermediate Load": "#E8A838", "Base Load": "#306998"}
+# Capacity threshold labels
+df_peak_cap = pd.DataFrame(
+    {"hour": [6200], "load_mw": [peak_threshold + 38], "label": [f"Peak capacity: {peak_threshold} MW"]}
+)
+df_inter_cap = pd.DataFrame(
+    {
+        "hour": [6200],
+        "load_mw": [intermediate_threshold + 38],
+        "label": [f"Intermediate capacity: {intermediate_threshold} MW"],
+    }
+)
 
-# Plot with non-overlapping geom_ribbon layers and tooltips
+REGION_COLORS = {"Peak Load": COLOR_PEAK, "Intermediate Load": COLOR_INTER, "Base Load": COLOR_BASE}
+
+title = "line-load-duration · python · letsplot · anyplot.ai"
+n = len(title)
+title_fontsize = round(16 * 67 / n) if n > 67 else 16
+
 plot = (
     ggplot()
     + geom_ribbon(
         data=df_base,
         mapping=aes(x="hour", ymin="ymin", ymax="ymax", fill="region"),
-        alpha=0.75,
+        alpha=0.72,
         tooltips=layer_tooltips()
         .format("ymax", ".0f")
         .format("@hour", ".0f")
@@ -137,7 +160,7 @@ plot = (
     + geom_ribbon(
         data=df_inter,
         mapping=aes(x="hour", ymin="ymin", ymax="ymax", fill="region"),
-        alpha=0.75,
+        alpha=0.72,
         tooltips=layer_tooltips()
         .format("@load_mw", ".0f")
         .format("@hour", ".0f")
@@ -148,7 +171,7 @@ plot = (
     + geom_ribbon(
         data=df_peak,
         mapping=aes(x="hour", ymin="ymin", ymax="ymax", fill="region"),
-        alpha=0.75,
+        alpha=0.72,
         tooltips=layer_tooltips()
         .format("@load_mw", ".0f")
         .format("@hour", ".0f")
@@ -159,45 +182,31 @@ plot = (
     + geom_line(
         data=df_line,
         mapping=aes(x="hour", y="load_mw"),
-        color="#1a1a1a",
-        size=1.8,
+        color=INK,
+        size=1.0,
         tooltips=layer_tooltips()
         .format("@load_mw", ".0f")
         .format("@hour", ",d")
         .line("Hour: @hour")
         .line("Demand: @load_mw MW"),
     )
-    + geom_hline(yintercept=peak_threshold, linetype="dashed", color="#C0392B", size=1.0)
-    + geom_hline(yintercept=intermediate_threshold, linetype="dashed", color="#D68910", size=1.0)
+    + geom_hline(yintercept=peak_threshold, linetype="dashed", color=COLOR_PEAK, size=0.8)
+    + geom_hline(yintercept=intermediate_threshold, linetype="dashed", color=COLOR_INTER, size=0.8)
+    + geom_text(data=df_labels, mapping=aes(x="hour", y="load_mw", label="label"), size=4, color=INK, fontface="bold")
     + geom_text(
-        data=df_labels, mapping=aes(x="hour", y="load_mw", label="label"), size=14, color="#2c3e50", fontface="bold"
+        data=df_energy, mapping=aes(x="hour", y="load_mw", label="label"), size=3.5, color=INK_MUTED, fontface="italic"
     )
     + geom_text(
-        data=df_energy, mapping=aes(x="hour", y="load_mw", label="label"), size=12, color="#2c3e50", fontface="italic"
+        data=df_peak_cap, mapping=aes(x="hour", y="load_mw", label="label"), size=3.5, color=COLOR_PEAK, fontface="bold"
     )
     + geom_text(
-        data=pd.DataFrame(
-            {"hour": [6200], "load_mw": [peak_threshold + 35], "label": [f"Peak Capacity: {peak_threshold} MW"]}
-        ),
+        data=df_inter_cap,
         mapping=aes(x="hour", y="load_mw", label="label"),
-        size=12,
-        color="#C0392B",
+        size=3.5,
+        color=COLOR_INTER,
         fontface="bold",
     )
-    + geom_text(
-        data=pd.DataFrame(
-            {
-                "hour": [6200],
-                "load_mw": [intermediate_threshold + 35],
-                "label": [f"Intermediate Capacity: {intermediate_threshold} MW"],
-            }
-        ),
-        mapping=aes(x="hour", y="load_mw", label="label"),
-        size=12,
-        color="#D68910",
-        fontface="bold",
-    )
-    + scale_fill_manual(values=colors)
+    + scale_fill_manual(values=REGION_COLORS)
     + scale_x_continuous(
         name="Hours of Year (Ranked by Demand)",
         breaks=[0, 2000, 4000, 6000, 8000],
@@ -205,26 +214,32 @@ plot = (
     )
     + scale_y_continuous(name="Power Demand (MW)", breaks=[0, 200, 400, 600, 800, 1000, 1200])
     + labs(
-        title="line-load-duration · letsplot · pyplots.ai",
-        subtitle=f"Mid-sized utility · Peak demand {np.max(load_sorted):.0f} MW · {peak_load_hours:,} hours above peak threshold",
+        title=title,
+        subtitle=f"Mid-sized utility · Peak {np.max(load_sorted):.0f} MW · {peak_hours_count:,} hours above peak threshold",
     )
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=24, face="bold", color="#1a1a1a"),
-        plot_subtitle=element_text(size=16, color="#5a6d7e"),
-        axis_title=element_text(size=20, color="#2c3e50"),
-        axis_text=element_text(size=16, color="#4a4a4a"),
+        plot_title=element_text(size=title_fontsize, face="bold", color=INK),
+        plot_subtitle=element_text(size=10, color=INK_SOFT),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_grid_major_y=element_line(color="#e8e8e8", size=0.3),
+        panel_grid_major_y=element_line(color=INK_SOFT, size=0.15),
         legend_position="none",
-        plot_background=element_rect(fill="#fafafa", color="#fafafa"),
-        panel_background=element_rect(fill="#fafafa", color="#fafafa"),
-        plot_margin=[40, 20, 20, 20],
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_text=element_text(color=INK_SOFT),
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save
-ggsave(plot, "plot.png", path=".", scale=3)
-ggsave(plot, "plot.html", path=".")
+# Save PNG and HTML for both themes
+# ggsave writes into lets-plot-images/ by default; move to the working directory
+ggsave(plot, f"plot-{THEME}.png", scale=4)
+ggsave(plot, f"plot-{THEME}.html")
+for _ext in ("png", "html"):
+    _src = os.path.join("lets-plot-images", f"plot-{THEME}.{_ext}")
+    if os.path.exists(_src):
+        shutil.move(_src, f"plot-{THEME}.{_ext}")
