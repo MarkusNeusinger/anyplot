@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 funnel-meta-analysis: Meta-Analysis Funnel Plot for Publication Bias
 Library: plotnine 0.15.5 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-06-10
@@ -32,8 +32,11 @@ from plotnine import (  # noqa: E402
     geom_polygon,
     geom_vline,
     ggplot,
+    guide_legend,
+    guides,
     labs,
     scale_color_manual,
+    scale_shape_manual,
     scale_size_continuous,
     scale_x_continuous,
     scale_y_reverse,
@@ -118,13 +121,20 @@ plot = (
     + geom_line(funnel_lines, aes(x="effect", y="se", group="side"), color=INK_SOFT, linetype="dashed", size=0.7)
     + geom_vline(xintercept=summary_effect, color=BRAND, size=1.2)
     + geom_vline(xintercept=0, color=INK_MUTED, linetype="dotted", size=0.7)
-    + geom_point(studies_df, aes(x="effect_size", y="std_error", size="weight", color="region"), alpha=0.85, stroke=0.3)
+    + geom_point(
+        studies_df,
+        aes(x="effect_size", y="std_error", size="weight", color="region", shape="region"),
+        alpha=0.85,
+        stroke=0.3,
+    )
     + scale_size_continuous(range=(2.5, 8), guide=None)
-    + scale_color_manual(values={"Inside funnel": BRAND, "Outside funnel": OUTLIER_COLOR})
+    + scale_color_manual(values={"Inside funnel": BRAND, "Outside funnel": OUTLIER_COLOR}, name="")
+    + scale_shape_manual(values={"Inside funnel": "o", "Outside funnel": "^"}, name="")
+    + guides(color=guide_legend(override_aes={"shape": ["o", "^"]}), shape=False)
     + annotate(
         "text",
-        x=summary_effect + 0.38,
-        y=0.50,
+        x=summary_effect + 0.45,
+        y=0.08,
         label="Asymmetry suggests\npublication bias",
         size=11,
         color=OUTLIER_COLOR,
@@ -151,7 +161,8 @@ plot = (
         plot_title=element_text(size=12, weight="bold", color=INK),
         axis_title=element_text(size=10, color=INK),
         axis_text=element_text(size=8, color=INK_SOFT),
-        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.12),
+        panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.12),
+        panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
         panel_background=element_rect(fill=PAGE_BG, color="none"),
         plot_background=element_rect(fill=PAGE_BG, color="none"),
