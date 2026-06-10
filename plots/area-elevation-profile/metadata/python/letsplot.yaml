@@ -1,48 +1,62 @@
 library: letsplot
+language: python
 specification_id: area-elevation-profile
 created: '2026-03-15T21:51:50Z'
-updated: '2026-03-15T22:32:52Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23120069378
+updated: '2026-06-10T06:12:18Z'
+generated_by: claude-sonnet
+workflow_run: 27256151633
 issue: 4578
-python_version: 3.14.3
-library_version: 4.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/letsplot/plot.html
-quality_score: 85
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/python/letsplot/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent spec compliance — all required features implemented including slope-based
-    coloring, landmarks, vertical exaggeration note
-  - Strong colorblind-safe palette (blue/amber/purple) with good contrast
-  - Thoughtful design with off-white background, subtle horizontal-only grid, and
-    well-styled landmark markers
-  - Slope-based line coloring adds effective data storytelling about terrain difficulty
-  - Clean, well-organized code with good reproducibility
+  - Slope-steepness coloring uses semantically correct Imprint palette (green=flat,
+    amber=moderate, red=steep) — valid exception with clear category labels
+  - Two-tier landmark label staggering system is thoughtfully designed, preventing
+    overlap in the dense 38–65 km zone
+  - Dotted connector lines from labels to landmark points maintain readability without
+    adding visual clutter
+  - 'Complete spec compliance: area fill, 8 landmarks, vertical exaggeration noted,
+    start/end labeled, optional slope coloring implemented'
+  - layer_tooltips() with multi-line content is idiomatic letsplot interactive feature
+    usage
+  - 'Canvas correctly sized: ggsize(800, 450) + scale=4 → 3200×1800 px; gate passed'
+  - 'Dark render: all chrome tokens correctly applied, no dark-on-dark failures, data
+    colors identical to light render'
+  - 'Title fontsize correctly scaled to 12pt for 91-char title (formula: round(16
+    × 67/91) = 12)'
   weaknesses:
-  - Label overlap in the 20-65 km region where four landmarks cluster — staggering
-    helps but does not fully resolve it
-  - X-axis extends to 150 for label accommodation, creating dead space on the right
-    side
-  - Landmark labels at 40-degree angle with size 14 are at the lower bound of readability
-  image_description: 'The plot shows an Alpine trail elevation profile spanning 120
-    km. The x-axis displays "Distance (km)" from 0 to 120 with ticks every 20 km,
-    and the y-axis shows "Elevation (m)" ranging from about 1,200 m to 2,800 m. A
-    light blue filled area creates a terrain silhouette beneath the profile line.
-    The profile line itself is colored by slope steepness using three colors: blue
-    (Flat/Gentle), amber/gold (Moderate), and deep purple (Steep). Eight landmarks
-    are marked with white-filled circles with blue borders, connected by dotted lines
-    to angled bold text labels: Talbach Village (0 km, ~1,200 m), Steinberg Pass (~20
-    km), Grünsee Lake (~38 km), Hochwand Summit (~50 km, highest point ~2,300 m),
-    Felsentor Saddle (~65 km), Alpenhof Hut (~80 km), Gipfelkreuz Peak (~95 km), and
-    Bergdorf Village (120 km, ~1,200 m). Dashed vertical lines drop from each landmark
-    to the bottom. The title reads "Alpine Trail Elevation Profile · area-elevation-profile
-    · letsplot · pyplots.ai" with a subtitle noting vertical exaggeration ~10x. A
-    legend at the bottom shows the three slope categories. The background is a soft
-    off-white (#FAFAFA) with subtle horizontal grid lines only.'
+  - '# noqa: F401 comment on the import block violates the project rule against lint-suppress
+    comments; all imports ARE used and the linter false-positive should be resolved
+    by explicit aliasing or restructuring rather than suppression'
+  - 'VQ-04: green-red pair (Flat/Gentle=#009E73 vs Steep=#AE3030) remains a concern
+    for deuteranopes/protanopes despite amber middle anchor; consider adding a line-style
+    or width redundant encoding (thick=steep, thin=flat) as an additional CVD signal'
+  - Landmark label density around km 38–65 (Grünsee Lake + Hochwand Summit stacked
+    close vertically) is workable but tight; increasing nudge_x on Grünsee Lake from
+    11 to 15 would give more horizontal breathing room
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "Alpine Trail Elevation Profile · area-elevation-profile · python · letsplot · anyplot.ai" in bold dark ink (#1A1A17) at top, clearly readable. Subtitle in INK_SOFT below. Axis labels "Distance (km)" and "Elevation (m)" in dark ink at correct size. Tick labels in dark secondary ink, all readable.
+      Data: Blue (#4467A3 at alpha=0.35) terrain silhouette fill beneath the profile line. Profile line colored by slope: green (#009E73) for flat sections, amber (#DDCC77) for moderate, matte red (#AE3030) for steep. Eight landmark points as hollow green circles with dashed vertical drop lines to baseline. Label connectors (dotted) link labels to landmark circles. Staggered two-tier labels in bold dark ink — all readable with no overlap observed.
+      Legend: "Slope Steepness" at bottom with three colored line swatches, text in INK_SOFT, legend box on elevated background (#FFFDF6).
+      Legibility verdict: PASS — all text clearly readable against warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title and subtitle in light ink (#F0EFE8), clearly readable. Axis labels and tick labels in light secondary ink (#B8B7B0). No dark-on-dark failures observed anywhere. Dashed landmark lines in tertiary muted ink — subtle but visible.
+      Data: Terrain fill appears slightly lighter blue on dark background but same blue family. Profile line slope colors (green/amber/red) are IDENTICAL to light render — only chrome flips, data colors constant. Landmark hollow circles in green, label connectors dotted in muted ink. All landmark text labels readable in bold light ink.
+      Legend: "Slope Steepness" with three color swatches on slightly elevated dark background (#242420), text in secondary light ink.
+      Legibility verdict: PASS — all text clearly readable against warm near-black background; no dark-on-dark failure found.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -50,43 +64,60 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set. Landmark labels at size 14 with 40°
-          angle slightly less legible but readable.
+        comment: Title scaled correctly for 91-char string (12pt). All axis, tick,
+          legend, and landmark labels readable in both themes. Minor deduction for
+          landmark label density in 38-65 km zone.
       - id: VQ-02
         name: No Overlap
-        score: 3
-        max: 6
-        passed: false
-        comment: Labels in 20-65 km region closely spaced with some tail overlap despite
-          staggering.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Profile line at size 2.5 clearly visible, landmark points at size
-          7 stand out well.
+        comment: Two-tier staggering prevents actual overlap. Minor deduction for
+          visual crowding of Grünsee Lake and Hochwand Summit labels in the dense
+          central zone.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 480-point line at size=1.5 appropriate for medium density. Landmark
+          circles size=5 visible. Area fill at alpha=0.35 readable. All elements clearly
+          distinguishable.
       - id: VQ-04
         name: Color Accessibility
+        score: 1
+        max: 2
+        passed: false
+        comment: Green-red pair (Flat=green, Steep=red) is semantically correct per
+          spec suggestion but remains a CVD concern for deuteranopes/protanopes. Amber
+          middle category helps but extremes are not distinguished by hue under colorblindness
+          simulation.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue/amber/purple colorblind-safe palette with strong contrast.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: X-axis extends to 150 while data ends at 120, creating dead space
-          on the right.
+        comment: Canvas gate passed (ggsize(800,450)+scale=4 = 3200×1800). Title at
+          ~85% width — expected for long 91-char title. Legend bottom placement clean.
+          Y-axis limits with 400m headroom for labels. No overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Distance (km) and Elevation (m) — descriptive with units.
+        comment: 'X: ''Distance (km)'', Y: ''Elevation (m)'' — units included. Title
+          includes descriptive prefix + mandatory format. Subtitle notes key context.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First slope series = #009E73 (Imprint pos 1). Amber (#DDCC77) as
+          caution anchor. Red (#AE3030) as semantic-bad anchor. Area fill = #4467A3
+          (Imprint pos 3, non-categorical use). Backgrounds correct (#FAF8F1 / #1A1A17).
+          Semantic exception is valid per spec guidance.'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -94,22 +125,28 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom colorblind-safe palette, thoughtful typography hierarchy,
-          themed markers, off-white background. Clearly above defaults.
+        comment: 'Above default (4): slope-based line coloring, two-tier staggered
+          label system, hollow circle landmarks, dotted connector lines, and semantic
+          Imprint palette exception all show intentional design. Not at 8 because
+          no additional flourishes like elevation annotations or gradient shading.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Minimal theme, horizontal-only grid, custom background, generous
-          margins, dotted connector lines.
+        comment: 'Above default (2): y-only grid (panel_grid_major_x blanked), minor
+          grid removed, subtle grid size=0.15, legend box with elevated background
+          and border, theme_minimal base. Could be improved by removing axis line
+          or spines explicitly.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Slope-based coloring creates terrain difficulty narrative. Landmarks
-          guide viewer through the trail.
+        comment: 'Above default (2): slope coloring creates an immediate difficulty
+          narrative. Landmark vertical lines guide the eye through the journey. VE
+          noted in subtitle. Visual hierarchy from area fill → colored line → landmark
+          points → labels is effective.'
     spec_compliance:
       score: 15
       max: 15
@@ -119,54 +156,62 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct area/line plot with filled terrain silhouette.
+        comment: 'Correct area elevation profile: geom_area for terrain silhouette
+          + geom_line for profile + geom_point + geom_segment + geom_text for landmarks.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: filled area, landmarks, vertical markers,
-          slope coloring, vertical exaggeration note.'
+        comment: Area fill ✓, start/end labeled ✓, 8 landmarks with vertical lines
+          and text ✓, VE ~10× noted in subtitle ✓, optional slope coloring implemented
+          ✓.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Distance on x-axis, elevation on y-axis, correct throughout.
+        comment: X = distance in km (0-120), Y = elevation in metres (clipped at 800m,
+          shown ~1200-2600). 480 sample points in spec range (50-500). All data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows spec-id · library · pyplots.ai format. Legend correctly
-          labels slope categories.
+        comment: 'Title: ''Alpine Trail Elevation Profile · area-elevation-profile
+          · python · letsplot · anyplot.ai'' — valid {Descriptive} · {spec-id} · python
+          · letsplot · anyplot.ai format. Legend labels ''Flat / Gentle'', ''Moderate'',
+          ''Steep'' match data categories.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Multiple peaks, valleys, varying slopes, 8 diverse landmarks. Good
-          variety.
+        comment: Full 120km profile with 480 points. 8 landmarks covering start, major
+          peaks, passes, huts, and end. Slope steepness coloring. Vertical exaggeration
+          noted. All spec features present.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Alpine hiking trail with plausible German-language landmark names.
-          Neutral, engaging.
+        comment: Alpine hiking trail with German/Austrian naming conventions (Steinberg
+          Pass, Hochwand Summit, Felsentor Saddle, Alpenhof Hut). Elevation range
+          1200-2400m realistic for Alps. Non-controversial topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Elevations 1200-2300 m realistic for Alpine trails. 120 km plausible
-          for multi-day hike.
+        comment: Distance 0-120 km with 20 km tick breaks. Elevation ~1200-2600m with
+          200m tick breaks. Terrain shape (ridges, valleys, broad sine base) is plausible.
+          Random seed for reproducibility.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -174,32 +219,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, save. No functions or classes.'
+        comment: 'No functions or classes. Linear script: imports → tokens → data
+          → landmarks → plot → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at start.
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: All imports used.
+        passed: false
+        comment: '# noqa: F401 on import block violates project no-lint-suppress rule.
+          All imports ARE used; the noqa is suppressing a flake8 false positive from
+          the + operator DSL pattern. Should be resolved without suppression.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. Manual nudge arrays appropriate for label
-          positioning.
+        comment: Clean layered composition. Staggered label arrays clearly documented.
+          No fake functionality. Appropriate complexity for the spec.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_ggsave with scale=3.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. ggsize(800,450) + scale=4
+          → correct 3200×1800 output. Current letsplot API.
     library_mastery:
       score: 7
       max: 10
@@ -209,21 +258,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good ggplot grammar usage: aes, geom layering, scale_color_manual,
-          theme customization, inherit_aes.'
+        comment: 'Above default (3): idiomatic grammar of graphics layering, inherit_aes=False
+          for auxiliary dataframes, scale_* functions, theme() composition over theme_minimal().
+          All letsplot API calls correct.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layer_tooltips() for interactive hover, ggsize(), export_ggsave
-          with scale. HTML export also generated.
+        comment: 'Above default (1): layer_tooltips() with multi-line .line() chain
+          is a letsplot-distinctive feature. HTML export alongside PNG leverages letsplot''s
+          interactive output capability. Tooltip configured on both line and landmark
+          points.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - layer-composition
+  - annotations
   - hover-tooltips
   - html-export
   patterns:
@@ -233,5 +285,3 @@ impl_tags:
   - binning
   styling:
   - alpha-blending
-  - grid-styling
-  - edge-highlighting
