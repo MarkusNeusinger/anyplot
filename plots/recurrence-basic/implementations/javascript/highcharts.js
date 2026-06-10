@@ -1,7 +1,8 @@
 // anyplot.ai
 // recurrence-basic: Recurrence Plot for Nonlinear Time Series
-// Library: highcharts 12.6.0 | JavaScript 22.22.3
-// Quality: 86/100 | Created: 2026-06-10
+// Library: Highcharts 12.6.0 | Node 22
+// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
+// Quality: pending | Created: 2026-06-10
 
 //# anyplot-orientation: square
 
@@ -24,7 +25,7 @@ for (let i = 0; i < M; i++) {
     emb[i] = [ts[i], ts[i + 1]];
 }
 
-// Binary recurrence matrix: mark (i,j) where distance < epsilon
+// Binary recurrence matrix: mark (i,j) where Euclidean distance < epsilon
 const eps = 0.15;
 const epsSq = eps * eps;
 const recData = [];
@@ -39,19 +40,24 @@ for (let i = 0; i < M; i++) {
 }
 
 // Chart
-Highcharts.chart("container", {
+const chart = Highcharts.chart("container", {
     chart: {
         type: "scatter",
         backgroundColor: "transparent",
         animation: false,
         style: { fontFamily: "inherit" },
-        spacing: [20, 20, 20, 10]
+        spacing: [20, 20, 20, 20],
+        plotBorderWidth: 0
     },
     credits: { enabled: false },
     colors: t.palette,
     title: {
         text: "recurrence-basic · javascript · highcharts · anyplot.ai",
         style: { color: t.ink, fontSize: "22px", fontWeight: "600" }
+    },
+    subtitle: {
+        text: "Diagonal lines = determinism · block structures = regime changes (logistic map, r = 3.82)",
+        style: { color: t.inkSoft, fontSize: "13px" }
     },
     xAxis: {
         title: {
@@ -98,3 +104,17 @@ Highcharts.chart("container", {
         color: t.palette[0]
     }]
 });
+
+// Overlay the main diagonal (i = j) using Highcharts SVG renderer.
+// The self-recurrence line anchors the viewer and highlights deterministic structure.
+const ax = chart.xAxis[0];
+const ay = chart.yAxis[0];
+chart.renderer.path([
+    "M", ax.toPixels(0), ay.toPixels(0),
+    "L", ax.toPixels(M - 1), ay.toPixels(M - 1)
+]).attr({
+    "stroke-width": 3,
+    stroke: t.amber,
+    opacity: 0.85,
+    zIndex: 5
+}).add(chart.seriesGroup);
