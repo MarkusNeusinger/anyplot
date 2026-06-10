@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 recurrence-basic: Recurrence Plot for Nonlinear Time Series
 Library: plotly 6.8.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-06-10
+Quality: 85/100 | Updated: 2026-06-10
 """
 
 import os
