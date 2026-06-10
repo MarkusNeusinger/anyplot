@@ -108,9 +108,9 @@ const landmarkPlugin = {
       c.stroke();
 
       // Measure label box dimensions
-      c.font = "bold 13px sans-serif";
+      c.font = "bold 15px sans-serif";
       const nameW = c.measureText(lm.name).width;
-      c.font = "12px sans-serif";
+      c.font = "14px sans-serif";
       const elevW = c.measureText(lm.elev).width;
       const boxW = Math.max(nameW, elevW) + pad * 2;
       const boxH = lineH * 2 + pad;
@@ -131,14 +131,14 @@ const landmarkPlugin = {
       c.fill();
 
       // Landmark name (bold)
-      c.font = "bold 13px sans-serif";
+      c.font = "bold 15px sans-serif";
       c.fillStyle = t.ink;
       c.textAlign = "center";
       c.textBaseline = "top";
       c.fillText(lm.name, boxCenterX, boxTop + pad);
 
       // Elevation value (regular, secondary)
-      c.font = "12px sans-serif";
+      c.font = "14px sans-serif";
       c.fillStyle = t.inkSoft;
       c.fillText(lm.elev, boxCenterX, boxTop + pad + lineH);
     });
@@ -180,7 +180,14 @@ new Chart(canvas, {
         text: "area-elevation-profile · javascript · chartjs · anyplot.ai",
         color: t.ink,
         font: { size: 22, weight: "500" },
-        padding: { top: 16, bottom: 8 },
+        padding: { top: 16, bottom: 4 },
+      },
+      subtitle: {
+        display: true,
+        text: "Vertical exaggeration ≈ 10×",
+        color: t.inkSoft,
+        font: { size: 13 },
+        padding: { bottom: 10 },
       },
       legend: { display: false },
     },
@@ -195,7 +202,7 @@ new Chart(canvas, {
           stepSize: 10,
           callback: (v) => v + " km",
         },
-        grid: { color: t.grid },
+        grid: { display: false },
         title: {
           display: true,
           text: "Distance (km)",
