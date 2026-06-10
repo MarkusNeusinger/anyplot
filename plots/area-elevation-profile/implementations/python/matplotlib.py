@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-elevation-profile: Terrain Elevation Profile Along Transect
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-10
@@ -67,10 +67,8 @@ ax.set_facecolor(PAGE_BG)
 y_min = 600
 y_max = elevation.max()
 
-# Gradient fill — terrain silhouette (semantic elevation palette: vegetation→rock)
-cmap = LinearSegmentedColormap.from_list(
-    "terrain_fill", ["#2d6a4f", "#40916c", "#74c69d", "#b7e4c7", "#d4a373", "#a0522d", "#6b3a2a"]
-)
+# Gradient fill — terrain silhouette (imprint_seq: brand green → blue)
+cmap = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
 gradient_resolution = 200
 y_levels = np.linspace(y_min, y_max, gradient_resolution)
 for i in range(len(y_levels) - 1):
@@ -80,8 +78,8 @@ for i in range(len(y_levels) - 1):
     color = cmap(i / (len(y_levels) - 1))
     ax.fill_between(distance, y_lo, clipped, color=color, alpha=0.9, linewidth=0)
 
-# Profile line — theme-adaptive ink color for contrast on both surfaces
-ax.plot(distance, elevation, color=INK, linewidth=2.0, zorder=3)
+# Profile line — brand green primary data element
+ax.plot(distance, elevation, color="#009E73", linewidth=2.0, zorder=3)
 
 # Landmark annotations — stagger to separate the 18–28 km cluster
 # Sonnalm pushed up high (horiz-centered) so it clears Hoher Kamm without going left into Bergdorf
