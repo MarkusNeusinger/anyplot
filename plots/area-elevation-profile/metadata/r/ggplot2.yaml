@@ -1,0 +1,266 @@
+library: ggplot2
+language: r
+specification_id: area-elevation-profile
+created: '2026-06-10T06:00:31Z'
+updated: '2026-06-10T06:27:13Z'
+generated_by: claude-sonnet
+workflow_run: 27256230307
+issue: 4578
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - linearGradient from R's grid package as terrain fill — leverages ggplot2 3.5.0+
+    grid integration for a distinctive landscape-illustration effect not easily replicated
+    in other libraries
+  - 'Complete spec compliance: all required features present (terrain fill, landmark
+    annotations with dashed verticals, start/end labels, vertical exaggeration note)'
+  - 'Perfect theme adaptation: correct #FAF8F1 / #1A1A17 backgrounds with all INK/INK_SOFT
+    tokens properly applied in both renders — no dark-on-dark failures'
+  - Realistic Alpine traverse with plausible named landmarks, factually consistent
+    elevation ranges, and neutral domain
+  - 'Clean idiomatic ggplot2 code: KISS structure, explicit sizing throughout, set.seed(42),
+    all imports used'
+  weaknesses:
+  - Landmark labels in the x=18-60 km mountain zone are somewhat dense (Fontaine Col
+    / Aiguille Peak / Lac Hut all within 27 km, all going upper-right at 45deg); consider
+    reducing label font size slightly or staggering vjust offsets for adjacent labels
+    to improve breathing room
+  - Title and subtitle typography are standard — could gain DE-01 points with a bolder
+    title weight (face='bold') or slightly larger subtitle contrast
+  - Upper plot margin is tight when multiple high-peak labels (2800-3000 m) extend
+    toward the top margin; slight increase to plot.margin top (28-30pt) would add
+    breathing room
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — confirmed, not pure white
+      Chrome: Title "area-elevation-profile · r · ggplot2 · anyplot.ai" at 12pt in INK (#1A1A17), centered. Subtitle "Alpine Traverse · 120 km · ~10× vertical exaggeration" in INK_SOFT (#4A4A44). Y-axis label "Elevation (m)" and X-axis label "Distance (km)" in INK at 10pt. Tick labels in INK_SOFT at 8pt. All text dark-on-light, clearly readable.
+      Data: Terrain silhouette filled with vertical linear gradient from #006B4F (40% alpha) at valley floor to #009E73 (65% alpha) at peaks. Profile line in #009E73. Seven open-circle landmark markers with PAGE_BG fill. 45-degree angled text labels for all landmarks. Y-axis grid lines subtle in INK_SOFT.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — confirmed, not pure black
+      Chrome: Title and axis labels in #F0EFE8 (INK dark), tick labels in #B8B7B0 (INK_SOFT dark). All text light-on-dark, clearly readable. No dark-on-dark failures detected. Horizontal grid lines subtle in INK_SOFT dark-mode tone.
+      Data: Terrain gradient identical to light render (#006B4F→#009E73); profile line remains #009E73. Landmark markers visible with light-colored text labels. Data colors confirm theme-independence.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 12pt, axis titles 10pt, axis
+          text 8pt, landmark labels size=3.0). Well-proportioned. Minor deduction
+          for slight crowding of 45-degree landmark labels in x=18-60 km zone.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Labels close in Fontaine Col / Aiguille Peak zone but vertically
+          offset enough (elevation diff ~780 m, ~119 px gap) to stay readable. No
+          hard overlap.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 481-point terrain profile clearly visible; gradient fill full silhouette;
+          profile line linewidth=1.0 well-suited; landmark points size=2.5 clearly
+          visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-series green on both surfaces; adequate luminance contrast;
+          no red-green conflict.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Correct 3200x1800 landscape canvas; canvas gate passed. Good margins.
+          Minor deduction: label texts near high peaks (2800-3000 m) extend close
+          to upper margin with limited breathing room.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Elevation (m) and Distance (km) with units; subtitle specifies traverse
+          length and vertical exaggeration.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Profile line uses IMPRINT_PALETTE[1] = #009E73. Gradient fill brand-green
+          derivative. Backgrounds #FAF8F1 (light) / #1A1A17 (dark). All chrome tokens
+          correctly theme-adaptive in both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured default: linearGradient terrain fill (ggplot2
+          3.5.0+ grid feature) creates landscape-illustration effect; open-circle
+          landmark markers with PAGE_BG fill; informative subtitle. Not yet strong
+          design — standard typography, no bold emphasis on elevation extremes.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped axis lines, panel border removed. Y-axis ticks removed;
+          X-axis ticks kept. Only major Y-grid (no X-grid, no minor grid). Reasonable
+          whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Gradient fill creates visual hierarchy (darker valleys, brighter
+          peaks). Landmark annotations guide viewer. Subtitle explains vertical exaggeration.
+          Effective terrain profile storytelling.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct area elevation profile: cross-section line with filled terrain
+          silhouette, distance on X, elevation on Y.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Area fill, start/end labels, landmark annotations with dashed verticals,
+          vertical exaggeration note, optional gradient coloring all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Distance (km) on X, elevation (m) on Y, all 481 sample points rendered.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'area-elevation-profile · r · ggplot2 · anyplot.ai'.
+          No separate legend needed (single-series terrain).
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: multi-peak terrain, valleys, labeled landmarks
+          (summits, cols, huts), vertical exaggeration factor, start/end annotations.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Alpine traverse with plausible French/Alpine names (Fontaine Col,
+          Aiguille Peak, Lac Hut, Grand Col); 120 km distance; neutral geography/hiking
+          domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Valley start/end at ~820-1080 m, peak summits at 2652 m and ~2980
+          m — factually consistent with a multi-day Alpine traverse.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports -> tokens -> data -> plot -> save. No
+          functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, scales, ragg, grid — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Idiomatic grammar-of-graphics construction; linearGradient as fill
+          value is clean; no over-engineering; no fake UI elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png via ragg::agg_png; modern ggplot2 API (linewidth=
+          not deprecated size=).
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert grammar-of-graphics layering (geom_ribbon + geom_line + geom_vline
+          + geom_point + geom_text); correct use of scale_*, coord_cartesian, expansion(),
+          theme_minimal() + theme() layering.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'linearGradient() from R''s grid package as direct fill for geom_ribbon
+          — ggplot2 3.5.0+ feature leveraging R''s native grid graphics system; splinefun()
+          and approx() are R-idiomatic. Minor deduction: other geom choices are standard.'
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scales
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - interpolation
+  styling:
+  - gradient-fill
+  - alpha-blending
