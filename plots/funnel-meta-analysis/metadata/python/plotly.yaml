@@ -1,114 +1,147 @@
 library: plotly
+language: python
 specification_id: funnel-meta-analysis
 created: '2026-03-15T16:44:51Z'
-updated: '2026-03-15T17:00:08Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23114663090
+updated: '2026-06-10T04:04:58Z'
+generated_by: claude-sonnet
+workflow_run: 27251350532
 issue: 4590
-python_version: 3.14.3
-library_version: 6.6.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/plotly/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.8.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/python/plotly/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent spec compliance with all required features including inverted Y-axis,
-    pooled effect line, 95% CI funnel, null effect reference, and weight-proportional
-    markers
-  - Strong data storytelling through outlier color coding, directional annotations,
-    and informative subtitle
-  - Layered 95%/99% CI regions add visual depth beyond basic spec requirements
-  - Realistic meta-analysis data with plausible log odds ratios and standard errors
-  - Clean well-structured code with good use of Plotly graph_objects API
+  - 'Full spec compliance: inverted SE y-axis, 15 weighted study markers, 95%/99%
+    CI funnel regions, pooled effect line, null reference line — all required features
+    present'
+  - 'Excellent Imprint palette usage with semantic reasoning: BRAND green (#009E73)
+    for inside-funnel studies, matte red (#AE3030) for outliers — with circle vs diamond
+    shape redundancy to address CVD accessibility'
+  - Rich Plotly hover tooltips with study name, log OR, actual OR, SE, and weight
+    percentage — making full use of Plotly's interactive capabilities
+  - 'Clear data storytelling: subtitle interpretation, directional annotations (Favors
+    Treatment/Control), and visual classification guide the viewer immediately to
+    the publication-bias narrative'
+  - Both light and dark themes correctly implemented with full theme-adaptive chrome
+    — INK, INK_SOFT, INK_MUTED, and ELEVATED_BG all appropriately adapted
   weaknesses:
-  - The 95% CI and 99% CI rotated labels are semi-transparent and slightly hard to
-    read against the shaded funnel background
-  - Could leverage more distinctive Plotly features such as dropdown selectors or
-    range slider
-  image_description: The plot displays a meta-analysis funnel plot with the title
-    "funnel-meta-analysis · plotly · pyplots.ai" centered at top, followed by a subtitle
-    explaining asymmetry and red outlier markers. The Y-axis shows "Standard Error"
-    inverted (0 at top, ~0.4 at bottom). The X-axis shows "Log Odds Ratio" ranging
-    from approximately -1.1 to 0.5. A solid dark blue vertical line marks the pooled
-    effect at -0.57, and a dashed gray vertical line marks the null effect at 0. Two
-    nested funnel-shaped shaded regions represent the 95% CI (darker blue tint) and
-    99% CI (lighter blue tint), both emanating from the pooled effect line at the
-    top. Fifteen study markers are plotted as circles sized proportionally to inverse-variance
-    weight. One red marker (upper-left, near -0.80, SE≈0.11) falls outside the 95%
-    CI funnel; the remaining 14 are blue (#306998). Direction annotations at the bottom
-    read "← Favors Treatment" (left, blue) and "Favors Control →" (right, gray). Rotated
-    "95% CI" and "99% CI" labels appear along the funnel boundaries. The background
-    is clean white with a very subtle off-white paper color and light gridlines.
+  - 'Moderate marker overlap in the study cluster (log_or ~-0.45 to -0.55, SE 0.17-0.25):
+    several green circles overlap noticeably — consider reducing opacity further (0.75)
+    or using a jitter offset to improve readability in the dense region'
+  - 'The ''Favors Treatment'' directional annotation uses BRAND green (#009E73), which
+    is the same color as the inside-funnel data series — could momentarily confuse
+    viewers into thinking it encodes a data category; consider using INK_MUTED (#6B6A63
+    light / #A8A79F dark) instead for the directional label'
+  - Legend has 5 entries including both CI regions which adds visual weight in the
+    upper-left; the 99% CI region legend entry adds little since the dotted outer
+    boundary is barely visible — could be omitted or noted in the subtitle instead
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "funnel-meta-analysis · python · plotly · anyplot.ai" in dark INK (#1A1A17), centered, clear; subtitle "Asymmetry at low precision (wide SE) suggests possible publication bias • Red ◆ outside 95% CI, green ● inside" in INK_MUTED; x-axis label "Log Odds Ratio" and y-axis label "Standard Error" in INK; tick labels in INK_SOFT; all clearly readable
+      Data: 14 green (#009E73) circles weighted by study precision (14–34px); 1 red (#AE3030) diamond (Kim et al. 2021, log_or=-0.80, se=0.11 — barely outside 95% CI at upper-left); 95% CI shaded region in translucent blue; 99% CI region in very faint blue dotted boundary; solid blue (#4467A3) vertical pooled effect line at -0.57; dashed INK_SOFT null-effect line at 0; "← Favors Treatment" in BRAND green at lower-left, "Favors Control →" in INK_MUTED at lower-right; "Pooled (-0.57)" and "Null (0)" annotations at top of inverted axis; "95% CI" and "99% CI" labels on right side of funnel at mid-height; legend in upper-left with elevated background
+      Legibility verdict: PASS — all text readable against the warm off-white background; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct dark theme surface
+      Chrome: Title, axis labels, and tick labels render in light-colored text (INK = #F0EFE8 for primary, INK_SOFT = #B8B7B0 for secondary); all clearly visible against dark background; legend background elevated to #242420 for contrast; subtitle text readable in #A8A79F; no dark-on-dark failures detected
+      Data: Green (#009E73) and red (#AE3030) data colors are identical to the light render — only chrome flips; blue pooled line (#4467A3) unchanged; CI funnel regions use slightly higher opacity rgba values for dark theme (0.16 vs 0.10) to maintain visibility; all markers and lines clearly distinguishable
+      Legibility verdict: PASS — no dark-on-dark issues; all text reads comfortably on near-black background; brand green annotation (#009E73) maintains good contrast on dark surface
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
-          18pt, annotations 14-16pt'
+        comment: 'All font sizes explicitly set; title 16px, axis labels 12px, ticks
+          10px — all readable at desktop and mobile scale in both themes. Minor deduction:
+          subtitle at 10px is small but readable.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Rotated 95%/99% CI labels are semi-transparent and slightly hard
-          to read against funnel shading
+        comment: No text-text overlap. Some marker overlap in the cluster area (log_or
+          -0.45 to -0.55, SE 0.17-0.25) where studies are densely grouped — mitigated
+          by opacity=0.88 but still noticeable.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 15 markers sized 18-40px proportional to weight, excellent for data
-          density
+        comment: All 15 study markers visible; weighted sizing (14-34px) appropriate
+          for 15 data points; red diamond stands out clearly; CI regions visible with
+          appropriate opacity contrast.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/red distinction is colorblind-safe; red used only for outliers
-          with subtitle explanation
+        comment: Green/red distinction supplemented by circle vs diamond shape encoding
+          — CVD-safe. Blue pooled line clearly distinct from both data categories.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization with balanced margins
+        comment: 3200x1800 canvas correctly used. Funnel fills the plot area well.
+          Legend in upper-left over empty funnel region (no data near SE=0 at the
+          tip). Directional annotations properly placed at bottom.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels for inherently unitless measures
+        comment: 'Title format correct. X: ''Log Odds Ratio'' with correct units.
+          Y: ''Standard Error'' correct. Both descriptive and appropriate.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (inside-funnel studies) = #009E73 BRAND. Blue (#4467A3)
+          for pooled line = Imprint position 3. Red (#AE3030) for outliers = Imprint
+          position 5 semantic anchor. Background #FAF8F1 light / #1A1A17 dark. Full
+          theme-adaptive chrome.'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Strong design with layered CI regions, custom typography, outlier
-          color coding, subtle paper background
+        comment: 'Above defaults: thoughtful Imprint palette semantic assignment,
+          layered 95%+99% CI regions with different opacities, weighted markers adding
+          visual dimension, directional annotations with semantic colors. Not quite
+          FiveThirtyEight-level (8) but clearly ''strong design clearly above defaults''.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: plotly_white template, subtle grid, thin axis lines, generous margins;
-          CI labels could be clearer
+        comment: Grid at 15% opacity. Plotly shows only bottom/left axis lines (no
+          top/right spines). Elevated legend background for readability. CI region
+          fills with appropriate transparency. Good but not exceptional whitespace
+          or polish.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Red outlier highlights bias, directional labels guide interpretation,
-          subtitle explains asymmetry, weight sizing conveys precision
+        comment: Subtitle explicitly interprets asymmetry. Directional annotations
+          orient the viewer. Color+shape classification (green circles vs red diamonds)
+          creates immediate data storytelling. Weighted markers encode study precision.
+          Clear narrative about publication bias.
     spec_compliance:
       score: 15
       max: 15
@@ -118,26 +151,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct funnel plot for meta-analysis
+        comment: Correct funnel plot with inverted SE y-axis (precise studies at top),
+          funnel boundary lines, study markers.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: inverted Y-axis, pooled effect line, 95% CI
-          funnel, weight-sized points, null effect reference'
+        comment: 'All spec features present: SE y-axis (inverted), log OR x-axis,
+          pooled effect line, pseudo 95% CI funnel, individual study points, weight-sized
+          markers, null reference line at 0. Also adds 99% CI region as bonus.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=log OR, Y=SE with reversed axis; correct mapping
+        comment: Log OR on x, SE on y (inverted correctly). All 15 studies plotted.
+          Y-axis reversed and rangemode tozero ensure correct orientation.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format; no legend needed, color meaning in subtitle
+        comment: 'Title: ''funnel-meta-analysis · python · plotly · anyplot.ai'' correct
+          format. Legend labels: ''99% CI region'', ''95% CI region'', ''Pooled OR...'',
+          ''Within 95% CI'', ''Outside 95% CI'' — all descriptive and accurate.'
     data_quality:
       score: 15
       max: 15
@@ -147,21 +185,26 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows asymmetric scatter, outlier outside CI, varying precision,
-          weight variation
+        comment: Shows symmetric and asymmetric distribution (asymmetry at low precision),
+          both inside and outside CI funnel studies, varying study sizes/weights —
+          all features of a funnel plot demonstrated.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 15 RCTs drug vs placebo with log odds ratios, neutral medical context
+        comment: 15 RCTs comparing drug vs placebo with log odds ratios — realistic
+          meta-analysis context. Study names (Adams et al. 2016 through Olsen et al.
+          2023) are plausible academic references. Medical domain appropriate and
+          neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Log ORs -0.80 to -0.10 and SEs 0.11-0.35 realistic for clinical trial
-          meta-analyses
+        comment: Log OR range (-0.80 to -0.10) realistic for a modest drug effect.
+          SE range (0.11-0.35) appropriate for trials of varying sizes. Pooled effect
+          (-0.57) falls within the data range.
     code_quality:
       score: 10
       max: 10
@@ -171,31 +214,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot traces, layout, annotations, save'
+        comment: 'Flat script: imports → tokens → data → computation → traces → layout
+          → annotations → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set and data is hardcoded deterministic
+        comment: np.random.seed(42) set. Data is hardcoded arrays — fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects, both used
+        comment: Only os, numpy, and plotly.graph_objects — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, appropriate complexity
+        comment: Clean, well-organized. Boolean mask for inside/outside classification
+          is Pythonic. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png (4800x2700) and plot.html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. No deprecated API usage.
+          autosize=False with explicit width/height per library rules.
     library_mastery:
       score: 7
       max: 10
@@ -205,14 +251,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Figure/go.Scatter, fill=toself, hovertemplate, update_layout
+        comment: Uses go.Scatter for all elements (traces, fills, lines). hovertemplate
+          with HTML formatting. hoverlabel dict customization. fig.add_annotation
+          API. write_image + write_html both used correctly.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Interactive hover tooltips with study details, HTML export, fill=toself
-          for polygon regions
+        comment: Rich hover tooltips with HTML formatting (bold study name, OR/SE/weight)
+          — distinctly Plotly. hoverlabel bgcolor/bordercolor per-trace customization.
+          fill='toself' for CI shading. HTML export for interactivity. These go beyond
+          generic usage.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -222,8 +272,8 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling
