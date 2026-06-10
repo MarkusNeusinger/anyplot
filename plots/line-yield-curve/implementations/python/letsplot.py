@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-yield-curve: Yield Curve (Interest Rate Term Structure)
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-10
@@ -102,7 +102,7 @@ plot = (
     + geom_point(  # noqa: F405
         data=df,
         mapping=aes(x="maturity_years", y="yield_pct", color="date"),  # noqa: F405
-        size=2.5,
+        size=3.5,
         alpha=0.85,
     )
     # Inversion region label — geom_text size is in mm, not pt
@@ -116,7 +116,7 @@ plot = (
     + scale_color_manual(values=IMPRINT_PALETTE[:3])  # noqa: F405
     + scale_x_continuous(breaks=tick_positions, labels=tick_labels_x)  # noqa: F405
     + labs(  # noqa: F405
-        x="Maturity", y="Yield (%)", title="line-yield-curve · letsplot · anyplot.ai", color=""
+        x="Maturity", y="Yield (%)", title="line-yield-curve · python · letsplot · anyplot.ai", color=""
     )
     + ggsize(800, 450)  # noqa: F405
     + theme_minimal()  # noqa: F405
@@ -129,10 +129,11 @@ plot = (
         axis_title=element_text(color=INK, size=12),  # noqa: F405
         axis_text=element_text(color=INK_SOFT, size=10),  # noqa: F405
         axis_line=element_line(color=INK_SOFT),  # noqa: F405
-        plot_title=element_text(color=INK, size=16),  # noqa: F405
+        plot_title=element_text(color=INK, size=16, face="bold"),  # noqa: F405
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),  # noqa: F405
         legend_text=element_text(color=INK_SOFT, size=10),  # noqa: F405
         legend_title=element_text(color=INK),  # noqa: F405
+        panel_border=element_blank(),  # noqa: F405
         legend_position="top",
     )
 )
