@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 recurrence-basic: Recurrence Plot for Nonlinear Time Series
 Library: plotly 6.8.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-10
@@ -28,7 +28,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Imprint categorical palette — position 1 (time series), position 3 (recurrent points)
 BRAND = "#009E73"  # Imprint position 1 — ALWAYS first series
-BLUE = "#4467A3"  # Imprint position 3 — recurrence heatmap
+# Lightened in dark theme to maintain contrast on near-black background (~1.5:1 → ~3:1)
+BLUE = "#4467A3" if THEME == "light" else "#6688CC"
 
 # Data — Lorenz attractor x-component, transient removed (integrate from t=0, sample from t=10)
 sol = solve_ivp(
@@ -113,10 +114,10 @@ fig.update_layout(
         "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
-        "y": 0.99,
+        "y": 0.975,
         "yanchor": "top",
     },
-    margin={"l": 80, "r": 40, "t": 100, "b": 60},
+    margin={"l": 80, "r": 40, "t": 130, "b": 60},
 )
 
 # Top subplot (time series) axis styling
