@@ -1,0 +1,246 @@
+library: muix
+language: javascript
+specification_id: acf-pacf
+created: '2026-06-10T02:06:14Z'
+updated: '2026-06-10T02:25:19Z'
+generated_by: claude-sonnet
+workflow_run: 27247982010
+issue: 4663
+language_version: 22.22.3
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/javascript/muix/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - 'Deterministic LCG RNG + Durbin-Levinson PACF recursion: rigorous, reproducible
+    time series analysis in pure browser JS'
+  - AR(2) data perfectly demonstrates the textbook ACF/PACF diagnostic pattern (exponential
+    decay vs. cutoff)
+  - Theme tokens correctly plumbed throughout (t.pageBg, t.ink, t.inkSoft, t.grid,
+    t.palette[0]) — seamless light/dark adaptation
+  - ChartsReferenceLine with proper dashed CI styling shows good MUI X-specific API
+    usage
+  - Clean dual-panel layout with thoughtful margins and bar gap ratio
+  weaknesses:
+  - Filled bars used instead of spec-required stem lines (vertical line from zero
+    + marker at tip); MUI X community lacks native stem chart
+  - ACF and PACF panels are two separate BarChart instances — x-axis ranges align
+    visually but axes are not truly shared
+  - PACF panel omits the 95% CI label present on the ACF panel — inconsistent documentation
+    of CI bounds
+  - 'DQ-02: context is abstract AR(2) without a real-world domain label — a domain
+    label would make it more concrete'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "AR(2) Process · acf-pacf · javascript · muix · anyplot.ai" in dark text (~65% canvas width). Y-axis labels "ACF" and "PACF" readable. X-axis label "Lag" on PACF panel. Tick labels 0-30 and correlation values visible. "95% CI" label at right margin of ACF panel.
+      Data: Brand green (#009E73) bars for all series. 31 bars in ACF (lags 0-30), 30 bars in PACF (lags 1-30). Dashed CI reference lines at ±0.113. Zero baseline reference line.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title in off-white/light text — clearly readable. All axis tick labels (0-30, -0.5 to 1.0), y-axis labels, and x-axis label are light-colored. Dashed CI reference lines visible against dark background. No dark-on-dark failures observed.
+      Data: Same brand green (#009E73) bars — identical colors to light render as required. Dashed CI reference lines and zero baseline visible.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (tick: 12px, label: 14px, title: 22px
+          CSS). Readable in both themes. 31 x-axis ticks create mild density but labels
+          remain legible.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: 'No overlapping elements. Bars well-spaced with categoryGapRatio:
+          0.62.'
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bars clearly visible; near-zero bars at high lags are very small
+          but reflect the data. CI lines visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single brand-green series on both surfaces; CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Two panels fill canvas well. No clipping. Good margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: ACF, PACF, and Lag are descriptive; correlation values need no units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; background #FAF8F1 (light) / #1A1A17 (dark);
+          all chrome from ANYPLOT_TOKENS.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean dual-panel layout with intentional Imprint palette usage and
+          soft CI styling. Above default but not publication-grade.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Deliberate refinements: axis lines styled with t.grid, bar gap ratio
+          tuned, CI reference lines with dashes and opacity.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'AR(2) process is pedagogically ideal: ACF shows exponential decay,
+          PACF shows cutoff. Classic ARIMA diagnostic story.'
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct ACF/PACF in two stacked panels. Spec requires stem lines,
+          implementation uses filled bars (MUI X limitation).
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 95% CI dashed lines, lag 0 in ACF, PACF from lag 1, 30 lags, axis
+          labels all present. Loses 1 for bars not stems and non-shared x-axis.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Lag on x-axis, correlation on y-axis, correct range and scaling.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows {Descriptive Title} · {spec-id} · {language} · {library}
+          · anyplot.ai format. Legend correctly hidden.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Lag-0 anchor at 1.0, exponential ACF decay, PACF cutoff after lag
+          2, CI bounds. Excellent AR(2) demonstration.
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: AR(2) is a standard context but lacks a specific real-world domain
+          label.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: ACF in [-1,1], CI at ±1.96/sqrt(300)=±0.113 mathematically correct,
+          PACF values realistic.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Multiple utility functions (lcgRng, randn, acfAt, computePACF) are
+          genuinely necessary for browser JS without seeded RNG. Technically above
+          KISS.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic LCG with seed 42. Fully reproducible.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only BarChart and ChartsReferenceLine imported, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic React. Complexity justified by algorithm requirements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct component export; harness produces plot-light.png + plot-dark.png
+          + HTML.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct BarChart with skipAnimation, ANYPLOT_SIZE sizing, slotProps.legend,
+          margin prop, categoryGapRatio.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses ChartsReferenceLine (MUI X-specific), slotProps customization
+          API, sx prop targeting .MuiChartsAxis-line internal elements.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
