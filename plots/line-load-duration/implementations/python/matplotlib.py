@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-load-duration: Load Duration Curve for Energy Systems
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-10
@@ -64,17 +64,21 @@ title_fontsize = max(8, round(12 * 67 / title_n)) if title_n > 67 else 12
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Region fills using Imprint semantic palette
-ax.fill_between(hour[: peak_end + 1], load_mw[: peak_end + 1], base_load - 30, color=COLOR_PEAK, alpha=0.18, zorder=2)
+# Region fills using Imprint semantic palette — alpha boosted in dark theme for visual impact
+fill_alpha = 0.18 if THEME == "light" else 0.32
+fill_alpha_inter = 0.22 if THEME == "light" else 0.35
+ax.fill_between(
+    hour[: peak_end + 1], load_mw[: peak_end + 1], base_load - 30, color=COLOR_PEAK, alpha=fill_alpha, zorder=2
+)
 ax.fill_between(
     hour[peak_end : base_start + 1],
     load_mw[peak_end : base_start + 1],
     base_load - 30,
     color=COLOR_INTER,
-    alpha=0.22,
+    alpha=fill_alpha_inter,
     zorder=2,
 )
-ax.fill_between(hour[base_start:], load_mw[base_start:], base_load - 30, color=COLOR_BASE, alpha=0.18, zorder=2)
+ax.fill_between(hour[base_start:], load_mw[base_start:], base_load - 30, color=COLOR_BASE, alpha=fill_alpha, zorder=2)
 
 # Main load duration curve
 ax.plot(hour, load_mw, color=INK, linewidth=2.5, zorder=5)
@@ -91,7 +95,7 @@ for y_val, color, label, x_frac in tier_props:
         hours * x_frac,
         y_val + 12,
         f"{label}  {y_val:,} MW",
-        fontsize=7,
+        fontsize=8,
         color=color,
         fontweight="semibold",
         path_effects=[pe.withStroke(linewidth=2.5, foreground=PAGE_BG)],
@@ -107,7 +111,7 @@ region_labels = [
         "INTERMEDIATE\nLOAD",
         COLOR_INTER,
     ),
-    ((base_start + hours) / 2 - 600, (intermediate_threshold + base_load) / 2 + 20, "BASE\nLOAD", COLOR_BASE),
+    ((base_start + hours) / 2 - 600, (intermediate_threshold + base_load) / 2 - 30, "BASE\nLOAD", COLOR_BASE),
 ]
 for x, y, text, color in region_labels:
     ax.text(
