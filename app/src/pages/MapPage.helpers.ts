@@ -1,7 +1,9 @@
 /**
  * Helpers for the /map page: tag flattening, IDF weighting, weighted
  * Jaccard similarity, KNN edge construction, plus thumbnail-tier
- * selection and image preloading.
+ * selection and image preloading. Consumed by useForceGraphSimulation
+ * (graph derivation + preloading) and by MapPage's canvas paint callbacks
+ * (tier selection + geometry).
  *
  * Most helpers are pure (math + selection logic) so they can be unit
  * tested in MapPage.helpers.test.ts. The two exceptions — preloadImages

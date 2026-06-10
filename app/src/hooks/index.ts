@@ -14,6 +14,12 @@ export type {
   ThemeContextValue,
 } from 'src/hooks/useLayoutContext';
 export { useThemeMode } from 'src/hooks/useThemeMode';
+export { useForceGraphSimulation } from 'src/hooks/useForceGraphSimulation';
+export type {
+  ForceGraphSimulation,
+  MapForceConfig,
+  MapGraphData,
+} from 'src/hooks/useForceGraphSimulation';
 export { useLatestRelease } from 'src/hooks/useLatestRelease';
 export * from 'src/hooks/useFeaturedSpecs';
 export * from 'src/hooks/usePlotOfTheDay';
