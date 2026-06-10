@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 acf-pacf: Autocorrelation and Partial Autocorrelation (ACF/PACF) Plot
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-10
@@ -107,33 +107,67 @@ pacf_df = pd.DataFrame(
 
 sig_palette = {"Significant": BRAND, "Within CI": INK_MUTED}
 
+
+def make_stem_df(df):
+    # Paired-row format required by sns.lineplot(units='Lag') to draw each stem as an
+    # individual vertical segment without cross-lag interpolation.
+    rows = []
+    for _, row in df.iterrows():
+        rows.append({"Lag": row["Lag"], "y": 0.0, "Significance": row["Significance"]})
+        rows.append({"Lag": row["Lag"], "y": row["Correlation"], "Significance": row["Significance"]})
+    return pd.DataFrame(rows)
+
+
+acf_stem_df = make_stem_df(acf_df)
+pacf_stem_df = make_stem_df(pacf_df)
+
 # Canvas: figsize=(8, 4.5) @ dpi=400 → exactly 3200×1800 px (landscape 16:9)
 fig, (ax_acf, ax_pacf) = plt.subplots(2, 1, figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG, sharex=True)
 ax_acf.set_facecolor(PAGE_BG)
 ax_pacf.set_facecolor(PAGE_BG)
 
-# ACF: vlines for stems + seaborn scatterplot for significance-coded markers
-for sig_val, color in [("Significant", BRAND), ("Within CI", INK_MUTED)]:
-    mask = acf_df["Significance"] == sig_val
-    ax_acf.vlines(acf_df.loc[mask, "Lag"], 0, acf_df.loc[mask, "Correlation"], color=color, linewidth=1.8)
+# ACF: sns.lineplot with units='Lag' draws each significance-colored stem as a
+# discrete vertical segment — idiomatic seaborn statistical unit rendering
+sns.lineplot(
+    data=acf_stem_df,
+    x="Lag",
+    y="y",
+    hue="Significance",
+    palette=sig_palette,
+    units="Lag",
+    estimator=None,
+    linewidth=1.8,
+    ax=ax_acf,
+    legend=False,
+)
 sns.scatterplot(
     data=acf_df,
     x="Lag",
     y="Correlation",
     hue="Significance",
+    hue_order=["Significant", "Within CI"],
     palette=sig_palette,
     s=55,
     zorder=5,
     edgecolor=PAGE_BG,
     linewidth=0.5,
     ax=ax_acf,
-    legend=False,
+    legend=True,
 )
 
-# PACF: same approach, starting from lag 1
-for sig_val, color in [("Significant", BRAND), ("Within CI", INK_MUTED)]:
-    mask = pacf_df["Significance"] == sig_val
-    ax_pacf.vlines(pacf_df.loc[mask, "Lag"], 0, pacf_df.loc[mask, "Correlation"], color=color, linewidth=1.8)
+# PACF: same seaborn approach from lag 1
+sns.lineplot(
+    data=pacf_stem_df,
+    x="Lag",
+    y="y",
+    hue="Significance",
+    palette=sig_palette,
+    units="Lag",
+    estimator=None,
+    linewidth=1.8,
+    ax=ax_pacf,
+    legend=False,
+)
 sns.scatterplot(
     data=pacf_df,
     x="Lag",
@@ -172,13 +206,31 @@ ax_pacf.set_xlabel("Lag", fontsize=10, color=INK)
 # X-ticks every 5 lags (shared axis — set once on either panel)
 ax_pacf.set_xticks(np.arange(0, n_lags + 1, 5))
 
-# Legend in ACF panel
-handles = [
-    plt.Line2D([0], [0], marker="o", color="w", markerfacecolor=BRAND, markersize=6, label="Significant"),
-    plt.Line2D([0], [0], marker="o", color="w", markerfacecolor=INK_MUTED, markersize=6, label="Within CI"),
-    plt.Line2D([0], [0], linestyle="--", color=ANYPLOT_AMBER, linewidth=1.5, label="95% CI"),
-]
-ax_acf.legend(handles=handles, loc="upper right", fontsize=8, facecolor=ELEVATED_BG, edgecolor=INK_SOFT)
+# Legend in ACF panel: seaborn auto-generates Significant/Within CI handles from
+# scatterplot hue; extend with the amber CI dashed-line handle
+handles, labels = ax_acf.get_legend_handles_labels()
+ci_handle = plt.Line2D([0], [0], linestyle="--", color=ANYPLOT_AMBER, linewidth=1.5)
+handles.append(ci_handle)
+labels.append("95% CI")
+ax_acf.legend(handles=handles, labels=labels, loc="upper right", fontsize=8, facecolor=ELEVATED_BG, edgecolor=INK_SOFT)
+
+# Data storytelling annotations — AR(1) signature visible in both panels
+ax_acf.annotate(
+    "Gradual decay → AR process",
+    xy=(4, acf_values[4]),
+    xytext=(13, 0.58),
+    fontsize=7,
+    color=INK_MUTED,
+    arrowprops={"arrowstyle": "->", "color": INK_MUTED, "lw": 0.7},
+)
+ax_pacf.annotate(
+    "Spike at lag 1 → AR(1) order",
+    xy=(1, pacf_values[1]),
+    xytext=(7, 0.63),
+    fontsize=7,
+    color=INK_MUTED,
+    arrowprops={"arrowstyle": "->", "color": INK_MUTED, "lw": 0.7},
+)
 
 # Title — "acf-pacf · python · seaborn · anyplot.ai" is 40 chars (< 67 baseline → fontsize=12)
 title = "acf-pacf · python · seaborn · anyplot.ai"
