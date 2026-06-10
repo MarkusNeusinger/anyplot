@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: funnel-meta-analysis
 created: '2026-03-15T16:44:54Z'
-updated: '2026-06-10T03:57:14Z'
+updated: '2026-06-10T04:06:37Z'
 generated_by: claude-sonnet
 workflow_run: 27251631355
 issue: 4590
@@ -15,93 +15,94 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-me
 quality_score: 88
 review:
   strengths:
-  - 'All required funnel plot elements present and correctly implemented: inverted
-    Y-axis, diagonal pseudo 95% CI dashed lines, pooled effect and null effect reference
-    lines, color-coded study groups'
-  - 'Excellent theme-adaptive design: structural lines use INK tokens while data series
-    use Imprint palette — a thoughtful design choice separating chrome from data'
-  - 'Full code quality: flat structure, reproducible seed, clean imports, correct
-    output filenames including HTML for pygal interactivity'
-  - Realistic and plausible meta-analysis data with visible publication bias asymmetry
-    in the rightward scatter of low-precision studies
-  - Correct 3200x1800 canvas with all font sizes explicitly set to style-guide values
+  - 'Perfect spec compliance: inverted-SE funnel shape, pooled effect line, null effect
+    reference, and publication-bias asymmetry story all correctly implemented'
+  - Both renders fully theme-adaptive with readable text in light and dark modes;
+    no dark-on-dark failures detected
+  - 'Semantic color design: INK tokens for structural reference lines, Imprint positions
+    1-2 for data series — clear and principled separation of chart layers'
+  - Style guide font sizes match pygal.md defaults exactly (title=66, labels=56, ticks=44,
+    legend=44); canvas correctly 3200x1800
+  - Clean, concise code with no unnecessary abstractions; proper per-series stroke/dots_size
+    overrides demonstrate idiomatic pygal usage
   weaknesses:
-  - 'Second data series (low-precision studies) uses Imprint position 3 (#4467A3 blue)
-    instead of canonical position 2 (#C475FD lavender) — violates default 1->N ordering
-    without semantic justification; fix by changing IMPRINT_BLUE to #C475FD in the
-    style colors tuple'
-  - Design Excellence limited by pygal full-frame rendering with no spine removal;
-    to improve DE scores, increase margin to 120+ and consider custom visual emphasis
-    to differentiate study groups more strongly
+  - Null effect line (x=0) intersects right CI funnel boundary in the lower-SE region,
+    creating minor visual ambiguity — consider a shorter dash pattern (e.g. dasharray='6,
+    4') to visually distinguish it from the CI boundary lines (dasharray='14, 6')
+  - A few high-precision study points overlap in the SE=0.07-0.13 cluster near x=-0.47;
+    adding opacity='.8' on the high-precision series or reducing dots_size from 24
+    to 20 would reduce occlusion while retaining prominence
+  - Legend color indicator squares for structural lines (95% Pseudo CI, Pooled Effect,
+    Null Effect) are small in both themes; slightly larger legend_box_size (e.g. 36)
+    or a distinct visual treatment would improve disambiguation
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface
-      Chrome: Title "funnel-meta-analysis · python · pygal · anyplot.ai" in dark INK color, clearly readable. X-axis label "Log Odds Ratio (Effect Size)" and Y-axis label "Standard Error (precision ↑)" both readable in dark text. Tick labels (0, 0.05, 0.10, ... 0.30 on Y; -1.00 to 0.10 on X) are clearly visible. Legend at bottom with descriptive labels readable.
-      Data: High-precision studies as large green (#009E73, Imprint position 1) dots clustered near pooled effect line. Low-precision studies as medium blue (#4467A3, Imprint position 3) dots more dispersed. Dashed diagonal CI lines and solid pooled effect vertical line, dashed null effect vertical line all visible in muted/ink tones.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "funnel-meta-analysis · python · pygal · anyplot.ai" clearly visible in dark ink; X-axis label "Log Odds Ratio (Effect Size)" and Y-axis label "Standard Error (precision up)" are readable; tick labels (-1.00 to 0.10 on X, 0 to 0.30 on Y) all readable in dark text; legend at bottom with 5 entries clearly labeled
+      Data: High-precision studies in brand green #009E73 (larger dots, clustered near pooled effect), low-precision studies in lavender #C475FD (smaller dots, scattered rightward showing publication bias); funnel CI boundaries as dashed diagonal lines in INK_MUTED; solid pooled effect vertical line; dashed null effect vertical line at x=0
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title, axis labels, and tick labels have correctly flipped to light/off-white text (INK token for dark = #F0EFE8), all clearly readable against the dark background. No dark-on-dark failures observed. Legend text at bottom is readable.
-      Data: Data colors are identical to light render — green (#009E73) for high-precision studies and blue (#4467A3) for low-precision studies. Brand green is clearly visible on dark background. Structural reference lines render in medium gray (muted INK tokens on dark surface) providing appropriate contrast.
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title, axis labels, tick labels all rendered in light off-white/cream tones; fully readable against dark background; no dark-on-dark failures; legend items including structural line indicators are visible
+      Data: Colors identical to light render — high-precision studies #009E73, low-precision studies #C475FD; structural line colors adapt to light INK tokens as expected
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=66, label=56, major_label=44,
-          legend=44); well-proportioned in both themes; no overflow or clipping
+        comment: 'All text explicitly sized per style guide; readable in both themes.
+          Minor: legend indicators for structural lines are small in dark mode.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text overlaps; study points cluster naturally near pooled effect
-          without illegibility
+        comment: High-precision points cluster near (-0.47, SE 0.08-0.13) with slight
+          overlap; still distinguishable. Otherwise clean.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 15 sparse studies with large dots (sizes 24/18); CI lines and reference
-          lines clearly visible
+        comment: 'All elements visible. Minor: null effect line (x=0) partially overlaps
+          right CI boundary in lower-SE region.'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green and blue are perceptually distinct hue families, CVD-safe
+        comment: CVD-safe green and lavender; no red-green sole signal; structural
+          lines use neutral ink tokens.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas; plot fills canvas well with balanced margins;
-          bottom legend well-integrated
+        comment: 3200x1800 canvas (gate passed); generous margins (120px); well-organized
+          legend at bottom.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: Log Odds Ratio (Effect Size); Y: Standard Error (precision up
-          arrow) with direction indicator'
+        comment: 'X: Log Odds Ratio (Effect Size); Y: Standard Error (precision up)
+          with directional indicator; title correct format.'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First data series correctly uses #009E73 (Imprint position 1). Second
-          data series uses #4467A3 (position 3) instead of #C475FD (position 2), skipping
-          canonical order without semantic justification. Backgrounds and chrome adaptation
-          correct.'
+        passed: true
+        comment: 'First data series #009E73; second #C475FD (Imprint position 2);
+          structural lines use INK tokens (semantic exception); backgrounds #FAF8F1/#1A1A17.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -109,22 +110,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful INK tokens for structural lines vs Imprint palette for
-          data series — above defaults. Different dot sizes add differentiation.
+        comment: 'Above generic: semantic separation of structural/data layers, size
+          differentiation by precision, Y-axis inversion as intentional design.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Dashed vs solid line distinction, organized 2-column bottom legend,
-          Y-axis-only grid. Pygal full-frame limits spine removal.
+        comment: Y-only grid, dashed CI lines, stroke width hierarchy (6px/4px/3px),
+          generous margins, legend at bottom with columns.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Rightward asymmetry of low-precision studies visually evident, illustrating
-          publication bias. Inverted Y-axis, color+size coding create visual hierarchy.
+        comment: Asymmetric lavender scatter conveys publication bias; size differentiation
+          reinforces precision distinction; legend labels include 'bias region'.
     spec_compliance:
       score: 15
       max: 15
@@ -134,28 +135,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct funnel plot as XY scatter with inverted Y-axis
+        comment: 'Correct funnel plot: XY scatter with inverted SE on Y-axis, effect
+          size on X-axis.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required: inverted SE axis, pooled effect line, null effect
-          line, pseudo 95% CI diagonal lines, study points'
+        comment: 95% CI funnel boundaries, pooled effect line, null effect reference,
+          study scatter points, size differentiation by precision.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = log odds ratio, Y = standard error (inverted); all 15 study points
-          visible
+        comment: Y-axis inverted with SE=0 at apex; X-axis LOR -1.05 to 0.15; all
+          15 studies plotted.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title funnel-meta-analysis · python · pygal · anyplot.ai is correct
-          format; legend labels descriptive
+        comment: 'Title: funnel-meta-analysis · python · pygal · anyplot.ai; legend
+          labels include statistical context.'
     data_quality:
       score: 15
       max: 15
@@ -165,22 +167,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all funnel plot aspects: symmetry for high-precision, rightward
-          asymmetry for low-precision demonstrating publication bias'
+        comment: 'All funnel plot elements: asymmetric scatter, funnel envelope, summary
+          effect, null reference, precision-based grouping.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 15 RCTs comparing drug vs placebo with realistic study names, log
-          odds ratios, and standard errors
+        comment: 15 RCTs with realistic author/year names, plausible LOR values (-0.08
+          to -0.72), coherent publication bias story.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: SE range 0-0.30 and LOR range -1.05 to 0.15 realistic for clinical
-          trial meta-analysis
+        comment: X-range -1.05 to 0.15 appropriate for LOR; Y-range 0 to 0.30 covers
+          realistic SE; pooled effect -0.47 clinically plausible.
     code_quality:
       score: 10
       max: 10
@@ -190,36 +192,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat sequential: imports -> tokens -> data -> style -> chart ->
-          series -> save'
+        comment: No functions or classes; linear, readable code flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set; fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pygal, pygal.style.Style — all used
+        comment: Only os, numpy, pygal, pygal.style.Style; all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: 'Clean list comprehensions; formatter=lambda x: '''' elegantly suppresses
-          tooltip values for structural lines'
+        comment: Clean separation of structural vs data elements; per-series stroke/dots_size
+          overrides; no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html (correct for interactive
-          pygal)
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; correct API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -227,24 +227,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses pygal.XY with per-series stroke/show_dots overrides for mixed
-          scatter+line; inverse_y_axis; legend_at_bottom_columns; series-level dots_size
-          override
+        comment: pygal.XY with Style object; per-series stroke overrides; stroke_style
+          dasharray; inverse_y_axis; y_labels; truncate_legend.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: HTML export alongside PNG leverages pygal interactive rendering.
-          Per-series stroke_style with dasharray for dashed lines. Mixed scatter+line
-          in single XY chart.
-  verdict: REJECTED
+        comment: inverse_y_axis, per-series stroke_style dashed lines, dots_size per
+          series, legend_at_bottom_columns, HTML interactive export.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
+  - manual-ticks
   patterns:
-  - data-generation
+  - iteration-over-groups
   dataprep: []
-  styling:
-  - alpha-blending
+  styling: []
