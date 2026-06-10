@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 recurrence-basic: Recurrence Plot for Nonlinear Time Series
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 84/100 | Created: 2026-06-10
@@ -53,24 +53,25 @@ df = pd.DataFrame({"time_i": rows, "time_j": cols})
 # Title (49 chars — under 67-char baseline, no scaling needed)
 title = "recurrence-basic · python · letsplot · anyplot.ai"
 
-# Theme
+# Theme — color=PAGE_BG on panel_background hides the panel box, yielding an L-shaped frame
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-    panel_background=element_rect(fill=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_border=element_blank(),
     panel_grid_major=element_blank(),
     panel_grid_minor=element_blank(),
     axis_title=element_text(color=INK, size=12),
     axis_text=element_text(color=INK_SOFT, size=10),
     axis_line=element_line(color=INK_SOFT),
-    axis_ticks=element_line(color=INK_SOFT),
     plot_title=element_text(color=INK, size=16),
     legend_position="none",
 )
 
-# Plot — recurrent pairs as tiles on PAGE_BG panel
+# Plot — recurrent pairs as tiles; diagonal line marks Line of Identity (i=j)
 plot = (
     ggplot(df, aes(x="time_i", y="time_j"))
-    + geom_tile(fill=BRAND, alpha=0.9)
+    + geom_tile(fill=BRAND, alpha=0.9, tooltips=layer_tooltips(["time_i", "time_j"]))
+    + geom_abline(slope=1, intercept=0, color=ELEVATED_BG, size=0.6, alpha=0.7)
     + labs(x="Time index i", y="Time index j", title=title)
     + anyplot_theme
     + ggsize(600, 600)
