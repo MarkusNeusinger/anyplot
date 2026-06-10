@@ -1,0 +1,259 @@
+library: muix
+language: javascript
+specification_id: funnel-meta-analysis
+created: '2026-06-10T04:07:34Z'
+updated: '2026-06-10T04:17:17Z'
+generated_by: claude-sonnet
+workflow_run: 27252199225
+issue: 4590
+language_version: 22.22.3
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/javascript/muix/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Custom FunnelCone SVG overlay using MUI X drawing area hooks (useDrawingArea,
+    useXScale, useYScale) is technically impressive and idiomatic to MUI X React architecture
+  - Subtle funnel shading (fillOpacity=0.04) adds depth without distracting from data
+  - 'Perfect spec compliance: inverted SE axis, pooled effect line, ±1.96×SE funnel
+    boundaries, null reference line, and scatter points all correctly implemented'
+  - Realistic and clinically plausible dataset (antihypertensive RCT meta-analysis
+    with intentional asymmetry suggesting publication bias)
+  - 'Both themes render correctly with appropriate Imprint warm backgrounds (#FAF8F1
+    light / #1A1A17 dark) and all text legible in both renders'
+  - All font sizes explicitly set (title 22px, axis labels 16px, tick labels 14px,
+    reference labels 12–13px)
+  weaknesses:
+  - 'Grid uses both horizontal and vertical axes for an 18-point scatter; style guide
+    recommends no grid or minimal single-axis grid for sparse plots — consider grid={{
+    horizontal: true, vertical: false }} or removing entirely'
+  - Full 4-sided chart border visible (all spines shown via MUI X ThemeProvider default);
+    style guide prefers removing top and right spines — explore chart sx or border
+    props for cleaner aesthetics
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface, not pure white
+      Chrome: Title "funnel-meta-analysis · javascript · muix · anyplot.ai" centered at top in dark text (22px). X-axis label "Log Odds Ratio" and Y-axis label "Standard Error" in dark ink (16px). Tick labels visible in soft dark ink (14px). All chrome readable.
+      Data: 18 Imprint green (#009E73) scatter circles distributed in a funnel pattern. Solid green vertical line at pooled effect (~-0.40) with label "Pooled: -0.40". Dashed gray vertical line at null (0) with label "Null (OR=1)". Two dashed diagonal lines form funnel cone boundaries with very subtle green triangular fill (opacity=0.04). Both horizontal and vertical grid lines visible but subtle.
+      Legibility verdict: PASS — all text clearly readable against the light background, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface, not pure black
+      Chrome: Title, axis labels, tick labels all rendered in light-colored text clearly readable against the dark background. ThemeProvider correctly flips all chrome elements to light-on-dark. No dark-on-dark failures detected.
+      Data: Same Imprint green (#009E73) scatter circles — identical to light render, confirming data colors are theme-invariant. Funnel cone boundaries, reference lines, and subtle shading all visible. Green brand color (#009E73) remains clearly visible against the dark surface.
+      Legibility verdict: PASS — all text clearly readable against the dark background, no dark-on-dark issues
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis labels 16px, tick
+          labels 14px, reference labels 12-13px). Both themes fully legible. No overflow
+          or clipping.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element overlaps detected in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 18 scatter points at markerSize=9 CSS px are appropriately sized
+          for sparse data. Funnel boundaries and reference lines clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single-color dataset (brand green #009E73) with dashed gray references.
+          CVD-safe by design.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Plot fills canvas well with generous margins
+          (80/60/90/90). Funnel shape centered with good breathing room.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Log Odds Ratio (X) and Standard Error (Y) are descriptive. Title
+          in correct anyplot format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (only) series uses #009E73. Background #FAF8F1 (light) / #1A1A17
+          (dark). ThemeProvider handles chrome adaptation. Data colors identical across
+          themes.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: custom FunnelCone SVG with coordinate-space calculations
+          and fillOpacity=0.04 shading; deliberate color hierarchy (solid green for
+          pooled, dashed gray for references); clearly above library defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Library defaults. Both horizontal and vertical grid lines shown for
+          sparse scatter. Full 4-sided chart border visible via ThemeProvider. Margins
+          generously set.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good storytelling: brand green pooled effect line creates focal
+          point; funnel shape provides context for unbiased distribution; intentional
+          asymmetric scatter tells publication bias story; color contrast creates
+          visual hierarchy.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter-based funnel plot with inverted Y-axis (SE=0 at top).
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required features: inverted SE axis, vertical pooled effect
+          line, ±1.96×SE funnel boundaries, null effect reference line, individual
+          study scatter points.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: effect_size (Log Odds Ratio), Y: std_error (Standard Error, inverted).
+          All 18 studies visible.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: funnel-meta-analysis · javascript · muix · anyplot.ai. Legend
+          correctly hidden for single-series plot.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all funnel plot aspects: precise studies at apex, wider scatter
+          at base, asymmetric distribution suggesting publication bias, pooled effect
+          and null reference.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Meta-analysis of 18 RCTs on antihypertensive therapy vs placebo.
+          Log odds ratios (-1.20 to -0.12) and SEs (0.10-0.62) are realistic for cardiovascular
+          outcomes. Neutral clinical scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Pooled effect ~-0.40 (33% reduction in event odds) is clinically
+          credible for antihypertensive therapy. SEs and effect sizes within realistic
+          range for RCTs.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean React structure. ChartTitle and FunnelCone helper components
+          are required for MUI X hooks. Idiomatic for the library.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hard-coded in-memory. Pooled effect computed deterministically.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ScatterChart, ChartsReferenceLine, useDrawingArea, useXScale, useYScale
+          — all imported and used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, idiomatic React/MUI X. No over-engineering. No fake interactive
+          elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: MUI X is an interactive library; harness generates plot-{THEME}.png
+          + plot-{THEME}.html correctly.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert MUI X usage: ScatterChart, ChartsReferenceLine with labelAlign/labelStyle,
+          skipAnimation, slotProps.legend.hidden, window.ANYPLOT_TOKENS for Imprint
+          palette.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses MUI X drawing area hooks (useDrawingArea, useXScale, useYScale)
+          to build a custom coordinate-space SVG overlay (FunnelCone) — distinctive
+          to MUI X React architecture.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
