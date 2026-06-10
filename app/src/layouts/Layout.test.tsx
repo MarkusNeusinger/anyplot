@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AppDataProvider } from 'src/components/Layout';
 import { useAppData } from 'src/hooks/useLayoutContext';
+import { AppDataProvider } from 'src/layouts/Layout';
 import { render, screen, waitFor } from 'src/test-utils';
 
 // Helper component that reads the context and renders the four counts

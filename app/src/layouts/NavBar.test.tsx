@@ -21,7 +21,7 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-import { NavBar } from 'src/components/NavBar';
+import { NavBar } from 'src/layouts/NavBar';
 
 describe('NavBar', () => {
   beforeEach(() => {

@@ -4,9 +4,9 @@ import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 
-import { ImageCard } from 'src/components/ImageCard';
 import { LoaderSpinner } from 'src/components/LoaderSpinner';
 import type { ImageSize } from 'src/constants';
+import { ImageCard } from 'src/sections/plots-gallery/ImageCard';
 import type { LanguageInfo, LibraryInfo, PlotImage, SpecInfo } from 'src/types';
 
 interface ImagesGridProps {

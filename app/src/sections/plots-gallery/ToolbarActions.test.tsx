@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { GridSizeToggle, PlotsLink, ToolbarActions } from 'src/components/ToolbarActions';
+import {
+  GridSizeToggle,
+  PlotsLink,
+  ToolbarActions,
+} from 'src/sections/plots-gallery/ToolbarActions';
 import { render, screen, userEvent } from 'src/test-utils';
 
 describe('PlotsLink', () => {
