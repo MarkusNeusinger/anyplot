@@ -1,7 +1,7 @@
 // anyplot.ai
 // area-elevation-profile: Terrain Elevation Profile Along Transect
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-06-10
+// Library: chartjs 4.4.7 | JavaScript 22.22.3
+// Quality: 87/100 | Created: 2026-06-10
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
