@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 area-elevation-profile: Terrain Elevation Profile Along Transect
-Library: seaborn | Python 3.14
-Quality: 93/100 | Updated: 2026-06-10
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-06-10
 """
 
 import os
