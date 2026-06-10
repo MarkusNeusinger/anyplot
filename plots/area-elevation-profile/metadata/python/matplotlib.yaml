@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: area-elevation-profile
 created: '2026-03-15T21:51:14Z'
-updated: '2026-06-10T05:52:12Z'
+updated: '2026-06-10T05:59:42Z'
 generated_by: claude-sonnet
 workflow_run: 27255531123
 issue: 4578
@@ -12,107 +12,98 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-elev
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 90
 review:
   strengths:
-  - Exceptional terrain silhouette with a layered gradient fill that creates a professional,
-    realistic elevation profile — the vegetation-to-rock colour sweep makes the terrain
-    immediately legible
-  - Landmark annotations are perfectly staggered (Sonnalm pushed high, Gipfelkreuz
-    given focal prominence) so all 8 labels remain non-overlapping despite the dense
-    18–55 km cluster
-  - 'Full theme-adaptive chrome: title, axis labels, tick labels, spines, grid lines,
-    dashed guide lines, annotation boxes, and marker edge colours all flip correctly
-    between light and dark themes'
-  - 'Complete spec compliance: filled silhouette, profile outline, start/end location
-    labels, dashed vertical marker lines with dot markers, vertical exaggeration note
-    in a styled callout box, and correctly labelled distance/elevation axes'
-  - Clean linear code structure with np.random.seed(42), no stray imports, correct
-    savefig API (dpi=400, facecolor=PAGE_BG, no bbox_inches='tight'), and accurate
-    title-fontsize scaling formula
+  - Beautiful gradient terrain silhouette using imprint_seq (brand green → blue) via
+    banded fill_between loops — sophisticated and visually striking
+  - Well-managed landmark annotation staggering avoids overlap across the dense 0–30
+    km cluster (Sonnalm pushed to 42pt offset)
+  - 'All theme tokens wired correctly: INK, INK_SOFT, INK_MUTED, ELEVATED_BG flip
+    correctly between light and dark; brand green profile line identical across both
+    renders'
+  - 'All required spec features present: filled silhouette, labeled start/end points,
+    6 intermediate landmark annotations with vertical marker lines, and vertical exaggeration
+    note'
+  - Perfect code structure (KISS), reproducible seed, clean imports, correct canvas
+    (3200×1800) without bbox_inches=tight
   weaknesses:
-  - 'Palette violation (VQ-07): the gradient fill uses a custom terrain colormap [''#2d6a4f'',
-    ''#40916c'', ''#74c69d'', ''#b7e4c7'', ''#d4a373'', ''#a0522d'', ''#6b3a2a'']
-    — only imprint_seq (brand-green→blue) or imprint_div (red↔neutral↔blue) are allowed
-    for continuous fills. Replace with LinearSegmentedColormap.from_list(''imprint_seq'',
-    [''#009E73'', ''#4467A3'']) for the vertical gradient strips.'
-  - 'Profile outline line uses INK token (theme-adaptive dark/light) instead of brand
-    green #009E73 — for a single-series elevation chart the primary data element should
-    use the first Imprint position. If the gradient fill is kept (after palette fix),
-    consider plotting the profile line in ''#009E73'' over the fill.'
+  - Landmark marker dots (markersize=5) are slightly small for a 3200×1800 canvas
+    — markersize=7–8 would give them more presence without cluttering
+  - Profile line linewidth=2.0 is just below the recommended 2.5–3 range; a minor
+    increase would improve prominence
+  - 120 km is unusually long for a presented hiking trail — clearer framing as a multi-day
+    alpine tour would strengthen DQ-03 plausibility
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Title "Alpine Trail Profile · area-elevation-profile · python · matplotlib · anyplot.ai" in dark near-black text, scaled to ~10pt, fills ~75% of plot width — readable and proportionate. X-axis label "Distance (km)" and Y-axis label "Elevation (m)" both at 10pt dark ink, balanced. Tick labels at 8pt in INK_SOFT (#4A4A44), clearly legible. Bottom and left spines in INK_SOFT; top/right removed. Subtle horizontal y-grid lines at 15% alpha.
-      Data: Terrain silhouette filled with a gradient from forest-green (#2d6a4f) at the base through light yellow-green, then brown/orange at the peaks — custom terrain palette (NOT Imprint). Profile outline is a solid black 2pt line (INK token). Eight landmarks annotated in bold 9pt dark text with white-edged circular markers and faint dashed vertical guide lines. Vertical exaggeration note "≈ 10×" in lower-right styled callout box with ELEVATED_BG fill.
-      Legibility verdict: PASS — all text is clearly readable against the warm off-white background; no light-on-light failures.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "Alpine Trail Profile · area-elevation-profile · python · matplotlib · anyplot.ai" is dark (#1A1A17), occupies ~75% of plot width, readable. Axis labels "Distance (km)" and "Elevation (m)" dark, fontsize 10. Tick labels in INK_SOFT dark tone, fontsize 8. All text clearly readable against light surface.
+      Data: Gradient terrain silhouette fills from #009E73 (brand green, bottom) through to #4467A3 (blue, top peaks) using imprint_seq. Profile line in #009E73 sits on top. Eight landmarks annotated with bold text and dashed vertical lines (INK_SOFT, alpha=0.4). Vertical exaggeration note (≈10×) in ELEVATED_BG bbox at lower right.
+      Legibility verdict: PASS — all text readable, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: Title, axis labels, and tick labels all rendered in light cream/near-white (#F0EFE8 / #B8B7B0) — correctly flipped from light theme. Spines adapt to INK_SOFT dark-theme token. Grid lines appear as faint cream-toned horizontal rules at 15% alpha, subtle but visible.
-      Data: Terrain gradient fill colours are IDENTICAL to the light render (same green-to-brown/orange sweep) — only chrome flips. Profile outline is now cream/white (INK dark-theme = #F0EFE8), standing out clearly against the dark background. Landmark annotation text is light-coloured and readable. Circular markers have dark-theme PAGE_BG edge colour. Callout box uses ELEVATED_BG (#242420) fill with appropriate contrast.
-      Legibility verdict: PASS — no dark-on-dark failures; all text elements are clearly visible against the near-black background. Brand green #009E73 in the fill (bottom of gradient) remains visible on the dark surface.
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title and axis labels render in #F0EFE8 (light cream), clearly readable against dark surface. Tick labels in #B8B7B0 (INK_SOFT dark), readable. Grid lines subtle. Exaggeration note box uses #242420 (ELEVATED_BG dark) with #B8B7B0 border — visible and appropriate.
+      Data: Gradient silhouette colors are identical to light render (#009E73 → #4467A3). Profile line identical brand green. Landmark annotation text in #F0EFE8 (INK dark), white circle markers (INK dark = #F0EFE8) visible against dark background. No dark-on-dark text issues detected.
+      Legibility verdict: PASS — all text readable on dark surface, theme adaptation correct throughout.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'Title auto-scaled to ~10pt for 81-char string; axis labels 10pt;
-          tick labels 8pt; annotations 9pt bold. All readable in both themes. Slight
-          deduction: title slightly smaller than 12pt default, reducing hierarchy
-          contrast.'
+        comment: All font sizes explicitly set (title dynamic, labels 10pt, ticks
+          8pt, annotations 9pt); theme-adaptive INK/INK_SOFT tokens used; well-proportioned
+          in both renders
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All 8 landmark labels non-overlapping; staggered xytext offsets (Sonnalm
-          pushed 42pt up, Gipfelkreuz 28pt) successfully separate the dense 18–55
-          km cluster. Bergdorf and Alpstadt at canvas edges remain fully visible.
+        comment: Landmark staggering (Sonnalm at 42pt offset, Gipfelkreuz at 28pt)
+          prevents overlaps in the 0-30km cluster; all labels readable
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 480-point continuous profile rendered as a 2pt solid line — appropriate
-          density. Fill gradient clearly visible. Landmark dots (5px with page-bg
-          edge) stand out. All elements distinguishable in both themes.
+        comment: Profile line and gradient fill clearly visible; landmark marker dots
+          (markersize=5) slightly small for 3200×1800 canvas; linewidth=2.0 just below
+          recommended 2.5
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Primary data encoding is shape/position (x-y coordinates), not colour
-          alone. Terrain gradient is supplementary. No red-green sole-signal issue.
+        comment: 'imprint_seq (brand green → blue) is CVD-safe; brand green #009E73
+          has good contrast on both surfaces'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200×1800px, figsize=(8,4.5) dpi=400). subplots_adjust(left=0.09,
-          right=0.98, top=0.91, bottom=0.12) — generous margins. No overflow or clipping
-          on any element.
+        comment: Canvas gate passed (3200×1800). subplots_adjust(left=0.09,right=0.98,top=0.91,bottom=0.12)
+          gives balanced margins; y_max+350 buffer accommodates annotations without
+          crowding
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title uses correct format: ''{Descriptive Title} · {spec-id} · python
-          · matplotlib · anyplot.ai''. Axes labelled ''Distance (km)'' and ''Elevation
-          (m)'' with units.'
+        comment: 'X: ''Distance (km)'', Y: ''Elevation (m)'' — both descriptive with
+          units'
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'FAIL: gradient fill uses custom terrain colormap [''#2d6a4f'',''#40916c'',''#74c69d'',''#b7e4c7'',''#d4a373'',''#a0522d'',''#6b3a2a'']
-          — not imprint_seq or imprint_div. Profile line uses INK token instead of
-          brand green #009E73. Backgrounds are correctly #FAF8F1 / #1A1A17.'
+        passed: true
+        comment: 'Profile line #009E73 (brand green, first series). Gradient fill
+          uses imprint_seq (LinearSegmentedColormap from #009E73 to #4467A3). Light
+          bg #FAF8F1, dark bg #1A1A17. All chrome theme-adaptive.'
     design_excellence:
       score: 14
       max: 20
@@ -122,27 +113,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Above default (4). Layered gradient fill, staggered annotation positioning
-          with intentional focal emphasis on Gipfelkreuz, styled callout box — deliberate
-          design hierarchy. Deduction for custom non-Imprint colours undermining brand
-          consistency.
+        comment: Gradient terrain silhouette is visually sophisticated and above typical
+          defaults; landmark annotations with staggered positioning add professional
+          polish; clear focal hierarchy on Gipfelkreuz
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Above default (2). Top/right spines removed; y-axis-only grid at
-          alpha=0.15 using INK token (theme-adaptive); generous plot margins; dashed
-          guide lines at alpha=0.4. Very clean presentation.
+        comment: Top/right spines removed; y-only grid at alpha=0.15 is subtle; subplots_adjust
+          for precise margins; exaggeration note with ELEVATED_BG bbox is a refined
+          detail
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Above default (2). Clear focal point at Gipfelkreuz (highest peak,
-          label pushed up for prominence). Landmarks narrate the trail journey. Gradient
-          fill helps convey terrain character. Could benefit from slightly stronger
-          contrast between valley annotations and peak annotations.
+        comment: Landmark annotations narrate the journey from Bergdorf to Alpstadt;
+          Gipfelkreuz pushed up as visual focal point; gradient fill reinforces elevation
+          concept; clear alpine narrative
     spec_compliance:
       score: 15
       max: 15
@@ -152,33 +141,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: cross-sectional area/elevation profile with filled terrain
-          silhouette and profile line.'
+        comment: 'Correct area elevation profile: filled silhouette + profile line
+          combination'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required: gradient fill, profile line, start/end labels (Bergdorf/Alpstadt),
-          8 landmark annotations with dashed vertical markers, vertical exaggeration
-          note, distance/elevation axes.'
+        comment: Filled area ✓, start/end labeled ✓, 6 intermediate landmarks ✓, vertical
+          marker lines ✓, vertical exaggeration note ✓
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = distance in km (0–120), Y = elevation in m. All 480 sample points
-          shown. Landmarks at correct distances.
+        comment: X=distance (0–120 km), Y=elevation (m); all 480 sample points visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: 'Title: ''Alpine Trail Profile · area-elevation-profile · python
-          · matplotlib · anyplot.ai'' — correct format. No legend (single-series,
-          correct omission).'
+          · matplotlib · anyplot.ai'' matches {Descriptive Title} · {spec-id} · {lang}
+          · {lib} · anyplot.ai format. No legend needed (single-series).'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -186,25 +173,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: multi-peak terrain profile, gradient terrain
-          fill, 8 annotated landmarks (start town, alpine meadow, ridge, river crossing,
-          summit, hut, rocky ridge, end town), vertical exaggeration annotation.'
+        comment: Multiple peaks and valleys, varied elevation changes, mixed terrain
+          with summits/passes/settlements — all elevation profile aspects covered
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible 120km Alpine hiking trail in German-speaking Alps with
-          realistic elevation range (800–2250m). German place names (Sonnalm, Hoher
-          Kamm, Gipfelkreuz, Seefeld Hut) are culturally authentic. Neutral context.
+        comment: Realistic alpine hiking trail with German place names; neutral topic;
+          plausible elevation range 800–2400m for alpine terrain
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Elevation range 800–2600m appropriate for Alpine terrain. 120km trail
-          length plausible. 480 points (1 per 250m) realistic for DEM sampling. Vertical
-          exaggeration ~10× correctly noted.
+        comment: Elevation values and terrain shape plausible; 120 km total distance
+          is unusually long for a hiking trail (typically 10–30 km) but plausible
+          as a multi-day alpine tour
     code_quality:
       score: 10
       max: 10
@@ -214,55 +199,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no classes or functions, clear data → landmark → plot
-          → style → save flow.
+        comment: Imports → Data → Plot → Save, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot, numpy, matplotlib.colors.LinearSegmentedColormap,
-          os, sys — all used.
+        comment: 'All imports used: os, sys (path manipulation), matplotlib.pyplot,
+          numpy, LinearSegmentedColormap'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. The 200-strip gradient loop is a standard
-          matplotlib gradient-fill technique. No fake UI elements.
+        comment: Gradient fill loop is necessarily verbose for the technique; label
+          config as tuple list is clean; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG) — correct
-          filename, dpi, no bbox_inches='tight'.
+        comment: Saves as plot-{THEME}.png; no bbox_inches='tight'; uses Axes methods
+          throughout
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Axes methods throughout (ax.plot, ax.fill_between, ax.annotate, ax.text),
-          proper fig/ax construction, ax.transAxes for figure-relative positioning.
-          fill_between loop slightly verbose but correct.
+        comment: Uses Axes API (ax.plot, ax.fill_between, ax.annotate, ax.text), LinearSegmentedColormap,
+          subplots_adjust — all idiomatic matplotlib patterns
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: LinearSegmentedColormap.from_list() for custom gradient, fill_between()
-          strips for gradient fill simulation, ax.annotate() with textcoords='offset
-          points' for staggered labels, ax.transAxes for the callout box.
+        comment: Banded fill_between loop for gradient terrain silhouette is a distinctive
+          matplotlib technique not easily replicated elsewhere; transAxes for positioned
+          annotation is library-specific
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -271,10 +254,10 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
+  - explicit-figure
   dataprep:
   - cumulative-sum
   styling:
+  - custom-colormap
   - gradient-fill
   - alpha-blending
-  - custom-colormap
-  - edge-highlighting
