@@ -1,108 +1,136 @@
 library: letsplot
+language: python
 specification_id: acf-pacf
 created: '2026-03-14T22:20:10Z'
-updated: '2026-03-14T22:32:18Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23097477745
+updated: '2026-06-10T02:17:06Z'
+generated_by: claude-sonnet
+workflow_run: 27247559914
 issue: 4663
-python_version: 3.14.3
-library_version: 4.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/letsplot/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/python/letsplot/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent significance coloring (red/blue) with proper legend creates immediate
-    visual hierarchy and data storytelling
-  - Clean two-panel layout using ggbunch with well-proportioned panels
-  - Classic airline-style seasonal data produces compelling and realistic ACF/PACF
-    pattern showing clear AR and seasonal components
-  - All spec requirements met with correct computation via statsmodels
-  - All font sizes explicitly set for consistent readability at target resolution
-  - 'Good visual refinement: subtle y-grid only, removed unnecessary chrome'
+  - Excellent significant/non-significant visual hierarchy using both color (#009E73
+    vs INK_MUTED) and size (thick/thin stems, large/small points) — immediately guides
+    the eye to significant autocorrelations
+  - 'Full Imprint theme-adaptive chrome: all colors correctly flip between light (#FAF8F1)
+    and dark (#1A1A17) backgrounds; no dark-on-dark or light-on-light failures'
+  - Correct faceted ACF/PACF layout via facet_wrap with bold strip labels; ACF includes
+    lag 0, PACF starts from lag 1 per spec
+  - 95% CI shown via both dashed horizontal lines and a subtle geom_ribbon band —
+    dual encoding adds clarity
+  - Seasonal autocorrelation pattern clearly visible with periodic green spikes at
+    lags 12, 24, 36 in ACF panel
+  - 'Idiomatic lets-plot grammar with comprehensive theme customization: x-grid removed,
+    y-grid only, panel border removed, elevated strip backgrounds'
+  - Generates both PNG and HTML output; seed-reproducible synthetic data with realistic
+    airline-style seasonality
   weaknesses:
-  - Vertical spacing between panels is slightly tight due to ggbunch overlapping region
-    approach
-  - Library mastery could be deeper with more lets-plot distinctive features
-  image_description: The plot displays two vertically stacked panels on a light background.
-    The top panel shows ACF values and the bottom shows PACF values, both sharing
-    an x-axis labeled "Lag" with breaks at 0, 6, 12, 18, 24, 30, 36. Vertical stem
-    lines (size 2.5) extend from a zero baseline to correlation values, capped with
-    circular markers (size 4.5). Stems are colored blue (#306998) for non-significant
-    lags and red (#C0392B) for significant lags exceeding the 95% confidence bounds
-    shown as horizontal gray dashed lines. A legend in the upper-right of the ACF
-    panel explains "Non-significant" (blue) and "Significant" (red). The bold centered
-    title reads "acf-pacf · letsplot · pyplots.ai". The ACF panel shows a clear sinusoidal
-    seasonal pattern with strong positive spikes at lags 12, 24, 36 and negative dips
-    at lags 6, 18, 30. Lag 0 is blue at 1.0. The PACF panel shows a sharp spike at
-    lag 1, then seasonal spikes with most values falling within the confidence bounds
-    after the initial lags. Subtle gray y-axis grid lines provide reference without
-    clutter.
+  - 'Confidence band (geom_ribbon fill=INK_SOFT alpha=0.1) is nearly invisible in
+    the dark render — INK_SOFT is #B8B7B0 on #1A1A17 background at 10% opacity fades
+    almost completely; consider alpha=0.15 or a theme-adaptive fill that remains perceptible
+    in dark mode'
+  - Y-axis label is 'Correlation' instead of per-panel 'ACF'/'PACF' as specified in
+    the spec — compensated by bold facet strip labels but technically diverges from
+    spec wording
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct Imprint surface color, not pure white
+      Chrome: Title "acf-pacf · python · letsplot · anyplot.ai" centered in dark ink, readable; axis label "Correlation" (y) and "Lag" (x) in dark ink; tick labels in INK_SOFT gray; facet strip labels "ACF" and "PACF" in bold dark text on slightly elevated off-white (#FFFDF6) strip with subtle border — all clearly readable against light background
+      Data: Two stacked panels — ACF (top) and PACF (bottom). Significant stems in brand green (#009E73) with size=2.0 stems and size=3.5 points; non-significant stems in muted gray with thinner lines and smaller points. 95% CI shown as dashed gray horizontal lines with subtle gray shaded ribbon between. Lag 0 in ACF reaches 1.0 (gray/non-significant by code design). Seasonal pattern clearly visible with green spikes at lags 12, 24, 36. PACF shows significant lags at 1-4 and 6-8, then scattered significant lags.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface, not pure black
+      Chrome: Title visible in light (#F0EFE8) text; axis labels and tick labels rendered in appropriate light tones (INK/INK_SOFT dark-theme values); facet strip labels "ACF" and "PACF" bold and readable in light text on dark elevated strip (#242420); no dark-on-dark text failures observed; confidence interval dashed lines visible as lighter dashes
+      Data: Data colors (green #009E73, muted gray) are identical to light render — only chrome elements flip. The CI ribbon (fill=INK_SOFT/#B8B7B0 alpha=0.1) is very faint but marginally visible. All stems and points retain their green/gray distinction. Legend at bottom shows "Significant" (green dot) and "Non-significant" (gray dot) with readable light text.
+      Legibility verdict: PASS — all text readable; minor note: CI ribbon is nearly invisible in dark mode due to low alpha, but this is a minor refinement point rather than a legibility failure
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16,
-          legend_text=16'
+        comment: 'Font sizes explicitly set (title=16, axis=12, text=10). All text
+          readable in both themes. Strip labels bold and clear. Minor: CI ribbon very
+          faint in dark render.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements anywhere
+        comment: No overlapping text or data elements. 36 lags well-spaced.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Stems and points well-adapted to 37 lags after size increase
+        comment: Significant stems clearly visible; non-significant stems appropriately
+          subtle. CI band nearly invisible in dark render (alpha=0.1 too low).
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette used. Green/gray is CVD-safe combination.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue/red scheme is colorblind-safe with strong contrast
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good layout but vertical spacing between panels slightly tight
+        comment: ggsize(800,450) × scale=4 = 3200×1800 correct. Two-panel layout well-proportioned.
+          No overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: ACF, PACF, and Lag are appropriate descriptive labels
+        comment: Title correct format. Lag/Correlation labels descriptive. ACF/PACF
+          panel labels prominent.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73. INK_MUTED for non-significant (theme-adaptive
+          muted anchor). Backgrounds #FAF8F1/#1A1A17. Both themes correct.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Strong design with flavor_high_contrast_light, intentional significance
-          coloring, clean legend
+        comment: 'Intentional visual hierarchy: significant/non-significant differentiated
+          by both color and size. Confidence band adds context. Clean faceted design
+          with elevated strip backgrounds. Above default (4) due to deliberate design
+          thinking.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Removed x-grid and minor grid, subtle y-grid, styled legend background
+        comment: theme_minimal() base. X-grid removed, y-grid only. Panel border removed.
+          Elevated strip backgrounds with subtle border. Clean axis lines.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Red/blue significance coloring creates immediate visual hierarchy
+        comment: Significant/non-significant color coding immediately guides viewer.
+          Seasonal periodicity in ACF clearly visible at lags 12, 24, 36. PACF AR
+          structure visible. No annotations to interpret patterns.
     spec_compliance:
       score: 15
       max: 15
@@ -112,26 +140,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ACF/PACF stem plots in two vertically stacked subplots
+        comment: Correct ACF/PACF stem plot using geom_segment + geom_point from zero
+          baseline.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec features present including CI bounds, lag 0 in ACF, PACF
-          from lag 1
+        comment: ACF top, PACF bottom. Stems from zero. 95% CI dashed lines. Lag 0
+          in ACF (value=1.0). PACF starts lag 1. 36 lags shown.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=lag, Y=correlation values correctly mapped
+        comment: X=lag, Y=correlation. All data within axis bounds.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend with clear significance labels
+        comment: 'Title: ''acf-pacf · python · letsplot · anyplot.ai''. Legend: Significant/Non-significant.'
     data_quality:
       score: 15
       max: 15
@@ -141,20 +170,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows seasonal pattern, both positive/negative correlations, significant
-          and non-significant lags
+        comment: Shows ACF and PACF with seasonal patterns, CI, significance highlighting
+          — full feature coverage.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic airline-style passenger data with trend and seasonality
+        comment: Airline-style monthly series with trend and seasonality — real-world
+          plausible and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 observations, correlations in [-1,1], realistic 12-month seasonality
+        comment: 200 obs, 36 lags. Correlation in [-1,1]. Values and scale appropriate.
     code_quality:
       score: 10
       max: 10
@@ -164,60 +194,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, compute, plot, save'
+        comment: No functions or classes. Clean flat structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean color column mapping approach, appropriate complexity
+        comment: Clean separation of sig/nonsig dataframes for visual hierarchy. Good
+          use of geom_ribbon for CI band.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html with current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Good ggplot grammar usage with geom_segment, geom_point, geom_hline,
-          theme composition
+        comment: facet_wrap for multi-panel, geom_segment+geom_point for lollipop
+          stems, geom_ribbon for CI band, scale_color_manual for categories, full
+          theme customization. Very idiomatic grammar-of-graphics.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses flavor_high_contrast_light, ggbunch, and export_ggsave with
-          scale
+        comment: HTML export via ggsave is a distinctive lets-plot feature. Multi-layer
+          composition with separate significant/non-significant datasets is leveraged
+          well. No use of lets-plot-specific interactive features beyond HTML export.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - statsmodels
   techniques:
-  - subplots
+  - faceting
   - layer-composition
-  - custom-legend
+  - html-export
   patterns:
   - data-generation
   dataprep:
   - time-series
   styling:
-  - grid-styling
+  - alpha-blending
