@@ -1,5 +1,7 @@
-"""line-yield-curve · python · plotly · anyplot.ai
-Yield Curve (Interest Rate Term Structure)
+""" anyplot.ai
+line-yield-curve: Yield Curve (Interest Rate Term Structure)
+Library: plotly 6.8.0 | Python 3.13.13
+Quality: 95/100 | Updated: 2026-06-10
 """
 
 import os
