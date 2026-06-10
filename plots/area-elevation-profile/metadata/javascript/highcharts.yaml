@@ -1,0 +1,257 @@
+library: highcharts
+language: javascript
+specification_id: area-elevation-profile
+created: '2026-06-10T05:55:03Z'
+updated: '2026-06-10T06:13:33Z'
+generated_by: claude-sonnet
+workflow_run: 27256075320
+issue: 4578
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Gradient fill with rgba alpha stops creates a beautiful terrain silhouette that
+    matches the spec's area fill requirement
+  - Seeded LCG (makeLCG(42)) ensures fully deterministic, reproducible data generation
+    in the offline JS environment
+  - Cosine interpolation between waypoints produces smooth, realistic terrain transitions
+  - plotLines with HTML labels elegantly annotate all 8 landmarks including start/end
+    elevations and summit height
+  - Theme tokens (t.ink, t.inkSoft, t.grid, t.palette) are wired throughout — chrome
+    flips correctly between light and dark renders
+  - Single-series legend correctly omitted; subtitle provides route context and vertical
+    exaggeration note
+  - 'Correct idiomatic Highcharts usage: animation:false in both chart and plotOptions.series,
+    credits disabled, transparent background'
+  weaknesses:
+  - 'Landmark labels at the top of the plot area are slightly crowded (13px, 8 labels
+    in ~120px width) — consider alternating y-offsets (y: 16 vs y: 32) to stagger
+    labels and reduce crowding'
+  - 'Top and right chart spines are still present — explicitly remove them via chart.plotBorderWidth:
+    0 or xAxis.lineWidth: 0 for the top/yAxis right side to achieve a cleaner L-shaped
+    frame'
+  - 'DE-02: No marker removal is set globally but gridLineWidth: 0 on xAxis is good
+    — further visual refinement could include softer yAxis line (lineWidth: 0) and
+    keeping only y-grid for the minimal look'
+  - 4 utility functions (rgba, cosineInterp, getElevation, makeLCG) break the ideal
+    flat KISS structure — not critical but worth noting for code style
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 surface — correct, not pure white.
+      Chrome: Title "area-elevation-profile · javascript · highcharts · anyplot.ai" in dark ink at 22px — clearly readable. Subtitle "Alpine Trail Transect — 120 km · Vertical exaggeration ≈10×" in softer ink at 14px — readable. Y-axis label "Elevation (m)" and X-axis label "Distance (km)" both explicitly set at 16px — readable. Tick labels at 14px — readable. Landmark labels at 13px — slightly small but legible.
+      Data: Area chart filled with brand green (#009E73) with a top-to-bottom alpha gradient (0.55 → 0.13), creating a terrain silhouette. 8 dashed vertical plotLines mark landmarks: Trailhead (892 m), River Crossing, Falcon Pass, Alpine Hut, Summit Peak (2847 m), Glacier View, Valley Camp, Journey's End (1005 m). Y-axis range 600–3200 m, X-axis 0–120 km. First (only) series correctly uses palette[0] = #009E73.
+      Legibility verdict: PASS — all text readable against warm off-white background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 surface — correct, not pure black.
+      Chrome: Title, axis labels, tick labels all rendered in light ink (t.ink = #F0EFE8 equivalent) — clearly readable against dark background. No dark-on-dark failures detected. Landmark labels in t.inkSoft light variant — visible. Grid lines adapt correctly to dark surface (subtle light lines).
+      Data: Brand green (#009E73) area fill is identical to light render — data colors unchanged, only chrome flips. Gradient fill and profile line same as light theme.
+      Legibility verdict: PASS — all text readable against near-black background; no dark-on-dark failures observed.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicitly set (title 22px, axis titles 16px, tick/axis
+          labels 14px, landmark labels 13px); readable in both themes; landmark labels
+          slightly small at 13px
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: 8 landmark labels spread across top of plot — slightly crowded but
+          no severe overlap; main content readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 241-point area series with gradient fill perfectly visible; no markers
+          on dense data (correct); lineWidth 2.5 appropriate
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series with brand green #009E73 — CVD-safe, no red-green
+          issues'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well, balanced margins, no content cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Distance (km) and Elevation (m) — descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'colors: t.palette; series color: t.palette[0] = #009E73; backgroundColor:
+          transparent; all chrome uses theme tokens; both renders theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: gradient terrain fill, landmark annotations with
+          dashed plotLines, subtitle context — clearly above defaults; not quite publication-ready'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No vertical grid (gridLineWidth:0 on xAxis), no data markers, hover
+          disabled — good; top/right spines not explicitly removed
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Landmark annotations guide the viewer through the trail journey;
+          gradient fill emphasizes terrain height; subtitle provides context — good
+          visual hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct area chart with filled terrain silhouette
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Area fill, start/end/summit labeled with elevations, dashed vertical
+          plotLines for all landmarks, VE noted in subtitle
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Distance(km), Y=Elevation(m), full 0-120 km range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: area-elevation-profile · javascript · highcharts · anyplot.ai;
+          single-series legend correctly omitted'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: ascent, descent, plateau sections, summit, varied
+          terrain with 241 sample points'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic alpine trail with named landmarks, plausible hiking distances
+          and elevations
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Elevation 892m to 2847m over 120km — realistic for alpine multi-day
+          trek; VE 10x appropriate and noted
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: 4 utility functions (rgba, cosineInterp, getElevation, makeLCG) break
+          flat structure; justified in offline JS context but still non-KISS
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG with seed=42 for deterministic terrain noise; waypoints
+          hardcoded
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed (JavaScript globals); all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized; functions are appropriate for the offline
+          JS constraint
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct Highcharts.chart() usage; harness generates plot-{theme}.png
+          and .html
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert Highcharts usage: animation:false, credits:false, transparent
+          bg, colors:t.palette, all chrome via tokens'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: plotLines with HTML labels, linearGradient fillColor, threshold:null,
+          useHTML:true in labels — Highcharts-specific features well leveraged
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - gradient-fill
+  - alpha-blending

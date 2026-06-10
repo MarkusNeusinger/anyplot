@@ -1,0 +1,272 @@
+library: chartjs
+language: javascript
+specification_id: area-elevation-profile
+created: '2026-06-10T06:06:54Z'
+updated: '2026-06-10T06:25:53Z'
+generated_by: claude-sonnet
+workflow_run: 27256385447
+issue: 4578
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/javascript/chartjs/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Beautiful gradient area fill using Chart.js backgroundColor function with chartArea
+    reference — idiomatic and visually polished terrain silhouette
+  - 'Custom landmarkPlugin using afterDraw with canvas 2D API: hollow dots, dashed
+    vertical guides, and themed rounded-corner label boxes demonstrate deep Chart.js
+    expertise'
+  - Cubic Hermite spline interpolation over 13 hard-coded control points produces
+    a smooth, realistic Alpine terrain profile without any external dependency
+  - 'Full theme adaptation throughout: pageBg, elevatedBg, ink, inkSoft, grid tokens
+    all applied correctly — both renders are visually correct and readable'
+  - Label clamping logic (Math.max/min on boxLeft) prevents landmark boxes from clipping
+    at chart edges; flip-below logic handles summit-level labels near the chart top
+  - Vertical exaggeration noted via subtitle; single-series legend correctly hidden;
+    x-axis gridlines hidden keeping the chart clean
+  weaknesses:
+  - 'DE-01: Design is professional and above defaults, but lacks a strong visual signature
+    — the optional slope-based gradient coloring (green flat → red steep) mentioned
+    in the spec would add a distinctive second data dimension to the fill and elevate
+    the chart to publication-ready level'
+  - 'DE-02: Axis border lines (border: { color: t.inkSoft }) on both x and y scales
+    create a subtle box frame around the data area; removing the top and right equivalent
+    borders (or using borderColor: ''transparent'' on the right/top sides) would align
+    with the style guide''s L-shaped spine preference and improve refinement'
+  - 'DE-03: Visual storytelling focuses on landmark labels but misses a climactic
+    emphasis on the Summit Peak — making the summit label box slightly larger, adding
+    a distinct color accent (e.g. palette[1] border on the box), or a summit annotation
+    arrow would guide the viewer''s eye to the narrative high point'
+  - 'VQ-02: Landmark label boxes for First Pass (20 km) and Summit Peak (33 km) are
+    horizontally close (~13 km apart); if landmark names were longer they would crowd
+    — adding a minimum horizontal separation check in the plugin would future-proof
+    this'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, clearly not pure white
+      Chrome: Title "area-elevation-profile · javascript · chartjs · anyplot.ai" in dark ink at top (~55% canvas width), subtitle "Vertical exaggeration ≈ 10×" in secondary ink below. X-axis label "Distance (km)" and Y-axis label "Elevation (m)" both in dark ink, visually balanced at 16px CSS. Tick labels in inkSoft (muted dark) at 14px CSS; Y-axis shows 400m–2800m at 400m intervals, X-axis shows 0–80km at 10km intervals. Subtle Y-axis grid lines; no X-axis grid — clean visual floor.
+      Data: Single terrain profile series in #009E73 (brand green) with gradient area fill from ~73% opacity at top to ~9% at the x-axis baseline — creates a rich terrain silhouette effect. Six landmark annotations (Trailhead, First Pass, Summit Peak, Mountain Hut, Second Pass, Trail End) with hollow circle dots on the terrain line, dashed vertical guides to the x-axis, and elevated-background rounded-corner label boxes showing name (bold) and elevation.
+      Legibility verdict: PASS — all title, axis, tick, and landmark label text is clearly readable against the warm off-white background; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title and subtitle in light ink (#F0EFE8 equivalent); axis labels and tick labels in light secondary ink (#B8B7B0 equivalent) — all text is light-on-dark and fully readable. Y-axis grid lines are subtly visible as faint light rules. Landmark label boxes use elevatedBg (#242420) creating a barely perceptible lift from the background, with ink text readable within.
+      Data: Terrain profile and gradient fill are identical to light render — #009E73 brand green line and fill with same gradient stops. Data color identity confirmed across both themes; only chrome (background, text, grid) flips.
+      Legibility verdict: PASS — no dark-on-dark failures detected; brand green #009E73 remains clearly visible on the dark surface; all text elements readable in both landmark boxes and axis chrome
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis labels 16px, ticks
+          14px, landmark labels 14-15px); readable in both themes; landmark labels
+          at 15px CSS are appropriately sized for the complexity of this chart
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Labels well-placed with flip-below and horizontal clamping; First
+          Pass and Summit Peak boxes (20km, 33km) are comfortably separated in the
+          render but close enough to warrant a minor deduction
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Terrain profile and gradient fill are prominently visible; pointRadius=0
+          appropriate for 200-point dense profile line
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series using #009E73 brand green — CVD-safe, adequate contrast
+          on both surfaces'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; landscape 3200x1800 appropriate for elevation
+          profile; generous whitespace with good plot-to-canvas ratio
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Distance (km) and Elevation (m) with units; correct anyplot title
+          format; subtitle noting vertical exaggeration
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series t.palette[0] = #009E73; background #FAF8F1 (light)
+          / #1A1A17 (dark); all chrome tokens theme-adaptive; data colors identical
+          across both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Gradient area fill, custom landmark plugin with rounded boxes and
+          hollow dots — clearly above defaults; professional mountain-silhouette look;
+          not publication-ready (no slope coloring, no accent emphasis on summit)
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis grid only (x-axis gridless), legend hidden, generous whitespace;
+          axis border lines create slight box frame that could be further refined
+          toward L-shaped spines
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Landmark journey narrative with dashed guides and labeled boxes;
+          gradient fill conveys terrain depth; no climactic emphasis on Summit Peak
+          as the narrative high point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct area/filled-line chart for elevation profile
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Area fill, start/end labels (Trailhead/Trail End), landmark annotations
+          with vertical guides, vertical exaggeration noted in subtitle
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Distance (km) on X, Elevation (m) on Y; 200 sample points within
+          spec's 50-500 range; 80 km trail with 6 landmarks
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'area-elevation-profile · javascript · chartjs · anyplot.ai';
+          no legend (appropriate for single series)
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Area fill, smooth interpolation, landmark annotations, elevation
+          labels, start/end labels, vertical exaggeration — all main features. Optional
+          slope-based gradient coloring from spec not implemented
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Alpine trail scenario; realistic landmark names (passes, summit,
+          hut, trailhead); neutral outdoor-recreation context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Elevation 880m–2450m realistic for European Alps; 80km multi-stage
+          trail; elevation range plausible for the described terrain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat script: data definition → canvas creation → plugin object →
+          Chart instantiation; no wrapper classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hard-coded deterministically; no Math.random()
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses global Chart and window.ANYPLOT_TOKENS as per harness
+          contract
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured; hermite spline is appropriately complex for the
+          use case; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct Chart.js API; harness handles file output; animation: false
+          set correctly'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert Chart.js patterns: gradient backgroundColor as function with
+          chartArea reference, fill: ''start'' for area, linear scale with tick callbacks,
+          responsive/maintainAspectRatio/animation settings all correct'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom afterDraw plugin with canvas 2D API (roundRect, arc, setLineDash)
+          is distinctively Chart.js; chartArea-anchored gradient fill is a pattern
+          unique to this library's declarative API
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - gradient-fill
+  - alpha-blending
