@@ -1,6 +1,6 @@
-"""anyplot.ai
+""" anyplot.ai
 line-yield-curve: Yield Curve (Interest Rate Term Structure)
-Library: plotnine | Python 3.13
+Library: plotnine 0.15.5 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-06-10
 """
 
