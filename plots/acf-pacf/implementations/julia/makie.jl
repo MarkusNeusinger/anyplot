@@ -1,7 +1,7 @@
 # anyplot.ai
 # acf-pacf: Autocorrelation and Partial Autocorrelation (ACF/PACF) Plot
-# Library: Makie.jl | Julia 1.11
-# Quality: pending | Created: 2026-06-10
+# Library: makie 0.22.10 | Julia 1.11.9
+# Quality: 86/100 | Created: 2026-06-10
 
 using CairoMakie
 using Colors
