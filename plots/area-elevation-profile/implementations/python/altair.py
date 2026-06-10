@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 area-elevation-profile: Terrain Elevation Profile Along Transect
-Library: altair 6.0.0 | Python 3.14.3
+Library: altair 6.2.1 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-06-10
 """
 
 import os
