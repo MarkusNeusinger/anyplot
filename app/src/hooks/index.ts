@@ -15,3 +15,6 @@ export type {
 } from 'src/hooks/useLayoutContext';
 export { useThemeMode } from 'src/hooks/useThemeMode';
 export { useLatestRelease } from 'src/hooks/useLatestRelease';
+export * from 'src/hooks/useFeaturedSpecs';
+export * from 'src/hooks/usePlotOfTheDay';
+export * from 'src/hooks/useTypewriter';

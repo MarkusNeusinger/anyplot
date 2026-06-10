@@ -28,6 +28,8 @@ export default defineConfig({
         'src/utils/**/*.ts',
         'src/hooks/**/*.ts',
         'src/components/**/*.tsx',
+        'src/layouts/**/*.tsx',
+        'src/sections/**/*.tsx',
         'src/pages/**/*.tsx',
         'src/constants/**/*.ts',
         'src/routes/**/*.ts',

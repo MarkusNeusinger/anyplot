@@ -5,9 +5,9 @@ import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 
 import { ErrorBoundary } from 'src/components/ErrorBoundary';
-import { AppDataProvider } from 'src/components/Layout';
-import { RootLayout } from 'src/components/RootLayout';
 import { RouteErrorBoundary } from 'src/components/RouteErrorBoundary';
+import { AppDataProvider } from 'src/layouts/Layout';
+import { RootLayout } from 'src/layouts/RootLayout';
 import { NotFoundPage } from 'src/pages/NotFoundPage';
 
 const LazyFallback = () => (

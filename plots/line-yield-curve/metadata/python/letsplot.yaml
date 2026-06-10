@@ -1,104 +1,126 @@
 library: letsplot
+language: python
 specification_id: line-yield-curve
 created: '2026-03-14T22:15:13Z'
-updated: '2026-03-14T22:29:13Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23097460574
+updated: '2026-06-10T01:07:31Z'
+generated_by: claude-sonnet
+workflow_run: 27245197539
 issue: 4664
-python_version: 3.14.3
-library_version: 4.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/letsplot/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/python/letsplot/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent data storytelling with inversion region shading and annotation highlighting
-    the recession signal
-  - Colorblind-safe palette with strong differentiation between three economic regimes
-  - Perfect spec compliance with all required features including maturity_years spacing
-    and multi-curve comparison
-  - Realistic Treasury yield data across three distinct economic periods
-  - Clean well-structured code with proper lets-plot idioms
+  - Excellent spec compliance — all required features present including inversion
+    region highlight and annotation
+  - Historically accurate U.S. Treasury yield curve data for three meaningful dates
+    that tell a clear story
+  - Correct Imprint palette usage with full theme-adaptive chrome in both light and
+    dark renders
+  - layer_tooltips() leverages letsplot's native interactive tooltip API distinctively
+  - Inversion ribbon + annotation creates a genuine visual focal point and data story
   weaknesses:
-  - Minor tick label crowding at short maturities (3M and 1Y are close together)
-  image_description: 'The plot displays three U.S. Treasury yield curves on a clean
-    white background. The title "line-yield-curve · letsplot · pyplots.ai" appears
-    at the top left. A top-center legend identifies three series: "Jan 2018 (Normal)"
-    in dark blue, "Aug 2019 (Inverted)" in amber/gold, and "Mar 2021 (Steep)" in teal
-    green. The x-axis is labeled "Maturity" with ticks at 3M, 1Y, 2Y, 5Y, 10Y, 20Y,
-    30Y using proper numeric spacing. The y-axis is labeled "Yield (%)". A light pink/red
-    shaded ribbon in the upper-left highlights the inversion region where short-term
-    rates exceed the 10Y yield, with italic red "Inversion Region" text. The blue
-    normal curve rises smoothly from ~1.28% to ~2.96%. The amber inverted curve starts
-    high at ~2.09% and dips to ~1.44% before recovering. The teal steep curve starts
-    near 0% and rises sharply to ~2.35%. Each curve has circular markers at data points.
-    Only subtle horizontal y-axis gridlines are shown.'
+  - 6M and 1Y x-axis tick labels are close (potentially touching) due to linear-scale
+    compression — consider log-scale x-axis (scale_x_log10) which naturally spreads
+    short maturities, or rotate short-end labels
+  - Inversion ribbon at alpha=0.18 is subtle; on dark background it is quite faint
+    — consider raising to alpha=0.22–0.25 for better dark-theme visibility
+  - Line width size=1.0 is conservative for a sparse 11-point dataset; increase to
+    1.4–1.6 for more visual weight
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 — correct
+      Chrome: title "line-yield-curve · python · letsplot · anyplot.ai" bold and visible; axis labels "Maturity" and "Yield (%)" clearly readable; tick labels visible though 6M/1Y/2Y are tight at short-maturity end
+      Data: three yield curves — brand green #009E73 (Jan 2018 Normal), lavender #C475FD (Aug 2019 Inverted), blue #4467A3 (Mar 2021 Steep); inversion ribbon in salmon/pink (alpha=0.18); "Inversion Region" italic red annotation
+      Legibility verdict: PASS — all text readable; minor 6M/1Y tick crowding noted but not a failure
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 — correct
+      Chrome: title and axis labels rendered in light ink (#F0EFE8/#B8B7B0), clearly readable against dark surface; no dark-on-dark failures detected; legend background uses #242420 (elevated dark)
+      Data: colors identical to light render — green, lavender, blue curves unchanged as required; inversion ribbon slightly more subtle on dark but still visible
+      Legibility verdict: PASS — all text readable on dark background; no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16,
-          legend_text=16'
+        comment: All font sizes explicitly set; readable in both themes; 6M/1Y tick
+          spacing slightly tight at short-maturity end
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: 3M and 1Y tick labels slightly close due to numeric x-axis spacing
-          but readable
+        comment: 6M and 1Y tick labels near-touching due to linear-scale compression
+          of 0.5-2 year range on 0-30 axis
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Lines size=2.5 and points size=5 well-visible for 33 data points
+        comment: Lines/points well-sized for 33 data points; inversion ribbon at alpha=0.18
+          slightly faint in dark render
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Okabe-Ito-inspired colorblind-safe palette
+        comment: Imprint palette, CVD-safe, three distinct series
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600x900 at scale=3, plot fills canvas well
+        comment: 3200x1800 correct, good canvas utilization, balanced margins, legend
+          at top
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Maturity, Yield (%)'
+        comment: Maturity and Yield (%) with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Imprint canonical order (positions 1-3), inversion
+          ribbon uses #AE3030 semantic anchor, backgrounds #FAF8F1/#1A1A17, full theme-adaptive
+          chrome'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom colorblind-safe palette, professional financial chart aesthetic
+        comment: Professional financial style with inversion region highlight; above
+          default but not publication-ready
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal, x-grid removed, subtle y-grid, legend at top
+        comment: Y-only grid, x-grid blanked, panel_border removed, explicit legend
+          background token, L-shaped axis frame
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Inversion region shading and annotation create clear recession signal
-          narrative
+        comment: Three dates tell normal-inverted-steep narrative arc; inversion ribbon
+          and annotation create focal point
     spec_compliance:
       score: 15
       max: 15
@@ -108,26 +130,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart for yield curves
+        comment: Multi-line yield curve with numeric x-axis spacing
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: multi-curve, maturity_years spacing,
-          inversion highlight, legend'
+        comment: Three curves, inversion region shaded and annotated, maturity_years
+          for spacing, maturity labels for ticks
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: maturity_years on x, yield_pct on y, correctly mapped
+        comment: x=maturity_years, y=yield_pct, color=date; all 11 maturities per
+          curve
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, descriptive legend labels
+        comment: 'Correct title format; legend: Jan 2018 (Normal), Aug 2019 (Inverted),
+          Mar 2021 (Steep)'
     data_quality:
       score: 15
       max: 15
@@ -137,20 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows normal, inverted, and steep yield curve shapes
+        comment: Normal, inverted, and steep curves showcase all three yield curve
+          shapes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real U.S. Treasury yield curve scenarios with plausible dates and
-          rates
+        comment: Real U.S. Treasury dates with historically accurate context; neutral
+          financial data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Yields in 0-3% range, realistic for depicted periods
+        comment: Jan 2018 (1.3-3%), Aug 2019 inversion (1.4-2.1%), Mar 2021 post-pandemic
+          (0.03-2.35%) are historically accurate
     code_quality:
       score: 10
       max: 10
@@ -160,31 +186,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save structure
+        comment: Imports -> tokens -> data -> plot -> save; no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: os, pandas, lets_plot only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, clean DataFrame and plot construction
+        comment: Well-organized, ordered categorical for color stability
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_ggsave with scale=3
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
       score: 7
       max: 10
@@ -194,26 +220,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper ggplot grammar with multiple geoms, scales, theme customization
+        comment: Correct grammar-of-graphics pattern, layer_tooltips(), scale functions,
+          theme_minimal+theme() idiomatically used
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layer_tooltips for interactive hover, HTML export, ggsize
+        comment: layer_tooltips() with .line() chains is letsplot-specific; HTML output
+          captures native letsplot interactivity; ordered pd.Categorical ensures color
+          assignment stability
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
-  - hover-tooltips
   - manual-ticks
+  - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
