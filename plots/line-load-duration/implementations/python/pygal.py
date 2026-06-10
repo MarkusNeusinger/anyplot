@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-load-duration: Load Duration Curve for Energy Systems
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 79/100 | Updated: 2026-06-10
+Quality: 86/100 | Updated: 2026-06-10
 """
 
 import os
