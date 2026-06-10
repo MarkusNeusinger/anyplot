@@ -104,7 +104,7 @@ p <- ggplot() +
     fill   = IMPRINT_PALETTE[1],
     color  = PAGE_BG,
     shape  = 21,
-    size   = 3.0,
+    size   = 3.5,
     stroke = 0.7,
     alpha  = 0.9
   ) +
@@ -113,10 +113,11 @@ p <- ggplot() +
     expand = expansion(mult = c(0.02, 0.08))
   ) +
   labs(
-    x       = "Log Odds Ratio",
-    y       = "Standard Error",
-    title   = title_str,
-    caption = sprintf(
+    x        = "Log Odds Ratio",
+    y        = "Standard Error",
+    title    = title_str,
+    subtitle = "Publication bias assessment — 20 RCTs on antihypertensive treatment vs. placebo",
+    caption  = sprintf(
       "n = %d studies  ·  pooled log OR = %.2f  ·  dashed funnel = pseudo 95%% CI",
       n_studies, pooled_lor
     )
@@ -125,13 +126,14 @@ p <- ggplot() +
   theme(
     plot.background  = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major = element_line(color = INK, linewidth = 0.3),
-    panel.grid.minor = element_line(color = INK, linewidth = 0.2),
+    panel.grid.major = element_line(color = INK_MUTED, linewidth = 0.25),
+    panel.grid.minor = element_blank(),
     panel.border     = element_blank(),
     axis.title       = element_text(color = INK, size = 10),
     axis.text        = element_text(color = INK_SOFT, size = 8),
     axis.line        = element_line(color = INK_SOFT, linewidth = 0.5),
-    plot.title       = element_text(color = INK, size = title_size),
+    plot.title       = element_text(color = INK, size = title_size, face = "bold"),
+    plot.subtitle    = element_text(color = INK_SOFT, size = 9),
     plot.caption     = element_text(color = INK_MUTED, size = 7, hjust = 1),
     plot.margin      = margin(t = 16, r = 20, b = 12, l = 14, unit = "pt")
   )
