@@ -224,7 +224,8 @@ new Chart(canvas, {
         ctx.textBaseline = "middle";
 
         regions.forEach(({ text, dataX, dataY, color }) => {
-          const px = xScale.getPixelForValue(dataX);
+          // Category scale uses indices (0–875), not raw hour values
+          const px = xScale.getPixelForValue(Math.round(dataX / 10));
           const py = yScale.getPixelForValue(dataY);
           const m = ctx.measureText(text);
           const padX = 10;
