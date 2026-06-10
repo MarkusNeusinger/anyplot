@@ -25,77 +25,56 @@ for (let i = 2; i < N; i++) {
   series[i] = 0.6 * series[i - 1] + 0.25 * series[i - 2] + _randn();
 }
 
-// Compute sample ACF at lags 0..maxLag
-function sampleACF(data, maxLag) {
-  const n = data.length;
-  const mean = data.reduce((s, v) => s + v, 0) / n;
-  const denom = data.reduce((s, v) => s + (v - mean) ** 2, 0);
-  const acf = [];
-  for (let k = 0; k <= maxLag; k++) {
-    let num = 0;
-    for (let i = k; i < n; i++) num += (data[i] - mean) * (data[i - k] - mean);
-    acf.push(num / denom);
-  }
-  return acf;
-}
-
-// Compute sample PACF at lags 1..maxLag via Durbin-Levinson recursion
-function samplePACF(acf, maxLag) {
-  const pacf = [null]; // pacf[0] unused; pacf[k] = PACF at lag k
-  let phi = [acf[1]];
-  pacf.push(acf[1]);
-  for (let k = 2; k <= maxLag; k++) {
-    let num = acf[k], den = 1;
-    for (let j = 0; j < k - 1; j++) {
-      num -= phi[j] * acf[k - 1 - j];
-      den -= phi[j] * acf[j + 1];
-    }
-    const pkk = num / den;
-    const next = new Array(k);
-    for (let j = 0; j < k - 1; j++) next[j] = phi[j] - pkk * phi[k - 2 - j];
-    next[k - 1] = pkk;
-    phi = next;
-    pacf.push(pkk);
-  }
-  return pacf.slice(1); // [PACF(1), PACF(2), ..., PACF(maxLag)]
-}
-
 const MAX_LAG = 35;
-const acf = sampleACF(series, MAX_LAG);
-const pacf = samplePACF(acf, MAX_LAG);
-const ci = 1.96 / Math.sqrt(N); // 95% confidence bound ≈ ±0.113
+const ci = 1.96 / Math.sqrt(N);
 
-// Color code bars: significant vs insignificant
-const SIG_ACF   = t.palette[0];               // #009E73
+// Sample ACF at lags 0..MAX_LAG
+const acfMean = series.reduce((s, v) => s + v, 0) / N;
+const acfDenom = series.reduce((s, v) => s + (v - acfMean) ** 2, 0);
+const acf = Array.from({ length: MAX_LAG + 1 }, (_, k) => {
+  let num = 0;
+  for (let i = k; i < N; i++) num += (series[i] - acfMean) * (series[i - k] - acfMean);
+  return num / acfDenom;
+});
+
+// Sample PACF at lags 1..MAX_LAG via Durbin-Levinson recursion
+const pacf = [acf[1]];
+let phi = [acf[1]];
+for (let k = 2; k <= MAX_LAG; k++) {
+  let num = acf[k], den = 1;
+  for (let j = 0; j < k - 1; j++) {
+    num -= phi[j] * acf[k - 1 - j];
+    den -= phi[j] * acf[j + 1];
+  }
+  const pkk = num / den;
+  const next = new Array(k);
+  for (let j = 0; j < k - 1; j++) next[j] = phi[j] - pkk * phi[k - 2 - j];
+  next[k - 1] = pkk;
+  phi = next;
+  pacf.push(pkk);
+}
+
+// Color tokens: palette[0] = ACF green #009E73, palette[1] = PACF lavender #C475FD
+const SIG_ACF    = t.palette[0];
 const INSIG_ACF  = "rgba(0,158,115,0.28)";
-const SIG_PACF  = t.palette[2];               // #4467A3
-const INSIG_PACF = "rgba(68,103,163,0.28)";
+const SIG_PACF   = t.palette[1];
+const INSIG_PACF = "rgba(196,117,253,0.28)";
 
-const acfLags  = Array.from({ length: MAX_LAG + 1 }, (_, i) => i);
-const pacfLags = Array.from({ length: MAX_LAG }, (_, i) => i + 1);
+// Shared 36-slot category axis (lags 0–35) for both panels so bars align vertically
+const lagLabels = Array.from({ length: MAX_LAG + 1 }, (_, i) => String(i));
 
 const acfBarData = acf.map((v, i) => ({
   value: +v.toFixed(4),
   itemStyle: { color: (i === 0 || Math.abs(v) > ci) ? SIG_ACF : INSIG_ACF }
 }));
-const pacfBarData = pacf.map((v, i) => ({
-  value: +v.toFixed(4),
-  itemStyle: { color: Math.abs(v) > ci ? SIG_PACF : INSIG_PACF }
-}));
 
-// Shared confidence interval markLine (amber dashed) + zero baseline
-function ciMarkLine() {
-  return {
-    silent: true,
-    symbol: "none",
-    label: { show: false },
-    data: [
-      { yAxis: 0,   lineStyle: { color: t.inkSoft, type: "solid",  width: 1.5 } },
-      { yAxis: ci,  lineStyle: { color: t.amber,   type: "dashed", width: 2   } },
-      { yAxis: -ci, lineStyle: { color: t.amber,   type: "dashed", width: 2   } }
-    ]
-  };
-}
+// Prepend null at lag-0 slot so PACF panel columns align with ACF panel
+const pacfBarData = [{ value: null, itemStyle: { color: "transparent" } }].concat(
+  pacf.map((v) => ({
+    value: +v.toFixed(4),
+    itemStyle: { color: Math.abs(v) > ci ? SIG_PACF : INSIG_PACF }
+  }))
+);
 
 // Init chart
 const chart = echarts.init(document.getElementById("container"));
@@ -124,7 +103,7 @@ chart.setOption({
     {
       gridIndex: 0,
       type: "category",
-      data: acfLags.map(String),
+      data: lagLabels,
       axisLabel: { show: false },
       axisLine:  { lineStyle: { color: t.inkSoft } },
       axisTick:  { show: false },
@@ -133,7 +112,7 @@ chart.setOption({
     {
       gridIndex: 1,
       type: "category",
-      data: pacfLags.map(String),
+      data: lagLabels,
       name: "Lag",
       nameLocation: "middle",
       nameGap: 38,
@@ -183,7 +162,16 @@ chart.setOption({
       yAxisIndex: 0,
       data: acfBarData,
       barWidth: 3,
-      markLine: ciMarkLine()
+      markLine: {
+        silent: true,
+        symbol: "none",
+        label: { show: false },
+        data: [
+          { yAxis: 0,   lineStyle: { color: t.inkSoft, type: "solid",  width: 1.5 } },
+          { yAxis: ci,  lineStyle: { color: t.amber,   type: "dashed", width: 2   } },
+          { yAxis: -ci, lineStyle: { color: t.amber,   type: "dashed", width: 2   } }
+        ]
+      }
     },
     {
       type: "bar",
@@ -191,7 +179,16 @@ chart.setOption({
       yAxisIndex: 1,
       data: pacfBarData,
       barWidth: 3,
-      markLine: ciMarkLine()
+      markLine: {
+        silent: true,
+        symbol: "none",
+        label: { show: false },
+        data: [
+          { yAxis: 0,   lineStyle: { color: t.inkSoft, type: "solid",  width: 1.5 } },
+          { yAxis: ci,  lineStyle: { color: t.amber,   type: "dashed", width: 2   } },
+          { yAxis: -ci, lineStyle: { color: t.amber,   type: "dashed", width: 2   } }
+        ]
+      }
     }
   ]
 });
