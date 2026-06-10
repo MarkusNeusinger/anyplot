@@ -1,18 +1,33 @@
-""" pyplots.ai
+"""anyplot.ai
 line-load-duration: Load Duration Curve for Energy Systems
-Library: plotly 6.6.0 | Python 3.14.3
+Library: plotly | Python 3.13
 Quality: 91/100 | Created: 2026-03-15
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
 
-# Data - synthetic annual hourly load profile for a mid-sized utility
+# Theme tokens (Imprint palette — see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint palette — semantic assignment: green=base (always-on), blue=intermediate, red=peak
+COLOR_BASE = "#009E73"  # Imprint pos 1 — stable, always-on base load
+COLOR_INTERMEDIATE = "#4467A3"  # Imprint pos 3 — intermediate cycling load
+COLOR_PEAK = "#AE3030"  # Imprint pos 5 — high-cost peak demand spikes
+
+# Data — synthetic annual hourly load profile for a mid-sized utility
 np.random.seed(42)
 hours = np.arange(8760)
 
-# Build realistic load profile: base + daily cycle + seasonal + noise
 hour_of_day = hours % 24
 day_of_year = hours // 24
 
@@ -35,63 +50,53 @@ base_capacity = 550
 intermediate_capacity = 900
 peak_capacity = 1150
 
-# Find hour indices where load crosses thresholds
+# Hour indices where load crosses each threshold
 peak_hours = np.searchsorted(-load_mw, -peak_capacity)
 intermediate_hours = np.searchsorted(-load_mw, -intermediate_capacity)
-base_hours = np.searchsorted(-load_mw, -base_capacity)
 
 # Total energy (area under curve) in GWh
 total_energy_gwh = np.trapezoid(load_mw) / 1000
 
-# Color palette (colorblind-safe: red→magenta, orange→teal for deuteranopia distinction)
-color_peak = "#C44E93"
-color_intermediate = "#2A9D8F"
-color_base = "#306998"
-color_line = "#1A3A5C"
-
 # Plot
 fig = go.Figure()
 
-# Base load region (rightmost)
+# Base load region (rightmost — always-on generation)
 fig.add_trace(
     go.Scatter(
         x=np.concatenate([hours, hours[::-1]]),
         y=np.concatenate([np.minimum(load_mw, base_capacity), np.zeros(8760)]),
         fill="toself",
-        fillcolor="rgba(48, 105, 152, 0.3)",
+        fillcolor="rgba(0,158,115,0.22)",
         line={"width": 0},
         name="Base Load",
-        showlegend=True,
         hoverinfo="skip",
     )
 )
 
-# Intermediate load region (middle, between base and intermediate capacity)
+# Intermediate load region (between base and intermediate capacity)
 intermediate_top = np.clip(load_mw, base_capacity, intermediate_capacity)
 fig.add_trace(
     go.Scatter(
         x=np.concatenate([hours, hours[::-1]]),
         y=np.concatenate([intermediate_top, np.full(8760, base_capacity)]),
         fill="toself",
-        fillcolor="rgba(42, 157, 143, 0.25)",
+        fillcolor="rgba(68,103,163,0.22)",
         line={"width": 0},
         name="Intermediate Load",
-        showlegend=True,
         hoverinfo="skip",
     )
 )
 
-# Peak load region (leftmost, only where load exceeds intermediate capacity)
+# Peak load region (leftmost — brief high-demand spikes)
 peak_top = np.maximum(load_mw, intermediate_capacity)
 fig.add_trace(
     go.Scatter(
         x=np.concatenate([hours, hours[::-1]]),
         y=np.concatenate([peak_top, np.full(8760, intermediate_capacity)]),
         fill="toself",
-        fillcolor="rgba(196, 78, 147, 0.25)",
+        fillcolor="rgba(174,48,48,0.22)",
         line={"width": 0},
         name="Peak Load",
-        showlegend=True,
         hoverinfo="skip",
     )
 )
@@ -102,89 +107,96 @@ fig.add_trace(
         x=hours,
         y=load_mw,
         mode="lines",
-        line={"color": color_line, "width": 3},
+        line={"color": INK, "width": 2.5},
         name="Load Duration Curve",
         hovertemplate="<b>Hour %{x:,}</b><br>Load: %{y:.0f} MW<extra></extra>",
     )
 )
 
-# Horizontal dashed lines for capacity tiers (annotations on left to avoid right-edge clipping)
+# Horizontal dashed capacity tier lines — annotations on right to avoid y-axis crowding
 for capacity, label, color in [
-    (peak_capacity, f"Peak Capacity ({peak_capacity} MW)", color_peak),
-    (intermediate_capacity, f"Intermediate Capacity ({intermediate_capacity} MW)", color_intermediate),
-    (base_capacity, f"Base Capacity ({base_capacity} MW)", color_base),
+    (peak_capacity, f"Peak Capacity ({peak_capacity} MW)", COLOR_PEAK),
+    (intermediate_capacity, f"Intermediate ({intermediate_capacity} MW)", COLOR_INTERMEDIATE),
+    (base_capacity, f"Base Capacity ({base_capacity} MW)", COLOR_BASE),
 ]:
     fig.add_hline(
         y=capacity,
         line_dash="dash",
         line_color=color,
-        line_width=2,
+        line_width=1.5,
         annotation_text=label,
-        annotation_position="top left",
-        annotation_font={"size": 16, "color": color},
+        annotation_position="top right",
+        annotation_font={"size": 12, "color": color},
     )
 
-# Region labels
+# Region labels placed within each zone
 fig.add_annotation(
-    x=peak_hours // 2 + 200,
-    y=(peak_capacity + intermediate_capacity) // 2 + 50,
+    x=peak_hours // 2,
+    y=(peak_capacity + intermediate_capacity) // 2 + 40,
     text="<b>Peak</b>",
     showarrow=False,
-    font={"size": 18, "color": color_peak},
+    font={"size": 14, "color": COLOR_PEAK},
 )
 
 fig.add_annotation(
     x=(peak_hours + intermediate_hours) // 2,
-    y=(intermediate_capacity + base_capacity) // 2 + 60,
+    y=(intermediate_capacity + base_capacity) // 2 + 30,
     text="<b>Intermediate</b>",
     showarrow=False,
-    font={"size": 18, "color": color_intermediate},
+    font={"size": 14, "color": COLOR_INTERMEDIATE},
 )
 
 fig.add_annotation(
-    x=6500, y=base_capacity // 2 + 50, text="<b>Base Load</b>", showarrow=False, font={"size": 18, "color": color_base}
+    x=6500, y=base_capacity // 2 + 30, text="<b>Base Load</b>", showarrow=False, font={"size": 14, "color": COLOR_BASE}
 )
 
-# Total energy annotation (positioned in base load region to avoid overlap with capacity lines)
+# Total energy annotation (mid-left area, clear of legend and capacity lines)
 fig.add_annotation(
-    x=6000,
-    y=750,
+    x=3800,
+    y=680,
     text=f"Total Energy: {total_energy_gwh:,.0f} GWh/year",
     showarrow=False,
-    font={"size": 18, "color": "#333333"},
-    bordercolor="#999999",
-    borderwidth=1.5,
-    borderpad=6,
-    bgcolor="rgba(255, 255, 255, 0.85)",
+    font={"size": 12, "color": INK_SOFT},
+    bordercolor=INK_SOFT,
+    borderwidth=1,
+    borderpad=5,
+    bgcolor=ELEVATED_BG,
 )
 
 # Layout
+title = "line-load-duration · python · plotly · anyplot.ai"
 fig.update_layout(
-    title={"text": "line-load-duration · plotly · pyplots.ai", "font": {"size": 28}, "x": 0.5, "xanchor": "center"},
+    autosize=False,
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
+    title={"text": title, "font": {"size": 16, "color": INK}, "x": 0.5, "xanchor": "center"},
     xaxis={
-        "title": {"text": "Hours (ranked by load, descending)", "font": {"size": 22}},
-        "tickfont": {"size": 18},
+        "title": {"text": "Hours (ranked by load, descending)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "showgrid": False,
         "range": [0, 8760],
-        "tickvals": [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 8760],
-        "ticktext": ["0", "1,000", "2,000", "3,000", "4,000", "5,000", "6,000", "7,000", "8,000", "8,760"],
+        "tickvals": [0, 2000, 4000, 6000, 8000, 8760],
+        "ticktext": ["0", "2,000", "4,000", "6,000", "8,000", "8,760"],
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
     },
     yaxis={
-        "title": {"text": "Power Demand (MW)", "font": {"size": 22}},
-        "tickfont": {"size": 18},
+        "title": {"text": "Power Demand (MW)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "showgrid": True,
         "gridwidth": 1,
-        "gridcolor": "rgba(0, 0, 0, 0.08)",
-        "range": [0, 1350],
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
+        "range": [0, 1400],
     },
-    template="plotly_white",
-    showlegend=True,
     legend={
         "x": 0.75,
-        "y": 0.45,
-        "font": {"size": 16},
-        "bgcolor": "rgba(255, 255, 255, 0.85)",
-        "bordercolor": "rgba(0, 0, 0, 0.1)",
+        "y": 0.42,
+        "font": {"size": 10, "color": INK_SOFT},
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
         "borderwidth": 1,
     },
     margin={"l": 80, "r": 60, "t": 80, "b": 60},
@@ -192,5 +204,5 @@ fig.update_layout(
 )
 
 # Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html")
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
