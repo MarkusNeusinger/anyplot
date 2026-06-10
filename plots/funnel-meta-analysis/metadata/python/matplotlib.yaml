@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: funnel-meta-analysis
 created: '2026-03-15T16:43:09Z'
-updated: '2026-06-10T03:45:18Z'
+updated: '2026-06-10T03:56:42Z'
 generated_by: claude-sonnet
 workflow_run: 27251208499
 issue: 4590
@@ -12,118 +12,137 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/funnel-me
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 94
 review:
   strengths:
-  - 'Complete spec implementation with all required funnel plot elements: inverted
-    Y-axis, pseudo 95% CI funnel region, summary effect line, null effect reference,
-    classified study scatter'
-  - 'Excellent semantic design: green circles (inside funnel) vs red diamonds (outside
-    funnel) with redundant shape encoding — CVD-safe and immediately interpretable'
-  - 'Advanced matplotlib patheffects used skillfully: Stroke+Normal on summary line
-    for visual depth, withStroke on annotation text for readability over data'
-  - Full theme adaptation — all chrome tokens (INK, INK_SOFT, PAGE_BG, ELEVATED_BG)
-    correctly wired in both renders; no dark-on-dark or light-on-light failure
-  - 'Data storytelling: annotation arrow points to the most prominent publication-bias
-    outlier with explanatory text, creating a clear focal point'
+  - 'Semantically meaningful color assignment: brand green (#009E73) for inside-funnel
+    studies and matte red (#AE3030) for outside-funnel studies correctly leverages
+    the Imprint palette semantic anchor for bad/error — making the publication-bias
+    signal immediately readable'
+  - 'Redundant encoding: circles for inside-funnel vs diamonds for outside-funnel
+    provides CVD-safe distinguishability even without hue differentiation'
+  - Weight-proportional marker sizing (80–520 area range based on inverse-variance
+    weights) adds an informative data dimension following standard meta-analysis conventions
+  - Targeted annotation with curved arrow points directly to the most prominent outlier,
+    transforming raw data into an explicit narrative about publication bias
+  - 'Excellent theme adaptation: all chrome tokens (INK, INK_SOFT, PAGE_BG, ELEVATED_BG)
+    correctly flip between light and dark renders with no dark-on-dark failures'
+  - Path effects on the summary line (halo stroke) and title create visual depth and
+    hierarchy without chartjunk
+  - No bbox_inches='tight' on savefig preserves exact canvas dimensions — correct
+    per library rules
   weaknesses:
-  - Annotation text at fontsize=8 is at the minimum; 9-10pt would improve readability
-    when scaled to mobile width (~400 px)
-  - plt.tight_layout() is called before save — the library guide recommends fig.subplots_adjust()
-    for precise margin control; tight_layout() can behave inconsistently across environments
-    (canvas gate passed this time)
-  - No weight-proportional marker sizing (s=weight_array where weight=1/SE^2) — optional
-    per the spec but standard publication-quality enhancement for funnel plots that
-    would raise DE-01 and LM-02
+  - 'DE-01 (6/8): While clearly above defaults, the design does not quite reach FiveThirtyEight-level
+    publication polish — could benefit from more refined typography hierarchy (e.g.,
+    slightly bolder axis labels relative to tick labels) and tighter visual identity'
+  - 'DE-02 (5/6): Minor: the annotation background uses path_effects with PAGE_BG
+    stroke rather than a proper bbox with ELEVATED_BG fill — a small inconsistency
+    with the style guide''s callout convention (ax.annotate with bbox=dict(facecolor=ELEVATED_BG))'
+  - 'LM-02 (3/5): Uses patheffects.Stroke which is distinctly matplotlib, but does
+    not demonstrate any truly unique matplotlib feature that would be hard to replicate
+    elsewhere (e.g., custom transforms, blended transforms, or figure-level artists)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "funnel-meta-analysis · python · matplotlib · anyplot.ai" at fontsize=12, dark INK text, spans ~85% of canvas width — expected for this title length. Axis labels "Log Odds Ratio" (x) and "Standard Error" (y) at fontsize=10 in INK. Tick labels at 8pt in INK_SOFT (#4A4A44). Legend in upper-right with ELEVATED_BG (#FFFDF6) frame and INK_SOFT edge — all four series labeled. Annotation "Potential\npublication bias" in RED (#AE3030) at fontsize=8 with arrow.
-      Data: Green (#009E73) circles for 12 inside-funnel studies, red (#AE3030) diamonds for 3 outside-funnel studies. Funnel filled with very subtle green (alpha=0.06). Dashed teal funnel boundary lines. Solid dark vertical summary effect line. Dotted gray null effect line at x=0.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "funnel-meta-analysis · python · matplotlib · anyplot.ai" in near-black INK at ~12pt, fills ~75% of width (expected for this title length). X-axis label "Log Odds Ratio" and Y-axis label "Standard Error" in INK at 10pt, clearly readable. Tick labels in INK_SOFT at 8pt, readable. Legend in upper right with ELEVATED_BG (#FFFDF6) frame and INK_SOFT text — all four entries (Summary effect, Null effect OR=1, Inside funnel, Outside funnel) visible and readable.
+      Data: 12 green (#009E73) circles inside the funnel, 3 red (#AE3030) diamond markers outside. Marker sizes range from small to large (weight-proportional: 80–520 area). Funnel region filled with semi-transparent green (#009E73, alpha=0.06) bounded by dashed green lines. Solid near-black summary effect vertical line with halo path effect. Dotted INK_SOFT null-effect line at x=0. Annotation "Potential / publication bias" in red with curved arrow pointing to lower-left outlier.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background, no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title in near-white INK (#F0EFE8) — fully readable. Axis labels in INK (#F0EFE8). Tick labels in INK_SOFT (#B8B7B0) — light gray on dark, clearly readable. Legend frame in ELEVATED_BG (#242420) with INK_SOFT edge and text. No dark-on-dark failure detected anywhere.
-      Data: Identical data colors to light render — green circles (#009E73) and red diamonds (#AE3030). Summary effect line is near-white (INK dark mode) — clearly visible. Null effect dotted line in #B8B7B0 — visible. Funnel fill subtly visible as darker teal tint against near-black background. Annotation red text readable on dark background.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title in light #F0EFE8 text, clearly readable. Axis labels and tick labels in light INK_SOFT tones (#B8B7B0). Legend with ELEVATED_BG (#242420) frame and light text — all entries visible. Spines in INK_SOFT light color, visible against dark background.
+      Data: Green (#009E73) circles and red (#AE3030) diamonds — colors are identical to the light render (only chrome flipped). Funnel dashed lines in same green, funnel fill still visible. Summary effect line with halo adapted to dark background. Annotation "Potential / publication bias" in same red with arrow, readable.
+      Legibility verdict: PASS — all text clearly readable against near-black background. No dark-on-dark failures. tick_params colors correctly set from INK_SOFT token which flips to #B8B7B0 in dark theme.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All chrome text readable in both themes; annotation at fontsize=8
-          borderline for mobile
+        comment: 'All font sizes explicitly set: title 12pt (computed), axis labels
+          10pt, tick labels 8pt, legend 8pt. Well-proportioned in both themes, title
+          fills ~75% of width (expected). Readable at desktop and mobile widths.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions; withStroke path effects prevent annotation
-          overlap
+        comment: No text or data element overlaps. Annotation placement avoids crowding.
+          Legend in upper right does not overlap funnel data.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: s=240 markers appropriate for 15 sparse studies; all plot elements
-          clearly visible
+        comment: 15 studies, weight-proportional sizes 80–520 area. All markers clearly
+          visible. Funnel boundary lines dashed and semi-transparent but legible.
+          Study outside lower-right still clearly a diamond.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red/green with redundant shape encoding (circles vs diamonds); CVD-safe
+        comment: Green (#009E73) vs red (#AE3030) has different luminance and is semantically
+          clear. Redundant encoding via marker shape (circles vs diamonds) makes this
+          CVD-safe without relying on hue alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); no overflow; legend and annotation
-          within frame
+        comment: Canvas gate passed. Explicit subplots_adjust (left=0.10, right=0.95,
+          top=0.91, bottom=0.13) fills the canvas well. Plot region uses ~85% of canvas
+          area with balanced margins. No content cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Log Odds Ratio and Standard Error are descriptive; title format correct
+        comment: '''Log Odds Ratio'' and ''Standard Error'' are descriptive and domain-appropriate
+          for meta-analysis. Units are implicit in the statistical context.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Inside funnel #009E73 (pos 1); outside funnel #AE3030 (pos 5 semantic
-          red); backgrounds correct both themes'
+        comment: 'Inside funnel = #009E73 (position 1, brand green) as primary series.
+          Outside funnel = #AE3030 (semantic anchor for bad/error) — correctly used
+          intentionally. Backgrounds #FAF8F1 / #1A1A17 correct. Data colors identical
+          across themes. Chrome correctly flips.'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Path effects on summary line add depth; semantic color+shape system
-          intentional; no weight-proportional sizing
+        comment: 'Strong design clearly above defaults: semantic color assignment,
+          weight-proportional sizing, shape redundancy, path effects on summary line
+          and title. Not quite FiveThirtyEight-level (typography hierarchy could be
+          more refined).'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, Y-only grid at alpha=0.15, edge-highlighted markers,
-          theme-aware legend — solid but not exceptional
+        comment: L-shaped spine frame, y-axis-only subtle grid (alpha=0.15), explicit
+          margins, elevated legend frame. Annotation uses path_effects stroke (slight
+          inconsistency with bbox=ELEVATED_BG convention) but overall highly refined.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Annotation creates focal point on bias outlier; semantic colors guide
-          viewer; good visual hierarchy
+        comment: 'Excellent narrative: inverted y-axis positions precise studies at
+          top (conventional), color/shape encoding distinguishes funnel position,
+          size encodes weight, direct annotation with arrow points to publication-bias
+          outlier. Viewer is guided to the insight immediately.'
     spec_compliance:
       score: 15
       max: 15
@@ -133,26 +152,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct meta-analysis funnel plot with inverted Y-axis
+        comment: Correct funnel plot with inverted y-axis (SE=0 at top), pseudo 95%
+          CI funnel lines, summary effect line, null effect reference line, and scatter
+          of studies.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Summary effect line, null effect reference, pseudo 95% CI funnel,
-          individual study scatter, asymmetry annotation — all present
+        comment: 'All spec features present: inverted y-axis, vertical summary effect
+          line, pseudo 95% CI funnel (diagonal lines), individual study scatter, null
+          effect dashed reference line at x=0, weight-proportional marker sizing.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Effect size on X, standard error on Y inverted — correct orientation
+        comment: X-axis = log odds ratio (effect size), Y-axis = standard error (inverted).
+          All 15 studies visible. Funnel correctly centered on summary effect.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; legend labels descriptive and accurate
+        comment: 'Title exactly ''funnel-meta-analysis · python · matplotlib · anyplot.ai''.
+          Legend correctly labels all four series: Summary effect, Null effect (OR=1),
+          Inside funnel, Outside funnel.'
     data_quality:
       score: 15
       max: 15
@@ -162,22 +187,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All funnel plot aspects: funnel boundaries, classification, summary
-          effect, null reference, asymmetry indication'
+        comment: 'Shows all funnel plot features: studies inside and outside funnel,
+          asymmetry simulating publication bias, varying study precisions (different
+          SEs), weight-proportional sizing.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 15 RCTs drug vs placebo, log ORs, plausible true effect (-0.4), realistic
-          SE range, intentional asymmetry
+        comment: 15 RCTs comparing drug vs placebo with log odds ratios — real, neutral
+          medical research scenario. Appropriate for Cochrane-style meta-analysis.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 15 studies in 8-30 range; effect sizes and SEs realistic for clinical
-          meta-analysis
+        comment: Log odds ratios range ~-1.5 to 0.75, SEs 0.05–0.55, summary effect
+          -0.4 — all factually plausible for a beneficial drug effect in an RCT meta-analysis.
     code_quality:
       score: 10
       max: 10
@@ -187,50 +213,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes, clear sequential flow
+        comment: 'Linear: imports → theme tokens → data → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.patheffects, matplotlib.pyplot, numpy — all used
+        comment: os, matplotlib.patheffects, matplotlib.pyplot, numpy — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake interactivity; clean conditional
-          annotation logic
+        comment: Clean, Pythonic. Appropriate complexity. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png; current matplotlib API throughout
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. Current API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Axes methods throughout; patheffects.Stroke+Normal is advanced and
-          correct; fill_betweenx idiomatic; annotate with connectionstyle correct
+        comment: Uses Axes methods throughout (ax.scatter, ax.plot, ax.axvline, ax.fill_betweenx,
+          ax.annotate). Correct matplotlib OO API.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: patheffects Stroke+Normal pipeline and fill_betweenx for funnel are
-          distinctive; could push further with weight-proportional scatter
+        comment: Uses matplotlib.patheffects.Stroke + Normal for halo effect on the
+          summary line (distinctive matplotlib feature). fill_betweenx for funnel
+          region. However, no use of truly unique matplotlib capabilities (e.g., custom
+          transforms, blended transforms, or figure-level compositing).
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -238,9 +266,7 @@ impl_tags:
   - annotations
   patterns:
   - data-generation
-  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling
