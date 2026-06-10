@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: recurrence-basic
 created: '2026-03-14T22:46:57Z'
-updated: '2026-06-10T02:54:37Z'
+updated: '2026-06-10T03:04:47Z'
 generated_by: claude-sonnet
 workflow_run: 27249184297
 issue: 4592
@@ -12,129 +12,128 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/recurrenc
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 81
+quality_score: 87
 review:
   strengths:
-  - 'Perfect spec compliance: 3D time-delay embedding, Euclidean distance, binary
-    threshold, square symmetric axes, all required features present'
-  - Two-layer heatmap composition (imprint_seq distance background at alpha=0.18 +
-    seaborn-masked binary overlay) is a sophisticated seaborn-native technique
-  - Inset recurrence rate chart adds meaningful temporal context without cluttering
-    the main visualization
-  - 'Perfect code quality: clean flat structure, deterministic data, all imports used,
-    no bbox_inches=''tight'''
-  - 'Both theme renders are correct: backgrounds, chrome, and data colors all theme-adaptive
-    while Imprint data colors stay identical across themes'
+  - Layered two-pass seaborn heatmap (distance background at alpha=0.18 + binary recurrence
+    overlay with mask) is sophisticated and exploits seaborn's matrix visualization
+    capabilities idiomatically
+  - 'Full spec compliance: time-delay embedding (Takens), Euclidean distance, binary
+    threshold, main diagonal filled, square axes — all present and correctly implemented'
+  - Both themes render correctly with fully theme-adaptive chrome and identical data
+    colors (#009E73 brand green constant across light and dark)
+  - Meaningful annotations guide viewer to key structural features (determinism diagonal,
+    chaotic transition region)
+  - Inset recurrence rate lineplot with filled area adds quantitative context without
+    cluttering the main visualization
+  - 'Perfect data quality: canonical Lorenz system (sigma=10, rho=28, beta=8/3) with
+    appropriate embedding parameters, fully deterministic and reproducible'
   weaknesses:
-  - Title fontsize=12 is too large for the 2400x2400 square canvas — estimated ~2430px
-    span vs. 2400px canvas width, leaving essentially no right margin. Reduce to fontsize=10
-    to bring title to ~82% of canvas width.
-  - 'DE-03 storytelling weak: the Lorenz attractor''s key visual features (main diagonal
-    = determinism, upper-left/lower-right blocks = high-recurrence epochs, sparse
-    middle = chaotic transition) are not called out. Add 1-2 brief text annotations
-    to guide the viewer.'
-  - Inset tick labels at fontsize=6 are very small; increase to 7pt for better mobile
-    readability.
+  - Footnote at fig.text(y=0.015) overlaps/crowds the X-axis label due to tight bottom
+    margin — increase fig.subplots_adjust(bottom=0.11) or move footnote y from 0.015
+    to 0.005, or reduce footnote fontsize to 7pt to create separation
+  - Title fontsize 10pt is slightly below the 12pt style-guide default for the 2400x2400
+    square canvas — raise to 12pt for better prominence
+  - ax.collections[-1].set_alpha(0.18) is a fragile index-based hack — prefer assigning
+    the QuadMesh to a variable during the first sns.heatmap call and calling .set_alpha()
+    on it directly
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface.
-      Chrome: Title "Lorenz Attractor · recurrence-basic · python · seaborn · anyplot.ai" in dark ink, readable but extends to ~99% of canvas width with essentially no right margin. Axis labels "Time Index (embedding steps)" on both axes in dark INK at fontsize=10. Tick labels (0,97,195,293,391,489) in INK_SOFT at fontsize=8, readable. Inset title "Recurrence Rate" at fontsize=8 readable. Inset tick labels at fontsize=6 — very small but legible. Footnote italic text at bottom in INK_MUTED, readable.
-      Data: Brand green #009E73 recurrent points on a subtle teal gradient (imprint_seq) distance background at alpha=0.18. Large filled blocks in upper-left and lower-right corners (high-recurrence epochs), diagonal bands (determinism), sparse middle (chaotic transition). Inset line chart in #009E73 with fill_between (alpha=0.25).
-      Legibility verdict: PASS (with caveat: title near right canvas edge)
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "Lorenz Attractor · recurrence-basic · python · seaborn · anyplot.ai" in dark INK (#1A1A17), clearly readable. Axis labels "Time Index (embedding steps)" in INK, tick labels in INK_SOFT (#4A4A44). All chrome dark against light background.
+      Data: Brand green #009E73 binary recurrence dots layered over imprint_seq (green→blue) distance background at alpha=0.18. Inset shows brand green filled lineplot on #FFFDF6 elevated background. Annotations in INK_SOFT italic. Footnote at bottom slightly crowds X-axis label.
+      Legibility verdict: PASS (all text readable; slight crowding between footnote and X-axis label at bottom)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface.
-      Chrome: Title and all text render in light cream/off-white tones, clearly readable against the dark background. Inset uses elevated #242420 background. No dark-on-dark failures observed. Tick labels, axis labels, inset labels all readable. Footnote visible in muted light tone.
-      Data: Brand green #009E73 data colors identical to light render — only background and chrome changed. Recurrent points stand out well against the dark teal distance background. All structural features (diagonal, blocks) clearly visible.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
+      Chrome: Title, axis labels, tick labels, annotations all render in light tones (#F0EFE8 / #B8B7B0). No dark-on-dark failures. Inset background flips to #242420 elevated dark. Spine colors visible in INK_SOFT.
+      Data: Brand green #009E73 identical to light render — data colors constant across themes as required. Distance background still perceptible in dark mode. Inset recurrence rate line and fill remain clearly visible.
+      Legibility verdict: PASS (all text readable against dark background, brand green clearly visible, chrome fully flipped to light tones)
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout (title=12, axes=10, ticks=8,
-          inset=8/6). Title at fontsize=12 on 2400px square canvas extends to ~99%
-          of canvas width — estimated 2430px span, essentially no right margin. Inset
-          tick labels at 6pt very small. Axis/tick labels well-sized in both themes.
+        comment: All font sizes explicitly set (title=10pt, axis labels=10pt, ticks=8pt).
+          Readable in both themes. Title slightly below 12pt style-guide default for
+          square canvas but proportions acceptable.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: No text-on-text overlap. Inset chart covers upper-right data quadrant
-          by design; acceptable. Footnote and x-axis label coexist at bottom without
-          overlap.
+        comment: Footnote at y=0.015 and X-axis label crowd each other at canvas bottom;
+          partial overlap visible in both renders. Main content readable.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Brand-green recurrent points clearly visible in both themes. Distance
-          background at alpha=0.18 is subtle, does not obscure binary data. Diagonal
-          lines and block structures clearly distinguishable.
+        comment: Binary recurrence dots at appropriate density; distance background
+          at alpha=0.18 intentionally subtle; inset lineplot fully clear.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single brand green #009E73 on distance background. CVD-safe Imprint
-          palette color used correctly.'
+        comment: Brand green on off-white/near-black maintains adequate contrast;
+          Imprint palette is CVD-safe by design.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
         passed: true
-        comment: Title extends to ~99% of canvas width (overflow beyond 90% threshold).
-          Canvas is correct 2400x2400 for symmetric square recurrence matrix. subplots_adjust
-          margins otherwise reasonable.
+        comment: Square canvas appropriate for symmetric recurrence matrix. Generous
+          margins overall. Minor penalty for tight bottom where footnote and axis
+          label crowd.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes labeled 'Time Index (embedding steps)' — descriptive with
-          implied units. Title format correct with descriptive prefix.
+        comment: Both axes labeled Time Index (embedding steps); title includes Lorenz
+          Attractor descriptive prefix; footnote explains methodology.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Background #FAF8F1 light / #1A1A17 dark correct. Data uses #009E73
-          brand green. imprint_seq (green-to-blue, single-polarity) used correctly
-          for distance background. All chrome is theme-adaptive.'
+        comment: 'Binary overlay uses #009E73 (brand green); distance background uses
+          imprint_seq (green→blue sequential) — correct for single-polarity data.
+          Light #FAF8F1 / dark #1A1A17 backgrounds. Chrome fully theme-adaptive.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Two-layer heatmap (imprint_seq distance background at alpha=0.18
-          + masked binary overlay) is intentionally sophisticated. Inset recurrence
-          rate chart adds analytical depth. Above default of 4.
+        comment: 'Strong design above defaults: layered two-pass heatmap, embedded
+          inset subplot, theme-adaptive chrome, italic annotations at carefully chosen
+          positions. Cohesive visual identity.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed; alpha-blended distance background; inset
-          despined; fill_between in inset with alpha=0.25. Well above default of 2.
+        comment: Top/right spines removed; inset despined; no cell borders on heatmap;
+          tick positions manually set; generous whitespace. Good refinement with minor
+          room for more polish.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Inset recurrence rate quantifies temporal variation. Title anchors
-          the Lorenz attractor domain. Footnote explains technical parameters. Above
-          default of 2 but key visual features (diagonal, regime blocks, transition
-          region) are not annotated or emphasized to guide the viewer.
+        comment: Annotations actively guide viewer to diagonal determinism and chaotic
+          transition region. Recurrence rate inset quantifies the visual patterns.
+          Clear focal point from high-recurrence upper-left block.
     spec_compliance:
       score: 15
       max: 15
@@ -144,60 +143,58 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct recurrence plot: binary distance-threshold matrix with optional
-          continuous-distance enhancement via two-layer composition.'
+        comment: Correct recurrence plot; binary threshold applied; optional distance-based
+          continuous background variant included; square symmetric matrix.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Time-delay embedding (dim=3, tau=5, Takens theorem); Euclidean distance
-          (cdist); binary threshold (15% of max); visible main diagonal; color-mapped
-          distance variant as enhancement; square axes.
+        comment: 'All features present: Euclidean distance in embedding space, binary
+          threshold (epsilon=15% of max), time-delay embedding with Takens theorem
+          (dim=3 tau=5), main diagonal filled.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Both axes are time indices (0-489 embedded steps); 490 points within
-          200-1000 recommended range; Lorenz x-component with correct sigma=10, rho=28,
-          beta=8/3.
+        comment: Both axes represent time indices (embedding steps); distance matrix
+          correctly computed; threshold creates well-formed recurrence matrix.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'Lorenz Attractor · recurrence-basic · python · seaborn · anyplot.ai'
-          — correct {Descriptive Title} · {spec-id} · {language} · {library} · anyplot.ai
-          format.
+        comment: Title Lorenz Attractor · recurrence-basic · python · seaborn · anyplot.ai
+          follows optionally-prefixed format. No legend (single-series, appropriate).
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Shows deterministic diagonal lines, high-recurrence regime blocks
-          (upper-left/lower-right), transition structure. Continuous distance background
-          adds feature dimension. Inset quantifies recurrence rate over time. Minor
-          deduction: transition region not explicitly highlighted.'
+        comment: 'Shows all aspects: diagonal line structure, block structures, chaotic
+          transition region, recurrence rate quantified in inset, distance-based continuous
+          variant alongside binary.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Lorenz attractor is the canonical chaotic dynamical system; standard
-          parameters (sigma=10, rho=28, beta=8/3) used; scientifically valid and neutral
-          context.
+        comment: Lorenz attractor (sigma=10 rho=28 beta=8/3) is canonical chaotic
+          dynamical system, perfectly matching spec application of detecting chaotic
+          vs periodic transitions.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 490 embedded points within spec range; epsilon=15% of max is a standard
-          threshold; 3D embedding with tau=5 is physically reasonable for this system.
+        comment: Canonical Lorenz parameters; 500 samples after transient (t=5..50);
+          embedding dim=3 and delay=5 appropriate for Lorenz x-component; threshold
+          at 15% of max produces informative recurrence rate.
     code_quality:
       score: 10
       max: 10
@@ -207,36 +204,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat sequential code: constants → data generation → figure setup
-          → heatmap layers → inset → footnote → save. No functions or classes.'
+        comment: Linear Imports → Data → Plot → Save structure; no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Lorenz ODE integration via solve_ivp is fully deterministic; no random
-          seed required.
+        comment: ODE with fixed initial conditions and parameters; fully deterministic,
+          no random seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All 9 imports used: os, matplotlib.pyplot, numpy, pandas, seaborn,
-          LinearSegmentedColormap, ListedColormap, solve_ivp, cdist.'
+        comment: 'All imports used: os, matplotlib, numpy, pandas, seaborn, LinearSegmentedColormap,
+          ListedColormap, solve_ivp, cdist.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Creative use of seaborn mask parameter for binary overlay. Two-layer
-          heatmap composition is clean. No fake interactivity.
+        comment: Clean and organized; two-pass sns.heatmap approach is intentional.
+          ax.collections[-1].set_alpha(0.18) is slightly hacky but acceptable.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png; no bbox_inches='tight'; current seaborn/matplotlib
-          API.
+        comment: Saves as plot-{THEME}.png; no bbox_inches='tight'; current seaborn
+          API throughout.
     library_mastery:
       score: 7
       max: 10
@@ -246,30 +242,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses sns.heatmap with mask (seaborn-specific), sns.lineplot for inset,
-          sns.despine, sns.set_theme with full rc dict. Good seaborn idioms above
-          baseline of 3.
+        comment: Uses sns.heatmap with mask parameter for selective display (seaborn-idiomatic),
+          sns.lineplot for inset, sns.set_theme with rc dict, sns.despine. Strongly
+          idiomatic usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: The mask parameter in sns.heatmap is distinctly seaborn, used creatively
-          to render only recurrent cells transparently. Two-layer heatmap composition
-          (distance background + masked binary overlay) is a seaborn-native technique
-          that would require manual pixel manipulation in other libraries.
-  verdict: REJECTED
+        comment: The mask parameter in sns.heatmap to overlay binary recurrence pattern
+          is genuinely seaborn-specific. Two-layer heatmap composition exploits seaborn
+          matrix visualization strengths. Could further leverage seaborn statistical
+          features.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - inset-axes
+  - annotations
   - manual-ticks
   - layer-composition
   patterns:
   - data-generation
   - matrix-construction
-  - explicit-figure
   dataprep:
   - normalization
   styling:
