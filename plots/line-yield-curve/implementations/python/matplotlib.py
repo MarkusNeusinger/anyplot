@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-yield-curve: Yield Curve (Interest Rate Term Structure)
-Library: matplotlib | Python 3.13
-Quality: pending | Created: 2026-06-10
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-06-10
 """
 
 import os
