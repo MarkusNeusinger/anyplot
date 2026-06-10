@@ -44,19 +44,27 @@ y_top   <- max(df$yield_pct)
 y_annot <- y_top + 0.30
 plot_title <- "line-yield-curve · r · ggplot2 · anyplot.ai"
 
+# Data-driven ribbon: front-end region (1M–2Y) between Jan 2021 baseline and
+# Jul 2023 peak — shows the full magnitude of the hiking cycle at the short end
+front_end_mask <- maturity_years <= 2.0
+inversion_df <- data.frame(
+  maturity_years = maturity_years[front_end_mask],
+  ymin           = yields_jan2021[front_end_mask],
+  ymax           = yields_jul2023[front_end_mask]
+)
+
 p <- ggplot(df, aes(x = maturity_years, y = yield_pct, color = curve_date)) +
-  # Shade the front-end region (3M–2Y) where 2023–2024 inversion is most prominent
-  annotate("rect",
-    xmin  = 0.25, xmax = 2.0,
-    ymin  = -Inf, ymax = Inf,
-    fill  = INK_MUTED, alpha = 0.07
+  geom_ribbon(
+    data = inversion_df,
+    aes(x = maturity_years, ymin = ymin, ymax = ymax),
+    fill = INK_MUTED, alpha = 0.10, inherit.aes = FALSE
   ) +
   geom_line(linewidth = 1.2, lineend = "round") +
-  geom_point(size = 2.5) +
+  geom_point(size = 3.5) +
   annotate("text",
     x     = 0.7,   y     = y_annot,
     label = "Inversion zone",
-    color = INK_MUTED, size = 2.8, hjust = 0.5, vjust = 0
+    color = INK_MUTED, size = 3.5, hjust = 0.5, vjust = 0
   ) +
   scale_color_manual(values = IMPRINT_PALETTE, name = NULL) +
   scale_x_log10(
@@ -82,7 +90,7 @@ p <- ggplot(df, aes(x = maturity_years, y = yield_pct, color = curve_date)) +
     axis.title        = element_text(color = INK,      size = 10),
     axis.text         = element_text(color = INK_SOFT, size = 8),
     axis.line         = element_line(color = INK_SOFT, linewidth = 0.5),
-    axis.ticks        = element_line(color = INK_SOFT),
+    axis.ticks        = element_blank(),
     plot.title        = element_text(color = INK,      size = 12, margin = margin(b = 12)),
     legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.3),
     legend.text       = element_text(color = INK_SOFT, size = 9),
