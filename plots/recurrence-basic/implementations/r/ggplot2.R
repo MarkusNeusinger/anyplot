@@ -4,7 +4,6 @@
 #' Quality: 84/100 | Created: 2026-06-10
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 set.seed(42)
@@ -59,12 +58,31 @@ rec_df <- data.frame(
   recurrent = recurrence
 )
 
-# Title: 58 chars < 67-char baseline — default size 12 applies
-plot_title <- "Logistic Map · recurrence-basic · r · ggplot2 · anyplot.ai"
+plot_title    <- "Logistic Map · recurrence-basic · r · ggplot2 · anyplot.ai"
+plot_subtitle <- "r = 3.9 (chaotic regime) · short diagonal bands signal deterministic recurrence"
 
-# Plot
+# Plot: binary recurrence matrix with diagonal reference + storytelling annotation
 p <- ggplot(rec_df, aes(x = i, y = j, fill = factor(recurrent))) +
   geom_raster(interpolate = FALSE) +
+  # Diagonal reference line emphasising the main recurrence axis (LOI)
+  geom_abline(
+    slope = 1, intercept = 0,
+    color = IMPRINT_PALETTE[3], linewidth = 0.5, alpha = 0.55
+  ) +
+  # Arrow annotation pointing to off-diagonal band structure
+  annotate(
+    "segment",
+    x = n_pts * 0.16, xend = n_pts * 0.26,
+    y = n_pts * 0.96, yend = n_pts * 0.81,
+    arrow = arrow(length = unit(0.12, "cm"), type = "closed"),
+    color = INK_SOFT, linewidth = 0.55
+  ) +
+  annotate(
+    "text",
+    x = n_pts * 0.10, y = n_pts * 0.98,
+    label = "off-diagonal bands\n= determinism",
+    color = INK_SOFT, size = 2.7, hjust = 0.5, lineheight = 0.9
+  ) +
   scale_fill_manual(
     values = c("0" = PAGE_BG, "1" = IMPRINT_PALETTE[1]),
     guide  = "none"
@@ -73,9 +91,10 @@ p <- ggplot(rec_df, aes(x = i, y = j, fill = factor(recurrent))) +
   scale_y_continuous(expand = c(0, 0), breaks = seq(50, n_pts, by = 50)) +
   coord_fixed(ratio = 1) +
   labs(
-    title = plot_title,
-    x     = "Time Index",
-    y     = "Time Index"
+    title    = plot_title,
+    subtitle = plot_subtitle,
+    x        = "Time Index",
+    y        = "Time Index"
   ) +
   theme_minimal(base_size = 8) +
   theme(
@@ -85,8 +104,9 @@ p <- ggplot(rec_df, aes(x = i, y = j, fill = factor(recurrent))) +
     panel.grid.minor    = element_blank(),
     panel.border        = element_rect(color = INK_SOFT, fill = NA, linewidth = 0.5),
     axis.title          = element_text(color = INK,      size = 10),
-    axis.text           = element_text(color = INK_SOFT, size = 8),
+    axis.text           = element_text(color = INK_SOFT, size = 9),
     plot.title          = element_text(color = INK,      size = 12, hjust = 0.5),
+    plot.subtitle       = element_text(color = INK_SOFT, size = 9,  hjust = 0.5),
     plot.title.position = "plot",
     plot.margin         = margin(16, 16, 12, 12, unit = "pt")
   )
