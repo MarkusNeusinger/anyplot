@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-yield-curve: Yield Curve (Interest Rate Term Structure)
 // Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 80/100 | Created: 2026-06-10
+// Quality: 88/100 | Created: 2026-06-10
 //# anyplot-orientation: landscape
 // anyplot.ai
 // line-yield-curve: Yield Curve (Interest Rate Term Structure)

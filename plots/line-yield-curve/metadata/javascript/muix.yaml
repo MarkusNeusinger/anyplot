@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: line-yield-curve
 created: '2026-06-10T00:59:59Z'
-updated: '2026-06-10T01:05:43Z'
+updated: '2026-06-10T01:20:04Z'
 generated_by: claude-sonnet
 workflow_run: 27245638594
 issue: 4664
@@ -12,109 +12,98 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-yiel
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/javascript/muix/plot-dark.html
-quality_score: 80
+quality_score: 88
 review:
   strengths:
-  - Historically plausible U.S. Treasury yield data across three distinct snapshots
-    (2021 normal, 2022 flat, 2023 inverted) — excellent real-world context
-  - Log-scale x-axis with custom valueFormatter correctly spaces maturities and maps
-    numeric years to readable labels (1M, 3M … 30Y)
-  - 'Semantic color choice: brand green for the normal curve, blue for flat, and matte
-    red (#AE3030) for the inverted/recession-signal curve — justified semantic exception'
-  - ChartsReferenceLine at 1Y with direction arrow annotation adds clear narrative
-    without fake interactivity
-  - All Imprint palette values (t.palette) and theme-adaptive tokens (t.ink) used
-    correctly; both renders pass theme check
-  - skipAnimation, window.ANYPLOT_SIZE sizing, and community-only imports all correct
-  - Legend positioned at bottom with descriptive labels identifying each curve's macroeconomic
-    interpretation
+  - Three yield curve shapes (normal, flat, inverted) with accurate U.S. Treasury
+    data provide excellent educational and financial coverage
+  - Semantic color assignment — matte red (#AE3030) for the inverted/recession curve
+    — reinforces the story with minimal annotation
+  - ChartsReferenceLine at 1Y maturity with directional label effectively marks the
+    inversion point, a distinctive MUI X feature
+  - Log-scale x-axis with custom valueFormatter correctly represents non-linear maturity
+    spacing per spec requirement
+  - CatmullRom curve interpolation gives smooth, professional financial-publication
+    appearance
   weaknesses:
-  - Y-axis label 'Yield (%)' overlaps with the '3.5%' tick label in both light and
-    dark renders — increase left margin or reduce y-axis label font size (currently
-    16px) to ~13px to prevent collision
-  - 'Palette ordering skips position 1 (lavender #C475FD) to use position 2 (blue
-    #4467A3) for the Oct 2022 curve — no semantic justification for the skip; canonical
-    order should be palette[0], palette[1], palette[2] with palette[4] (matte red)
-    reserved for the semantic inverted series via a discrete override'
-  - Spec requests shading or annotation to highlight the inversion region; only a
-    reference line annotation is provided — adding a subtle filled region (alpha ~0.06)
-    between the Jul 2023 curve and a baseline would better satisfy the spec
-  - 3M tick label (maturity 0.25 years) is dropped on the log-scale x-axis due to
-    crowding — consider using a smaller tick font or adjusting the label step to retain
-    3M since it is listed in the spec's data definition
+  - 'DE-02: Grid lines are MUI X defaults (visible horizontal lines) — reduce grid
+    opacity via sx (e.g., `& .MuiChartsGrid-line: { opacity: 0.15 }`) or remove for
+    the clean minimal-gridline look the spec calls for in a financial context'
+  - 'DE-01: Good financial styling but short of publication-quality — consider adding
+    semi-transparent area fill (areaSeriesType or area chart mode) under each yield
+    curve to add visual weight and better separate the three curve profiles'
+  - 'VQ-01: Slight asymmetry between x-axis label (16px) and y-axis label (13px) font
+    sizes — aligning both to ~14-15px would improve axis label balance'
+  - The 3M maturity tick label is auto-hidden by MUI X log scale rendering; explicitly
+    specify tick positions via tickMinStep or a custom ticks array to ensure all 11
+    maturity labels appear as the spec intends
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — correct anyplot light surface, no pure white.
-      Chrome: Title "U.S. Treasury Yield Curves · line-yield-curve · javascript · muix · anyplot.ai" in dark text at top, fully readable. X-axis label "Maturity" and Y-axis label "Yield (%)" both visible; the rotated Y-axis label overlaps the "3.5%" tick label, causing minor readability loss at that position. All other tick labels (0%, 0.5%, 1%, …, 6.5%) and maturity labels (1M, 6M, 1Y, 2Y, 3Y, 5Y, 7Y, 10Y, 20Y, 30Y) are clearly readable. 3M tick label is absent (dropped by MUI X log-scale).
-      Data: Three smooth catmullRom lines — brand green (#009E73) for Jan 2021 Normal (low, steeply upward-sloping 0.05%→1.82%), blue (#4467A3) for Oct 2022 Flat (humped 3.3%→4.6%→4.1%), matte red (#AE3030) for Jul 2023 Inverted (peaked short-term ~5.5% declining to 4.1%). Circle markers on each data point. Dashed red reference line at 1Y with label "Inverted beyond 1Y →" in red text, visible and readable.
-      Legend: Bottom-center, row layout. Labels "Jan 2021 (Normal)", "Oct 2022 (Flat)", "Jul 2023 (Inverted)" with correct color swatches. Fully readable.
-      Legibility verdict: PASS — all text readable; minor Y-axis label / tick overlap noted but does not block comprehension.
+      Background: Warm off-white (#FAF8F1) — passes theme check.
+      Chrome: Title "U.S. Treasury Yield Curves · line-yield-curve · javascript · muix · anyplot.ai" in dark ink (~65-70% canvas width, expected for long mandated title). Y-axis label "Yield (%)" and X-axis label "Maturity" both clearly readable. Tick labels for 0%–6% (Y) and 1M/6M/1Y/2Y/3Y/5Y/7Y/10Y/20Y/30Y (X, note 3M auto-hidden by log scale) in dark secondary text.
+      Data: Three smooth CatmullRom curves — brand green (#009E73) for Jan 2021 (Normal, upward sloping 0.05%–1.82%), lavender (#C475FD) for Oct 2022 (Flat/humped, 3.3%–4.6%), matte red (#AE3030) for Jul 2023 (Inverted, 5.5% short end descending to 4.1% at 30Y). Dashed vertical reference line at 1Y maturity in matte red with label "Inverted beyond 1Y →". Horizontal legend at bottom with swatch + label per series. Subtle horizontal grid lines visible.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17) — correct anyplot dark surface, no pure black.
-      Chrome: Title rendered in light text, clearly readable against dark background. Axis labels and tick labels rendered in light/muted text — all readable. No dark-on-dark failure detected. Y-axis label overlaps "3.5%" tick label persists from light render. Reference line label "Inverted beyond 1Y →" in matte red — readable against the dark background.
-      Data: Identical colors to light render — brand green, blue, matte red. Data colors are theme-invariant as required. All three curves clearly distinguishable. Circle markers visible on each line.
-      Legend: Same layout, readable against dark surface.
-      Legibility verdict: PASS — all text readable in dark theme; same minor Y-axis label overlap present.
+      Background: Warm near-black (#1A1A17) — passes theme check.
+      Chrome: Title, axis labels, tick labels all rendered in light ink (cream/off-white) — no dark-on-dark failures observed. Grid lines subtle against dark surface.
+      Data: Data colors are identical to light render — green, lavender, matte red remain unchanged between themes. Reference line and label same matte red. Legend visible at bottom in light text.
+      Legibility verdict: PASS — all text clearly readable against dark background. No dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 19px, axis labels 16px, ticks 14px,
-          legend 15px). Minor legibility loss where Y-axis label overlaps 3.5% tick.
+        comment: Font sizes explicitly set (title 19px, axis labels 16px/13px, ticks
+          14px, legend 15px); slight x/y axis label size asymmetry (16px vs 13px)
       - id: VQ-02
         name: No Overlap
-        score: 4
-        max: 6
-        passed: false
-        comment: Y-axis 'Yield (%)' label overlaps with '3.5%' tick label in both
-          renders due to left margin being too tight for the rotated label.
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All three curves clearly visible with distinct colors and circle
-          markers at each data point. Moderate density handled well.
+        comment: No overlapping text elements in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines at strokeWidth 3px with visible markers; all three curves clearly
+          distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green, blue, matte red are CVD-safe Imprint palette selections. No
-          red-green sole signal (blue provides third distinction).
+        comment: Imprint palette, CVD-safe, good contrast between series
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Landscape orientation, good margins (top:60 right:60 bottom:80 left:90).
-          Legend at bottom. No AR-09 clipping. Left margin slightly tight causing
-          y-label overlap.
+        comment: 'Good margins (top:60, right:60, bottom:80, left:110); layout well-utilized;
+          minor: MUI X default grid visible'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Yield (%)'' with percent unit. X-axis: ''Maturity''. Title
-          follows required format with descriptive prefix.'
+        comment: 'Y-axis: ''Yield (%)'' with units; X-axis: ''Maturity'' descriptive;
+          title with descriptive prefix'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series correctly uses #009E73. Matte red for inverted curve
-          is a valid semantic exception. However, palette[1] (lavender) is skipped
-          to use palette[2] (blue) with no semantic justification — minor canonical
-          ordering violation.'
+        passed: true
+        comment: 'First series #009E73 (brand green); palette[1] lavender for flat;
+          palette[4] matte red for inverted (semantic exception: red = recession/bad);
+          backgrounds theme-correct; data colors identical across renders'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -122,28 +111,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default (4): semantic color mapping (green=normal, red=inverted
-          recession signal), reference line annotation, log scale, catmullRom smoothing
-          show intentional design thinking.'
+        comment: 'Above defaults: semantic color choices, reference line, smooth curves,
+          financial-publication feel; not fully publication-ready (no area fills,
+          default grid)'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: 'Above default (2): explicit font sizing via sx prop, 3px stroke
-          width, thoughtful legend placement. MUI X default frame (all four spines)
-          retained — removing top/right would improve polish.'
+        comment: Custom font sizes and line width; MUI X default horizontal grid lines
+          remain; no explicit grid reduction
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 'Above default (2): narrative arc from COVID-era normal to hiking-cycle
-          flat to inverted recession signal. Reference line with directional label
-          guides viewer to the inversion story. Shading would have strengthened it
-          further.'
+        comment: 'Clear narrative: green=normal era, red=inverted/recession; ''(Normal)/(Flat)/(Inverted)''
+          labels in legend; reference line at 1Y marks inversion threshold; viewer
+          immediately grasps the rate cycle story'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -151,58 +138,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct chart type — line chart with log-scale x-axis for yield curve
-          term structure.
+        comment: Correct line chart type showing yield curves
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Three curves (≥2 required) ✓, log scale ✓, maturity tick labels ✓.
-          Inversion annotation present via reference line but spec specifically requests
-          shading — partial fulfillment.
+        comment: Multiple curves (3) ✓; maturity_years log-scale x-axis ✓; maturity
+          labels for ticks ✓; inversion annotation/reference line ✓
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: maturityYears used for x-axis numeric positioning, maturityLabels
-          as tick labels, yield_pct on y-axis, three date snapshots as series.
+        comment: X=maturity years (log scale), Y=yield percentage; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: 'Title: ''U.S. Treasury Yield Curves · line-yield-curve · javascript
-          · muix · anyplot.ai'' — correct format with descriptive prefix. Legend labels
-          describe each curve with date and yield-curve shape.'
+          · muix · anyplot.ai'' — correct format with descriptive prefix; legend labels
+          descriptive with context tags'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'All three canonical yield curve shapes (normal, flat, inverted)
-          represented. Log scale, tick labels, annotation all present. Missing: shading
-          for inversion region.'
+        comment: 'Shows all three canonical yield curve shapes: normal (upward), flat/humped,
+          and inverted'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Historically accurate U.S. Treasury par yield snapshots — Jan 2021
-          COVID-era ultra-low rates, Oct 2022 Fed hiking cycle near-flat, Jul 2023
-          deeply inverted. All values are realistic and historically documented.
+        comment: Real U.S. Treasury yield snapshots; neutral financial topic; specific
+          dates tied to real market events
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis 0–6.5% is appropriate for the dataset range. Log x-axis correctly
-          spans 0.083–30 years. No scale distortions.
+        comment: Jan 2021 COVID-era low rates (0.05–1.82%) ✓; Oct 2022 Fed hiking
+          cycle (3.3–4.6%) ✓; Jul 2023 inversion (3.97–5.54%) ✓; factually accurate
     code_quality:
       score: 10
       max: 10
@@ -212,35 +194,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Single default-exported component, data as flat arrays, no helper
-          functions or classes.
+        comment: 'Clean: data constants → default export component; no unnecessary
+          abstraction'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded as constant arrays — fully deterministic, no RNG.
+        comment: All data hard-coded; fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: LineChart and ChartsReferenceLine — both are actually used. No unused
-          imports.
+        comment: Only LineChart and ChartsReferenceLine imported, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, straightforward composition. No fake interactivity, no manual
-          DOM manipulation.
+        comment: Clean idiomatic React/MUI X; no over-engineering; duplicate header
+          is a workflow artifact, not author code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: MUI X harness emits plot-{THEME}.png + .html. window.ANYPLOT_SIZE
-          used for sizing. skipAnimation set.
+        comment: Harness generates plot-light.png + plot-dark.png + interactive HTML;
+          current MUI X API used
     library_mastery:
       score: 7
       max: 10
@@ -250,23 +231,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Correct MUI X patterns: colors prop for palette, sx for style overrides,
-          slotProps.legend for positioning, margin for spacing. Log scaleType on xAxis.
-          Above default (3).'
+        comment: Correct import paths, skipAnimation, window.ANYPLOT_SIZE/TOKENS,
+          slotProps.legend, log scale axis — solid idiomatic usage
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: ChartsReferenceLine for inversion annotation, catmullRom curve smoothing,
-          log-scale x-axis, custom valueFormatter for tick labels. Above default (1).
+        comment: ChartsReferenceLine (MUI X-specific component); catmullRom curve
+          interpolation; slotProps pattern for legend positioning
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - manual-ticks
+  - annotations
+  - html-export
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
