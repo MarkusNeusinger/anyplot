@@ -49,7 +49,7 @@ export default function Chart() {
         width={window.ANYPLOT_SIZE.width}
         height={window.ANYPLOT_SIZE.height}
         skipAnimation
-        colors={[t.palette[0], t.palette[2], t.palette[4]]}
+        colors={[t.palette[0], t.palette[1], t.palette[4]]}
         xAxis={[
           {
             scaleType: "log",
@@ -66,6 +66,7 @@ export default function Chart() {
             label: "Yield (%)",
             min: 0,
             max: 6.5,
+            tickMinStep: 1,
             valueFormatter: (v) => `${v}%`,
           },
         ]}
@@ -93,6 +94,9 @@ export default function Chart() {
           "& .MuiChartsAxis-label": {
             fontSize: "16px !important",
           },
+          "& .MuiChartsAxis-left .MuiChartsAxis-label": {
+            fontSize: "13px !important",
+          },
           "& .MuiChartsAxis-tickLabel": {
             fontSize: "14px !important",
           },
@@ -109,7 +113,7 @@ export default function Chart() {
             position: { vertical: "bottom", horizontal: "middle" },
           },
         }}
-        margin={{ top: 60, right: 60, bottom: 80, left: 90 }}
+        margin={{ top: 60, right: 60, bottom: 80, left: 110 }}
       >
         <ChartsReferenceLine
           x={1}
