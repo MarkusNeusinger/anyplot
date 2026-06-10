@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-load-duration: Load Duration Curve for Energy Systems
 // Library: highcharts 12.6.0 | JavaScript 22.22.3
-// Quality: 89/100 | Created: 2026-06-10
+// Quality: 88/100 | Created: 2026-06-10
 
 //# anyplot-orientation: landscape
 

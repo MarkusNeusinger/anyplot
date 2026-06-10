@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: line-load-duration
 created: '2026-06-10T04:56:01Z'
-updated: '2026-06-10T05:06:11Z'
+updated: '2026-06-10T05:22:59Z'
 generated_by: claude-sonnet
 workflow_run: 27253647808
 issue: 4586
@@ -12,43 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-load
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/javascript/highcharts/plot-dark.html
-quality_score: 89
+quality_score: 88
 review:
   strengths:
-  - Excellent semantic color assignment — green for base (always-on), ochre for intermediate,
-    red for peak (critical) — with stacked area that visually maps load composition
-    to capacity thresholds
-  - Well-implemented plotBands and plotLines with labeled capacity tiers, region boundary
-    dividers, and color-matched region labels directly on the chart
-  - Total annual energy consumption (6.99 TWh) in the subtitle provides a clean quantitative
-    summary of the area under the curve
-  - 'Deterministic LCG (seed=42) generates reproducible 8760-point load profile; turboThreshold:
-    0 prevents Highcharts from downsampling the dense dataset'
-  - Both light and dark themes render correctly — transparent chart background, theme-adaptive
-    ink/inkSoft tokens on all chrome elements, data colors identical between themes
+  - 'All spec requirements implemented correctly: monotonically decreasing curve,
+    shaded base/intermediate/peak regions, capacity tier markers with labels, region
+    labels directly on plot, and total energy annotation in subtitle'
+  - Semantic Imprint palette assignment (green=base/safe, red=peak/critical) is principled
+    and follows real-world energy engineering color conventions — valid semantic exception
+  - Deterministic LCG (seed=42) produces realistic load profile with seasonal variation,
+    morning peak (9am), and evening peak (7pm) patterns across 8760 hours
+  - 'Highcharts-specific features (plotBands with region labels, plotLines with dashStyle
+    and inline labels, mixed area+line series types, turboThreshold: 0 for 8760 points)
+    used idiomatically and effectively'
+  - Stacked area + overlay load duration curve combination shows both region decomposition
+    and total load shape simultaneously — strong compositional choice for engineering
+    context
   weaknesses:
-  - Missing peak capacity horizontal dashed line — spec explicitly lists 'peak capacity'
-    as a third capacity tier alongside base and intermediate; add a plotLine at the
-    99th-percentile or maximum load (~1200 MW) labeled 'Peak capacity — ~1200 MW'
-  - Annotation font sizes too small for mobile readability — capacity line labels
-    are 12px CSS and region labels are 13px CSS; at 3200×1800 native resolution these
-    render at 24px and 26px native pixels, which at mobile scale (400px wide) shrink
-    below 3px; increase to at least 13px for capacity labels and 14px for region labels
+  - Region labels use same color as their respective area fills — 'Peak Load' (red
+    text on red peak-load area), 'Intermediate Load' (ochre on ochre area), 'Base
+    Load' (green on green area) — creating poor contrast when the label y-position
+    coincides with the colored fill. Add textOutline/halo to label styles or reposition
+    labels to empty space above the data curve.
+  - 'The ''Intermediate Load'' label uses a hardcoded x: -260 pixel offset to shift
+    it left of center — fragile magic number that may misalign if chart dimensions
+    or intermediate zone width change. Prefer verticalAlign: ''middle'' or a data-relative
+    anchor.'
+  - 'Highcharts default axis spine lines still visible on all four sides. Removing
+    top and right axis lines (xAxis.lineWidth: 0) would give a cleaner engineering-report
+    aesthetic consistent with the style guide''s L-shaped frame recommendation.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — PASS
-      Chrome: Title "line-load-duration · javascript · highcharts · anyplot.ai" in bold dark ink at 22px, clearly readable. Subtitle "Total annual energy consumption: 6.99 TWh" in inkSoft at 14px, clearly readable. X-axis title "Hours of the Year (sorted by descending demand)" and Y-axis title "Power Demand (MW)" at 16px, readable. Tick labels at 14px, readable. Capacity line labels ("Base capacity — 600 MW", "Intermediate capacity — 900 MW") at 12px on the right side — small but legible at full resolution, borderline at mobile scale. Region labels "Peak Load" (red, 13px), "Intermediate Load" (ochre, 13px), "Base Load" (green, 13px) positioned within their respective bands.
-      Data: Three stacked area bands fill the chart smoothly — base load in brand green (#009E73) at the bottom, intermediate load in ochre (#BD8233) in the middle, peak load in matte red (#AE3030) at the upper left. A near-black outline line (ink token) overlays the full load duration curve at lineWidth 1.5. Two horizontal dashed capacity lines at 600 MW (green) and 900 MW (ochre) with right-aligned labels. Two vertical dashed gray dividers at interHour (~2500) and baseHour (~7500). Legend at bottom shows three swatch entries.
-      Legibility verdict: PASS — all main text elements are readable against the light background; annotation labels at 12-13px CSS are legible at full resolution but too small for mobile.
+      Background: Warm off-white (#FAF8F1) — correct light theme surface, not pure white.
+      Chrome: Title "line-load-duration · javascript · highcharts · anyplot.ai" in bold dark ink (22px), ~70% of chart width — readable. Subtitle "Total annual energy consumption: 6.99 TWh" in secondary ink. Y-axis label "Power Demand (MW)" in inkSoft. X-axis label "Hours of the Year (sorted by descending demand)" in inkSoft. Tick labels at 14px in inkSoft. All chrome text clearly readable against light background. Region labels (Peak Load in red, Intermediate Load in ochre, Base Load in green) are positioned on or near their respective colored fill areas, causing same-color contrast issue — visible but reduced contrast.
+      Data: First series (base load) is brand green #009E73. Intermediate load is ochre #BD8233 (palette[3]). Peak load is matte red #AE3030 (palette[4]). Semantic exception valid for energy domain. Capacity tier dashed lines in matching semantic colors. Thin dark ink overlay shows the full load duration curve.
+      Legibility verdict: PASS — all chrome text readable; region label same-color contrast is a design weakness (not a legibility failure).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — PASS
-      Chrome: Title and subtitle in light ink (#F0EFE8 equivalent), clearly readable against the dark background. Axis titles and tick labels in inkSoft tone, readable. No dark-on-dark failures on title, axis labels, or tick labels. Region labels use the same data colors as light render (red, ochre, green); the ochre "Intermediate Load" label appears slightly muted on dark but at 13px bold is still legible. No black-on-black issues.
-      Data: All three stacked area colors are identical to the light render — green, ochre, red (Imprint palette, positions 1, 4, 5). The ink-colored outline line adapts correctly to near-white in dark mode. Capacity dashed lines remain in their respective data colors (green, ochre). Chrome-only elements (background, text, grid) correctly flip; data colors do not.
-      Legibility verdict: PASS — both renders are readable; no dark-on-dark failures; data colors are identical between themes.
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title and all axis/tick labels rendered in light ink tokens (#F0EFE8 / #B8B7B0). No dark-on-dark text failures. All text clearly readable against dark background. Capacity line labels in their semantic colors (green/ochre/red) remain readable on dark background.
+      Data: Colors IDENTICAL to light render — same brand green (#009E73), ochre (#BD8233), matte red (#AE3030). t.ink token adapts correctly (now light-colored for the overlay curve line). No theme-induced color changes to data series.
+      Legibility verdict: PASS — all chrome fully readable in dark theme; same region-label contrast weakness as light render (red text on red fill, etc.) but no additional dark-mode specific failures.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -56,57 +63,52 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: All main font sizes explicitly set (title 22px, axis titles 16px,
-          tick/legend 14px). However capacity line labels at 12px CSS and region labels
-          at 13px CSS are below mobile-readable threshold — at 400px mobile width
-          these render at ~3px native pixels.
+        comment: All sizes explicitly set (title 22px, axis labels 16px, ticks/legend
+          14px). Chrome text well-proportioned in both themes. Region labels same-color
+          as fills reduce score slightly.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text elements. Region labels, capacity line labels,
-          legend, and axis labels are all spatially separated.
+        comment: 'Clean layout, no significant text collisions. Minor: Peak Load region
+          label low contrast on red fill area.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stacked area fills clearly visible with fillOpacity 0.88. Three distinct
-          color bands easily differentiated. Overlay load-duration line at lineWidth
-          1.5 is clean.
+        comment: '8760-point dataset handled with turboThreshold: 0 and area series
+          (no markers). Load-duration overlay line clearly visible.'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Three spatially separated color bands from the Imprint palette. Stacked
-          areas are distinguishable without color alone (position encodes quantity).
-          CVD-safe palette.
+        comment: Imprint palette, CVD-safe. Green/ochre/red perceptually distinct.
+          Position/label redundancy ensures differentiation.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Chart fills the canvas well — 8760 hours span
-          the full width, the stacked areas span most of the vertical height. Legend
-          at bottom is clean. Balanced margins.
+        comment: Landscape orientation, good canvas utilization, balanced margins,
+          legend at bottom. No overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''Hours of the Year (sorted by descending demand)'' — descriptive
-          with context. Y-axis: ''Power Demand (MW)'' — descriptive with units.'
+        comment: 'X-axis: ''Hours of the Year (sorted by descending demand)''. Y-axis:
+          ''Power Demand (MW)'' with units. Title format correct.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Base Load) correctly uses #009E73 (brand green). Semantic
-          exception applied: ochre (#BD8233, position 4) for intermediate (earth/resource),
-          red (#AE3030, position 5) for peak (critical/costly). Light background #FAF8F1,
-          dark #1A1A17. All chrome theme-adaptive.'
+        comment: 'First series #009E73 (palette[0]). Ochre and red follow semantic
+          exception for energy domain. Transparent background shows correct theme
+          surfaces. All chrome tokens applied.'
     design_excellence:
       score: 13
       max: 20
@@ -116,27 +118,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above generic defaults: semantic color choices, region labels with
-          matching colors, capacity line annotations, subtitle with quantitative insight.
-          Not yet at FiveThirtyEight publication quality.'
+        comment: Semantic color mapping demonstrates design intent above defaults.
+          Engineering-report aesthetic. Above 'well-configured default' (4) but below
+          'strong design' (6).
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Transparent background, theme-adaptive grid, fillOpacity 0.88 subtlety,
-          clean axes. Some visible refinement above pure Highcharts defaults.
+        comment: Transparent background, subtle grid via t.grid token, credits disabled,
+          legend styled. Default Highcharts axis spines still present on all four
+          sides.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Chart clearly communicates the three-tier load story through color-coded
-          stacked areas, capacity boundary lines, region labels, and the total energy
-          subtitle. Good visual hierarchy guiding the viewer through base → intermediate
-          → peak.
+        comment: Load duration curve message immediately readable from stacked areas.
+          Capacity guidelines connect zones to engineering decisions. Clear visual
+          hierarchy (peak narrow → base dominant). Good above default.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -144,32 +146,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct load duration curve — monotonically decreasing stacked area
-          chart with 8760 sorted hours on x-axis.
+        comment: Load duration curve correctly implemented as sorted-descending area
+          chart with 8760 hours.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Regions shaded (stacked areas) ✓, region labels on plot ✓, total
-          energy annotation in subtitle ✓, horizontal dashed capacity lines ✓. Missing:
-          third peak capacity line — spec lists ''base load capacity, intermediate
-          capacity, peak capacity'' as three tiers.'
+        comment: Monotonically decreasing, shaded regions, horizontal dashed capacity
+          lines with labels, region annotations, total energy in subtitle — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: hours 0–8760 sorted descending ✓. Y: Power Demand (MW) 0–1300
-          ✓. Stacked layers correctly computed as base/intermediate/peak components.'
+        comment: X-axis rank-ordered hour index (0-8759), Y-axis MW demand, all 8760
+          points shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''line-load-duration · javascript · highcharts · anyplot.ai''
-          — correct format. Legend: ''Base Load'', ''Intermediate Load'', ''Peak Load''
-          — matches data.'
+        comment: 'Title: ''line-load-duration · javascript · highcharts · anyplot.ai''.
+          Legend: Base Load, Intermediate Load, Peak Load.'
     data_quality:
       score: 15
       max: 15
@@ -179,24 +178,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: monotonically decreasing profile, three distinct
-          load regions, capacity boundary markers, area under curve, seasonal + daily
-          peak patterns in generated data.'
+        comment: All three load regions with correct proportions, capacity markers,
+          zone boundaries, total energy metric.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Synthetic annual hourly load profile for a mid-sized utility. Not
-          controversial. Business/engineering domain.
+        comment: Mid-sized utility 400-1200 MW with seasonal variation, morning/evening
+          peaks, LCG noise. Neutral engineering domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Peak ~1200 MW, base ~400–500 MW, total 6.99 TWh for a mid-sized utility
-          — all realistic. Daily morning/evening peaks and seasonal variation included.
-          Math checks out (8760h × ~800 MW avg ≈ 7 TWh).
+        comment: Peak ~1200 MW, base ~480 MW, total ~7 TWh/year — realistic for a
+          600-1200 MW utility. Deterministic LCG.
     code_quality:
       score: 10
       max: 10
@@ -206,57 +203,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Tokens → LCG helper → data generation → capacity thresholds → stacked
-          layer computation → chart. The LCG function is a necessary browser workaround,
-          not over-engineering.
+        comment: Linear structure with minimal rand() LCG helper. No unnecessary abstraction.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic LCG with seed=42, no Math.random() calls.
+        comment: Fixed-seed LCG (_seed=42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No explicit imports; all globals used (window.ANYPLOT_TOKENS, Highcharts).
+        comment: No imports needed; Highcharts is a global. All tokens used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. plotBands/plotLines logically grouped. No
-          fake functionality.
+        comment: Clean, well-structured. No fake interactive elements. Array.from
+          + .map pipeline idiomatic.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Highcharts.chart('container', ...) with animation:false and credits
-          disabled. Harness produces plot-light.png, plot-dark.png, plot-light.html,
-          plot-dark.html.
+        comment: 'No explicit chart.width/height; animation: false on chart and series;
+          credits disabled.'
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Uses high-level Highcharts options API correctly. turboThreshold:
-          0 is the idiomatic way to handle 8760-point datasets. Stacking: ''normal''
-          for stacked areas. Proper zIndex layering for the overlay line.'
+        comment: 'Correct plotBands/plotLines, stacking: ''normal'', turboThreshold:
+          0, mixed series types, all token mappings per Highcharts library guide.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses Highcharts-distinctive plotBands (region labeling) and plotLines
-          (capacity annotations) on both axes simultaneously. Mixed series type (area
-          + line in same chart). These combinations are non-trivial in other libraries.
-  verdict: REJECTED
+        comment: plotBands with region labels, plotLines with dashStyle and inline
+          labels, zIndex layering, fillOpacity on stacked areas, mixed area+line composition
+          — all Highcharts-distinctive.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
