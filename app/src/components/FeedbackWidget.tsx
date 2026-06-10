@@ -16,9 +16,9 @@ import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Tooltip from '@mui/material/Tooltip';
 
-import { API_URL } from 'src/constants';
 import { useAnalytics } from 'src/hooks';
 import { useLocalStorage } from 'src/hooks/useLocalStorage';
+import { apiPost, endpoints } from 'src/lib/api';
 import { RESERVED_TOP_LEVEL } from 'src/utils/paths';
 
 const MAX_MESSAGE_LENGTH = 500;
@@ -224,12 +224,10 @@ export function FeedbackWidget() {
     // the row was never written.
     setMode('closed');
     try {
-      const response = await fetch(`${API_URL}/feedback`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(buildPayload({ message: null, reaction: r, contact: null })),
-      });
-      if (!response.ok) return;
+      await apiPost<unknown>(
+        endpoints.feedback,
+        buildPayload({ message: null, reaction: r, contact: null })
+      );
       setThanksVisible(true);
       trackEvent('feedback_submitted', {
         path: getCurrentPath() || undefined,
@@ -239,8 +237,8 @@ export function FeedbackWidget() {
         mode: 'quick',
       });
     } catch {
-      // Network failure — drop silently. The quick interaction has no error UI
-      // surface (we closed the FAB optimistically); the user can retry.
+      // Non-2xx or network failure — drop silently. The quick interaction has
+      // no error UI surface (we closed the FAB optimistically); the user can retry.
     }
   };
 
@@ -260,17 +258,10 @@ export function FeedbackWidget() {
     setError(null);
 
     try {
-      const response = await fetch(`${API_URL}/feedback`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(
-          buildPayload({ message: trimmed || null, reaction, contact: contact.trim() || null })
-        ),
-      });
-
-      if (!response.ok) {
-        throw new Error(`status ${response.status}`);
-      }
+      await apiPost<unknown>(
+        endpoints.feedback,
+        buildPayload({ message: trimmed || null, reaction, contact: contact.trim() || null })
+      );
 
       trackEvent('feedback_submitted', {
         path: getCurrentPath() || undefined,

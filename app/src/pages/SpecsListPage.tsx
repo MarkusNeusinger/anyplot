@@ -10,9 +10,10 @@ import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 
 import { SectionHeader } from 'src/components/SectionHeader';
-import { API_URL, GITHUB_URL } from 'src/constants';
+import { GITHUB_URL } from 'src/constants';
 import { useAnalytics } from 'src/hooks';
 import { useAppData, useHomeState } from 'src/hooks';
+import { ApiError, apiGet, endpoints } from 'src/lib/api';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 import type { PlotImage } from 'src/types';
 import { specPath } from 'src/utils/paths';
@@ -55,17 +56,18 @@ export function SpecsListPage() {
 
     const fetchImages = async () => {
       try {
-        const res = await fetch(`${API_URL}/plots/filter`, {
+        const data = await apiGet<{ images?: PlotImage[] }>(endpoints.plotsFilter(), {
           signal: abortController.signal,
         });
         if (abortController.signal.aborted) return;
-        if (res.ok) {
-          const data = await res.json();
-          setAllImages(data.images || []);
-        }
+        setAllImages(data.images || []);
       } catch (err) {
         if (abortController.signal.aborted) return;
-        console.error('Error fetching images:', err);
+        // Non-2xx responses were silently ignored before the apiGet migration;
+        // keep logging only for network-level failures.
+        if (!(err instanceof ApiError)) {
+          console.error('Error fetching images:', err);
+        }
       } finally {
         if (!abortController.signal.aborted) {
           setLoading(false);

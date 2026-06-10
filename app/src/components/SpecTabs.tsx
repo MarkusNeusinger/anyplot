@@ -20,7 +20,7 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
 const CodeHighlighter = lazy(() => import('src/components/CodeHighlighter'));
-import { API_URL } from 'src/constants';
+import { apiGet, endpoints } from 'src/lib/api';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 
 // Cached global tag counts — loaded once, shared across all SpecTabs instances
@@ -198,8 +198,12 @@ export function SpecTabs({
   useEffect(() => {
     if (cachedTagCounts) return;
     const controller = new AbortController();
-    fetch(`${API_URL}/plots/filter?limit=1`, { signal: controller.signal })
-      .then(r => (r.ok ? r.json() : null))
+    // Non-ok responses previously resolved to null and were ignored; apiGet
+    // throws instead, so the empty catch keeps the same silent-skip behavior.
+    apiGet<{ globalCounts?: Record<string, Record<string, number>> }>(
+      endpoints.plotsFilter('limit=1'),
+      { signal: controller.signal }
+    )
       .then(data => {
         if (data?.globalCounts) {
           cachedTagCounts = data.globalCounts;
