@@ -1,3 +1,7 @@
+// anyplot.ai
+// recurrence-basic: Recurrence Plot for Nonlinear Time Series
+// Library: echarts 5.5.1 | JavaScript 22.22.3
+// Quality: 85/100 | Created: 2026-06-10
 //# anyplot-orientation: square
 // anyplot.ai
 // recurrence-basic: Recurrence Plot for Nonlinear Time Series
