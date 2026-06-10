@@ -59,16 +59,17 @@ for (let i = 0; i <= 240; i++) {
   seriesData.push([d, elev]);
 }
 
-// Key landmarks along the trail — used as annotated plot lines
+// Key landmarks with name, distance, and elevation for annotation
+// elev shown on start/end points and summit per spec requirement
 const LANDMARKS = [
-  { dist: 0,   name: "Trailhead",      align: "left",   x: 6  },
-  { dist: 18,  name: "River Crossing", align: "center", x: 0  },
-  { dist: 38,  name: "Falcon Pass",    align: "center", x: 0  },
-  { dist: 55,  name: "Alpine Hut",     align: "center", x: 0  },
-  { dist: 70,  name: "Summit Peak",    align: "center", x: 0  },
-  { dist: 88,  name: "Glacier View",   align: "center", x: 0  },
-  { dist: 105, name: "Valley Camp",    align: "center", x: 0  },
-  { dist: 120, name: "Journey's End",  align: "right",  x: -6 },
+  { dist: 0,   name: "Trailhead",      elev: "892 m",  align: "left",   x: 6,  y: 16 },
+  { dist: 18,  name: "River Crossing", elev: null,     align: "center", x: 0,  y: 16 },
+  { dist: 38,  name: "Falcon Pass",    elev: null,     align: "center", x: 0,  y: 16 },
+  { dist: 55,  name: "Alpine Hut",     elev: null,     align: "center", x: 0,  y: 16 },
+  { dist: 70,  name: "Summit Peak",    elev: "2847 m", align: "center", x: 0,  y: 16 },
+  { dist: 88,  name: "Glacier View",   elev: null,     align: "center", x: 0,  y: 16 },
+  { dist: 105, name: "Valley Camp",    elev: null,     align: "center", x: 0,  y: 16 },
+  { dist: 120, name: "Journey's End",  elev: "1005 m", align: "right",  x: -6, y: 32 },
 ];
 
 const plotLines = LANDMARKS.map(lm => ({
@@ -78,13 +79,14 @@ const plotLines = LANDMARKS.map(lm => ({
   dashStyle: "Dash",
   zIndex: 5,
   label: {
-    text: lm.name,
+    text: lm.elev ? `${lm.name}<br/>${lm.elev}` : lm.name,
+    useHTML: !!lm.elev,
     rotation: 0,
     textAlign: lm.align,
     verticalAlign: "top",
     x: lm.x,
-    y: 16,
-    style: { color: t.inkSoft, fontSize: "12px", fontWeight: "normal" },
+    y: lm.y,
+    style: { color: t.inkSoft, fontSize: "13px", fontWeight: "normal" },
   },
 }));
 
@@ -142,7 +144,7 @@ Highcharts.chart("container", {
         linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
         stops: [
           [0, rgba(t.palette[0], 0.55)],
-          [1, rgba(t.palette[0], 0.06)],
+          [1, rgba(t.palette[0], 0.13)],
         ],
       },
       states: { hover: { enabled: false } },
