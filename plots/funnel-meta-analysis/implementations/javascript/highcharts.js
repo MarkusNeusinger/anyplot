@@ -1,8 +1,7 @@
 // anyplot.ai
 // funnel-meta-analysis: Meta-Analysis Funnel Plot for Publication Bias
-// Library: Highcharts 12.6.0 | Node 22
-// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
-// Quality: 82/100 | Created: 2026-06-10
+// Library: highcharts 12.6.0 | JavaScript 22.22.3
+// Quality: 90/100 | Created: 2026-06-10
 
 const t = window.ANYPLOT_TOKENS;
 

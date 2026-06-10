@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: funnel-meta-analysis
 created: '2026-06-10T03:54:46Z'
-updated: '2026-06-10T04:02:20Z'
+updated: '2026-06-10T04:17:24Z'
 generated_by: claude-sonnet
 workflow_run: 27251704098
 issue: 4590
@@ -12,132 +12,125 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/funnel-me
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/javascript/highcharts/plot-dark.html
-quality_score: 82
+quality_score: 90
 review:
   strengths:
-  - Correct funnel plot implementation with inverted y-axis (SE=0 at top, larger SE
-    at bottom) matching meta-analysis convention
-  - 'All required spec features present: study scatter points, pseudo 95% CI funnel
-    lines, solid pooled effect line, dashed null reference line'
-  - Good use of mixed Highcharts series types (scatter + line) to build the funnel
-    from first principles
-  - 'Imprint palette correctly applied — brand green #009E73 for study points, both
-    renders theme-correct with transparent background and token-based chrome'
-  - 'Scientifically realistic data: antidepressant vs placebo RCTs with plausible
-    log-ORs (-0.10 to 0.78) and SEs (0.12–0.60), pooled OR 1.49 is credible'
-  - 'Idiomatic Highcharts usage: plotLines for reference lines, yAxis.reversed for
-    inverted SE axis, showInLegend:false for duplicate CI series'
-  - Deterministic hard-coded data, animation disabled in both chart and series — ready
-    for headless screenshot
+  - Perfect spec compliance — inverted SE y-axis, pseudo 95% CI funnel diagonals,
+    pooled effect solid line, null reference dashed line, and 18 study scatter points
+    all present and correctly positioned
+  - 'Visual hierarchy is intentional and effective: lineWidth=3 solid pooled line,
+    lineWidth=1.5 dashed CI limits, lineWidth=1.5 shortdash null reference — three
+    distinct visual weights guide the eye'
+  - Data labels on the pooled OR and null reference line at y=0 cleanly annotate the
+    two key reference values ('Pooled OR = 1.49' and 'Null (OR = 1)') without crowding
+    the plot
+  - 'Both light and dark renders are fully theme-correct: transparent background maps
+    to page bg, all chrome uses t.ink/t.inkSoft tokens, data colors identical across
+    themes'
+  - 'Idiomatic Highcharts usage: mixed scatter+line series, showInLegend:false on
+    the duplicate CI funnel arm, enableMouseTracking:false on reference lines, zIndex
+    for precise layering'
+  - 'Realistic meta-analysis data: antidepressant vs placebo with plausible log ORs
+    (-0.10 to 0.78) and SEs (0.12-0.60); one negative study present to avoid artificial
+    positive-only clustering'
   weaknesses:
-  - 'plotLine labels (''Null (OR = 1)'' and ''Pooled OR = 1.49'') render as rotated
-    vertical text at the funnel apex — fix by adding rotation: 0 to each label''s
-    style block, and adjust y offset to keep horizontal labels clear of the apex'
-  - 'All four chart borders visible (Highcharts default full-frame) — add chart.plotBorderWidth:
-    0 to remove the border box, leaving only axis lines for a cleaner look'
-  - Solid pooled effect line weight (2px) not visually distinguished from null dashed
-    line — increase pooled line width to 2.5–3px and/or use t.ink at full opacity
-    to reinforce visual hierarchy
-  - 'Design refinement is at library defaults: no spine/frame removal, grid on both
-    axes with default weight — optionally hide xAxis gridLines or reduce gridLineWidth
-    to 0.5 for subtlety'
-  - DE-03 storytelling could be improved by marking the pooled effect line more prominently
-    (e.g. wider lineWidth) so the viewer's eye is drawn first to the focal summary
-    statistic
+  - 'DE-01 moderate: design is clean and intentional but stops at well-configured
+    defaults — no distinctive typographic treatment or emphasis beyond correct token
+    usage'
+  - 'DE-03 moderate: the funnel asymmetry (possible publication bias signal) is visible
+    in the data but not explicitly highlighted — a subtle annotation or shading of
+    the asymmetric gap would push storytelling above 4/6'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface consistent with #FAF8F1 — correct theme background.
-      Chrome: Title "funnel-meta-analysis · javascript · highcharts · anyplot.ai" is bold, dark, clearly readable at ~65% of plot width. Subtitle "Antidepressant vs Placebo · 18 Randomized Controlled Trials" in muted tone, readable. X-axis label "Log Odds Ratio" and Y-axis label "Standard Error (SE)" are clearly visible. Tick labels on both axes are legible at appropriate sizes. All four chart borders are visible (Highcharts default frame). Grid lines are subtle on both axes.
-      Data: 18 scatter points in brand green #009E73 with white/pageBg edge stroke — well-sized (radius 7) for 18-point sparse dataset. Inverted y-axis correctly places SE=0 (high precision) at top and SE=0.70 at bottom. Two dashed diagonal lines form the pseudo 95% CI funnel shape. Solid vertical line at x=0.40 (pooled effect), short-dashed vertical line at x=0 (null). PlotLine labels "Null (OR = 1)" and "Pooled OR = 1.49" appear as small (12px) rotated vertical text at the funnel apex — legible with effort but not ideal.
-      Legibility verdict: PASS (all primary text readable; rotated plotLine labels at apex are a minor weakness)
+      Background: Warm off-white (#FAF8F1) — correct page surface, not pure white.
+      Chrome: Title "funnel-meta-analysis · javascript · highcharts · anyplot.ai" in dark ink (~22px), clearly readable. Subtitle "Antidepressant vs Placebo · 18 Randomized Controlled Trials" in inkSoft, readable. Y-axis title "Standard Error (SE)" and X-axis title "Log Odds Ratio" in inkSoft (~16px). Tick labels in inkSoft (~14px). Legend at bottom with three items readable. Annotations "Pooled OR = 1.49" and "Null (OR = 1)" in 11px at top of their respective lines — small but legible.
+      Data: 18 brand-green (#009E73) circle markers with white (pageBg) stroke for definition. Solid dark ink vertical line at x=0.40 (pooled effect, lineWidth=3). Two dashed inkSoft diagonal lines forming the inverted funnel from apex (0.40, 0) to base corners (pooled±1.96*SE_max). Dashed inkSoft vertical line at x=0 (null reference). Subtle 0.5-width gridlines visible.
+      Legibility verdict: PASS — all text readable against the light background; no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Near-black warm surface consistent with #1A1A17 — correct dark theme background.
-      Chrome: Title rendered in light text clearly visible against dark background. Subtitle and axis labels also appear in appropriately lightened token colors (inkSoft). Tick labels appear light-on-dark — readable. No dark-on-dark failures observed.
-      Data: 18 scatter points retain brand green #009E73 — identical data colors to light render as required. Dashed CI funnel lines rendered in lighter tone (inkSoft on dark theme). Solid pooled effect line visible in light ink color. Funnel shape clearly visible against dark background.
-      Legibility verdict: PASS (data and chrome both readable; same rotated plotLine label issue at apex as in light render)
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title and subtitle rendered in light ink (F0EFE8 / B8B7B0) — clearly readable. Axis titles and tick labels use light inkSoft tokens. Legend items readable in light text. Annotations "Pooled OR = 1.49" and "Null (OR = 1)" visible in light ink against dark background.
+      Data: Brand green (#009E73) study markers are identical to the light render — color unchanged, only chrome flips. Pooled effect line is now a light/white solid line (t.ink = #F0EFE8 in dark). CI dashed lines and null reference in lighter inkSoft. Grid lines subtly visible.
+      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures; brand green #009E73 reads well on the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: All major text explicitly sized and readable; plotLine labels at
-          funnel apex render rotated (12px vertical) — harder to read
+        comment: All font sizes explicitly set (22px title, 16px axis labels, 14px
+          tick/legend, 11px annotations); well-proportioned, readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Minor crowding at funnel apex where two rotated plotLine labels converge;
-          no actual text-on-data overlap
+        comment: No text or data overlap with 18 well-spaced scatter points at radius=7
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 18 scatter points at radius=7 well-adapted for sparse data; all reference
-          lines and funnel dashes clearly visible
+        comment: marker.radius=7 appropriate for 18 data points; funnel lines, pooled
+          line, and null reference all clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green on off-white/near-black backgrounds has good contrast;
-          CVD-safe Imprint palette; marker edge stroke adds separation
+        comment: Imprint green is CVD-safe; series distinctions use line weight and
+          dash style redundantly, not color alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; title occupies ~65% of width; good proportions;
-          nothing clipped at canvas edges
+        comment: Canvas gate passed; good plot proportions, balanced whitespace, legend
+          well-placed below the funnel
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Log Odds Ratio'' and ''Standard Error (SE)'' are descriptive;
-          title follows required format exactly'
+        comment: '''Log Odds Ratio'' and ''Standard Error (SE)'' are descriptive and
+          domain-appropriate'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First series uses t.palette[0] (#009E73); backgroundColor transparent
-          (shows pageBg); all chrome tokens mapped; both renders theme-correct
+        comment: t.palette[0]=#009E73 for studies; transparent background maps to
+          page bg; all chrome uses t.ink/t.inkSoft tokens; both themes correct
     design_excellence:
-      score: 9
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured Highcharts with thoughtful line-style differentiation
-          (solid/shortDash/dash), but overall at 'configured default' level — no exceptional
-          typography or emphasis hierarchy
+        passed: true
+        comment: Intentional visual hierarchy through three distinct line weights/styles;
+          above configured defaults but not FiveThirtyEight-level polish
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Default Highcharts full-frame border visible; grid on both axes with
-          default weight; transparent background is good; no spine removal or grid-weight
-          refinement
+        passed: true
+        comment: plotBorderWidth:0, gridLineWidth:0.5, transparent background, fontFamily:inherit
+          — several explicit refinements; clean appearance
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Solid vs dashed line contrast provides some visual hierarchy; subtitle
-          adds domain context; inverted axis correctly orients precision-at-top; but
-          pooled effect line not visually dominant enough as the key focal point
+        passed: true
+        comment: Labeled pooled OR and null reference guide the reader; descriptive
+          subtitle; visual weight hierarchy; funnel asymmetry visible but not explicitly
+          highlighted
     spec_compliance:
       score: 15
       max: 15
@@ -147,56 +140,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct meta-analysis funnel plot with inverted y-axis showing SE;
-          scatter + line construction is appropriate
+        comment: 'Correct meta-analysis funnel plot: scatter of studies around summary
+          effect with inverted SE y-axis'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features: inverted SE y-axis, pooled effect vertical
-          line, pseudo 95% CI funnel lines, null reference dashed line, individual
-          study points'
+        comment: 'All spec requirements met: inverted y-axis, effect size x-axis,
+          pooled effect line, pseudo 95% CI funnel diagonals, study scatter points,
+          null reference dashed line'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = log odds ratio (effect size), Y = standard error (inverted) —
-          correct per spec
+        comment: Correct x=effect_size / y=std_error (inverted) mapping; 18 studies
+          within 8-30 range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'funnel-meta-analysis · javascript · highcharts · anyplot.ai'
-          exactly; legend shows 'Studies (n = 18)' and '95% CI Limits' correctly
+        comment: Title 'funnel-meta-analysis · javascript · highcharts · anyplot.ai'
+          correct; legend shows Studies/Pooled OR/95% CI Limits appropriately
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Good coverage: 18 studies with heterogeneous effect sizes including
-          two slightly negative log-ORs (realistic); shows funnel shape, pooled line,
-          null reference; optional study labels not added (acceptable)'
+        comment: 'Shows all aspects of funnel plot: scatter around pooled, funnel
+          boundary, one negative study for realistic spread, visible asymmetry'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Antidepressant vs placebo RCTs is a well-established meta-analysis
-          context; neutral, scientifically appropriate, comprehensible
+        comment: Antidepressant vs placebo RCT meta-analysis is a neutral, real-world
+          scientific scenario with appropriate domain framing
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Log-ORs from -0.10 to 0.78 with SEs 0.12-0.60 are plausible for antidepressant
-          trials; pooled OR exp(0.40)≈1.49 is credible for the domain
+        comment: Log ORs (-0.10 to 0.78) and SEs (0.12-0.60) are appropriate magnitudes
+          for a clinical trial meta-analysis
     code_quality:
       score: 10
       max: 10
@@ -206,34 +198,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: data definitions → chart config — no unnecessary
-          functions or classes'
+        comment: 'Flat JS: data constants → chart call; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hard-coded as literals; no RNG; deterministic
+        comment: Deterministic hardcoded study data — no RNG needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: JS snippet uses only window.ANYPLOT_TOKENS and window.Highcharts
-          — no unused globals
+        comment: Only window.ANYPLOT_TOKENS and Highcharts global; no unnecessary
+          imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no over-engineering; clean series construction
+        comment: Clean, well-organized; appropriate complexity; minimal inline comments
+          explain non-obvious patterns
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness generates plot-{theme}.png and .html; no manual save calls
-          needed
+        comment: Highcharts.chart('container', ...) correct API; animation:false on
+          both chart and plotOptions; credits disabled
     library_mastery:
       score: 7
       max: 10
@@ -243,26 +235,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses plotLines for reference lines, yAxis.reversed, mixed scatter+line
-          series types, showInLegend:false for duplicate series — proper Highcharts
-          idioms throughout
+        comment: Mixed scatter+line series composition, showInLegend:false on duplicate
+          arm, enableMouseTracking:false, zIndex layering — clearly idiomatic
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: plotLines with labels (Highcharts-specific), yAxis.reversed for inverted
-          SE axis, custom tooltip.formatter, showInLegend:false — genuine Highcharts-specific
-          patterns
-  verdict: REJECTED
+        comment: Per-point dataLabels within a line series (Highcharts-specific),
+          mixed series types for funnel construction, zIndex control for precise visual
+          layering
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - html-export
-  - layer-composition
   - annotations
+  - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - edge-highlighting
+  - grid-styling
