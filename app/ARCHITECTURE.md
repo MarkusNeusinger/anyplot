@@ -40,13 +40,17 @@ src/
 ## Conventions
 
 - **Imports** are absolute from the `src/` alias (`import { paths } from 'src/routes/paths'`);
-  no relative `../` imports. ESLint (perfectionist) enforces sorted, grouped imports.
+  no relative imports between `src/` modules (the one exception: files reaching
+  outside `src/`, e.g. `global-config.ts` importing `../package.json`).
+  ESLint (perfectionist) enforces sorted, grouped imports.
 - **Naming**: `PascalCase.tsx` components, `useXxx.ts` hooks, lowercase modules elsewhere.
 - **URLs** never appear as string literals in components — use `paths.*` from
   `src/routes/paths` (static routes, `paths.plotsFiltered(param, value)`,
   `paths.spec(specId, language, library)`).
-- **API access** goes through `src/lib/api` (`apiGet`/`apiPost` + `endpoints`);
-  raw `fetch()` lives only inside that module. Callers own caching/abort/dedup.
+- **API access** to the anyplot backend goes through `src/lib/api`
+  (`apiGet`/`apiPost` + `endpoints`); raw `fetch()` against our backend lives
+  only inside that module. External third-party APIs (e.g. the GitHub releases
+  call in `useLatestRelease`) may fetch directly. Callers own caching/abort/dedup.
 - **Config**: read `CONFIG` from `src/global-config` instead of `import.meta.env`.
 - **Theme**: design tokens (colors, font stacks, style constants) come from
   `src/theme` (tokens); MUI theme composition lives in `theme/create-theme.ts`.
@@ -77,7 +81,9 @@ cd app
 yarn lint && yarn fm:check && yarn type-check && yarn test && yarn build
 ```
 
-CI (`.github/workflows/ci-tests.yml`, job `test-frontend`) runs the same gates;
+CI (`.github/workflows/ci-tests.yml`, job `test-frontend`) runs lint, format
+check, type-check, and tests; `yarn build` itself runs during the Cloud Build
+Docker build on merge to main — that's why the local gate includes it.
 `yarn type-check` covers app and test files (`tsconfig.test.json`). During
 development, `vite-plugin-checker` surfaces TS/ESLint errors in the browser.
 
