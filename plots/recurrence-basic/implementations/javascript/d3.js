@@ -8,9 +8,10 @@
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
 
-const margin = { top: 70, right: 70, bottom: 90, left: 90 };
-const iw = width - margin.left - margin.right;  // 1040
-const ih = height - margin.top - margin.bottom;  // 1040
+// Extended right and bottom margins for structural annotations
+const margin = { top: 70, right: 180, bottom: 200, left: 90 };
+const iw = width - margin.left - margin.right;   // 930 (square plot area)
+const ih = height - margin.top - margin.bottom;  // 930
 
 // --- Data: logistic map (deterministic, r=3.85 → chaotic regime) ----------
 const R = 3.85, TAU = 3, N_STEPS = 350, N_BURN = 50;
@@ -39,21 +40,18 @@ upperD.sort((a, b) => a - b);
 const eps = upperD[Math.floor(upperD.length * 0.15)];  // ~15% recurrence rate
 
 // --- Recurrence matrix → offscreen canvas → SVG image ---------------------
-// Imprint palette[0] = #009E73 for recurrent points; pageBg for background
 const offCanvas = document.createElement("canvas");
 offCanvas.width = M;
 offCanvas.height = M;
 const ctx = offCanvas.getContext("2d");
 
-// Parse hex #RRGGBB → [r, g, b]
 const hr = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
 const [bR, bG, bB] = hr(t.pageBg);
-const [fR, fG, fB] = hr(t.palette[0]);  // Imprint palette position 1 — always first series
+const [fR, fG, fB] = hr(t.palette[0]);  // Imprint palette[0] = #009E73
 
 const imgData = ctx.createImageData(M, M);
 const px = imgData.data;
 
-// Matrix convention: row i = time index i (increases top → bottom)
 for (let i = 0; i < M; i++) {
   for (let j = 0; j < M; j++) {
     const idx = 4 * (i * M + j);
@@ -72,6 +70,15 @@ const svg = d3.select("#container").append("svg")
 
 svg.append("rect").attr("width", width).attr("height", height).attr("fill", t.pageBg);
 
+// Arrowhead marker for annotation leader lines
+svg.append("defs").append("marker")
+  .attr("id", "arr")
+  .attr("viewBox", "0 0 6 6")
+  .attr("markerWidth", 6).attr("markerHeight", 6)
+  .attr("refX", 5).attr("refY", 3)
+  .attr("orient", "auto")
+  .append("path").attr("d", "M0,0 L0,6 L6,3 z").attr("fill", t.inkSoft);
+
 const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
 // Recurrence image — pixelated rendering keeps cell edges crisp
@@ -82,15 +89,14 @@ g.append("image")
   .style("image-rendering", "pixelated")
   .attr("href", offCanvas.toDataURL());
 
-// Plot border (matrix visualizations use all four sides)
+// Plot border — slightly heavier for visual definition
 g.append("rect")
   .attr("x", 0).attr("y", 0)
   .attr("width", iw).attr("height", ih)
   .attr("fill", "none")
-  .attr("stroke", t.inkSoft).attr("stroke-width", 0.5);
+  .attr("stroke", t.inkSoft).attr("stroke-width", 1);
 
 // --- Axes ------------------------------------------------------------------
-// Matrix convention: time 0 at top-left corner
 const xScale = d3.scaleLinear().domain([0, M - 1]).range([0, iw]);
 const yScale = d3.scaleLinear().domain([0, M - 1]).range([0, ih]);
 
@@ -118,6 +124,54 @@ g.append("text")
   .attr("text-anchor", "middle")
   .attr("fill", t.inkSoft).style("font-size", "16px")
   .text("Time Index (j)");
+
+// --- ε threshold annotation (analytical context) --------------------------
+g.append("text")
+  .attr("x", iw / 2).attr("y", ih + 40)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft).style("font-size", "13px").style("font-style", "italic")
+  .text(`ε = ${eps.toFixed(3)}  ·  15% recurrence rate  ·  logistic map r = 3.85, τ = 3`);
+
+// --- Structural annotations (D3 text + leader lines into matrix) -----------
+// Pixel positions of annotation targets inside the 930×930 plot area
+const diagTargetX = Math.round(ih * 0.10);  // point on main diagonal (i=j≈30)
+const diagTargetY = diagTargetX;
+const stripeTargetX = Math.round(iw * 0.505); // offset-stripe at i≈150, j≈137
+const stripeTargetY = Math.round(ih * 0.461);
+
+const annX = iw + 18;  // start of annotation text in right margin
+
+// Annotation 1: main diagonal — leader from text region into diagonal
+g.append("line")
+  .attr("x1", annX - 10).attr("y1", diagTargetY)
+  .attr("x2", diagTargetX + 4).attr("y2", diagTargetY)
+  .attr("stroke", t.inkSoft).attr("stroke-width", 0.7)
+  .attr("stroke-dasharray", "4,3")
+  .attr("marker-end", "url(#arr)");
+g.append("text")
+  .attr("x", annX).attr("y", diagTargetY - 5)
+  .attr("fill", t.ink).style("font-size", "13px").style("font-weight", "600")
+  .text("Main diagonal");
+g.append("text")
+  .attr("x", annX).attr("y", diagTargetY + 12)
+  .attr("fill", t.inkSoft).style("font-size", "12px").style("font-style", "italic")
+  .text("i = j  (identity)");
+
+// Annotation 2: parallel off-diagonal stripe — quasi-periodicity indicator
+g.append("line")
+  .attr("x1", annX - 10).attr("y1", stripeTargetY)
+  .attr("x2", stripeTargetX + 4).attr("y2", stripeTargetY)
+  .attr("stroke", t.inkSoft).attr("stroke-width", 0.7)
+  .attr("stroke-dasharray", "4,3")
+  .attr("marker-end", "url(#arr)");
+g.append("text")
+  .attr("x", annX).attr("y", stripeTargetY - 5)
+  .attr("fill", t.ink).style("font-size", "13px").style("font-weight", "600")
+  .text("Parallel stripes");
+g.append("text")
+  .attr("x", annX).attr("y", stripeTargetY + 12)
+  .attr("fill", t.inkSoft).style("font-size", "12px").style("font-style", "italic")
+  .text("quasi-periodicity");
 
 // --- Title -----------------------------------------------------------------
 svg.append("text")
