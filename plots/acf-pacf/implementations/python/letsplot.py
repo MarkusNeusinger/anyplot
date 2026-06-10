@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 acf-pacf: Autocorrelation and Partial Autocorrelation (ACF/PACF) Plot
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-10
@@ -18,6 +18,7 @@ from lets_plot import (
     facet_wrap,
     geom_hline,
     geom_point,
+    geom_ribbon,
     geom_segment,
     ggplot,
     ggsave,
@@ -26,6 +27,7 @@ from lets_plot import (
     scale_color_manual,
     scale_x_continuous,
     theme,
+    theme_minimal,
 )
 from statsmodels.tsa.stattools import acf, pacf
 
@@ -62,26 +64,39 @@ pacf_df["sig"] = pacf_df["value"].abs() > ci
 df = pd.concat([acf_df, pacf_df], ignore_index=True)
 df["label"] = df["sig"].map({True: "Significant", False: "Non-significant"})
 
+# CI band columns — semi-transparent shaded confidence zone behind the stems
+df["ci_ymin"] = -ci
+df["ci_ymax"] = ci
+
+# Separate datasets for visual hierarchy — significant stems are drawn thicker
+sig_df = df[df["sig"]].copy()
+nonsig_df = df[~df["sig"]].copy()
+
 color_order = ["Significant", "Non-significant"]
 color_values = [BRAND, INK_MUTED]
 
-# Plot — faceted ACF / PACF panels sharing the lag x-axis
+# Plot — faceted ACF / PACF panels; theme_minimal() as lets-plot built-in base preset
 plot = (
-    ggplot(df, aes(x="lag", y="value", color="label"))
-    + geom_segment(aes(x="lag", y="zero", xend="lag", yend="value", color="label"), size=1.5)
-    + geom_point(aes(x="lag", y="value", color="label"), size=2.5)
+    ggplot(df, aes(x="lag", y="value"))
+    + geom_ribbon(aes(x="lag", ymin="ci_ymin", ymax="ci_ymax"), fill=INK_SOFT, alpha=0.1)
     + geom_hline(yintercept=0, color=INK_SOFT, size=0.5)
     + geom_hline(yintercept=ci, color=INK_MUTED, size=0.7, linetype="dashed")
     + geom_hline(yintercept=-ci, color=INK_MUTED, size=0.7, linetype="dashed")
+    + geom_segment(aes(x="lag", y="zero", xend="lag", yend="value", color="label"), data=nonsig_df, size=0.8)
+    + geom_segment(aes(x="lag", y="zero", xend="lag", yend="value", color="label"), data=sig_df, size=2.0)
+    + geom_point(aes(x="lag", y="value", color="label"), data=nonsig_df, size=1.5)
+    + geom_point(aes(x="lag", y="value", color="label"), data=sig_df, size=3.5)
     + scale_color_manual(values=color_values, limits=color_order, name="")
     + scale_x_continuous(breaks=list(range(0, n_lags + 1, 6)))
     + facet_wrap("panel", ncol=1, scales="free_y")
     + labs(x="Lag", y="Correlation", title="acf-pacf · python · letsplot · anyplot.ai")
+    + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_background=element_rect(fill=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_border=element_blank(),
         strip_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.5),
-        strip_text=element_text(color=INK, size=12, face="bold"),
+        strip_text=element_text(color=INK, size=14, face="bold"),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
         panel_grid_major_y=element_line(color=GRID, size=0.5),
