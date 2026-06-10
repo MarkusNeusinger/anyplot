@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 recurrence-basic: Recurrence Plot for Nonlinear Time Series
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 81/100 | Updated: 2026-06-10
@@ -50,8 +50,8 @@ sol = solve_ivp(
     method="RK45",
 )
 x_raw = sol.y[0, 1000:]
-stride = len(x_raw) // 150
-x_series = x_raw[::stride][:150]
+stride = max(1, len(x_raw) // 220)
+x_series = x_raw[::stride][:220]
 
 emb_dim, emb_delay = 3, 5
 n_pts = len(x_series) - (emb_dim - 1) * emb_delay
@@ -69,7 +69,7 @@ for i in range(n_pts):
         d = dist_matrix[i, j]
         if d <= epsilon:
             b = min(int(d / epsilon * N_BINS), N_BINS - 1)
-            bin_data[b].append((j, n_pts - 1 - i))
+            bin_data[b].append({"value": (j, n_pts - 1 - i), "label": f"t{j}–t{i}"})
 
 # Plot
 title = "recurrence-basic · python · pygal · anyplot.ai"
@@ -98,8 +98,8 @@ chart = pygal.XY(
     x_title="Time Index",
     y_title="Time Index",
     stroke=False,
-    dots_size=7,
-    show_legend=False,
+    dots_size=4,
+    show_legend=True,
     show_x_guides=True,
     show_y_guides=True,
 )
