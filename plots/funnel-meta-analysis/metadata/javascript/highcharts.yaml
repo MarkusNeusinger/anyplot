@@ -1,0 +1,258 @@
+library: highcharts
+language: javascript
+specification_id: funnel-meta-analysis
+created: '2026-06-10T03:54:46Z'
+updated: '2026-06-10T04:17:24Z'
+generated_by: claude-sonnet
+workflow_run: 27251704098
+issue: 4590
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-meta-analysis/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Perfect spec compliance — inverted SE y-axis, pseudo 95% CI funnel diagonals,
+    pooled effect solid line, null reference dashed line, and 18 study scatter points
+    all present and correctly positioned
+  - 'Visual hierarchy is intentional and effective: lineWidth=3 solid pooled line,
+    lineWidth=1.5 dashed CI limits, lineWidth=1.5 shortdash null reference — three
+    distinct visual weights guide the eye'
+  - Data labels on the pooled OR and null reference line at y=0 cleanly annotate the
+    two key reference values ('Pooled OR = 1.49' and 'Null (OR = 1)') without crowding
+    the plot
+  - 'Both light and dark renders are fully theme-correct: transparent background maps
+    to page bg, all chrome uses t.ink/t.inkSoft tokens, data colors identical across
+    themes'
+  - 'Idiomatic Highcharts usage: mixed scatter+line series, showInLegend:false on
+    the duplicate CI funnel arm, enableMouseTracking:false on reference lines, zIndex
+    for precise layering'
+  - 'Realistic meta-analysis data: antidepressant vs placebo with plausible log ORs
+    (-0.10 to 0.78) and SEs (0.12-0.60); one negative study present to avoid artificial
+    positive-only clustering'
+  weaknesses:
+  - 'DE-01 moderate: design is clean and intentional but stops at well-configured
+    defaults — no distinctive typographic treatment or emphasis beyond correct token
+    usage'
+  - 'DE-03 moderate: the funnel asymmetry (possible publication bias signal) is visible
+    in the data but not explicitly highlighted — a subtle annotation or shading of
+    the asymmetric gap would push storytelling above 4/6'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct page surface, not pure white.
+      Chrome: Title "funnel-meta-analysis · javascript · highcharts · anyplot.ai" in dark ink (~22px), clearly readable. Subtitle "Antidepressant vs Placebo · 18 Randomized Controlled Trials" in inkSoft, readable. Y-axis title "Standard Error (SE)" and X-axis title "Log Odds Ratio" in inkSoft (~16px). Tick labels in inkSoft (~14px). Legend at bottom with three items readable. Annotations "Pooled OR = 1.49" and "Null (OR = 1)" in 11px at top of their respective lines — small but legible.
+      Data: 18 brand-green (#009E73) circle markers with white (pageBg) stroke for definition. Solid dark ink vertical line at x=0.40 (pooled effect, lineWidth=3). Two dashed inkSoft diagonal lines forming the inverted funnel from apex (0.40, 0) to base corners (pooled±1.96*SE_max). Dashed inkSoft vertical line at x=0 (null reference). Subtle 0.5-width gridlines visible.
+      Legibility verdict: PASS — all text readable against the light background; no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title and subtitle rendered in light ink (F0EFE8 / B8B7B0) — clearly readable. Axis titles and tick labels use light inkSoft tokens. Legend items readable in light text. Annotations "Pooled OR = 1.49" and "Null (OR = 1)" visible in light ink against dark background.
+      Data: Brand green (#009E73) study markers are identical to the light render — color unchanged, only chrome flips. Pooled effect line is now a light/white solid line (t.ink = #F0EFE8 in dark). CI dashed lines and null reference in lighter inkSoft. Grid lines subtly visible.
+      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures; brand green #009E73 reads well on the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (22px title, 16px axis labels, 14px
+          tick/legend, 11px annotations); well-proportioned, readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or data overlap with 18 well-spaced scatter points at radius=7
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: marker.radius=7 appropriate for 18 data points; funnel lines, pooled
+          line, and null reference all clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint green is CVD-safe; series distinctions use line weight and
+          dash style redundantly, not color alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; good plot proportions, balanced whitespace, legend
+          well-placed below the funnel
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Log Odds Ratio'' and ''Standard Error (SE)'' are descriptive and
+          domain-appropriate'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: t.palette[0]=#009E73 for studies; transparent background maps to
+          page bg; all chrome uses t.ink/t.inkSoft tokens; both themes correct
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional visual hierarchy through three distinct line weights/styles;
+          above configured defaults but not FiveThirtyEight-level polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: plotBorderWidth:0, gridLineWidth:0.5, transparent background, fontFamily:inherit
+          — several explicit refinements; clean appearance
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Labeled pooled OR and null reference guide the reader; descriptive
+          subtitle; visual weight hierarchy; funnel asymmetry visible but not explicitly
+          highlighted
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct meta-analysis funnel plot: scatter of studies around summary
+          effect with inverted SE y-axis'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: inverted y-axis, effect size x-axis,
+          pooled effect line, pseudo 95% CI funnel diagonals, study scatter points,
+          null reference dashed line'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct x=effect_size / y=std_error (inverted) mapping; 18 studies
+          within 8-30 range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'funnel-meta-analysis · javascript · highcharts · anyplot.ai'
+          correct; legend shows Studies/Pooled OR/95% CI Limits appropriately
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects of funnel plot: scatter around pooled, funnel
+          boundary, one negative study for realistic spread, visible asymmetry'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Antidepressant vs placebo RCT meta-analysis is a neutral, real-world
+          scientific scenario with appropriate domain framing
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Log ORs (-0.10 to 0.78) and SEs (0.12-0.60) are appropriate magnitudes
+          for a clinical trial meta-analysis
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat JS: data constants → chart call; no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded study data — no RNG needed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only window.ANYPLOT_TOKENS and Highcharts global; no unnecessary
+          imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized; appropriate complexity; minimal inline comments
+          explain non-obvious patterns
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Highcharts.chart('container', ...) correct API; animation:false on
+          both chart and plotOptions; credits disabled
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Mixed scatter+line series composition, showInLegend:false on duplicate
+          arm, enableMouseTracking:false, zIndex layering — clearly idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Per-point dataLabels within a line series (Highcharts-specific),
+          mixed series types for funnel construction, zIndex control for precise visual
+          layering
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
