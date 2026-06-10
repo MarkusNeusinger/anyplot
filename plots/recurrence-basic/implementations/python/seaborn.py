@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 recurrence-basic: Recurrence Plot for Nonlinear Time Series
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 81/100 | Updated: 2026-06-10
@@ -113,7 +113,17 @@ ax.set_yticklabels(tick_lab[::-1], fontsize=8, color=INK_SOFT, rotation=0)
 ax.set_xlabel("Time Index (embedding steps)", fontsize=10, color=INK, labelpad=10)
 ax.set_ylabel("Time Index (embedding steps)", fontsize=10, color=INK, labelpad=10)
 title = "Lorenz Attractor · recurrence-basic · python · seaborn · anyplot.ai"
-ax.set_title(title, fontsize=12, fontweight="medium", color=INK, pad=14)
+ax.set_title(title, fontsize=10, fontweight="medium", color=INK, pad=14)
+
+# Story annotations — guide viewer to key structural features
+_ann = {
+    "fontsize": 7,
+    "color": INK_SOFT,
+    "style": "italic",
+    "bbox": {"facecolor": PAGE_BG, "edgecolor": "none", "alpha": 0.80, "pad": 1.5},
+}
+ax.text(n_embedded * 0.62, n_embedded * 0.56, "← diagonal:\ndeterminism", ha="left", va="center", **_ann)
+ax.text(n_embedded * 0.43, n_embedded * 0.50, "chaotic\ntransition", ha="center", va="center", **_ann)
 
 # Inset: recurrence rate over time — seaborn lineplot (repositioned upper-right)
 recurrence_rate = recurrence_matrix.sum(axis=1) / n_embedded
@@ -126,7 +136,7 @@ ax_inset.fill_between(rate_df["Time"], rate_df["Rate"], alpha=0.25, color=BRAND)
 ax_inset.set_title("Recurrence Rate", fontsize=8, color=INK_SOFT)
 ax_inset.set_xlabel("")
 ax_inset.set_ylabel("")
-ax_inset.tick_params(labelsize=6, colors=INK_SOFT)
+ax_inset.tick_params(labelsize=7, colors=INK_SOFT)
 sns.despine(ax=ax_inset)
 ax_inset.spines["left"].set_color(INK_SOFT)
 ax_inset.spines["bottom"].set_color(INK_SOFT)
