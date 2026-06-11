@@ -344,7 +344,7 @@ filtering is served via a `?language=` query param on the hub, and the hub's
 canonical tag omits the query — so the hub and its language-filtered variants
 all consolidate on the same canonical URL. Legacy links to
 `/{spec_id}/{language}` redirect to `/{spec_id}?language={language}` (SPA
-client-side redirect via `app/src/router.tsx`; bots get a 301 from
+client-side redirect via `app/src/routes/index.tsx`; bots get a 301 from
 `/seo-proxy/{spec_id}/{language}` to `/seo-proxy/{spec_id}`).
 
 The interactive view follows the same pattern: `?view=interactive` is a
