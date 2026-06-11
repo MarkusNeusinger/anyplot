@@ -1,0 +1,29 @@
+# Specification-level metadata for climograph-walter-lieth
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: climograph-walter-lieth
+title: Walter-Lieth Climate Diagram
+
+# Specification tracking
+created: 2026-06-10T23:00:09Z
+updated: 2026-06-10T23:00:09Z
+issue: 8656
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - line
+    - area
+  data_type:
+    - timeseries
+    - numeric
+  domain:
+    - meteorology
+    - environment
+  features:
+    - composite
+    - multi
+    - annotated
+    - printable
