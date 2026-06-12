@@ -99,6 +99,19 @@ function formatNum(n: number): string {
   return n.toLocaleString();
 }
 
+// Shorter labels for the fixed-width (80px) library column so every row stays
+// on a single line. The API's canonical names ("Apache ECharts", "MUI X
+// Charts") wrap to two lines here; we keep the full names elsewhere (Libraries
+// page, SEO, plot-of-the-day) and only trim them in this dense histogram list.
+const STATS_LIB_LABELS: Record<string, string> = {
+  echarts: 'ECharts',
+  muix: 'MUI X',
+};
+
+function statsLibLabel(lib: Pick<LibraryStats, 'id' | 'name'>): string {
+  return STATS_LIB_LABELS[lib.id] ?? lib.name;
+}
+
 export function StatsPage() {
   const { trackPageview, trackEvent } = useAnalytics();
   const { isDark } = useTheme();
@@ -361,7 +374,7 @@ export function StatsPage() {
                       pb: '2px',
                     }}
                   >
-                    {lib.name}
+                    {statsLibLabel(lib)}
                   </Typography>
                   <Box
                     sx={{
@@ -442,7 +455,7 @@ export function StatsPage() {
                       pb: '2px',
                     }}
                   >
-                    {lib.name}
+                    {statsLibLabel(lib)}
                   </Typography>
                   <Box
                     sx={{
