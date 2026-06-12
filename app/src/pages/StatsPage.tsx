@@ -108,7 +108,7 @@ const STATS_LIB_LABELS: Record<string, string> = {
   muix: 'MUI X',
 };
 
-function statsLibLabel(lib: { id: string; name: string }): string {
+function statsLibLabel(lib: Pick<LibraryStats, 'id' | 'name'>): string {
   return STATS_LIB_LABELS[lib.id] ?? lib.name;
 }
 
