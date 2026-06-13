@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: line-training-load-pmc
 created: '2026-06-13T20:51:01Z'
-updated: '2026-06-13T20:57:30Z'
+updated: '2026-06-13T21:12:59Z'
 generated_by: claude-sonnet
 workflow_run: 27478424392
 issue: 8646
@@ -12,56 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-trai
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/python/pygal/plot-dark.html
-quality_score: 80
+quality_score: 78
 review:
   strengths:
-  - 'Correct Imprint palette assignment: reference line uses INK_MUTED neutral anchor,
-    then CTL=#009E73, ATL=#C475FD, Form=#4467A3, TSS=#BD8233 — semantically well-reasoned'
-  - Highly realistic EWMA data generation with authentic 3-week build / 1-week recovery
-    periodization and a proper 2-week taper leading to race day
-  - 'Idiomatic pygal usage: x_labels_major for sparse month-start labels, show_minor_x_labels=False,
-    per-series stroke_style width differentiation (5.5/3.5/2.5/1.5)'
-  - Both PNG and interactive HTML saved for both themes — correct pygal artifact set
-  - sys.path.pop(0) fix for script-name collision with the pygal package is a nice
-    robustness detail
-  - 'Theme adaptation is correct: background, foreground, foreground_strong, foreground_subtle
-    all derived from ANYPLOT_THEME'
-  - Canvas is exactly 3200×1800 — hard rule satisfied
+  - Two-toned TSB fill (blue for fresh/positive, red for fatigued/negative) correctly
+    implemented using allow_interruptions=True and split positive/negative series
+  - Imprint palette applied correctly with semantic colour assignments (CTL=green,
+    ATL=lavender, fatigue=red, fresh=blue)
+  - Realistic 6-month training block with correct EWMA formulas and 3-week-build/1-week-recovery
+    periodisation
+  - Stroke-width hierarchy (CTL 5.5, ATL 3.5, TSB fills 1.5) gives visual weight to
+    the most important signals
+  - 'Perfect code quality: reproducible, clean imports, correct output format, no
+    fake UI'
+  - Interactive HTML export alongside PNG leverages pygal native strength
   weaknesses:
-  - 'SC-02 MISS: TSB (Form) must be rendered as a FILLED AREA relative to the zero
-    baseline, not a plain line. Spec says ''filled area or band, ideally two-toned
-    (positive form = fresh, negative = fatigued)''. Fix: add fill=True per-series
-    on the Form TSB chart.add() call (pygal supports per-series fill). Optionally
-    split into two filled series (positive / negative) with green vs red for the two-toned
-    effect.'
-  - 'X-axis major labels appear as indistinct small marks at both renders — month
-    names (''Jan 2024'', ''Feb 2024'' etc.) are unclear. Likely a pygal rendering
-    artefact with 180 empty-string labels in x_labels alongside 6 major labels. Consider
-    setting explicit x_labels only at month starts (6 entries) and removing the empty-string
-    approach: chart.x_labels = x_labels_major works directly.'
-  - 'Design: no visual hierarchy or focal point — the taper and race day (day 155/June
-    4) are the story of the chart but are not annotated or emphasized. A vertical
-    annotation at the race date or a shaded taper window would significantly improve
-    storytelling (DE-03).'
-  - Pygal box frame (all 4 spines) is retained by default; DE-02 is limited by the
-    library, but removing dots is already done — no further action needed on spines
-    for pygal.
+  - 'Daily TSS rendered as a full line chart reaching 100-130 units, dominating the
+    CTL/ATL signal. Spec requires TSS as light points or thin bars near the bottom
+    without dominating. Fix: use show_dots=True with a small dot size and suppress
+    the TSS stroke (stroke_style width 0) so TSS appears as scattered dots rather
+    than tall spikes; alternatively clip visible range so TSS dots cluster near the
+    top of a compressed scale'
+  - 'Legend labels truncated by pygals narrow left-legend area: Form TSB (fresh) becomes
+    Form TSB (fres...) and Form TSB (fatigued) becomes Form TSB (fati...). Fix: shorten
+    series names to 12 chars or fewer or switch to legend_at_bottom=True which gives
+    more horizontal space for full names'
+  - 'Design storytelling is weak: the taper period and form peak are visible in the
+    data but not visually highlighted. Consider adding a vertical marker or annotation
+    at day 155 (race day) to anchor the narrative'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, no pure white
-      Chrome: Title "line-training-load-pmc · python · pygal · anyplot.ai" in dark ink, clearly readable. Y-axis label "Training Load (TSS pts)" visible. X-axis label "Date (2024)" visible. Y-axis tick labels (0, 20, 40, 60, 80, 100, 120, 140) clearly readable. X-axis major labels (month names) appear as very small marks and are hard to read even at thumbnail — possible rendering issue with the 180-entry empty-label approach.
-      Legend: Top-left, 5 entries (TSB = 0, Fitness CTL, Fatigue ATL, Form TSB, Daily TSS) in dark ink — readable.
-      Data: Green (#009E73) CTL smooth rising line from ~20 to ~50 TSS, purple (#C475FD) ATL spiky following weekly training, blue (#4467A3) TSB oscillating mostly -30 to +10 shown as a line (NOT a filled area), ochre (#BD8233) Daily TSS as very spiky thin line showing raw workout intensity. Dashed INK_MUTED reference at TSB=0. All series distinguishable.
-      Legibility verdict: PASS — title, axis labels, and legend readable; minor concern on x-axis month tick labels.
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "line-training-load-pmc · python · pygal · anyplot.ai" in dark ink, centred — readable. Y-axis label "Training Load (TSS pts)" rotated left — readable. X-axis label "Date (2024)" at bottom — readable. Six monthly tick labels (Jan–Jun 2024) along x-axis. Six-entry left-side legend — "Form TSB (fresh)" and "Form TSB (fatigued)" truncated to "Form TSB (fres..." / "Form TSB (fati..." by narrow legend column.
+      Data: CTL green (#009E73) smooth rising line; ATL lavender (#C475FD) more oscillating; TSB-negative fill in matte red (#AE3030) dominant below zero; TSB-positive fill in blue (#4467A3) small islands; Daily TSS in ochre (#BD8233) as tall jagged spikes reaching 100-130 units — overwhelms CTL/ATL signal.
+      Legibility verdict: PASS (all chrome readable; legend truncation is a content issue, not a contrast failure)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, no pure black
-      Chrome: Title in light cream text, clearly readable on dark surface. Y-axis label and tick labels in light text — readable. X-axis label visible. Legend entries in light text — readable.
-      Data: Colors are IDENTICAL to light render — green CTL, purple ATL, blue TSB line, ochre TSS spikes, muted dashed zero reference. No dark-on-dark text failure observed.
-      Legibility verdict: PASS — no dark-on-dark failure, all text readable against near-black surface.
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title and axis labels in light-coloured ink — readable. Same six-entry legend with same truncation. Tick labels in muted light tone — readable. No dark-on-dark text failures detected anywhere.
+      Data: Colours identical to light render — green CTL, lavender ATL, red TSB-negative fill, blue TSB-positive fill, ochre TSS spikes. Only background and text chrome have flipped.
+      Legibility verdict: PASS (all text readable against dark background; no dark-on-dark failures)
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -69,57 +62,55 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Title, y-axis labels, tick labels, legend readable in both themes.
-          X-axis major month labels appear as small unclear marks — possible pygal
-          rendering artefact with 180 empty-label approach. Font sizes (66/56/44)
-          are correct per style guide.
+        comment: 'All font sizes explicitly set (title 66, label 56, major-label 44,
+          legend 44). Title and axes readable in both themes. Deduction: legend labels
+          Form TSB (fresh) and Form TSB (fatigued) truncated to Form TSB (fres...)
+          and Form TSB (fati...) by narrow left-legend column.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Lines overlap in the 20-60 TSS region (expected for PMC chart), but
-          no text collides with data or other text.
+        comment: No text-on-text or text-on-data collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: All 5 series distinctly visible. CTL smooth upward trend clear. ATL
-          weekly variation clear. TSB oscillation clear. TSS spikes prominent. Zero
-          reference dashed line visible.
+        comment: CTL and ATL lines visible but buried under dominant Daily TSS spikes
+          reaching 100-130 units. Spec requires TSS near the bottom without dominating
+          smoothed lines; it clearly dominates.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe. No red-green as sole distinguishing
-          signal.
+        comment: Imprint palette is CVD-safe by design; good luminance separation
+          across all series.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 3200x1800 canvas confirmed. Title at ~75% width (expected for long
-          mandated title). No overflow, no clipping.
+        comment: Canvas is correct 3200x1800. Layout reasonable but left-side legend
+          column too narrow, forcing truncation and wasting canvas space.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format. Y-axis 'Training Load (TSS pts)' is
-          descriptive with units. X-axis 'Date (2024)' is clear.
+        comment: Training Load (TSS pts) and Date (2024) are descriptive with units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'CTL (first data series) = #009E73 brand green. Palette in Imprint
-          canonical order. Reference line uses INK_MUTED neutral anchor (semantically
-          correct for a structural reference element). Backgrounds #FAF8F1 / #1A1A17
-          correct.'
+        comment: 'INK_MUTED for TSB=0 reference line is a valid semantic-anchor use.
+          First data series (CTL) correctly receives #009E73. All series use Imprint
+          palette with semantic assignments. Backgrounds #FAF8F1/#1A1A17 correct.
+          Chrome is theme-adaptive in both renders.'
     design_excellence:
-      score: 10
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -127,27 +118,24 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Custom Style object with correct palette applied. Stroke width differentiation
-          across series (5.5/3.5/2.5/1.5) shows thought. But no special visual hierarchy,
-          no annotations, no emphasis on the taper/race event which is the story's
-          climax.
+        comment: Imprint palette applied correctly, stroke-width hierarchy shows intention.
+          Looks like a well-configured pygal default rather than something exceptional.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Pygal box frame retained (library limitation). No dots on lines (clean).
-          Y-grid only. Stroke width variation adds refinement. Muted dashed reference
-          line is elegant.
+        comment: Y-only grid is good. Stroke-width hierarchy adds refinement. All
+          four spines visible (pygal limitation). Noisy TSS spikes reduce overall
+          polish.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: PMC structure is legible and the training periodization pattern (build/recovery/taper)
-          is readable from the data. But the race day event (day 155) is not annotated,
-          and the 'taper = form rising' story is not highlighted. A vertical annotation
-          or shaded taper window would significantly elevate storytelling.
+        comment: Two-toned TSB fill is a good conceptual choice. TSS dominates and
+          drowns core PMC narrative. Taper period (days 140-155) and race day are
+          in data but not visually emphasised.
     spec_compliance:
       score: 13
       max: 15
@@ -157,30 +145,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Multi-line time series is the correct chart type for a PMC.
+        comment: 'Correct PMC line chart: CTL, ATL, two-toned TSB fill, TSS, reference
+          line at 0.'
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: 'CTL and ATL as smooth lines ✓. Zero reference line ✓. Daily TSS
-          as thin line ✓. Clear legend ✓. MISSING: TSB must be a FILLED AREA relative
-          to zero baseline (spec: ''filled area or band''). MISSING: two-toned TSB
-          fill (positive=fresh, negative=fatigued). Pygal supports per-series fill=True.'
+        passed: true
+        comment: 'CTL/ATL smooth lines, two-toned TSB fill, reference line, shared
+          date x-axis all present. Deduction: spec requires TSS as light points or
+          thin bars near the bottom without dominating; implementation shows TSS as
+          full line spiking to 100-130 units, clearly dominating.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on x-axis, training load on y-axis, all series correctly mapped.
+        comment: Dates on x-axis, load units on y-axis; all series correctly mapped.
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Title is 'line-training-load-pmc · python · pygal · anyplot.ai' —
-          correct format. Legend distinguishes all 5 elements including the TSB=0
-          reference.
+        comment: 'Title format is correct. Deduction: legend labels Form TSB (fresh)
+          and Form TSB (fatigued) truncated by pygal renderer.'
     data_quality:
       score: 14
       max: 15
@@ -190,25 +178,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: All 5 PMC metrics shown (CTL, ATL, TSB, TSS, zero reference). Chart
-          demonstrates build/recovery periodization and taper. Missing the two-toned
-          TSB fill somewhat limits feature demonstration.
+        comment: 'Shows build weeks, recovery weeks, taper, rest day, both positive
+          and negative TSB phases. Minor: no explicit race-day marker.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 180-day training block (Jan-Jun 2024) for a single athlete. Realistic
-          TSS patterns with weekly structure (Mon rest, Sat long session, Tue-Fri
-          quality). Taper into race day well implemented.
+        comment: Six-month endurance training block with realistic weekly TSS patterns
+          is a convincing real-world scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: TSS up to ~140 (realistic for hard days), CTL rising to ~50 (trained
-          athlete over 6 months), ATL 20-70, TSB -30 to +20. All values plausible
-          for an endurance athlete.
+        comment: TSS range 0-130, CTL rising 10-50, ATL oscillating around CTL, TSB
+          between -30 and +10 — all consistent with real endurance-athlete data.
     code_quality:
       score: 10
       max: 10
@@ -218,7 +203,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no classes or functions.
+        comment: Linear imports to data to plot to save; no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -230,21 +215,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used. sys.path.pop(0) fix is necessary and correct.
+        comment: All imported symbols are used; noqa comments appropriate for sys.path
+          workaround.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-commented code. No fake UI. EWMA calculation is correctly
-          implemented.
+        comment: Clean and well-commented; sys.path.pop(0) workaround is correct and
+          documented.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html for both themes. Correct
-          pygal artifact set.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current pygal API.
     library_mastery:
       score: 7
       max: 10
@@ -254,24 +239,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Style object used correctly with all theme tokens. x_labels + x_labels_major
-          pattern for sparse date labeling is idiomatic. show_minor_x_labels=False.
-          show_dots=False. Per-series stroke_style dicts.
+        comment: 'Correct use of Style(), stroke_style dict, fill=True, allow_interruptions.
+          Minor: x_labels with 6 entries across 180 data points relies on pygal label
+          distribution heuristic.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: 'Uses pygal''s interactive HTML export (key distinctive feature).
-          Uses x_labels_major for controlled date display. Per-series stroke_style
-          width differentiation. Missing: fill=True per-series for TSB (a distinctive
-          pygal capability that would have met the spec requirement).'
-  verdict: APPROVED
+        passed: true
+        comment: allow_interruptions=True for interrupted fill areas is pygal-specific
+          and used correctly. Interactive HTML export alongside PNG is distinctive.
+          stroke_style dasharray for dashed reference line leverages SVG-level control.
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
-  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
