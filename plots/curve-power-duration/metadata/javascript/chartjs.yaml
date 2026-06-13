@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: curve-power-duration
 created: '2026-06-13T22:17:04Z'
-updated: '2026-06-13T22:28:10Z'
+updated: '2026-06-13T22:39:03Z'
 generated_by: claude-sonnet
 workflow_run: 27480452151
 issue: 8647
@@ -12,120 +12,128 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-pow
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/javascript/chartjs/plot-dark.html
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - 'Full spec compliance: log x-axis, monotonically-decaying empirical curve, dashed
-    CP model overlay, all four reference duration markers (5 s, 1 min, 5 min, 20 min),
-    horizontal CP asymptote annotation'
-  - 'Perfect Imprint palette application: palette[0]=#009E73 empirical, palette[1]=#C475FD
-    model; identical data colors in both themes; fully token-driven chrome (backgrounds,
-    text, grid)'
-  - 'Excellent Chart.js idioms: afterDraw plugin for annotations, afterBuildTicks
-    for precise log-scale tick control, cubicInterpolationMode:monotone producing
-    a physically-correct non-oscillating decay curve'
-  - Realistic, factually-correct cycling data (CP=280 W, W-prime=20000 J, sprint ~1100
-    W); marker border styled to pageBg for clean visual definition
+  - 'Perfect spec compliance: logarithmic time axis, empirical MMP curve, CP model
+    overlay, all four reference markers (5s/1min/5min/20min), CP horizontal asymptote
+    — nothing missing'
+  - Realistic, domain-correct cycling physiology data (CP=280 W, W′=20 000 J, peak
+    sprint ~1100 W)
+  - Excellent Imprint palette and theme-chrome implementation — both light and dark
+    renders are polished and data colours are identical across themes
+  - Custom afterDraw annotation plugin elegantly draws reference lines and CP asymptote
+    without any external plugin dependency
+  - 'Clear visual hierarchy: solid line with markers (empirical) vs dashed no-markers
+    (model) makes the two series instantly distinguishable'
+  - All font sizes explicitly set, axes balanced, no overflow or overlap in either
+    render
   weaknesses:
-  - 'Chart.js scale borders (all 4 sides) not removed — add border: {display: false}
-    to both x and y scale configs for L-shaped or floating frame per style guide (DE-02)'
-  - 'Both X and Y axis grids enabled — style guide recommends Y-only grid for line/scatter;
-    disable X grid with scales.x.grid.display: false for cleaner look (DE-02)'
+  - Rotated annotation labels (5 s sprint, 1 min, 5 min, 20 min) are rendered at 13
+    px with alpha=0.75 — readable at full 3200x1800 resolution but may be marginal
+    when scaled to ~400 px mobile width; increase to 14-15 px and alpha=0.85 for better
+    mobile legibility
+  - Power values at reference marks are not annotated (e.g. 430 W at 1 min, 316 W
+    at 5 min) — the spec flags these as optional but adding them would strengthen
+    data storytelling
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (~#FAF8F1) — correct
-      Chrome: title "curve-power-duration · javascript · chartjs · anyplot.ai" in dark medium-weight text (~55% canvas width); Y-axis label "Power (W)" and X-axis label "Duration" in dark ink; tick labels (300 W–1100 W and 1 s–5 h) in inkSoft dark gray — all clearly readable
-      Data: solid brand-green (#009E73) empirical curve from 1100 W at 1 s to ~276 W at 5 h with 3.5 px markers; dashed lavender (#C475FD) CP model line; four vertical reference dashed lines with rotated labels (5 s sprint, 1 min, 5 min, 20 min); horizontal CP asymptote at 280 W with annotation; first series is #009E73 confirmed
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "curve-power-duration · javascript · chartjs · anyplot.ai" in dark ink at top, readable; Y-axis label "Power (W)" in dark ink, X-axis label "Duration" in dark ink; tick labels (220 W … 1180 W on Y, 1 s … 5 h on X) in ink-soft — all clearly readable against light background; legend at top readable; rotated reference-line labels ("5 s sprint", "1 min", "5 min", "20 min") in ink-soft with alpha — readable; "CP = 280 W" annotation at bottom-left readable
+      Data: First series (empirical MMP curve) in #009E73 brand green as solid line with 3.5 px circular markers; second series (CP model) in #C475FD lavender as dashed line with no markers; both clearly distinguishable; empirical curve monotonically decreasing from ~1100 W at 1 s to ~276 W at 5 h; model line arcs from high values near t=22 s and converges toward CP=280 W asymptote; four dashed vertical reference lines; one dashed horizontal CP asymptote at 280 W
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: near-black (~#1A1A17) — correct
-      Chrome: title, axis labels, tick labels, legend text all switch to warm light tones (off-white/light-gray) — clearly legible against dark surface; rotated reference labels in inkSoft (~#B8B7B0) at 0.65–0.75 alpha, still readable; no dark-on-dark failures
-      Data: identical data colors to light render — green (#009E73) empirical, lavender (#C475FD) model; brand green fully visible on dark background; only chrome flipped, data colors unchanged
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title, axis labels, tick labels, legend text, annotation labels all in light ink — clearly readable against dark background; no dark-on-dark failures observed; grid lines subtly visible as lighter lines on dark surface
+      Data: Empirical green line and lavender dashed model line colours are identical to light render — only chrome has flipped; both data series clearly visible on dark background; brand green #009E73 remains clearly visible
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px wt-500, axis labels 15px,
-          ticks 13px, legend 14px, annotations 13px); balanced proportions; readable
-          in both themes
+        comment: All font sizes explicitly set (title 22px, legend 14px, axis titles
+          15px, ticks 13px, annotations 13px); proportions balanced; minor deduction
+          for annotation labels at 13px alpha=0.75 potentially marginal at mobile
+          scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Reference labels inside chartArea (top+8px), legend above chartArea
-          — no overlap; CP annotation clear of tick labels
+        comment: No overlapping text or data elements in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 45-point empirical curve with 3.5px markers, 150-point model line
-          without markers — perfectly adapted to density and role
+        comment: 45-point empirical line with 3.5px dots well-adapted to density;
+          model line has no dots (appropriate for fitted curve)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint positions 1+2 (green, lavender) are CVD-safe; solid vs dashed
-          linestyle adds redundant encoding
+        comment: Green vs lavender strong hue+luminance separation; solid vs dashed
+          adds redundant encoding; CVD-safe Imprint palette
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 confirmed; plot fills ~75-80% of canvas; right padding
-          40px prevents crowding; no canvas-edge clipping
+        comment: Landscape 3200x1800 correct; canvas gate passed; chart fills canvas
+          well with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis Power (W) with units; X-axis Duration with units from tick
-          labels (1 s, 1 min, 1 h)
+        comment: Y-axis 'Power (W)' has units; X-axis 'Duration' with units encoded
+          in human-readable tick labels — standard for time axes
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: palette[0]=#009E73 empirical, palette[1]=#C475FD model; token-driven
-          backgrounds (#FAF8F1/#1A1A17); identical data colors across themes
+        comment: 'First series palette[0]=#009E73; second series palette[1]=#C475FD;
+          pageBg/ink/inkSoft/grid tokens used correctly; light #FAF8F1 and dark #1A1A17
+          backgrounds confirmed; data colours identical across themes'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above default: intentional Imprint palette, tuned annotation alpha
-          values, marker pageBg border, monotone interpolation. Not yet exceptional
-          — enclosed borders and dual-axis grid limit score.'
+        comment: 'Strong design: Imprint palette correctly applied, intentional typographic
+          hierarchy, dashed-vs-solid encoding, custom annotation plugin. Professionally
+          polished but not quite publication-ready (annotation text small, no zone
+          shading)'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Token-based grid colors and explicit font weights are good. Scale
-          borders not removed (all 4 sides visible); both X and Y grids enabled. Style
-          guide recommends L-shaped frame and Y-only grid.
+        passed: true
+        comment: 'Axis borders removed (border: {display: false}); x-axis grid off,
+          y-axis grid subtle with token colour; explicit layout padding; legend cleanly
+          configured. Excellent refinement for Chart.js'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Reference markers at physiologically meaningful durations, CP asymptote
-          label, solid/dashed visual hierarchy create a coherent sports-science story
-          with clear focal points
+        comment: 'Clear visual hierarchy: empirical (solid, with dots) as focal point;
+          model (dashed, no dots) secondary; reference vertical lines at key physiological
+          durations guide viewer; CP asymptote provides analytical context. Power
+          values at reference marks not annotated (optional per spec)'
     spec_compliance:
       score: 15
       max: 15
@@ -135,29 +143,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Scatter+showLine with logarithmic x-axis; monotonically decreasing
-          power-duration shape
+        comment: Scatter + showLine on logarithmic x-axis = correct power duration
+          curve
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Empirical curve, dashed CP model, log x-axis with readable labels,
-          4 reference markers, CP asymptote — all present
+        comment: Log x-axis, human-readable ticks, empirical MMP curve, CP model dashed
+          overlay, 4 reference vertical markers, CP horizontal asymptote with label
+          — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Duration on log x-axis, power (W) on linear y-axis; full 1s-5h range;
-          model clipped at t>=22s where it enters y-axis range
+        comment: x=duration (s), y=power (W), log scale correct, monotonically decreasing
+          empirical, model converging to CP
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'curve-power-duration · javascript · chartjs · anyplot.ai';
-          legend labels match data series
+        comment: Title exactly 'curve-power-duration · javascript · chartjs · anyplot.ai';
+          legend distinguishes empirical vs model with matching colours
     data_quality:
       score: 15
       max: 15
@@ -167,83 +176,88 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full 1s-5h range; empirical + CP model; 4 reference markers; CP asymptote;
-          curve shape and model convergence both demonstrated
+        comment: Full spectrum 1s to 5h; empirical and CP model both represented;
+          reference marks at key physiological durations; CP asymptote visible
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic cycling sports-science scenario; neutral content
+        comment: Well-trained cyclist, CP=280W, W-prime=20000J, peak sprint~1100W
+          — factually correct and neutral sports science context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: CP=280W, W-prime=20000J within typical range for well-trained amateur;
-          sprint ~1100W at 1s plausible; decay profile physically correct
+        comment: All values align with established cycling physiology (CP 240-320W,
+          W-prime 15000-25000J, 1100W sprint realistic for trained rider)
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Two compact helper functions (empPower, logspace) add minor complexity
-          but are necessary and concise
+        comment: 'Clear flat structure: tokens → data → mount → chart; two small helpers
+          (empPower, logspace) are pragmatically necessary in JavaScript (no numpy
+          equivalent)'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: hard-coded key PD pairs, no RNG'
+        comment: 'Fully deterministic: KEY_PD hardcoded, logspace and model are pure
+          math'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; all from window globals as expected
+        comment: No imports; all globals provided by harness; no dead code
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Custom annotation plugin is idiomatic Chart.js; no over-engineering
-          or fake-UI
+        comment: Custom annotation plugin is idiomatic Chart.js; no fake UI elements;
+          no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Canvas appended to #container; animation:false, responsive:true,
-          maintainAspectRatio:false — harness contract satisfied'
+        comment: Output managed by harness; Chart.js 4.4.7 API used correctly
     library_mastery:
       score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: scatter+showLine pattern, logarithmic scale type, afterBuildTicks,
-          cubicInterpolationMode:monotone, borderDash — all idiomatic Chart.js
+        comment: 'Uses scatter+showLine, cubicInterpolationMode:monotone, afterBuildTicks
+          for custom log-axis ticks, borderDash, animation:false — all idiomatic.
+          Minor deduction: tooltip not customised for interactive HTML artifact'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: 'Chart.js-specific: afterDraw plugin API, afterBuildTicks scale hook,
-          cubicInterpolationMode:monotone. Annotation drawing itself uses generic
-          Canvas 2D API reducting distinctiveness.'
-  verdict: REJECTED
+        comment: Custom afterDraw plugin using Chart.js canvas context and getPixelForValue
+          scale API is distinctive; afterBuildTicks tick override is Chart.js-specific.
+          Not 5/5 because raw canvas drawing could be replicated in other canvas-based
+          libraries
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - manual-ticks
+  - custom-legend
   - html-export
   patterns:
   - data-generation
@@ -252,4 +266,4 @@ impl_tags:
   - interpolation
   styling:
   - alpha-blending
-  - edge-highlighting
+  - grid-styling
