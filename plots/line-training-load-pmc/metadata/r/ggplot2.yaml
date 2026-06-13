@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: line-training-load-pmc
 created: '2026-06-13T20:53:06Z'
-updated: '2026-06-13T21:00:46Z'
+updated: '2026-06-13T21:18:20Z'
 generated_by: claude-sonnet
 workflow_run: 27478575829
 issue: 8646
@@ -12,40 +12,36 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-trai
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 88
 review:
   strengths:
-  - 'Semantic Imprint palette assignments: green=fitness (CTL), lavender=fatigue (ATL),
-    blue=fresh form, matte-red=fatigued form — colors reinforce data meaning'
-  - 'Complete PMC feature set in a single ggplot2 plot: CTL/ATL lines, two-toned TSB
-    ribbons, TSS bars, TSB=0 reference line, secondary y-axis'
-  - Both themes fully legible with correct chrome flipping — no dark-on-dark failures
-    in dark render
-  - Realistic 180-day cyclist training dataset with proper EWMA computation (42-day
-    CTL, 7-day ATL) and phased build/recovery/taper structure
-  - 'Modern ggplot2 idioms: linewidth=, inside legend placement, sec_axis()'
+  - Complete, correct PMC implementation with all four components (CTL, ATL, TSB ribbon,
+    daily TSS) using accurate EWMA formulas
+  - Two-toned TSB ribbon using Imprint semantic anchors (blue=fresh, red=fatigued)
+    communicates athlete form at a glance with correct palette positions
+  - Dual-axis via sec_axis correctly transforms so TSB=0 aligns at visual center of
+    chart
+  - guide_legend(override.aes=...) elegantly mixes line and fill swatches across 5
+    heterogeneous geom types in a single legend
+  - All chrome tokens fully threaded through theme — both renders fully readable with
+    no dark-on-dark failures
   weaknesses:
-  - TSS daily bars have no legend entry — spec requires distinguishing all four metrics
-    including daily TSS; add a manual legend swatch using guide override or a dummy
-    aesthetic
-  - Two separate legend boxes (fill + color) consume upper-left canvas space; merge
-    into one vertical box using guides() with consistent order
-  - library(scales) imported but not explicitly used — ggplot2 already depends on
-    scales internally; remove the standalone library() call
-  - Right-axis title size=9 vs left-axis size=10 creates minor typographic imbalance
-    — both should be 10pt
+  - Daily TSS segments at linewidth=0.2 are extremely thin — may disappear at mobile-thumbnail
+    widths (~400 px); increase to linewidth=0.4-0.5
+  - Positive TSB ribbon (blue, alpha=0.35) appears as washed-out gray on warm off-white
+    light background; increase alpha to 0.45-0.50 for clearer blue appearance
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Bold title "line-training-load-pmc · r · ggplot2 · anyplot.ai" in dark ink, clearly readable at ~75% canvas width (expected for mandated title length). Left Y-axis label "Fitness / Fatigue (TSS points)" and right Y-axis label "Form / TSB" both readable. X-axis monthly date labels rotated 30deg, all legible. Two stacked legend boxes in upper-left with dark-ink text — readable.
-      Data: CTL line in Imprint brand green (#009E73), ATL line in lavender (#C475FD). Blue muted ribbon above TSB=0 reference (fresh/positive form, #4467A3 at alpha=0.35). Red muted ribbon below reference (fatigued/negative form, #AE3030 at alpha=0.55). Thin grey TSS segments at bottom (INK_MUTED, intentionally subtle). Dashed horizontal reference at TSB=0 (primary y=60).
-      Legibility verdict: PASS — all text readable; first data series is #009E73
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "line-training-load-pmc · r · ggplot2 · anyplot.ai" in dark bold (#1A1A17) — clearly readable. Primary Y-axis label "Fitness / Fatigue (TSS points)" in dark ink, readable. Secondary Y-axis label "Form / TSB" in INK_SOFT, readable. X-axis tick labels (monthly dates, rotated 30°) in INK_SOFT, readable. Legend "PMC Metrics" with dark title and soft-ink item text, clearly readable.
+      Data: CTL line in brand green #009E73 (first series, correct). ATL line in lavender #C475FD. Positive TSB ribbon in blue #4467A3 alpha=0.35 (appears as light blue-gray above dashed reference line). Negative TSB ribbon in matte red #AE3030 alpha=0.35 below reference line. Daily TSS thin gray segments (INK_MUTED) at chart bottom (y=0-22 range). Dashed reference line in INK_SOFT at y=60 (TSB=0).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title in cream/light text clearly visible. All axis labels, tick labels, and legend text render in light cream (#F0EFE8 / #B8B7B0) — no dark-on-dark failures. Legend boxes have dark elevated background (#242420) with subtle border — readable.
-      Data: CTL green and ATL lavender are identical to light render. Blue and red TSB ribbons unchanged. TSS bars render as slightly darker grey on dark background but remain adequately visible given their intentional subtlety. Data colors match light render exactly — only chrome flipped.
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures detected
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in near-white #F0EFE8 — clearly readable against dark surface. Axis labels in INK (#F0EFE8), tick labels in INK_SOFT (#B8B7B0) — all readable. Secondary Y-axis label readable. Legend box uses elevated dark bg #242420 with thin border; legend text in #B8B7B0 readable against elevated dark bg. No dark-on-dark failures detected.
+      Data: Colors identical to light render — CTL in #009E73, ATL in #C475FD, TSB ribbons in #4467A3 and #AE3030 (same Imprint palette positions). Daily TSS bars in theme-adaptive muted gray. Brand green #009E73 clearly visible on dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 27
@@ -56,53 +52,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=12pt bold, axis=10pt, ticks=8pt,
-          legend=8pt). Right-axis title at 9pt vs left at 10pt creates minor imbalance.
-          Both themes fully legible.
+        comment: Title 12pt bold, axis labels 10pt, tick labels 8pt all readable in
+          both renders. Minor deduction for compact rotated x-axis labels and small
+          vertical secondary Y-axis label.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text collisions. Two legend boxes stacked cleanly without overlapping
-          data elements.
+        comment: No text-on-text overlaps. Legend positioned in clear space. ATL line
+          volatility causes natural data overlap with ribbons but no legibility impact.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: CTL/ATL lines well-sized. TSS bars (linewidth=0.2, alpha=0.55) very
-          thin but intentionally subtle per spec. Ribbons at alpha=0.35 appropriately
-          visible.
+        comment: CTL and ATL lines prominent. TSB ribbons visible. Daily TSS segments
+          at linewidth=0.2 visible at full resolution but may disappear at mobile
+          thumbnail scale.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender pair CVD-safe. Blue/red ribbon pair uses positional
-          encoding (above/below dashed line) as redundant signal.
+        comment: Imprint palette CVD-optimised. No red-green as sole encoding signal.
+          TSB zones additionally distinguished by position relative to zero reference
+          line.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Good margins. Two separate legend
-          boxes consume more upper-left space than a merged legend would.
+        comment: Canvas gate passed (3200x1800). Title ~65% of plot width. Good margins.
+          No overflow or clipping in either render.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Primary Y with units, secondary Y descriptive, mandatory title format
-          correct.
+        comment: 'Primary Y: Fitness / Fatigue (TSS points), secondary Y: Form / TSB,
+          X null (date self-explanatory), title in correct mandated format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'CTL=#009E73 (slot 1), ATL=#C475FD (slot 2), fresh ribbon=#4467A3
-          (slot 3), fatigued ribbon=#AE3030 (slot 5, semantic exception). Backgrounds
-          #FAF8F1/#1A1A17. Both themes correct.'
+        comment: 'CTL=IMPRINT[1] #009E73, ATL=IMPRINT[2] #C475FD, positive TSB=IMPRINT[3]
+          #4467A3, negative TSB=IMPRINT[5] #AE3030, TSS=INK_MUTED. Light bg #FAF8F1,
+          dark bg #1A1A17. Both renders theme-correct.'
     design_excellence:
       score: 13
       max: 20
@@ -112,25 +109,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Semantic Imprint palette assignments show design intent. CTL thicker
-          than ATL (1.3 vs 1.0) creates subtle hierarchy. Split legend boxes detract
-          slightly.
+        comment: Two-toned TSB ribbon with semantic palette anchors shows real design
+          thinking. Secondary axis elegantly separates scales. Elevated legend box
+          with custom override.aes is polished. Above generic defaults but not publication-ready.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Y-only grid, minor grid removed, tick marks removed, clean spines,
-          legend with styled border. Good refinement above default.
+        comment: Y-only grid (no vertical clutter), ticks explicitly removed, minimal
+          chrome, legend background elevated. Clean execution above baseline.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear PMC narrative with dashed TSB=0 reference as focal point. No
-          explicit annotations for peak CTL or taper start that would push to 6/6.
+        comment: 'Clear visual hierarchy: ribbons (background) → TSS bars (raw input)
+          → CTL (fitness story) → ATL (fatigue). Taper visible as widening positive
+          TSB ribbon. Dashed reference explicitly anchors zero crossing.'
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -138,29 +136,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct PMC chart: CTL/ATL lines, two-toned TSB ribbon, TSS bars,
-          secondary axis.'
+        comment: 'Correct PMC chart: CTL/ATL smooth lines + two-toned TSB filled ribbon
+          + daily TSS bars on shared date axis.'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: All visual features present but TSS bars missing from legend. Spec
-          requires distinguishing CTL, ATL, Form, and daily TSS in legend.
+        comment: CTL line (42-day EWMA), ATL line (7-day EWMA), two-toned TSB ribbon
+          (positive blue/negative red), daily TSS thin bars, secondary Y-axis for
+          TSB, horizontal reference at TSB=0, legend distinguishing all four metrics.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Shared date x-axis, CTL/ATL on primary Y, TSB scaled onto secondary
-          axis correctly.
+        comment: Date on X, TSS/CTL/ATL magnitudes on primary Y, TSB on secondary
+          Y correctly offset so TSB=0 aligns with primary y=60. 180 daily points across
+          Jan-Jul 2024.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend split across two boxes; TSS bars absent
-          from legend.
+        comment: 'Title: line-training-load-pmc · r · ggplot2 · anyplot.ai — exactly
+          correct. Legend: PMC Metrics with all 5 series labeled.'
     data_quality:
       score: 15
       max: 15
@@ -170,24 +170,27 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All four PMC metrics shown. Phased training structure with realistic
-          variation. CTL lags ATL as expected.
+        comment: EWMA correctly computed for both time constants (CTL k=2/43, ATL
+          k=2/8). TSB as previous-day CTL minus ATL. All four PMC components present
+          and visually distinct.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 180-day cyclist build season Jan-Jul 2024. Neutral sports science
-          context with domain-correct TSS computation.
+        comment: '180-day cyclist build season with periodic structure: recovery weeks
+          every 4th week, progressive build, taper in final weeks. Neutral sports
+          science context; no controversy.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: TSS 15-155/day, CTL 30-65, ATL spikes ~90, TSB -50 to +50 — all realistic
-          for serious amateur cyclist.
+        comment: CTL 30-65 TSS points (trained amateur). ATL spikes to 85-90 during
+          hard blocks (plausible). TSB oscillates -50 to +50 (realistic range). Daily
+          TSS peak ~155 (hard cycling day) is physiologically appropriate.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -195,35 +198,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: tokens -> data -> EWMA loop -> plot -> save. No functions
-          or classes.'
+        comment: Linear script with no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present.
+        comment: set.seed(42) at top.
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: library(scales) imported but not explicitly called; ggplot2 already
-          imports scales as a dependency.
+        passed: true
+        comment: Only ggplot2 and ragg imported and both used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity. EWMA loop appropriate for custom rolling computation.
+        comment: Appropriate complexity. EWMA computed in-loop cleanly. sec_axis transform
+          is a one-liner. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, uses ragg::agg_png, modern linewidth= API.
+        comment: sprintf('plot-%s.png', THEME) pattern correct. ragg::agg_png device
+          used. No bare plot.png.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -231,22 +234,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Grammar-of-graphics layering, named-vector scale_color_manual/scale_fill_manual,
-          proper theme() system usage.
+        comment: 'Correct ggplot2 grammar: aes() for data mapping, scale_color_manual
+          with ordered breaks, guide_legend(override.aes=...) for mixed geometry legends.
+          Layer ordering semantically correct.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: sec_axis() for secondary axis, legend.position='inside' with coordinates
-          (modern ggplot2), geom_ribbon, dual aesthetic scale separation.
-  verdict: REJECTED
+        comment: sec_axis with transform formula is distinctly ggplot2. guide_legend
+          override.aes mixing line+fill+alpha across 5 heterogeneous geometries demonstrates
+          advanced ggplot2 knowledge. geom_ribbon for area fill is idiomatic.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - ragg
-  - scales
   techniques:
   - twin-axes
+  - custom-legend
   - layer-composition
   patterns:
   - data-generation
