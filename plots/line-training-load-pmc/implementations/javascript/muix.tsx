@@ -5,6 +5,7 @@
 
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { AreaPlot, LinePlot } from "@mui/x-charts/LineChart";
+import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
@@ -28,6 +29,8 @@ const rand = lcg(42);
 // --- Generate 180-day PMC training data (6-month endurance build to race) ---
 const DAYS = 180;
 const start = new Date(2025, 1, 3); // 3 Feb 2025
+// Taper begins at week 22 (day 154) — where positive form zone opens
+const taperDate = new Date(start.getTime() + 154 * 24 * 60 * 60 * 1000);
 
 const dates = [];
 const tssData = [];
@@ -89,6 +92,9 @@ for (let i = 0; i < DAYS; i++) {
   tsbNeg.push(tsb < 0 ? tsb : null);
 }
 
+// TSS as scatter points: {x: Date, y: tss, id} format for ScatterPlot
+const tssScatter = dates.map((d, i) => ({ x: d, y: tssData[i], id: i }));
+
 const TITLE = "line-training-load-pmc · javascript · muix · anyplot.ai";
 const TITLE_H = 58;
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -118,7 +124,7 @@ export default function Chart() {
         }}
       >
         <Typography
-          sx={{ color: t.ink, fontSize: "22px", fontWeight: 500, lineHeight: 1 }}
+          sx={{ color: t.ink, fontSize: "24px", fontWeight: 500, lineHeight: 1 }}
         >
           {TITLE}
         </Typography>
@@ -132,7 +138,6 @@ export default function Chart() {
         sx={{
           "& .MuiAreaElement-series-tsbPos": { fillOpacity: 0.3 },
           "& .MuiAreaElement-series-tsbNeg": { fillOpacity: 0.3 },
-          "& .MuiAreaElement-series-tss": { fillOpacity: 0.45 },
         }}
         xAxis={[{
           id: "date",
@@ -149,7 +154,7 @@ export default function Chart() {
           { id: "load", min: 0, max: 190 },
           // Secondary right axis: TSB form (oscillates around 0)
           { id: "tsb",  min: -90, max: 90 },
-          // Hidden axis for TSS bars (scaled so bars stay compact at bottom)
+          // Hidden axis for TSS scatter (scaled so points cluster at bottom quarter)
           { id: "tss",  min: 0, max: 760 },
         ]}
         series={[
@@ -197,17 +202,16 @@ export default function Chart() {
             showMark: false,
             curve: "monotoneX",
           },
-          // TSS as step-curve area (day-by-day variation looks bar-like)
+          // TSS as scatter points — daily raw load shown as light dots near the bottom
           {
             id: "tss",
-            type: "line",
-            data: tssData,
+            type: "scatter",
+            data: tssScatter,
+            xAxisId: "date",
             yAxisId: "tss",
             label: "Daily TSS",
             color: t.palette[3], // #BD8233 ochre
-            area: true,
-            showMark: false,
-            curve: "stepAfter",
+            markerSize: 3,
           },
         ]}
         margin={{ top: 20, bottom: 100, left: 90, right: 90 }}
@@ -215,6 +219,7 @@ export default function Chart() {
         <ChartsGrid horizontal />
         <AreaPlot />
         <LinePlot />
+        <ScatterPlot />
         <ChartsXAxis
           axisId="date"
           tickLabelStyle={{ fill: t.inkSoft, fontSize: 14 }}
@@ -232,6 +237,7 @@ export default function Chart() {
           tickLabelStyle={{ fill: t.inkSoft, fontSize: 13 }}
           labelStyle={{ fill: t.inkSoft, fontSize: 15 }}
         />
+        {/* TSB = 0 horizontal reference — separates fresh from fatigued zones */}
         <ChartsReferenceLine
           y={0}
           yAxisId="tsb"
@@ -240,6 +246,20 @@ export default function Chart() {
             strokeOpacity: 0.28,
             strokeDasharray: "6 3",
             strokeWidth: 1.5,
+          }}
+        />
+        {/* Taper start — marks the positive-form window before race day */}
+        <ChartsReferenceLine
+          x={taperDate}
+          xAxisId="date"
+          label="↑ Taper"
+          labelAlign="start"
+          labelStyle={{ fill: t.inkSoft, fontSize: 12, fontStyle: "italic" }}
+          lineStyle={{
+            stroke: t.inkSoft,
+            strokeOpacity: 0.4,
+            strokeDasharray: "4 4",
+            strokeWidth: 1,
           }}
         />
         <ChartsLegend
