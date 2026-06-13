@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-power-duration: Mean-Maximal Power Duration Curve
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 82/100 | Created: 2026-06-13
 """
 
 import os
@@ -52,6 +51,9 @@ X_LABELS_ALL = [
 # Key reference durations shown as major axis tick labels
 X_LABELS_MAJOR = ["1s", "5s", "30s", "1min", "5min", "20min", "1h", "5h"]
 
+# Reference duration indices in DURATIONS_S: 5s=2, 1min=6, 5min=8, 20min=10
+REF_IDX = {2, 6, 8, 10}
+
 # Data
 # Empirical reference points (physiology-informed, CP≈280 W, P_max≈1100 W at 1 s)
 _ref_dur = np.array([1, 5, 15, 30, 60, 180, 300, 600, 1200, 1800, 3600, 7200, 18000])
@@ -67,6 +69,11 @@ model_power = [round(CP + W_PRIME / d, 1) if d >= 30 else None for d in DURATION
 
 # Horizontal CP asymptote at critical power
 cp_line = [float(CP)] * len(DURATIONS_S)
+
+# Reference duration markers: isolated dots at y_max simulate vertical guide marks.
+# With allow_interruptions=True, each isolated non-None value renders as a lone dot.
+Y_MAX = 1150
+ref_markers = [Y_MAX if i in REF_IDX else None for i in range(len(DURATIONS_S))]
 
 # Plot
 title_str = "curve-power-duration · python · pygal · anyplot.ai"
@@ -85,7 +92,7 @@ custom_style = Style(
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
-    stroke_width=5,
+    stroke_width=2.5,
 )
 
 chart = pygal.Line(
@@ -96,7 +103,7 @@ chart = pygal.Line(
     x_title="Duration",
     y_title="Power (W)",
     show_dots=True,
-    dots_size=6,
+    dots_size=10,
     stroke=True,
     show_legend=True,
     legend_at_bottom=True,
@@ -118,6 +125,10 @@ chart.add("CP Model (P = CP + W’/t)", model_power, stroke_style={"width": 4, "
 
 # Critical power asymptote — Imprint blue, dotted horizontal reference
 chart.add(f"Critical Power: CP = {CP} W", cp_line, stroke_style={"width": 3, "dasharray": "5, 12"}, show_dots=False)
+
+# Reference duration markers — Imprint amber (#BD8233), large dots at y_max
+# Positioned at 5s (sprint), 1min, 5min, 20min (FTP proxy) per spec requirement
+chart.add("Reference Durations (5 s · 1 min · 5 min · 20 min)", ref_markers, show_dots=True, dots_size=18)
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
