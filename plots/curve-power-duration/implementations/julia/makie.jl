@@ -103,6 +103,16 @@ for dur in ref_dur
     vlines!(ax, [dur]; color = (INK_SOFT, 0.45), linewidth = 1.0, linestyle = :dash)
 end
 
+# W′ reserve zone — band! fill between CP asymptote and model line (Makie-native primitive)
+band!(ax, mt, fill(CP, length(mt)), mp;
+    color = (IMPRINT_PALETTE[3], 0.08),
+)
+
+# Area fill under MMP curve — band! adds depth and makes the primary data the focal point
+band!(ax, dur_emp, fill(Y_MIN, n_emp), empirical_mmp;
+    color = (IMPRINT_PALETTE[1], 0.08),
+)
+
 # CP model overlay (dashed, Imprint position 3 — blue)
 lines!(ax, mt, mp;
     color     = IMPRINT_PALETTE[3],
@@ -131,7 +141,7 @@ hlines!(ax, [CP]; color = (INK_MUTED, 0.85), linewidth = 1.5, linestyle = :dot)
 text!(ax, 150.0, CP + 14;
     text     = "CP = $(Int(CP)) W",
     color    = INK_MUTED,
-    fontsize = 11,
+    fontsize = 12,
     align    = (:left, :bottom),
 )
 
@@ -140,7 +150,7 @@ for (dur, lbl) in zip(ref_dur, ref_labels)
     text!(ax, dur, Y_MAX - 30;
         text     = lbl,
         color    = INK_SOFT,
-        fontsize = 10,
+        fontsize = 12,
         align    = (:center, :top),
     )
 end
@@ -153,11 +163,14 @@ ax.xticks = (
 
 axislegend(ax;
     position        = :rt,
-    framecolor      = ELEVATED_BG,
+    framevisible    = true,
+    framecolor      = (INK_SOFT, 0.4),
     backgroundcolor = ELEVATED_BG,
     labelcolor      = INK,
-    padding         = (8, 8, 6, 6),
-    labelsize       = 11,
+    padding         = (10, 10, 8, 8),
+    labelsize       = 12,
+    patchsize       = (24, 8),
+    rowgap          = 4,
 )
 
 save("plot-$(THEME).png", fig; px_per_unit = 2)
