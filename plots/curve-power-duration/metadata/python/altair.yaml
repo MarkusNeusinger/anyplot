@@ -1,0 +1,292 @@
+library: altair
+language: python
+specification_id: curve-power-duration
+created: '2026-06-13T22:04:28Z'
+updated: '2026-06-13T22:22:55Z'
+generated_by: claude-sonnet
+workflow_run: 27480124749
+issue: 8647
+language_version: 3.13.13
+library_version: 6.2.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/python/altair/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Perfect spec compliance: log-x axis, empirical MMP curve, dashed CP model overlay,
+    vertical reference markers at 5s/1min/5min/20min, CP asymptote annotation — all
+    implemented'
+  - 'Correct Imprint palette: brand green (#009E73) for MMP Curve as first series,
+    lavender (#C475FD) for CP Model as second series, correct canonical order'
+  - 'Full theme-adaptive chrome: PAGE_BG, ELEVATED_BG, INK, INK_SOFT, INK_MUTED tokens
+    all defined and applied to configure_axis, configure_title, configure_legend —
+    no dark-on-dark failures in either render'
+  - Idiomatic Altair layer composition with multiple mark types (mark_line, mark_point,
+    mark_rule, mark_text), custom strokeDash encoding per series as redundant encoding,
+    and transform_filter for subset layers
+  - Custom labelExpr for human-readable tick labels on log axis is a sophisticated
+    Altair technique, and alt.value(6) for pixel-coordinate reference label placement
+    is appropriately idiomatic
+  - 'Clean KISS structure: no functions or classes, linear procedural code, proper
+    canvas padding via PIL post-render with explicit SystemExit on overflow'
+  - 'Realistic cyclist data matching spec exactly: CP = 280 W, W'' = 20,000 J, Pmax
+    = 1,100 W; model correctly shown from 1 min onward where it is valid'
+  weaknesses:
+  - 'DE-01 moderate (5/8): Design is technically correct and clean but could push
+    further — e.g. a subtle gradient area fill under the MMP curve to visually anchor
+    the decay shape, or fill-between shading from the CP asymptote to the model line
+    to emphasise the W'' zone'
+  - 'DE-02 moderate (3/6): Spines are effectively removed via domainWidth=0 and stroke=None
+    on configure_view, but no explicit removal of top/right axis domain lines — the
+    result is still cleaner than default but could benefit from setting domainOpacity=0
+    explicitly for both axes'
+  - 'DE-03 (4/6): The overlap zone between MMP Curve data points and CP Model dashed
+    line (1–20 min region) creates visual ambiguity — dashed line exists but the green
+    points and lavender dashes overlap heavily; a slightly thicker dashed line (strokeWidth=2.5
+    for the model vs 3 for MMP) or reduced marker opacity in the overlap zone would
+    improve readability of that region'
+  - 'VQ-02 minor (5/6): Reference labels at top of chart (''5 s'', ''1 min'', ''5
+    min'', ''20 min'') are placed at alt.value(6) which puts them at the very top
+    of the plot area where the flat 1100W MMP curve also sits — vertically crowded
+    but not overlapping in the rendered output'
+  - Legend label has trailing double-space in 'CP Model  (P = CP + W′/t)' (two spaces
+    before the parenthesis) which renders correctly in Altair but is cosmetically
+    unclean in the code
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 across the full 3200x1800 canvas and chart area — correct, no pure white
+      Chrome: Title "curve-power-duration · python · altair · anyplot.ai" bold dark text (~65-70% width) clearly readable. Y-axis label "Power (W)" and X-axis label "Duration" dark ink, readable. Tick labels (1,200 / 1,000 / 800 ... / 200 on Y; 1 s / 5 s / 30 s / 1 min / 5 min / 20 min / 1 h / 5 h on X) in secondary ink, all readable. Legend in top-right with light elevated background showing "MMP Curve" and "CP Model (P = CP + W'/t)".
+      Data: Brand green #009E73 MMP Curve dominates — flat at Pmax ~1100W from 1s to ~30s, then steep monotonic decay toward CP~280W over 5h, with filled circular markers at each of the 50 data points. Lavender #C475FD CP model appears as a dashed line from 1 min onward, converging smoothly to the CP=280W asymptote. Vertical dashed reference rules in INK_MUTED at 5s, 1min, 5min, 20min with corresponding labels at top of chart area. Horizontal dashed CP asymptote in INK_SOFT at 280W with "CP = 280 W" annotation at right.
+      Legibility verdict: PASS — all text clearly readable on warm off-white background, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 across entire canvas — correct, no pure black
+      Chrome: Title in light off-white (#F0EFE8) clearly visible against dark background. Y-axis and X-axis labels in light ink readable. Tick labels in secondary light gray (#B8B7B0) clearly readable. Legend in elevated dark background (#242420) with light label text — no dark-on-dark failures. Reference labels at chart top in tertiary light gray (#A8A79F) readable. "CP = 280 W" annotation in light muted tone readable against dark background.
+      Data: Data colors are identical to light render — brand green #009E73 MMP Curve and lavender #C475FD CP Model dashed line unchanged between themes. Only chrome elements (background, text, grid, legend fill) have flipped to dark variants. The CP asymptote dashed rule is in INK_SOFT (#B8B7B0), clearly visible on dark background.
+      Legibility verdict: PASS — all text readable against warm near-black background, chrome correctly adapted, no dark-on-dark failures detected
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All text readable in both themes. Title 16px, axis labels 12px,
+          tick/legend 10px — well-calibrated. Minor: reference labels at top of chart
+          are slightly crowded in the flat Pmax region but still readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: 'No actual text-on-text or text-on-data overlap. Minor: reference
+          labels at alt.value(6) are in close vertical proximity to the flat 1100W
+          MMP segment at short durations.'
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 50 data points with size=40 markers — appropriate for medium density.
+          Both series clearly visible with redundant stroke-dash encoding. CP asymptote
+          and reference rules at appropriate opacity.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green + lavender is CVD-safe; strokeDash adds redundant encoding
+          beyond color. No red-green pairs as sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. 3200x1800 output achieved via width=620 height=320
+          scale=4.0 + PIL padding. Title ~65-70% width. Good proportions with generous
+          whitespace in padded areas.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis 'Power (W)' has units. X-axis 'Duration' is descriptive. Title
+          exactly matches required format 'curve-power-duration · python · altair
+          · anyplot.ai'.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green) for MMP Curve. Second series
+          #C475FD (lavender) for CP Model — canonical Imprint order. Backgrounds #FAF8F1
+          / #1A1A17. All 8 chrome tokens properly adapted.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above baseline: Imprint palette with custom strokeDash redundant
+          encoding, layered annotations (reference rules, CP asymptote, text labels),
+          multiple mark types in layer composition. Lacks further refinements like
+          area fill under the curve or W'' shading.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: domainWidth=0 and stroke=None effectively suppress spine/frame. Y-axis-only
+          grid at 0.12 opacity is subtle. Legend uses elevated background with PAGE_BG
+          stroke border. Above default of 2 but not maximally refined.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear focal point on the decaying MMP curve. Visual hierarchy: bright
+          green primary, lavender secondary, muted reference lines tertiary. CP asymptote
+          explicitly annotated as the physiological limit. Overlap of MMP points and
+          CP model line in 1-20 min zone slightly reduces clarity of the story.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct power-duration curve with log-x axis. Empirical MMP curve
+          as primary, CP model as dashed overlay.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Log-x axis with human-readable labels (1s, 5s, 30s, 1min, 5min, 20min,
+          1h, 5h). Empirical MMP curve. CP model overlay (dashed). Reference vertical
+          markers at 5s, 1min, 5min, 20min with labels. CP horizontal asymptote with
+          annotation.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=duration_s on log scale [1, 18000]. Y=power_w in watts [200, 1200].
+          Both series cover appropriate domains.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is exactly 'curve-power-duration · python · altair · anyplot.ai'.
+          Legend entries 'MMP Curve' and 'CP Model (P = CP + W\u2019/t)' are descriptive.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows full decay from Pmax ceiling (1100W) to CP asymptote (280W).
+          Empirical and modeled series. Reference durations. CP asymptote annotation.
+          Model correctly starts at 60s where it is valid.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Well-trained cyclist: CP=280W, W''=20000J, Pmax=1100W matches spec
+          example values. Plausible for elite amateur/professional cyclist. Neutral
+          context.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Duration 1s-18000s (5h), 50 log-spaced points. Power 200-1200W range.
+          Noise level (2% + 3W floor) realistic for empirical MMP data.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes. Linear procedural structure. sys.path manipulation
+          at top is the only non-data code.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: sys, os, altair, numpy, pandas, PIL.Image — all imported and used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. Layer composition cleanly structured. Canvas
+          padding block follows library guide exactly.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses Altair 6.2.1 current
+          API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper encoding types (Q, N). Layer composition pattern. configure_*
+          for global styling. alt.Title for structured title. Tooltip encoding. transform_filter
+          for subset layers.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'labelExpr for custom log-axis tick labels is sophisticated Altair
+          technique. alt.value() for pixel-coordinate positioning. StrokeDash encoding
+          with categorical domain/range mapping. transform_filter in layer context.
+          Minor: could further leverage Altair''s selection/parameter system for interactivity.'
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - pillow
+  techniques:
+  - layer-composition
+  - annotations
+  - hover-tooltips
+  - html-export
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
