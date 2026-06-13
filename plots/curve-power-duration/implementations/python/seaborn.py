@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-power-duration: Mean-Maximal Power Duration Curve
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 87/100 | Created: 2026-06-13
@@ -28,8 +28,9 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Imprint palette — canonical order, first series always #009E73
-BRAND = "#009E73"  # empirical MMP curve — first series
-MODEL_COLOR = "#4467A3"  # CP model fit — third Imprint position
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = IMPRINT_PALETTE[0]  # empirical MMP curve — position 1
+MODEL_COLOR = IMPRINT_PALETTE[1]  # CP model fit — position 2 (lavender)
 
 sns.set_theme(
     style="ticks",
@@ -47,6 +48,7 @@ sns.set_theme(
         "legend.edgecolor": INK_SOFT,
     },
 )
+sns.set_context("notebook", font_scale=0.85)
 
 # Data — well-trained cyclist: CP ≈ 280 W, W′ ≈ 21 kJ
 np.random.seed(42)
@@ -94,7 +96,7 @@ ax.text(16500, CP + 8, f"CP = {CP} W", color=INK_MUTED, fontsize=7.5, ha="right"
 ref_markers = {5: "5 s sprint", 60: "1 min", 300: "5 min", 1200: "20 min"}
 for t, label in ref_markers.items():
     ax.axvline(t, color=INK_SOFT, linewidth=0.9, linestyle="--", alpha=0.5, zorder=1)
-    ax.text(t, 1210, label, color=INK_SOFT, fontsize=7, ha="center", va="bottom")
+    ax.text(t, 1210, label, color=INK_SOFT, fontsize=8, ha="center", va="bottom")
 
 # X-axis — log scale with human-readable duration labels
 ax.set_xscale("log")
@@ -113,8 +115,7 @@ ax.set_xlabel("Duration", fontsize=10, color=INK)
 ax.set_ylabel("Power (W)", fontsize=10, color=INK)
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
+sns.despine(ax=ax)
 ax.spines["left"].set_color(INK_SOFT)
 ax.spines["bottom"].set_color(INK_SOFT)
 
