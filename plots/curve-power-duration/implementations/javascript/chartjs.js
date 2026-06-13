@@ -1,7 +1,7 @@
 // anyplot.ai
 // curve-power-duration: Mean-Maximal Power Duration Curve
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-06-13
+// Library: chartjs 4.4.7 | JavaScript 22.22.3
+// Quality: 89/100 | Created: 2026-06-13
 
 //# anyplot-orientation: landscape
 
