@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: curve-power-duration
 created: '2026-06-13T22:12:37Z'
-updated: '2026-06-13T22:19:48Z'
+updated: '2026-06-13T22:28:48Z'
 generated_by: claude-sonnet
 workflow_run: 27480353372
 issue: 8647
@@ -12,52 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-pow
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - 'Strong spec compliance: all required features present — log x-axis with human-readable
-    tick labels, empirical MMP curve (green solid), CP model overlay (blue dashed),
-    vertical reference markers at 5s/1min/5min/20min, CP asymptote with annotation'
-  - 'Perfect data quality: realistic CP=280W, W''=20000J, Pmax=1100W parameters for
-    a well-trained cyclist; full power-duration spectrum from 1s sprint to 5h endurance'
-  - 'Excellent theme-adaptation: both light (#FAF8F1) and dark (#1A1A17) renders are
-    fully readable with correctly flipped chrome tokens; no dark-on-dark failures'
-  - 'Strong code structure: KISS linear layout, set.seed(42) reproducibility, guides(override.aes)
-    for expert linetype+linewidth legend customization'
-  - 'Good storytelling: reference duration guides and CP asymptote label contextualize
-    the cycling performance narrative clearly'
+  - 'Perfect spec compliance: all required features (MMP curve, CP model, log x-axis,
+    reference duration markers, CP asymptote) present and correctly implemented'
+  - Dual-scale coordination using scale_color_manual + scale_linetype_manual + guides(override.aes=)
+    is exactly the right ggplot2 idiom for combined colour+linestyle legends
+  - 'Full theme adaptation: both light and dark renders pass readability check with
+    no dark-on-dark or light-on-light failures'
+  - cummin() enforces the physically-required monotonicity of the MMP curve — a domain-correct
+    detail
+  - R-specific workaround for grid alpha (grDevices::adjustcolor) shows awareness
+    of ggplot2 element_line alpha limitation
   weaknesses:
-  - 'VQ-06: Axis labels lack explicit units — y-axis reads ''Mean-Maximal Power''
-    (should be ''Mean-Maximal Power (W)'') and x-axis reads ''Duration (log scale)''
-    (should be ''Duration (s)'' or ''Duration (log scale, s)''); tick labels carry
-    units but the axis label itself should too per style guide'
-  - 'VQ-07: Imprint palette position 2 (#C475FD lavender) is skipped — CP Model uses
-    position 3 (#4467A3 blue) directly. Either use canonical order (position 2 for
-    CP Model) or add a semantic justification comment. Blue is not a mandatory semantic
-    color for ''model fit'' lines in this context.'
-  - 'CQ-03: library(dplyr) and library(scales) are imported but no functions from
-    either package appear in the code — data.frame() is base R, expansion() is ggplot2-native,
-    label formatting uses anonymous functions. Remove both unused imports.'
-  - 'DE-02: Minor grid lines (panel.grid.minor) are visible in the rendered images,
-    creating some visual noise in the flat lower region of the curve where MMP line,
-    CP model, and CP asymptote converge. Consider removing minor grid or reducing
-    its alpha further.'
-  - 'DE-01: Design sophistication is above defaults but not publication-ready — consider
-    removing minor grid entirely, tightening whitespace at bottom between chart and
-    legend, and adding a subtle background fill difference to the legend panel to
-    make it stand out more cleanly.'
+  - Reference duration annotation text (geom size=2.4, ~6.8pt) and CP label (size=2.6,
+    ~7.4pt) are near the minimum readable threshold; increase to size 2.8-3.0 to improve
+    legibility at mobile display widths
+  - Scatter markers at size=1.8 with every-3rd thinning are quite subtle; increase
+    to size=2.2-2.5 for more visual depth without cluttering (15 points is sparse
+    enough)
+  - 'Design Excellence headroom: consider adding a shaded W prime zone (geom_ribbon
+    between empirical curve and CP asymptote, alpha=0.06-0.08) or annotating key reference
+    power values alongside vertical duration guides to elevate storytelling'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "curve-power-duration · r · ggplot2 · anyplot.ai" in bold dark ink, ~65% of canvas width, clearly readable. Y-axis label "Mean-Maximal Power" in dark ink (10pt). X-axis label "Duration (log scale)" in dark ink (10pt). Tick labels in muted dark ink (8pt): y-axis shows "200 W" through "1000 W", x-axis shows "1 s", "5 s", "30 s", "1 min", "5 min", "20 min", "1 h", "5 h". Reference duration labels ("5 s", "1 min", "5 min", "20 min") appear in muted gray at top of plot area. "CP = 280 W" annotation in italic muted text. All text readable.
-      Data: Primary empirical MMP curve in #009E73 (brand green), solid line (linewidth 1.3) with small circular data points every 3rd observation. CP model overlay in #4467A3 (blue), dashed line (linewidth 1.0), starting from 2 minutes. Dashed vertical guides at 5s, 1min, 5min, 20min in muted gray. Horizontal dotted line at 280W (CP asymptote) in muted gray. Subtle major and minor grid lines visible. Legend at bottom with bordered box showing both series with correct linestyles.
-      Legibility verdict: PASS — all text readable against warm off-white background, no contrast failures.
+      Background: Warm off-white #FAF8F1 — correct for light theme, not pure white
+      Chrome: Title "curve-power-duration · r · ggplot2 · anyplot.ai" in bold dark ink (#1A1A17) — clearly readable. Axis labels "Duration (log scale, s)" and "Mean-Maximal Power (W)" in dark ink (10pt) — readable. Tick labels in secondary ink (#4A4A44, 8pt) — readable. Reference duration text labels (5 s, 1 min, 5 min, 20 min) at geom size=2.4 (~6.8pt) — small but visible. CP annotation "CP = 280 W" at size=2.6 (~7.4pt) — small but visible. Legend text in secondary ink — readable.
+      Data: Empirical MMP curve in brand green #009E73 (solid, linewidth=1.3) sweeps from ~1100W at 1s to ~280W at 5h. CP model in lavender #C475FD (dashed, linewidth=1.0) visible from 2min onward. Horizontal dotted CP asymptote in INK_SOFT. Vertical dashed reference lines in INK_MUTED. Scattered green points (size=1.8, alpha=0.75) visible at every 3rd sample. First series is brand green #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title in light cream text, clearly readable against dark background. Y-axis label in light ink. X-axis label in light ink. Tick labels in muted light color (INK_SOFT = #B8B7B0). Reference duration labels in muted light gray at top. "CP = 280 W" annotation in light italic text. All text clearly readable — no dark-on-dark failures detected.
-      Data: Data colors are identical to light render — MMP curve still #009E73 green (confirmed same hue), CP model still #4467A3 blue dashed. Vertical and horizontal guide lines adapt to slightly lighter muted tones. Legend has elevated dark box (#242420) with light text. Brand green #009E73 remains visible and well-contrasted on dark background.
-      Legibility verdict: PASS — all text readable against near-black background, chrome correctly flipped, data colors unchanged from light render.
+      Background: Warm near-black #1A1A17 — correct for dark theme, not pure black
+      Chrome: Title in off-white (#F0EFE8) — clearly readable against dark background. Axis labels in off-white (#F0EFE8) — readable. Tick labels in secondary dark-theme ink (#B8B7B0) — readable, no dark-on-dark failure observed. Reference duration labels visible in muted token. CP annotation visible. Legend box uses elevated dark background (#242420) with border — readable. No dark-on-dark text failures.
+      Data: Data colors are identical to light render — green #009E73 for MMP curve, lavender #C475FD for CP model line. Both series clearly visible against the dark background. Brand green #009E73 remains clearly legible on dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 28
@@ -65,56 +54,55 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 12pt, axis labels 10pt, ticks
-          8pt, legend 8pt, annotations 2.4-2.6mm); readable in both themes; title
-          ~65% width; balanced axis labels
+        comment: 'Title 12pt, axis labels 10pt, tick labels 8pt all readable in both
+          themes. Minor deduction: reference annotations at geom size=2.4 (~6.8pt)
+          and CP label at size=2.6 (~7.4pt) are near mobile-readability floor.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render; reference
-          labels at y=1120 clear of data
+        comment: No text-on-text or text-on-data overlaps. Reference labels at y=1120
+          clear of curves. CP annotation positioned to avoid model line.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: MMP solid green line and CP model dashed blue line both clearly visible;
-          data points at size 1.8 appropriate for the line-primary visualization
+        comment: 'Primary MMP curve (linewidth=1.3) and dashed CP model (linewidth=1.0)
+          clearly visible. Minor deduction: scatter markers (size=1.8, alpha=0.75,
+          every 3rd of 45 = 15 points) are subtle; slightly larger would improve depth.'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; redundant solid/dashed linetype encoding
-          provides additional distinction beyond color
+        comment: Green/lavender pair is CVD-safe. Solid/dashed linetype provides redundant
+          encoding beyond color alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 landscape (canvas gate passed); good canvas utilization;
-          balanced margins; legend integrated at bottom
+        comment: Canvas gate passed (3200x1800). No clipping. Well-proportioned margins
+          and legend at bottom.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Labels are descriptive but lack explicit units: ''Mean-Maximal Power''
-          should be ''Mean-Maximal Power (W)''; ''Duration (log scale)'' should include
-          ''(s)'''
+        passed: true
+        comment: Duration (log scale, s) and Mean-Maximal Power (W) are descriptive
+          with units.
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Backgrounds correct (#FAF8F1 light, #1A1A17 dark); MMP uses #009E73
-          correctly as position 1; CP Model uses #4467A3 (position 3) skipping position
-          2 (#C475FD lavender) without semantic justification'
+        passed: true
+        comment: 'MMP = #009E73 (position 1), CP Model = #C475FD (position 2). Backgrounds
+          #FAF8F1 / #1A1A17 correct. Chrome fully theme-adaptive.'
     design_excellence:
       score: 13
       max: 20
@@ -124,25 +112,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above-default polish: custom Imprint palette, reference duration
-          guides, italic CP annotation, linetype+linewidth differentiated legend.
-          Thoughtful multi-layer sports-science design but not yet publication-ready.'
+        comment: Custom Imprint palette with deliberate visual hierarchy (thicker
+          primary line, thinner dashed secondary). Multiple annotation layers add
+          domain-appropriate depth. Above default but not exemplary.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Panel border removed, L-shape axis retained, alpha-adjusted grid
-          (0.12). Minor grid lines (panel.grid.minor) still visible and add noise
-          in the flat lower region of the curve.
+        comment: Top/right spines removed. Grid alpha ~12% very subtle. No minor grid.
+          Legend with elevated background and border. L-frame axis lines added explicitly.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Reference duration guides and CP asymptote label clearly frame the
-          cycling performance narrative. Empirical vs. model differentiation guides
-          the viewer to the key insight (where CP model diverges from MMP).
+        comment: Curve shape communicates aerobic-to-neuromuscular decay. Reference
+          duration markers contextualize sprint/FTP reference points. CP asymptote
+          anchors the aerobic ceiling visually.
     spec_compliance:
       score: 15
       max: 15
@@ -152,32 +139,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct power-duration curve with logarithmic x-axis spanning 1s
-          to 5h
+        comment: Correct power duration curve on log-x axis with monotonically-decreasing
+          MMP.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: log x-axis with human-readable labels,
-          empirical MMP curve as primary, CP model overlay as dashed line, vertical
-          reference markers at 5s/1min/5min/20min with labels, CP asymptote with label'
+        comment: Empirical MMP curve, CP model dashed overlay, log x-axis, reference
+          duration markers at 5s/1min/5min/20min, CP asymptote all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Duration (seconds, log scale) on X; power (watts) on Y; both empirical
-          and model curves correctly mapped; monotonically non-increasing empirical
-          curve
+        comment: X=duration (log-scale, 1s-18000s), Y=power (W, 200-1150). Full range
+          shown, monotonicity enforced via cummin().
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'curve-power-duration · r · ggplot2 · anyplot.ai' matches required
-          format; legend labels 'Mean-Maximal Power' and 'Critical Power Model' with
-          correct linestyles via override.aes
+        comment: Title is exactly 'curve-power-duration · r · ggplot2 · anyplot.ai'.
+          Legend shows both series with matching line styles.
     data_quality:
       score: 15
       max: 15
@@ -187,27 +171,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full power-duration spectrum: sprint peak ~1100W at 1s, smooth decay,
-          CP asymptote ~280W at 5h; CP model overlay shows physiological model; reference
-          benchmarks cover all key training zones'
+        comment: Both key curves shown, reference duration guides, CP asymptote, data
+          points visible.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Well-trained cyclist parameters: CP=280W (realistic for trained
-          amateur), W''=20000J (typical anaerobic capacity), Pmax=1100W (plausible
-          sprint). Neutral sports science context.'
+        comment: Well-trained cyclist CP=280W, W'=20000J, Pmax=1100W is physically
+          plausible. Neutral, no controversial content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All values physiologically correct; power-law decay model appropriate;
-          CP model starting from 2 minutes reflects physical validity constraint;
-          noise and cummin monotonicity enforcement are methodologically sound
+        comment: 1s-5h range is standard for power-duration analysis. Power values
+          280-1100W realistic for target athlete profile.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -215,36 +196,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: theme tokens → data generation → plot construction
-          → save; no functions or classes'
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) at script top
+        comment: set.seed(42) present.
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: library(dplyr) and library(scales) imported but neither package's
-          functions are called in the code; data.frame() is base R, expansion() is
-          ggplot2-native, label functions use anonymous lambdas
+        passed: true
+        comment: Only ggplot2 and ragg imported; both used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, informative inline comments, appropriate complexity
-          for a multi-layer sports science visualization
+        comment: No fake interactivity. Appropriate complexity for a multi-layer chart.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: sprintf('plot-%s.png', THEME) saves both themes correctly; ragg::agg_png
-          device; modern ggplot2 API throughout
+        comment: sprintf('plot-%s.png', THEME) correct. Uses ragg::agg_png. Modern
+          linewidth= API used throughout.
     library_mastery:
       score: 7
       max: 10
@@ -254,28 +231,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper grammar-of-graphics layering, scale functions with custom
-          breaks/labels/expand, theme composition via theme_minimal+theme. guides(override.aes)
-          with linetype+linewidth is expert-level ggplot2.
+        comment: Correct grammar-of-graphics layering. scale_x_log10 with custom breaks/labels.
+          scale_color_manual + scale_linetype_manual in tandem. annotate() for text.
+          Proper expansion() for axis padding.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: guides(color=guide_legend(override.aes=list(linetype=..., linewidth=...)))
-          is distinctively ggplot2 for synchronized multi-aesthetic legends. scale_x_log10
-          with custom breaks and labels leverages ggplot2 scale system well.
-  verdict: REJECTED
+        comment: guides(override.aes=list(linetype,linewidth)) for synchronized legend
+          is ggplot2 power-user pattern. grDevices::adjustcolor for alpha-embedded
+          grid color (R-specific workaround for element_line alpha limitation) shows
+          library-level awareness.
+  verdict: APPROVED
 impl_tags:
   dependencies:
-  - dplyr
-  - scales
   - ragg
   techniques:
   - annotations
+  - layer-composition
   - manual-ticks
   - custom-legend
-  - layer-composition
   patterns:
   - data-generation
   dataprep: []
