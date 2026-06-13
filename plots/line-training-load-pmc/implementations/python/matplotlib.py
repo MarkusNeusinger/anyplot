@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-training-load-pmc: Training Load Performance Management Chart
 Library: matplotlib 3.11.0 | Python 3.13.13
 Quality: 89/100 | Created: 2026-06-13
@@ -98,6 +98,27 @@ ax1.bar(dates, tss, width=0.85, color=INK_MUTED, alpha=0.18, label="Daily TSS", 
 # CTL and ATL smooth lines on primary axis
 ax1.plot(dates, ctl, color=COLOR_CTL, linewidth=2.5, label="Fitness (CTL)", zorder=4)
 ax1.plot(dates, atl, color=COLOR_ATL, linewidth=2.0, linestyle="--", label="Fatigue (ATL)", zorder=4)
+
+# Event annotations — race blocks and taper onset
+taper_start_date = dates[n_days - 21]
+ax1.axvspan(taper_start_date, dates[-1], alpha=0.07, color=COLOR_TSB_POS, zorder=1)
+
+for event_date, label, ls in [
+    (dates[41], "Race 1", ":"),
+    (dates[119], "Race 2", ":"),
+    (taper_start_date, "Taper", "--"),
+]:
+    ax1.axvline(event_date, color=INK_MUTED, linewidth=0.7, linestyle=ls, alpha=0.7, zorder=5)
+    ax1.text(
+        event_date,
+        0.02,
+        label,
+        fontsize=7,
+        color=INK_MUTED,
+        ha="center",
+        va="bottom",
+        transform=ax1.get_xaxis_transform(),
+    )
 
 # Style — primary axis
 title = "line-training-load-pmc · python · matplotlib · anyplot.ai"
