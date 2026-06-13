@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 curve-power-duration: Mean-Maximal Power Duration Curve
-Library: altair | Python 3.13
-Quality: pending | Created: 2026-06-13
+Library: altair 6.2.1 | Python 3.13.13
+Quality: 84/100 | Created: 2026-06-13
 """
 
 import sys
