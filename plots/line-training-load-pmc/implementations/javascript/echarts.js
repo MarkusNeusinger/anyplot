@@ -4,6 +4,7 @@
 // Quality: 87/100 | Created: 2026-06-13
 
 const t = window.ANYPLOT_TOKENS;
+const isDark = window.ANYPLOT_THEME === "dark";
 
 // Deterministic data (xorshift RNG — no Math.random())
 let seed = 12345;
@@ -67,10 +68,22 @@ for (let i = 0; i < N; i++) {
 }
 
 // Two-tone TSB: positive clipped to [0, ∞) and negative clipped to (-∞, 0]
-// This avoids visualMap piecewise (which has coord-access issues with category axes)
 const tsbPos = tsbArr.map(v => Math.max(v, 0));
 const tsbNeg = tsbArr.map(v => Math.min(v, 0));
-const zeroLine = tsbArr.map(() => 0);
+
+// Phase boundary indices (matching data generation thresholds)
+const baseEnd = Math.floor(N * 0.35) - 1;      // day 62
+const intensityEnd = Math.floor(N * 0.65) - 1; // day 116
+const peakEnd = Math.floor(N * 0.82) - 1;      // day 147
+
+// Peak CTL date for annotation
+let peakCtlIdx = 0;
+for (let i = 1; i < ctlArr.length; i++) {
+  if (ctlArr[i] > ctlArr[peakCtlIdx]) peakCtlIdx = i;
+}
+
+// Very subtle phase background shading, theme-adaptive
+const phaseShade = isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)";
 
 const chart = echarts.init(document.getElementById("container"));
 
@@ -143,10 +156,25 @@ chart.setOption({
       data: ctlArr,
       smooth: 0.4,
       symbol: "none",
-      lineStyle: { width: 3.5, color: t.palette[2] }, // blue — long-term fitness
-      itemStyle: { color: t.palette[2] },
+      // palette[0] = brand green: first categorical series (hard rule) + fitness/progress reads as green
+      lineStyle: { width: 3.5, color: t.palette[0] },
+      itemStyle: { color: t.palette[0] },
       yAxisIndex: 0,
       z: 5,
+      // Annotate peak fitness moment for data storytelling
+      markLine: {
+        silent: true,
+        symbol: ["none", "none"],
+        lineStyle: { color: t.palette[0], opacity: 0.5, width: 1.5, type: "dashed" },
+        label: {
+          show: true,
+          formatter: "Peak",
+          position: "insideStart",
+          fontSize: 10,
+          color: t.inkSoft,
+        },
+        data: [{ xAxis: dates[peakCtlIdx] }],
+      },
     },
     {
       name: "Fatigue (ATL)",
@@ -154,13 +182,13 @@ chart.setOption({
       data: atlArr,
       smooth: 0.3,
       symbol: "none",
-      lineStyle: { width: 2.5, color: t.palette[1] }, // purple — acute fatigue
+      lineStyle: { width: 2.5, color: t.palette[1] }, // lavender — acute fatigue
       itemStyle: { color: t.palette[1] },
       yAxisIndex: 0,
       z: 4,
     },
     {
-      // Raw daily training load — muted vertical bars
+      // Raw daily training load — muted vertical bars; carries training phase markArea (z:1, below data)
       name: "Daily TSS",
       type: "bar",
       data: tssArr,
@@ -168,44 +196,56 @@ chart.setOption({
       barMaxWidth: 4,
       itemStyle: { color: t.inkSoft, opacity: 0.35 },
       z: 1,
+      // Subtle phase shading with italic labels for data storytelling
+      markArea: {
+        silent: true,
+        itemStyle: { color: phaseShade },
+        label: {
+          show: true,
+          position: "insideTop",
+          fontSize: 10,
+          color: t.inkSoft,
+          fontStyle: "italic",
+        },
+        data: [
+          [{ name: "Base", xAxis: dates[0] }, { xAxis: dates[baseEnd] }],
+          [{ name: "Intensity", xAxis: dates[baseEnd + 1] }, { xAxis: dates[intensityEnd] }],
+          [{ name: "Peak", xAxis: dates[intensityEnd + 1] }, { xAxis: dates[peakEnd] }],
+          [{ name: "Taper", xAxis: dates[peakEnd + 1] }, { xAxis: dates[N - 1] }],
+        ],
+      },
     },
 
     // --- Secondary axis: TSB two-tone area ---
     {
-      // TSB zero baseline
-      name: "_tsb_zero",
-      type: "line",
-      data: zeroLine,
-      symbol: "none",
-      lineStyle: { width: 1, color: t.inkSoft, opacity: 0.55 },
-      itemStyle: { color: t.inkSoft },
-      yAxisIndex: 1,
-      z: 2,
-      legendHoverLink: false,
-      tooltip: { show: false },
-    },
-    {
-      // Positive TSB (fresh / peak form) — brand green fill
+      // Positive TSB (fresh / peak form) — blue fill (spec: "positive form = fresh/blue")
       name: "Form (TSB)",
       type: "line",
       data: tsbPos,
       smooth: 0.4,
       symbol: "none",
       lineStyle: { width: 0 },
-      areaStyle: { color: t.palette[0], opacity: 0.45 }, // green
-      itemStyle: { color: t.palette[0] },
+      areaStyle: { color: t.palette[2], opacity: 0.45 }, // blue — fresh/positive form
+      itemStyle: { color: t.palette[2] },
       yAxisIndex: 1,
       z: 3,
+      // Idiomatic ECharts zero reference via markLine (avoids phantom series)
+      markLine: {
+        silent: true,
+        symbol: ["none", "none"],
+        lineStyle: { color: t.inkSoft, opacity: 0.55, width: 1 },
+        data: [{ yAxis: 0 }],
+      },
     },
     {
-      // Negative TSB (fatigued) — matte red fill; shares legend entry via same name trick
+      // Negative TSB (fatigued) — matte red fill
       name: "_tsb_neg",
       type: "line",
       data: tsbNeg,
       smooth: 0.4,
       symbol: "none",
       lineStyle: { width: 0 },
-      areaStyle: { color: "#AE3030", opacity: 0.40 }, // matte red
+      areaStyle: { color: "#AE3030", opacity: 0.40 }, // matte red — fatigued
       itemStyle: { color: "#AE3030" },
       yAxisIndex: 1,
       z: 3,
