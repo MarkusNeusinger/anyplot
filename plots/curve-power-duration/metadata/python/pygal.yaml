@@ -1,0 +1,263 @@
+library: pygal
+language: python
+specification_id: curve-power-duration
+created: '2026-06-13T22:05:10Z'
+updated: '2026-06-13T22:26:45Z'
+generated_by: claude-sonnet
+workflow_run: 27480217007
+issue: 8647
+language_version: 3.13.13
+library_version: 3.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/python/pygal/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - 'Excellent palette compliance: correct Imprint ordering across all four series,
+    both renders fully theme-adaptive'
+  - Creative use of allow_interruptions=True to implement reference markers — solves
+    a real pygal constraint elegantly
+  - Physiology-informed synthetic data using PCHIP monotone interpolation produces
+    a convincingly realistic curve
+  - Clean four-layer visual hierarchy (empirical curve → model → asymptote → reference
+    markers) effectively communicates the cycling analytics story
+  - 'Perfect code quality: KISS structure, deterministic, clean imports, no over-engineering'
+  weaknesses:
+  - CP asymptote dotted line (dasharray='5, 12', 12px gap) is too sparse — nearly
+    invisible on the dark render at the bottom of the y-range; widen the dash (e.g.
+    dasharray='8, 6') and consider increasing stroke width to 4 for the asymptote
+  - Reference duration annotation uses only legend text rather than positional labels
+    at the x-position — spec asks for markers + labels at those specific durations;
+    consider adding text annotations near the amber dots showing the duration value
+    (5s, 1min, 5min, 20min)
+  - Pygal's default four-sided box border limits visual refinement; consider whether
+    pygal exposes any border/frame controls to remove top and right spines
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface
+      Chrome: Title "curve-power-duration · python · pygal · anyplot.ai" in dark ink — fully readable. X-axis label "Duration" and Y-axis label "Power (W)" in dark ink — readable. Major tick labels (1s, 5s, 30s, 1min, 5min, 20min, 1h, 5h) on x-axis; numeric W values on y-axis — both readable. Legend at bottom with four entries in dark text — readable.
+      Data: Green (#009E73) empirical curve with dot markers descending from ~1100 W at 1s to ~274 W at 5h. Lavender (#C475FD) dashed CP model line starting at 30s. Blue (#4467A3) dotted CP asymptote near 280 W. Amber (#BD8233) isolated dots at top of chart marking 5s, 1min, 5min, 20min positions. First series is brand green #009E73 — correct.
+      Legibility verdict: PASS — all text and data elements readable against light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface
+      Chrome: Title in light (#F0EFE8) ink — fully readable. Axis labels "Duration" and "Power (W)" in light text — readable. Tick labels in light muted tone — readable. Legend text in light colors — readable. No dark-on-dark failures detected.
+      Data: Data colors are identical to the light render — green empirical curve, lavender dashed CP model, blue dotted CP asymptote, amber reference markers all retain exact hues. The blue (#4467A3) CP asymptote dotted line near 280 W is somewhat harder to distinguish on the dark background due to the sparse dasharray (5px dash, 12px gap), but still present.
+      Legibility verdict: PASS — all text elements readable against dark background; minor concern with the blue asymptote line visibility at small viewing sizes.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=66, labels=56, major_labels=44,
+          legend=44). Well-proportioned in both renders. No overflow.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements. Major-label-only x-axis prevents crowding.
+          Legend at bottom does not interfere with data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Green curve and reference markers very visible. CP asymptote dotted
+          line (dasharray=5,12) is too sparse — barely visible on dark render at 280W
+          level.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette. Redundant encoding via solid/dashed/dotted
+          line styles ensures distinguishability without relying on hue alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). Plot fills canvas well. Legend placement
+          balanced at bottom. No content cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Power (W)'' with units. X-axis: ''Duration'' with units
+          in tick labels. Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 brand green. Series 2-4 follow Imprint canonical
+          order (lavender, blue, ochre). Backgrounds #FAF8F1 light / #1A1A17 dark.
+          Both renders fully theme-adaptive.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured pygal chart with correct palette and intentional
+          line-style differentiation. Characteristic pygal SVG template appearance
+          is present — does not transcend library defaults significantly.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Y-only grid reduces clutter. Major-label-only x-axis. Pygal's default
+          full box frame is visible (four-sided border) — limits refinement options.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: green empirical curve draws eye first, lavender
+          CP model provides analytical overlay, blue asymptote marks aerobic ceiling,
+          amber dots highlight key physiological reference points. Effective four-layer
+          storytelling for cycling analytics context.'
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct chart type: monotonically decreasing power-duration curve
+          with CP model overlay.'
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Log-spaced categorical positions simulate log x-axis (acceptable
+          pygal workaround). Empirical curve, CP model, CP asymptote all present.
+          Reference duration markers via amber dots at y_max with legend label — creative
+          but not 'vertical markers with labels' as spec states.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: log-spaced duration 1s-5h. Y: power in W. CP model starts at
+          30s. Monotonically decreasing.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title format correct. Legend entries descriptive: Mean-Maximal Power,
+          CP Model (P = CP + W''/t), Critical Power: CP = 280 W, Reference Durations
+          (5 s · 1 min · 5 min · 20 min).'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: empirical curve, model fit, CP asymptote, reference
+          duration anchors. Full range 1s-5h. Monotone non-increasing behavior demonstrated.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Well-trained road cyclist scenario. Sports science framing. Neutral
+          domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: CP=280W and W'=20000J are textbook-plausible for trained amateur/semi-pro
+          cyclist. 1s peak at ~1100W realistic. PCHIP from physiology-informed reference
+          points produces realistic curve.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports → theme tokens → model constants → data generation
+          → chart setup → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: fixed reference points + PCHIP interpolation.
+          No randomness.'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used. sys/os necessary. noqa comments justified by path-fix
+          workaround.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and Pythonic. sys.path.pop(0) workaround clearly documented.
+          No over-engineering, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. No deprecated API calls.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good idiomatic usage: Style object for theme tokens, x_labels_major
+          + show_minor_x_labels=False, stroke_style with SVG dasharray, dots_size
+          control, allow_interruptions=True for reference markers.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Creative use of allow_interruptions=True with isolated None-bounded
+          values to simulate reference-duration point markers — distinctly pygal approach.
+          SVG stroke dasharray via stroke_style. Interactive HTML output alongside
+          PNG.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - interpolation
+  styling: []
