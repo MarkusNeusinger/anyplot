@@ -1,11 +1,13 @@
 // anyplot.ai
 // line-training-load-pmc: Training Load Performance Management Chart
 // Library: highcharts 12.6.0 | JavaScript 22.22.3
+// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
 // Quality: 88/100 | Created: 2026-06-13
 
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
+const isDark = window.ANYPLOT_THEME === "dark";
 
 // Seeded LCG for deterministic data (no seeded RNG in the browser)
 function makeLcg(seed) {
@@ -74,6 +76,18 @@ for (let i = 0; i < DAYS; i++) {
 const TITLE = "Training Load PMC · line-training-load-pmc · javascript · highcharts · anyplot.ai";
 const titleSize = Math.max(14, Math.round(22 * 67 / TITLE.length));
 
+// Dark bg absorbs semi-transparent color more; boost negative fill alpha on dark
+const negFillAlpha = isDark ? 0.35 : 0.22;
+
+// Phase date boundaries for x-axis plotBands
+const phase1End = START_MS + 8  * 7 * MS_PER_DAY;
+const phase2End = START_MS + 16 * 7 * MS_PER_DAY;
+const phase3End = START_MS + 22 * 7 * MS_PER_DAY;
+const END_MS    = START_MS + DAYS * MS_PER_DAY;
+
+const bandAlpha = isDark ? 0.07 : 0.05;
+const phaseLabel = { style: { color: t.inkSoft, fontSize: "11px", fontStyle: "italic" }, y: 18, align: "center" };
+
 Highcharts.chart("container", {
   chart: {
     backgroundColor: "transparent",
@@ -92,7 +106,14 @@ Highcharts.chart("container", {
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
     gridLineColor: t.grid,
-    labels: { style: { color: t.inkSoft, fontSize: "14px" } }
+    labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    // Phase bands guide unfamiliar viewers through the training periodization narrative
+    plotBands: [
+      { from: START_MS, to: phase1End, color: `rgba(68,103,163,${bandAlpha})`,  label: { ...phaseLabel, text: "Build 1" } },
+      { from: phase1End, to: phase2End, color: `rgba(68,103,163,${bandAlpha * 1.5})`, label: { ...phaseLabel, text: "Build 2" } },
+      { from: phase2End, to: phase3End, color: `rgba(174,48,48,${bandAlpha})`,  label: { ...phaseLabel, text: "Peak" } },
+      { from: phase3End, to: END_MS,    color: `rgba(0,158,115,${bandAlpha})`,  label: { ...phaseLabel, text: "Taper" } }
+    ]
   },
   yAxis: [
     {
@@ -114,13 +135,38 @@ Highcharts.chart("container", {
       opposite: true,
       gridLineColor: "transparent",
       labels: { style: { color: t.inkSoft, fontSize: "14px" } },
-      plotLines: [{
-        value: 0,
-        color: t.inkSoft,
-        width: 1,
-        dashStyle: "ShortDash",
-        zIndex: 3
-      }]
+      plotLines: [
+        {
+          value: 0,
+          color: t.inkSoft,
+          width: 1,
+          dashStyle: "ShortDash",
+          zIndex: 3
+        },
+        // CVD-redundant positional labels: provide text cues in addition to color
+        {
+          value: 20,
+          color: "transparent",
+          width: 0,
+          label: {
+            text: "Fresh ↑",
+            style: { color: t.palette[0], fontSize: "11px", fontStyle: "italic" },
+            align: "right",
+            x: -4
+          }
+        },
+        {
+          value: -22,
+          color: "transparent",
+          width: 0,
+          label: {
+            text: "Fatigued ↓",
+            style: { color: t.palette[4], fontSize: "11px", fontStyle: "italic" },
+            align: "right",
+            x: -4
+          }
+        }
+      ]
     }
   ],
   legend: {
@@ -159,10 +205,10 @@ Highcharts.chart("container", {
       data: tsbPoints,
       yAxis: 1,
       threshold: 0,
-      color: t.palette[0],               // green #009E73 — positive/fresh
+      color: t.palette[0],                                        // green #009E73 — positive/fresh
       fillColor: "rgba(0,158,115,0.22)",
-      negativeColor: t.palette[4],       // red #AE3030 — negative/fatigued
-      negativeFillColor: "rgba(174,48,48,0.22)",
+      negativeColor: t.palette[4],                               // red #AE3030 — negative/fatigued
+      negativeFillColor: `rgba(174,48,48,${negFillAlpha})`,      // boosted alpha on dark bg
       lineWidth: 1.5,
       zIndex: 2
     },
