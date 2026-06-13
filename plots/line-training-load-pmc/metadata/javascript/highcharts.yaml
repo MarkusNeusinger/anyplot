@@ -1,0 +1,286 @@
+library: highcharts
+language: javascript
+specification_id: line-training-load-pmc
+created: '2026-06-13T20:47:01Z'
+updated: '2026-06-13T21:10:05Z'
+generated_by: claude-sonnet
+workflow_run: 27478474546
+issue: 8646
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/javascript/highcharts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Phase-band narrative (Build 1 → Build 2 → Peak → Taper) encoded as background
+    plotBands with labels — exceptional PMC storytelling that guides unfamiliar viewers
+    through periodization
+  - 'Two-toned TSB area using Highcharts threshold: 0 + negativeColor / negativeFillColor
+    — semantic green (fresh) / red (fatigued) split is perfectly idiomatic and impossible
+    to replicate as cleanly in most other libraries'
+  - Dual y-axis design keeps TSB oscillation readable on its own scale while CTL/ATL/TSS
+    share the left axis — avoids the magnitude confusion common in naïve PMC implementations
+  - Deterministic seeded LCG for in-browser data generation ensures reproducible renders
+    across both themes
+  - CVD-redundant 'Fresh ↑' / 'Fatigued ↓' text labels on the TSB axis supplement
+    the green/red color signal for accessibility
+  - 'All spec features present: CTL spline, ATL spline, two-toned TSB area, daily
+    TSS columns, secondary y-axis, TSB=0 reference plotLine, four-series legend'
+  - Title length correctly scaled via Math.max(14, Math.round(22 * 67 / TITLE.length))
+    — text fits without overflow
+  weaknesses:
+  - Negative TSB fill (rgba(174,48,48,0.35)) on the dark background (#1A1A17) has
+    insufficient contrast — the fatigued region appears nearly invisible in the dark
+    render; increase negFillAlpha to at least 0.5 on dark, or use a brighter red stop
+    (e.g. rgba(200,60,60,0.45))
+  - Annotation labels ('Fresh ↑', 'Fatigued ↓') and phase-band labels are 11px italic
+    — too small to read comfortably when the chart is scaled to 800px or 400px thumbnail
+    sizes; raise to 12-13px minimum
+  - 'Highcharts default axis spines are retained — explicitly setting xAxis.lineWidth:
+    0 and yAxis.lineWidth: 0 would remove the structural borders and clean up the
+    visual chrome in line with the L-frame convention'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correctly theme-adaptive, not pure white.
+      Chrome: Title "Training Load PMC · line-training-load-pmc · javascript · highcharts · anyplot.ai" in dark bold text, font scaled down from 22px default to approximately 18px for the longer string — fully readable. Left y-axis label "Training Load (TSS units)" at 16px and right y-axis label "Form / TSB" at 16px are both clearly legible. X-axis date tick labels (Dec 30 – Jun 30) and y-axis numeric tick labels at 14px are all sharp. Four-item legend at the bottom (Daily TSS, Form TSB, Fitness CTL, Fatigue ATL) is readable. Phase-band labels ("Build 1", "Build 2", "Peak", "Taper") at 11px italic are small but legible. "Fresh ↑" and "Fatigued ↓" directional labels at 11px are readable within the right margin.
+      Data: Daily TSS shown as ochre (#BD8233) columns at varying heights (0–250 TSS range). Form (TSB) as a dual-toned area — green (#009E73) above zero (strongly visible in the Taper phase) and red (#AE3030) below zero (semi-transparent, clearly distinguishable on cream background). Fitness (CTL) as a smooth blue (#4467A3) spline trending upward across the 26-week block. Fatigue (ATL) as a spikier lavender (#C475FD) spline. Subtle phase-band shading divides the timeline into four training phases. Zero reference line on the TSB axis (right side) shown as a dashed line.
+      Legibility verdict: PASS — all primary text (title, axes, ticks, legend) clearly readable; annotation labels (11px) are secondary and acceptable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correctly theme-adaptive, not pure black.
+      Chrome: Title in light off-white text — clearly readable against the dark surface. Left and right y-axis labels in light gray (#B8B7B0 equivalent, from t.inkSoft on dark) — readable. X-axis date tick labels and y-axis numeric tick labels in light gray — all readable. Legend at bottom with light-gray text — readable. Phase-band labels and directional labels are in light/soft colors — readable. No dark-on-dark text failure detected.
+      Data: Imprint palette data colors are identical to the light render — Daily TSS bars remain ochre, CTL remains blue, ATL remains lavender, TSB positive area remains green. The negative TSB fill (rgba(174,48,48,0.35) on #1A1A17) is notably less prominent than in the light render — the red fill area is visible but significantly subdued against the dark background; the red boundary line (negativeColor) is still discernible. The green TSB positive area during the Taper phase is very prominent and clearly visible. Phase bands have slightly increased alpha on dark (0.07/0.105 vs 0.05/0.075) and are visible.
+      Legibility verdict: PASS with one note — all chrome text is readable (no dark-on-dark failure); however, the negative TSB filled region (fatigued area) has reduced visual prominence on the dark background due to low fill opacity, which slightly reduces the informativeness of the dark render compared to the light render.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set throughout (title scaled, axes 16px, ticks
+          14px, legend 14px). All primary text readable in both themes. Minor deduction
+          for 11px annotation/phase labels that are small at thumbnail sizes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps detected. Phase band labels positioned at top of
+          bands (y:18) well clear of data. Legend at bottom clearly separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: CTL (lineWidth:3) and ATL (lineWidth:2.5) lines excellent. TSS columns
+          (maxPointWidth:4) small but individually readable. Negative TSB fill rgba(174,48,48,0.35)
+          on dark background has low contrast — fatigued region visually subdued in
+          dark render.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette used. Green/red TSB split supplemented by 'Fresh
+          ↑' / 'Fatigued ↓' text labels — CVD-redundant encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Landscape format fills well. marginRight:90 accommodates
+          right y-axis and annotation labels. Balanced whitespace.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Training Load (TSS units)'' with units. ''Form / TSB'' descriptive.
+          Title follows required format with optional descriptive prefix.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'colors: t.palette sets Imprint palette. Semantic color exception
+          properly applied: green (#009E73) = positive form (fresh), red (#AE3030)
+          = negative form (fatigued), blue (#4467A3) = fitness/CTL, lavender (#C475FD)
+          = fatigue/ATL, ochre (#BD8233) = raw TSS input. Background transparent (shows
+          theme pageBg). Both renders theme-correct.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Clearly above library defaults. Phase bands with semantic colors,
+          dual-colored TSB area, dual y-axis, directional annotation labels, scaled
+          title — all show intentional design thought. Strong design category.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Right y-axis gridLineColor:transparent avoids double-grid. t.grid
+          used correctly for subtle gridlines. backgroundColor:transparent with theme
+          pageBg. Animation disabled. Axis spines not explicitly removed (Highcharts
+          default retained).
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Phase bands + labels create a clear periodization narrative. Two-toned
+          TSB area immediately communicates fresh vs fatigued status. 'Fresh ↑' /
+          'Fatigued ↓' directional guides. CTL rising trend visible against ATL spikes.
+          Strong but information-dense — viewer needs a moment to parse.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct PMC chart: CTL and ATL as spline lines, TSB as dual-toned
+          area, TSS as columns.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: CTL line, ATL line, two-toned TSB area (green/red),
+          TSS bars, secondary y-axis for TSB, TSB=0 reference plotLine, legend, shared
+          date x-axis.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date on x-axis. CTL/ATL/TSS on left y-axis (TSS units). TSB on right
+          y-axis (Form/TSB). 182-day block within spec's 90-365 range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''Training Load PMC · line-training-load-pmc · javascript
+          · highcharts · anyplot.ai''. Legend: ''Daily TSS'', ''Form (TSB)'', ''Fitness
+          (CTL)'', ''Fatigue (ATL)'' — all descriptive and accurate.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows full PMC lifecycle: build phases with negative TSB (fatigue
+          accumulation), peak phase, taper with positive TSB (freshness). CTL/ATL
+          EWMA lag difference clearly visible. Rest days, easy days, long/hard days
+          create realistic weekly structure.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 26-week (182-day) endurance athlete training block with standard
+          Build 1 → Build 2 → Peak → Taper periodization. TSS values realistic (base
+          65-115 depending on phase). EWMA parameters correct (7-day ATL, 42-day CTL).
+          Neutral, sports-science context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: CTL range 30-100+ (realistic for trained endurance athlete). ATL
+          spikes higher than CTL as expected. TSB oscillates -40 to +40 (realistic
+          form range). EWMA formulas correctly implemented with previous-day TSB computation.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear structure: LCG setup → data generation → EWMA calculation
+          → chart config. makeLcg and phaseBase helper functions justified (browser
+          has no seeded RNG; phase logic is non-trivial).'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42) ensures deterministic data generation across
+          renders.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed. All globals (window.ANYPLOT_TOKENS, window.ANYPLOT_THEME,
+          window.Highcharts) are harness-provided.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-structured JavaScript. Appropriate complexity for a multi-series
+          PMC chart. No over-engineering or fake UI elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Highcharts.chart('container', ...) with animation:false, credits:false,
+          backgroundColor:transparent. Harness handles PNG/HTML output. Current API
+          throughout.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Idiomatic use of plotBands (phase shading), plotLines (zero reference
+          + annotation labels), dual yAxis, series types (spline, area, column). threshold:0
+          + negativeColor/negativeFillColor is the correct Highcharts pattern. Minor:
+          uses invisible plotLines as label anchors (color:transparent, width:0) which
+          is a creative workaround rather than first-class API.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: threshold:0 with negativeColor/negativeFillColor for automatic above/below-zero
+          color split is a distinctively Highcharts capability. plotBands with per-band
+          labels for phase annotation is also Highcharts-idiomatic. These combinations
+          are hard to replicate with equivalent elegance in other libraries.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
