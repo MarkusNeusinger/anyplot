@@ -115,7 +115,7 @@ const tsbLayer = g.append("g").attr("clip-path", "url(#clip)");
 tsbLayer.append("path").datum(data)
   .attr("d", areaPos)
   .attr("fill", t.palette[2])   // #4467A3 blue = fresh
-  .attr("opacity", 0.18);
+  .attr("opacity", 0.32);
 tsbLayer.append("path").datum(data)
   .attr("d", areaNeg)
   .attr("fill", t.palette[4])   // #AE3030 red = fatigued
@@ -150,18 +150,18 @@ const dateFmt = d3.timeFormat("%b '%y");
 
 const xAx = g.append("g").attr("transform", `translate(0,${ih})`)
   .call(d3.axisBottom(x).ticks(d3.timeMonth.every(1)).tickFormat(dateFmt));
-xAx.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px");
+xAx.selectAll("text").attr("fill", t.inkSoft).style("font-size", "12px");
 xAx.selectAll("line").attr("stroke", t.grid);
 xAx.select(".domain").attr("stroke", t.inkSoft);
 
 const yAxL = g.append("g").call(d3.axisLeft(yLeft).ticks(6));
-yAxL.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px");
+yAxL.selectAll("text").attr("fill", t.inkSoft).style("font-size", "12px");
 yAxL.selectAll("line").attr("stroke", t.grid);
 yAxL.select(".domain").attr("stroke", t.inkSoft);
 
 const yAxR = g.append("g").attr("transform", `translate(${iw},0)`)
   .call(d3.axisRight(yRight).ticks(6));
-yAxR.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px");
+yAxR.selectAll("text").attr("fill", t.inkSoft).style("font-size", "12px");
 yAxR.selectAll("line").attr("stroke", t.grid);
 yAxR.select(".domain").attr("stroke", t.inkSoft);
 
