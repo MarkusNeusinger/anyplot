@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-training-load-pmc: Training Load Performance Management Chart
 // Library: echarts 5.5.1 | JavaScript 22.22.3
-// Quality: 87/100 | Created: 2026-06-13
+// Quality: 91/100 | Created: 2026-06-13
 
 const t = window.ANYPLOT_TOKENS;
 const isDark = window.ANYPLOT_THEME === "dark";
