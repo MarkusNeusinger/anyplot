@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-training-load-pmc: Training Load Performance Management Chart
 Library: bokeh 3.9.1 | Python 3.13.13
 Quality: 88/100 | Created: 2026-06-13
@@ -19,7 +19,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, LinearAxis, Range1d
+from bokeh.models import BoxAnnotation, ColumnDataSource, Label, LinearAxis, Range1d
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -116,7 +116,7 @@ tsb_axis = LinearAxis(
     axis_label_text_color=INK,
     major_label_text_font_size="34pt",
     major_label_text_color=INK_SOFT,
-    axis_line_color=INK_SOFT,
+    axis_line_color=None,
     major_tick_line_color=INK_SOFT,
     minor_tick_line_color=None,
 )
@@ -175,6 +175,26 @@ p.line(x="dates", y="ctl", source=source, line_color=CTL_COLOR, line_width=5.0, 
 # ATL line — fatigue / acute load
 p.line(x="dates", y="atl", source=source, line_color=ATL_COLOR, line_width=5.0, legend_label="Fatigue (ATL)")
 
+# Taper region annotation — final 21 days where load was progressively reduced
+# Draws attention to the race-preparation narrative (DE-03 storytelling)
+taper_start_ms = float(dates[n_days - 21].value) / 1_000_000  # ns → ms (bokeh datetime axis unit)
+taper_end_ms = float(dates[-1].value) / 1_000_000 + 86_400_000  # include last day
+taper_box = BoxAnnotation(
+    left=taper_start_ms, right=taper_end_ms, fill_color=INK_MUTED, fill_alpha=0.07, line_color=None
+)
+p.add_layout(taper_box)
+taper_label = Label(
+    x=taper_start_ms,
+    y=152,
+    text="  Taper",
+    text_color=INK_SOFT,
+    text_font_size="28pt",
+    text_alpha=0.65,
+    x_units="data",
+    y_units="data",
+)
+p.add_layout(taper_label)
+
 # Theme chrome
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
@@ -210,9 +230,9 @@ p.ygrid.grid_line_alpha = 0.12
 # Legend
 p.legend.location = "top_left"
 p.legend.background_fill_color = ELEVATED_BG
-p.legend.border_line_color = INK_SOFT
+p.legend.border_line_color = None
 p.legend.label_text_color = INK_SOFT
-p.legend.label_text_font_size = "30pt"
+p.legend.label_text_font_size = "34pt"
 p.legend.glyph_width = 50
 p.legend.glyph_height = 50
 p.legend.spacing = 10
