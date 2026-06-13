@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: curve-power-duration
 created: '2026-06-13T21:52:22Z'
-updated: '2026-06-13T21:57:12Z'
+updated: '2026-06-13T22:04:32Z'
 generated_by: claude-sonnet
 workflow_run: 27479933737
 issue: 8647
@@ -12,37 +12,35 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-pow
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - 'Full spec compliance — all required elements present: log-x axis, empirical MMP
-    curve, CP model overlay, four reference duration markers, CP asymptote with direct
-    annotation'
-  - 'Perfect Imprint palette usage: brand green for primary series, Imprint blue for
-    CP model, theme-adaptive chrome tokens throughout both renders'
-  - 'Clean canvas control: figsize=(8,4.5) dpi=400 produces exact 3200×1800 with no
-    bbox_inches drift'
-  - Both themes fully pass readability — dark render correctly flips all chrome while
-    preserving data colors
-  - Direct CP asymptote annotation on the chart (not in legend) keeps legend clean
+  - Complete spec implementation with all required features (log axis, empirical MMP
+    curve, CP model overlay, reference markers, CP asymptote)
+  - Correct Imprint palette usage with justified semantic exception (blue for theoretical
+    model fit) and perfect theme-adaptive chrome in both renders
+  - Physiologically realistic synthetic data with accurate CP/W-prime/P_max values
+    and correct monotonic enforcement
+  - Clean KISS code structure with explicit font sizing throughout
+  - Effective line hierarchy (solid/dashed/dotted) encodes the three curve types semantically
   weaknesses:
-  - CP model dashed line (linewidth=2.0) visually merges with the empirical at durations
-    >1h, making the model nearly invisible on the right side; increase model linewidth
-    to 2.5
-  - Reference duration text labels at fontsize=7 and CP annotation at fontsize=7.5
-    are at minimum readable threshold — raise to 8pt for mobile legibility
+  - CP model line and empirical MMP curve become visually indistinguishable at long
+    durations (1h-5h) where both converge near 280 W; consider slightly increasing
+    dash spacing or a subtle opacity difference to maintain separability at convergence
+  - Reference duration marker text (fontsize=8) is at the minimum readable size; mobile
+    scaling to ~400 px may make these labels borderline — increase to 9pt
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct Imprint light surface
-      Chrome: Title "curve-power-duration · python · matplotlib · anyplot.ai" in dark #1A1A17; x-label "Effort Duration" and y-label "Power Output (W)" in dark INK; tick labels (1s, 5s, 30s, 1min, 5min, 20min, 1h, 3h, 5h) in INK_SOFT; reference markers and CP annotation in INK_MUTED/INK_SOFT — all readable
-      Data: Primary empirical MMP curve in brand green #009E73 (solid, linewidth=2.8) starts near 1100W at 1s and decays to ~280W at 5h; CP model overlay in Imprint blue #4467A3 (dashed, linewidth=2.0) from 1min onward; CP asymptote dotted line with "CP = 280 W" annotation; four vertical dotted reference markers at 5s sprint, 1min, 5min, 20min FTP
-      Legibility verdict: PASS — all text readable against light background
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "curve-power-duration · python · matplotlib · anyplot.ai" in dark ink, spans ~75% of width, clearly readable. Y-axis label "Power Output (W)" and X-axis label "Effort Duration" both in dark INK (#1A1A17), readable. Tick labels in INK_SOFT (#4A4A44), all readable. Reference duration labels ("5 s sprint", "1 min", "5 min", "20 min (FTP)") in INK_SOFT at 8pt — small but visible. CP = 280 W annotation label readable at the right edge. Legend frame uses ELEVATED_BG (#FFFDF6) with INK_SOFT edge and text.
+      Data: Primary empirical MMP curve in brand green (#009E73), solid line, 1100 W at 1s decaying to ~270 W at 5h. CP model in Imprint blue (#4467A3), dashed, starting at 1min. CP horizontal asymptote dotted gray line at 280 W. Four vertical dotted reference markers.
+      Legibility verdict: PASS — all text readable against warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct Imprint dark surface
-      Chrome: Title and axis labels in #F0EFE8 (INK dark); tick labels in #B8B7B0 (INK_SOFT dark); legend text in INK_SOFT; reference labels in INK_SOFT — all clearly readable, no dark-on-dark failures
-      Data: Colors are identical to light render — brand green #009E73 empirical curve, Imprint blue #4467A3 dashed model line; grid and reference lines remain subtle and visible
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures observed
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title in light off-white (#F0EFE8), clearly readable. Axis labels and tick labels in light gray (INK_SOFT = #B8B7B0), all readable against dark background. Reference duration labels readable. CP annotation readable. Legend frame uses dark elevated background (#242420) — appropriately raised from page. No dark-on-dark failures detected; all text elements correctly flip to light-on-dark.
+      Data: Colors identical to light render — brand green (#009E73) empirical curve and Imprint blue (#4467A3) CP model line are unchanged. CP asymptote dotted line visible in muted gray. Data presentation identical.
+      Legibility verdict: PASS — all text readable against near-black background; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -53,48 +51,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All fonts explicitly set with theme-adaptive tokens; reference labels
-          at 7pt and CP annotation at 7.5pt are at the small end for mobile readability
+        comment: All font sizes explicitly set; well-proportioned throughout; reference
+          marker labels at 8pt are borderline at mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements; legend in lower left avoids
-          data
+        comment: No text or element overlaps; reference labels well-spaced on log
+          axis
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Empirical line clearly visible; CP model dashed line converges with
-          empirical at >1h durations making model hard to distinguish at right side
+        comment: Primary green curve prominent; CP model line merges visually with
+          empirical curve at long-duration convergence (1h-5h)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/blue pair is CVD-safe and clearly distinct
+        comment: Green vs blue is CVD-safe; dotted gray asymptote is structurally
+          distinct
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 confirmed, subplots_adjust well-tuned, no overflow or clipping
+        comment: Good margins via subplots_adjust; canvas fills well; no content cut
+          off; legend well-positioned
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Effort Duration (x), Power Output W (y) with units, required title
-          format
+        comment: Power Output (W) has explicit units; Effort Duration descriptive
+          with time units in tick labels; correct mandatory title
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second Imprint blue #4467A3 (semantic: model
-          fit), backgrounds correct in both themes'
+        comment: 'First series #009E73 brand green; CP model uses Imprint position
+          3 (#4467A3) as justified semantic exception (blue=theoretical fit); backgrounds
+          and chrome theme-correct in both renders'
     design_excellence:
       score: 13
       max: 20
@@ -104,22 +105,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clean sports-science style, CP asymptote annotated directly not in
-          legend, purposeful palette choices
+        comment: Professional sports-analytics look with intentional line hierarchy
+          (solid/dashed/dotted); above well-configured default; not FiveThirtyEight-level
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, y-grid only at alpha=0.12, legend frame
-          uses ELEVATED_BG, reference lines at alpha=0.35
+        comment: Top and right spines removed; y-axis-only grid at alpha=0.12; styled
+          legend frame; generous margins; clear refinement above defaults
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Reference duration markers guide viewer to key physiological landmarks;
-          CP asymptote shows theoretical limit; curve shape tells power-duration narrative
+        comment: Visual hierarchy guides the reader; reference markers at physiologically
+          meaningful durations contextualize the curve; CP asymptote anchors aerobic
+          baseline
     spec_compliance:
       score: 15
       max: 15
@@ -129,28 +131,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct power-duration curve with log-x axis
+        comment: Correct power duration curve with log x-axis, monotonically non-increasing
+          empirical curve and CP model overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Empirical MMP curve, CP model overlay (dashed), four reference duration
-          markers, CP horizontal asymptote with label
+        comment: Log-scale time axis with human-readable labels; empirical MMP primary
+          series; CP model dashed overlay; vertical markers at 5s/1min/5min/20min;
+          CP asymptote with label
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: log-spaced duration in seconds; Y: power in watts; full 1s-5h
-          range'
+        comment: Duration in seconds on log x-axis; power in W on y-axis; both series
+          visible across full domain
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches required format; legend has Mean-Maximal Power
-          and CP Model (P = CP + W prime/t)
+        comment: Title exactly matches required format; legend labels descriptive
+          (Mean-Maximal Power / CP Model P=CP+W/t)
     data_quality:
       score: 15
       max: 15
@@ -160,22 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Empirical MMP, CP model, CP asymptote, reference markers, log x-axis,
-          monotonically decreasing curve all present
+        comment: 'Shows all aspects: neuromuscular peak, aerobic-anaerobic transition,
+          CP asymptote, model overlay, reference markers'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Well-trained cyclist (CP=280W, W prime=20kJ, Pmax=1100W) is physiologically
-          realistic and neutral
+        comment: Synthetic well-trained cyclist with physiologically plausible values;
+          neutral sports science context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1s-18000s duration range, 150-1270W y-axis; values match spec example
-          exactly
+        comment: CP=280W, W-prime=20000J, P_max=1100W — all physiologically realistic
+          for a well-trained cyclist
     code_quality:
       score: 10
       max: 10
@@ -185,51 +189,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: 'Linear flat structure: imports, theme tokens, data, plot, style,
+          legend, save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set before any stochastic operations
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, matplotlib.ticker, numpy — all used
+        comment: os, matplotlib.pyplot, matplotlib.ticker, numpy — all four used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Readable, well-structured; monotonic enforcement loop is clean; no
-          fake UI
+        comment: Pythonic and concise; monotonic enforcement loop correct and minimal;
+          no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plt.savefig f'plot-{THEME}.png' dpi=400 facecolor=PAGE_BG with no
-          bbox_inches
+        comment: Saves as plot-THEME.png; bbox_inches omitted; figsize x dpi produces
+          exact 3200x1800 canvas
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Uses Axes methods throughout; NullLocator for log minor ticks; fig.subplots_adjust
-          instead of tight_layout; no bbox_inches per library guide
+        comment: Consistently uses Axes methods; correct NullLocator for minor log
+          ticks; proper matplotlib patterns throughout
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Log-scale with custom human-readable tick labels via set_xticks/set_xticklabels;
-          NullLocator to suppress log minor ticks; axhline/axvline for reference elements
+        comment: Uses matplotlib log scale tick customization (set_xticks+set_xticklabels+NullLocator),
+          axhline/axvline convenience methods; good but not uniquely matplotlib-only
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -238,7 +243,6 @@ impl_tags:
   - annotations
   patterns:
   - data-generation
-  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
