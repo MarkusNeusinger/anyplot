@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-training-load-pmc: Training Load Performance Management Chart
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 84/100 | Created: 2026-06-13
@@ -80,6 +80,9 @@ df = pd.DataFrame(
         "tsb_pos": np.maximum(tsb, 0.0),
         "tsb_neg": np.minimum(tsb, 0.0),
         "zero": np.zeros(n_days),
+        "tsb_pos_label": "Positive Form (TSB)",
+        "tsb_neg_label": "Negative Form (TSB)",
+        "tss_label": "Daily TSS",
     }
 )
 
@@ -102,6 +105,7 @@ base_theme = theme(
     axis_text=element_text(color=INK_SOFT, size=10),
     axis_line=element_line(color=INK_SOFT),
     axis_ticks=element_blank(),
+    panel_border=element_blank(),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     legend_text=element_text(color=INK_SOFT, size=10),
     legend_title=element_blank(),
@@ -110,11 +114,12 @@ base_theme = theme(
 # Main panel: TSB ribbon (two-toned) + CTL/ATL lines + zero reference
 plot_main = (
     ggplot()
-    + geom_ribbon(data=df, mapping=aes(x="date", ymin="zero", ymax="tsb_pos"), fill=COLOR_TSB_POS, alpha=0.22)
-    + geom_ribbon(data=df, mapping=aes(x="date", ymin="tsb_neg", ymax="zero"), fill=COLOR_TSB_NEG, alpha=0.22)
+    + geom_ribbon(data=df, mapping=aes(x="date", ymin="zero", ymax="tsb_pos", fill="tsb_pos_label"), alpha=0.32)
+    + geom_ribbon(data=df, mapping=aes(x="date", ymin="tsb_neg", ymax="zero", fill="tsb_neg_label"), alpha=0.32)
     + geom_hline(yintercept=0, color=INK_SOFT, size=0.5, linetype="dashed")
     + geom_line(data=df_lines, mapping=aes(x="date", y="value", color="label"), size=1.5)
     + scale_color_manual(values={"Fitness (CTL)": COLOR_CTL, "Fatigue (ATL)": COLOR_ATL})
+    + scale_fill_manual(values={"Positive Form (TSB)": COLOR_TSB_POS, "Negative Form (TSB)": COLOR_TSB_NEG})
     + scale_x_datetime(format="%b")
     + labs(title=title_str, x="", y="Training Load (CTL / ATL / TSB)")
     + base_theme
@@ -122,18 +127,19 @@ plot_main = (
         plot_title=element_text(color=INK, size=16),
         axis_text_x=element_blank(),
         axis_ticks_x=element_blank(),
-        legend_position=[0.84, 0.87],
+        legend_position=[0.82, 0.85],
     )
 )
 
 # TSS panel: daily training stress scores as bars
 plot_tss = (
     ggplot(df, aes(x="date", y="tss"))
-    + geom_bar(stat="identity", fill=INK_MUTED, alpha=0.65)
+    + geom_bar(stat="identity", mapping=aes(fill="tss_label"), alpha=0.65)
+    + scale_fill_manual(values={"Daily TSS": INK_MUTED})
     + scale_x_datetime(format="%b")
     + labs(x="Month (2024)", y="TSS")
     + base_theme
-    + theme(plot_title=element_blank(), legend_position="none")
+    + theme(plot_title=element_blank(), legend_position=[0.88, 0.82])
 )
 
 # Combine panels — main 75%, TSS 25%
