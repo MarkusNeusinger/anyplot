@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-training-load-pmc: Training Load Performance Management Chart
 Library: altair 6.2.1 | Python 3.13.13
 Quality: 89/100 | Created: 2026-06-13
@@ -89,12 +89,12 @@ title_fontsize = max(round(16 * 67 / n_chars), 11)
 
 tsb_pos_area = (
     alt.Chart(df_tsb_pos)
-    .mark_area(color=COLOR_TSB_POS, opacity=0.30, line=False)
+    .mark_area(color=COLOR_TSB_POS, opacity=0.42, line=False)
     .encode(x=alt.X("date:T", axis=None), y=alt.Y("tsb_pos:Q", title="Load / Form"), y2=alt.Y2(datum=0))
 )
 tsb_neg_area = (
     alt.Chart(df_tsb_neg)
-    .mark_area(color=COLOR_TSB_NEG, opacity=0.30, line=False)
+    .mark_area(color=COLOR_TSB_NEG, opacity=0.42, line=False)
     .encode(x=alt.X("date:T", axis=None), y=alt.Y("tsb_neg:Q"), y2=alt.Y2(datum=0))
 )
 tsb_zero = (
@@ -106,6 +106,15 @@ tsb_zero = (
 # Melt CTL/ATL into long form for a clean colour-encoded legend
 df_lines = df_main[["date", "ctl", "atl"]].melt(id_vars="date", var_name="metric", value_name="value")
 df_lines["metric"] = df_lines["metric"].map({"ctl": "Fitness (CTL)", "atl": "Fatigue (ATL)"})
+
+# Add dummy entries so TSB and TSS appear in the shared legend (NaN = no visible line rendered)
+df_legend_extras = pd.DataFrame(
+    {"date": [dates[0], dates[0]], "metric": ["Form (TSB)", "Daily TSS"], "value": [np.nan, np.nan]}
+)
+df_lines = pd.concat([df_lines, df_legend_extras], ignore_index=True)
+
+_LEGEND_DOMAIN = ["Fitness (CTL)", "Fatigue (ATL)", "Form (TSB)", "Daily TSS"]
+_LEGEND_COLORS = [COLOR_CTL, COLOR_ATL, COLOR_TSB_POS, COLOR_TSS]
 
 metric_lines = (
     alt.Chart(df_lines)
@@ -119,8 +128,10 @@ metric_lines = (
         ),
         color=alt.Color(
             "metric:N",
-            scale=alt.Scale(domain=["Fitness (CTL)", "Fatigue (ATL)"], range=[COLOR_CTL, COLOR_ATL]),
-            legend=alt.Legend(title="Metrics", orient="right", symbolStrokeWidth=3, labelFontSize=10, titleFontSize=10),
+            scale=alt.Scale(domain=_LEGEND_DOMAIN, range=_LEGEND_COLORS),
+            legend=alt.Legend(
+                title="PMC Components", orient="right", symbolStrokeWidth=3, labelFontSize=10, titleFontSize=10
+            ),
         ),
         strokeDash=alt.condition(alt.datum.metric == "Fatigue (ATL)", alt.value([6, 3]), alt.value([1, 0])),
         tooltip=[
