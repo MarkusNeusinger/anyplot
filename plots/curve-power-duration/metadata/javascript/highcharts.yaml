@@ -1,0 +1,238 @@
+library: highcharts
+language: javascript
+specification_id: curve-power-duration
+created: '2026-06-13T22:04:05Z'
+updated: '2026-06-13T22:36:42Z'
+generated_by: claude-sonnet
+workflow_run: 27480263150
+issue: 8647
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Clean logarithmic x-axis with custom human-readable tick formatter (1s, 5s, 1min,
+    etc.)
+  - 'All spec features implemented: empirical MMP curve, dashed CP model overlay,
+    vertical reference plotLines at 5s/1min/5min/20min, horizontal CP asymptote'
+  - 'Correct Imprint palette — brand green #009E73 primary series, lavender #C475FD
+    dashed model'
+  - 'Redundant encoding: solid vs dashed linestyle for CVD accessibility'
+  - Deterministic LCG with seed=42 for reproducible noise
+  - Perfect theme adaptation in both light and dark renders — no dark-on-dark failures
+  weaknesses:
+  - Plotline labels use 11px font (below the 14px guideline) — increase to 13px for
+    better legibility at canvas size
+  - Markers at radius 3 are subtle; could be radius 4–5 for slightly more prominence
+    on the 50-point empirical series
+  - 'LM-02: yAxis zones (e.g. shading the region above CP in a muted color) would
+    leverage a Highcharts-specific feature not easily replicated elsewhere'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "curve-power-duration · javascript · highcharts · anyplot.ai" in dark ink, clearly readable. Y-axis "Power (W)" and X-axis "Duration (log scale)" labels in inkSoft, readable. Tick labels at 14px visible. Plotline labels ("5 s", "1 min", "5 min", "20 min") at 11px visible but slightly small. "CP = 280 W" label at right side of horizontal dotted line, readable.
+      Data: Two series. Primary: solid green (#009E73) Mean-Maximal Power curve, monotonically decreasing from ~1150W at 1s to ~280W at 5h. Secondary: dashed lavender (#C475FD) CP model (P = CP + W'/t), entering chart area from top around 30s mark and converging to 280W asymptote. Horizontal dotted line at CP=280W. Vertical dashed reference lines at 5s, 1min, 5min, 20min.
+      Legibility verdict: PASS — all text readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title, axis labels, tick labels all render in light text against dark background — no dark-on-dark failures. "CP = 280 W" label clearly visible in light inkSoft color. Legend box uses elevatedBg (#242420).
+      Data: Data colors identical to light render — green #009E73 solid line and lavender #C475FD dashed line unchanged. Only chrome (background, text, grid, legend box) flips.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set. Plotline labels at 11px slightly below
+          14px guideline but readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap. Series converge gracefully at CP level.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Lines well-visible. Markers at radius 3 are subtle for 50-point series
+          — could be slightly larger.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs lavender CVD-safe; solid vs dashed redundant encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Good landscape utilization, balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Duration (log scale) and Power (W) — both descriptive with context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #C475FD. Transparent bg shows pageBg.
+          Both themes correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: custom log tick formatter, domain-specific reference
+          lines, elevated legend box. Clearly above defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: plotBorderWidth:0, subtle theme-adaptive grid, clean whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Reference lines at key training zones, CP asymptote, two-series empirical
+          vs model narrative.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct power-duration curve with logarithmic x-axis.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: log x-axis, empirical MMP, dashed CP model, reference
+          plotLines, CP asymptote.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Duration (log), Y=Power (W). All data correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: curve-power-duration · javascript · highcharts · anyplot.ai.
+          Legend labels clear and accurate.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Empirical MMP + CP model + reference lines + asymptote — full spec
+          coverage.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Well-trained cyclist CP=280W, W'=20000J — neutral, real sports science
+          scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: CP=280W, W'=20000J, sprint ~1150W at 1s — all physiologically realistic.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear: constants → LCG → data → chart config.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic LCG with seed=42.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports. Only window.ANYPLOT_TOKENS used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, concise. LCG function necessary and appropriately small.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct Highcharts.chart(container) pattern. Harness handles file
+          output.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: type:logarithmic, tickPositions, plotLines, dashStyle, tooltip.formatter
+          — all idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: plotLines with labels on both axes, custom log tick formatter, dashStyle.
+          Could use yAxis zones for CP region shading.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
