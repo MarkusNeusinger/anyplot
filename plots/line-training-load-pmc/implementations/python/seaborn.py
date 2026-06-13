@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-training-load-pmc: Training Load Performance Management Chart
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 86/100 | Created: 2026-06-13
@@ -143,14 +143,44 @@ sns.lineplot(
 if ax1.get_legend() is not None:
     ax1.get_legend().remove()
 
-# Style — primary axis (CTL / ATL / TSS)
+# Explicit ylim with headroom so phase labels have a clear slot above bars
+y_data_max = max(float(tss.max()), float(atl.max()))
+ax1.set_ylim(0, y_data_max * 1.22)
+
+# Training phase boundary lines (subtle dashes at phase transitions)
+phase_transition_dates = [dates[42], dates[98], dates[140]]
+for d in phase_transition_dates:
+    ax1.axvline(d, color=INK_SOFT, alpha=0.22, linewidth=0.7, linestyle="--", zorder=1)
+
+# Phase labels — annotated just above the top axis spine (axes-fraction y)
+phase_segments = [
+    ("Base", dates[0], dates[41]),
+    ("Build", dates[42], dates[97]),
+    ("Peak", dates[98], dates[139]),
+    ("Taper", dates[140], dates[179]),
+]
+xaxis_transform = ax1.get_xaxis_transform()
+for phase_name, start, end in phase_segments:
+    mid = start + (end - start) / 2
+    ax1.annotate(
+        phase_name,
+        xy=(mid, 1.01),
+        xycoords=xaxis_transform,
+        ha="center",
+        va="bottom",
+        fontsize=6.5,
+        color=INK_MUTED,
+        style="italic",
+        annotation_clip=False,
+    )
+
+# Style — primary axis: seaborn-idiomatic spine removal via sns.despine
 title = "line-training-load-pmc · python · seaborn · anyplot.ai"
 ax1.set_title(title, fontsize=12, fontweight="medium", color=INK, pad=10)
 ax1.set_xlabel("", color=INK)
 ax1.set_ylabel("Training Load (TSS units)", fontsize=10, color=INK)
 ax1.tick_params(axis="y", labelsize=8, colors=INK_SOFT)
-ax1.spines["top"].set_visible(False)
-ax1.spines["right"].set_visible(False)
+sns.despine(ax=ax1, top=True, right=True)
 ax1.yaxis.grid(True, alpha=0.12, linewidth=0.6, color=INK, zorder=0)
 
 ax1.xaxis.set_major_locator(mdates.MonthLocator())
