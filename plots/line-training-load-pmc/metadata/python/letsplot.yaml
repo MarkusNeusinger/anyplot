@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: line-training-load-pmc
 created: '2026-06-13T20:55:36Z'
-updated: '2026-06-13T21:01:48Z'
+updated: '2026-06-13T21:11:14Z'
 generated_by: claude-sonnet
 workflow_run: 27478526180
 issue: 8646
@@ -12,44 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-trai
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/python/letsplot/plot-dark.html
-quality_score: 84
+quality_score: 86
 review:
   strengths:
-  - 'Excellent realistic data: 180-day periodized training block with EWMA-correct
-    CTL/ATL/TSB calculations and authentic weekly structure'
-  - Two-toned TSB ribbon elegantly distinguishes positive form (blue, fresh) from
-    negative form (red, fatigued) with semantic palette colors
-  - Multi-panel gggrid layout (75%/25%) cleanly separates smoothed training load from
-    raw TSS input — matches PMC best practice
-  - 'Full Imprint palette compliance with justified semantic exception for TSB fills;
-    first series = #009E73 correct'
-  - Perfect canvas sizing (ggsize(800,450) + scale=4 = 3200x1800) and correct theme-adaptive
-    chrome in both renders
+  - Two-panel gggrid layout cleanly separates CTL/ATL/TSB dynamics from raw daily
+    TSS input — a purposeful, spec-faithful design choice
+  - 'Semantic Imprint palette assignment is excellent: green for Fitness, lavender
+    for Fatigue, blue for positive form, matte red for negative form — all from the
+    palette, no custom hexes'
+  - Correct EWMA formulas for CTL (42-day) and ATL (7-day) with TSB derived as previous-day
+    CTL minus ATL — textbook PMC implementation
+  - 'Theme-adaptive chrome fully implemented: background, INK, INK_SOFT, INK_MUTED
+    all switch correctly between light (#FAF8F1) and dark (#1A1A17) themes'
+  - No axis tick marks (element_blank()) + subtle grid (size=0.3) + panel border removed
+    — clean visual refinement above library defaults
+  - KISS code structure with np.random.seed(42) reproducibility, clean imports, and
+    pd.melt() for idiomatic long-format CTL/ATL series
+  - HTML output saved alongside PNG for both themes via ggsave
   weaknesses:
-  - Legend is missing Form (TSB) entries and daily TSS label — spec requires legend
-    distinguishing all four series (CTL, ATL, Form/TSB positive/negative, TSS); add
-    ribbon/fill legend entries for 'Positive Form (TSB)' and 'Negative Form (TSB)'
-    using scale_fill_manual or geom_rect legend keys
-  - Top and right spines not removed — style guide requires L-shaped frame; add theme(panel_border=element_blank())
-    or axis_line settings to remove top/right borders from both panels
-  - TSB ribbon fills at alpha=0.22 are quite faint; increase to alpha=0.30-0.35 to
-    make positive/negative form zones more visually prominent without overwhelming
+  - Legend overlaps CTL/ATL line data in the upper-right quadrant of the main panel
+    — consider moving to a non-overlapping position or using direct line labels instead
+    of a boxed legend
+  - TSB ribbons at alpha=0.32 are slightly faint, especially the negative (red) regions
+    — raising alpha to 0.45-0.50 would make the form zones more readable without overwhelming
     the CTL/ATL lines
+  - Lower TSS panel with heights=[3,1] ratio is quite compressed — individual daily
+    bars are thin; consider heights=[3,1.2] or reducing bar count visibility to improve
+    readability
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title 'line-training-load-pmc · python · letsplot · anyplot.ai' is dark and readable. Y-axis label 'Training Load (CTL / ATL / TSB)', TSS panel y-label 'TSS', x-label 'Month (2024)' all clearly visible. Month tick labels (Jan–Jul) readable. Legend 'Fitness (CTL)' and 'Fatigue (ATL)' readable at top-right.
-      Data: CTL line in #009E73 green (first series correct), ATL line in #C475FD lavender. TSB positive fill in #4467A3 blue (alpha=0.22, subtle), TSB negative fill in #AE3030 red (alpha=0.22, subtle). Zero reference dashed line visible. TSS bars in muted gray (alpha=0.65).
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "line-training-load-pmc · python · letsplot · anyplot.ai" in dark ink, occupies ~65-70% of plot width; Y-axis labels "Training Load (CTL / ATL / TSB)" and "TSS" in dark ink; tick labels in INK_SOFT (#4A4A44) — all clearly readable. Month abbreviations (Jan–Jul) on X-axis tick labels readable. Subtle cream-colored grid lines visible without dominating.
+      Data: CTL line in brand green (#009E73) — smooth, rising trend from ~20 to ~80 over 6 months. ATL line in lavender (#C475FD) — more volatile, tracking heavy training weeks. TSB two-toned ribbon: positive form in blue (#4467A3) at alpha=0.32, negative form in red (#AE3030) at alpha=0.32. Dashed zero reference line in INK_SOFT. Lower panel: daily TSS bars in INK_MUTED (#6B6A63) at alpha=0.65 — visible but secondary. Legend in elevated-BG box (top-right of main panel) slightly overlapping line data, but text readable due to solid legend background.
+      Legibility verdict: PASS — all text readable, first series correctly in #009E73.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title, axis labels, tick labels all light-colored (#F0EFE8 range) and clearly readable against dark background. Legend text is light. No dark-on-dark failures. Brand green #009E73 remains clearly visible against dark background.
-      Data: CTL green and ATL lavender colors are identical to light render (only chrome flipped). TSB ribbon fills (blue positive, red negative) remain visible. TSS bars render as light gray/white, clearly distinguishable from the dark background.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title and axis labels in INK (#F0EFE8 light cream) — clearly readable on dark background. Tick labels in INK_SOFT (#B8B7B0 medium gray) — readable. Grid lines slightly lighter than background — subtle and visible. No dark-on-dark failures detected.
+      Data: CTL green (#009E73) and ATL lavender (#C475FD) lines — colors identical to light render. TSB ribbons in same blue/red hues — identical to light render. TSS bars now in INK_MUTED dark variant (#A8A79F — lighter gray) — appropriately visible on dark surface. Legend box uses ELEVATED_BG (#242420) with INK_SOFT border — distinguishable from background.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues, data colors identical to light render.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -57,54 +61,56 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set (title=16, axis=12, tick=10). All text
-          readable in both themes. Minor: two-panel compression slightly reduces breathing
-          room.'
+        comment: 'Font sizes explicitly set (title=16, axis=12, tick=10, legend=10).
+          All text readable in both themes. Minor: y-axis label in main panel slightly
+          tight in stacked layout.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text. Legend well-positioned inside plot area. Month
-          tick labels evenly spaced.
+        comment: Legend box in top-right of main panel overlaps CTL/ATL line data;
+          legend background makes text readable but is not ideal.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: CTL/ATL lines prominent. TSB ribbon fills at alpha=0.22 are functional
-          but quite faint; form zones could be more prominent.
+        comment: CTL/ATL lines at size=1.5 are clearly prominent. TSB ribbons at alpha=0.32
+          are slightly faint — visible but could be stronger. TSS bars at alpha=0.65
+          are well visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender pair is high-contrast and CVD-safe. Blue/red TSB two-tone
-          is semantically appropriate.
+        comment: Green vs lavender for CTL/ATL is CVD-safe (no red-green as sole signal).
+          Blue/red for TSB is semantic and supported by context.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Two-panel 75/25 split proportionally
-          excellent. No overflow, no clipping.
+        comment: Two-panel gggrid layout well balanced. Lower TSS panel at heights=[3,1]
+          is compact but functional. Canvas well utilized.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Training Load (CTL / ATL / TSB)' descriptive. TSS panel labeled
-          'TSS'. X-axis 'Month (2024)'.
+        comment: 'Y-axis: ''Training Load (CTL / ATL / TSB)'' — descriptive with metric
+          names. TSS panel: ''TSS''. X-axis: ''Month (2024)''. All descriptive.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'CTL=#009E73 (first series). ATL=#C475FD (position 2). TSB uses semantic
-          blue (pos 3) and matte red (pos 5) with justified semantic exception. Backgrounds
-          #FAF8F1/#1A1A17 correct.'
+        comment: 'First series (CTL) = #009E73. ATL = #C475FD (pos 2). TSB positive
+          = #4467A3 (pos 3, semantic: fresh=blue). TSB negative = #AE3030 (pos 5,
+          semantic: fatigued=red). TSS = INK_MUTED anchor. Light bg #FAF8F1, dark
+          #1A1A17. Both themes correct.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -112,27 +118,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above default. Correct Imprint palette with semantic exception for
-          TSB two-tone. Multi-panel gggrid layout thoughtfully proportioned. Theme-adaptive
-          chrome applied throughout.
+        comment: Thoughtful semantic color mapping, two-panel layout with gggrid,
+          TSB ribbon with two-toned fill — clearly above library defaults. Not yet
+          FiveThirtyEight-level.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Grid lines are subtle (size=0.3), tick marks removed. However, top/right
-          spines not removed — style guide requires L-shaped frame. Panel borders
-          still visible around both panels.
+        passed: true
+        comment: No axis tick marks (element_blank), subtle grid (size=0.3), panel
+          border removed, legend styled with ELEVATED_BG. Good refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Two-panel design separates smoothed trends from raw TSS input. Zero
-          reference line aids TSB interpretation. Two-toned ribbon creates visual
-          zones for fresh vs. fatigued. Good visual hierarchy.
+        comment: Two-panel layout separates derived metrics from raw data. TSB zero
+          baseline separates fresh/fatigued states. Rising CTL trend readable. Visual
+          hierarchy works (lines > ribbons > bars).
     spec_compliance:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -140,30 +145,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct PMC with CTL/ATL smooth lines, TSB filled area two-toned
-          positive/negative, daily TSS bars, zero reference line, shared time axis.
+        comment: 'Correct PMC chart with all four elements: CTL line, ATL line, TSB
+          two-toned ribbon, daily TSS bars.'
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 'Two-toned TSB ribbon, zero baseline, TSS bars, CTL/ATL lines all
-          present. Missing: legend entries for Form (TSB) positive/negative and daily
-          TSS. Spec requires legend distinguishing all four PMC components.'
+        passed: true
+        comment: CTL/ATL lines, two-toned TSB ribbon (positive/negative), daily TSS
+          bars, zero reference line, shared date x-axis, legend with all four series
+          labels.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X-axis, CTL/ATL/TSB on primary Y-axis, TSS on secondary panel.
-          All data visible across full 180-day period.
+        comment: Date on x-axis shared. CTL/ATL/TSB on primary y-axis. TSS on secondary
+          y-axis in lower panel. All data correctly mapped.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title format correct. Legend incomplete — missing Form (TSB: positive=fresh/blue,
-          negative=fatigued/red) and daily TSS entries.'
+        passed: true
+        comment: 'Title: ''line-training-load-pmc · python · letsplot · anyplot.ai''
+          — exact correct format. Legend: Fitness (CTL), Fatigue (ATL), Positive Form
+          (TSB), Negative Form (TSB), Daily TSS — all correct.'
     data_quality:
       score: 15
       max: 15
@@ -173,24 +179,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: CTL 42-day EWMA, ATL 7-day EWMA, TSB = prev-day CTL minus prev-day
-          ATL, TSS bars. All four PMC components present. 4-week periodization blocks
-          visible.
+        comment: 'Covers all PMC features: fitness build phase, fatigue spikes, recovery
+          weeks (week_in_block==3 at 55% base), TSB positive/negative zones, realistic
+          periodization.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 180-day Jan-Jun 2024 training block. TSS 0-150/day, CTL builds ~20
-          to ~80, ATL oscillates appropriately. Rest days, recovery days, taper visible
-          — realistic periodization.
+        comment: 180-day Jan-Jun 2024 training block, periodized with 3-build/1-recovery
+          structure. Endurance sports domain — neutral, non-controversial.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: CTL 20-80, ATL 10-100, TSB -30 to +20 — all within realistic ranges
-          for an amateur endurance athlete.
+        comment: CTL 20→80 range realistic for 6-month build. ATL peaks ~100 during
+          heavy weeks. TSB ±20-30 range correct. Standard EWMA formulas (k=2/(n+1))
+          implemented correctly.
     code_quality:
       score: 10
       max: 10
@@ -200,7 +206,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Linear procedural code with clear sections.
+        comment: 'Linear: imports → tokens → data generation → plots → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -212,20 +219,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pandas, lets_plot all used. No unused imports.
+        comment: os, numpy, pandas, lets_plot — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean EWMA loops, proper long-format melt for CTL/ATL, well-structured
-          gggrid composition.
+        comment: Clean Pythonic code. pd.melt() for long-format CTL/ATL. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current letsplot API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via ggsave with scale=4.
     library_mastery:
       score: 7
       max: 10
@@ -235,17 +241,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: gggrid() for multi-panel, geom_ribbon() for TSB fills, scale_color_manual()
-          for explicit palette, scale_x_datetime(format='%b') for month labels. Correct
-          theme() element hierarchy.
+        comment: 'Uses ggplot grammar correctly: geom_ribbon, geom_hline, geom_line,
+          geom_bar, scale_*_manual, scale_x_datetime. gggrid for multi-panel is idiomatic
+          lets-plot.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: gggrid(heights=[3,1]) for proportional multi-panel is letsplot-distinctive.
-          HTML export via ggsave('.html') leverages letsplot built-in interactivity.
-          Could go further with letsplot-specific tooltips.
+        comment: gggrid() with heights=[3,1] for stacked panels with relative sizing
+          is a lets-plot distinctive feature. geom_ribbon() used effectively for TSB
+          fill.
   verdict: APPROVED
 impl_tags:
   dependencies: []
