@@ -1,7 +1,7 @@
 // anyplot.ai
 // curve-power-duration: Mean-Maximal Power Duration Curve
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-06-13
+// Library: d3 7.9.0 | JavaScript 22.22.3
+// Quality: 83/100 | Created: 2026-06-13
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
