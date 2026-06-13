@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-training-load-pmc: Training Load Performance Management Chart
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 78/100 | Created: 2026-06-13
+Quality: 85/100 | Created: 2026-06-13
 """
 
 import os

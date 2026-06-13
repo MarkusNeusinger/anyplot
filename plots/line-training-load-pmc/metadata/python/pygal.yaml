@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: line-training-load-pmc
 created: '2026-06-13T20:51:01Z'
-updated: '2026-06-13T21:12:59Z'
+updated: '2026-06-13T21:29:55Z'
 generated_by: claude-sonnet
 workflow_run: 27478424392
 issue: 8646
@@ -12,132 +12,125 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-trai
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/python/pygal/plot-dark.html
-quality_score: 78
+quality_score: 85
 review:
   strengths:
-  - Two-toned TSB fill (blue for fresh/positive, red for fatigued/negative) correctly
-    implemented using allow_interruptions=True and split positive/negative series
-  - Imprint palette applied correctly with semantic colour assignments (CTL=green,
-    ATL=lavender, fatigue=red, fresh=blue)
-  - Realistic 6-month training block with correct EWMA formulas and 3-week-build/1-week-recovery
-    periodisation
-  - Stroke-width hierarchy (CTL 5.5, ATL 3.5, TSB fills 1.5) gives visual weight to
-    the most important signals
-  - 'Perfect code quality: reproducible, clean imports, correct output format, no
-    fake UI'
-  - Interactive HTML export alongside PNG leverages pygal native strength
+  - 'Perfect spec compliance: all PMC components implemented correctly (CTL smooth
+    line, volatile ATL, two-toned TSB fill, TSS dots, TSB=0 reference, race day marker)'
+  - 'Excellent semantic color choices: matte red for fatigued form, brand green for
+    fitness, amber for race day warning'
+  - 'Well-constructed realistic EWMA data: 3-week build / 1-week recovery periodization
+    with day-of-week specificity and authentic taper window'
+  - Clean flat code structure with reproducible seed and correct sys.path fix for
+    the script shadow issue
+  - Dual-theme rendering fully correct in both renders — backgrounds, text colors,
+    and data colors all proper
+  - Pygal interactive HTML output correctly produced alongside the PNG
   weaknesses:
-  - 'Daily TSS rendered as a full line chart reaching 100-130 units, dominating the
-    CTL/ATL signal. Spec requires TSS as light points or thin bars near the bottom
-    without dominating. Fix: use show_dots=True with a small dot size and suppress
-    the TSS stroke (stroke_style width 0) so TSS appears as scattered dots rather
-    than tall spikes; alternatively clip visible range so TSS dots cluster near the
-    top of a compressed scale'
-  - 'Legend labels truncated by pygals narrow left-legend area: Form TSB (fresh) becomes
-    Form TSB (fres...) and Form TSB (fatigued) becomes Form TSB (fati...). Fix: shorten
-    series names to 12 chars or fewer or switch to legend_at_bottom=True which gives
-    more horizontal space for full names'
-  - 'Design storytelling is weak: the taper period and form peak are visible in the
-    data but not visually highlighted. Consider adding a vertical marker or annotation
-    at day 155 (race day) to anchor the narrative'
+  - TSS dots at dots_size=3 for 180 medium-density points are very small; individual
+    points hard to distinguish — increase to dots_size=5-6 for improved visibility
+    while keeping them subordinate to main lines
+  - Race Day marker at dots_size=8 is too small to function as a meaningful focal
+    point — increase to 14-16 to strengthen the narrative anchor
+  - DE-03 storytelling is structurally present but not visually emphasized — taper
+    story would be clearer with a larger race day marker or subtle vertical guide
+    at day 155
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "line-training-load-pmc · python · pygal · anyplot.ai" in dark ink, centred — readable. Y-axis label "Training Load (TSS pts)" rotated left — readable. X-axis label "Date (2024)" at bottom — readable. Six monthly tick labels (Jan–Jun 2024) along x-axis. Six-entry left-side legend — "Form TSB (fresh)" and "Form TSB (fatigued)" truncated to "Form TSB (fres..." / "Form TSB (fati..." by narrow legend column.
-      Data: CTL green (#009E73) smooth rising line; ATL lavender (#C475FD) more oscillating; TSB-negative fill in matte red (#AE3030) dominant below zero; TSB-positive fill in blue (#4467A3) small islands; Daily TSS in ochre (#BD8233) as tall jagged spikes reaching 100-130 units — overwhelms CTL/ATL signal.
-      Legibility verdict: PASS (all chrome readable; legend truncation is a content issue, not a contrast failure)
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "line-training-load-pmc · python · pygal · anyplot.ai" clearly readable in dark ink at top. Y-axis label "Training Load (TSS pts)" and X-axis label "Date (2024)" both legible. Six month-start tick labels (Jan–Jun 2024) on x-axis, numeric tick labels on y-axis ranging from -30 to 80 — all readable. Bottom legend shows all 7 series in readable text.
+      Data: Brand green #009E73 CTL (Fitness) line rises smoothly from ~15 to ~45. Lavender #C475FD ATL (Fatigue) line more volatile at 35–65. Matte red #AE3030 filled area below zero (TSB fatigued). Blue #4467A3 small patches above zero (TSB fresh). Small amber/ochre #BD8233 dots scattered (Daily TSS). Muted dashed reference line at TSB=0. Amber star at day 155 for Race Day.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title and axis labels in light-coloured ink — readable. Same six-entry legend with same truncation. Tick labels in muted light tone — readable. No dark-on-dark text failures detected anywhere.
-      Data: Colours identical to light render — green CTL, lavender ATL, red TSB-negative fill, blue TSB-positive fill, ochre TSS spikes. Only background and text chrome have flipped.
-      Legibility verdict: PASS (all text readable against dark background; no dark-on-dark failures)
+      Background: Warm near-black #1A1A17 — correct dark surface
+      Chrome: All text (title, axis labels, tick labels, legend) rendered in light off-white/cream colors — fully readable against dark background. No dark-on-dark failures detected. Brand green #009E73 clearly visible on dark surface.
+      Data: Identical Imprint palette colors to light render — green CTL, lavender ATL, red TSB-negative fill, blue TSB-positive fill, amber TSS dots, amber race-day star. Only background and text colors (chrome) flip between themes; all data series colors remain constant.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 66, label 56, major-label 44,
-          legend 44). Title and axes readable in both themes. Deduction: legend labels
-          Form TSB (fresh) and Form TSB (fatigued) truncated to Form TSB (fres...)
-          and Form TSB (fati...) by narrow left-legend column.'
+        comment: All font sizes explicitly set (title 66, label 56, tick 44, legend
+          44); readable in both themes. Bottom legend with 7 entries slightly dense.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions.
+        comment: No text collisions. Intentional visual layering of fills + lines
+          + dots by design.
       - id: VQ-03
         name: Element Visibility
         score: 4
         max: 6
         passed: true
-        comment: CTL and ATL lines visible but buried under dominant Daily TSS spikes
-          reaching 100-130 units. Spec requires TSS near the bottom without dominating
-          smoothed lines; it clearly dominates.
+        comment: CTL and ATL lines clearly visible. TSB fills clear. TSS dots at size=3
+          for 180 points are small — visible as cloud but not individually distinct.
+          Race Day marker at size=8 is barely distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe by design; good luminance separation
-          across all series.
+        comment: Imprint palette, colorblind-safe. Red/green semantically distinct
+          and reinforced by fill vs. line encoding.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas is correct 3200x1800. Layout reasonable but left-side legend
-          column too narrow, forcing truncation and wasting canvas space.
+        comment: 3200x1800 confirmed. Canvas gate passed. Well-proportioned with bottom
+          legend.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Training Load (TSS pts) and Date (2024) are descriptive with units.
+        comment: 'Y: Training Load (TSS pts), X: Date (2024) — descriptive with context.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'INK_MUTED for TSB=0 reference line is a valid semantic-anchor use.
-          First data series (CTL) correctly receives #009E73. All series use Imprint
-          palette with semantic assignments. Backgrounds #FAF8F1/#1A1A17 correct.
-          Chrome is theme-adaptive in both renders.'
+        comment: 'First data series (CTL) = #009E73. Imprint palette with valid semantic
+          exceptions (red=fatigued, amber=race warning). Correct backgrounds in both
+          themes.'
     design_excellence:
-      score: 9
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Imprint palette applied correctly, stroke-width hierarchy shows intention.
-          Looks like a well-configured pygal default rather than something exceptional.
+        passed: true
+        comment: 'Above defaults: semantic color mapping, stroke-width hierarchy,
+          two-toned TSB fill. Short of strong design — no typography refinement beyond
+          palette.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Y-only grid is good. Stroke-width hierarchy adds refinement. All
-          four spines visible (pygal limitation). Noisy TSS spikes reduce overall
-          polish.
+        passed: true
+        comment: Y-only grid, stroke variation, dashed reference line. Pygal default
+          border frame remains; limited spine removal options.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Two-toned TSB fill is a good conceptual choice. TSS dominates and
-          drowns core PMC narrative. Taper period (days 140-155) and race day are
-          in data but not visually emphasised.
+        passed: true
+        comment: Taper narrative structurally visible (ATL drops, TSB turns positive
+          before Race Day). Race Day marker too small to anchor narrative. No annotation
+          emphasis.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -145,55 +138,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct PMC line chart: CTL, ATL, two-toned TSB fill, TSS, reference
-          line at 0.'
+        comment: Correct PMC line chart with filled area components.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'CTL/ATL smooth lines, two-toned TSB fill, reference line, shared
-          date x-axis all present. Deduction: spec requires TSS as light points or
-          thin bars near the bottom without dominating; implementation shows TSS as
-          full line spiking to 100-130 units, clearly dominating.'
+        comment: CTL/ATL smooth lines, two-toned TSB fill, TSB=0 baseline, TSS dots,
+          race day marker — all per spec.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Dates on x-axis, load units on y-axis; all series correctly mapped.
+        comment: Date on x, Training Load on y. CTL smoother and slower than ATL.
+          TSB centered around zero.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: 'Title format is correct. Deduction: legend labels Form TSB (fresh)
-          and Form TSB (fatigued) truncated by pygal renderer.'
+        comment: Title exactly matches required format. All 7 legend labels descriptive.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Shows build weeks, recovery weeks, taper, rest day, both positive
-          and negative TSB phases. Minor: no explicit race-day marker.'
+        comment: 'All PMC components: fitness build, fatigue oscillation, form (both
+          positive and negative TSB zones), raw load, taper/race event.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Six-month endurance training block with realistic weekly TSS patterns
-          is a convincing real-world scenario.
+        comment: Single endurance athlete 6-month season (Jan-Jun 2024). 3-week build
+          / 1-week recovery with day-of-week specificity. Neutral sports science.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: TSS range 0-130, CTL rising 10-50, ATL oscillating around CTL, TSB
-          between -30 and +10 — all consistent with real endurance-athlete data.
+        comment: CTL rising 15 to 45+ is realistic. ATL 0-65 plausible. TSB -25 to
+          +10 typical. Standard EWMA time constants (42/7 days).
     code_quality:
       score: 10
       max: 10
@@ -203,33 +193,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports to data to plot to save; no functions or classes.
+        comment: 'Flat script: imports → theme tokens → data → EWMA → chart → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols are used; noqa comments appropriate for sys.path
-          workaround.
+        comment: os, sys, numpy, pandas, pygal, Style — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and well-commented; sys.path.pop(0) workaround is correct and
-          documented.
+        comment: Clean Pythonic code. sys.path.pop(0) workaround well-commented. No
+          fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current pygal API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. render_to_png() and
+          render() used correctly.
     library_mastery:
       score: 7
       max: 10
@@ -239,25 +229,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Correct use of Style(), stroke_style dict, fill=True, allow_interruptions.
-          Minor: x_labels with 6 entries across 180 data points relies on pygal label
-          distribution heuristic.'
+        comment: Style object for all theme tokens, allow_interruptions for None-valued
+          series, fill=True for area, stroke_style with dasharray, show_dots=True
+          with stroke=False for scatter, legend_at_bottom. Solid pygal usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: allow_interruptions=True for interrupted fill areas is pygal-specific
-          and used correctly. Interactive HTML export alongside PNG is distinctive.
-          stroke_style dasharray for dashed reference line leverages SVG-level control.
-  verdict: REJECTED
+        comment: HTML interactive output (pygal's defining feature), allow_interruptions
+          for gap handling, SVG stroke_style with dasharray — distinctively pygal.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
+  - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - time-series
+  - rolling-window
   styling: []
