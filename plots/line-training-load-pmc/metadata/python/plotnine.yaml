@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: line-training-load-pmc
 created: '2026-06-13T20:48:59Z'
-updated: '2026-06-13T20:54:13Z'
+updated: '2026-06-13T21:06:34Z'
 generated_by: claude-sonnet
 workflow_run: 27478375704
 issue: 8646
@@ -12,41 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-trai
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Perfect spec compliance — all PMC components (CTL/ATL lines, two-toned TSB ribbon,
-    TSS bars, zero reference line) correctly implemented with standard EWMA formulas
-    (tau=42, tau=7)
-  - 'Excellent semantic color choices: green for CTL/Fitness (Imprint #1), purple
-    for ATL/Fatigue (Imprint #2), blue for fresh TSB (Imprint #3), red for fatigued
-    TSB (semantic anchor AE3030)'
-  - Both theme renders pass legibility checks — theme-adaptive chrome correctly applied
-    throughout
-  - Clean idiomatic plotnine grammar-of-graphics code with proper multi-dataframe
-    layer composition
+  - Excellent data quality — realistic 180-day PMC block with correct EWMA formulas
+    (tau=42 for CTL, tau=7 for ATL) and a believable weekly training cycle including
+    every-4th-week recovery
+  - Two-toned TSB ribbon (blue above zero for fresh form, matte red below for fatigued)
+    elegantly encodes the key PMC insight without any extra annotation
+  - 'Full Imprint palette compliance: CTL=#009E73 (brand green) first, ATL=#C475FD
+    (position 2), TSB+ uses #4467A3 (position 3), TSB- uses semantic #AE3030; both
+    theme renders correct with proper chrome tokens throughout'
+  - All four PMC series present (CTL, ATL, two-toned TSB ribbon, capped TSS bars)
+    with a zero-reference dashed line — complete spec implementation
+  - 'Clean code: KISS structure, np.random.seed(42), all imports used, proper plot-{THEME}.png
+    output; theme token branching is textbook'
   weaknesses:
-  - TSS bars (geom_col) span the full chart height (0–175) and overlap with the CTL/ATL
-    lines through the mid-section; alpha=0.2 mitigates this but they are not \"near
-    the bottom\" as the spec intends — consider capping TSS bar height or rendering
-    them in a separate visual lane
-  - 'Legend titles are inconsistent: the metric section uses a blank name while Form
-    uses the title \"Form\" — standardize to either both empty or both labeled for
-    cleaner legend presentation'
-  - 'Design Excellence room: no annotations highlight key training events (e.g., peak
-    fatigue, recovery weeks, taper phase) which would elevate the data storytelling'
+  - TSS daily bars are absent from the legend — the spec explicitly asks for a legend
+    distinguishing Fitness (CTL), Fatigue (ATL), Form (TSB), and daily TSS; add a
+    named geom_col or a manual legend entry for 'Daily TSS' so all four series are
+    identified
+  - Annotation geom_label uses size=2.2 (mm units in plotnine ≈ 6.25 pt), which is
+    borderline at mobile width (~400 px scaled); increase to size=2.8–3.0 for safe
+    mobile legibility
+  - scale_color_manual and scale_fill_manual both pass name='' but plotnine renders
+    the aesthetic variable names ('metric', 'form') as legend section headers; pass
+    descriptive names or use guide_legend(title=...) to suppress or replace the headers
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — matches the required light theme surface. PASS.
-      Chrome: Title "line-training-load-pmc · python · plotnine · anyplot.ai" is dark (#1A1A17) and clearly visible at top (~65% width). Y-axis label "Training Stress Score" and X-axis label "Date" both readable in dark ink. Tick labels (Jan 2024 – Jul 2024, -50/0/50/100/150) rendered in INK_SOFT (#4A4A44) and fully legible. Y-axis grid lines are subtle (#1A1A17 at alpha=0.12), no X-axis grid. Dashed zero reference line is visible. Legend (metric: CTL/ATL; Form: TSB+/TSB−) reads cleanly against elevated-bg (#FFFDF6) box on right.
-      Data: CTL (Fitness) line in Imprint #1 green (#009E73) — smooth upward trend from ~0 to ~70 over 180 days. ATL (Fatigue) line in Imprint #2 lavender (#C475FD) — more volatile, oscillating 40–90. TSB ribbon: blue (#4467A3) for positive/fresh areas (small, near zero from April onward) and red (#AE3030) for negative/fatigued (dominant, -50 to 0, realistic for training block). TSS bars in muted gray (INK_MUTED @ alpha=0.2) span full chart height, providing raw context without dominating.
-      Legibility verdict: PASS — all text readable against light background. No light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "line-training-load-pmc · python · plotnine · anyplot.ai" clearly visible in dark ink at top; Y-axis label "Training Stress Score" and X-axis label "Date" readable in dark ink; monthly tick labels (Jan 2024–Jul 2024) readable in secondary ink; legend text and entries clearly readable
+      Data: CTL line in #009E73 (brand green) — smooth upward trend from ~0 to ~70 over 180 days; ATL line in #C475FD (lavender) — more volatile, peaks at ~90+; TSB ribbon blue (#4467A3) above zero (tiny positive form peaks), matte red (#AE3030) below zero (large fatigued zones dominating the lower half); capped TSS bars as light gray (#6B6A63 at alpha=0.25) near y=0; zero-reference dashed line visible; three small geom_label annotation boxes at peak ATL, minimum TSB, and peak CTL events
+      Legibility verdict: PASS — all main text elements clearly readable; annotation labels (size=2.2mm) are small but visible at full resolution; mobile readability is borderline
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — matches required dark theme surface. PASS.
-      Chrome: Title rendered in light ink (#F0EFE8) — clearly readable. Axis labels, tick labels in INK_SOFT (#B8B7B0) — all readable against dark background. No dark-on-dark failures detected. Grid lines are subtle and visible. Legend text is legible against #242420 elevated background.
-      Data: CTL (#009E73) and ATL (#C475FD) colors are identical to light render — only chrome flipped. TSS bars appear slightly darker (gray bars on dark bg) but still visible as background context. TSB ribbon colors (blue/red) unchanged. Zero reference line (dashed, INK_SOFT) visible.
-      Legibility verdict: PASS — all text readable against dark background. No dark-on-dark failures.
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title readable in light-cream (#F0EFE8) ink; Y-axis and X-axis labels readable in light ink; tick labels readable in secondary light ink (#B8B7B0); legend box uses elevated dark bg (#242420) with visible light-colored text — no dark-on-dark failures detected
+      Data: CTL line remains #009E73 (identical to light render); ATL line remains #C475FD (identical); TSB ribbon blue and matte-red fills identical to light render; TSS gray bars visible; zero-reference dashed line visible; same annotation boxes present with light-colored text
+      Legibility verdict: PASS — data colors are identical to light render (only chrome flips); all text is readable against dark background; no "dark on dark" failures observed
   criteria_checklist:
     visual_quality:
       score: 28
@@ -57,52 +60,59 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=12, axis_title=10, axis_text=8,
-          legend=8). Readable in both themes.
+        comment: 'All font sizes explicitly set: title 12pt, axis titles 10pt, tick
+          labels 8pt, legend 8pt. Well-proportioned in both renders. Annotation labels
+          (2.2mm geom_label) are small but visible at full canvas; borderline at mobile
+          400px width.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap, legend placed outside plot area, tick labels spaced
-          appropriately.
+        comment: No text-on-text overlap. Annotation boxes are positioned at peak
+          events and don't visibly collide with each other or main text. Legend is
+          isolated to the right side.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: CTL/ATL lines clearly visible. TSB+ ribbon very small (brief fresh
-          periods). TSS bars at alpha=0.2 subtle but intentional.
+        comment: CTL and ATL lines (size=1.2) clearly visible. TSB ribbon (alpha=0.45)
+          clearly visible. TSS bars intentionally capped at 35 and subdued (alpha=0.25)
+          per spec — visible but secondary, as intended.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used. CVD-safe hue combinations (green/purple for
-          CTL/ATL).
+        comment: Imprint palette is CVD-optimised. CTL green vs ATL purple are distinct
+          under deuteranopia/protanopia. TSB blue vs red have sufficient luminance
+          contrast. No red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Good proportions, no clipping, generous
-          whitespace.
+        comment: Canvas gate passed (3200x1800). Plot area well-utilised with legend
+          on the right. Balanced margins. No overflow or clipping at canvas edges.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format, x='Date', y='Training Stress Score' are descriptive.
+        comment: 'Y-axis: ''Training Stress Score'' (descriptive). X-axis: ''Date''
+          (appropriate — tick labels provide the date context). Title format correct.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series CTL=#009E73 (Imprint #1). ATL=#C475FD (Imprint #2).
-          TSB+=#4467A3 (semantic blue=fresh), TSB-=#AE3030 (semantic red=fatigued).
-          Backgrounds correct (#FAF8F1 / #1A1A17).'
+        comment: 'CTL=#009E73 (Imprint position 1, brand green) first series; ATL=#C475FD
+          (position 2); TSB+=#4467A3 (position 3); TSB-=#AE3030 (semantic matte red
+          for fatigued/negative). Backgrounds #FAF8F1 light / #1A1A17 dark. Chrome
+          tokens correct in both renders. Data colors identical across themes.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -110,24 +120,29 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom Imprint palette, layered geom composition, two-toned TSB ribbon
-          shows design thought beyond defaults.
+        comment: Intentional two-toned TSB ribbon design, Imprint palette used thoughtfully
+          with semantic color choice for fresh/fatigued form. Above defaults but not
+          publication-ready — no refined typography weight variation, legend section
+          headers are awkward ('metric', 'form').
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: L-shaped frame (panel_border removed, axis_line set), Y-only grid
-          at alpha=0.12, subtle styling.
+        comment: Y-only grid at very low opacity (size=0.3, alpha=0.12), X grid removed,
+          panel border removed, axis lines kept thin. Some refinement visible. Legend
+          has a framed box background which is fine.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: PMC narrative (building fitness, fatigue management) is clear via
-          data choices, but no annotations highlight key events.
+        comment: 'Visual hierarchy is clear: CTL/ATL lines prominent, TSS bars secondary.
+          Zero-reference line aids interpretation. Annotations at peak ATL, minimum
+          TSB, and peak CTL provide narrative context. Viewer can read the building-fitness
+          arc across the 6-month block.'
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -135,28 +150,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct PMC chart: CTL/ATL smooth lines + TSB ribbon + TSS bars.'
+        comment: 'Correct PMC chart: CTL/ATL smooth lines + two-toned TSB ribbon +
+          TSS bars + zero-reference line. All required components present.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All PMC elements: EWMA CTL (tau=42), ATL (tau=7), two-toned TSB
-          ribbon, TSS bars, zero reference line, legend.'
+        comment: CTL (smooth, lags ATL) ✓; ATL (more volatile) ✓; TSB as two-toned
+          filled ribbon ✓; daily TSS bars ✓; zero reference line ✓; single shared
+          date x-axis ✓; legend distinguishing series ✓. No secondary y-axis (plotnine
+          limitation accepted per spec).
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=dates, Y=TSS units. CTL clearly smoother than ATL. TSB oscillates
-          around zero. 180-day block.
+        comment: X=date, Y=Training Stress Score. All series mapped correctly. TSB
+          correctly oscillates around zero.
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Title: ''line-training-load-pmc · python · plotnine · anyplot.ai''.
-          Legend labels CTL/ATL/TSB+ /TSB-.'
+        comment: Title 'line-training-load-pmc · python · plotnine · anyplot.ai' correct.
+          Legend covers CTL, ATL, TSB+, TSB-. However daily TSS bars are NOT in the
+          legend — spec asks for all four series (CTL, ATL, TSB, TSS) to be labelled.
     data_quality:
       score: 15
       max: 15
@@ -166,22 +185,27 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All PMC aspects covered: fitness/fatigue/form plus raw TSS. Correct
-          EWMA formulas.'
+        comment: 'Shows all PMC aspects: rising CTL fitness arc, volatile ATL fatigue
+          spikes, TSB oscillating (mostly negative during build, small positive peaks
+          before ramp-ups), TSS daily load. Includes recovery weeks every 4th week.
+          Complete picture.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic 6-month training block with weekly cycles and monthly recovery
-          weeks. Neutral athlete data.
+        comment: One athlete's 180-day training block (Jan-Jun 2024). Sports science
+          / endurance training — neutral, non-controversial. CTL reaching ~70, ATL
+          ~90, realistic periodisation with weekly cycles.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: TSS 0-200, CTL 0-70+, ATL 0-90+, TSB -50 to +10 — all realistic for
-          endurance athlete.
+        comment: CTL ~70 after 6 months is realistic for a competitive cyclist/runner.
+          ATL peaks ~90 during hard weeks. TSB range -50 to +10 correct for an athlete
+          in a build phase. TSS values up to 200 (capped) plausible for hard endurance
+          sessions.
     code_quality:
       score: 10
       max: 10
@@ -191,54 +215,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat procedural code, no functions or classes.
+        comment: 'Linear: imports → theme tokens → data generation → plot layers →
+          save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imported symbols are used. os/sys used for theme token and path
+          fix. numpy/pandas/all plotnine imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI. sys.path fix needed and correctly applied. Clean.
+        comment: Clean Pythonic code. EWMA loop is the standard PMC formula. Long-format
+          DataFrames for multi-series geoms is the idiomatic plotnine pattern. No
+          over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves to plot-{THEME}.png with correct dimensions.
+        comment: Saves as plot-{THEME}.png with dpi=400 and correct dimensions. Current
+          plotnine API used.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Correct ggplot grammar: aes, layered geoms, scale_*_manual, theme()
-          customization. Multi-dataframe layer pattern.'
+        comment: 'Layer-by-layer ggplot grammar: multiple geoms with separate data
+          frames, aes mappings, scale_*_manual with named value dicts, scale_x_date
+          with date_labels/date_breaks, theme() with element_* functions. Textbook
+          plotnine idiom.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: geom_ribbon for TSB (plotnine-distinctive), pd.Categorical for legend
-          ordering, multi-df geom layers.
+        comment: geom_ribbon for the two-toned TSB fill is a distinctive plotnine/ggplot2
+          capability; pd.Categorical with ordered=True for legend ordering; multiple
+          data sources in one ggplot (base df_tss + df_lines + df_tsb + df_events).
+          These are grammar-of-graphics strengths but not highly unique.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - annotations
+  - custom-legend
   patterns:
   - data-generation
   - wide-to-long
@@ -246,3 +281,4 @@ impl_tags:
   - time-series
   styling:
   - alpha-blending
+  - grid-styling
