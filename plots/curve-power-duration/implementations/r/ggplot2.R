@@ -4,8 +4,6 @@
 #' Quality: 87/100 | Created: 2026-06-13
 
 library(ggplot2)
-library(dplyr)
-library(scales)
 library(ragg)
 
 set.seed(42)
@@ -20,8 +18,8 @@ INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
 
 IMPRINT_PALETTE <- c(
     "#009E73",  # 1 - brand green  (empirical MMP curve)
-    "#C475FD",  # 2 - lavender
-    "#4467A3",  # 3 - blue         (CP model overlay)
+    "#C475FD",  # 2 - lavender     (CP model overlay)
+    "#4467A3",  # 3 - blue
     "#BD8233",  # 4 - ochre
     "#AE3030",  # 5 - matte red
     "#2ABCCD",  # 6 - cyan
@@ -94,7 +92,7 @@ p <- ggplot() +
         linetype   = "dashed",
         alpha      = 0.55
     ) +
-    # CP model — dashed blue line (from 2 min to 5 h)
+    # CP model — dashed lavender line (from 2 min to 5 h)
     geom_line(
         data      = df_mod,
         aes(x = duration_s, y = power_w, color = series, linetype = series),
@@ -138,12 +136,12 @@ p <- ggplot() +
         hjust    = 0,
         fontface = "italic"
     ) +
-    # Color scale — Imprint positions 1 (green) and 3 (blue)
+    # Color scale — Imprint positions 1 (green) and 2 (lavender), canonical order
     # limits forces legend order: MMP first (primary), CP Model second
     scale_color_manual(
         values = c(
             "Mean-Maximal Power"   = IMPRINT_PALETTE[1],
-            "Critical Power Model" = IMPRINT_PALETTE[3]
+            "Critical Power Model" = IMPRINT_PALETTE[2]
         ),
         limits = c("Mean-Maximal Power", "Critical Power Model"),
         name   = NULL
@@ -158,7 +156,7 @@ p <- ggplot() +
         name   = NULL,
         guide  = "none"
     ) +
-    # Legend icons match actual styles: MMP = solid green, CP Model = dashed blue
+    # Legend icons match actual styles: MMP = solid green, CP Model = dashed lavender
     guides(color = guide_legend(
         override.aes = list(
             linetype  = c("solid", "dashed"),
@@ -181,15 +179,15 @@ p <- ggplot() +
     ) +
     labs(
         title = plot_title,
-        x     = "Duration (log scale)",
-        y     = "Mean-Maximal Power"
+        x     = "Duration (log scale, s)",
+        y     = "Mean-Maximal Power (W)"
     ) +
     theme_minimal(base_size = 8) +
     theme(
         plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
         panel.background  = element_rect(fill = PAGE_BG, color = NA),
         panel.grid.major  = element_line(color = GRID_COLOR, linewidth = 0.35),
-        panel.grid.minor  = element_line(color = GRID_COLOR, linewidth = 0.20),
+        panel.grid.minor  = element_blank(),
         panel.border      = element_blank(),
         axis.line         = element_line(color = INK_SOFT, linewidth = 0.4),
         axis.ticks        = element_line(color = INK_SOFT, linewidth = 0.3),
