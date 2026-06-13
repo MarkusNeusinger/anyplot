@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 curve-power-duration: Mean-Maximal Power Duration Curve
 Library: pygal 3.1.0 | Python 3.13.13
+Quality: 86/100 | Created: 2026-06-13
 """
 
 import os
