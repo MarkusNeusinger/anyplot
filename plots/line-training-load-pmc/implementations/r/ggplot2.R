@@ -4,7 +4,6 @@
 #' Quality: 84/100 | Created: 2026-06-13
 
 library(ggplot2)
-library(scales)
 library(ragg)
 
 set.seed(42)
@@ -88,19 +87,19 @@ title_str <- "line-training-load-pmc · r · ggplot2 · anyplot.ai"
 
 # Plot
 p <- ggplot(df, aes(x = date)) +
-  # TSB ribbons — two-toned (positive = fresh, negative = fatigued)
+  # TSB ribbons — two-toned; fill hardcoded so only color drives the single legend
   geom_ribbon(
-    aes(ymin = tsb_neg_ymin, ymax = tsb_neg_ymax, fill = "Fatigued (TSB < 0)"),
-    alpha = 0.35
+    aes(ymin = tsb_neg_ymin, ymax = tsb_neg_ymax, color = "Fatigued (TSB < 0)"),
+    fill = IMPRINT_PALETTE[5], alpha = 0.35, linewidth = 0
   ) +
   geom_ribbon(
-    aes(ymin = tsb_pos_ymin, ymax = tsb_pos_ymax, fill = "Fresh (TSB > 0)"),
-    alpha = 0.35
+    aes(ymin = tsb_pos_ymin, ymax = tsb_pos_ymax, color = "Fresh (TSB > 0)"),
+    fill = IMPRINT_PALETTE[3], alpha = 0.35, linewidth = 0
   ) +
-  # Daily TSS segments — raw load at bottom, intentionally subtle
+  # Daily TSS segments — raw load at bottom, mapped to color for legend entry
   geom_segment(
-    aes(xend = date, y = 0, yend = tss_display),
-    color = INK_MUTED, linewidth = 0.2, alpha = 0.55
+    aes(xend = date, y = 0, yend = tss_display, color = "Daily TSS"),
+    linewidth = 0.2, alpha = 0.55
   ) +
   # ATL line — fatigue, faster-reacting to recent training
   geom_line(aes(y = atl, color = "Fatigue (ATL)"), linewidth = 1.0) +
@@ -112,17 +111,24 @@ p <- ggplot(df, aes(x = date)) +
     color = INK_SOFT, linewidth = 0.55, linetype = "dashed"
   ) +
   scale_color_manual(
-    name   = NULL,
+    name   = "PMC Metrics",
     values = c(
-      "Fitness (CTL)" = IMPRINT_PALETTE[1],
-      "Fatigue (ATL)" = IMPRINT_PALETTE[2]
-    )
-  ) +
-  scale_fill_manual(
-    name   = "Form (TSB)",
-    values = c(
+      "Fitness (CTL)"      = IMPRINT_PALETTE[1],
+      "Fatigue (ATL)"      = IMPRINT_PALETTE[2],
+      "Daily TSS"          = INK_MUTED,
       "Fresh (TSB > 0)"    = IMPRINT_PALETTE[3],
       "Fatigued (TSB < 0)" = IMPRINT_PALETTE[5]
+    ),
+    breaks = c("Fitness (CTL)", "Fatigue (ATL)", "Daily TSS",
+               "Fresh (TSB > 0)", "Fatigued (TSB < 0)"),
+    guide = guide_legend(
+      override.aes = list(
+        fill      = c(NA, NA, NA,
+                      adjustcolor(IMPRINT_PALETTE[3], alpha.f = 0.35),
+                      adjustcolor(IMPRINT_PALETTE[5], alpha.f = 0.35)),
+        linewidth = c(1.3, 1.0, 1.0, 0, 0),
+        alpha     = c(1, 1, 0.55, 1, 1)
+      )
     )
   ) +
   scale_x_date(date_breaks = "1 month", date_labels = "%b %Y") +
@@ -145,7 +151,7 @@ p <- ggplot(df, aes(x = date)) +
     panel.grid.major.x = element_blank(),
     panel.grid.minor   = element_blank(),
     axis.title         = element_text(color = INK, size = 10),
-    axis.title.y.right = element_text(color = INK_SOFT, size = 9),
+    axis.title.y.right = element_text(color = INK_SOFT, size = 10),
     axis.text          = element_text(color = INK_SOFT, size = 8),
     axis.text.x        = element_text(angle = 30, hjust = 1),
     axis.text.y.right  = element_text(color = INK_SOFT, size = 8),
