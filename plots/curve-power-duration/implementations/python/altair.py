@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-power-duration: Mean-Maximal Power Duration Curve
 Library: altair 6.2.1 | Python 3.13.13
 Quality: 84/100 | Created: 2026-06-13
@@ -28,9 +28,9 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint palette — first series always #009E73
+# Imprint palette — first series always #009E73, second always #C475FD (lavender)
 BRAND = "#009E73"  # empirical MMP curve
-MODEL_COLOR = "#4467A3"  # CP model fit
+MODEL_COLOR = "#C475FD"  # CP model fit — palette position 2
 
 # Data — synthetic well-trained cyclist: CP = 280 W, W' = 20,000 J, Pmax = 1,100 W
 # The simple CP model P=CP+W'/t diverges to ~20 kW at t=1 s (outside its valid range).
@@ -87,7 +87,7 @@ base = alt.Chart(df).encode(
         "duration_s:Q",
         scale=alt.Scale(type="log", domain=[1, 18000]),
         axis=alt.Axis(
-            values=tick_vals, labelExpr=label_expr, title="Duration", titleFontSize=12, labelFontSize=10, grid=True
+            values=tick_vals, labelExpr=label_expr, title="Duration", titleFontSize=12, labelFontSize=10, grid=False
         ),
     ),
     y=alt.Y(
@@ -102,7 +102,7 @@ base = alt.Chart(df).encode(
     ),
     strokeDash=alt.StrokeDash(
         "series:N",
-        scale=alt.Scale(domain=["MMP Curve", "CP Model  (P = CP + W′/t)"], range=[[1, 0], [8, 4]]),
+        scale=alt.Scale(domain=["MMP Curve", "CP Model  (P = CP + W′/t)"], range=[[1, 0], [12, 4]]),
         legend=None,
     ),
     tooltip=[
@@ -121,7 +121,7 @@ cp_rule = alt.Chart(cp_df).mark_rule(color=INK_SOFT, strokeWidth=1, strokeDash=[
 # CP label
 cp_label = (
     alt.Chart(cp_label_df)
-    .mark_text(align="right", baseline="bottom", fontSize=9, color=INK_MUTED)
+    .mark_text(align="right", baseline="bottom", fontSize=10, color=INK_MUTED)
     .encode(x="x:Q", y="y:Q", text="text:N")
 )
 
@@ -131,7 +131,7 @@ ref_rules = alt.Chart(ref_df).mark_rule(color=INK_MUTED, strokeWidth=1, strokeDa
 # Reference labels at top of chart area (pixel y=6 from chart top)
 ref_labels_chart = (
     alt.Chart(ref_df)
-    .mark_text(baseline="top", align="center", fontSize=8, color=INK_MUTED, dy=0)
+    .mark_text(baseline="top", align="center", fontSize=10, color=INK_MUTED, dy=0)
     .encode(x="duration_s:Q", text="label:N", y=alt.value(6))
 )
 
@@ -142,12 +142,16 @@ chart = (
     .properties(width=620, height=320, background=PAGE_BG, title=alt.Title(title_text, fontSize=16, color=INK))
     .configure_view(fill=PAGE_BG, stroke=None)
     .configure_axis(
-        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.12, labelColor=INK_SOFT, titleColor=INK
+        domainColor=INK_SOFT,
+        domainWidth=0,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.12,
+        labelColor=INK_SOFT,
+        titleColor=INK,
     )
     .configure_title(color=INK, fontSize=16)
-    .configure_legend(
-        fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK, labelFontSize=10
-    )
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=PAGE_BG, labelColor=INK_SOFT, titleColor=INK, labelFontSize=10)
 )
 
 # Save PNG then pad to exact target canvas
