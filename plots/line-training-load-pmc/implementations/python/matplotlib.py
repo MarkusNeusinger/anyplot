@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-training-load-pmc: Training Load Performance Management Chart
-Library: matplotlib | Python 3.13
-Quality: pending | Created: 2026-06-13
+Library: matplotlib 3.11.0 | Python 3.13.13
+Quality: 89/100 | Created: 2026-06-13
 """
 
 import os
