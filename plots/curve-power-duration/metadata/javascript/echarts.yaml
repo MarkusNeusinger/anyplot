@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: curve-power-duration
 created: '2026-06-13T22:26:23Z'
-updated: '2026-06-13T22:33:31Z'
+updated: '2026-06-13T22:42:51Z'
 generated_by: claude-sonnet
 workflow_run: 27480542220
 issue: 8647
@@ -12,53 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-pow
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/javascript/echarts/plot-dark.html
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - Correct logarithmic X-axis with human-readable formatter (1s, 10s, 2min, etc.)
-    — core spec requirement met
-  - All four required reference duration vertical markers (5s, 1min, 5min, 20min)
-    implemented idiomatically via ECharts markLine
-  - CP asymptote horizontal dotted line adds important physiological context
-  - Strong visual hierarchy across three series through line width (3.5 / 2.5 / 1.5)
-    and linestyle (solid / dashed / dotted)
-  - 'Both themes render cleanly: warm off-white (#FAF8F1) light, near-black (#1A1A17)
-    dark — chrome fully theme-adaptive via t.ink / t.inkSoft / t.grid tokens'
-  - Deterministic synthetic data with fixed boostPct array ensures reproducibility
-    without a seeded RNG
-  - KISS code structure — no functions or classes, flat linear script
+  - 'Full spec compliance: logarithmic X-axis, empirical + model curves, reference
+    markers at 5s/1min/5min/20min, CP asymptote — all correctly implemented'
+  - 'Correct Imprint palette usage: brand green (#009E73) first series, semantic use
+    of matte red (#AE3030) for CP limit line'
+  - 'Both theme renders pass: light (#FAF8F1) and dark (#1A1A17) backgrounds with
+    correct theme-adaptive chrome; data colors identical across themes'
+  - Deterministic, reproducible data using hardcoded boostPct array and mathematical
+    CP model formula
+  - markLine for reference duration annotations is the idiomatic ECharts approach
+    — avoids manual annotation positioning
+  - Visual hierarchy with 3 line weights (3.5 / 2.5 / 2.0) and 3 styles (solid / dashed
+    / dotted) creates clear reading order
+  - Clean KISS-structured code with no over-engineering; all font sizes explicitly
+    set
   weaknesses:
-  - 'Palette non-canonical order: second series uses palette[2] (#4467A3 blue) instead
-    of palette[1] (#C475FD lavender), skipping a slot without documented semantic
-    justification. The CP Asymptote at palette[4] (matte red) is defensible as a threshold/critical-limit
-    anchor, but jumping from [0] to [2] for the model is an ordinal skip — fix by
-    using palette[1] for the Critical Power Model or document semantic reasoning.'
-  - CP Asymptote line (palette[4] dotted, width=1.5) is very thin and barely distinguishable
-    from the grid, especially in the bottom-right region where the empirical curve
-    converges toward 280W. Increase width to 2.0 and consider opacity 0.8+ to make
-    it more prominent.
-  - Reference marker labels (5 s, 1 min, 5 min, 20 min) are rendered at fontSize=12
-    inside the top of the plot area — very small relative to the canvas and risk being
-    missed. Increase to fontSize=14 and add padding/background to improve readability.
-  - X-axis auto-ticks on log scale (1s, 10s, 2min, 17min, 2.8h, 5h) do not align with
-    the sports-science canonical reference points the spec suggests (1s, 5s, 30s,
-    1min, 5min, 20min, 1h). Consider manually setting xAxis.interval or using a fixed
-    minorTick grid that includes the reference durations.
+  - Reference duration marker labels (5s, 1min, 5min, 20min) are quite small and faint
+    — increase markLine label fontSize to ~16 and opacity to 0.7 for legibility
+  - CP asymptote dotted line (palette[4], opacity 0.85, width 2.0) appears faint in
+    light render — increase lineStyle.width to 2.5 or 3.0
+  - X-axis log ticks are ECharts auto-generated at non-standard positions (10s, 17min,
+    2.8h) — using explicit tick positions at key cycling reference durations (1s,
+    5s, 30s, 1min, 5min, 20min, 1h) would improve sports-science readability
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface (#FAF8F1) — correct, not pure white.
-      Chrome: Bold centered title "curve-power-duration · javascript · echarts · anyplot.ai" in dark ink (#1A1A17), clearly legible. Y-axis label "Power (W)" and X-axis label "Duration" both visible in inkSoft. Tick labels in inkSoft (1s, 10s, 2min, 17min, 2.8h, 5h) readable. Grid lines are very subtle. Legend box has elevated background with border-radius — all three series labels readable.
-      Data: Three lines visible — (1) Mean-Maximal Power as a thick green solid curve (#009E73, palette[0]) showing the characteristic power-duration decay from ~1200W at 1s to ~280W at 5h; (2) Critical Power Model as a blue dashed line (#4467A3, palette[2]) overlaid slightly below the empirical curve; (3) CP Asymptote as a thin red dotted horizontal line at 280W (#AE3030, palette[4]). Four vertical dashed reference markers at 5s, 1min, 5min, and 20min with small top labels.
-      Legibility verdict: PASS — all text readable. Minor note: reference marker labels at the top (fontSize=12) are small. CP asymptote dotted line is subtle.
+      Background: Warm off-white (#FAF8F1) — correct theme surface.
+      Chrome: Title "curve-power-duration · javascript · echarts · anyplot.ai" at fontSize 22, centered, clearly readable in dark ink. Y-axis label "Power (W)" at fontSize 16 readable. X-axis label "Duration" at fontSize 16 readable. Tick labels at fontSize 13 readable (1s, 10s, 2min, 17min, 2.8h, 5h). Legend text at fontSize 14 readable with elevated background box (#FFFDF6). Reference marker labels (5s, 1min, 5min, 20min) are present but quite faint due to small size and low label opacity.
+      Data: Three series — solid green line (#009E73, width 3.5) for Mean-Maximal Power; dashed lavender line (#C475FD, width 2.5) for Critical Power Model; dotted matte red (#AE3030, width 2.0, opacity 0.85) horizontal line for CP Asymptote at 280 W. First series is brand green #009E73. Vertical dashed reference markers at 5s, 1min, 5min, 20min in muted ink color.
+      Legibility verdict: PASS (minor: reference marker labels slightly faint)
 
     Dark render (plot-dark.png):
-      Background: Near-black surface (#1A1A17) — correct, not pure black.
-      Chrome: Title, axis labels, and tick labels all rendered in light-colored ink (#F0EFE8 / #B8B7B0) — fully readable against dark background. Legend box uses elevatedBg (#242420). Grid lines subtle against dark surface. No dark-on-dark failures observed — all text elements clearly visible.
-      Data: Data colors identical to light render — green empirical curve (#009E73), blue dashed model (#4467A3), red dotted asymptote (#AE3030). Color identities preserved between themes. Brand green #009E73 reads well on the dark surface.
-      Legibility verdict: PASS — no dark-on-dark text issues. All chrome elements correctly adapt via t.ink / t.inkSoft / t.grid tokens.
+      Background: Warm near-black (#1A1A17) — correct dark theme surface.
+      Chrome: Title readable in light text (F0EFE8 ink token). Axis labels, tick labels, legend text all render in light-colored theme-adaptive ink. No dark-on-dark issues detected. Grid lines subtle using dark-mode grid token. Legend box uses dark elevated background (#242420).
+      Data: Data colors are identical to the light render — solid green (#009E73), dashed lavender (#C475FD), dotted matte red (#AE3030) — all identical across themes, confirming only chrome flips. Brand green (#009E73) clearly visible on dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -66,56 +59,55 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels all readable in both themes. Reference
-          marker labels at fontSize=12 are small; minor concern at mobile scale.
+        comment: 'All font sizes explicitly set (title 22, axis labels 16, ticks 13,
+          legend 14). Readable in both themes. Minor deduction: markLine reference
+          marker labels are quite faint and small.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No significant overlaps. Reference marker labels at 5s are close
-          to the empirical curve peak but not overlapping.
+        comment: No overlapping text elements. Log scale spaces reference markers
+          adequately.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Empirical curve and CP model clearly visible. CP asymptote dotted
-          line (width=1.5) is thin and subtle, especially where curves converge near
-          280W.
+        comment: 'Main empirical curve (width 3.5) and model (width 2.5, dashed) clearly
+          visible. Minor deduction: CP asymptote dotted line appears faint (width
+          2.0, opacity 0.85).'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Three distinct colors from Imprint palette. CVD-safe. No red-green
-          as sole distinguishing signal (blue is second series).
+        comment: Distinct color AND line style (solid/dashed/dotted) redundant encoding.
+          Imprint palette is CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Landscape orientation correct. Good margins. Legend in upper-right
-          with adequate right grid offset (260px). Title ~55% width — appropriate.
+        comment: Canvas gate passed. Plot fills ~70% of canvas with legend properly
+          placed. Good balance.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format. Y-axis 'Power (W)' includes units.
-          X-axis 'Duration' with human-readable formatted tick labels.
+        comment: 'Y-axis: Power (W) with units. X-axis: Duration (units in tick labels).
+          Title correct.'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: First series correctly uses palette[0] (#009E73). However, second
-          series uses palette[2] (blue) instead of palette[1] (lavender) — non-canonical
-          ordinal skip without documented semantic justification. CP Asymptote at
-          palette[4] (matte red) is defensible as a threshold anchor. Background tokens
-          correct for both themes.
+        passed: true
+        comment: First series t.palette[0]=#009E73. Second t.palette[1]=#C475FD. Third
+          t.palette[4]=#AE3030 (semantic use for CP limit). Background transparent
+          (harness applies pageBg). Both themes correct.
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -123,26 +115,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above default (4). Legend has elevated background with border-radius
-          and padding. Line width hierarchy (3.5/2.5/1.5) reflects data importance.
-          Reference markers add professional sports-analytics feel.
+        comment: Above well-configured default. Intentional line-style hierarchy,
+          semantic palette use, elevated legend with border radius. Not FiveThirtyEight-level
+          but design-thoughtful.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Above default (2). Proper axis line styling, subtle grid using t.grid
-          token, markLine opacity at 0.45 for reference markers. No spine-removal
-          equivalent in ECharts (all axes visible by default).
+        comment: Grid subtle with t.grid token. Reference markers use opacity 0.45.
+          No top/right bounding spines. Legend styled with elevatedBg. Good refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Above default (2). Reference duration annotations (5s sprint, 1min,
-          5min, 20min FTP proxy) add physiological context. CP asymptote helps readers
-          identify the aerobic limit. Visual hierarchy guides from primary curve to
-          model to asymptote.
+        comment: Good visual hierarchy through line weight (3.5/2.5/2.0). Reference
+          markers communicate key training zones. CP asymptote provides physiological
+          context. Marker labels could be more prominent.
     spec_compliance:
       score: 15
       max: 15
@@ -152,31 +142,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct chart type: line chart with log X-axis showing power vs
-          duration. Both empirical and model curves present.'
+        comment: 'Correct: line chart with logarithmic X-axis, empirical curve + model
+          overlay.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'Log X-axis (type=''log''): YES. Empirical curve as primary series:
-          YES. CP model as dashed overlay: YES. Reference markers at 5s/1min/5min/20min
-          via markLine: YES. CP asymptote as dotted horizontal: YES. Human-readable
-          axis formatter: YES.'
+        comment: Log X-axis, empirical mean-maximal curve, dashed CP model overlay,
+          vertical markers at 5s/1min/5min/20min, CP horizontal asymptote — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = duration in seconds (log). Y = power in watts. Full range 1s–18000s
-          (5h). Empirical and model data correctly mapped.
+        comment: 'X: duration in seconds (log-spaced 1-18000s). Y: power in watts
+          (200-1200W). All data visible.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''curve-power-duration · javascript · echarts · anyplot.ai''
-          — correct format. Legend labels all three series.'
+        comment: 'Title: curve-power-duration · javascript · echarts · anyplot.ai.
+          Legend: Mean-Maximal Power, Critical Power Model, CP Asymptote (280 W).'
     data_quality:
       score: 15
       max: 15
@@ -186,25 +174,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All power-duration curve aspects shown: monotonic decay, neuromuscular
-          peak at short durations, aerobic convergence at long durations, CP model
-          fit, CP asymptote, reference duration annotations.'
+        comment: Shows empirical decay curve, CP model fit, reference duration markers,
+          CP horizontal asymptote. Full range 1s to 5h with monotonically non-increasing
+          shape.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Well-trained cyclist: CP=280W, W''=20000J. Power range ~1100W (1s
-          sprint) to ~280W (5h). Physiologically realistic and domain-neutral (no
-          political/controversial content).'
+        comment: Well-trained cyclist (CP=280W, W'=20000J, sprint ~1100W). Neutral,
+          scientifically grounded sports context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 45 log-spaced points — appropriate density. Y-axis 200–1200W covers
-          full physiological range. X-axis 1s–18000s covers full sports-science relevant
-          spectrum.
+        comment: CP=280W and W'=20000J realistic for well-trained club cyclist. Decay
+          from 1100W at 1s to 280W at 5h is physiologically plausible.
     code_quality:
       score: 10
       max: 10
@@ -214,34 +200,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Flat linear script.
+        comment: 'Linear flow: constants → data arrays → chart init → setOption. No
+          functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: hard-coded boostPct array, fixed CP and W''
-          constants.'
+        comment: 'Fully deterministic: mathematical formulas + hardcoded boostPct
+          array. No randomness.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports — uses echarts global and window.ANYPLOT_TOKENS as required.
+        comment: Only browser globals used (window.ANYPLOT_TOKENS, window.echarts,
+          document). No unnecessary imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean data generation via Array.from + map. No fake UI or interactive
-          simulation.
+        comment: Clean, readable. Array.from + .map() for data generation. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'animation: false set. echarts.init on #container with no explicit
-          size or devicePixelRatio. Harness handles file output.'
+        comment: 'animation: false set. No explicit size/devicePixelRatio. ECharts
+          5.x API used correctly.'
     library_mastery:
       score: 7
       max: 10
@@ -251,26 +238,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Above default (3). Native log axis type used. markLine for reference
-          annotations is the ECharts-idiomatic approach. Custom axis label formatter
-          correctly converts seconds to human-readable strings. backgroundColor: ''transparent''
-          correct.'
+        comment: 'Good idiomatic usage: markLine for vertical reference lines, type:log
+          for logarithmic axis, series-array composition. Slight deduction: log axis
+          ticks are auto-generated at non-cycling-reference positions.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Above default (1). markLine with vertical reference markers is a
-          distinctive ECharts feature not easily replicated in other libraries. Native
-          log axis type with custom formatter leverages ECharts strengths. elevatedBg
-          legend box shows token system mastery.
+        comment: Uses markLine (distinctively ECharts declarative annotation feature),
+          built-in log axis with custom formatter. Could push further with rich tooltip
+          formatter or custom symbol shapes.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - manual-ticks
+  - html-export
   patterns:
   - data-generation
   dataprep: []
-  styling:
-  - alpha-blending
+  styling: []
