@@ -1,8 +1,7 @@
 // anyplot.ai
 // line-training-load-pmc: Training Load Performance Management Chart
-// Library: Highcharts 12.6.0 | Node 22
-// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
-// Quality: pending | Created: 2026-06-13
+// Library: highcharts 12.6.0 | JavaScript 22.22.3
+// Quality: 88/100 | Created: 2026-06-13
 
 //# anyplot-orientation: landscape
 
