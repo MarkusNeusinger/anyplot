@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-training-load-pmc: Training Load Performance Management Chart
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 78/100 | Created: 2026-06-13
@@ -23,7 +23,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Palette in series-add order: ref, CTL, ATL, TSB+ (fresh), TSB- (fatigued), TSS
+# Palette in series-add order: ref, CTL, ATL, TSB+ (fresh), TSB- (fatigued), TSS, race-day
 CHART_COLORS = (
     INK_MUTED,  # 0: TSB = 0 reference line (dashed)
     "#009E73",  # 1: Fitness (CTL)  — Imprint pos 1
@@ -31,6 +31,7 @@ CHART_COLORS = (
     "#4467A3",  # 3: Form TSB (fresh / positive) — Imprint pos 3
     "#AE3030",  # 4: Form TSB (fatigued / negative) — Imprint pos 5
     "#BD8233",  # 5: Daily TSS — Imprint pos 4
+    "#DDCC77",  # 6: Race Day marker — ANYPLOT_AMBER
     "#2ABCCD",
     "#954477",
 )
@@ -84,8 +85,11 @@ tsb_list = tsb.tolist()
 tsb_pos = [v if v >= 0 else None for v in tsb_list]
 tsb_neg = [v if v < 0 else None for v in tsb_list]
 
+# Race day marker: single dot at day 155 (taper complete, form peaks)
+race_day_marker = [None] * n_days
+race_day_marker[155] = float(ctl[155])
+
 # X-axis: only month-start labels (6 entries) — avoids rendering artefact
-# from the 180-empty-string approach and gives clear, readable tick marks
 x_labels = [d.strftime("%b %Y") for d in dates if d.day == 1]
 
 # Title — 52 chars → ratio 1.0 → title_font_size 66
@@ -107,7 +111,7 @@ custom_style = Style(
     stroke_width=3.0,
 )
 
-# Chart
+# Chart — y-range capped at 80 so CTL/ATL dominate; TSS dots scatter in the upper zone
 chart = pygal.Line(
     width=3200,
     height=1800,
@@ -119,7 +123,8 @@ chart = pygal.Line(
     show_y_guides=True,
     show_dots=False,
     fill=False,
-    legend_at_bottom=False,
+    legend_at_bottom=True,  # horizontal legend gives full label width — no truncation
+    range=[-35, 80],  # clips extreme TSS spikes; ATL/CTL (≤65) fully visible
 )
 
 chart.x_labels = x_labels
@@ -129,10 +134,12 @@ chart.add("TSB = 0", [0] * n_days, stroke_style={"width": 1.2, "dasharray": "6 4
 chart.add("Fitness (CTL)", ctl.tolist(), stroke_style={"width": 5.5})
 chart.add("Fatigue (ATL)", atl.tolist(), stroke_style={"width": 3.5})
 # TSB as two-toned filled area: blue=fresh (positive form), red=fatigued (negative form)
-# allow_interruptions=True ensures each island fills independently to the zero baseline
 chart.add("Form TSB (fresh)", tsb_pos, allow_interruptions=True, fill=True, stroke_style={"width": 1.5})
 chart.add("Form TSB (fatigued)", tsb_neg, allow_interruptions=True, fill=True, stroke_style={"width": 1.5})
-chart.add("Daily TSS", tss.tolist(), stroke_style={"width": 1.5})
+# TSS as scatter dots — stroke=False so only dots render without dominating spike-lines
+chart.add("Daily TSS", tss.tolist(), stroke=False, show_dots=True, dots_size=3)
+# Race-day marker: single amber dot at day 155 anchors the taper narrative
+chart.add("Race Day ★", race_day_marker, allow_interruptions=True, stroke=False, show_dots=True, dots_size=8)
 
 # Save PNG and interactive HTML
 chart.render_to_png(f"plot-{THEME}.png")
