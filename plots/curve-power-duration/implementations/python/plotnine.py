@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-power-duration: Mean-Maximal Power Duration Curve
 Library: plotnine 0.15.7 | Python 3.13.13
 Quality: 84/100 | Created: 2026-06-13
@@ -117,18 +117,18 @@ anyplot_theme = theme(
 # Plot
 plot = (
     ggplot(df_all, aes("duration_s", "power_w", color="series", linetype="series"))
-    + geom_line(size=1.0)
+    + geom_line(size=1.1)
     # Reference duration markers
     + geom_vline(xintercept=[5, 60, 300, 1200], color=INK_MUTED, linetype="dotted", size=0.5)
     # CP asymptote
     + geom_hline(yintercept=CP, color=INK_MUTED, linetype="dotted", size=0.4)
     # Duration annotation labels
-    + annotate("text", x=5, y=1000, label="5 s", color=INK_MUTED, size=2.8, ha="center")
-    + annotate("text", x=60, y=1000, label="1 min", color=INK_MUTED, size=2.8, ha="center")
-    + annotate("text", x=300, y=1000, label="5 min", color=INK_MUTED, size=2.8, ha="center")
-    + annotate("text", x=1200, y=1000, label="20 min\n(FTP proxy)", color=INK_MUTED, size=2.8, ha="center")
+    + annotate("text", x=5, y=1000, label="5 s", color=INK_MUTED, size=3.5, ha="center")
+    + annotate("text", x=60, y=1000, label="1 min", color=INK_MUTED, size=3.5, ha="center")
+    + annotate("text", x=300, y=1000, label="5 min", color=INK_MUTED, size=3.5, ha="center")
+    + annotate("text", x=1200, y=1000, label="20 min\n(FTP proxy)", color=INK_MUTED, size=3.5, ha="center")
     # CP label
-    + annotate("text", x=1.5, y=CP + 16, label=f"CP = {CP} W", color=INK_MUTED, size=2.5, ha="left")
+    + annotate("text", x=1.5, y=CP + 16, label=f"CP = {CP} W", color=INK_MUTED, size=3.2, ha="left")
     # Scales
     + scale_x_log10(breaks=x_breaks, labels=x_labels)
     + scale_color_manual(values=color_map, name="")
