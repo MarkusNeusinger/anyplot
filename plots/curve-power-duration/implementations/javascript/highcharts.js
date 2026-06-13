@@ -39,11 +39,12 @@ for (let i = 1; i < rawPowers.length; i++) {
 }
 const empiricalData = durList.map((d, i) => [d, Math.round(rawPowers[i] * 10) / 10]);
 
-// 2-param CP model: P = CP + W'/t, sampled from 45 s to 18 000 s
-// (CP model is applied only in the range where it is physiologically valid)
+// 2-param CP model: P = CP + W'/t, sampled from 1 s to 18 000 s
+// Highcharts clips points above the y-axis max; the line naturally enters the
+// chart area around ~20 s, matching the empirical curve without a hard cutoff.
 const modelData = [];
 for (let i = 0; i < 200; i++) {
-  const d = Math.exp(Math.log(45) + (i / 199) * (LOG_MAX - Math.log(45)));
+  const d = Math.exp((i / 199) * LOG_MAX);
   modelData.push([d, CP + W_PRIME / d]);
 }
 
@@ -51,14 +52,13 @@ for (let i = 0; i < 200; i++) {
 // Title: 59 chars < 67 baseline — no fontSize shrinkage needed
 const titleText = "curve-power-duration · javascript · highcharts · anyplot.ai";
 
-const tickPositions = [1, 5, 15, 30, 60, 300, 600, 1200, 3600, 18000];
-
 Highcharts.chart("container", {
   chart: {
     type: "line",
     backgroundColor: "transparent",
     animation: false,
     style: { fontFamily: "inherit" },
+    plotBorderWidth: 0,
   },
   credits: { enabled: false },
   colors: t.palette,
@@ -69,7 +69,8 @@ Highcharts.chart("container", {
   },
   xAxis: {
     type: "logarithmic",
-    tickPositions,
+    tickPositions: [1, 5, 15, 30, 60, 300, 600, 1200, 3600, 18000],
+    minorTicks: false,
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
     gridLineColor: t.grid,
@@ -78,9 +79,11 @@ Highcharts.chart("container", {
       style: { color: t.inkSoft, fontSize: "14px" },
       formatter: function () {
         const v = this.value;
-        if (v < 60) return v.toFixed(0) + " s";
-        if (v < 3600) return (v / 60).toFixed(0) + " min";
-        return (v / 3600).toFixed(0) + " h";
+        const allowed = [1, 5, 15, 30, 60, 300, 600, 1200, 3600, 18000];
+        if (!allowed.some(a => Math.abs(v - a) / a < 0.01)) return "";
+        if (v < 60) return Math.round(v) + " s";
+        if (v < 3600) return Math.round(v / 60) + " min";
+        return Math.round(v / 3600) + " h";
       },
     },
     title: {
@@ -115,7 +118,8 @@ Highcharts.chart("container", {
     tickColor: t.inkSoft,
     gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
-    min: 0,
+    min: 210,
+    max: 1250,
     plotLines: [
       {
         value: CP,
