@@ -1,0 +1,262 @@
+library: d3
+language: javascript
+specification_id: line-training-load-pmc
+created: '2026-06-13T21:00:40Z'
+updated: '2026-06-13T21:18:58Z'
+generated_by: claude-sonnet
+workflow_run: 27478722238
+issue: 8646
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/javascript/d3/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - Correct PMC with all four signals (CTL, ATL, TSB, daily TSS) rendered faithfully
+  - 'Semantically correct color assignments: green (fitness), lavender (fatigue),
+    blue (fresh/positive form), red (fatigued/negative form) — all Imprint palette
+    members with justified semantic reasoning'
+  - Two-tone TSB filled area using separate d3.area() generators for positive and
+    negative regions — distinctively D3
+  - Dual Y-axes correctly separate CTL/ATL scale from TSB oscillating scale
+  - Seeded LCG RNG provides reproducibility in browser context where Math.random()
+    cannot be seeded
+  - Realistic 180-day cycling season with periodized build → peak → race prep → taper
+    arc, realistic EWMA math
+  - Clip paths prevent data from bleeding outside the plot area on all layers
+  - Dashed zero reference line at TSB=0 cleanly separates fresh (positive) from fatigued
+    (negative) zones
+  - All font sizes explicitly set; both renders are clean and fully readable
+  weaknesses:
+  - 'Dark render: negative TSB fill (#AE3030 at opacity 0.22 on #1A1A17) creates a
+    murky brownish zone — consider raising opacity to 0.30 or using a slightly warmer
+    red for better distinction in dark mode'
+  - Legend border box adds visual noise — consider removing the stroke or replacing
+    with a more minimal translucent fill only
+  - No phase-transition markers or annotations indicating the build / peak / taper
+    boundaries — would strengthen data storytelling without requiring extra spec features
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 surface — correct Imprint light theme background.
+      Chrome: Title "line-training-load-pmc · javascript · d3 · anyplot.ai" bold 22px centered, fully visible, spans ~75% of width. Left Y-axis label "Training Load (TSS)" and right Y-axis label "Form / TSB" both at 14px, clearly readable. Tick labels at 12px on all three axes (x, left-y, right-y) readable. Dashed zero reference line at TSB=0 provides clear zone separator.
+      Data: Fitness (CTL) as thick green (#009E73) smooth rising line — brand-first color correct. Fatigue (ATL) as lavender (#C475FD) spiky line clearly above CTL for most of the season. Positive TSB (fresh) as translucent blue (#4467A3 ~32%) area above zero — visible in late-season taper. Negative TSB (fatigued) as translucent red (#AE3030 ~22%) area below zero — covers large portion of season. Daily TSS as subtle gray bars at bottom 24% of chart. Legend in top-right corner clearly labels all five series with matching colors.
+      Legibility verdict: PASS — all text readable against warm off-white background; no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct Imprint dark theme background.
+      Chrome: Title in light ink color, clearly visible against dark background. Axis labels and tick labels rendered in light/soft ink color — all readable. No dark-on-dark failures. Grid lines subtle at low opacity.
+      Data: CTL green line (#009E73) identical to light render — correctly unchanged across themes. ATL lavender (#C475FD) line identical. Positive TSB blue area identical. Negative TSB red fill (#AE3030 at 0.22) blends somewhat more with dark background, appearing brownish-dark — discernible but less crisp than light render. TSS bars (inkSoft at 0.28 on dark bg) are subtle but present.
+      Legibility verdict: PASS — all text elements readable in light colors against near-black background. Data colors identical to light render (only chrome flipped). Minor: negative TSB fill is less visually distinct in dark mode due to low opacity on dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 22px, axis labels 14px, tick
+          labels 12px, legend 13px. Well-proportioned in both renders.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps. Legend placed in top-right does not collide with
+          data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines, area fills, and TSS bars all visible and adapted to 180-day
+          density. CTL/ATL stroke widths appropriate.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe. Green/purple/blue/red semantic combination
+          provides multi-cue distinguishability.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Generous margins (top 80, right 90, bottom 70,
+          left 75). Plot fills canvas well.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Left: Training Load (TSS), Right: Form / TSB — both descriptive
+          with context.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'CTL = palette[0] #009E73 (brand-first correct). ATL = palette[1]
+          #C475FD. TSB blue/red semantic exception justified by spec guidance. Chrome
+          theme-correct in both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: semantic color assignments, dual-axis professional
+          layout, monotone smooth curves, clip paths. Clearly above defaults but not
+          quite FiveThirtyEight-level polish.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle horizontal grid (t.grid token ~15% opacity), clean axis styling
+          with inkSoft domain strokes, generous whitespace. Legend box frame adds
+          minor noise.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dashed zero line clearly separates form zones. Dual-tone TSB (blue=fresh,
+          red=fatigued) creates immediate visual narrative. Training arc (build →
+          peak → taper) is visible. Phase-transition markers absent.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct PMC chart type with all required components.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: CTL line, ATL line, TSB two-toned filled area, TSS bars, dual Y-axes,
+          TSB=0 reference line, legend — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date on X, CTL/ATL on left Y, TSB on right Y, TSS as bars — all correctly
+          mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''line-training-load-pmc · javascript · d3 · anyplot.ai''
+          — exact format correct. Legend labels match all five series.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all PMC aspects: fitness build, fatigue response, both positive
+          and negative form zones, daily training load variation.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic 180-day cycling season (Oct 2025–Mar 2026). Neutral sport
+          science context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: CTL builds to ~100 (realistic for dedicated cyclist), ATL more volatile
+          (7-day constant correct), TSB range ±40 (realistic), TSS values 0-150+ plausible
+          for daily training sessions.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat structure with clear commented sections. No functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG RNG with _seed=42 provides deterministic data generation
+          in browser context.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only uses the global d3 object. No unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean D3 idiomatic code. Separate layer groups with clip paths. No
+          over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: D3 harness renders to plot-{THEME}.png + plot-{THEME}.html. Uses
+          D3 v7 API correctly.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert D3 usage: data binding with .selectAll().data().join(), area/line
+          generators, time scales, clip paths, dual axes.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Two separate area generators for positive/negative TSB zones, clip
+          path layer isolation, d3.curveMonotoneX for EWMA smoothness, browser-compatible
+          LCG seeded RNG — distinctly D3 patterns.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  - rolling-window
+  styling:
+  - alpha-blending
