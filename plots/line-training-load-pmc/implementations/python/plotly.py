@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-training-load-pmc: Training Load Performance Management Chart
 Library: plotly 6.8.0 | Python 3.13.13
 Quality: 87/100 | Created: 2026-06-13
@@ -69,6 +69,7 @@ fig.add_trace(
         x=dates,
         y=tss,
         name="Daily TSS",
+        width=86400000,  # one day in ms — fills each slot without gaps
         marker={"color": TSS_BLUE, "opacity": 0.28, "line": {"width": 0}},
         hovertemplate="%{x|%b %d}: TSS %{y:.0f}<extra></extra>",
     ),
@@ -118,13 +119,13 @@ fig.add_trace(
     secondary_y=True,
 )
 
-# ATL — Acute Training Load / Fatigue (primary axis)
+# ATL — Acute Training Load / Fatigue (primary axis, dashed for color-blind accessibility)
 fig.add_trace(
     go.Scatter(
         x=dates,
         y=atl,
         name="Fatigue (ATL)",
-        line={"color": FATIGUE_RED, "width": 2.5},
+        line={"color": FATIGUE_RED, "width": 2.5, "dash": "dot"},
         mode="lines",
         hovertemplate="%{x|%b %d}: ATL %{y:.1f}<extra></extra>",
     ),
@@ -144,13 +145,13 @@ fig.add_trace(
     secondary_y=False,
 )
 
-# TSB — Form line with legend entry (secondary axis)
+# TSB — Form line with legend entry (secondary axis, 2px for better visibility)
 fig.add_trace(
     go.Scatter(
         x=dates,
         y=tsb,
         name="Form (TSB)",
-        line={"color": INK_SOFT, "width": 1.5},
+        line={"color": INK_SOFT, "width": 2.0},
         mode="lines",
         hovertemplate="%{x|%b %d}: TSB %{y:.1f}<extra></extra>",
     ),
@@ -174,9 +175,9 @@ fig.update_layout(
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
         "font": {"color": INK_SOFT, "size": 10},
-        "x": 0.02,
+        "x": 0.99,
         "y": 0.97,
-        "xanchor": "left",
+        "xanchor": "right",
         "yanchor": "top",
     },
     barmode="overlay",
@@ -187,7 +188,9 @@ fig.update_yaxes(
     title={"text": "Training Load (TSS · CTL · ATL)", "font": {"color": INK, "size": 12}},
     tickfont={"color": INK_SOFT, "size": 10},
     gridcolor=GRID,
+    showline=True,
     linecolor=INK_SOFT,
+    mirror=False,
     zeroline=False,
     rangemode="tozero",
     secondary_y=False,
@@ -199,13 +202,21 @@ fig.update_yaxes(
     tickfont={"color": INK_SOFT, "size": 10},
     showgrid=False,
     zeroline=False,
+    showline=True,
     linecolor=INK_SOFT,
+    mirror=False,
     secondary_y=True,
 )
 
 # x-axis: shared date axis with monthly ticks
 fig.update_xaxes(
-    tickfont={"color": INK_SOFT, "size": 10}, linecolor=INK_SOFT, showgrid=False, dtick="M1", tickformat="%b '%y"
+    tickfont={"color": INK_SOFT, "size": 10},
+    showline=True,
+    linecolor=INK_SOFT,
+    mirror=False,
+    showgrid=False,
+    dtick="M1",
+    tickformat="%b '%y",
 )
 
 # Save
