@@ -1,0 +1,260 @@
+library: letsplot
+language: python
+specification_id: curve-power-duration
+created: '2026-06-13T22:07:55Z'
+updated: '2026-06-13T22:16:32Z'
+generated_by: claude-sonnet
+workflow_run: 27480308477
+issue: 8647
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/python/letsplot/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Complete spec compliance: all required features present (log x-axis, empirical
+    MMP curve, CP model overlay, reference duration markers at 5s/1min/5min/20min,
+    CP asymptote annotation)'
+  - Perfect theme-adaptive chrome with all Imprint tokens correctly applied in both
+    light and dark renders — no dark-on-dark failures
+  - Redundant encoding (color + linetype) provides excellent CVD accessibility across
+    all series
+  - 'Realistic, domain-authentic data: CP=280W, W′=18,500J, PCHIP interpolation, explicit
+    monotonicity enforcement'
+  - Clean KISS structure with all text sizes explicitly set
+  weaknesses:
+  - Reference annotation text (size=3.2mm) is at the lower readable boundary — slightly
+    larger (size=3.8–4.0) would improve readability of zone labels (5 s, 1 min, 5
+    min, 20 min) and lift DE-01
+  - Imprint palette position 2 (#C475FD, lavender) skipped in favor of position 3
+    (#4467A3, blue) for the CP model line without a documented semantic exception
+    comment in the code
+  - Legend box border (color=INK_SOFT) adds marginal visual noise; a borderless legend
+    would improve DE-02 refinement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface
+      Chrome: Title "curve-power-duration · python · letsplot · anyplot.ai" in dark ink, ~70% plot width — expected for mandated title length. Y-axis label "Mean-Maximal Power (W)" clearly readable in dark ink. X-axis label "Duration" readable. Tick labels ("1s", "5s", "30s", "1min", "5min", "20min", "1h") in soft dark gray. Reference labels ("5 s", "1 min", "5 min", "20 min") near top of plot area at size=3.2mm — small but readable. "CP = 280 W" annotation at right edge readable.
+      Data: Primary series (Measured MMP) in Imprint brand green #009E73, solid line with circular markers. Secondary series (CP Model) in Imprint blue #4467A3, dashed line starting near 45s. Four dashed vertical reference lines (alpha=0.55) at 5s, 1min, 5min, 20min. Dotted horizontal CP asymptote at 280W. Legend below plot with elevated-background box.
+      Legibility verdict: PASS — all text readable against #FAF8F1 background, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct Imprint dark surface
+      Chrome: Title in near-white (#F0EFE8 INK token), fully readable. Axis labels, tick labels, reference annotations, "CP = 280 W" label and legend text all appear in light tones (INK_SOFT=#B8B7B0 for secondary text). Y-axis horizontal grid lines visible as subtle light-gray rules. No dark-on-dark failures detected.
+      Data: Colors identical to light render — green #009E73 empirical curve with markers, blue #4467A3 dashed model fit. Visual separation between data colors and dark background is strong.
+      Legibility verdict: PASS — all text readable against #1A1A17 background, no dark-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=16, axis_title=12, axis_text=10,
+          legend_text=10, annotations=3.2mm). Proportions well-balanced, no overflow,
+          both renders fully legible.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Reference labels at y=1170 sit well above data at their x positions.
+          No text collisions detected.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines at size=1.5, markers at size=2.5 alpha=0.85 well-adapted for
+          50 empirical points. Dashed model line clearly distinct.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green (#009E73) and blue (#4467A3) well-separated. Redundant linetype
+          encoding (solid vs dashed) provides full CVD safety.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: L-shaped axis frame, y-axis-only grid, good margins. Canvas 3200x1800
+          confirmed by gate pass. No content cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis 'Mean-Maximal Power (W)' includes units. X-axis 'Duration'
+          with explicit time tick labels serves as unit reference.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 correct. Second series uses Imprint position
+          3 (#4467A3, blue) — recognized convention for model-fit lines. Backgrounds
+          #FAF8F1/#1A1A17 correct. Both renders theme-correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above well-configured default (4). Custom Imprint palette, careful
+          theme adaptation, meaningful annotation layer. Not quite at clearly-above-defaults
+          tier (6).
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis-only grid, panel border removed, L-shaped axis, subtle reference
+          line alpha. Legend box border adds marginal noise.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Strong visual hierarchy: solid green primary vs dashed blue secondary.
+          Reference annotations at training zone boundaries (5s/1min/5min/20min).
+          CP asymptote communicates aerobic threshold.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Power-duration curve with log x-axis, empirical MMP as primary, CP
+          model as overlay — correct chart type.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Log x-axis, human-readable tick labels, empirical MMP, dashed CP
+          model overlay, vertical markers at 5s/1min/5min/20min, CP asymptote with
+          label, monotonically-enforced curve — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Duration (s) on log x-axis, Mean-Maximal Power (W) on y-axis, spanning
+          1s to 18000s correctly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'curve-power-duration · python · letsplot · anyplot.ai' matches
+          required format. Legend labels descriptive.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows empirical MMP curve, CP model divergence at short durations,
+          asymptotic approach to CP, reference zone markers, characteristic monotonic
+          decay.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Synthetic well-trained cyclist, CP=280W, W'=18500J, realistic anchor
+          powers, PCHIP interpolation producing domain-authentic curve.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: CP=280W typical for Cat 3/4, W'=18500J within normal 15000-25000J
+          range, 1100W at 1s plausible for well-trained rider.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports → tokens → data → plot → save. No functions
+          or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All 19 lets_plot imports used. scipy.interpolate.PchipInterpolator
+          used. No unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity. No over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html correctly.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'High-level ggplot grammar used expertly: simultaneous scale_color_manual
+          + scale_linetype_manual, inherit_aes=False on annotation layers, scale_x_log10
+          with custom breaks/labels, full theme() element_* hierarchy.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: HTML export via ggsave (interactive Vega/D3 output), scale_x_log10
+          with custom breaks, ggsize + scale=4 for exact canvas control.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - manual-ticks
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - interpolation
+  styling:
+  - alpha-blending
