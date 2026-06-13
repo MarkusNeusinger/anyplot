@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: curve-power-duration
 created: '2026-06-13T22:02:06Z'
-updated: '2026-06-13T22:07:09Z'
+updated: '2026-06-13T22:15:39Z'
 generated_by: claude-sonnet
 workflow_run: 27480172199
 issue: 8647
@@ -12,99 +12,93 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-pow
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - 'Full spec compliance: all required features (log x, MMP curve, CP model, reference
-    markers, CP asymptote, annotations) are present and correctly implemented'
-  - 'Excellent data quality: realistic well-trained cyclist profile with CP=280 W,
-    W’=20,000 J, PCHIP interpolation from physiologically grounded anchors'
-  - Proper theme-adaptive chrome throughout (page bg, ink, ink_soft, ink_muted all
-    correctly branched on ANYPLOT_THEME)
-  - 'Correct Imprint palette order: brand green first, lavender second, with solid/dashed
-    linetype redundant encoding'
-  - 'Clean plotnine idioms: merged legend via shared scale name, coord_cartesian for
-    y-limits, scale_x_log10 with custom breaks/labels'
+  - 'Perfect spec compliance: log-x, empirical MMP curve, CP model overlay, reference
+    duration markers, and CP asymptote all implemented correctly'
+  - Correct Imprint palette usage with brand green first series and theme-adaptive
+    chrome in both light and dark renders with no dark-on-dark issues
+  - High data quality with realistic well-trained cyclist physiology (CP=280 W, W′=20
+    kJ) using PCHIP interpolation for smooth monotonic empirical curve
+  - Redundant visual encoding (solid vs dashed linetype) removes hue-only color dependence;
+    clean KISS code with reproducibility seed
   weaknesses:
-  - Annotation text sizes (size=2.8 for duration labels, size=2.5 for 'CP = 280 W')
-    are at the floor of readability — increase to ~3.5 for better legibility at mobile
-    scales
-  - CP model dashed line visually merges with the empirical curve at long durations
-    (>1 h) where both approach ~280 W — consider a slightly stronger colour or slightly
-    thicker dashed line to keep the two series distinguishable in that convergence
-    zone
-  - DE-03 storytelling is weakened by the small annotation sizes; the '20 min (FTP
-    proxy)' zone is the most important reference for athletes but the annotation is
-    hard to read at smaller viewing sizes
+  - Tertiary annotation text (CP label at size=3.2 mm, duration labels at size=3.5
+    mm) is borderline small for mobile readability — increase to 3.8–4.5 mm
+  - CP model line and empirical curve converge very closely at long durations making
+    them hard to distinguish — slightly increase model line size to 1.4 or add alpha
+    differentiation
+  - Slight gap above peak sprint data in upper plot region — tighten ylim upper bound
+    or annotate the sprint peak to improve canvas utilization
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "curve-power-duration · python · plotnine · anyplot.ai" clearly visible in dark ink. Axis labels "Power (W)" and "Duration" readable. Tick labels (1 s, 5 s, 30 s, 1 min, 5 min, 20 min, 1 h, 5 h on x; 200–1000+ on y) clearly readable. Horizontal legend at top with "CP model (P = CP + W'/t)" and "Mean-maximal power" labels legible. Annotation text at size=2.8 mm is small but just readable at full resolution.
-      Data: First series (Mean-maximal power) in #009E73 brand green solid line — prominently visible. Second series (CP model) in #C475FD lavender dashed line — visible from ~5 min onwards. Reference vertical dotted lines at 5 s, 1 min, 5 min, 20 min using INK_MUTED. CP asymptote horizontal dotted line at 280 W. Monotonically decreasing curve from ~1050 W at 1 s to ~280 W at 5 h.
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "curve-power-duration · python · plotnine · anyplot.ai" in dark ink, clearly readable. Y-axis label "Power (W)" and X-axis label "Duration" in INK color, clearly visible. Tick labels in INK_SOFT, readable. Legend entries in INK_SOFT text, readable. Reference annotations (duration labels, CP label) in INK_MUTED — quite small but legible.
+      Data: First series (Mean-maximal power) in brand green #009E73 — solid line, monotonically decreasing from ~1050 W to ~278 W. Second series (CP model P = CP + W'/t) in lavender #C475FD — dashed line, overlaid from 5 min onward. Vertical dotted reference lines at 5s, 1min, 5min, 20min in INK_MUTED. Horizontal CP asymptote at 280W dotted in INK_MUTED.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title, axis labels ("Power (W)", "Duration"), tick labels all rendered in light-coloured ink, clearly readable against dark background. Legend box uses elevated dark fill (#242420). No dark-on-dark failure observed — all text elements are properly using theme-adaptive INK/INK_SOFT/INK_MUTED tokens. Annotation text visible in muted light tone.
-      Data: Brand green #009E73 and lavender #C475FD are visually identical to light render — Imprint palette data colours unchanged between themes as required. Reference dotted lines and CP asymptote visible in muted light tone.
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title and axis labels flip to light cream/off-white text — clearly readable against dark background. Tick labels in B8B7B0 secondary ink — visible. Legend box uses elevated dark background #242420. No dark-on-dark failures detected.
+      Data: Colors identical to light render — brand green #009E73 and lavender #C475FD unchanged. Reference dotted lines use dark-theme INK_MUTED token.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Primary text readable in both themes. Annotation text at size=2.8
-          and 2.5 mm is at the legibility floor — marginal at mobile scales.
+        comment: All primary text sizes explicitly set; title fontsize scaled dynamically;
+          annotation text (size 3.2-3.5 mm) is borderline small for mobile
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No significant collisions. '20 min (FTP proxy)' annotation closely
-          packed alongside its vertical reference line but legible.
+        comment: No text overlaps; reference labels at y=1000 well-separated; tick
+          labels clean
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Green empirical curve prominent. CP model lavender dashed line visible
-          in 5-20 min zone but converges visually with empirical line at long durations
-          (>1 h).
+        comment: Lines at size=1.1 visible; CP label very small; model and empirical
+          curves merge closely at long durations
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender pair CVD-safe. INK_MUTED for reference lines. No red/green
-          sole-signal.
+        comment: Green + lavender CVD-safe; redundant linetype encoding removes hue-only
+          reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed. Good proportions, no clipping. CP label near
-          left edge is tight but within bounds.
+        comment: Canvas 3200x1800 correct; good layout; minor gap above peak sprint
+          data in upper region
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Power (W)' includes units. X-axis 'Duration' contextualised
-          by human-readable tick labels. Mandated title format correct.
+        comment: Y-axis 'Power (W)' with units; X-axis 'Duration' descriptive in log-scale
+          context
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green). Second series #C475FD (Imprint
-          position 2). Backgrounds #FAF8F1/#1A1A17 correct. Chrome theme-adaptive.'
+        comment: 'First series #009E73; second series #C475FD (Imprint pos 2); backgrounds
+          #FAF8F1/#1A1A17; full theme-adaptive chrome'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -112,24 +106,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom Imprint palette, theme-adaptive chrome, clean log-x layout,
-          PCHIP interpolation for smooth empirical curve, thoughtful annotation strategy.
-          Above default.
+        comment: Custom Imprint palette, theme-adaptive tokens throughout, clean minimal
+          aesthetic clearly above library defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Panel border removed, no x-grid, subtle y-grid (alpha=0.15), elevated
-          legend surface, dotted reference lines. Well-refined.
+        comment: Panel border removed; y-axis only grid at alpha=0.15; explicit axis
+          lines; legend with elevated background
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Reference markers and CP asymptote help orientation; linetype+colour
-          redundant encoding. However, small annotation text (size 2.5-2.8) diminishes
-          storytelling clarity in the key FTP zone.
+        comment: Reference markers communicate cycling training zones; CP asymptote
+          shows aerobic ceiling; dual-line hierarchy guides reader
     spec_compliance:
       score: 15
       max: 15
@@ -139,30 +131,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct power-duration curve with logarithmic time axis, monotonically
-          decreasing MMP shape.
+        comment: 'Correct chart type: multi-series line on log-x axis for power-duration
+          curve'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Log x-axis, human-readable ticks, empirical MMP curve, CP model dashed
-          overlay, 4 reference markers with annotations, CP asymptote with label —
-          all present.
+        comment: Log-x axis, empirical MMP, dashed CP model, vertical reference markers
+          (5s/1min/5min/20min), horizontal CP asymptote with label
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: duration_s on log x, power_w on y. 50 log-spaced empirical points
-          via PCHIP. CP model P(t)=CP+W'/t. Monotonically non-increasing enforced.
+        comment: X=duration_s log scale, Y=power_w; full 1s-5h range; monotonically
+          non-increasing empirical curve enforced
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'curve-power-duration · python · plotnine · anyplot.ai' correct.
-          Legend labels match series.
+        comment: Title 'curve-power-duration · python · plotnine · anyplot.ai' correct;
+          legend labels clearly identify both series
     data_quality:
       score: 15
       max: 15
@@ -172,22 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects: empirical curve, CP model, reference durations, CP
-          asymptote, full 1s-5h range.'
+        comment: Full power-duration shape from 1s sprint to 5h endurance; both empirical
+          and model curves; reference zones; CP asymptote
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: CP=280 W, W'=20,000 J — textbook well-trained cyclist values. Sprint
-          peak ~1050 W plausible. Neutral sports-science context.
+        comment: Well-trained cyclist CP=280W, W'=20kJ; realistic cycling analytics
+          scenario, neutral context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis 220-1120 W covers all data. X-axis 1s-18,000s (5h) matches
-          spec.
+        comment: Sprint ~1050W, CP=280W asymptote — consistent with real-world well-trained
+          cyclist physiology
     code_quality:
       score: 10
       max: 10
@@ -197,31 +188,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no functions or classes.
+        comment: 'Linear: imports → data → theme → plot → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42) set at top
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. sys.path guard justified.
+        comment: All imports used; scipy.interpolate.PchipInterpolator used for realistic
+          MMP curve
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean grammar-of-graphics composition. No fake UI.
+        comment: Clean Pythonic code; PCHIP interpolation for realistic data generation;
+          monotonicity loop is domain-correct
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=400, width=8, height=4.5.
+        comment: Saves as plot-{THEME}.png with dpi=400, width=8, height=4.5
     library_mastery:
       score: 7
       max: 10
@@ -231,17 +224,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Layered ggplot composition, scale_x_log10 for aesthetic-level log
-          transform, coord_cartesian for y-limits, theme() tokens correctly mapped,
-          dual scales merged via shared name.
+        comment: Tidy data concatenation, ggplot grammar layering, scale functions
+          for log axis with custom breaks/labels — very idiomatic
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Exploits plotnine dual-scale merging (colour+linetype same legend),
-          grammar-of-graphics layer composition for reference lines and annotations,
-          scale_x_log10 breaks/labels for custom tick formatting.
+        comment: scale_x_log10 with breaks/labels, scale_color_manual + scale_linetype_manual
+          together, coord_cartesian — grammar-of-graphics features distinctive to
+          plotnine
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -255,4 +247,4 @@ impl_tags:
   dataprep:
   - interpolation
   styling:
-  - grid-styling
+  - publication-ready

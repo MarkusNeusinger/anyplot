@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 curve-power-duration: Mean-Maximal Power Duration Curve
 Library: plotnine 0.15.7 | Python 3.13.13
-Quality: 84/100 | Created: 2026-06-13
+Quality: 87/100 | Created: 2026-06-13
 """
 
 import os
