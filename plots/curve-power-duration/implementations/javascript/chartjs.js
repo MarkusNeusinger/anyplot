@@ -208,7 +208,8 @@ new Chart(canvas, {
             return MAP[Math.round(value)] || null;
           },
         },
-        grid: { color: tokens.grid },
+        border: { display: false },
+        grid: { display: false },
       },
       y: {
         type: 'linear',
@@ -229,6 +230,7 @@ new Chart(canvas, {
             return `${value} W`;
           },
         },
+        border: { display: false },
         grid: { color: tokens.grid },
       },
     },
