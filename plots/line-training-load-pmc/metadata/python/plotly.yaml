@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: line-training-load-pmc
 created: '2026-06-13T20:38:24Z'
-updated: '2026-06-13T20:44:44Z'
+updated: '2026-06-13T20:53:41Z'
 generated_by: claude-sonnet
 workflow_run: 27478223333
 issue: 8646
@@ -12,57 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-trai
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/python/plotly/plot-dark.html
-quality_score: 87
+quality_score: 86
 review:
   strengths:
-  - Semantic color mapping is excellent — green (#009E73) for fitness/CTL, red (#AE3030)
-    for fatigue/ATL, matches widely-shared domain expectations and Imprint palette
-    semantic exceptions
-  - 'Perfect spec compliance: all four PMC metrics (CTL, ATL, TSB, TSS) implemented
-    with correct EWMA formulas and 42-day/7-day time constants'
-  - Two-tone TSB fills (green positive, red negative) clearly separate fresh vs. fatigued
-    zones — the end-of-block taper story is visually compelling
-  - Secondary y-axis correctly keeps TSB (±50) readable against CTL/ATL (0–150) range
-  - 'Clean, idiomatic plotly code: make_subplots secondary_y, fill=tozeroy, hovertemplate,
-    barmode=overlay — all correctly applied'
-  - 'Both light and dark themes fully correct: backgrounds #FAF8F1/#1A1A17, chrome
-    tokens propagated to all axes and legend'
-  - Differential line weights (CTL 3.0px, ATL 2.5px, TSB 1.5px) communicate metric
-    priority without labels alone
-  - TSS bars at opacity=0.28 stay as a background layer without dominating the smoothed
-    trend lines
-  - Title fontsize correctly scaled for 73-char string (round(16 × 67/73)=15) to avoid
-    overflow
+  - Semantically justified Imprint palette mapping (CTL=green/fitness, ATL=red/fatigue,
+    TSS=blue/neutral) with clear domain rationale
+  - Secondary y-axis properly implemented via make_subplots, keeping TSB oscillations
+    readable against CTL/ATL scale
+  - 'CVD-safe design: ATL uses both dotted dash AND semantic red so colorblind readers
+    can distinguish from CTL solid green'
+  - 'Full PMC spec compliance: TSS bars, CTL/ATL smoothed lines, two-toned TSB filled
+    zones, zero reference line, legend, dual axis — all present'
+  - 'Clean code: np.random.seed(42), no functions/classes, only used imports, correct
+    output filenames'
+  - Per-trace custom hovertemplate enriches interactivity; bar width in milliseconds
+    correctly fills date slots without gaps
+  - 'Both renders fully theme-adaptive: background (#FAF8F1 / #1A1A17), INK/INK_SOFT
+    tokens applied to all chrome elements'
   weaknesses:
-  - Red (#AE3030) and green (#009E73) are the primary distinguishers for CTL vs ATL
-    without redundant encoding (distinct line styles or markers) — deuteranopic/protanopic
-    users may struggle to separate them; add dashes to one line (e.g. ATL as dash=dot)
-    to provide a non-color cue
-  - TSB Form line (1.5px, INK_SOFT gray) is the thinnest element on the chart; increasing
-    to 2px and adding a subtle marker at key events (e.g. peak TSB) would aid reading
-  - Plotly default plot border (all four spines) is retained; removing top and right
-    spines via fig.update_xaxes(showline=True, mirror=False) would give a cleaner
-    L-frame per style-guide defaults
-  - Bar chart TSS bars are drawn with width=auto which can leave gaps; setting width=86400000
-    (one day in ms) ensures bars fill the day slots without gaps
-  - Legend is upper-left but sits partially over the first few bars; shifting to x=0.01,
-    y=0.99 or moving to lower-right would avoid data overlap during high-TSS January
-    weeks
+  - TSB fill opacity (0.18) is quite subtle — the positive/negative form zones can
+    be hard to distinguish at smaller render sizes; raising to 0.25-0.30 would improve
+    readability without cluttering the chart
+  - TSB=0 reference line (1px dotted in INK_SOFT) is nearly invisible where it passes
+    through the TSB fills — consider slightly thicker or higher-contrast styling
+  - Form (TSB) legend line uses INK_SOFT (#4A4A44 in light) which reads as near-black
+    and can be momentarily confused with a spine or axis line in the light render;
+    adding a small stylistic distinction (e.g. dashed) could help
+  - 'DE-02: top/right spines not explicitly removed — `mirror=False` stops mirroring
+    but full spine removal (`showline=False` on top/right, or `fig.update_layout(xaxis_showline=False…)`)
+    would give a cleaner look'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light surface.
-      Chrome: Title "Training Load PMC · line-training-load-pmc · python · plotly · anyplot.ai" in dark INK (#1A1A17) at top-left, fontsize scaled to ~15px for 73-char string — readable and fits without clipping. Left Y-axis label "Training Load (TSS · CTL · ATL)" in dark ink, right Y-axis "Form (TSB)" in dark ink, both readable. Monthly x-tick labels ("Jan '25", "Feb '25" etc.) in INK_SOFT (#4A4A44) — clear. Legend upper-left with ELEVATED_BG (#FFFDF6) fill and INK_SOFT border — labels "Daily TSS", "Fatigue (ATL)", "Fitness (CTL)", "Form (TSB)" all legible.
-      Data: Semi-transparent blue (#4467A3, opacity 0.28) bars for daily TSS reaching ~140. Green line (#009E73, 3px) for CTL rising from ~40 to ~80. Red line (#AE3030, 2.5px) for ATL oscillating more sharply. Gray/neutral TSB line (1.5px, INK_SOFT) on secondary axis. Green fill (rgba(0,158,115,0.18)) shows positive TSB at taper; red fill (rgba(174,48,48,0.18)) shows negative TSB during heavy training. Dotted zero-reference line visible. First Imprint series (#009E73) assigned to CTL/Fitness — semantic exception correctly applied.
-      Legibility verdict: PASS — all text readable against light background, no light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct, no pure white.
+      Chrome: Title "Training Load PMC · line-training-load-pmc · python · plotly · anyplot.ai" in dark ink at top-left, clearly readable (~75% width, appropriate scaling to 15px). Left y-axis "Training Load (TSS · CTL · ATL)" and right y-axis "Form (TSB)" in dark INK, tick labels in INK_SOFT — all readable. Monthly x-axis ticks (Jan '25 through Jun '25) legible.
+      Data: Blue (#4467A3) semi-transparent bars for Daily TSS in background. Red dotted line for Fatigue (ATL). Green (#009E73) solid line for Fitness (CTL). Dark-gray adaptive line (INK_SOFT) for Form (TSB). Subtle green/red filled zones for positive/negative TSB. Legend box top-right with all 4 entries visible.
+      Legibility verdict: PASS — all text readable, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface.
-      Chrome: Title in light INK (#F0EFE8) — clearly visible. Axis labels and tick labels in INK_SOFT (#B8B7B0) on dark bg — legible. Legend with ELEVATED_BG (#242420) fill and INK_SOFT border — slightly subtle contrast but border makes it findable.
-      Data: Data colors identical to light render — green CTL (#009E73), red ATL (#AE3030), blue TSS bars (#4467A3). TSB line renders in INK_SOFT (#B8B7B0 = light gray) which is more prominent on dark background than in light. Green and red TSB fills remain visible. Zero-reference dotted line visible in light gray.
-      Legibility verdict: PASS — no dark-on-dark failure. All text in theme-correct light colors. Data colors match light render exactly (only chrome flips).
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title and axis labels render in F0EFE8 (light off-white), clearly readable against dark background. Tick labels in B8B7B0 (lighter gray) — readable. No dark-on-dark text issues observed.
+      Data: All Imprint palette colors (green CTL, red ATL, blue TSS bars) are identical to light render — only chrome flipped. Form (TSB) line correctly adapted to light gray (INK_SOFT = #B8B7B0) — visible against dark background. TSB fills (green positive, red negative) slightly subdued at 0.18 opacity but still discernible.
+      Legibility verdict: PASS — both renders fully legible, theme adaptation working correctly.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -70,59 +63,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Title fontsize correctly scaled for 73-char string; all axis labels
-          and ticks readable at 12px/10px. Left Y-axis label is long but readable.
-          Minor: legend text at 10px is near the minimum floor on this canvas.'
+        comment: All text explicitly sized and readable in both themes; title scales
+          from 16 to 15px for 73-char string — correct behavior
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No text-on-text overlap. Legend positioned upper-left but sits over
-          first few bars during high-TSS January; no collision with axis labels. Visual
-          element density (bars+fills+lines) is high but appropriate for PMC chart
-          type.
+        comment: Chart is dense by design (PMC type); no problematic text collisions;
+          legend well-positioned in upper right
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: CTL (3px green) and ATL (2.5px red) clearly visible. TSS bars semi-transparent
-          but readable. TSB line (1.5px INK_SOFT) is thin but the fills provide context.
-          Zero-reference dotted line visible.
+        comment: TSB fill opacity 0.18 is subtle; bars at 0.28 work well as background
+          layer; CTL/ATL lines clear at 3.0/2.5px
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Green CTL and red ATL are the primary series distinguishers with
-          no redundant encoding (same line style, no markers). Deuteranopic/protanopic
-          users cannot distinguish them by hue alone. Add dashed linestyle to ATL.
+        passed: true
+        comment: ATL uses both red color AND dotted dash — excellent CVD redundancy;
+          green CTL solid for contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas 3200x1800 via width=800 height=450 scale=4 correct. autosize=False.
-          Margins l=80 r=80 t=80 b=90 give both Y-axes room. No clipping visible.
+        comment: Canvas gate passed; dual-axis layout clean; margins 80/80/80/90 generous;
+          no overflow or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Primary Y: ''Training Load (TSS · CTL · ATL)'' descriptive with
-          units. Secondary Y: ''Form (TSB)'' clear. X-axis monthly ticks with format
-          ''%b %y''. Title follows {Descriptive} · {spec-id} · python · plotly · anyplot.ai
-          format.'
+        comment: Primary y descriptive with all series noted; secondary y 'Form (TSB)'
+          clear; x-axis monthly format readable
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Semantic exception correctly applied: #009E73 for CTL/fitness (growth/positive),
-          #AE3030 for ATL/fatigue (stress/negative), #4467A3 for TSS (neutral input).
-          TSB uses INK_SOFT (neutral anchor) — theme-adaptive. Backgrounds #FAF8F1/#1A1A17
-          correct. Data colors identical across themes.'
+        comment: 'Semantic exception well-justified: CTL/fitness=green(#009E73), ATL/fatigue=red(#AE3030),
+          TSS=blue(#4467A3) — all Imprint positions; backgrounds #FAF8F1/#1A1A17 correct'
     design_excellence:
       score: 13
       max: 20
@@ -132,28 +116,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: intentional semantic color mapping, differential
-          line weights, two-tone TSB fills, semi-transparent TSS bars as background
-          layer. Design choices are purposeful for the domain. Chart is somewhat busy
-          but that is inherent to PMC type.'
+        comment: Professional semantic color mapping, layered visualization with fills
+          + lines + bars; elevated legend box — above generic defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: no secondary Y-axis grid (avoids double-grid),
-          primary Y grid only, differential line widths (3/2.5/1.5), TSS opacity 0.28.
-          Plotly default all-four-spines box frame retained — removing top/right would
-          improve cleanliness.'
+        comment: Secondary y has no grid (good); primary y has subtle grid; x-axis
+          grid off; mirror=False but spines not fully removed
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'The taper narrative is visually clear: growing green TSB fill in
-          final weeks signals the athlete coming into form. Rising CTL tells the fitness-building
-          story. Accessible to readers with domain knowledge; heavy blocks and recovery
-          weeks are distinguishable.'
+        comment: Taper narrative visible (CTL peak then decline, ATL drops sharply,
+          TSB goes positive at end); form zones guide interpretation
     spec_compliance:
       score: 15
       max: 15
@@ -163,60 +141,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Full PMC correctly implemented: dual-axis, smoothed CTL/ATL lines,
-          TSB area, daily TSS bars — all PMC components present.'
+        comment: Correct PMC chart with all required components
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: CTL smooth line, ATL smooth line, two-tone TSB fill (positive green
-          / negative red), TSS bars, zero reference line, secondary Y-axis, legend
-          distinguishing all four metrics — all present.
+        comment: CTL+ATL smoothed lines, two-toned TSB fills, daily TSS bars, zero
+          reference line, secondary y-axis, legend — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Shared date x-axis, CTL/ATL/TSS on primary Y, TSB on secondary Y.
-          180-day training block correctly generated with EWMA formulas (42-day CTL,
-          7-day ATL).
+        comment: Date on x, Training Load on primary y, Form on secondary y; EWMA
+          formulas with correct 42/7-day time constants
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: 'Title: ''Training Load PMC · line-training-load-pmc · python · plotly
-          · anyplot.ai'' matches required format. Legend entries: ''Daily TSS'', ''Fatigue
-          (ATL)'', ''Fitness (CTL)'', ''Form (TSB)'' — all correctly labeled.'
+          · anyplot.ai'' — correct format with descriptive prefix'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'All PMC aspects shown: base build, peak build, recovery weeks, taper,
-          event target. All four metrics (CTL/ATL/TSB/TSS) with correct relationships
-          (ATL more volatile than CTL, TSB = CTL-ATL lagged).'
+        comment: All 4 PMC metrics shown with proper EWMA derivation; periodization
+          structure (base/peak/recovery/taper) adds realism
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Realistic periodized training block: Sunday rest days, recovery
-          weeks (TSS 25-60), build weeks (55-115), peak weeks (90-155), taper (decaying
-          TSS from day 160). Values consistent with trained endurance athlete.'
+        comment: 180-day block, realistic TSS ranges, neutral endurance athlete framing,
+          clear taper at day 160+
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: TSS 0-155, CTL ~40-90, ATL ~20-140, TSB ~-50 to +35 — all realistic
-          for competitive endurance athlete. Scale ratio between primary and secondary
-          axes is appropriate.
+        comment: TSS 20-155, CTL 40-100+, ATL oscillates appropriately, TSB ±40 —
+          all within realistic trained athlete range
     code_quality:
       score: 10
       max: 10
@@ -226,37 +197,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Linear script with logical sections (constants,
-          data generation, traces, layout, save).
+        comment: No functions or classes; clean procedural script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42) set before any random call
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os (ANYPLOT_THEME), numpy (data generation, EWMA),
-          pandas (date_range), plotly.graph_objects, plotly.subplots.make_subplots.'
+        comment: os, numpy, pandas, plotly.graph_objects, plotly.subplots — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean named constants for palette values. EWMA loop is readable.
-          np.where for conditional fills is idiomatic.
+        comment: Bar width in ms for date axis, EWMA loop clean, secondary_y handled
+          idiomatically
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (write_image width=800 height=450 scale=4)
-          and plot-{THEME}.html (write_html). Correct filenames, correct API.
+        comment: Saves plot-{THEME}.png (width=800,height=450,scale=4) and plot-{THEME}.html
+          with include_plotlyjs=cdn
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -264,17 +233,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'make_subplots(specs=[[{''secondary_y'': True}]]) is the correct
-          plotly pattern. fig.update_yaxes(secondary_y=...) for dual-axis config.
-          fill=''tozeroy'', barmode=''overlay'', hovertemplate — all idiomatic.'
+        comment: make_subplots(secondary_y=True), add_trace with secondary_y param,
+          update_yaxes/update_xaxes — correct plotly patterns
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Secondary Y-axis (plotly make_subplots), fill='tozeroy' area fills,
-          hovertemplate for interactive tooltips, write_html for HTML export, barmode='overlay'
-          for bar+line composition — multiple plotly-specific features leveraged.
+        comment: Per-trace custom hovertemplate, bar width in milliseconds for date
+          slots, HTML+PNG dual output, dual-axis subplot — good plotly-specific features
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -282,7 +249,6 @@ impl_tags:
   - twin-axes
   - hover-tooltips
   - html-export
-  - layer-composition
   patterns:
   - data-generation
   dataprep:
