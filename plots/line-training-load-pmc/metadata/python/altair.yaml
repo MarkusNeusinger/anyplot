@@ -1,0 +1,259 @@
+library: altair
+language: python
+specification_id: line-training-load-pmc
+created: '2026-06-13T20:48:05Z'
+updated: '2026-06-13T21:04:59Z'
+generated_by: claude-sonnet
+workflow_run: 27478325826
+issue: 8646
+language_version: 3.13.13
+library_version: 6.2.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/python/altair/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Semantically justified Imprint palette assignment matching domain conventions
+    (blue=fitness, lavender=fatigue, green=fresh, red=fatigued)
+  - Clean two-panel layout separating smooth PMC trends from raw TSS bars
+  - TSB two-toned fill (green above zero, red below) immediately communicates athlete
+    form state
+  - Realistic 180-day synthetic training block with 3:1 build:recovery mesocycle structure
+  - Theme-adaptive chrome correctly implemented in both renders with no dark-on-dark
+    failures
+  - PAD-only canvas logic correctly sizes PNG without cropping
+  weaknesses:
+  - X-axis tick format %b %Y with auto tick density causes duplicate adjacent month
+    labels (Jan 2025 appearing twice in sequence) — add tickCount=month to show each
+    month exactly once
+  - Legend symbols for Form (TSB) and Daily TSS render as lines rather than area swatch
+    and bar because they use dummy NaN entries in the line-mark layer — misleads about
+    actual mark types
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "line-training-load-pmc · python · altair · anyplot.ai" in dark ink, readable. Y-axis label "Load / Form" and "TSS" readable. X-axis label "Date" readable. Tick labels in INK_SOFT (#4A4A44) — all readable against light background. Minor issue: auto tick density with %b %Y format produces duplicate month labels (e.g. "Jan 2025" twice). Grid lines at 10% opacity are subtle and do not compete with data.
+      Data: CTL = solid blue line (#4467A3) rising from ~52 to ~85. ATL = dashed lavender line (#C475FD) volatile between ~50–110. TSB+ = green fills (#009E73) above zero. TSB− = red fills (#AE3030) below zero. TSS bars = muted gray (INK_MUTED) in bottom panel. First categorical series in the legend is brand green #009E73 (TSB positive, valid semantic assignment). Dashed zero reference line visible.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title and all axis labels render in light off-white tones (#F0EFE8 / #B8B7B0). No dark-on-dark failures observed. Tick labels clearly visible against dark background. Legend box uses elevated dark surface (#242420). Grid lines remain subtle.
+      Data: Colors identical to light render — CTL blue, ATL lavender-dashed, TSB green/red fills, TSS muted bars. Brand green #009E73 visible against near-black surface. Data identity across themes confirmed.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Font sizes explicitly set; all text readable in both themes. Minor:
+          x-axis %b %Y format with auto tick density produces duplicate month labels
+          (Jan 2025 twice in sequence).'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Duplicate month-year tick labels crowd x-axis slightly; -30deg rotation
+          prevents true overlap.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: CTL/ATL lines clear at strokeWidth=2.8; TSB areas at opacity=0.42;
+          TSS bars at width=2, opacity=0.55; zero reference dashed line visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Dashed ATL provides redundant encoding vs solid CTL; green/red TSB
+          fills distinguishable by fill shape as well as hue.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; two-panel layout fills space well; no clipping
+          or overflow.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Load / Form, Date, TSS are descriptive for this domain; title format
+          correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception valid (spec specifies blue=fitness, purple=fatigue);
+          TSB+ = #009E73, TSB- = #AE3030; backgrounds and chrome theme-correct in
+          both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful semantic color assignments demonstrate domain awareness.
+          Two-panel layout cleanly separates signal from raw input. Above generic
+          defaults but conventional for PMC chart type.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid opacity=0.10 very subtle; view stroke=None removes borders;
+          clean panel separation. Legend box adds minor visual weight.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Two-toned TSB fill immediately communicates form state; rising CTL
+          trend vs ATL oscillation tells the progressive overload story; clear visual
+          hierarchy.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct PMC chart: CTL/ATL smooth lines + two-toned TSB filled area
+          + daily TSS bars on shared date x-axis.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: CTL line, ATL line, TSB two-toned fill with zero baseline, TSS bars,
+          zero reference dashed line, secondary TSS panel all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date on x-axis; Load/Form on top panel y-axis; TSS on bottom panel
+          y-axis; all 180 days visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: false
+        comment: 'Title format correct. Legend labels correct but symbols mislead:
+          Form (TSB) and Daily TSS show as line symbols because they use dummy NaN
+          entries in the line layer, not as area swatch and bar.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 180-day block shows 3:1 build:recovery mesocycles; TSS 0 to 200+;
+          CTL rising 52-85; ATL oscillating; TSB shows positive and negative periods.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic endurance athlete training scenario; seed-reproducible;
+          neutral, non-controversial domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: CTL 52-85 realistic for trained cyclist; ATL 60-110 appropriate for
+          described mesocycle; TSS 0-200+ matches cycling training literature.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat script: imports -> data -> chart layers -> compose -> save.
+          No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before synthetic data generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, sys, altair, numpy, pandas, PIL — all actively used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code; sys.path cleanup justified; appropriate complexity
+          for multi-layer composition.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; PAD-only logic correctly
+          handles undersized renders.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: alt.layer() for multi-mark composition, alt.vconcat() for panel layout,
+          proper encoding types (:T :Q :N), alt.Y2() for area anchoring, alt.condition()
+          for conditional strokeDash — correct and idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: alt.Y2(datum=0) for TSB area anchoring is Altair-specific; alt.condition()
+          for conditional dash encoding; alt.layer() + vconcat() composition is distinctively
+          Vega-Lite. Dummy-NaN legend trick is creative if imperfect.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - pillow
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  - wide-to-long
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
