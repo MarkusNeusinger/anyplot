@@ -1,0 +1,279 @@
+library: makie
+language: julia
+specification_id: curve-power-duration
+created: '2026-06-13T22:19:14Z'
+updated: '2026-06-13T22:44:53Z'
+generated_by: claude-sonnet
+workflow_run: 27480404630
+issue: 8647
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Full spec compliance: log-x axis, empirical MMP curve, CP model overlay, reference
+    duration markers, and CP asymptote all correctly implemented'
+  - 'Excellent Imprint palette usage: brand green #009E73 as first series (empirical),
+    Imprint blue #4467A3 for CP model — identical across both themes'
+  - Both themes work correctly — warm off-white (#FAF8F1) light background and near-black
+    (#1A1A17) dark background with all chrome tokens properly flipped
+  - Idiomatic Makie band! primitives used for W' reserve zone and MMP area fill, adding
+    analytical depth without visual clutter
+  - Human-readable custom log-scale tick labels (1s, 5s, 30s, 1min, 5min, 20min, 1h,
+    5h) via ax.xticks, clearly communicating the duration spectrum
+  - CP asymptote annotation with value and reference duration labels provide excellent
+    data storytelling for sports-science readability
+  - Scientifically accurate CP model with Y_MAX clipping (model only shown where P
+    ≤ 1250W) and neuromuscular cap at short durations
+  - Clean code with no functions/classes, reproducible seed (42), all imports used,
+    and correct canvas size (1600×900 × px_per_unit=2 = 3200×1800)
+  weaknesses:
+  - Tertiary annotation text (CP label, reference duration labels) at fontsize=12
+    becomes borderline small at mobile scale (~400px viewport from 3200px source);
+    consider fontsize=13-14 for these annotations
+  - W' reserve band fill (8% opacity) is nearly invisible in both renders — intentional
+    as a subtle depth cue but could be slightly more prominent (12-15% opacity) to
+    communicate the W' concept more clearly
+  - 'DE-03 (data storytelling): the reference labels at the top (''5 s'', ''1 min'',
+    ''5 min'', ''20 min (FTP)'') are small and could benefit from slight size increase
+    or a brief annotation pointing to the FTP/CP significance'
+  - 'LM-02: only uses standard Makie primitives (band!, vlines!, hlines!, axislegend);
+    could leverage Makie''s more distinctive features such as Colorbar, Interactive-style
+    annotations, or more complex layout compositions to better showcase the library'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface, no pure white.
+      Chrome: Title "curve-power-duration · julia · makie · anyplot.ai" bold and clearly legible in dark ink. Y-axis label "Power (W)" and X-axis label "Duration" visible in dark ink at readable size. Tick labels (250, 500, 750, 1000, 1250 on Y; 1s, 5s, 30s, 1min, 5min, 20min, 1h, 5h on X) visible in INK_SOFT gray. Reference labels ("5 s", "1 min", "5 min", "20 min (FTP)") at top of vertical markers readable though small. CP annotation "CP = 280 W" legible near the asymptote.
+      Data: Empirical MMP curve solid brand green #009E73 line with circular markers (strokecolor=PAGE_BG for definition), starting ~1100W at 1s and decaying to ~280W at 5h. CP model dashed blue #4467A3 line starting from ~30s (clipped at Y_MAX=1250W) smoothly converging to the 280W asymptote. Dotted horizontal CP asymptote line at 280W in muted gray. Subtle 8%-opacity green area fill under empirical curve, subtle blue fill for W' reserve zone. Four dashed gray vertical reference lines. Legend in upper right with frame showing both series labels.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface.
+      Chrome: Title clearly visible in light cream text. Axis labels and tick labels rendered in light INK_SOFT color (#B8B7B0) against dark background. Reference labels and CP annotation remain legible. Legend frame shows elevated dark background (#242420).
+      Data: Data colors are IDENTICAL to light render — green #009E73 for empirical curve and blue #4467A3 for CP model; only chrome (text, background, grid, legend frame) flipped. No dark-on-dark failures observed. Brand green #009E73 highly visible on dark surface.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures detected.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, axis labels, and tick labels all clearly readable in both
+          themes. Tertiary annotation text (fontsize=12) is slightly small at mobile
+          scale but acceptable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps with data or other text elements. Reference labels
+          well-spaced on log scale. Legend does not overlap data or labels.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Empirical curve (linewidth=3, markersize=8) and CP model (linewidth=2.5,
+          dashed) both clearly visible. CP asymptote dotted line visible. Band fills
+          at 8% opacity are intentionally subtle.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green and blue series are perceptually distinct and CVD-safe. No
+          red-green as sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 (gate passed). Title ~55% plot width — appropriate.
+          Axis labels balanced. No overflow or clipping detected. Generous margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title in correct format. Y-axis 'Power (W)' with units. X-axis 'Duration'
+          with custom human-readable log-scale tick labels.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green) for empirical curve. CP model
+          uses Imprint position 3 (#4467A3 blue). Backgrounds #FAF8F1 light / #1A1A17
+          dark. Both themes correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default (4). Thoughtful layering: area fills under MMP and
+          W'' reserve, markers with PAGE_BG stroke, CP asymptote with label, and legend
+          with elevated frame. Clean, professional sports-science style.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Above default (2). Top/right spines removed, y-only grid at 12% opacity,
+          PAGE_BG marker stroke for definition, INK_MUTED for CP asymptote. Well-polished
+          chrome.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Above default (2). Reference vertical lines at physiologically meaningful
+          durations (5s, 1min, 5min, 20min FTP), CP asymptote annotation, and W' reserve
+          band all aid the sports-science narrative. Clear visual hierarchy between
+          empirical data and model fit.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct power-duration curve with log-x axis showing mean-maximal
+          power vs duration. Characteristic monotonic decay shape.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Log x-axis, empirical MMP curve, CP model overlay (dashed), reference
+          markers at 5s/1min/5min/20min with labels, CP asymptote line with value
+          annotation — all implemented.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis log-scale from 1s to 18000s (5h). Y-axis power 200-1250W.
+          Empirical data 45 log-spaced points, monotonically non-increasing. CP model
+          smoothly approaches asymptote.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title ''curve-power-duration · julia · makie · anyplot.ai'' — correct
+          format. Legend labels ''CP model: P = CP + W\''prime/t'' and ''Mean-maximal
+          power (empirical)'' are accurate and informative.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All aspects covered: empirical MMP curve with scatter, CP model
+          line, CP asymptote, W'' reserve zone, reference durations. Comprehensive
+          power-duration analysis.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Well-trained cyclist with CP=280W, W'=20000J, P_max~1100W — realistic
+          values. Correct CP model P(t)=CP+W'/t with neuromuscular cap at short durations.
+          Scientifically accurate.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Duration 1s-18000s (5h) covers full performance spectrum. Power 200-1250W
+          appropriate for well-trained club cyclist. 45 log-spaced points appropriate
+          density.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'No functions or classes. Clean linear script: constants, data generation,
+          figure setup, plot layers, save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set. Data generation is deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: using CairoMakie, Colors, Random — all three are used. No unused
+          imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or interactivity. Uses Makie band! primitive appropriately.
+          Well-organized constant definitions with comments.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png. Uses size= parameter (current Makie 0.22.x
+          API). px_per_unit=2 correct.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: band!, vlines!, hlines!, axislegend all used idiomatically. xscale=log10,
+          custom ax.xticks, xlims!/ylims! — idiomatic Makie API throughout. Uses size=
+          (newer API over resolution=).
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: band! for both W' reserve zone and MMP area fill is distinctively
+          Makie. xscale=log10 built-in. Spine visibility controls (topspinevisible,
+          rightspinevisible). Could go further with more distinctive Makie-only features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

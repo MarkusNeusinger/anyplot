@@ -1,0 +1,265 @@
+library: seaborn
+language: python
+specification_id: curve-power-duration
+created: '2026-06-13T21:55:29Z'
+updated: '2026-06-13T22:10:00Z'
+generated_by: claude-sonnet
+workflow_run: 27479983399
+issue: 8647
+language_version: 3.13.13
+library_version: 0.13.2
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - 'Perfect spec compliance — all required features implemented: log x-axis with
+    human-readable labels, empirical MMP curve as primary series, CP model dashed
+    overlay, all four reference duration markers (5s, 1min, 5min, 20min), and CP horizontal
+    asymptote with label.'
+  - Excellent theme adaptation — both light and dark renders display proper chrome
+    switching (background, text, tick, grid tokens) with zero dark-on-dark issues.
+  - Realistic and domain-authentic data — CP=280 W, W′=21 kJ, peak ~1100 W produce
+    a curve shape that matches real well-trained cyclist power-duration profiles.
+  - Clean KISS code structure with np.random.seed(42) for reproducibility, correct
+    canvas (figsize=(8,4.5), dpi=400), and no bbox_inches=‘tight’ drift.
+  weaknesses:
+  - 'LM-02: The implementation leans heavily on matplotlib primitives (ax.plot, ax.axhline,
+    ax.axvline, ax.text) for all secondary elements beyond the primary sns.lineplot
+    call — seaborn-distinctive features are underused relative to what the library
+    offers.'
+  - 'DE-03: Reference duration markers label the x-position but do not annotate the
+    corresponding power values — adding W callouts at 5s, 1min, 5min, and 20min would
+    turn the chart into an actionable training-prescription tool and add meaningful
+    data storytelling.'
+  - 'DE-01: The overall design is clean but conservative; a subtle fill-between under
+    the empirical curve (alpha ≈10%) would add visual depth and better distinguish
+    the primary curve from the dashed model overlay at a glance.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, visually confirmed.
+      Chrome: Title "curve-power-duration · python · seaborn · anyplot.ai" in dark ink, clearly readable, spans ~70% of plot width. X-axis label "Duration" and Y-axis label "Power (W)" in dark ink, both readable. Tick labels at 8pt in INK_SOFT — readable. Reference duration labels ("5 s sprint", "1 min", "5 min", "20 min") appear at the top of the plot area in muted ink — readable. "CP = 280 W" annotation at right edge — readable.
+      Data: Empirical MMP curve in #009E73 (brand green), solid line at linewidth=2.5, clearly dominant. CP model in #C475FD (lavender), dashed at linewidth=1.8, visually distinct. CP asymptote as a light dotted line at 280 W. Reference vertical dashed lines at 4 key durations. Legend at lower-left with both series labeled.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, visually confirmed.
+      Chrome: Title, axis labels, tick labels all render in near-white (F0EFE8/B8B7B0 tokens) — clearly readable against the dark surface. No dark-on-dark issues detected. Reference labels and CP annotation also adapt to light text. Legend box uses elevated dark background (#242420) with light text.
+      Data: Empirical MMP curve remains #009E73 (identical to light render), CP model remains #C475FD (identical) — Imprint data colors are theme-independent as required. CP asymptote dotted line and reference vertical markers visible against dark background.
+      Legibility verdict: PASS — all text readable, no dark-on-dark failures, Imprint data colors unchanged between themes.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, axis labels, tick labels all readable in both themes. Font
+          sizes (title 12pt, labels 10pt, ticks 8pt) follow style guide. Small tertiary
+          annotations (7.5-8pt for reference labels and CP annotation) are readable
+          but at the lower legibility threshold.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element overlap. Reference labels at top well-spaced.
+          Legend clear of data at lower-left.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: MMP curve at linewidth=2.5 and CP model at linewidth=1.8 are appropriately
+          sized. Solid vs dashed provides redundant encoding. 50-point dataset density
+          well-handled.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green (#009E73) and lavender (#C475FD) are CVD-distinct. Redundant
+          encoding via line style (solid vs dashed) reinforces distinction.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). subplots_adjust provides good margins.
+          Nothing cut off. Title and all annotations within bounds.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title exact format correct. Y-axis 'Power (W)' has units. X-axis
+          'Duration' — units implicit from tick labels.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green), second #C475FD (Imprint position
+          2). Backgrounds #FAF8F1 light / #1A1A17 dark correct. Both renders theme-correct.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default (4): Imprint palette applied correctly, clean sports-analytics
+          aesthetic, reference annotation system adds analytical value. Below ceiling:
+          no fill-under-curve for depth, limited visual hierarchy beyond color+linestyle.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Above default (2): sns.despine removes top/right spines, subtle
+          y-grid at alpha=0.15, generous margins via subplots_adjust. Legend at lower-left
+          is thoughtful placement.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Above default (2): Reference markers at key athletic durations guide
+          the viewer through performance zones. CP asymptote provides clinical reference.
+          However, no power-value callouts at reference durations limits actionability
+          as a training tool.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: mean-maximal power duration curve on log x-axis with CP
+          model overlay.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: log x-axis, human-readable labels, empirical MMP curve,
+          CP model overlay, all four reference markers (5s/1min/5min/20min), horizontal
+          CP asymptote with label.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: duration seconds on log scale (1s to 18000s). Y: power in watts
+          (220-1300 range). Full spec range covered.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title exact: ''curve-power-duration · python · seaborn · anyplot.ai''.
+          Legend has two clearly-labeled entries.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Empirical MMP, CP model, reference duration markers, CP asymptote,
+          monotonic enforcement — all key aspects present.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: CP=280W, W'=21kJ, peak~1100W are authentic well-trained cyclist values.
+          Curve shape matches real power-duration profiles.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1s to 5h duration range appropriate. 220-1300W range matches domain.
+          Decay from sprint power to CP is realistic.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes. Linear script with clear sectioned comments.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports (os, sys, matplotlib.pyplot, matplotlib.ticker, numpy,
+          seaborn) are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI elements. sys.path manipulation
+          is commented and justified.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png with correct dpi and facecolor. No bbox_inches='tight'.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: sns.set_theme, sns.lineplot (axes-level, preferred), sns.despine,
+          sns.set_context all idiomatic. Secondary elements use matplotlib primitives
+          which is acceptable.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Only sns.lineplot's errorbar=None is distinctly seaborn. Most visualization
+          logic (axhline, axvline, ax.text, ax.plot for CP model) bypasses seaborn's
+          API. Limited showcase of seaborn-specific capabilities.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  patterns:
+  - data-generation
+  - explicit-figure
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
