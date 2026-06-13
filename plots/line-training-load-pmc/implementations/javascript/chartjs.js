@@ -77,16 +77,16 @@ new Chart(canvas, {
                 label: "Daily TSS",
                 data: tssArr,
                 yAxisID: "y",
-                backgroundColor: t.palette[2] + "40",
+                backgroundColor: t.palette[2] + "66",
                 borderWidth: 0,
             },
-            // TSB positive fill — fresh / good form (green)
+            // TSB positive fill — fresh / good form (blue, per spec and CVD safety)
             {
                 type: "line",
                 label: "_tsbPos",
                 data: tsbPos,
                 yAxisID: "y1",
-                backgroundColor: t.palette[0] + "4D",
+                backgroundColor: t.palette[2] + "4D",
                 borderWidth: 0,
                 pointRadius: 0,
                 fill: "origin",
