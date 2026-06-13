@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 curve-power-duration: Mean-Maximal Power Duration Curve
-Library: seaborn | Python 3.13
-Quality: pending | Created: 2026-06-13
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 87/100 | Created: 2026-06-13
 """
 
 import os
