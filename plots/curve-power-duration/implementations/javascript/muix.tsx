@@ -1,7 +1,7 @@
 // anyplot.ai
 // curve-power-duration: Mean-Maximal Power Duration Curve
 // Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 88/100 | Created: 2026-06-13
+// Quality: 84/100 | Created: 2026-06-13
 
 import { LineChart, ChartsReferenceLine } from "@mui/x-charts";
 import Box from "@mui/material/Box";
