@@ -1,8 +1,7 @@
 // anyplot.ai
 // line-training-load-pmc: Training Load Performance Management Chart
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-13
+// Library: muix 7.29.1 | JavaScript 22.22.3
+// Quality: 86/100 | Created: 2026-06-13
 
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { AreaPlot, LinePlot } from "@mui/x-charts/LineChart";
