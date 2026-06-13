@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-training-load-pmc: Training Load Performance Management Chart
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 80/100 | Created: 2026-06-13
@@ -23,14 +23,14 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Palette: reference slot first so CTL gets Imprint position 1 (#009E73)
+# Palette in series-add order: ref, CTL, ATL, TSB+ (fresh), TSB- (fatigued), TSS
 CHART_COLORS = (
-    INK_MUTED,  # TSB = 0 reference line
-    "#009E73",  # Fitness (CTL)  — Imprint pos 1
-    "#C475FD",  # Fatigue (ATL)  — Imprint pos 2
-    "#4467A3",  # Form (TSB)     — Imprint pos 3
-    "#BD8233",  # Daily TSS      — Imprint pos 4
-    "#AE3030",
+    INK_MUTED,  # 0: TSB = 0 reference line (dashed)
+    "#009E73",  # 1: Fitness (CTL)  — Imprint pos 1
+    "#C475FD",  # 2: Fatigue (ATL)  — Imprint pos 2
+    "#4467A3",  # 3: Form TSB (fresh / positive) — Imprint pos 3
+    "#AE3030",  # 4: Form TSB (fatigued / negative) — Imprint pos 5
+    "#BD8233",  # 5: Daily TSS — Imprint pos 4
     "#2ABCCD",
     "#954477",
 )
@@ -79,9 +79,14 @@ for i in range(1, n_days):
     atl[i] = atl[i - 1] + a_atl * (tss[i] - atl[i - 1])
     tsb[i] = ctl[i - 1] - atl[i - 1]  # previous-day CTL minus previous-day ATL
 
-# X-axis: show labels only at month-start positions
-x_labels = [d.strftime("%b %Y") if d.day == 1 else "" for d in dates]
-x_labels_major = [d.strftime("%b %Y") for d in dates if d.day == 1]
+# Two-toned TSB: split into positive (fresh) and negative (fatigued) fill areas
+tsb_list = tsb.tolist()
+tsb_pos = [v if v >= 0 else None for v in tsb_list]
+tsb_neg = [v if v < 0 else None for v in tsb_list]
+
+# X-axis: only month-start labels (6 entries) — avoids rendering artefact
+# from the 180-empty-string approach and gives clear, readable tick marks
+x_labels = [d.strftime("%b %Y") for d in dates if d.day == 1]
 
 # Title — 52 chars → ratio 1.0 → title_font_size 66
 title = "line-training-load-pmc · python · pygal · anyplot.ai"
@@ -115,17 +120,18 @@ chart = pygal.Line(
     show_dots=False,
     fill=False,
     legend_at_bottom=False,
-    show_minor_x_labels=False,
 )
 
 chart.x_labels = x_labels
-chart.x_labels_major = x_labels_major
 
 # Add series in color-assignment order
 chart.add("TSB = 0", [0] * n_days, stroke_style={"width": 1.2, "dasharray": "6 4"})
 chart.add("Fitness (CTL)", ctl.tolist(), stroke_style={"width": 5.5})
 chart.add("Fatigue (ATL)", atl.tolist(), stroke_style={"width": 3.5})
-chart.add("Form (TSB)", tsb.tolist(), stroke_style={"width": 2.5})
+# TSB as two-toned filled area: blue=fresh (positive form), red=fatigued (negative form)
+# allow_interruptions=True ensures each island fills independently to the zero baseline
+chart.add("Form TSB (fresh)", tsb_pos, allow_interruptions=True, fill=True, stroke_style={"width": 1.5})
+chart.add("Form TSB (fatigued)", tsb_neg, allow_interruptions=True, fill=True, stroke_style={"width": 1.5})
 chart.add("Daily TSS", tss.tolist(), stroke_style={"width": 1.5})
 
 # Save PNG and interactive HTML
