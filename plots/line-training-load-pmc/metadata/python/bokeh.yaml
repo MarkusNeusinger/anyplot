@@ -1,0 +1,281 @@
+library: bokeh
+language: python
+specification_id: line-training-load-pmc
+created: '2026-06-13T20:39:34Z'
+updated: '2026-06-13T21:01:44Z'
+generated_by: claude-sonnet
+workflow_run: 27478277657
+issue: 8646
+language_version: 3.13.13
+library_version: 3.9.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/python/bokeh/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Correct dual y-axis PMC chart with CTL/ATL on primary and TSB on secondary axis
+  - 'Semantically mapped Imprint palette: #009E73 first series (TSB fresh), #AE3030
+    for fatigue, #4467A3 blue for fitness, #C475FD lavender for ATL'
+  - Taper region BoxAnnotation + Label creates clear narrative focal point
+  - Two-toned varea fill (green fresh / red tired) immediately communicates form state
+  - 'Perfect spec compliance: zero reference line, legend, dual-axis all present'
+  - Clean code structure with correct Selenium CDP viewport override for exact 3200×1800
+    PNG
+  - Realistic 180-day cycling training data with proper EWMA computations
+  - Theme-adaptive chrome fully correct in both light and dark renders
+  weaknesses:
+  - DE-01 could reach higher with more creative annotation choices (e.g. annotating
+    fitness peak date, marking race day on the x-axis) to push from strong-design
+    to publication-ready
+  - LM-02 could be improved by adding a HoverTool for the HTML artifact to surface
+    TSS/CTL/ATL values on hover — the HTML is already saved, making this a natural
+    Bokeh-distinctive addition
+  - 'Minor: the right secondary axis label font size (42pt) is identical to the left
+    axis, which may feel slightly oversized for a supplemental axis at this canvas
+    size — consider 36pt for the right axis label to create subtle hierarchy between
+    primary and secondary axis chrome'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light theme surface, not pure white.
+      Chrome: Title "Cycling Season PMC · line-training-load-pmc · python · bokeh · anyplot.ai" bold and fully readable in dark ink. Left Y-axis label "Load (CTL / ATL / TSS)" rotated 90°, readable. Right secondary axis label "Form (TSB)" visible. X-axis label "Date" readable. Tick labels all dark and clearly readable. Subtle dashed zero-reference line for TSB visible.
+      Data: TSB positive (fresh) area in #009E73 brand green appears in taper region (last ~21 days). TSB negative (tired) area in #AE3030 matte red dominates the heavy training blocks. CTL line in #4467A3 blue rises smoothly. ATL line in #C475FD lavender is spiky and reactive. Daily TSS gray semi-transparent bars visible throughout at alpha=0.28. Taper BoxAnnotation shades the final region with "Taper" label.
+      Legibility verdict: PASS — all text, chrome, and data elements clearly readable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title light-colored and readable against dark background. Tick labels light. Axis labels light. No dark-on-dark failures observed. Legend box uses #242420 elevated bg with #B8B7B0 label text — adequate contrast.
+      Data: All data colors are identical to light render — #009E73 green fresh area, #AE3030 red tired area, #4467A3 blue CTL line, #C475FD lavender ATL line. TSS bars render as lighter gray (#A8A79F INK_MUTED dark token) against the dark canvas — visible and appropriate. Only the chrome (bg, text, grid) flipped, data colors constant.
+      Legibility verdict: PASS — all text readable, no dark-on-dark issues.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title scaled 50→46pt for 73-char
+          string, axis labels 42pt, ticks 34pt, legend 34pt). Both renders readable.
+          Minor: title spans ~85% of canvas width which is at the upper end of the
+          expected range, though within acceptable bounds.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Legend top-left does not collide with data.
+          Tick labels spaced correctly. Taper label placed in open space within annotation
+          box.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: CTL and ATL lines at line_width=5.0 clearly visible. TSB varea fills
+          at alpha=0.35 visible. TSS bars at alpha=0.28 intentionally subtle per spec
+          ('light bars'). Zero reference dashed line visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe. Green (fresh) and red (tired) TSB areas
+          have zero reference line as additional signal beyond color. Line thickness
+          provides redundant encoding for CTL vs ATL.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). min_border settings (160 bottom,
+          200 left, 110 top, 210 right) provide good spacing for dual-axis labels.
+          Plot fills canvas well.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Left axis: ''Load (CTL / ATL / TSS)'', right secondary: ''Form (TSB)'',
+          x-axis: ''Date''. Title includes descriptive prefix ''Cycling Season PMC''
+          plus mandated spec-id/lang/lib/anyplot.ai format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series drawn is TSB positive fill in #009E73 (Imprint position
+          1). TSB tired uses #AE3030 (semantic red, Imprint position 5 — appropriate
+          for fatigue). CTL uses #4467A3 (semantic blue). ATL uses #C475FD (lavender,
+          Imprint position 2). TSS bars use INK_MUTED theme-adaptive anchor. Backgrounds
+          #FAF8F1 / #1A1A17. Chrome fully theme-adaptive.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: semantic color mapping (green=fresh, red=tired, blue=fitness,
+          lavender=fatigue) shows intentional palette use beyond canonical order.
+          Dual-axis layout, two-toned area, taper narrative annotation all above library
+          defaults. Clearly in ''strong design'' tier.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-only grid at alpha=0.12 (subtle). No outer border frame (outline_line_color=None).
+          No legend border. Theme-adaptive backgrounds. Axis lines kept (INK_SOFT)
+          — appropriate for multi-series chart with dual axes.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Taper BoxAnnotation + Label creates clear focal point showing race
+          preparation narrative. Two-toned TSB area guides viewer to immediately understand
+          form state. Visual hierarchy: bars < TSB areas < CTL/ATL lines creates layered
+          reading. The training periodization story is clear.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct PMC chart: CTL smooth line, ATL reactive line, TSB two-toned
+          filled area, daily TSS bars, secondary y-axis for TSB, zero reference line.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: CTL/ATL on primary axis, TSB two-toned
+          fill on secondary axis, TSS as light bars, shared date x-axis, legend distinguishing
+          all series, zero reference line, secondary y-axis.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date on x-axis, CTL/ATL/TSS on primary y (0-165), TSB on secondary
+          y (-80 to 80). All data visible and correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''Cycling Season PMC · line-training-load-pmc · python ·
+          bokeh · anyplot.ai'' — correct format with descriptive prefix. Legend: ''Form
+          TSB+ (Fresh)'', ''Form TSB− (Tired)'', ''Daily TSS'', ''Fitness (CTL)'',
+          ''Fatigue (ATL)'' — all descriptive and matching spec.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows build phases, fatigue accumulation, recovery weeks, taper.
+          CTL rises over season. ATL reactive to load spikes. TSB negative during
+          hard blocks, positive during taper. Full training arc visible.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 180-day cycling training block with 3-week build / 1-week recovery
+          microcycle structure plus taper. Neutral sports science topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: CTL ~0-60 range (realistic for developing cyclist). ATL 0-80 (more
+          reactive). TSB -60 to +30 (realistic for periodized training). Daily TSS
+          0-150 (appropriate cycling range).
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: path fix → imports → theme tokens → data generation
+          → figure setup → glyphs → annotations → chrome → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before data generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os/sys for path fix, time for sleep, Path for
+          file resolution, numpy/pandas for data, all bokeh models used, selenium
+          for screenshot.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic. CDP override for exact viewport is appropriate Selenium
+          technique. No fake UI elements. Title font scaling formula is clean.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Bokeh 3.9.1 API. No
+          deprecated functions.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Expert use of ColumnDataSource, figure() with Range1d, varea/vbar/line
+          glyphs, extra_y_ranges with y_range_name, add_layout for secondary axis
+          and annotations. Full high-level Bokeh API.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses Bokeh-distinctive features: extra_y_ranges + y_range_name for
+          dual-axis glyph assignment, BoxAnnotation for taper region overlay, varea
+          glyph for two-toned area fill, click_policy=''hide'' for interactive HTML
+          legend. Clearly uses Bokeh-specific models beyond basic line/scatter.'
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - twin-axes
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
