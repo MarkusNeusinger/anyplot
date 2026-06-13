@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-power-duration: Mean-Maximal Power Duration Curve
 Library: matplotlib 3.11.0 | Python 3.13.13
 Quality: 88/100 | Created: 2026-06-13
@@ -50,18 +50,18 @@ ax.plot(durations, empirical, color=BRAND, linewidth=2.8, label="Mean-Maximal Po
 
 # CP model fit (Imprint blue, dashed)
 ax.plot(
-    dur_model, model_line, color=MODEL_CLR, linewidth=2.0, linestyle="--", label="CP Model  (P = CP + W′/t)", zorder=2
+    dur_model, model_line, color=MODEL_CLR, linewidth=2.5, linestyle="--", label="CP Model  (P = CP + W′/t)", zorder=2
 )
 
 # CP horizontal asymptote — annotated directly, not in legend
 ax.axhline(y=CP, color=INK_MUTED, linewidth=1.3, linestyle=":", alpha=0.8, zorder=1)
-ax.text(17000, CP + 12, f"CP = {CP} W", color=INK_MUTED, fontsize=7.5, ha="right", va="bottom")
+ax.text(17000, CP + 12, f"CP = {CP} W", color=INK_MUTED, fontsize=8, ha="right", va="bottom")
 
 # Reference duration vertical markers
 ref_marks = {"5 s\nsprint": 5, "1 min": 60, "5 min": 300, "20 min\n(FTP)": 1200}
 for label, dur in ref_marks.items():
     ax.axvline(x=dur, color=INK_SOFT, linewidth=0.8, linestyle=":", alpha=0.35, zorder=1)
-    ax.text(dur, 1200, label, color=INK_SOFT, fontsize=7, ha="center", va="top", linespacing=1.25)
+    ax.text(dur, 1200, label, color=INK_SOFT, fontsize=8, ha="center", va="top", linespacing=1.25)
 
 # X-axis — log scale with human-readable tick labels
 ax.set_xscale("log")
