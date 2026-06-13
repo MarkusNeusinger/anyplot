@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-power-duration: Mean-Maximal Power Duration Curve
 Library: bokeh 3.9.1 | Python 3.13.13
 Quality: 88/100 | Created: 2026-06-13
@@ -77,7 +77,7 @@ p = figure(
 
 # Empirical mean-maximal power (primary series — BRAND green, always first)
 src_emp = ColumnDataSource({"x": durations, "y": empirical_power})
-p.line("x", "y", source=src_emp, line_color=BRAND, line_width=5, legend_label="Mean-Maximal Power")
+p.line("x", "y", source=src_emp, line_color=BRAND, line_width=5, line_alpha=0.7, legend_label="Mean-Maximal Power")
 p.scatter("x", "y", source=src_emp, color=BRAND, size=14, alpha=0.85, line_color=PAGE_BG, line_width=2)
 
 # Fitted CP model overlay — dashed, secondary series color
@@ -87,7 +87,7 @@ p.line(
     "y",
     source=src_mdl,
     line_color=MODEL_COLOR,
-    line_width=3,
+    line_width=5,
     line_dash="dashed",
     legend_label=f"CP Model (CP={CP_VAL} W, W′=22 kJ)",
 )
@@ -110,7 +110,7 @@ for label, t in ref_durations.items():
             x=t,
             y=1150,
             text=label,
-            text_font_size="30pt",
+            text_font_size="34pt",
             text_color=INK_SOFT,
             text_align="center",
             text_baseline="bottom",
@@ -125,7 +125,7 @@ p.add_layout(
         x=15000,
         y=CP_VAL + 20,
         text=f"CP = {CP_VAL} W",
-        text_font_size="30pt",
+        text_font_size="34pt",
         text_color=INK_SOFT,
         text_align="right",
         text_baseline="bottom",
@@ -148,7 +148,7 @@ p.xaxis.formatter = CustomJSTickFormatter(
 # Theme-adaptive chrome
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None
 
 p.title.text_color = INK
 p.title.text_font_size = "50pt"
