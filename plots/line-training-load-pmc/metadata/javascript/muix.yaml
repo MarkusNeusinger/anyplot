@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: line-training-load-pmc
 created: '2026-06-13T21:09:36Z'
-updated: '2026-06-13T21:17:26Z'
+updated: '2026-06-13T21:32:53Z'
 generated_by: claude-sonnet
 workflow_run: 27478820505
 issue: 8646
@@ -12,48 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-trai
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/javascript/muix/plot-dark.html
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - 'Correct PMC implementation with all required elements: CTL/ATL smooth lines,
-    two-toned TSB filled areas (fresh=blue, fatigued=semantic red), step-curve TSS
-    at the bottom, dual y-axis, and TSB=0 reference line'
-  - 'Excellent semantic color use: brand green for CTL (first series), semantic red
-    (#AE3030) for fatigued TSB — exactly the right exception to canonical palette
-    order'
-  - Sophisticated data generation with phase-structured training (base, build, peak,
-    taper) and deterministic LCG seed, producing a realistic 6-month endurance build
-    to race
-  - 'Idiomatic MUI X composition API: ChartContainer + LinePlot + AreaPlot + ChartsXAxis/YAxis
-    + ChartsReferenceLine — demonstrates advanced multi-axis multi-series usage'
-  - Semi-transparent area fills (0.3 opacity TSB, 0.45 TSS) keep overlapping elements
-    readable without drowning the CTL/ATL lines; both themes render cleanly with correct
-    chrome adaptation
+  - 'Full PMC spec compliance: all five data elements (CTL, ATL, TSB+/TSB-, TSS) correctly
+    rendered with appropriate axis assignments'
+  - Sophisticated ChartContainer composition combining LinePlot, AreaPlot, and ScatterPlot
+    in a single SVG frame
+  - 'Semantically correct Imprint palette: brand green for CTL (fitness as primary
+    metric), matte red as valid semantic exception for Form (Fatigued), two-toned
+    TSB area clearly communicates fresh vs. fatigued narrative'
+  - Deterministic LCG with realistic phase-structured training data (base -> build
+    -> peak -> taper) makes the chart genuinely informative
+  - Dual Y-axes correctly keep TSB readable against CTL/ATL magnitudes; hidden TSS
+    axis keeps daily dots in the bottom quarter without cluttering the primary axis
+    scale
+  - Both renders fully theme-adaptive with clean dark-mode legibility
   weaknesses:
-  - Daily TSS is rendered as a step-curve area rather than 'light points or thin bars
-    near the bottom' as the spec explicitly requests — a bar-like step area is close
-    but diverges from the spec language
-  - Form (Fresh) blue area is nearly invisible in most of the chart since the training
-    block generates mostly negative TSB (fatigue); while this is data-realistic, a
-    note or annotation marking the taper's positive-form zone would improve storytelling
-    (DE-03)
-  - Title spans approximately 44% of the plot width, slightly below the 50–70% guideline;
-    consider increasing the font size marginally (e.g. 24–25px CSS) to improve proportion
-  - 'DE-01/DE-02 ceiling: the multi-series chart is dense but not visually polished
-    beyond the data-driven composition — top/right spines are absent by MUI X default
-    but no additional refinement (legend box, subtle axis line styling) was added'
+  - TSS scatter markerSize=3 is quite small for 180 points at the final canvas resolution;
+    increasing to 4-5 would improve readability without compromising the 'light background
+    noise' intent
+  - The ATL/TSB overlap zone is visually dense — the spiky ATL lavender line overlapping
+    with the salmon fatigued TSB area creates a complex mid-chart region; a slightly
+    higher TSB fillOpacity or explicit z-order adjustment could improve separation
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm cream off-white (#FAF8F1), not pure white — correct.
-      Chrome: Title "line-training-load-pmc · javascript · muix · anyplot.ai" in dark ink at top-left, clearly readable. Left Y-axis label "Training Load (AU)" and right Y-axis label "Form / TSB (AU)" rotated vertically, both readable. X-axis tick labels (Feb 2025 – Aug 2025) and Y-axis tick labels all clearly readable in dark ink.
-      Data: CTL = brand green (#009E73), gradually rising smooth line; ATL = lavender (#C475FD), highly oscillating line reaching up to ~145 AU; TSB Fatigued = matte red (#AE3030) filled area dominating the middle band (most of 180 days in negative form); TSB Fresh = blue (#4467A3) small filled area appearing only at the very end (taper); Daily TSS = ochre (#BD8233) step-curve area at the bottom. Dashed reference line at TSB=0 visible. Legend at bottom shows all 5 series.
-      Legibility verdict: PASS — all elements readable, no light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct
+      Chrome: Title "line-training-load-pmc · javascript · muix · anyplot.ai" at 24px dark ink, clearly readable. Left Y-axis label "Training Load (AU)" and right Y-axis label "Form / TSB (AU)" both readable at 15px. Tick labels at 13-14px readable. Month+year x-axis ticks clearly legible.
+      Data: CTL as brand-green smooth line rising ~40->115 AU; ATL as lavender spiky line ~50-145 AU; TSB two-toned filled areas (blue fresh/positive, salmon-red fatigued/negative); ochre TSS scatter dots near bottom quarter. Dashed TSB=0 reference line visible. Vertical dashed taper reference with italic label.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background. No light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black — correct.
-      Chrome: Title, axis labels, and tick labels flip to light cream text — all clearly readable. No dark-on-dark failures observed. Grid lines are subtle horizontal white-on-dark lines.
-      Data: Colors are identical to light render — green CTL, lavender ATL, red TSB (Fatigued) area, blue TSB (Fresh) area, ochre TSS step area. The red area is slightly more saturated against the dark background but within acceptable range.
-      Legibility verdict: PASS — all text and data elements readable, chrome adapts correctly to dark surface.
+      Background: Warm near-black (#1A1A17) — correct
+      Chrome: Title and axis labels/ticks appear in light ink, all clearly readable against dark surface. ThemeProvider correctly inverts chrome via MUI token system.
+      Data: Colors identical to light render — same brand green CTL (#009E73), same lavender ATL (#C475FD), same blue fresh TSB area (#4467A3), same matte red fatigued TSB area (#AE3030), same ochre TSS dots (#BD8233). Only chrome flips.
+      Legibility verdict: PASS — no dark-on-dark text failures. All elements clearly distinguishable against near-black background. Fatigued TSB area reads as rich dark red, still distinct from background.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -64,81 +57,79 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; font sizes explicitly set (22px
-          title, 14px ticks, 15px axis labels); title at ~44% of plot width, slightly
-          below 50% guideline but acceptable
+        comment: All font sizes explicitly set (24px title, 15px axis labels, 13-14px
+          ticks). Readable in both themes. Minor density in ATL/TSB overlap zone.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No text overlaps; ATL and TSB areas overlap by design in a PMC chart;
-          minor visual density where 5 series share the same space
+        comment: No text collisions. Data-element overlap inherent to PMC chart design,
+          not penalised. Legend five-item row clean.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All 5 series visible; TSB Fresh (blue) is a small area at chart end
-          (data-realistic, not a rendering failure); 0.3 opacity areas preserve underlying
-          line visibility
+        comment: CTL/ATL lines prominently visible. TSB two-toned areas clear. TSS
+          scatter dots at markerSize=3 are appropriately subtle but quite small for
+          180 points.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used; green vs lavender vs blue vs red vs ochre are
-          CVD-distinguishable; no red-green as sole signal
+        comment: Imprint palette CVD-safe. Green/red distinction reinforced by area
+          vs line encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; good proportions with 90px side margins; title,
-          chart, and legend well-spaced; nothing cut off
+        comment: Canvas gate passed. Generous 90px left/right + 100px bottom margins.
+          No overflow. Taper label within bounds.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Left axis 'Training Load (AU)', right axis 'Form / TSB (AU)', X-axis
-          month labels; title in correct anyplot format
+        comment: Title matches exact required format. Both Y-axis labels descriptive
+          with units. Time axis readable.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: CTL = palette[0] brand green; ATL = palette[1] lavender; TSB Fresh
-          = palette[2] blue; TSB Fatigued = palette[4] red (semantic exception for
-          fatigue role); TSS = palette[3] ochre; both backgrounds correct
+        comment: 'First series (CTL) = t.palette[0] brand green #009E73. Canonical
+          order 1-3. palette[4] matte red for Form(Fatigued) is valid semantic exception.
+          Background uses t.pageBg. Colors identical across themes.'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Two-toned TSB area (positive/negative split) shows design intentionality;
-          step-curve for TSS is elegant; secondary axis is sophisticated; opacity
-          choices are deliberate
+        comment: Dual Y-axes, two-toned TSB with semantic colors, taper annotation,
+          five-series composition. Intentional visual hierarchy. Dense in ATL/TSB
+          overlap region.
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: true
-        comment: Horizontal-only grid is correct; MUI X default removes top/right
-          spines; area opacity is refined; no additional polish beyond structural
-          requirements
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: PMC chart tells a clear 6-month periodization story (base → build
-          → peak → taper); TSB=0 reference line delineates fresh vs fatigued zones;
-          the taper positive-form zone is visible but understated
+        comment: Horizontal-only grid, fillOpacity=0.3 on TSB areas, dashed semi-transparent
+          reference lines, italic muted taper label.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear training season narrative: red fatigue zones during load blocks,
+          blue fresh zone during taper. Taper reference line creates focal narrative
+          moment.'
     spec_compliance:
       score: 15
       max: 15
@@ -148,56 +139,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct PMC: multi-line with filled areas, dual y-axis, shared time
-          x-axis'
+        comment: Correct PMC chart with smooth CTL/ATL lines, filled TSB area, and
+          TSS scatter points.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: CTL and ATL lines; TSB two-toned filled area; TSS step area; TSB=0
-          reference line; secondary y-axis; legend
+        comment: 'All features present: CTL/ATL lines, two-toned TSB area, TSS scatter,
+          secondary Y-axis, TSB=0 reference line, legend.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date x-axis; CTL/ATL on left load axis; TSB on right form axis; TSS
-          on hidden axis scaled to bottom
+        comment: 'X: date time scale; Y-left: CTL/ATL (0-190 AU); Y-right: TSB (-90
+          to +90 AU); Y-hidden: TSS in bottom quarter.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title ''line-training-load-pmc · javascript · muix · anyplot.ai''
-          is correct; legend labels match spec: CTL – Fitness, ATL – Fatigue, Form
-          (Fresh), Form (Fatigued), Daily TSS'
+        comment: 'Title: ''line-training-load-pmc · javascript · muix · anyplot.ai''.
+          Legend labels all five series clearly.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All PMC metrics present; TSS rendered as step-curve area rather than
-          'points or thin bars' as spec text specifies — minor deviation from explicit
-          spec wording
+        comment: 'All PMC elements: EWMA fitness/fatigue lines, split form area, daily
+          TSS, secondary axis, reference line, taper annotation.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 180-day endurance build (Feb–Aug 2025) with base/build/peak/taper
-          phases; recovery weeks; realistic CTL 36→120, ATL volatility, tapering TSB
+        comment: Phase-structured 6-month endurance build (base/build/peak/taper)
+          with realistic CTL ramp. Neutral sports-science context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: TSS 0–180 per day; CTL 36–120; ATL 35–145; TSB approx -40 to +15
-          — all realistic for competitive endurance athlete
+        comment: CTL 36->115 AU, ATL 50-140 AU, TSB -80 to +40 AU, TSS 0-160+ per
+          day — all realistic endurance athlete ranges. 180 days in spec range.
     code_quality:
       score: 10
       max: 10
@@ -207,64 +196,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: lcg() helper is the explicitly recommended pattern in muix.md for
-          in-browser reproducibility; no chart logic wrapped in functions/classes
+        comment: No unnecessary classes/abstractions. LCG helper necessary for deterministic
+          data. Single flat generation loop.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic LCG with seed 42
+        comment: Deterministic LCG with seed=42.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no dead imports
+        comment: All 11 imports used in the component.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized with clear section comments; phase-structured TSS
-          generation is clean; no fake UI
+        comment: Appropriate complexity. No fake UI. Clear EWMA -> render data flow.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses window.ANYPLOT_SIZE, window.ANYPLOT_TOKENS, skipAnimation; default-exports
-          component
+        comment: Default-exports React component. Current MUI X community API. Harness
+          handles PNG/HTML.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: ChartContainer composition API with slot components; multiple yAxisId
-          mapping; curve types (monotoneX, stepAfter); ChartsReferenceLine; MUI sx
-          for area opacity
+        comment: ChartContainer composition pattern — idiomatic MUI X approach for
+          mixed-type multi-series charts. Correct skipAnimation, window.ANYPLOT_SIZE
+          sizing, sx for area opacity, theme tokens for chrome.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Multi-axis ChartContainer (not many JS libs handle 3 simultaneous
-          y-axes); AreaPlot + LinePlot composition; ChartsReferenceLine; area opacity
-          via sx class targeting
+        comment: 'ChartsReferenceLine (horizontal + vertical), multiple Y-axes with
+          different scales, ScatterPlot in composed chart, AreaPlot dual-series on
+          shared right axis. Minor: no slotProps legend fine-tuning.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - twin-axes
-  - html-export
+  - annotations
   patterns:
   - data-generation
   dataprep:
-  - rolling-window
   - time-series
   styling:
   - alpha-blending
