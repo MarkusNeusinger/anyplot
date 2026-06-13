@@ -1,7 +1,7 @@
 # anyplot.ai
 # line-training-load-pmc: Training Load Performance Management Chart
-# Library: Makie.jl 0.22 | Julia 1.11
-# Quality: pending | Created: 2026-06-13
+# Library: makie 0.22.10 | Julia 1.11.9
+# Quality: 93/100 | Created: 2026-06-13
 
 using CairoMakie
 using Colors
