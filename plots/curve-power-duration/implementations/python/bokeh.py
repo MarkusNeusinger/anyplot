@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 curve-power-duration: Mean-Maximal Power Duration Curve
 Library: bokeh 3.9.1 | Python 3.13.13
-Quality: 88/100 | Created: 2026-06-13
+Quality: 89/100 | Created: 2026-06-13
 """
 
 import os

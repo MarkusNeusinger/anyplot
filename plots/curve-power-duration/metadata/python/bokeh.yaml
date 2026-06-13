@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: curve-power-duration
 created: '2026-06-13T21:58:02Z'
-updated: '2026-06-13T22:03:41Z'
+updated: '2026-06-13T22:14:35Z'
 generated_by: claude-sonnet
 workflow_run: 27480079769
 issue: 8647
@@ -12,48 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-pow
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/python/bokeh/plot-dark.html
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - Full spec compliance across all four sub-criteria; every required feature present
-    and correctly implemented (log x-axis, empirical MMP curve, CP model overlay,
-    reference markers, CP asymptote).
-  - 'Excellent data quality: physiologically realistic cyclist parameters (CP=280
-    W, W′=22 kJ, PMAX=1050 W), 52 log-spaced points within spec range, PMAX plateau
-    correctly applied.'
-  - Clean reproducible code with all imports used and correct Selenium 4 screenshot
-    pattern followed.
-  - Correct Imprint palette ordering (brand green first, lavender second) with theme-adaptive
-    chrome throughout both light and dark renders.
-  - CustomJSTickFormatter produces clear human-readable log-axis tick labels (1 s
-    → 5 h).
-  - Four reference-duration vertical markers plus CP asymptote annotation tell the
-    sports-science story effectively with minimal clutter.
+  - 'Perfect spec compliance: all required features present (log x-axis, empirical
+    + model curves, four reference annotations at 5s/1min/5min/20min, CP asymptote
+    line with label, human-readable tick labels 1s through 5h)'
+  - 'Correct Imprint palette: #009E73 as first series, #C475FD as second, correct
+    theme-adaptive chrome tokens throughout'
+  - 'Both renders pass theme-readability check: fully readable text in light (#FAF8F1)
+    and dark (#1A1A17) themes, no dark-on-dark failures detected'
+  - 'Idiomatic Bokeh usage: CustomJSTickFormatter for human-readable log axis labels,
+    Span elements for reference/asymptote lines, CDP viewport pinning for exact 3200x1800
+    canvas'
+  - Clean, flat code with np.random.seed(42) for reproducibility and realistic domain
+    parameters (CP=280W, W prime=22kJ, PMAX=1050W for competitive cyclist)
   weaknesses:
-  - 'Full box outline retained (p.outline_line_color = INK_SOFT) — style guide requires
-    L-shaped frame (remove top and right spines); fix: set outline_line_color = None
-    and rely on the left and bottom axis lines.'
-  - 'The empirical and model curves overlap extensively in the PMAX plateau (1 s–30
-    s) and the long-duration tail near CP, making it hard to see two distinct series.
-    Fix: increase model line_width to 4–5 and/or reduce empirical line alpha to ~0.7
-    to let the dashed model show through.'
-  - Annotation font sizes (30pt for reference duration labels and CP label) are noticeably
-    smaller than tick labels (34pt); aligning to 34pt would improve hierarchy consistency.
+  - Legend border still visible (p.legend.border_line_color = INK_SOFT); style guide
+    recommends removing legend box frames — set to None or 0 alpha for cleaner look
+  - The two data series are nearly superimposed in the PMAX-capped flat zone (1s-30s),
+    reducing visual differentiation in that region; consider increasing empirical
+    line_width to 6-7 and alpha to 0.9 to assert primacy of actual data over model
+    fit
+  - Design excellence held back by safe typography defaults; removing the legend border
+    and increasing empirical line weight would lift DE-01 and DE-02
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Title "curve-power-duration · python · bokeh · anyplot.ai" in dark #1A1A17, centered, 50pt — clearly readable. X-axis label "Duration" and y-axis label "Power (W)" in dark ink, 42pt — readable. Tick labels in #4A4A44 (INK_SOFT), 34pt — readable. Reference annotation labels (5 s, 1 min, 5 min, 20 min) at 30pt and "CP = 280 W" at 30pt — readable but slightly smaller than tick labels. Legend in top-right with ELEVATED_BG fill.
-      Data: First series (Mean-Maximal Power) in brand green #009E73 — solid line + circular markers. Second series (CP Model) in lavender #C475FD — dashed line. CP asymptote dotted horizontal line. Four vertical dashed reference lines at 5s, 1min, 5min, 20min.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "curve-power-duration · python · bokeh · anyplot.ai" in dark ink (#1A1A17), centered, clearly visible. X-axis label "Duration" and Y-axis label "Power (W)" in dark ink. Tick labels in INK_SOFT (#4A4A44) — all readable. Reference labels "5 s", "1 min", "5 min", "20 min" in INK_SOFT at top of chart — readable. "CP = 280 W" label in INK_SOFT at lower right — readable.
+      Data: Empirical MMP curve in solid green #009E73 with circular markers (first series). CP model in dashed lavender #C475FD (second series). Both decay from ~1060W at 1s to ~280W at 5h. Flat PMAX-capped section from 1s to ~30s at ~1050W, then steep decay. CP asymptote dotted line at 280W. Four vertical dashed reference lines at 5s/1min/5min/20min. Legend in top-right corner.
+      Legibility verdict: PASS — all text clearly readable against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: Title, axis labels, and tick labels all render in light cream (#F0EFE8 / #B8B7B0) — clearly readable against the dark surface. No dark-on-dark failures. Legend background is #242420 (ELEVATED_BG dark) with light label text.
-      Data: Colors identical to light render — brand green #009E73 empirical curve and lavender #C475FD dashed model line. Brand green reads well on dark background. Reference span lines visible with muted alpha-blended tones.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and all axis labels/ticks flip to light text (INK = #F0EFE8, INK_SOFT = #B8B7B0) — all clearly readable against dark background. No dark-on-dark failures. Reference labels "5 s", "1 min", "5 min", "20 min" visible in light gray. "CP = 280 W" label readable in light gray on dark surface.
+      Data: Empirical green #009E73 curve and dashed lavender #C475FD model — identical data colors as light render, confirming theme-invariant palette. Brand green #009E73 clearly visible on dark background. CP asymptote dotted line visible in muted gray. Vertical reference lines subtle but visible.
+      Legibility verdict: PASS — all text readable, no dark-on-dark issues, brand green clearly visible on dark surface
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -61,50 +58,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 50pt, axis labels 42pt, tick labels 34pt, annotation labels
-          30pt — all readable in both light and dark themes.
+        comment: All text sized per style guide (50pt title, 42pt axis labels, 34pt
+          ticks/annotations). Fully readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; reference labels at top and legend in top-right
-          are adjacent but do not overlap.
+        comment: No text-text or text-data collisions. Reference labels at top, ticks
+          at bottom, legend upper-right, CP label lower-right — well-spaced.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Green empirical and lavender dashed model lines are close in the
-          PMAX plateau and near-CP tail; color + linestyle differences distinguish
-          them, but overlap reduces model salience.
+        comment: Empirical line (5px solid + 14px markers with edge color) and CP
+          model (5px dashed) clearly distinct. Reference spans visible at appropriate
+          alpha.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint positions 1 and 2; redundant encoding via solid vs dashed;
-          no red-green sole-signal pairs.
+        comment: 'Green #009E73 and lavender #C475FD are CVD-safe and perceptually
+          distinct. No red-green-only signaling.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 landscape; min_border reservations correct; no clipping;
-          canvas gate passed.
+        comment: Canvas gate passed (3200x1800). Title spans ~70% of width at 50pt,
+          appropriate for 50-char title. min_border settings match Bokeh style guide.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Duration and Power (W) descriptive with units; title correctly formatted.
+        comment: Y-axis 'Power (W)' includes units. X-axis 'Duration' paired with
+          human-readable tick labels. Title matches required format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #C475FD; backgrounds #FAF8F1 / #1A1A17;
-          chrome tokens theme-adaptive.'
+        comment: 'First series #009E73, second #C475FD (Imprint positions 1,2). Backgrounds
+          #FAF8F1/#1A1A17. Chrome fully theme-adaptive.'
     design_excellence:
       score: 12
       max: 20
@@ -114,22 +112,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Imprint palette, reference annotations, CP asymptote, and log ticks
-          lift above default. Box outline retained instead of L-shaped spines.
+        comment: 'Above default: intentional multi-element composition (CP asymptote,
+          reference spans, two data series). Imprint palette correct. Safe but not
+          exceptional typography.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Grid at alpha=0.12 subtle; generous min_border whitespace; clean
-          typography. Box outline (outline_line_color=INK_SOFT) is main miss.
+        comment: outline_line_color=None (spine removal), grid alpha=0.12 (subtle),
+          generous min_border whitespace, marker edge color for definition. Legend
+          border still visible.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Reference markers with labels and CP asymptote annotation tell the
-          sports-science story. PMAX plateau evident. Visual hierarchy clear.
+        comment: Reference annotations create training-zone narrative. CP asymptote
+          highlights physiological threshold. Two series nearly superimposed in PMAX-capped
+          flat zone (1s-30s).
     spec_compliance:
       score: 15
       max: 15
@@ -139,30 +140,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct power-duration curve with log x-axis; monotonically non-increasing
-          empirical curve.
+        comment: Correct power-duration curve with log x-axis, monotonically decreasing
+          empirical + CP model overlay.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Log x-axis with human-readable ticks, empirical MMP curve, CP model
-          dashed overlay, vertical reference markers at 5s/1min/5min/20min, CP asymptote
-          with label.
+        comment: Log time axis, empirical MMP curve, dashed CP model overlay, vertical
+          reference markers at 5s/1min/5min/20min, CP asymptote line+label, human-readable
+          tick labels all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: duration in seconds (log); Y: power in watts; range 1-18000s
-          x 200-1200W; monotonicity enforced.'
+        comment: 'X: log-spaced durations 1s to 18000s. Y: power in watts 200-1200.
+          Both empirical and dense model arrays correctly mapped.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'curve-power-duration · python · bokeh · anyplot.ai'; legend
-          labels correctly describe both series.
+        comment: 'Title: ''curve-power-duration · python · bokeh · anyplot.ai''. Legend
+          labels: ''Mean-Maximal Power'' and ''CP Model (CP=280 W, W prime=22 kJ)''.'
     data_quality:
       score: 15
       max: 15
@@ -172,22 +173,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows empirical MMP, CP model, PMAX plateau, CP asymptote, and all
-          four reference durations.
+        comment: 'Shows all key aspects: empirical MMP curve, CP+W'' model, neuromuscular
+          peak power cap, reference training zones, asymptotic approach to CP.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Well-trained cyclist; CP=280W, W'=22kJ, PMAX=1050W are physiologically
-          plausible; neutral sports-science framing.
+        comment: Well-trained competitive cyclist with CP=280W, W'=22kJ, PMAX=1050W.
+          Realistic, neutral, domain-appropriate parameters.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 52 log-spaced points; duration 1-18000s; power 200-1200W; all values
-          realistic.
+        comment: Duration 1s-18000s (5h) spans full physiological range. Power 200-1200W
+          appropriate for competitive cycling. Model parameters internally consistent.
     code_quality:
       score: 10
       max: 10
@@ -197,31 +198,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; linear top-to-bottom script.
+        comment: Flat, no functions or classes. Clear top-to-bottom flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42) set before all random operations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported names used.
+        comment: All imports (os, time, Path, numpy, bokeh.*, selenium) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI; constants well-named.
+        comment: Appropriate complexity. No fake UI elements or simulated interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png; Selenium 4 pattern.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html using current Bokeh
+          + Selenium API.
     library_mastery:
       score: 7
       max: 10
@@ -231,15 +233,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource throughout; correct figure() kwargs; output_file+save+Selenium
-          pattern; toolbar_location=None; min_border_* reservations.
+        comment: ColumnDataSource for both series, figure() with log axis type, output_file/save
+          for HTML, Selenium for PNG, CDP setDeviceMetricsOverride for viewport pinning
+          — all idiomatic.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: CustomJSTickFormatter for human-readable log ticks; FixedTicker;
-          Span and Label models used idiomatically. No HoverTool or callbacks.
+        comment: CustomJSTickFormatter for human-readable log tick labels, Span elements
+          for reference/asymptote lines, FixedTicker for custom log axis ticks — Bokeh-distinctive
+          features used well.
   verdict: APPROVED
 impl_tags:
   dependencies:
