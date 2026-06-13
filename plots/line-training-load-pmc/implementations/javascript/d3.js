@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-training-load-pmc: Training Load Performance Management Chart
 // Library: d3 7.9.0 | JavaScript 22.22.3
-// Quality: 87/100 | Created: 2026-06-13
+// Quality: 93/100 | Created: 2026-06-13
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
