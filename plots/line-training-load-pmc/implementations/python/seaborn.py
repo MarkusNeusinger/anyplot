@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-training-load-pmc: Training Load Performance Management Chart
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 86/100 | Created: 2026-06-13
+Quality: 90/100 | Created: 2026-06-13
 """
 
 import os as _os
