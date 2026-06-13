@@ -96,7 +96,7 @@ export default function Chart() {
         width={W}
         height={H - TITLE_H}
         skipAnimation
-        colors={[t.palette[0], t.palette[2]]}
+        colors={[t.palette[0], t.palette[1]]}
         xAxis={[
           {
             id: "duration",
@@ -104,7 +104,7 @@ export default function Chart() {
             scaleType: "log",
             label: "Effort Duration",
             valueFormatter: fmtDur,
-            tickNumber: 8,
+            tickInterval: [1, 5, 30, 60, 300, 1200, 3600, 7200, 18000],
             min: 1,
             max: 20000,
             tickLabelStyle: { fontSize: 13 },
