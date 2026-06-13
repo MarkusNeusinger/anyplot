@@ -60,7 +60,7 @@ const g = svg.append("g")
 
 // --- Scales ---
 const xScale = d3.scaleLog().domain([1, 18000]).range([0, iw]);
-const yMax = 1250;   // neuromuscular ceiling; model clipped via clipPath below
+const yMax = Math.ceil(d3.max(empiricalPower) / 100) * 100 + 100;
 const yScale = d3.scaleLinear().domain([0, yMax]).range([ih, 0]);
 
 // --- Clip path so the diverging model line stays inside the plot area ---
@@ -94,14 +94,14 @@ refs.forEach(ref => {
     .attr("x", rx).attr("y", 18)
     .attr("text-anchor", "middle")
     .attr("fill", t.inkSoft)
-    .style("font-size", "12px")
+    .style("font-size", "13px")
     .text(ref.line1);
   if (ref.line2) {
     g.append("text")
       .attr("x", rx).attr("y", 32)
       .attr("text-anchor", "middle")
       .attr("fill", t.inkSoft)
-      .style("font-size", "11px")
+      .style("font-size", "13px")
       .text(ref.line2);
   }
 });
@@ -143,6 +143,7 @@ const empirLine = d3.line()
 
 g.append("path")
   .datum(empiricalPower)
+  .attr("clip-path", "url(#plot-clip)")
   .attr("fill", "none")
   .attr("stroke", t.palette[0])
   .attr("stroke-width", 3.5)
@@ -150,6 +151,7 @@ g.append("path")
 
 // Dots on empirical curve
 g.selectAll(".dot").data(empiricalPower).join("circle")
+  .attr("clip-path", "url(#plot-clip)")
   .attr("cx", (d, i) => xScale(durations[i]))
   .attr("cy", d => yScale(d))
   .attr("r", 4)
