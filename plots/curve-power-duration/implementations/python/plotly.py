@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-power-duration: Mean-Maximal Power Duration Curve
 Library: plotly 6.8.0 | Python 3.13.13
-Quality: 86/100 | Created: 2026-06-13
 """
 
 import os
@@ -53,16 +52,9 @@ references = {"5 s": 5, "1 min": 60, "5 min": 300, "20 min": 1200}
 LOG_MIN = 0.0
 LOG_MAX = float(np.log10(18000))  # ≈ 4.255
 
-# Paper x-positions for annotations (accounts for l=80, r=40 margins on width=800)
-_left_frac = 80 / 800
-_right_frac = 40 / 800
-_data_frac = 1.0 - _left_frac - _right_frac
-
-
-def log_to_paper(dur):
-    """Convert a duration in seconds to paper x-coordinate."""
-    return _left_frac + (np.log10(dur) - LOG_MIN) / (LOG_MAX - LOG_MIN) * _data_frac
-
+# Paper x-coordinate constants (accounts for l=80, r=40 margins on width=800)
+_LEFT_FRAC = 80 / 800
+_DATA_FRAC = 1.0 - _LEFT_FRAC - 40 / 800
 
 # Title — 49 chars < 67-char baseline, no scaling needed
 title = "curve-power-duration · python · plotly · anyplot.ai"
@@ -75,6 +67,19 @@ tick_text = ["1s", "10s", "1min", "5min", "20min", "1h", "5h"]
 # Plot
 fig = go.Figure()
 
+# Subtle aerobic zone fill: area between the empirical curve and the CP floor
+fig.add_trace(
+    go.Scatter(
+        x=np.concatenate([durations, durations[::-1]]),
+        y=np.concatenate([empirical_power, np.full(len(durations), CP)]),
+        fill="toself",
+        fillcolor="rgba(0,158,115,0.07)",
+        line={"width": 0},
+        showlegend=False,
+        hoverinfo="skip",
+    )
+)
+
 # Empirical mean-maximal power curve (primary series — Imprint position 1)
 fig.add_trace(
     go.Scatter(
@@ -83,7 +88,7 @@ fig.add_trace(
         mode="lines+markers",
         name="Mean-Maximal Power",
         line={"color": IMPRINT_PALETTE[0], "width": 3},
-        marker={"size": 6, "color": IMPRINT_PALETTE[0], "opacity": 0.85, "line": {"color": PAGE_BG, "width": 1}},
+        marker={"size": 10, "color": IMPRINT_PALETTE[0], "opacity": 0.85, "line": {"color": PAGE_BG, "width": 1.5}},
     )
 )
 
@@ -122,7 +127,7 @@ for dur in references.values():
 # Reference annotations using paper x-coordinates to avoid log-axis positioning issues
 for label, dur in references.items():
     ref_power = int(np.interp(dur, durations, empirical_power))
-    x_paper = log_to_paper(dur)
+    x_paper = _LEFT_FRAC + (np.log10(dur) - LOG_MIN) / (LOG_MAX - LOG_MIN) * _DATA_FRAC
     fig.add_annotation(
         x=x_paper,
         y=0.97,
@@ -130,7 +135,7 @@ for label, dur in references.items():
         yref="paper",
         text=f"<b>{label}</b><br>{ref_power} W",
         showarrow=False,
-        font={"size": 9, "color": INK},
+        font={"size": 11, "color": INK},
         bgcolor=ELEVATED_BG,
         bordercolor=INK_SOFT,
         borderwidth=1,
@@ -154,9 +159,8 @@ fig.update_layout(
         "tickfont": {"size": 10, "color": INK_SOFT},
         "tickangle": 0,
         "gridcolor": GRID,
-        "linecolor": INK_SOFT,
         "showgrid": True,
-        "showline": True,
+        "showline": False,
         "zeroline": False,
     },
     yaxis={
@@ -164,9 +168,8 @@ fig.update_layout(
         "title": {"text": "Power (W)", "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "gridcolor": GRID,
-        "linecolor": INK_SOFT,
         "showgrid": True,
-        "showline": True,
+        "showline": False,
         "zeroline": False,
     },
     legend={
