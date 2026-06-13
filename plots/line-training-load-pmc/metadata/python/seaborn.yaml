@@ -1,0 +1,287 @@
+library: seaborn
+language: python
+specification_id: line-training-load-pmc
+created: '2026-06-13T20:38:12Z'
+updated: '2026-06-13T20:59:14Z'
+generated_by: claude-sonnet
+workflow_run: 27478173665
+issue: 8646
+language_version: 3.13.13
+library_version: 0.13.2
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Correct PMC implementation with all four data series (CTL, ATL, TSB, daily TSS)
+    rendered at appropriate visual hierarchy
+  - 'Semantic Imprint palette usage: CTL=#009E73 (brand green, first series), ATL=#C475FD
+    (lavender), TSB+=#4467A3 (blue=fresh), TSB-=#AE3030 (red=fatigued) — semantically
+    motivated and well-justified'
+  - Secondary y-axis for TSB keeps TSB readable vs the larger CTL/ATL magnitudes as
+    the spec recommends
+  - Multi-layer alpha hierarchy (bars alpha=0.22 → fills alpha=0.38 → lines 100%)
+    creates excellent visual depth without clutter
+  - Training phase annotations (Base/Build/Peak/Taper) with dashed boundary lines
+    add storytelling context beyond what the spec requires
+  - 'Full theme-adaptive chrome: both renders pass readability checks, no dark-on-dark
+    or light-on-light failures'
+  - EWMA formulas implemented correctly using standard TrainingPeaks time constants
+    (42-day CTL, 7-day ATL)
+  - Custom legend with mixed handles (Line2D + Patch) correctly represents all 5 data
+    series
+  weaknesses:
+  - Phase labels (Base, Build, Peak, Taper) at fontsize=6.5pt render as ~36 source
+    pixels on the 3200px canvas — at 400px mobile viewport they shrink to ~4.5 CSS
+    pixels and become effectively unreadable; increase to 8pt or omit if space is
+    tight
+  - seaborn is used primarily for sns.lineplot + sns.set_theme + sns.despine; the
+    majority of the chart (fill_between, bar, twinx, legend) is matplotlib — limits
+    LM-02 distinctive-feature score
+  - Legend placed at upper-left overlaps with the high-TSS early-phase bars; a location
+    like 'center left' or 'upper right' (taper zone has fewer data elements) would
+    reduce visual collision
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, no pure white.
+      Chrome: Title "line-training-load-pmc · python · seaborn · anyplot.ai" at fontsize=12 is fully readable, occupying ~75% of canvas width (expected for this long title). Primary y-axis label "Training Load (TSS units)" and secondary y-axis label "Form (TSB)" are both readable at fontsize=10. Month tick labels (Sep '25 – Mar '26) rotated 30° are clear at fontsize=8. Legend in upper-left with ELEVATED_BG frame lists all 5 series; readable at fontsize=8. Phase labels (Base/Build/Peak/Taper) at fontsize=6.5 are small but visible at full resolution; they would diminish significantly at 400px mobile scale.
+      Data: Daily TSS bars (gray, alpha=0.22) form a dense background layer, reaching ~250 TSS units in peak phase. TSB negative fill (matte red #AE3030, alpha=0.38) dominates Sep–Jan when ATL > CTL. TSB positive fill (blue #4467A3, alpha=0.38) spikes dramatically in Feb–Mar as the taper takes hold. CTL green line (#009E73) rises smoothly from ~0 to ~90 over the 6-month block. ATL purple line (#C475FD) oscillates rapidly between ~20 and ~250 tracking weekly training load. Dashed phase-boundary lines at low alpha (0.22) subtly mark transitions.
+      Legibility verdict: PASS — all primary text elements readable. Minor note: 6.5pt phase labels may not survive mobile scaling.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct.
+      Chrome: All text is light-colored (INK = #F0EFE8 for titles/labels, INK_SOFT = #B8B7B0 for ticks). No dark-on-dark failures observed. Title, axis labels, tick labels, legend text all clearly readable against the dark background. Secondary axis label "Form (TSB)" on the right spine is light and visible.
+      Data: All Imprint palette data colors are identical to the light render — CTL green (#009E73), ATL lavender (#C475FD), TSB positive blue (#4467A3), TSB negative red (#AE3030), daily TSS gray bars. The TSB fills appear slightly deeper on the dark surface but remain fully distinct and distinguishable. The large positive-TSB taper spike (right end) is the visual focal point in both renders.
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome correctly inverted.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All primary text explicitly sized and readable in both themes. Minor
+          deduction: phase labels at 6.5pt (~36 source px) shrink to ~4.5 CSS px at
+          400px mobile — borderline unreadable at smallest viewport.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text collisions. Month labels rotated 30° are well-spaced.
+          Legend has frame and sits clearly above data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Multi-layer alpha hierarchy (bars 0.22 → fills 0.38 → lines solid)
+          correctly prioritizes visual importance. All 5 data series distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe. Green/purple/blue/red combination provides
+          good perceptual separation. Shape+fill redundant encoding in legend.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. subplots_adjust(left=0.09, right=0.89, top=0.91,
+          bottom=0.13) provides good margins. No content cut off. Secondary axis right
+          margin well-managed.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Primary y-axis: ''Training Load (TSS units)''. Secondary y-axis:
+          ''Form (TSB)''. X-axis intentionally empty — date tick labels are self-explanatory.
+          Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'CTL=#009E73 (first series, brand green). ATL=#C475FD (pos 2). TSB+=#4467A3
+          (pos 3) and TSB-=#AE3030 (pos 5, semantic red for fatigued/bad) — valid
+          semantic exception. Backgrounds: light=#FAF8F1, dark=#1A1A17. Both renders
+          theme-correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: intentional semantic color assignments with rationale,
+          multi-layer visual hierarchy, phase annotations showing periodization context.
+          Clearly above defaults but not FiveThirtyEight-level publication polish.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: sns.despine, y-axis grid at alpha=0.12, phase boundary
+          dashes at alpha=0.22, fills at 0.38, TSS bars at 0.22 — careful transparency
+          layering. Some visual busyness from 5 overlapping data sources.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Visual hierarchy guides reader: faint bars → colored fills → bold
+          lines. Phase labels contextualize the training periodization story. Large
+          positive TSB spike at taper is an obvious focal point — viewer immediately
+          sees the ''freshness'' outcome of the taper.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct PMC chart: CTL/ATL smooth lines, TSB two-toned filled area,
+          TSS as background bars, secondary y-axis for TSB.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: CTL/ATL lines, TSB fill_between (two-toned
+          positive/negative), TSS bars, single date x-axis, full legend, TSB=0 reference
+          line (ax2.axhline), secondary y-axis.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: date. Primary Y: CTL, ATL, TSS (all TSS units). Secondary Y:
+          TSB. All series correctly mapped and visible.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''line-training-load-pmc · python · seaborn · anyplot.ai''
+          — correct format. Legend distinguishes all 5 series: Fitness (CTL), Fatigue
+          (ATL), Form+ (TSB ≥ 0), Form− (TSB < 0), Daily TSS.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all PMC aspects: fitness growth (CTL rising), fatigue oscillation
+          (ATL), form dipping negative during load blocks and turning positive during
+          taper, rest days (Monday zeros), long-session peaks (Sunday spikes), recovery
+          weeks, full 4-phase periodization.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic 6-month endurance training block (Sep 2025 – Feb 2026)
+          with Base/Build/Peak/Taper structure. Neutral topic. Standard TrainingPeaks
+          EWMA formulas.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'CTL reaching ~90 over 6 months: realistic for age-group endurance
+          athlete. ATL peaking ~250 in quality sessions: plausible for high-intensity
+          day. TSB ±30–40: typical range. TSS values 0–250 appropriate for daily training
+          load.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports → data generation → EWMA computation
+          → plot layers → styling → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before data generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used. Dual os import (os as _os + os) is intentional
+          for seaborn path-shadowing workaround.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a 5-series chart. Idiomatic pandas concat
+          for long-form df, ax.get_xaxis_transform() for phase labels, mixed Line2D/Patch
+          legend handles are all correct techniques.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png without bbox_inches='tight'. Current seaborn
+          0.13.2 API used throughout.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'sns.lineplot with long-form dataframe and hue dict is the canonical
+          seaborn pattern for multi-series lines. sns.set_theme with rc dict and sns.despine
+          are idiomatic. Deduction: most chart elements (fill_between, bar, twinx,
+          legend) are matplotlib — seaborn''s high-level API is used where it fits,
+          but the chart''s complexity pushes most rendering to matplotlib.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Distinctive seaborn features used: hue-based lineplot with long-form
+          dataframe (seaborn''s signature), sns.set_theme for comprehensive rc injection,
+          sns.despine for spine management. Does not use figure-level API (relplot)
+          or advanced seaborn-only features like FacetGrid or statistical estimation.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - explicit-figure
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
+  - grid-styling
