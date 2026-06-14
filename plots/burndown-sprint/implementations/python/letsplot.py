@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 burndown-sprint: Agile Sprint Burndown Chart
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 88/100 | Created: 2026-06-14
@@ -25,6 +25,8 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 BRAND = IMPRINT_PALETTE[0]  # actual burndown — brand green, always first series
 IDEAL_COLOR = IMPRINT_PALETTE[2]  # ideal guideline — Imprint blue
 SCOPE_COLOR = IMPRINT_PALETTE[4]  # scope-change marker — matte red (semantic: risk/alert)
+# Slightly lighter red for annotation on dark backgrounds to improve contrast
+SCOPE_ANNOTATION_COLOR = "#AE3030" if THEME == "light" else "#D45555"
 
 # Data — 10-working-day sprint, Oct 7–18 2024
 # Initial scope: 40 story points; +8 scope added on day 4 (Oct 11, Fri)
@@ -70,9 +72,10 @@ anyplot_theme = theme(
     panel_grid_major_y=element_line(color=INK_SOFT, size=0.25),
     panel_grid_major_x=element_blank(),
     panel_grid_minor=element_blank(),
+    panel_border=element_blank(),
     axis_title=element_text(color=INK, size=12),
-    axis_text=element_text(color=INK_SOFT, size=9),
-    axis_text_x=element_text(color=INK_SOFT, size=8, angle=45, vjust=1, hjust=1),
+    axis_text=element_text(color=INK_SOFT, size=10),
+    axis_text_x=element_text(color=INK_SOFT, size=9, angle=45, vjust=1, hjust=1),
     axis_ticks=element_line(color=INK_SOFT),
     axis_line=element_line(color=INK_SOFT),
     plot_title=element_text(color=INK, size=16),
@@ -103,7 +106,9 @@ plot = (
     # Scope change vertical marker (matte red — semantic alert)
     + geom_vline(xintercept=4, color=SCOPE_COLOR, size=0.8, linetype="dotted")
     # Scope change annotation
-    + geom_text(mapping=aes(x="x", y="y", label="label"), data=df_scope_label, color=SCOPE_COLOR, size=4.0, hjust=0)
+    + geom_text(
+        mapping=aes(x="x", y="y", label="label"), data=df_scope_label, color=SCOPE_ANNOTATION_COLOR, size=4.0, hjust=0
+    )
     # Color scale / legend for the two series
     + scale_color_manual(values={"Actual": BRAND, "Ideal": IDEAL_COLOR}, name="")
     + scale_x_continuous(breaks=day_indices, labels=day_labels, expand=[0.02, 0])
