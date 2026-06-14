@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: bar-heart-rate-zones
 created: '2026-06-14T21:29:30Z'
-updated: '2026-06-14T21:34:42Z'
+updated: '2026-06-14T21:43:47Z'
 generated_by: claude-sonnet
 workflow_run: 27512413001
 issue: 8649
@@ -12,41 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-heart
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - Perfect semantic color mapping — all 5 zone colors match fitness industry conventions
-    while using Imprint palette members and anchors
-  - Multi-line x-tick labels elegantly combining zone ID, name, and HR range in a
-    single compact label group
-  - Full theme-adaptive chrome — both light and dark renders are fully legible with
-    no dark-on-dark or light-on-light failures
-  - 'Complete spec compliance: zone ordering, bar duration labels, HR boundary annotations,
-    correct chart type all present'
-  - 'Clean idiomatic matplotlib code: no bbox_inches=tight, correct 3200x1800 canvas,
-    no fake interactivity'
+  - Correct semantic zone colors (grey/blue/green/ochre/red) matching fitness industry
+    convention via Imprint palette members
+  - Idiomatic use of ax.bar_label() for clean bar duration annotations
+  - Excellent multi-line tick labels showing zone ID, name, and HR boundary ranges
+    — spec feature fully satisfied
+  - Visual emphasis on dominant Z2 bar via darker edge highlighting creates clear
+    focal point
+  - Theme-adaptive chrome fully implemented — both renders pass legibility checks
+    with no dark-on-dark failures
+  - 'Perfect data quality: realistic 60-minute tempo run with physiologically accurate
+    HR boundary ranges'
+  - 'Total: 60 min annotation adds immediate narrative context anchoring the workout
+    story'
   weaknesses:
-  - No visual focal point or narrative emphasis — could highlight the dominant Z2
-    bar (22 min endurance) or add a total-time summary annotation to anchor the training
-    story
-  - Design is functional but not ambitious — a subtle background stripe per zone or
-    a reference annotation for target zone could elevate from solid to sophisticated
-  - Bar value labels use manual ax.text() instead of the more idiomatic modern ax.bar_label()
-    (available since matplotlib 3.4)
-  - Multi-line x-tick labels at fontsize=8 are on the small side for a 1800px canvas
-    — fontsize=9 would be slightly more comfortable without overlap risk
+  - Multi-line tick labels (3 rows at 9pt) are readable at desktop but borderline
+    at 400px mobile — consider combining zone name and HR range into a single shorter
+    line, or bumping tick fontsize to 10pt
+  - 'DE-01 sits at 5/8: the design is above defaults but not publication-ready — a
+    subtle zone-intensity progression arrow or annotation from Z1 to Z5 along the
+    bottom axis would elevate storytelling further'
+  - 'LM-02 sits at 3/5: individual bar artist manipulation (set_edgecolor on dominant
+    bar) is a good matplotlib-specific touch, but could use bar_container properties
+    or hatch patterns for even more distinctive library usage'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 surface, clearly not pure white — correct Imprint surface.
-      Chrome: Title "bar-heart-rate-zones · python · matplotlib · anyplot.ai" at ~70% width in dark INK color, clearly readable. Y-axis label "Time (minutes)" and X-axis label "Heart Rate Training Zone" in dark INK, balanced and legible. X-tick labels show "Z1  Recovery / < 115 bpm" etc. in INK_SOFT (#4A4A44), readable at 3-line format. Bar annotations ("8 min", "22 min", etc.) in bold dark INK above each bar.
-      Data: 5 bars in semantic zone colors — Z1 medium grey (INK_MUTED), Z2 blue (#4467A3), Z3 brand green (#009E73), Z4 ochre (#BD8233), Z5 matte red (#AE3030). All bars clearly distinguishable from the warm off-white background.
-      Legibility verdict: PASS — all text elements readable, no light-on-light issues, grid lines subtle at alpha=0.15.
+      Background: Warm off-white #FAF8F1 — correct anyplot surface color, not pure white.
+      Chrome: Title "bar-heart-rate-zones · python · matplotlib · anyplot.ai" at 12pt in dark #1A1A17 ink — fully readable. Y-axis label "Time (minutes)" and X-axis label "Heart Rate Training Zone" at 10pt in dark ink — clear. Y-axis tick labels (0-25) and multi-line X-axis tick labels (zone code + name + HR range) at 9pt in INK_SOFT — readable at desktop size; borderline on mobile for the 3-line format. Bar labels ("8 min", "22 min", etc.) in bold dark ink — crisp and clear.
+      Data: Five bars in semantic zone colors — Z1 grey (INK_MUTED muted anchor), Z2 blue (#4467A3), Z3 green (#009E73), Z4 ochre (#BD8233), Z5 red (#AE3030). Z2 bar has a darker INK edge highlight emphasizing the dominant zone. "Total: 60 min" annotation in top-right in INK_SOFT. Subtle y-axis grid only, top+right spines removed.
+      Legibility verdict: PASS — all text readable; minor mobile concern with 3-line tick labels.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 surface, clearly not pure black — correct Imprint dark surface.
-      Chrome: Title in light INK (#F0EFE8), clearly visible against dark background. Axis labels in light INK, readable. X-tick labels in INK_SOFT (#B8B7B0) which is a light grey-beige, clearly legible on the near-black background — no dark-on-dark issues. Bar annotations in bold light INK above each bar.
-      Data: Colors are identical to the light render — Z1 light grey (INK_MUTED adapts to #A8A79F, lighter on dark), Z2 blue, Z3 brand green (#009E73 still fully visible), Z4 ochre, Z5 red. Only the Z1 bar shifts slightly lighter grey which is appropriate (theme-adaptive muted anchor). All other data colors (positions 2-5) are identical between themes as required.
-      Legibility verdict: PASS — all text is readable on dark background, no dark-on-dark failures detected, brand green #009E73 clearly visible on near-black.
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black.
+      Chrome: Title and axis labels rendered in light #F0EFE8 ink — clearly visible against dark background. Tick labels in #B8B7B0 INK_SOFT — readable. Bar labels in bold light ink — visible. No dark-on-dark failures observed. "Total: 60 min" annotation uses INK_SOFT dark-adapted value (#B8B7B0) — readable.
+      Data: Bar colors are IDENTICAL to light render — Z1 grey (muted), Z2 blue (#4467A3), Z3 green (#009E73), Z4 ochre (#BD8233), Z5 red (#AE3030). Z2 dominant bar edge uses INK (#F0EFE8) in dark theme — visible highlight. Subtle grid adapts to dark surface.
+      Legibility verdict: PASS — all text readable against dark background; data colors unchanged between renders; no chrome inversion failures.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -57,55 +60,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All text readable in both themes. Title, axis labels, tick labels,
-          bar annotations all set with explicit fontsizes and theme-adaptive colors.
-          Minor: 3-line x-tick labels at fontsize=8 are slightly small for the canvas.'
+        comment: All font sizes explicitly set; readable at desktop. 3-line tick labels
+          at 9pt borderline at ~400px mobile width.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Bar labels clear of bars and neighboring
-          labels. X-tick labels well-separated.
+        comment: No overlapping elements; bar labels clear of each other and bars.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 5 bars clearly visible in both themes. Zone colors distinct.
-          Bar edges match background for clean definition.
+        comment: All 5 bars clearly visible with distinct semantic colors and width=0.55
+          appropriate for 5 categories.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 5 distinct hues; grey/blue/green/ochre/red provide good perceptual
-          separation. Semantic zone mapping follows fitness-industry conventions.
+        comment: Semantic zone colors span distinct hue families and luminance levels;
+          zones labeled redundantly so no red-green-only encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Good margins via subplots_adjust.
-          Bottom margin (0.24) accommodates 3-line tick labels. Title padding adequate.
+        comment: Canvas gate passed. Balanced margins via subplots_adjust; ample bottom
+          space for multi-line tick labels; plot fills canvas well.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Time (minutes)'' with unit. X-axis: ''Heart Rate Training
-          Zone''. Title format correct.'
+        comment: 'Y-axis: Time (minutes) with units; X-axis: Heart Rate Training Zone
+          — descriptive.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Semantic exception correctly applied — zone colors use Imprint palette
-          members: Z2 #4467A3 (pos 3), Z3 #009E73 (pos 1), Z4 #BD8233 (pos 4), Z5
-          #AE3030 (pos 5), Z1 INK_MUTED (semantic anchor). Both backgrounds correct
-          (#FAF8F1 light, #1A1A17 dark).'
+        comment: 'Semantic exception applies: spec mandates zone colors. All colors
+          are Imprint palette members or semantic anchors. Backgrounds #FAF8F1/#1A1A17
+          correct. Chrome fully adaptive.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -113,25 +113,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: semantic colors are intentional (not random), spines
-          removed, multi-line tick labels add info density elegantly. No exceptional
-          design innovation (no zone emphasis, no summary callout).'
+        comment: Semantic zone colors, dominant bar emphasis, warm backgrounds — clearly
+          above defaults but not FiveThirtyEight publication level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top and right spines removed, Y-grid subtle at alpha=0.15, tick marks
-          removed (length=0), bar edges match background for clean look. Above the
-          default floor.
+        comment: Top/right spines removed, subtle y-grid only, edge highlighting on
+          bars, generous margins for tick labels — good refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Zone names and HR ranges in tick labels provide context. Duration
-          labels give immediate readout. Z1-Z5 order implies intensity progression.
-          Missing: no visual hierarchy emphasizing key zones or narrative annotation.'
+        comment: 'Z2 bar emphasized as dominant zone, Total: 60 min annotation anchors
+          workout context, color intensity progression Z1→Z5 guides viewer. Clear
+          focal point.'
     spec_compliance:
       score: 15
       max: 15
@@ -141,29 +139,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Vertical bar chart — exactly as specified.
+        comment: Correct vertical bar chart for zone comparison.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Zone colors (grey/blue/green/ochre/red), duration labels above bars,
-          HR boundary ranges in tick labels, Z1→Z5 fixed order all present.
+        comment: All 5 zones, conventional zone colors, duration labels (MM min format),
+          HR boundary ranges in tick labels, Z1→Z5 order maintained.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: zones Z1-Z5 in order. Y-axis: time in minutes. Data values
-          (8, 22, 15, 12, 3 min) sum to 60-min tempo run as specified.'
+        comment: 'X: zones Z1-Z5, Y: time in minutes. All zones visible.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''bar-heart-rate-zones · python · matplotlib · anyplot.ai''
-          — exact required format. No legend needed; zone identity conveyed by tick
-          labels.'
+        comment: Title is exactly 'bar-heart-rate-zones · python · matplotlib · anyplot.ai'.
+          No legend needed — bars labeled directly.
     data_quality:
       score: 15
       max: 15
@@ -173,22 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 5 zones shown with zone ID, descriptive name, HR boundary range,
-          and duration. Covers all spec data fields.
+        comment: Shows all 5 zones with varied durations, zone names, and HR boundaries
+          — complete feature coverage.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 60-minute tempo run with Z2-dominant distribution (22 min) is realistic
-          and plausible. Data is neutral, no controversial content.
+        comment: 60-min tempo run is a real, neutral fitness scenario. Zone durations
+          (8/22/15/12/3) represent a plausible intensity distribution.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis range 0-26+ minutes appropriate for zone durations. HR ranges
-          (115-169+ bpm) are physiologically correct.
+        comment: Durations sum to 60 min (consistent). HR boundaries (< 115 to > 169
+          bpm) are physiologically accurate for a 5-zone model.
     code_quality:
       score: 10
       max: 10
@@ -198,7 +194,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Clean top-level script with logical organization.
+        comment: Clean Imports→Data→Plot→Save structure. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -210,21 +206,22 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only os, pathlib, sys, matplotlib.pyplot, numpy imported — all used.
+        comment: os, pathlib, sys (all used for path setup), matplotlib.pyplot, numpy
+          — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Uses zip(strict=True) for modern Python safety. No fake UI. sys.path
-          manipulation is documented and necessary for name-collision avoidance.
+        comment: Clean, Pythonic. sys.path filtering serves a documented purpose (name
+          collision avoidance). No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. Current matplotlib
-          API used.
+        comment: Saves as plot-{THEME}.png via pathlib. No bbox_inches='tight'. No
+          deprecated functions.
     library_mastery:
       score: 7
       max: 10
@@ -234,17 +231,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses Axes methods (ax.bar, ax.text, ax.tick_params) correctly. fig.subplots_adjust
-          for layout. Could use ax.bar_label() instead of manual ax.text() for bar
-          annotations.
+        comment: Uses ax.bar_label() (3.4+ high-level API), Axes methods throughout,
+          ax.spines[], ax.bar() — idiomatic. Missing higher-level patterns like bar_container
+          access.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Multi-line x-tick labels with \n are a distinctive matplotlib technique.
-          Theme-adaptive color system well-implemented. Bar edgecolor matching background
-          is a polished touch.
+        comment: Individual bar artist manipulation (bars[i].set_edgecolor, set_linewidth,
+          set_zorder) is matplotlib-specific. ax.bar_label() is a distinctive matplotlib
+          feature. Could go further with hatch or container styling.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -253,7 +250,6 @@ impl_tags:
   - manual-ticks
   patterns:
   - explicit-figure
-  - iteration-over-groups
   dataprep: []
   styling:
   - edge-highlighting
