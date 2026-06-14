@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-heart-rate-zones: Time in Heart Rate Zones Bar Chart
-Library: plotly | Python 3.13
-Quality: pending | Created: 2026-06-14
+Library: plotly 6.8.0 | Python 3.13.13
+Quality: 88/100 | Created: 2026-06-14
 """
 
 import os
