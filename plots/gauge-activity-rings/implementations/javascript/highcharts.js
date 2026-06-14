@@ -1,7 +1,3 @@
-// anyplot.ai
-// gauge-activity-rings: Activity Rings Progress Chart
-// Library: highcharts 12.6.0 | JavaScript 22.22.3
-// Quality: 89/100 | Created: 2026-06-14
 //# anyplot-orientation: square
 // anyplot.ai
 // gauge-activity-rings: Activity Rings Progress Chart
@@ -10,6 +6,7 @@
 // Quality: pending | Created: 2026-06-14
 
 const t = window.ANYPLOT_TOKENS;
+const isDark = window.ANYPLOT_THEME === "dark";
 
 // --- Data: Daily fitness summary -------------------------------------------
 // Outer ring first (Move), then Exercise, then Stand (innermost)
@@ -18,6 +15,10 @@ const rings = [
   { metric: "Exercise", value: 25,  goal: 30,  unit: "min",  color: t.palette[1] },
   { metric: "Stand",    value: 9,   goal: 12,  unit: "hr",   color: t.palette[2] },
 ];
+
+// Dark mode: low-opacity hue over near-black background disappears at 18% opacity;
+// 25% keeps the track visible without overshadowing the progress arc.
+const trackOpacity = isDark ? 0.25 : 0.18;
 
 let rendererEls = [];
 
@@ -32,18 +33,22 @@ function drawRings(chart) {
   const W = chart.chartWidth;
   const H = chart.chartHeight;
   const cx = W / 2;
-
-  // Reserve legend space at bottom; top margin handled by Highcharts (title + subtitle)
-  const legAreaH = 95;
   const plotTop = chart.plotTop;
-  const ringAreaH = chart.plotHeight - legAreaH;
-  const cy = plotTop + ringAreaH / 2;
-  const legY = plotTop + chart.plotHeight - legAreaH + 20;
 
-  // Ring geometry
-  const maxR = Math.round(Math.min(W * 0.265, ringAreaH * 0.43));
+  // Ring geometry — radius limited by canvas width
+  const maxR = Math.round(Math.min(W * 0.265, (H - plotTop - 100) * 0.45));
   const strokeW = Math.round(maxR * 0.138);
   const ringGap = Math.round(strokeW * 0.30);
+
+  // Center the rings+legend block vertically between plotTop and the canvas bottom
+  // so equal whitespace appears above and below the visual content.
+  const ringVisH = 2 * (maxR + Math.round(strokeW * 0.5));
+  const totalVisH = ringVisH + 28 + 36; // 28px gap + ~36px for two legend lines
+  const topOffset = Math.max(0, (H - plotTop - totalVisH) / 2);
+  const cy = plotTop + topOffset + maxR + Math.round(strokeW * 0.5);
+
+  // Legend sits directly below the outermost ring
+  const legY = cy + maxR + Math.round(strokeW * 0.5) + 28;
 
   rings.forEach((ring, i) => {
     const r = maxR - i * (strokeW + ringGap);
@@ -64,7 +69,7 @@ function drawRings(chart) {
         fill: "none",
         stroke: ring.color,
         "stroke-width": strokeW,
-        "stroke-opacity": 0.18,
+        "stroke-opacity": trackOpacity,
         zIndex: 3,
       }).add()
     );
@@ -114,9 +119,9 @@ function drawRings(chart) {
         .add()
     );
     rendererEls.push(
-      ren.text(ring.value + "/" + ring.goal + " " + ring.unit + "  ·  " + pct + "%", lx + 22, legY + 18)
+      ren.text(ring.value + "/" + ring.goal + " " + ring.unit + "  ·  " + pct + "%", lx + 22, legY + 18)
         .attr({ align: "left", zIndex: 5 })
-        .css({ color: t.inkSoft, fontSize: "12px" })
+        .css({ color: t.inkSoft, fontSize: "13px" })
         .add()
     );
   });
@@ -128,7 +133,6 @@ Highcharts.chart("container", {
     backgroundColor: "transparent",
     animation: false,
     style: { fontFamily: "inherit" },
-    marginBottom: 110,
     events: {
       render: function () { drawRings(this); },
     },
