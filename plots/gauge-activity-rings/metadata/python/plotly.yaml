@@ -1,0 +1,254 @@
+library: plotly
+language: python
+specification_id: gauge-activity-rings
+created: '2026-06-14T20:29:26Z'
+updated: '2026-06-14T20:44:44Z'
+generated_by: claude-sonnet
+workflow_run: 27510911348
+issue: 8648
+language_version: 3.13.13
+library_version: 6.8.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/python/plotly/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Rounded end caps via endpoint markers deliver the iconic fitness-tracker ring
+    aesthetic
+  - Theme-adaptive track opacity (0.14 light / 0.22 dark) shows thoughtful dark-mode
+    refinement
+  - Center percentage annotation creates an immediate focal point and clear visual
+    hierarchy
+  - 'Fully spec-compliant: all required features (arcs, tracks, center label, legend,
+    square aspect) present'
+  - Realistic fitness tracker scenario (Move/Exercise/Stand) with factually accurate
+    values
+  - Correct Imprint palette in canonical order across both themes with proper chrome
+    adaptation
+  - Rich hover tooltips with per-ring context (value/goal/percent) leverage Plotly
+    interactive strength
+  weaknesses:
+  - Three helper functions (arc_xy, circle_xy, hex_to_rgba) violate the KISS flat-script
+    guideline — inline hex_to_rgba and merge circle_xy into arc_xy(radius, fraction=1.0)
+  - Center 'avg. complete' sub-label at font size=11 is small relative to the 2400px
+    canvas — increase to size=13 for better mobile readability
+  - Ring gap spacing between radii (0.83, 0.58, 0.33) produces slightly inconsistent
+    visual band widths due to line_width rendering on different arc circumferences
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "gauge-activity-rings · python · plotly · anyplot.ai" in dark ink at top center — fully readable. Center "76%" bold annotation in dark (#1A1A17) ink — clearly readable. "avg. complete" sub-label in muted gray (#6B6A63) — readable. Legend at bottom with dark text on elevated background (#FFFDF6) with subtle border — all metric labels visible.
+      Data: Outer ring green (#009E73) sweeping ~70%, middle ring lavender (#C475FD) at ~83%, inner ring blue (#4467A3) at ~75%. Background tracks at 14% opacity visible. Rounded end caps via endpoint circle markers.
+      Legibility verdict: PASS — all text readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title in light ink (#F0EFE8) on dark background — fully readable, no dark-on-dark issue. Center "76%" in light text — clearly visible. "avg. complete" in muted gray (#A8A79F) — subtle but readable. Legend on elevated dark background (#242420) with light-colored text — all entries readable.
+      Data: Ring colors identical to light render — green/lavender/blue unchanged as required. Background tracks at 22% opacity (higher than light mode) — appropriately more visible on near-black surface.
+      Legibility verdict: PASS — all text readable against warm near-black background, no dark-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set. Both themes fully readable. Minor:
+          center sub-label ''avg. complete'' at size=11 is small on 2400px canvas.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements. Legend well-spaced. Center text isolated
+          from rings.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Thick arcs (line_width=30) highly prominent. Background tracks appropriately
+          faint at alpha=0.14/0.22.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette green/lavender/blue provides high CVD-safe perceptual
+          distance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas 2400x2400 ideal for circular rings. Rings fill ~65%
+          with balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis labels needed for radial chart. Legend shows metric names
+          with units. Title correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First ring #009E73. Canonical Imprint order. Background #FAF8F1/#1A1A17.
+          Chrome fully theme-adaptive.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Above library defaults: rounded end caps, theme-adaptive track opacity,
+          center summary hierarchy. Not quite FiveThirtyEight-tier typographic control.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'No grid, no axes, no spines. Subtle background tracks. Elevated
+          legend with subtle border. Dark mode bumps track opacity. Minor: ring band
+          widths slightly inconsistent.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Center percentage creates immediate focal point. Visual hierarchy
+          from summary to detail. Per-ring value/goal adds specifics.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct activity rings: thick partial arcs, clockwise from 12 o''clock,
+          concentric, rounded end caps, background tracks.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: rounded caps, tracks, clockwise sweep, center
+          label, legend, square aspect with equal scaling.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Move 420/600 kcal outer, Exercise 25/30 min middle, Stand 9/12 hr
+          inner. Fractions correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: gauge-activity-rings · python · plotly · anyplot.ai. Legend:
+          Move/Exercise/Stand with value/goal/units.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Three rings at varied completion (70%/83%/75%). Background tracks
+          show remaining capacity. Center aggregates.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Daily fitness summary matches real-world fitness tracker UX. Neutral,
+          non-controversial scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 420/600 kcal, 25/30 min exercise, 9/12 hr standing — all factually
+          plausible fitness tracker targets.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: Three helper functions defined (arc_xy, circle_xy, hex_to_rgba).
+          Deviates from flat KISS structure though functions are geometrically necessary.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data. No random seed needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, numpy, plotly.graph_objects — all used, nothing extraneous.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable. Title scaling formula documented. Theme tokens well-organized.
+          No fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Plotly API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct go.Figure/go.Scatter pattern for custom charts. add_annotation,
+          update_layout, write_image, write_html all idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Rich hovertemplate with HTML formatting. Dual PNG+HTML output. Creative
+          scatter-trace arc construction shows Plotly fluency.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
