@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 burndown-sprint: Agile Sprint Burndown Chart
-Library: plotly | Python 3.13
-Quality: pending | Created: 2026-06-14
+Library: plotly 6.8.0 | Python 3.13.13
+Quality: 88/100 | Created: 2026-06-14
 """
 
 import os
