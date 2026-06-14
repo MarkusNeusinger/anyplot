@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: bar-heart-rate-zones
 created: '2026-06-14T21:32:28Z'
-updated: '2026-06-14T21:38:47Z'
+updated: '2026-06-14T21:49:26Z'
 generated_by: claude-sonnet
 workflow_run: 27512512137
 issue: 8649
@@ -12,59 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-heart
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/python/plotly/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - 'Excellent semantic color mapping: Imprint palette members used for fitness zone
-    conventions (grey muted anchor for Z1 recovery, brand green for Z3 aerobic, matte
-    red for Z5 maximum) — exactly what the spec mandates and what a fitness app reader
-    expects'
-  - Rich multi-line x-axis tick labels (bold zone code + name + HR range) using Plotly
-    HTML formatting — spec-compliant and informative without needing a legend
-  - 'Perfect spec compliance: all 5 zones shown in Z1→Z5 order, duration labels on
-    every bar, HR boundary ranges annotated, conventional zone colors all present'
-  - 'Perfect data quality: 60-minute total (8+22+15+12+3=60), realistic tempo run
-    Z2-dominant distribution, accurate HR ranges (< 115 bpm through > 171 bpm)'
-  - 'Both themes render correctly: warm off-white (#FAF8F1) background in light, warm
-    near-black (#1A1A17) in dark; all chrome tokens flip appropriately; data colors
-    identical across themes'
-  - 'Clean code structure: KISS layout with no functions or classes, deterministic
-    data, only two imports used'
+  - Semantic zone color mapping (grey/blue/green/ochre/red) exactly matches fitness-app
+    convention, correctly implemented as an Imprint palette semantic exception
+  - Rich multi-line HTML tick labels (bold zone code + name + HR range) provide all
+    context without a separate legend
+  - Reference line at the zone average adds meaningful storytelling context and creates
+    a visual benchmark
+  - 'Perfect spec compliance: all 5 zones in fixed order, duration labels, HR boundaries,
+    correct chart type'
+  - Data totals exactly 60 minutes with physiologically accurate HR ranges
+  - 'Theme adaptation exemplary: all chrome tokens correct in both renders, no dark-on-dark
+    issues'
   weaknesses:
-  - Excessive bottom margin (b=110) creates ~25% of canvas height as empty space below
-    the x-axis tick labels in both renders — reduce bottom margin to b=60–75 to bring
-    the plot closer to center and improve canvas utilization (VQ-05 lost 2 pts)
-  - 'DE-01 (Aesthetic Sophistication 5/8): chart is a well-configured bar chart but
-    lacks a strong design statement — consider removing the Y-axis spine line to go
-    full minimal, adding a faint horizontal emphasis line at the tallest bar, or adjusting
-    bar colors to have subtle ink-color outlines for definition on lighter zones (Z1
-    grey on light background has low contrast against #FAF8F1)'
-  - 'DE-02 (Visual Refinement 4/6): the horizontal grid is present but spines (left
-    and bottom axis lines) are not explicitly hidden — consider removing the left
-    and bottom linecolor to go spine-free, which would modernize the look; bargap=0.35
-    is fine but could be increased to 0.4 for more breathing room'
-  - 'LM-02 (Distinctive Features 3/5): the HTML multi-line tick labels and hovertemplate
-    are good Plotly-specific features, but the chart doesn''t exploit Plotly''s most
-    distinctive capabilities — consider using `go.Bar` with `customdata` for richer
-    hover info, or adding a reference annotation line (e.g. 80/20 polarized split
-    marker) using `fig.add_hline()` which is native Plotly'
+  - DE-01 could reach 8/8 with a descriptive subtitle and source footnote for typographic
+    hierarchy
+  - DE-02 could reach 6/6 with tick mark removal (ticks="") and slightly more generous
+    bottom margin
+  - strict=False in zip() on line 35 is redundant for equal-length lists — remove
+    for cleaner code
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white matching #FAF8F1 — correct theme surface, not pure white.
-      Chrome: Title "60-min Tempo Run · bar-heart-rate-zones · python · plotly · anyplot.ai" centered at the top, clearly readable in dark ink against the warm background. Y-axis label "Time (min)" is legible. X-axis tick labels are three-line (bold zone code + zone name + HR range) in dark-muted ink, clearly readable. Y-axis tick labels (0–30 in steps of 5) are readable. Horizontal grid lines are very subtle.
-      Data: Five bars in Z1→Z5 order. Z1 (Recovery) = grey/muted, Z2 (Endurance) = Imprint blue #4467A3, Z3 (Aerobic) = brand green #009E73, Z4 (Threshold) = Imprint ochre #BD8233, Z5 (Maximum) = matte red #AE3030. Each bar has a duration label ("8 min" through "3 min") placed outside/above the bar. Bars are proportional and clearly distinguishable.
-      Layout note: Approximately 25% of the canvas height below the x-axis tick labels is empty — bottom margin is too large (b=110).
-      Legibility verdict: PASS — all text readable; only layout concern is excessive bottom whitespace.
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "60-min Tempo Run · bar-heart-rate-zones · python · plotly · anyplot.ai" centered, spans ~78% of width (expected for long mandated format). Y-axis label "Time (min)" dark INK text. Multi-line x-axis tick labels in INK_SOFT with bold zone codes. Bar duration labels ("8 min" etc.) in INK above each bar. All text readable.
+      Data: 5 bars — Z1 muted grey (INK_MUTED semantic anchor), Z2 Imprint blue (#4467A3), Z3 Imprint brand green (#009E73), Z4 Imprint ochre (#BD8233), Z5 Imprint matte red (#AE3030). Dotted reference line at y=12 with annotation "12 min / zone avg".
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black matching #1A1A17 — correct dark theme surface, not pure black.
-      Chrome: Title text flips to light cream (#F0EFE8 range), clearly readable on the dark surface. Y-axis label and tick labels flip to light tones — all readable. X-axis multi-line tick labels are light-colored and legible. No dark-on-dark text failures detected. Horizontal grid lines are visible but subtle.
-      Data: Bar colors are identical to the light render — Z1 grey-muted, Z2 blue, Z3 brand green, Z4 ochre, Z5 red. Duration labels above bars are in light ink, readable. The color identity across themes is preserved.
-      Layout note: Same excessive bottom empty space as light render.
-      Legibility verdict: PASS — all text readable in dark mode; chrome adapts correctly.
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title, axis labels, tick labels, bar duration labels, and reference line annotation all rendered in light-colored text (INK = #F0EFE8 in dark mode). All clearly legible. No dark-on-dark failures observed.
+      Data: All five bar colors identical to light render. Z1 grey appears slightly lighter in dark mode due to adaptive INK_MUTED token (#A8A79F vs #6B6A63 in light) — correct semantic anchor behavior, not a data color shift.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -72,87 +55,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title scaled with length formula,
-          bar labels 14px, x-axis ticks 11px, y-axis ticks 10px, axis label 12px.
-          Well-proportioned and readable in both themes at full resolution.'
+        comment: All font sizes explicitly set; adaptive title scaling formula used;
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap detected. Bar labels above each bar are well-spaced.
-          Multi-line tick labels are properly separated. No collisions with data elements.
+        comment: No text or element collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 5 bars clearly visible with distinct semantic colors. Duration
-          labels above bars are prominent. 5 bars on a landscape canvas = ideal density.
+        comment: 5 bars with clear semantic colors; reference line visible in both
+          themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette members used. Good luminance contrast between bars
-          and background. Zone colors are CVD-safe within the Imprint palette selection.
+        comment: Adequate contrast; zone labels disambiguate CVD ambiguity
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Canvas dimensions correct (3200x1800). However, bottom margin b=110
-          creates approximately 25% of canvas height as empty space below x-axis tick
-          labels. Canvas utilization is ~65-70% — below the 80% target. Whitespace
-          is not balanced (top is tighter than bottom).
+        passed: true
+        comment: Canvas 3200x1800 confirmed; margins explicit; good whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis labeled 'Time (min)' with units. X-axis uses informative multi-line
-          tick labels (zone code, name, HR range). Title is descriptive with workout
-          context.
+        comment: 'Y-axis: Time (min) with units; x-axis tick labels carry zone name
+          and HR range'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Valid semantic exception: spec explicitly mandates fitness zone
-          color conventions (Z1 grey, Z2 blue, Z3 green, Z4 orange, Z5 red). Implementation
-          uses Imprint palette members and the muted semantic anchor (Z1). Light bg
-          #FAF8F1 and dark bg #1A1A17 are correct. Chrome adapts fully in both themes.'
+        comment: 'Semantic exception correctly applied per spec; backgrounds #FAF8F1/#1A1A17;
+          chrome theme-correct in both renders'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Thoughtful semantic color selection demonstrates design intent beyond
-          defaults. Rich multi-line tick labels with HR ranges are elegant. However,
-          the chart remains a clean-but-conventional bar chart without exceptional
-          visual design flourishes.
+        comment: Intentional semantic color mapping, rich HTML tick labels, reference
+          line — clearly above defaults but missing subtitle/footnote for FiveThirtyEight-level
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid is horizontal-only (appropriate for bar chart) with subtle GRID
-          color token. bargap=0.35 is explicitly set. Spines are partially handled
-          by plotly defaults but not explicitly removed. Bottom margin imbalance detracts
-          from overall refinement.
+        comment: Spines removed, y-only subtle grid at 15% opacity, bargap for breathing
+          room, bar edges styled — solid but tick marks still visible
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: The color progression from grey (Z1 recovery) to red (Z5 maximum)
-          immediately encodes intensity visually. The dominant Z2 endurance bar (22
-          min) tells the story of a base-focused session. HR ranges in tick labels
-          give readers immediate context without needing external reference.
+        comment: Reference line creates benchmark; semantic zone colors encode intensity
+          progression; Z2 dominance immediately legible
     spec_compliance:
       score: 15
       max: 15
@@ -162,31 +130,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct vertical bar chart. Zones in fixed Z1→Z5 order on x-axis
-          as required.
+        comment: Correct vertical bar chart with 5 zones
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All 5 zones shown. Duration labels on each bar. Zone names (Recovery,
-          Endurance, etc.) in tick labels. HR boundary ranges annotated. Conventional
-          zone colors used.
+        comment: Zone colors, duration labels, HR boundaries in tick labels, fixed
+          Z1-Z5 order — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: zones Z1–Z5 in order. Y-axis: time in minutes. All data
-          mapped correctly and visible.'
+        comment: X=zones, Y=time in minutes, all 5 zones shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''60-min Tempo Run · bar-heart-rate-zones · python · plotly
-          · anyplot.ai'' — correct format with descriptive prefix. No legend needed
-          since each bar is individually color-coded and labeled.'
+        comment: Title format correct with descriptive prefix; no legend needed (zones
+          labeled on x-axis)
     data_quality:
       score: 15
       max: 15
@@ -196,25 +160,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all 5 zones with varying durations demonstrating full distribution
-          across intensity zones. Z1–Z5 all present with distinct values. HR ranges
-          included.
+        comment: All 5 zones with meaningful variation; reference line adds extra
+          feature layer
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: '''60-min Tempo Run'' is a specific, realistic fitness scenario.
-          Not controversial. Zone names (Recovery, Endurance, Aerobic, Threshold,
-          Maximum) are standard fitness terminology.'
+        comment: 60-min tempo run is a real neutral training scenario matching Garmin/Strava
+          style
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Total: 8+22+15+12+3=60 min (exactly matches the ''60-min'' title).
-          HR ranges (< 115 to > 171 bpm) are physiologically correct for a 5-zone
-          HR model. Z2-dominant distribution is realistic for a tempo run.'
+        comment: Total=60 min exactly; HR boundaries physiologically accurate; zone
+          distribution plausible for tempo run
     code_quality:
       score: 10
       max: 10
@@ -224,34 +185,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clear Imports → Tokens → Data → Plot → Save structure. No functions
-          or classes.
+        comment: 'Linear: imports → tokens → data → plot → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is hardcoded (no random generation). Fully deterministic.
+        comment: Fully deterministic static data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os and plotly.graph_objects imported; both used.
+        comment: Only os and plotly.graph_objects imported, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. zip() for label construction. title_size formula
-          is appropriate. No over-engineering or fake UI.
+        comment: 'Clean Pythonic code; minor: strict=False in zip() unnecessary for
+          equal-length lists'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly. Current Plotly
-          API used throughout.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current plotly API
     library_mastery:
       score: 7
       max: 10
@@ -261,27 +220,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses go.Bar with marker_color list, textposition='outside', constraintext='none',
-          hovertemplate with <extra></extra>. Good idiomatic patterns. tickmode='array'
-          with tickvals/ticktext is the correct Plotly way for custom tick labels.
+        comment: go.Figure(go.Bar(...)), add_hline(), update_layout(), write_image()+write_html()
+          all idiomatic
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: HTML-formatted multi-line tick labels using <b> and <br> tags are
-          distinctly Plotly — no other static library can do this natively. hovertemplate
-          with custom formatting is Plotly-native. However, the chart doesn't exploit
-          more advanced Plotly capabilities like fig.add_hline(), custom shapes, or
-          richer customdata hover content.
-  verdict: REJECTED
+        comment: HTML-formatted tick labels with <b> tags, add_hline() shape helper,
+          constraintext, hovertemplate, HTML output — uses Plotly distinctives
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
+  - annotations
   - hover-tooltips
   - html-export
+  - manual-ticks
   patterns: []
   dataprep: []
   styling:
-  - grid-styling
+  - edge-highlighting
