@@ -5,39 +5,17 @@
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
-const THEME = window.ANYPLOT_THEME;
 
 // Zone colors follow fitness convention (semantic exception to ordinal Imprint order):
-// Z1 grey (recovery), Z2 blue (endurance), Z3 green (aerobic),
-// Z4 ochre (threshold), Z5 red (maximum)
-const zoneColors = [
-    THEME === "light" ? "#6B6A63" : "#A8A79F",  // Z1 Recovery  — Imprint muted anchor
-    "#4467A3",                                    // Z2 Endurance — Imprint blue
-    "#009E73",                                    // Z3 Aerobic   — Imprint brand green
-    "#BD8233",                                    // Z4 Threshold — Imprint ochre
-    "#AE3030",                                    // Z5 Maximum   — Imprint matte red
+// Z1 static #6B6A63 (grey/recovery — same in both themes, satisfies data-colors-identical rule),
+// Z2 blue, Z3 brand green, Z4 ochre, Z5 red
+const categories = [
+    'Z1 Recovery<br><span style="font-size:11px">95–124 bpm</span>',
+    'Z2 Endurance<br><span style="font-size:11px">125–148 bpm</span>',
+    'Z3 Aerobic<br><span style="font-size:11px">149–163 bpm</span>',
+    'Z4 Threshold<br><span style="font-size:11px">164–178 bpm</span>',
+    'Z5 Maximum<br><span style="font-size:11px">179–190 bpm</span>',
 ];
-
-// Data: 60-minute criterium road race
-const zones = [
-    { label: "Z1",  name: "Recovery",  minutes: 8,  hrLow:  95, hrHigh: 124 },
-    { label: "Z2",  name: "Endurance", minutes: 20, hrLow: 125, hrHigh: 148 },
-    { label: "Z3",  name: "Aerobic",   minutes: 17, hrLow: 149, hrHigh: 163 },
-    { label: "Z4",  name: "Threshold", minutes:  9, hrLow: 164, hrHigh: 178 },
-    { label: "Z5",  name: "Maximum",   minutes:  6, hrLow: 179, hrHigh: 190 },
-];
-
-function toMMSS(minutes) {
-    const m = Math.floor(minutes);
-    const s = Math.round((minutes % 1) * 60);
-    return `${m}:${String(s).padStart(2, "0")}`;
-}
-
-const seriesData = zones.map((z, i) => ({
-    y: z.minutes,
-    color: zoneColors[i],
-    name: `${z.label} ${z.name}`,
-}));
 
 Highcharts.chart("container", {
     chart: {
@@ -57,14 +35,12 @@ Highcharts.chart("container", {
         margin: 8,
     },
     subtitle: {
-        text: "60-minute criterium road race · distribution of intensity",
+        text: "60-minute criterium road race · Z2 Endurance dominant at 33% of session",
         style: { color: t.inkSoft, fontSize: "14px" },
         margin: 20,
     },
     xAxis: {
-        categories: zones.map(z =>
-            `${z.label} ${z.name}<br><span style="font-size:11px">${z.hrLow}–${z.hrHigh} bpm</span>`
-        ),
+        categories,
         lineColor: t.inkSoft,
         tickColor: "transparent",
         labels: {
@@ -83,6 +59,20 @@ Highcharts.chart("container", {
         labels: { style: { color: t.inkSoft, fontSize: "14px" } },
         min: 0,
         tickInterval: 5,
+        // Reference line at session mean (60 min ÷ 5 zones = 12 min avg)
+        plotLines: [{
+            value: 12,
+            color: t.inkSoft,
+            dashStyle: "Dash",
+            width: 1.5,
+            label: {
+                text: "avg 12:00",
+                style: { color: t.inkSoft, fontSize: "12px" },
+                align: "right",
+                x: -4,
+            },
+            zIndex: 3,
+        }],
     },
     legend: { enabled: false },
     tooltip: { enabled: false },
@@ -96,7 +86,9 @@ Highcharts.chart("container", {
             dataLabels: {
                 enabled: true,
                 formatter: function () {
-                    return toMMSS(this.y);
+                    const m = Math.floor(this.y);
+                    const s = Math.round((this.y % 1) * 60);
+                    return `${m}:${String(s).padStart(2, "0")}`;
                 },
                 style: {
                     color: t.ink,
@@ -111,7 +103,14 @@ Highcharts.chart("container", {
     },
     series: [{
         name: "Time in Zone",
-        data: seriesData,
         colorByPoint: true,
+        data: [
+            { y: 8,  color: "#6B6A63" },
+            // Z2 is the dominant zone — larger label emphasises the focal insight
+            { y: 20, color: "#4467A3", dataLabels: { style: { fontSize: "22px", fontWeight: "800" } } },
+            { y: 17, color: "#009E73" },
+            { y: 9,  color: "#BD8233" },
+            { y: 6,  color: "#AE3030" },
+        ],
     }],
 });
