@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 gauge-activity-rings: Activity Rings Progress Chart
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 85/100 | Created: 2026-06-14
@@ -42,18 +42,43 @@ ring_radii = [0.80, 0.56, 0.32]
 LW = 26  # ring stroke width in points (rounded caps)
 TRACK_ALPHA = 0.14
 
-sns.set_theme(style="white", rc={"figure.facecolor": PAGE_BG, "axes.facecolor": PAGE_BG})
+# Full theme-adaptive rc — follows seaborn.md template exactly
+sns.set_theme(
+    style="white",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+sns.set_palette(ring_colors)
+
+# Fractions and arc end-point positions for seaborn progress-tip markers
+fractions = [min(v / g, 1.0) for v, g in zip(values, goals, strict=False)]
+end_angles = [np.pi / 2 - f * 2 * np.pi for f in fractions]
+end_xs = [r * np.cos(a) for r, a in zip(ring_radii, end_angles, strict=False)]
+end_ys = [r * np.sin(a) for r, a in zip(ring_radii, end_angles, strict=False)]
 
 # Square canvas — 2400×2400 px (symmetric plot)
 fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 ax.set_aspect("equal")
-ax.set_xlim(-1.5, 1.5)
-ax.set_ylim(-1.4, 1.4)
+ax.set_xlim(-1.5, 1.7)  # wider right margin for value labels
+ax.set_ylim(-1.1, 1.2)  # reduced lower whitespace, better composition
 ax.axis("off")
 
 # Draw rings outer → inner
-for _metric, value, goal, _unit, color, radius in zip(metrics, values, goals, units, ring_colors, ring_radii, strict=False):
+for _metric, value, goal, _unit, color, radius in zip(
+    metrics, values, goals, units, ring_colors, ring_radii, strict=False
+):
     fraction = min(value / goal, 1.0)
 
     # Background track: full faint circle
@@ -76,18 +101,36 @@ for _metric, value, goal, _unit, color, radius in zip(metrics, values, goals, un
             radius * np.cos(theta_arc), radius * np.sin(theta_arc), color=color, linewidth=LW, solid_capstyle="round"
         )
 
+# Seaborn: progress-tip indicators at the end of each arc — idiomatic hue+palette usage
+marker_s = int(np.pi * (LW / 2) ** 2)  # circle area matching arc linewidth
+sns.scatterplot(
+    x=end_xs,
+    y=end_ys,
+    hue=metrics,
+    palette=dict(zip(metrics, ring_colors, strict=False)),
+    s=marker_s,
+    edgecolor=PAGE_BG,
+    linewidths=2.0,
+    ax=ax,
+    legend=False,
+    zorder=11,
+)
+sns.despine(ax=ax, left=True, bottom=True, top=True, right=True)
+
 # Center label: primary metric completion
 pct_move = int(values[0] / goals[0] * 100)
 ax.text(0, 0.06, f"{pct_move}%", ha="center", va="center", fontsize=22, fontweight="bold", color=INK, zorder=10)
 ax.text(0, -0.1, "Move", ha="center", va="center", fontsize=11, color=INK_SOFT, zorder=10)
 
 # Per-ring labels to the right, stacked at ring heights
-for metric, value, goal, unit, color, radius in zip(metrics, values, goals, units, ring_colors, ring_radii, strict=False):
+x_lbl = 1.02
+for metric, value, goal, unit, color, radius in zip(
+    metrics, values, goals, units, ring_colors, ring_radii, strict=False
+):
     pct = int(value / goal * 100)
-    x_lbl = 1.02
     ax.text(x_lbl, radius + 0.05, metric, ha="left", va="center", fontsize=9, fontweight="bold", color=color)
     ax.text(
-        x_lbl, radius - 0.07, f"{value} / {goal} {unit}  ({pct}%)", ha="left", va="center", fontsize=8, color=INK_MUTED
+        x_lbl, radius - 0.07, f"{value} / {goal} {unit}  ({pct}%)", ha="left", va="center", fontsize=9, color=INK_MUTED
     )
 
 # Title — 51 chars, under 67-char baseline → fontsize stays at 12
