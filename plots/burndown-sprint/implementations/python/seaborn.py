@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 burndown-sprint: Agile Sprint Burndown Chart
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 87/100 | Created: 2026-06-14
@@ -13,6 +13,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 
 
@@ -60,6 +61,10 @@ ideal = 40.0 * (1.0 - calendar_days / 14.0)
 # X-axis labels: abbreviated day names across both sprint weeks
 day_labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun", "Mon"]
 
+# DataFrames for seaborn plotting API
+df_actual = pd.DataFrame({"day": calendar_days, "remaining": remaining})
+df_ideal = pd.DataFrame({"day": calendar_days, "ideal": ideal})
+
 # Seaborn theme — Imprint chrome tokens applied globally
 sns.set_theme(
     style="ticks",
@@ -86,22 +91,41 @@ ax.set_facecolor(PAGE_BG)
 for sat_day in [5, 12]:
     ax.axvspan(sat_day - 0.5, sat_day + 1.5, color=INK_SOFT, alpha=0.07, zorder=0, linewidth=0)
 
-# Ideal burndown — dashed muted reference line (structural / neutral role)
-ax.plot(
-    calendar_days, ideal, color=INK_MUTED, linewidth=2.0, linestyle="--", label="Ideal burndown", zorder=2, alpha=0.9
+# Ideal burndown — dashed muted reference line via seaborn lineplot
+sns.lineplot(
+    data=df_ideal,
+    x="day",
+    y="ideal",
+    ax=ax,
+    color=INK_MUTED,
+    linewidth=2.0,
+    linestyle="--",
+    label="Ideal burndown",
+    alpha=0.9,
+    zorder=2,
 )
 
-# Actual remaining — step series (brand green, always first series)
-ax.step(calendar_days, remaining, where="post", color=BRAND, linewidth=2.8, label="Actual remaining", zorder=4)
+# Actual remaining — step series via seaborn lineplot with drawstyle (brand green, always first series)
+sns.lineplot(
+    data=df_actual,
+    x="day",
+    y="remaining",
+    ax=ax,
+    color=BRAND,
+    linewidth=2.8,
+    drawstyle="steps-post",
+    label="Actual remaining",
+    zorder=4,
+)
 ax.fill_between(calendar_days, remaining, 0, step="post", color=BRAND, alpha=0.07, zorder=1)
 
 # Scope-change marker at day 4 — vertical dotted line (semantic danger red)
 ax.axvline(x=4, color=DANGER, linewidth=1.5, linestyle=":", alpha=0.9, zorder=3)
 ax.text(
     4.22,
-    39.5,
+    41.5,
     "+8 SP\nscope change",
-    fontsize=7.5,
+    fontsize=9,
     color=DANGER,
     va="top",
     ha="left",
@@ -118,9 +142,9 @@ ax.tick_params(axis="both", colors=INK_SOFT)
 
 # X-axis ticks — one per calendar day with abbreviated day name
 ax.set_xticks(calendar_days)
-ax.set_xticklabels(day_labels, fontsize=7, color=INK_SOFT)
+ax.set_xticklabels(day_labels, fontsize=8, color=INK_SOFT)
 ax.set_xlim(-0.5, 14.5)
-ax.set_ylim(-2, 46)
+ax.set_ylim(-2, 48)
 
 # Spines
 ax.spines["top"].set_visible(False)
