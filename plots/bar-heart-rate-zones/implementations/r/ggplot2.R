@@ -11,14 +11,14 @@ THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
+GRID_COLOR  <- if (THEME == "light") "#D0CFC7" else "#3A3A36"
 
 # Zone colors — semantic Imprint palette mapping (conventional HR zone hue associations):
-# Z1 recovery (grey) -> muted anchor  |  Z4 threshold (orange) -> Imprint ochre #BD8233
+# Z1 recovery (grey) -> fixed #6B6A63  |  Z4 threshold (orange) -> Imprint ochre #BD8233
 # Z2 endurance (blue) -> Imprint #4467A3  |  Z5 maximum (red) -> semantic red #AE3030
 # Z3 aerobic (green) -> Imprint brand green #009E73
 ZONE_COLORS <- c(
-  Z1 = INK_MUTED,
+  Z1 = "#6B6A63",
   Z2 = "#4467A3",
   Z3 = "#009E73",
   Z4 = "#BD8233",
@@ -33,6 +33,8 @@ df <- data.frame(
   hr_low  = c(100, 120, 140, 155, 170),
   hr_high = c(119, 139, 154, 169, 185)
 )
+# Intensity alpha: de-emphasise low zones, fully saturate high zones
+df$intensity <- c(0.55, 0.70, 0.82, 0.92, 1.00)
 df$bar_label <- paste0(df$minutes, " min")
 
 # x-axis labels: zone code + name + bpm range
@@ -43,7 +45,7 @@ x_labels <- setNames(
 )
 
 # Plot
-p <- ggplot(df, aes(x = zone, y = minutes, fill = zone)) +
+p <- ggplot(df, aes(x = zone, y = minutes, fill = zone, alpha = I(intensity))) +
   geom_col(width = 0.62) +
   geom_text(
     aes(label = bar_label, y = minutes),
@@ -70,7 +72,7 @@ p <- ggplot(df, aes(x = zone, y = minutes, fill = zone)) +
     panel.background   = element_rect(fill = PAGE_BG, color = NA),
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
-    panel.grid.major.y = element_line(color = INK, linewidth = 0.2),
+    panel.grid.major.y = element_line(color = GRID_COLOR, linewidth = 0.3),
     panel.grid.minor.y = element_blank(),
     axis.title.y       = element_text(color = INK, size = 10),
     axis.text.x        = element_text(color = INK_SOFT, size = 7.5, lineheight = 1.3),
