@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 burndown-sprint: Agile Sprint Burndown Chart
 Library: matplotlib 3.11.0 | Python 3.13.13
 Quality: 88/100 | Created: 2026-06-14
@@ -46,7 +46,7 @@ ax.set_facecolor(PAGE_BG)
 
 # Weekend background band (Sat–Sun between the two working weeks)
 ax.axvspan(pd.Timestamp("2025-01-11"), pd.Timestamp("2025-01-13"), color=INK, alpha=0.04, zorder=0)
-ax.text(pd.Timestamp("2025-01-12"), 2, "wknd", fontsize=6, ha="center", va="bottom", color=INK_MUTED, rotation=90)
+ax.text(pd.Timestamp("2025-01-12"), 2, "wknd", fontsize=8, ha="center", va="bottom", color=INK_MUTED, rotation=90)
 
 # Behind-schedule fill: region where actual remaining exceeds the ideal target
 ax.fill_between(sprint_dates, remaining, ideal, where=(remaining > ideal), color=RED, alpha=0.07, step="post", zorder=1)
@@ -70,6 +70,19 @@ ax.text(
     va="bottom",
     bbox={"facecolor": ELEVATED_BG, "edgecolor": RED, "alpha": 0.88, "linewidth": 0.7, "boxstyle": "round,pad=0.3"},
     zorder=5,
+)
+
+# "Behind schedule" label at peak deviation — Jan 13 (Mon), midpoint between step and ideal
+ax.text(
+    sprint_dates[5] + pd.Timedelta(hours=12),
+    (remaining[5] + ideal[5]) / 2,
+    "behind schedule",
+    fontsize=7,
+    color=RED,
+    alpha=0.55,
+    ha="center",
+    va="center",
+    rotation=90,
 )
 
 # Axis limits and labels
