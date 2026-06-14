@@ -1,20 +1,16 @@
 // anyplot.ai
 // gauge-activity-rings: Activity Rings Progress Chart
-// Library: echarts 5.5.1 | JavaScript 22.22.3
-// Quality: 89/100 | Created: 2026-06-14
-//# anyplot-orientation: square
-// anyplot.ai
-// gauge-activity-rings: Activity Rings Progress Chart
 // Library: echarts 5.5.1 | JavaScript 22
 // Quality: pending | Created: 2026-06-14
+//# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (daily fitness goals) ---
+// --- Data (daily fitness goals with spread completion levels) ---
 const metrics = [
-  { name: "Steps",      value: 7842, goal: 10000, display: "7,842 / 10,000 steps" },
-  { name: "Active Min", value: 48,   goal: 60,    display: "48 / 60 min"           },
-  { name: "Stand",      value: 10,   goal: 12,    display: "10 / 12 hr"            },
+  { name: "Steps",      value: 4521, goal: 10000, display: "4,521 / 10,000 steps" },
+  { name: "Active Min", value: 57,   goal: 60,    display: "57 / 60 min"           },
+  { name: "Stand",      value: 12,   goal: 12,    display: "12 / 12 hr"            },
 ];
 const colors = [t.palette[0], t.palette[1], t.palette[2]];
 
@@ -30,8 +26,9 @@ const pcts = metrics.map(m =>
   parseFloat(Math.min(m.value / m.goal * 100, 100).toFixed(1))
 );
 
-// Ring geometry: outer → inner, concentric
-const radii = ["66%", "48%", "30%"];
+// Ring geometry: outer → inner, larger radii to fill canvas vertically
+// Outer ring bottom: 600 + 74%×600 = 1044px; gap to text row ~24px
+const radii = ["74%", "56%", "38%"];
 const ringW  = 34;  // CSS px (→ 68 physical px at DPR 2)
 
 // --- Init ---
@@ -50,16 +47,17 @@ chart.setOption({
   },
 
   // Center labels + bottom values row (1200×1200 CSS mount, center at 600,600)
+  // Inner ring inner radius: 38%×600 − 34 = 194px → center space spans y 406–794
   graphic: {
     elements: [
-      // "Daily Goals" header above the per-ring labels
+      // "Daily Goals" header
       {
         type: "text",
         style: {
-          x: 600, y: 556,
+          x: 600, y: 542,
           text: "Daily Goals",
           fill: t.inkSoft,
-          fontSize: 14,
+          fontSize: 16,
           textAlign: "center",
           fontStyle: "italic",
         },
@@ -68,22 +66,22 @@ chart.setOption({
       ...metrics.map((m, i) => ({
         type: "text",
         style: {
-          x: 600, y: 594 + i * 36,
+          x: 600, y: 576 + i * 38,
           text: `${m.name}: ${pcts[i]}%`,
           fill: colors[i],
-          fontSize: 17,
+          fontSize: 22,
           fontWeight: "bold",
           textAlign: "center",
         },
       })),
-      // Bottom row: raw values for each metric
+      // Bottom row: raw values for each metric, just below outer ring
       {
         type: "text",
         style: {
-          x: 600, y: 1062,
+          x: 600, y: 1068,
           text: metrics.map(m => m.display).join("   ·   "),
           fill: t.inkSoft,
-          fontSize: 14,
+          fontSize: 16,
           textAlign: "center",
         },
       },
