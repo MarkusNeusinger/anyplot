@@ -1,0 +1,252 @@
+library: echarts
+language: javascript
+specification_id: bar-heart-rate-zones
+created: '2026-06-14T21:54:00Z'
+updated: '2026-06-14T22:15:03Z'
+generated_by: claude-sonnet
+workflow_run: 27513060042
+issue: 8649
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/javascript/echarts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Semantic zone color mapping using Imprint palette members matches fitness-platform
+    convention (grey→blue→green→ochre→red) — correct application of the style guide’s
+    semantic exception
+  - markArea regional highlight for Z4+Z5 with 'High Intensity' annotation creates
+    a genuine visual narrative focal point
+  - Three-line x-axis labels (zone shorthand / description / HR boundary) are information-dense
+    without being cluttered
+  - Subtitle provides workout metadata (60-min Tempo Run, total time, max HR) that
+    contextualizes the zone distribution
+  - All chrome correctly reads from window.ANYPLOT_TOKENS — both themes render cleanly
+    with no dark-on-dark or light-on-light failures
+  - 'Code is clean, deterministic, and maximally idiomatic ECharts (no explicit dimensions,
+    animation: false, transparent background)'
+  weaknesses:
+  - HR boundary range sub-labels in rich text use fontSize 11px CSS — slightly below
+    the ~14px minimum for auxiliary text; raise to 12–13px to improve mobile readability
+  - Design Excellence is above average but not publication-ready; overall visual stays
+    in 'polished default' territory — could be further elevated with stronger typographic
+    hierarchy or more distinctive layout
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "bar-heart-rate-zones · javascript · echarts · anyplot.ai" in bold dark ink, centered. Subtitle "60-min Tempo Run · Total: 60 min · Max HR: 185 bpm" in soft ink. Y-axis label "Time (minutes)" in dark ink. Tick labels and HR sub-labels in soft ink. All text clearly dark on warm light background.
+      Data: Five bars in zone-semantic colors: Z1 muted grey, Z2 Imprint blue (#4467A3), Z3 Imprint green (#009E73, brand), Z4 Imprint ochre (#BD8233), Z5 Imprint red (#AE3030). Bold duration labels above each bar. Subtle pink markArea overlay on Z4–Z5 with italic "High Intensity" annotation.
+      Legibility verdict: PASS — all title, axis labels, tick labels, bar value labels, and HR range sub-labels readable. HR sub-labels at 11px CSS are slightly small but legible at full resolution.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface, not pure black.
+      Chrome: Title, subtitle, axis labels, tick labels, and bar value labels all rendered in light text (#F0EFE8 / #B8B7B0 range). All clearly visible against dark background. No dark-on-dark failures observed. Grid lines subtle (low-opacity light rule on dark surface).
+      Data: Zone bar colors identical to light render — Z1 grey (lighter adaptive muted tone), Z2 blue, Z3 green, Z4 ochre, Z5 red. Brand green #009E73 on Z3 clearly visible. markArea tint renders as deep brownish-red, still visible but appropriately subtle for the dark surface.
+      Legibility verdict: PASS — all text readable in dark render. Theme adaptation is correct throughout; no dark-on-dark issues.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set. HR boundary sub-labels at 11px CSS
+          slightly below 14px minimum for auxiliary text — readable at full res but
+          small at mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements in either render. Three-line x-axis labels,
+          bar value labels, and markArea annotation all clear.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All five bars clearly visible with distinct per-zone colors and rounded
+          tops. Bold value labels above each bar.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette members throughout (grey/blue/green/ochre/red). CVD-safe
+          hue spread. No red-green sole encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Grid margins correctly accommodate three-line
+          x-axis labels (bottom=165). Plot fills canvas well.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Time (minutes)'' with units. X-axis: zone shorthand +
+          description + HR boundary range. Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception correctly applied for fitness-platform zone colors
+          using Imprint palette members. Backgrounds transparent (page shows #FAF8F1/#1A1A17).
+          Chrome via t.ink/t.inkSoft/t.grid tokens throughout.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: semantic zone-color mapping, markArea highlight,
+          informative subtitle, three-line axis labels, rounded bar corners. Polished
+          and clearly above vanilla ECharts defaults, but not FiveThirtyEight-level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, ticks removed, Y-only grid using t.grid token, rounded
+          bar corners, generous bottom margin for multi-line labels. Good refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: markArea creates focal region for Z4+Z5 as 'High Intensity'. Implicit
+          intensity gradient Z1→Z5 encodes workout narrative. Subtitle adds actionable
+          context.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct vertical bar chart with zones on x-axis and time on y-axis.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Conventional per-zone colors, duration labels above bars, Z1→Z5 fixed
+          order, HR boundary annotations all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X-axis: Z1–Z5 in order. Y-axis: time in minutes. All five zones
+          present.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''bar-heart-rate-zones · javascript · echarts · anyplot.ai''.
+          No legend needed (zones individually labeled on x-axis).'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All five zones shown with varying durations. HR boundary ranges annotated.
+          Full Z1–Z5 spectrum including near-zero Z5.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 60-minute tempo run with realistic zone distribution. Max HR 185
+          bpm plausible. Matches spec example. Neutral sports data.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Zone durations sum to 60 min. HR ranges non-overlapping and realistic.
+          Y-axis max 27 gives ~20% headroom above tallest bar.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat script: data -> init -> setOption. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hard-coded; deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports (echarts global). Only used globals (t, THEME, echarts).
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean array mapping for per-bar itemStyle. Appropriate complexity;
+          no over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Output handled by harness. animation: false. ECharts 5.5.1 API.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'echarts.init(el) without explicit dimensions, animation: false,
+          backgroundColor: transparent, all chrome via ANYPLOT_TOKENS, per-datapoint
+          itemStyle via array mapping.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: markArea with per-theme tinting and italic annotation is ECharts-specific.
+          Rich text labels (rich property) for multi-line formatted axis annotations
+          is ECharts-distinctive.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
