@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 gauge-activity-rings: Activity Rings Progress Chart
 Library: bokeh 3.9.1 | Python 3.13.13
 Quality: 87/100 | Created: 2026-06-14
@@ -49,7 +49,7 @@ OUTER_RADII = [0.80, 0.56, 0.32]
 RING_WIDTH = 0.18
 INNER_RADII = [r - RING_WIDTH for r in OUTER_RADII]
 MID_RADII = [(o + i) / 2 for o, i in zip(OUTER_RADII, INNER_RADII, strict=False)]
-CAP_R = RING_WIDTH / 2  # radius of rounded end-cap circles
+CAP_R = 0.05  # radius of rounded end-cap circles — kept < ring gap (0.06) to avoid bleed
 
 title = "gauge-activity-rings · python · bokeh · anyplot.ai"
 W, H = 2400, 2400
@@ -72,6 +72,7 @@ p = figure(
 p.axis.visible = False
 p.grid.visible = False
 p.outline_line_color = None
+p.outline_line_width = 0
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 p.title.text_color = INK
@@ -89,7 +90,7 @@ for color, frac, outer_r, inner_r, mid_r in zip(COLORS, FRACTIONS, OUTER_RADII, 
         start_angle=0,
         end_angle=2 * math.pi,
         color=color,
-        alpha=0.13,
+        alpha=0.18 if THEME == "dark" else 0.13,
         line_color=None,
     )
 
@@ -144,7 +145,7 @@ p.text(
 )
 p.text(
     x=[CX],
-    y=[CY - 0.15],
+    y=[CY - 0.08],
     text=["avg complete"],
     text_color=INK_MUTED,
     text_font_size="28pt",
