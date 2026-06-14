@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: bar-heart-rate-zones
 created: '2026-06-14T21:35:40Z'
-updated: '2026-06-14T21:41:06Z'
+updated: '2026-06-14T21:56:22Z'
 generated_by: claude-sonnet
 workflow_run: 27512608865
 issue: 8649
@@ -12,104 +12,111 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-heart
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/python/altair/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - 'Semantic zone color exception expertly handled: all 5 zone colors map to Imprint
-    palette members or anchors, with clear inline documentation explaining the mapping
-    rationale'
-  - 'Full spec compliance on all 4 criteria: correct vertical bar chart type, Z1–Z5
-    ordering, duration labels above bars, and legend with full zone names'
-  - 'Excellent Altair idioms: layer composition for bar+text marks, proper ordinal/nominal
-    encoding types, complete configure_* theme adaptation chain for both light and
-    dark themes'
-  - 'Perfect code quality (10/10): deterministic hardcoded data, clean imports, KISS
-    structure, correct PNG+HTML outputs, PIL padding pattern following the altair.md
-    spec'
-  - Both theme renders fully readable — complete theme-adaptive chrome with no dark-on-dark
-    or light-on-light failures
+  - 'Near-perfect spec compliance: all required features, correct zone ordering, conventional
+    HR zone colors via valid Imprint semantic exception'
+  - Dual annotation system (duration + percentage) maximises information density without
+    clutter
+  - Subtitle explicitly states the session's key insight (67% low-intensity), turning
+    the chart into a brief narrative
+  - Fully deterministic data, all font sizes explicitly set via configure_axis/configure_legend/mark_text/TitleParams,
+    clean KISS code structure
+  - Canvas padding correctly implemented following the altair library guide's canonical
+    PAD-only pattern
+  - 'Both themes fully correct: warm off-white / near-black backgrounds, INK/INK_SOFT
+    tokens applied throughout text and grid, no dark-on-dark failure in dark render'
+  - transform_calculate used idiomatically for Vega-Lite in-spec percentage computation
+    — distinctively Altair
   weaknesses:
-  - X-axis has no title (title=None) — adding 'Heart Rate Zone' as an X label would
-    improve the chart's self-sufficiency in the static PNG
-  - HR boundary ranges (50–59% max HR, etc.) are only available in interactive tooltips,
-    invisible in the static PNG; a secondary x-axis tick label or annotated text would
-    make the static version more informative
-  - Significant empty padding below chart content in the 3200×1800 canvas — chart
-    fills ~55% of canvas height; consider increasing height from 320 to 360–380 to
-    better utilize the canvas
-  - Design storytelling is functional but minimal — no visual cues guide the viewer
-    to the Z2-dominant base-endurance insight (no annotation, reference line, or emphasis
-    element)
+  - 'DE-01 (5/8): missing a distinctive compositional element — e.g. shaded background
+    bands per zone, a reference line at 18 min (session average), or direct bar labels
+    replacing the legend would push DE-01 to 6+'
+  - 'DE-02 (4/6): legend stroke is slightly prominent; explicitly setting domainOpacity=0
+    on top/right axes (configure_axisX/configure_axisY) would sharpen the L-frame
+    and reach 6'
+  - 'LM-02 (3/5): transform_calculate used but Altair''s selection API (hover-driven
+    highlight across bars) is untouched — using condition-based encoding on a selection
+    would make this distinctively Altair and reach 4+'
+  - 'Minor code comment inconsistency on line 48: comment says ''16px fontsize is
+    fine'' but the formula produces 21px for the 51-char title — not a visual issue
+    but misleading'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "bar-heart-rate-zones · python · altair · anyplot.ai" in bold dark text (#1A1A17), occupying ~55–60% of plot width. Y-axis label "Time (minutes)" in dark ink. Tick labels on both axes in INK_SOFT (#4A4A44). Zone legend in upper-right with elevated bg (#FFFDF6) and soft border.
-      Data: Five bars in Z1–Z5 order. Z1 grey (#6B6A63), Z2 steel blue (#4467A3), Z3 brand green (#009E73), Z4 golden ochre (#BD8233), Z5 matte red (#AE3030). Duration labels "12 min", "48 min", "18 min", "8 min", "4 min" in bold dark text above each bar. Horizontal grid lines at subtle 12% opacity.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background. No light-on-light failures.
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "bar-heart-rate-zones · python · altair · anyplot.ai" in large bold dark ink (#1A1A17) at top-left. Subtitle "90-min base endurance ride · 67% in low-intensity zones (Z1+Z2)" in smaller soft-grey italic below. Y-axis label "Time (minutes)" in dark ink. X-axis label "Heart Rate Zone" in dark ink. Tick labels (0–60 on y-axis, Z1–Z5 on x-axis) in INK_SOFT grey. All text clearly readable.
+      Data: Five vertical bars — Z1 grey (#6B6A63), Z2 blue (#4467A3), Z3 green (#009E73), Z4 ochre (#BD8233), Z5 red (#AE3030). Each bar has a bold "X min" duration label above it and a smaller italic "X%" percentage label above that, all in dark/soft-ink tokens. Horizontal gridlines at opacity 0.12, very subtle. Legend box (warm elevated #FFFDF6 fill, subtle border) on the right with all five zone names.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light off-white text (#F0EFE8), clearly readable against dark background. Y-axis label and tick labels in INK_SOFT (#B8B7B0). Zone legend uses elevated dark bg (#242420) with subtle border. All chrome correctly flipped for dark theme.
-      Data: Data colors identical to light render — Z1 grey (lighter adaptive shade #A8A79F), Z2 blue #4467A3, Z3 green #009E73, Z4 ochre #BD8233, Z5 red #AE3030. Brand green #009E73 clearly visible on dark surface. Duration labels render in light INK (#F0EFE8) text above each bar, clearly readable.
-      Legibility verdict: PASS — no dark-on-dark failures. All tick labels, axis titles, duration labels, and legend text are rendered in light-colored theme tokens and are clearly legible against the near-black background.
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black
+      Chrome: Title and subtitle render in light cream (#F0EFE8 INK token) — clearly readable against the dark background. Axis labels and tick labels in #B8B7B0 (INK_SOFT dark). Legend box uses elevated dark fill (#242420) with light text. No dark-on-dark failure observed anywhere.
+      Data: Bar colors are identical to light render for Z2–Z5 (blue, green, ochre, red unchanged). Z1 Recovery correctly changes from #6B6A63 to #A8A79F (theme-adaptive muted anchor by design). Duration and percentage labels rendered in light INK/INK_SOFT tokens, clearly readable on dark background. Brand green #009E73 on Z3 Aerobic bar is clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes. Bar labels for short Z4/Z5 bars
-          are well-positioned but feel small relative to padded canvas.
+        comment: All font sizes explicitly set via configure_axis, configure_legend,
+          mark_text fontSize, and TitleParams fontSize. Title adaptive scaling (21px
+          for 51-char title), tick labels 11px, axis titles 12px, duration labels
+          13px, percentage labels 10px. Well-proportioned in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; duration labels clear of bars and grid lines;
-          legend clear of bars.
+        comment: No overlap between bars, dual annotation layers, legend, or axis
+          labels. Clean vertical stacking of duration + percentage labels above each
+          bar.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 5 bars clearly visible with distinct colors; well-proportioned
-          for 5 categories.
+        comment: All five bars clearly visible with distinct colours. Both annotation
+          layers readable. Data elements well-sized for 5-bar chart density.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; redundant encoding via legend text and
-          x-axis zone labels.
+        comment: Five distinct perceptual hue families (grey/blue/green/ochre/red)
+          with good luminance spread. Redundant encoding via text labels and legend.
+          CVD-safe with zone names removing any colour-only dependency.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Notable empty padding below chart
-          — chart fills ~55% of canvas height. Consider increasing height from 320
-          to 360-380.
+        comment: Chart fills canvas well at 3200x1800. Legend properly positioned
+          right. Balanced margins. Canvas correctly padded to exact target. No elements
+          cut off or isolated.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Time (minutes)' with unit. X-axis zone codes self-explanatory
-          with legend. No x-axis title.
+        comment: 'Y-axis: ''Time (minutes)'' with units. X-axis: ''Heart Rate Zone''
+          descriptive. Title in correct spec format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Semantic exception correctly applied: grey muted anchor (Z1), blue
-          pos-3 (Z2), green pos-1 (Z3), ochre pos-4 (Z4), red pos-5 (Z5). Correct
-          backgrounds in both themes.'
+        comment: 'Valid semantic exception: conventional HR zone colors mapped to
+          Imprint members. Z1 uses theme-adaptive muted anchor (correct for rest/recovery
+          role). Z3 uses brand green #009E73. Backgrounds #FAF8F1/#1A1A17. Full theme-adaptive
+          chrome in both renders.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -117,22 +124,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Deliberate semantic color exception well-documented; clean professional
-          appearance. Lacks stronger visual hierarchy or data emphasis.
+        comment: 'Above well-configured defaults: thoughtful semantic color choices,
+          dual annotation system (absolute + percentage), descriptive subtitle pre-stating
+          key insight. Not yet at strong-design level (6) — lacks a distinctive compositional
+          element.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Subtle grid (opacity 12%), Altair clean defaults, no top/right spines,
-          rounded-corner legend box with elevated bg. Functional but not exceptional.
+        comment: 'Good refinement: Y-only grid at opacity 0.12, configure_view(stroke=None)
+          removes view border, Altair default L-shaped axis frame, styled legend with
+          elevated fill and corner radius. Stops short of 6 — legend stroke slightly
+          visible.'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Z2-dominant distribution clearly apparent from bar heights. No annotations
-          or storytelling elements guiding the viewer to the key insight.
+        comment: 'Clear story: subtitle explicitly names the 67% low-intensity finding,
+          percentage labels show each zone''s share, Z2 bar is visually dominant focal
+          point, progressive grey-to-red spectrum communicates intensity direction.'
     spec_compliance:
       score: 15
       max: 15
@@ -142,28 +154,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Vertical bar chart, correct chart type as specified.
+        comment: Correct vertical bar chart with Z1-Z5 ordered on x-axis.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 5 zones Z1-Z5 in fixed order; conventional zone colors via semantic
-          exception; duration labels above bars; legend with zone names.
+        comment: 'All required features present: zone ordering, conventional colors,
+          per-bar duration labels, legend, HR range available via tooltip.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis zones in Z1-Z5 order; Y-axis time in minutes; color encoding
-          correct.
+        comment: 'X: zone codes (ordinal, fixed Z1-Z5 sort). Y: minutes (quantitative).
+          All zones visible with correct heights.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'bar-heart-rate-zones · python · altair · anyplot.ai';
-          legend labels match zone names.
+        comment: Title 'bar-heart-rate-zones · python · altair · anyplot.ai' matches
+          required format. Legend shows all five zone names with correct semantic
+          labels.
     data_quality:
       score: 15
       max: 15
@@ -173,22 +186,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 5 zones; duration labels; HR ranges in interactive tooltips;
-          zone names in legend.
+        comment: All five zones represented with varied durations showing realistic
+          training distribution — not uniform, illustrating the chart type's ability
+          to reveal session intensity balance.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 90-minute base endurance ride with Z2-dominant distribution is textbook
-          for aerobic base building. Neutral, non-controversial.
+        comment: 90-minute base endurance ride is a common, recognisable fitness scenario.
+          Neutral topic, no controversy.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Total 90 minutes realistic; Z1=12, Z2=48, Z3=18, Z4=8, Z5=4 min is
-          a plausible polarized distribution; Y-axis domain [0,58] provides headroom.
+        comment: Durations sum to exactly 90 min (12+48+18+8+4). HR percentage ranges
+          (50-59% through 90-100%) match standard zone definitions. Z2-dominant distribution
+          is factually realistic for an endurance base ride.
     code_quality:
       score: 10
       max: 10
@@ -198,31 +213,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; linear top-to-bottom script.
+        comment: 'Flat linear structure: imports -> tokens -> data -> layers -> properties
+          -> save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data; no random seed needed.
+        comment: Fully deterministic hardcoded data arrays. No random generation needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, altair, pandas, PIL — all four are used.
+        comment: os, altair, pandas, PIL.Image — all four imports are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean readable code, no fake UI, appropriate complexity.
+        comment: Three chart layers cleanly composed. Canvas padding follows canonical
+          KISS pattern. Tooltips legitimate for altair (interactive library). Minor
+          comment inconsistency on line 48 but code is correct.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Altair API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Canvas padded to exact
+          3200x1800. Current Altair 6.x API.
     library_mastery:
       score: 8
       max: 10
@@ -232,16 +251,17 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent: layer composition (bars + text_labels), proper encoding
-          types (O/Q/N), alt.TitleParams, configure_view/axis/legend chain, alt.Scale
-          with domain/range.'
+        comment: 'Expert Altair usage: encoding type annotations (:O,:Q,:N), alt.Scale
+          domain/range for semantic color mapping, configure_* global theming, TitleParams
+          with subtitle, band mark width, layer composition with + operator.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: HTML export for interactive tooltips, mark_text layer composition,
-          band width for proportional bars. Could leverage Altair selections or transforms.
+        comment: 'Uses transform_calculate (Vega-Lite declarative in-spec computation
+          for percentage) and layer composition — genuinely Altair-distinctive. Stops
+          short of 4-5: selection API for interactive highlight is unused.'
   verdict: APPROVED
 impl_tags:
   dependencies:
