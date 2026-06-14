@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 gauge-activity-rings: Activity Rings Progress Chart
 Library: plotly 6.8.0 | Python 3.13.13
 Quality: 89/100 | Created: 2026-06-14
@@ -32,16 +32,18 @@ ring_colors = IMPRINT_PALETTE[:3]  # green, lavender, blue (outer → inner)
 # Ring geometry — outer to inner
 radii = [0.83, 0.58, 0.33]
 line_width = 30  # px on the 600×600 logical canvas (→ 120 px in 2400×2400 output)
-N_POINTS = 400  # arc smoothness
+TRACK_ALPHA = 0.14 if THEME == "light" else 0.22  # higher in dark mode so track reads on near-black bg
 
 
-def arc_xy(radius, fraction, n=N_POINTS):
+def arc_xy(radius, fraction):
     fraction = min(fraction, 1.0)
+    n = max(400, int(600 / radius))  # more points for inner (smaller) rings to stay smooth
     angles = np.linspace(90, 90 - fraction * 360, n)
     return (radius * np.cos(np.radians(angles))).tolist(), (radius * np.sin(np.radians(angles))).tolist()
 
 
-def circle_xy(radius, n=N_POINTS):
+def circle_xy(radius):
+    n = max(400, int(600 / radius))
     angles = np.linspace(0, 360, n + 1)
     return (radius * np.cos(np.radians(angles))).tolist(), (radius * np.sin(np.radians(angles))).tolist()
 
@@ -61,13 +63,18 @@ fig = go.Figure()
 
 for metric, radius, color in zip(metrics, radii, ring_colors, strict=False):
     fraction = metric["value"] / metric["goal"]
-    track_color = hex_to_rgba(color, 0.14)
+    track_color = hex_to_rgba(color, TRACK_ALPHA)
 
     # Background track (full circle, faint)
     cx, cy = circle_xy(radius)
     fig.add_trace(
         go.Scatter(
-            x=cx, y=cy, mode="lines", line={"color": track_color, "width": line_width}, showlegend=False, hoverinfo="skip"
+            x=cx,
+            y=cy,
+            mode="lines",
+            line={"color": track_color, "width": line_width},
+            showlegend=False,
+            hoverinfo="skip",
         )
     )
 
@@ -119,7 +126,14 @@ fig.add_annotation(
 
 # Layout — square canvas (2400×2400 via width=600 height=600 scale=4)
 fig.update_layout(
-    title={"text": title, "font": {"size": title_size, "color": INK}, "x": 0.5, "xanchor": "center", "y": 0.98, "yanchor": "top"},
+    title={
+        "text": title,
+        "font": {"size": title_size, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+        "y": 0.98,
+        "yanchor": "top",
+    },
     autosize=False,
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
@@ -128,7 +142,7 @@ fig.update_layout(
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
-        "font": {"color": INK_SOFT, "size": 10},
+        "font": {"color": INK_SOFT, "size": 11},
         "orientation": "h",
         "x": 0.5,
         "xanchor": "center",
