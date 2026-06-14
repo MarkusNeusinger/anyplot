@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 gauge-activity-rings: Activity Rings Progress Chart
 Library: altair 6.2.1 | Python 3.13.13
-Quality: 85/100 | Created: 2026-06-14
+Quality: 86/100 | Created: 2026-06-14
 """
 
 import importlib

@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: gauge-activity-rings
 created: '2026-06-14T20:52:21Z'
-updated: '2026-06-14T21:00:35Z'
+updated: '2026-06-14T21:13:14Z'
 generated_by: claude-sonnet
 workflow_run: 27511011802
 issue: 8648
@@ -12,43 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-act
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/python/altair/plot-dark.html
-quality_score: 85
+quality_score: 86
 review:
   strengths:
-  - Perfect Imprint palette compliance — green/lavender/blue in canonical order, correct
-    backgrounds in both themes
-  - 'Accurate activity rings geometry: equal ring thickness (35 units each), capsule
-    end caps (cornerRadius=22), proper 12 o''clock start, clockwise sweep'
-  - Excellent dark theme adaptation — no dark-on-dark failures; rings remain vivid;
-    title adapts correctly
-  - Correct Altair grammar-of-graphics layer composition using alt.layer() to combine
-    9 layers (3 tracks + 3 arcs + 3 labels)
-  - Realistic fitness data with correct real-world proportions (Move/Exercise/Stand
-    goals); canvas pads cleanly to exact 2400x2400 target
+  - 'Full spec compliance: three concentric activity rings with faint background tracks,
+    rounded end caps (cornerRadius=22), and correct clockwise sweep from 12 o''clock
+    — the iconic Apple Watch-style look is faithfully reproduced'
+  - 'Perfect Imprint palette usage: outer ring green (#009E73), middle lavender (#C475FD),
+    inner blue (#4467A3) in canonical positions 1-3; data colors identical across
+    light and dark renders'
+  - 'Theme-adaptive chrome: PAGE_BG, INK, and TRACK_OPACITY all correctly branch on
+    ANYPLOT_THEME; dark track opacity bumped from 0.18 to 0.28 so background arcs
+    remain visible on dark surface'
+  - 'Thoughtful data storytelling: center labels are color-coded to match their ring,
+    and the best-performing metric (Exercise 83%) receives a star (★) prefix and slightly
+    larger font for explicit visual hierarchy'
+  - 'Canvas handling correct: width=500/height=460 square target, scale_factor=4.0,
+    with PIL pad-to-2400×2400 and raise-on-overshoot guard — canvas gate passed'
+  - 'Dual output: both plot-{THEME}.png and plot-{THEME}.html saved; HTML preserves
+    tooltips with full value/goal/unit breakdown'
+  - 'KISS code structure: flat loop over metrics, no helper functions or classes,
+    deterministic hardcoded data'
   weaknesses:
-  - ring_layers() helper function violates the KISS no-functions rule — refactor as
-    an inline for-loop
-  - Center labels at fontSize=10 are small; increase to 12-13px for better readability
-    at mobile scale
-  - 'Background track opacity (0.18) is near-invisible in dark theme against #1A1A17
-    — increase to 0.25-0.30 for THEME==dark'
-  - 'DE-03 storytelling gap: no visual emphasis or hierarchy to highlight the leading
-    metric; consider a subtle visual cue on the highest-completion ring (Exercise
-    83%)'
-  - No external legend — center text-only approach limits accessibility; add a compact
-    ring legend or outer per-ring labels
+  - 'Blue center label ''Stand 75%'' has insufficient contrast in dark theme: #4467A3
+    on #1A1A17 yields ~3.2:1 contrast ratio, below WCAG AA (4.5:1 for normal text).
+    Fix: in dark mode, use a lighter variant for the center label color — e.g. apply
+    INK_SOFT (#B8B7B0) or a lightened blue (#8FA8D4) for labels whose ring color falls
+    below 4.5:1 on the dark background.'
+  - Center label spacing uses hardcoded pixel offsets (VIEW_CY ± 20 chart-px) relative
+    to a fixed center point. While adequate for the current three metrics, this does
+    not adapt if label_size increases or metrics count changes. Minor robustness concern,
+    no visual defect in current render.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 — correct
-      Chrome: title "gauge-activity-rings · python · altair · anyplot.ai" in dark ink, clearly readable; no axis labels (appropriate for radial chart); center labels "Move 70%", "Exercise 83%", "Stand 75%" in ring colors, small but legible
-      Data: three concentric progress arcs — outer in #009E73 (green), middle in #C475FD (lavender), inner in #4467A3 (blue); faint full-circle background tracks at 18% opacity; rounded end caps (cornerRadius=22); arcs start at 12 o'clock sweeping clockwise
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "gauge-activity-rings · python · altair · anyplot.ai" in bold dark (#1A1A17) text, centered above the chart, fully readable. No axis labels or tick labels (appropriate for a radial chart). Title occupies roughly 50–60% of the canvas width.
+      Data: Three concentric partial arcs with rounded end caps. Outer ring: brand green (#009E73), Move 70% — arc sweeps clockwise from 12 o'clock to ~4:12 position, with faint green background track for the remaining 30%. Middle ring: lavender (#C475FD), Exercise 83% — arc sweeps to ~6 o'clock, with faint lavender track. Inner ring: blue (#4467A3), Stand 75% — arc sweeps to ~9 o'clock, with faint blue track. Center labels: "Move 70%" in green, "★ Exercise 83%" in lavender (bold, slightly larger, star prefix), "Stand 75%" in blue — all readable against the off-white center background.
+      Legibility verdict: PASS — all elements clearly readable, good contrast throughout.
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 — correct
-      Chrome: title in light near-white text, clearly readable; center labels still readable in green/lavender/blue on dark background
-      Data: colors are IDENTICAL to light render (green, lavender, blue); background tracks near-invisible at 18% opacity against the dark surface; progress arcs remain bold and distinguishable
-      Legibility verdict: PASS — no dark-on-dark failures; brand green #009E73 clearly visible
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title in light warm-white text (#F0EFE8) clearly readable against the dark surface. No axis chrome.
+      Data: Ring colors are identical to the light render (green, lavender, blue data colors unchanged, per Imprint palette rules — only chrome flips). Background tracks visible at slightly higher opacity (0.28 vs 0.18) to compensate for the dark surface. Center labels: "Move 70%" in green (#009E73) — readable; "★ Exercise 83%" in lavender (#C475FD) — readable; "Stand 75%" in blue (#4467A3) — PARTIAL CONCERN: #4467A3 on #1A1A17 yields ~3.2:1 contrast ratio, below WCAG AA 4.5:1 for normal text. Text is visually discernible in the render but notably less vivid than the green and lavender labels.
+      Legibility verdict: PARTIAL PASS — title and two center labels are fully readable; "Stand 75%" blue label has suboptimal contrast in dark mode but remains legible.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -56,53 +62,61 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Font sizes explicitly set (calculated title_size, fontSize=10 for
-          center labels); title proportional; center labels functional but small at
-          10px pre-scale
+        comment: 'All font sizes explicitly set (title_size computed, label_size 12/14).
+          Title and two center labels fully readable in both themes. Blue center label
+          ''Stand 75%'' (#4467A3 on #1A1A17) has ~3.2:1 contrast ratio, below WCAG
+          AA 4.5:1 — visually discernible but suboptimal in dark mode.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Center labels cleanly spaced; rings do not overlap text
+        comment: Center labels spaced at VIEW_CY-20/0/+20 chart-px, no overlaps detected.
+          Rings do not overlap with text.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Progress arcs bold and visible; background tracks at 18% opacity
-          near-invisible in dark theme
+        comment: All three rings clearly visible in both themes. Background tracks
+          visible at appropriate opacity. Rounded end caps distinctly rendered.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Three distinct Imprint hues CVD-safe with sufficient perceptual separation
+        comment: Imprint palette positions 1-3 (green, lavender, blue) are CVD-safe.
+          No red-green sole signal. Adequate luminance differentiation between rings.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Rings centered on 2400x2400 square canvas with balanced whitespace;
-          appropriate format for circular chart
+        comment: Square 2400x2400 canvas appropriate for concentric rings. Chart fills
+          canvas well with generous whitespace on all sides. No overflow or clipping
+          detected (AR-09 clear). Canvas gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels needed for radial chart; title format correct
+        comment: Title correctly formatted as 'gauge-activity-rings · python · altair
+          · anyplot.ai'. Center labels serve as per-ring legend showing metric name
+          and percentage. No axis labels needed for radial chart.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First ring #009E73; positions 1-3 canonical Imprint order; backgrounds
-          #FAF8F1/#1A1A17; data colors identical across themes'
+        comment: 'First ring is brand green #009E73. Second is lavender #C475FD (position
+          2). Third is blue #4467A3 (position 3). Data colors identical in both renders.
+          Background #FAF8F1 (light) / #1A1A17 (dark) — correct. Title color theme-adaptive
+          (dark in light, light in dark).'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -110,23 +124,30 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above configured default — custom ring geometry, capsule end caps,
-          opacity-based tracks, center labels give Apple Watch feel; not publication-ready
-          due to limited labeling hierarchy
+        comment: 'Above default (4): the star-prefix on best metric, color-coded center
+          labels matching ring colors, and rounded-cap ''activity ring'' look show
+          intentional design thinking. Not quite 6 because no additional typography
+          hierarchy, no outline strokes on rings, and overall still a fairly standard
+          interpretation of the spec.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Extremely clean — no axes, no grid, no spines; good opacity contrast
-          between track and arc
+        comment: 'Above default (2): no axes/spines (appropriate), generous whitespace,
+          theme-adaptive track opacity shows attention to detail. Not quite 4 because
+          no additional polish like ring gap control, stroke definition on arc ends,
+          or annotation callouts outside the center.'
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Three completion levels readable but no emphasis technique to highlight
-          nearest-to-goal ring; viewer extracts story themselves
+        passed: true
+        comment: 'Above default (2): star (★) on best-performing metric (Exercise
+          83%) and larger label_size=14 vs 12 provide explicit visual hierarchy. Color
+          coding of center labels reinforces the ring-to-metric mapping. Does not
+          reach 4 as there is no additional emphasis through size variation, callout
+          annotations, or reference lines.'
     spec_compliance:
       score: 15
       max: 15
@@ -136,88 +157,108 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct concentric radial progress arcs with background tracks, rounded
-          end caps, canonical 3-ring configuration
+        comment: 'Correct activity rings chart: concentric partial arcs, clockwise
+          sweep from 12 o''clock, rounded end caps (cornerRadius=22), faint background
+          tracks, center labels. All defining characteristics of the spec''s plot
+          type are present.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 12 o'clock start, clockwise sweep, faint full-circle track, fraction
-          clamped to 360deg, equal ring thickness, ordered outer-inner, center labels
+        comment: 'All spec features present: metric (categorical ring labels), value/goal
+          fraction computation, distinct color per ring (Imprint palette), background
+          track at low opacity, rounded end caps, center label area showing percent
+          completion, 3 rings (canonical count).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Move 70%, Exercise 83%, Stand 75% correctly computed and rendered
+        comment: Arc sweep correctly proportional to value/goal fraction (Move 420/600=70%,
+          Exercise 25/30=83%, Stand 9/12=75%). Outer ring = primary metric (Move),
+          inner = tertiary (Stand). Rings concentric with consistent thickness and
+          gap.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact spec title format; center labels serve as metric identification
+        comment: Title 'gauge-activity-rings · python · altair · anyplot.ai' matches
+          required format exactly. Per-ring center labels serve as legend mapping
+          color to metric name and completion percentage.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Three rings at varying completion; no edge cases (0% or >100%) demonstrated
+        comment: 'Shows all aspects: three rings at different completion levels (70%,
+          75%, 83%), background tracks showing remaining progress, center labels with
+          percentage, tooltips with full value/goal/unit, best-performer emphasis.
+          Completion values are meaningfully distinct to show the chart''s differential-progress
+          capability.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Genuine fitness tracker scenario (Move/kcal, Exercise/min, Stand/hr)
-          matching spec example; neutral
+        comment: Daily fitness tracker scenario (Move 420/600 kcal, Exercise 25/30
+          min, Stand 9/12 hr) is the canonical real-world use case for activity rings,
+          matching the spec's primary application exactly. Neutral, non-controversial
+          domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Accurate Apple Watch goal conventions; 600 kcal, 30 min exercise,
-          12 hr stand
+        comment: 'Values are realistic for a typical fitness day: 420/600 kcal (moderate
+          activity), 25/30 min exercise (almost at goal), 9/12 stand hours (good but
+          not complete). Proportions are believable and factually plausible.'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: ring_layers() helper function violates no-functions rule; should
-          be inlined into the for-loop
+        passed: true
+        comment: No helper functions or classes. Flat loop over metrics to build layers.
+          Imports → Data → Build layers → Compose chart → Save. Clean linear flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data
+        comment: 'Fully deterministic: hardcoded metric names, values, and goals —
+          no random number generation needed.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imported modules (altair, numpy, pandas, PIL) are used
+        comment: All imports used (altair, numpy, pandas, PIL.Image). Standard importlib
+          pattern to avoid name collision with script file.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; importlib workaround for filename shadowing
-          is justified; no fake functionality
+        comment: Appropriate complexity for the visualization. No fake UI elements.
+          Loop is idiomatic for multi-ring construction. Minor verbosity in arc layer
+          construction is justified by the repeated pattern.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html using current Altair
-          API
+        comment: Saves plot-{THEME}.png with scale_factor=4.0 and plot-{THEME}.html.
+          Uses current Altair 6.x API (alt.TitleParams, alt.Theta with scale=None).
+          No deprecated functions.
     library_mastery:
       score: 7
       max: 10
@@ -227,16 +268,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of mark_arc with innerRadius/outerRadius, theta/theta2
-          with scale=None, alt.layer() composition, alt.TitleParams, configure_view
+        comment: 'Good idiomatic Altair for a non-standard radial chart: mark_arc
+          with theta/theta2 encoding, alt.value() for constant color/opacity, alt.layer()
+          composition, configure_view/configure_title for theme chrome. Not quite
+          5 because the mark_text positioning uses alt.value(x)/alt.value(y) pixel
+          coords rather than a more declarative Altair pattern.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Grammar-of-graphics layer composition (9 layers), built-in tooltip
-          encoding, HTML export — distinctively Altair features
-  verdict: REJECTED
+        comment: Uses Altair/Vega-Lite's mark_arc (a feature not found in matplotlib/seaborn),
+          layer composition pattern, and HTML export with interactive tooltips. The
+          arc mark with cornerRadius for rounded caps is a Vega-Lite-distinctive feature.
+          Does not reach 5 as the implementation doesn't push into advanced Altair
+          features like selections, transforms, or custom projection encoding.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
