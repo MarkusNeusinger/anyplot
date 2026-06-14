@@ -1,7 +1,7 @@
 // anyplot.ai
 // burndown-sprint: Agile Sprint Burndown Chart
 // Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 85/100 | Created: 2026-06-14
+// Quality: 91/100 | Created: 2026-06-14
 
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts";
