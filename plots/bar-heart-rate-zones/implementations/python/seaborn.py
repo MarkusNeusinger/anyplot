@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-heart-rate-zones: Time in Heart Rate Zones Bar Chart
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 85/100 | Created: 2026-06-14
@@ -7,6 +7,7 @@ Quality: 85/100 | Created: 2026-06-14
 import os
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import seaborn as sns
 
 
@@ -35,6 +36,9 @@ hr_ranges = ["< 111 bpm", "111–130 bpm", "130–148 bpm", "148–166 bpm", "> 
 # Multi-line x-tick labels: zone ID / zone name / HR boundary
 x_tick_labels = [f"{z}\n{n}\n{h}" for z, n, h in zip(zones, zone_names, hr_ranges, strict=False)]
 
+# Palette dict for sns.barplot hue mapping
+zone_palette = dict(zip(zones, ZONE_COLORS, strict=False))
+
 # Seaborn theme
 sns.set_theme(
     style="ticks",
@@ -53,13 +57,24 @@ sns.set_theme(
     },
 )
 
+# DataFrame for seaborn — categorical order preserves Z1→Z5 sequence
+df = pd.DataFrame({"zone": pd.Categorical(zones, categories=zones, ordered=True), "minutes": minutes})
+
 # Plot — landscape 3200 × 1800 px
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-bars = ax.bar(range(len(zones)), minutes, color=ZONE_COLORS, width=0.55, edgecolor=PAGE_BG, linewidth=1.2)
+# sns.barplot — seaborn-native bar chart with hue for per-bar palette
+sns.barplot(
+    data=df, x="zone", y="minutes", hue="zone", palette=zone_palette, ax=ax, errorbar=None, legend=False, width=0.55
+)
 
-# X-tick labels (zone ID / name / HR boundary)
+# Apply edge color to match page background (post-draw, patches are accessible)
+for patch in ax.patches:
+    patch.set_edgecolor(PAGE_BG)
+    patch.set_linewidth(1.2)
+
+# X-tick labels (zone ID / name / HR boundary) — restore after barplot
 ax.set_xticks(range(len(zones)))
 ax.set_xticklabels(x_tick_labels, fontsize=8)
 ax.tick_params(axis="x", which="both", length=0)
@@ -68,10 +83,10 @@ ax.tick_params(axis="x", which="both", length=0)
 ax.tick_params(axis="y", labelsize=8, colors=INK_SOFT)
 
 # Bar duration labels
-for bar, mins in zip(bars, minutes, strict=False):
+for patch, mins in zip(ax.patches, minutes, strict=False):
     ax.text(
-        bar.get_x() + bar.get_width() / 2,
-        bar.get_height() + 0.4,
+        patch.get_x() + patch.get_width() / 2,
+        patch.get_height() + 0.4,
         f"{mins} min",
         ha="center",
         va="bottom",
