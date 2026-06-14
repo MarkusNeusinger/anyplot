@@ -5,6 +5,7 @@
 //# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
+const isDark = window.ANYPLOT_THEME === "dark";
 
 // --- Helpers ---
 function hexToRgba(hex, alpha) {
@@ -21,13 +22,16 @@ const rings = [
   { label: "Stand",    value: 9,   goal: 12,  unit: "hr"   },
 ];
 
+// Theme-adaptive track opacity: dark bg absorbs translucent colours; increase alpha
+const trackAlpha = isDark ? 0.28 : 0.15;
+
 const datasets = rings.map((ring, i) => {
   const fraction = Math.min(ring.value / ring.goal, 1.0);
   const color = t.palette[i];
   return {
     label: ring.label,
     data: [fraction, 1 - fraction],
-    backgroundColor: [color, hexToRgba(color, 0.15)],
+    backgroundColor: [color, hexToRgba(color, trackAlpha)],
     borderWidth: 0,
     borderRadius: (ctx) => (ctx.dataIndex === 0 ? 32 : 0),
   };
@@ -41,23 +45,57 @@ const avgPct = Math.round(
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
-// --- Plugin: center summary text ---
+// --- Plugin: center summary + glowing progress-tip dots ---
 const centerTextPlugin = {
   id: "centerText",
   afterDraw(chart) {
     const { ctx, chartArea } = chart;
     const cx = (chartArea.left + chartArea.right) / 2;
     const cy = (chartArea.top + chartArea.bottom) / 2;
+
+    // Soft radial glow behind the percentage — lifts the focal point
+    ctx.save();
+    const glowR = 90;
+    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR);
+    grad.addColorStop(0, hexToRgba(t.palette[0], isDark ? 0.12 : 0.06));
+    grad.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, glowR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Center percentage and sub-label
     ctx.save();
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.font = `bold 62px system-ui, sans-serif`;
     ctx.fillStyle = t.ink;
-    ctx.fillText(`${avgPct}%`, cx, cy - 30);
+    ctx.fillText(`${avgPct}%`, cx, cy - 28);
     ctx.font = `20px system-ui, sans-serif`;
     ctx.fillStyle = t.inkSoft;
     ctx.fillText("avg. complete", cx, cy + 30);
     ctx.restore();
+
+    // Glowing dot at each ring's progress endpoint (skips full/over-100% rings)
+    rings.forEach((ring, i) => {
+      if (ring.value / ring.goal >= 1.0) return;
+      const meta = chart.getDatasetMeta(i);
+      const arc = meta.data[0];
+      if (!arc) return;
+      const dotR = (arc.outerRadius - arc.innerRadius) / 2;
+      const midR = (arc.outerRadius + arc.innerRadius) / 2;
+      const tipX = arc.x + midR * Math.cos(arc.endAngle);
+      const tipY = arc.y + midR * Math.sin(arc.endAngle);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(tipX, tipY, dotR, 0, Math.PI * 2);
+      ctx.fillStyle = t.palette[i];
+      ctx.shadowColor = hexToRgba(t.palette[i], 0.55);
+      ctx.shadowBlur = 14;
+      ctx.fill();
+      ctx.restore();
+    });
   },
 };
 
@@ -89,7 +127,7 @@ new Chart(canvas, {
         position: "bottom",
         labels: {
           color: t.ink,
-          font: { size: 14 },
+          font: { size: 17 },
           padding: 28,
           usePointStyle: true,
           pointStyle: "circle",
