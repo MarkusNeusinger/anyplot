@@ -60,7 +60,7 @@ g.append("rect")
 
 g.append("text")
   .attr("x", (x(weekendStart) + x(weekendEnd)) / 2)
-  .attr("y", y(3))
+  .attr("y", y(8))
   .attr("text-anchor", "middle")
   .attr("fill", t.inkSoft)
   .style("font-size", "13px")
@@ -106,13 +106,19 @@ g.selectAll(".dot")
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 2.5);
 
-// --- Scope change marker (matte red vertical dashed line) ---
+// --- Scope change marker (matte red vertical dashed line + D3 triangle tip) ---
 g.append("line")
   .attr("x1", x(scopeChangeDate)).attr("x2", x(scopeChangeDate))
   .attr("y1", 0).attr("y2", ih)
   .attr("stroke", t.palette[4])
   .attr("stroke-width", 2)
   .attr("stroke-dasharray", "6,4");
+
+// Triangle arrowhead at the top of the scope-change line (pointing down = event occurred here)
+g.append("path")
+  .attr("d", d3.symbol().type(d3.symbolTriangle).size(80)())
+  .attr("transform", `translate(${x(scopeChangeDate)}, 8) rotate(180)`)
+  .attr("fill", t.palette[4]);
 
 // Scope change annotation
 const scx = x(scopeChangeDate) + 8;
@@ -133,7 +139,7 @@ const xAxis = g.append("g")
   );
 xAxis.selectAll("text")
   .attr("fill", t.inkSoft)
-  .style("font-size", "13px")
+  .style("font-size", "14px")
   .attr("transform", "rotate(-35)")
   .attr("text-anchor", "end")
   .attr("dx", "-0.4em")
@@ -167,6 +173,15 @@ svg.append("text")
 // --- Legend (top-right of plot area) ---
 const lx = iw - 210;
 const ly = 8;
+
+// Elevated-bg legend frame
+g.append("rect")
+  .attr("x", lx - 10).attr("y", ly - 10)
+  .attr("width", 220).attr("height", 92)
+  .attr("rx", 4)
+  .attr("fill", t.elevatedBg)
+  .attr("stroke", t.grid)
+  .attr("stroke-width", 1);
 
 g.append("line")
   .attr("x1", lx).attr("y1", ly + 8).attr("x2", lx + 40).attr("y2", ly + 8)
