@@ -1,0 +1,243 @@
+library: plotly
+language: python
+specification_id: bar-heart-rate-zones
+created: '2026-06-14T21:32:28Z'
+updated: '2026-06-14T21:49:26Z'
+generated_by: claude-sonnet
+workflow_run: 27512512137
+issue: 8649
+language_version: 3.13.13
+library_version: 6.8.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/python/plotly/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Semantic zone color mapping (grey/blue/green/ochre/red) exactly matches fitness-app
+    convention, correctly implemented as an Imprint palette semantic exception
+  - Rich multi-line HTML tick labels (bold zone code + name + HR range) provide all
+    context without a separate legend
+  - Reference line at the zone average adds meaningful storytelling context and creates
+    a visual benchmark
+  - 'Perfect spec compliance: all 5 zones in fixed order, duration labels, HR boundaries,
+    correct chart type'
+  - Data totals exactly 60 minutes with physiologically accurate HR ranges
+  - 'Theme adaptation exemplary: all chrome tokens correct in both renders, no dark-on-dark
+    issues'
+  weaknesses:
+  - DE-01 could reach 8/8 with a descriptive subtitle and source footnote for typographic
+    hierarchy
+  - DE-02 could reach 6/6 with tick mark removal (ticks="") and slightly more generous
+    bottom margin
+  - strict=False in zip() on line 35 is redundant for equal-length lists — remove
+    for cleaner code
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "60-min Tempo Run · bar-heart-rate-zones · python · plotly · anyplot.ai" centered, spans ~78% of width (expected for long mandated format). Y-axis label "Time (min)" dark INK text. Multi-line x-axis tick labels in INK_SOFT with bold zone codes. Bar duration labels ("8 min" etc.) in INK above each bar. All text readable.
+      Data: 5 bars — Z1 muted grey (INK_MUTED semantic anchor), Z2 Imprint blue (#4467A3), Z3 Imprint brand green (#009E73), Z4 Imprint ochre (#BD8233), Z5 Imprint matte red (#AE3030). Dotted reference line at y=12 with annotation "12 min / zone avg".
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title, axis labels, tick labels, bar duration labels, and reference line annotation all rendered in light-colored text (INK = #F0EFE8 in dark mode). All clearly legible. No dark-on-dark failures observed.
+      Data: All five bar colors identical to light render. Z1 grey appears slightly lighter in dark mode due to adaptive INK_MUTED token (#A8A79F vs #6B6A63 in light) — correct semantic anchor behavior, not a data color shift.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; adaptive title scaling formula used;
+          all text readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 5 bars with clear semantic colors; reference line visible in both
+          themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Adequate contrast; zone labels disambiguate CVD ambiguity
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 confirmed; margins explicit; good whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: Time (min) with units; x-axis tick labels carry zone name
+          and HR range'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception correctly applied per spec; backgrounds #FAF8F1/#1A1A17;
+          chrome theme-correct in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Intentional semantic color mapping, rich HTML tick labels, reference
+          line — clearly above defaults but missing subtitle/footnote for FiveThirtyEight-level
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, y-only subtle grid at 15% opacity, bargap for breathing
+          room, bar edges styled — solid but tick marks still visible
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Reference line creates benchmark; semantic zone colors encode intensity
+          progression; Z2 dominance immediately legible
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct vertical bar chart with 5 zones
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Zone colors, duration labels, HR boundaries in tick labels, fixed
+          Z1-Z5 order — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=zones, Y=time in minutes, all 5 zones shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with descriptive prefix; no legend needed (zones
+          labeled on x-axis)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 5 zones with meaningful variation; reference line adds extra
+          feature layer
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 60-min tempo run is a real neutral training scenario matching Garmin/Strava
+          style
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Total=60 min exactly; HR boundaries physiologically accurate; zone
+          distribution plausible for tempo run
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports → tokens → data → plot → save; no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic static data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only os and plotly.graph_objects imported, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Clean Pythonic code; minor: strict=False in zip() unnecessary for
+          equal-length lists'
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current plotly API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: go.Figure(go.Bar(...)), add_hline(), update_layout(), write_image()+write_html()
+          all idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: HTML-formatted tick labels with <b> tags, add_hline() shape helper,
+          constraintext, hovertemplate, HTML output — uses Plotly distinctives
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  - manual-ticks
+  patterns: []
+  dataprep: []
+  styling:
+  - edge-highlighting
