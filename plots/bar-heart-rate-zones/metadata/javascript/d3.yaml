@@ -1,0 +1,255 @@
+library: d3
+language: javascript
+specification_id: bar-heart-rate-zones
+created: '2026-06-14T21:53:39Z'
+updated: '2026-06-14T22:00:00Z'
+generated_by: claude-sonnet
+workflow_run: 27513011803
+issue: 8649
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/javascript/d3/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Semantic Imprint palette mapping for heart rate zones (muted anchor for Z1, palette
+    positions 3/1/4/5 for Z2–Z5) correctly applies fitness domain conventions while
+    staying within palette rules
+  - Three-tier x-axis labels (zone ID + name + HR boundary range) provide complete
+    reader context without a separate legend — elegant information density
+  - Dynamic title font sizing correctly shrinks the title for the long descriptive
+    prefix
+  - Full theme-adaptive chrome via ANYPLOT_TOKENS throughout; Z1 muted anchor correctly
+    adapts between themes as designed
+  - D3 gridline-as-separate-axis pattern and group-based multi-line tick labels are
+    idiomatic and distinctively D3
+  weaknesses:
+  - 'DE-03: No visual emphasis on the dominant zone (Z2 at 22:00 = 37% of total session)
+    — consider a percentage annotation on the tallest bar, a subtle highlight stroke,
+    or a short insight subtitle to guide the viewer''s eye'
+  - 'DE-01: No additional typographic hierarchy or storytelling layer to elevate beyond
+    a standard bar chart — a bold label or accent color on the peak bar would increase
+    sophistication'
+  - 'VQ-01 minor: HR range labels at 12px CSS (24px native) are the smallest text
+    element; raising to 13–14px CSS would improve mobile-scale readability'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "60-min Tempo Run · bar-heart-rate-zones · javascript · d3 · anyplot.ai" in dark bold text (~21px CSS), clearly visible. Y-axis label "Time (minutes)" in inkSoft color at 15px. Tick labels "X min" at 14px in inkSoft. X-axis zone ID labels at 17px bold, zone names at 14px, HR ranges at 12px — all in theme-appropriate ink colors.
+      Data: Z1 (Recovery) = dark muted grey #6B6A63; Z2 (Endurance) = Imprint blue #4467A3; Z3 (Aerobic) = Imprint brand green #009E73; Z4 (Threshold) = Imprint ochre #BD8233; Z5 (Maximum) = Imprint matte red #AE3030. Duration labels (8:00, 22:00, 15:00, 12:00, 3:00) in bold dark ink above each bar.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title, axis labels, tick labels, zone names, HR range text, and duration labels all in light ink (#F0EFE8 / #B8B7B0 range) — clearly readable against the dark background. No dark-on-dark failures detected.
+      Data: Z1 uses theme-adaptive muted anchor #A8A79F (lighter grey on dark surface — correct per style guide). Z2–Z5 bar colors identical to light render (#4467A3, #009E73, #BD8233, #AE3030). Subtle gridlines visible.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues; brand green #009E73 remains distinctly visible
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set in px; title dynamically scaled by
+          length; HR range labels at 12px CSS (24px native) are the smallest element
+          — readable but borderline on mobile
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element overlaps in either render; three-tier x-axis labels
+          and bar duration labels well-spaced
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 5 bars clearly visible; Z5 short bar still has visible label;
+          Z1 muted grey contrasts adequately in both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette members used (CVD-optimised); each bar additionally
+          labeled so color is not sole distinguisher
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); title spans ~65% width; generous
+          margins; no overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis 'Time (minutes)' with units; title uses descriptive prefix
+          format correctly; x-axis fully annotated
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Valid semantic-exception: fitness zone colors map to Imprint muted+positions
+          3/1/4/5; backgrounds correct; data colors consistent between themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Well above default: semantic zone color mapping, three-tier x-axis
+          labels, MM:SS formatting, rounded bar corners. No visual emphasis on dominant
+          zone.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis only gridlines; tick marks removed; grid styled with token;
+          rounded bar corners; L-frame axis. Could be more refined.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Semantic color progression conveys intensity; three-tier labels give
+          full context. No focal point or storytelling element highlighting dominant
+          zone.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct vertical bar chart with 5 zones on x-axis
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All zones Z1-Z5 in fixed order; zone-specific semantic colors; MM:SS
+          duration labels; HR boundary annotations; y-axis in minutes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis zones in fixed Z1-Z5 order; y-axis time in minutes; domain
+          [0,30] shows all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''60-min Tempo Run · bar-heart-rate-zones · javascript ·
+          d3 · anyplot.ai'' — correct descriptive prefix format; no separate legend
+          needed'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 5 zones shown; both duration and HR boundary range data; zone
+          names + IDs; realistic workout profile
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 60-minute tempo run with Z2-dominant distribution (8/22/15/12/3 min)
+          is plausible endurance session; neutral content
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Y-axis [0,30] min sensible for data range (max 22 min); HR ranges
+          in % of max HR is correct fitness convention
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat procedural script; no functions, classes, or unnecessary abstractions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Data hard-coded inline; deterministic by nature
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses global d3 and window.ANYPLOT_*; no unused variables
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; idiomatic D3 patterns; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: D3 harness writes plot-{theme}.png + plot-{theme}.html; correct D3
+          7.9.0 API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: d3.scaleBand() with padding, d3.scaleLinear(), .call() chaining,
+          .join() data binding, SVG group transforms — all canonical D3 patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Two D3-distinctive techniques: separate axisLeft for gridlines (negative
+          tickSize + empty tickFormat), and group-based multi-line x-axis labels using
+          nested text elements'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - html-export
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - edge-highlighting
