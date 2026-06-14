@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-heart-rate-zones: Time in Heart Rate Zones Bar Chart
 Library: altair 6.2.1 | Python 3.13.13
 Quality: 87/100 | Created: 2026-06-14
@@ -54,7 +54,7 @@ bars = (
     alt.Chart(df)
     .mark_bar(width={"band": 0.6})
     .encode(
-        x=alt.X("zone:O", sort=zone_codes, axis=alt.Axis(title=None, labelPadding=8)),
+        x=alt.X("zone:O", sort=zone_codes, axis=alt.Axis(title="Heart Rate Zone", labelPadding=8)),
         y=alt.Y("minutes:Q", axis=alt.Axis(title="Time (minutes)", titlePadding=12), scale=alt.Scale(domain=[0, 58])),
         color=alt.Color(
             "name:N",
@@ -77,13 +77,32 @@ text_labels = (
     .encode(x=alt.X("zone:O", sort=zone_codes), y=alt.Y("minutes:Q"), text=alt.Text("duration:N"), color=alt.value(INK))
 )
 
+# Percentage-of-session labels above duration labels (transform_calculate computes share of 90 min)
+pct_labels = (
+    alt.Chart(df)
+    .transform_calculate(pct_text="format(datum.minutes / 90 * 100, '.0f') + '%'")
+    .mark_text(align="center", baseline="bottom", dy=-22, fontSize=10, fontStyle="italic")
+    .encode(
+        x=alt.X("zone:O", sort=zone_codes), y=alt.Y("minutes:Q"), text=alt.Text("pct_text:N"), color=alt.value(INK_SOFT)
+    )
+)
+
 chart = (
-    (bars + text_labels)
+    (bars + text_labels + pct_labels)
     .properties(
         width=620,
-        height=320,
+        height=340,
         background=PAGE_BG,
-        title=alt.TitleParams(text=title, fontSize=title_fontsize, color=INK, anchor="start", offset=12),
+        title=alt.TitleParams(
+            text=title,
+            fontSize=title_fontsize,
+            color=INK,
+            anchor="start",
+            offset=12,
+            subtitle="90-min base endurance ride · 67% in low-intensity zones (Z1+Z2)",
+            subtitleColor=INK_SOFT,
+            subtitleFontSize=11,
+        ),
         padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
     )
     .configure_view(fill=PAGE_BG, stroke=None)
