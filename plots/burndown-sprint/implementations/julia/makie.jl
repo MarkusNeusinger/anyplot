@@ -1,7 +1,7 @@
 # anyplot.ai
 # burndown-sprint: Agile Sprint Burndown Chart
-# Library: Makie.jl | Julia 1.11
-# Quality: pending | Created: 2026-06-14
+# Library: makie 0.22.10 | Julia 1.11.9
+# Quality: 90/100 | Created: 2026-06-14
 
 using CairoMakie
 using Colors
