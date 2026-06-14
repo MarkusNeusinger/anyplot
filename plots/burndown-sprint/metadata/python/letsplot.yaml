@@ -1,0 +1,268 @@
+library: letsplot
+language: python
+specification_id: burndown-sprint
+created: '2026-06-14T22:49:55Z'
+updated: '2026-06-14T23:04:53Z'
+generated_by: claude-sonnet
+workflow_run: 27514334466
+issue: 8654
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/python/letsplot/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Perfect spec compliance: step series for actual burndown, dashed ideal line,
+    weekend band, scope-change annotation, and legend all present and correct'
+  - 'Rich data storytelling: weekend shading explains flat segments, red dotted scope-change
+    line with annotation tells the mid-sprint event, visual hierarchy between actual
+    (bold green) and ideal (dashed blue) is immediately clear'
+  - 'Fully theme-adaptive chrome: backgrounds, text, grid, legend box and weekend
+    annotation all flip correctly between #FAF8F1 and #1A1A17 surfaces without any
+    dark-on-dark or light-on-light failures'
+  - All font sizes explicitly set with correct proportions; rotated x-axis tick labels
+    at 45° prevent crowding across 12 day labels
+  - 'Excellent data quality: 10-working-day sprint from Oct 7–18 2024 with realistic
+    40 SP scope, +8 SP scope change on day 4, and near-complete burndown — plausible
+    real-world scenario with factually correct proportions'
+  - Clean, deterministic, KISS-structured code with no functions/classes; produces
+    both PNG and HTML outputs
+  weaknesses:
+  - 'Palette ordering deviation: uses Imprint position 3 (#4467A3 blue) for the Ideal
+    series, skipping position 2 (#C475FD lavender). No strong real-world semantic
+    association justifies this reordering — canonical order should be followed by
+    default (Actual=#009E73, Ideal=#C475FD).'
+  - 'Design Excellence cap on first two attempts: DE-01 at 5/8 (thoughtful but not
+    FiveThirtyEight-level polish), DE-02 at 4/6 (good refinement but could push further
+    — e.g. remove all four spines for a completely open canvas, or refine legend border),
+    DE-03 at 4/6 (clear storytelling but no direct annotation calling out the team''s
+    final position vs ideal).'
+  - Weekend band label ('Weekend') appears at geom_text size=3.5mm which renders quite
+    small at the top of the band — consider increasing to 4.0–4.5mm to better match
+    annotation hierarchy.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct surface color, not pure white.
+      Chrome: Title "burndown-sprint · python · letsplot · anyplot.ai" in dark ink (#1A1A17), clearly readable ~75% of plot width. Y-axis label "Remaining Story Points" and X-axis label "Sprint Day (Oct 7 – Oct 18, 2024)" both readable in dark ink. Tick labels rotated 45° in secondary ink (#4A4A44), all readable with no crowding. Subtle horizontal grid lines visible. Legend box with elevated background, "Actual" (green) and "Ideal" (blue) entries clearly labeled.
+      Data: Actual burndown step series in brand green (#009E73), prominent at size=1.4. Ideal diagonal dashed line in Imprint blue (#4467A3). Weekend band (Oct 12–13) as a subtle gray-tinted rectangle. Red dotted vertical line at Oct 11 with "+8 pts scope added" annotation in matte red.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background. No light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title in light cream (#F0EFE8), clearly readable. Axis labels and tick labels in secondary light (#B8B7B0), all readable. Grid lines subtle. Legend box with dark elevated background (#242420), text readable.
+      Data: Actual step series remains in brand green (#009E73) — identical to light render. Ideal dashed line remains in blue (#4467A3) — identical to light render. Weekend band slightly darker against the dark background but still distinct. Scope change annotation in adjusted red (#D45555) — good contrast on dark background.
+      Legibility verdict: PASS — all text clearly readable against warm near-black background. No dark-on-dark failures observed. Brand green #009E73 clearly visible on dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; proportions well-balanced; rotated
+          tick labels prevent crowding. Weekend label at size=3.5mm renders slightly
+          small but legible.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Step series at size=1.4 and dashed ideal at size=1.0 both clearly
+          visible; weekend band subtle but distinguishable; scope line visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs blue pair distinguishable under CVD; scope change uses redundant
+          encoding (color + linetype + annotation).
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas confirmed; canvas gate passed; plot fills ~70% of
+          canvas with balanced margins; legend in upper-right with fractional coordinates.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Remaining Story Points'' (story points is the unit); X-axis:
+          ''Sprint Day (Oct 7 – Oct 18, 2024)'' includes date range.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'First series (Actual) correctly uses #009E73. Second series (Ideal)
+          uses Imprint position 3 (#4467A3 blue) instead of canonical position 2 (#C475FD
+          lavender) — no strong semantic justification for skipping. Backgrounds and
+          chrome are correct in both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful semantic color choices, custom theme with clear hierarchy,
+          weekend shading and scope annotation show genuine design intent. Clearly
+          above defaults but not FiveThirtyEight-level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Panel border removed, y-axis-only grid, subtle grid styling. Good
+          refinement visible. Could go further — fully removing spines or refining
+          legend frame border.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy (bold green actual vs dashed blue ideal),
+          weekend band explains flat segments, scope annotation tells the mid-sprint
+          event. Viewer immediately reads the story.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Sprint burndown chart with step series (geom_step) for actual and
+          dashed line for ideal.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: step series, ideal reference line (dashed,
+          distinct), y-axis from 0, weekend shading, scope-change marker with annotation,
+          legend.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X-axis: sprint days Oct 7–18; Y-axis: remaining story points from
+          0–48. All 12 calendar days shown including weekends.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''burndown-sprint · python · letsplot · anyplot.ai'' — exact
+          format. Legend labels ''Actual'' and ''Ideal'' match series.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all burndown aspects: step burndown, ideal reference, scope
+          change event (jump up on day 4), weekend flat segments, and near-complete
+          sprint end.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real-world agile sprint Oct 7–18, 2024; neutral business/tech scenario;
+          specific date labels and realistic story point values.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 40 SP initial scope reasonable for 2-week sprint; +8 SP (~20% increase)
+          plausible scope change; team finishes at 4 SP (realistic near-complete sprint).
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean top-level structure: imports → constants → data → theme →
+          plot → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data arrays. No random number generation
+          needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, pandas, lets_plot — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, well-commented with rationale. No fake UI elements.
+          Appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current letsplot API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Expert use of ggplot layering with multiple geom types, proper aes()
+          mappings, scale_color_manual, scale_x_continuous with custom breaks/labels,
+          and full theme() customization.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses geom_step (letsplot-native step chart), fractional legend_position
+          coordinates [0.88, 0.82] for inside-legend placement, geom_rect for background
+          band shading, and HTML export alongside PNG.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - html-export
+  patterns: []
+  dataprep: []
+  styling:
+  - alpha-blending
