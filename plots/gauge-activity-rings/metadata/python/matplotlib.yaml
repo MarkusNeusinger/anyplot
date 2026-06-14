@@ -1,0 +1,264 @@
+library: matplotlib
+language: python
+specification_id: gauge-activity-rings
+created: '2026-06-14T20:27:46Z'
+updated: '2026-06-14T20:44:10Z'
+generated_by: claude-sonnet
+workflow_run: 27510810756
+issue: 8648
+language_version: 3.13.13
+library_version: 3.11.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - Clean activity rings design using Imprint palette correctly (green outer, lavender
+    middle, blue inner)
+  - Rounded end caps implemented via Circle patches at both endpoints of each arc
+    — gives the iconic wearable-tracker look
+  - Background tracks at alpha=0.15 clearly show remaining progress without competing
+    with the arcs
+  - Center summary 79% provides strong focal point; "Daily Goals" subtitle adds context
+  - Per-ring labels use matching ring colors with value/goal/unit/percent — informative
+    and visually cohesive
+  - Square 2400×2400 canvas appropriate for symmetric rings; no bbox_inches=tight
+    drift
+  - 'Theme adaptation is correct: INK and INK_MUTED tokens used for chrome text, data
+    colors constant across both renders'
+  - Code is clean, flat, and fully deterministic (no random seed needed — data is
+    hardcoded)
+  weaknesses:
+  - Daily Goals subtitle at fontsize=9 may be too small for mobile display (~8 CSS
+    px at 400px width) — increase to at least 11pt
+  - Per-ring bottom labels at fontsize=10 similarly risk mobile illegibility (~9 CSS
+    px at 400px width) — increase to 11-12pt
+  - 'INK_SOFT token (#4A4A44 light / #B8B7B0 dark) is defined in the style guide but
+    not declared in the code — minor token hygiene issue, though has no visual impact
+    since ax.axis(off) suppresses all chrome'
+  - 'DE-01 ceiling: no emphasis on the nearly-complete ring (Exercise at 93%) — a
+    subtle highlight glow or slightly brighter color could add storytelling lift'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "gauge-activity-rings · python · matplotlib · anyplot.ai" is clearly readable in dark ink (#1A1A17) against the cream surface. Center "79%" in bold dark ink is the dominant focal point. "Daily Goals" subtitle in muted warm gray (#6B6A63) is visible but small (9pt). Bottom metric labels in ring colors are legible.
+      Data: Three concentric rings. Outer = Move in brand green #009E73 (~70% arc). Middle = Exercise in lavender #C475FD (~93% arc, nearly complete). Inner = Stand in blue #4467A3 (~75% arc). Background tracks at 15% alpha visible. Rounded end caps cleanly rendered.
+      Legibility verdict: PASS — all text readable; minor concern that 9pt subtitle and 10pt bottom labels are small but not unreadable at full resolution.
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct, not pure black.
+      Chrome: Title readable in near-white (#F0EFE8). Center "79%" clearly visible in light ink. "Daily Goals" in muted gray (#A8A79F) — visible. Bottom labels use ring colors (green/lavender/blue), all clearly visible against dark background. No dark-on-dark failure detected.
+      Data: Identical Imprint palette colors — green, lavender, blue — unchanged from light render. Background tracks are slightly more prominent due to dark surface contrast, but remain subtle and appropriate. Rounded caps identical.
+      Legibility verdict: PASS — all chrome elements adapt correctly; no dark-on-dark issues observed.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title and center % clearly readable in both themes. Daily Goals subtitle
+          (9pt) and metric labels (10pt) risk mobile illegibility at ~400px display
+          width (~8-9 CSS px). Both themes pass legibility at full resolution.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps rings or other text. Center labels are entirely
+          within the inner ring void. Bottom labels are well-spaced.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All three rings clearly visible. Background tracks at 15% alpha show
+          remaining progress. Rounded caps visible. 3-item data density appropriate.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette CVD-safe. Three colors (green/lavender/blue) perceptually
+          distinct. No red-green sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 canvas appropriate. Canvas gate passed. Rings centered.
+          Labels below with fig.subplots_adjust. Good proportions.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct. Per-ring labels include metric name, value,
+          goal, unit, and percentage — informative.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73. Next two in canonical order: lavender #C475FD,
+          blue #4467A3. Light bg #FAF8F1, dark bg #1A1A17. Data colors identical across
+          themes.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Well above generic defaults. Imprint palette deliberate. Rounded
+          caps add polish. Center % is an intentional design element. Colored metric
+          labels reinforce ring identity. Lacks emphasis on standout metric.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: All axes suppressed (appropriate for this chart type). Generous whitespace.
+          fig.subplots_adjust controls margins. Clean, minimal composition with no
+          chartjunk.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Center 79% provides clear focal point. Outer-to-inner ring ordering
+          matches primary-to-tertiary metric hierarchy. No extra emphasis on the nearly-complete
+          Exercise ring (93%) which is a missed storytelling opportunity.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Activity rings chart with concentric radial progress arcs — exactly
+          as specified.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Partial arcs from 90deg (12 o'clock), clockwise sweep, rounded caps,
+          background tracks, center label, per-ring labels, square aspect.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Move 420/600, Exercise 28/30, Stand 9/12 — all correct. Outer-to-inner
+          ordering.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: gauge-activity-rings · python · matplotlib · anyplot.ai.
+          Colored metric labels correct.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 3 rings (canonical count), background tracks, rounded caps, clockwise
+          from top, center summary, per-ring labels with full detail.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Fitness tracker data (Move/Exercise/Stand) consistent with Apple
+          Watch-style daily goals. Values are realistic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 70%, 93%, 75% completion rates — varied and interesting, within plausible
+          daily ranges.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat procedural code, no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic — hardcoded data, no random elements.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, matplotlib.pyplot, numpy, matplotlib.patches (Circle, Wedge)
+          — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. zip with strict=False. No fake UI. Clean
+          iteration over rings.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png at dpi=400. No bbox_inches=tight. Correct
+          API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: fig/ax subplots pattern, ax.add_patch() for shapes, fig.text() for
+          figure-level labels, fig.subplots_adjust() for margins. All idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses matplotlib.patches.Wedge for arcs and Circle for caps — distinctive
+          patch-based rendering. The Wedge+Circle combination for rounded arcs is
+          clever matplotlib-specific technique not available in simpler APIs.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  - annotations
+  patterns:
+  - iteration-over-groups
+  - explicit-figure
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
