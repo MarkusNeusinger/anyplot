@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 burndown-sprint: Agile Sprint Burndown Chart
 Library: altair 6.2.1 | Python 3.13.13
 Quality: 88/100 | Created: 2026-06-14
@@ -103,14 +103,29 @@ scope_rule = alt.Chart(scope_df).mark_rule(strokeDash=[6, 3], strokeWidth=2, col
 scope_label = (
     alt.Chart(scope_df)
     .mark_text(align="left", dx=6, baseline="top", color=ANYPLOT_AMBER, fontSize=11, fontWeight="bold")
-    .encode(x="date:T", y=alt.value(12), text="label:N")
+    .encode(x="date:T", y=alt.value(30), text="label:N")
+)
+
+# Ahead/behind schedule annotations — makes the reading explicit per spec
+# Team is briefly ahead Jan 07–08 (actual < ideal), then behind after scope jump
+ahead_df = pd.DataFrame({"date": pd.to_datetime(["2025-01-08"]), "remaining": [31.5], "label": ["↓ Ahead"]})
+ahead_annotation = (
+    alt.Chart(ahead_df)
+    .mark_text(align="center", dy=-4, fontSize=9, color=BRAND, fontStyle="italic")
+    .encode(x="date:T", y=alt.Y("remaining:Q", scale=y_scale), text="label:N")
+)
+behind_df = pd.DataFrame({"date": pd.to_datetime(["2025-01-14"]), "remaining": [17.0], "label": ["↑ Behind"]})
+behind_annotation = (
+    alt.Chart(behind_df)
+    .mark_text(align="left", dx=4, fontSize=9, color=INK_MUTED, fontStyle="italic")
+    .encode(x="date:T", y=alt.Y("remaining:Q", scale=y_scale), text="label:N")
 )
 
 # Compose and configure
 title_str = "burndown-sprint · python · altair · anyplot.ai"
 
 chart = (
-    alt.layer(weekend_layer, ideal_layer, actual_layer, scope_rule, scope_label)
+    alt.layer(weekend_layer, ideal_layer, actual_layer, scope_rule, scope_label, ahead_annotation, behind_annotation)
     .properties(
         width=620,
         height=320,
@@ -119,7 +134,16 @@ chart = (
         title=alt.Title(text=title_str, fontSize=16, color=INK, anchor="start", offset=10),
     )
     .configure_view(fill=PAGE_BG, stroke=None, continuousWidth=620, continuousHeight=320)
-    .configure_axis(
+    .configure_axisX(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        grid=False,
+        labelColor=INK_SOFT,
+        labelFontSize=10,
+        titleColor=INK,
+        titleFontSize=12,
+    )
+    .configure_axisY(
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
         gridColor=INK,
