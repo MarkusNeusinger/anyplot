@@ -5,6 +5,7 @@
 
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts";
+import { useXScale, useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -24,6 +25,36 @@ const actual = [40, 37, 34, 32, 38, 34, 28, 21, 14, 7, 2];
 const ideal = [40, 36, 32, 28, 24, 20, 16, 12, 8, 4, 0];
 
 const TITLE_H = 60;
+
+// SVG overlay: shades the Fri→Mon gap to represent the weekend break
+function WeekendBand() {
+  const xScale = useXScale();
+  const { top, height } = useDrawingArea();
+
+  if (typeof xScale.bandwidth !== "function") return null;
+
+  const bw = xScale.bandwidth();
+  const x1 = xScale("Fri 5");
+  const x2 = xScale("Mon 8");
+
+  if (x1 == null || x2 == null) return null;
+
+  // Shade from the mid-point of Fri 5 to mid-point of Mon 8 (one bandwidth wide)
+  // — visually straddles the weekend discontinuity between the two adjacent bands
+  const rectX = x1 + bw * 0.5;
+  const rectW = x2 + bw * 0.5 - rectX;
+
+  return (
+    <rect
+      x={rectX}
+      y={top}
+      width={rectW}
+      height={height}
+      fill={t.inkSoft}
+      fillOpacity={0.12}
+    />
+  );
+}
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
@@ -92,12 +123,17 @@ export default function Chart() {
             curve: "linear",
             showMark: false,
             color: t.inkSoft,
+            area: true,
           },
         ]}
         sx={{
           "& .MuiLineElement-series-ideal": {
             strokeDasharray: "10 6",
             strokeOpacity: 0.6,
+          },
+          "& .MuiAreaElement-series-ideal": {
+            fill: t.palette[0],
+            fillOpacity: 0.07,
           },
           "& .MuiLineElement-series-actual": {
             strokeWidth: 3,
@@ -116,9 +152,13 @@ export default function Chart() {
           },
         }}
       >
+        {/* Weekend shading: straddled rect at Fri→Mon discontinuity */}
+        <WeekendBand />
+
         <ChartsReferenceLine
           x="Thu 4"
           label="Scope +8 pts"
+          labelAlign="start"
           lineStyle={{
             stroke: t.palette[3],
             strokeWidth: 2,
