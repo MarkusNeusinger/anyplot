@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: burndown-sprint
 created: '2026-06-14T22:45:35Z'
-updated: '2026-06-14T22:51:18Z'
+updated: '2026-06-14T23:00:56Z'
 generated_by: claude-sonnet
 workflow_run: 27514190570
 issue: 8654
@@ -12,47 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/burndown-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - 'Perfect spec compliance: step series, dashed ideal line, weekend shading band,
-    amber scope-change marker and annotation are all present and correctly placed'
-  - 'Correct Imprint palette usage — first series is #009E73 (brand green), ideal
-    line uses theme-adaptive muted neutral, amber (#DDCC77) for scope-change warning
-    anchor'
-  - 'Full theme-adaptive chrome: all text, background, grid, legend elements properly
-    switch between light (#FAF8F1) and dark (#1A1A17) surfaces'
-  - 'Realistic, plausible sprint data: 10 working days, 40-point scope, +8 scope change
-    on day 4, step burndown to 0'
-  - Idiomatic plotnine grammar-of-graphics composition with coord_cartesian for proper
-    view-clipping of the weekend rect that extends below y=0
+  - Correct geom_step for actual burndown — discrete work completion represented faithfully
+  - Weekend shading (geom_rect) + label explains flat segments; scope-change vline
+    + amber annotation communicates +8 pts narrative clearly
+  - Behind/ahead-of-schedule geom_ribbon adds immediate visual read of performance
+    against ideal
+  - 'Semantic color choices: #009E73 (brand green) for actual remaining, INK_SOFT
+    (theme-adaptive neutral) for ideal reference, ANYPLOT_AMBER for warning/scope-change
+    — all correct per style guide'
+  - 'Full theme-adaptive chrome: PAGE_BG, INK, INK_SOFT, INK_MUTED all correctly conditioned
+    on ANYPLOT_THEME; dark render passes legibility check'
+  - Canvas exactly 3200×1800 px (8in × 4.5in @ 400 dpi); correct plotnine save call
+    without bbox_inches trim
+  - Idiomatic plotnine layer composition — coord_cartesian used correctly to clip
+    weekend rect beyond y-axis bounds
+  - 'Spec-complete: step series, ideal dashed line, weekend shading, scope-change
+    marker, legend, title all implemented'
   weaknesses:
-  - 'Weekend label annotation is too faint in both renders: size=3.0mm (mm scale in
-    plotnine, ≈8.5pt) over the semi-transparent band background makes it barely legible
-    — increase to at least 3.5mm and confirm it reads clearly against the band fill'
-  - Scope +8 pts annotation (size=3.2mm) is small for the 3200×1800 canvas — at mobile
-    scale (~400px) it will be difficult to read; increase to 3.5-4mm
-  - 'DE-03 opportunity: the chart tells the burndown story but lacks a visual cue
-    indicating whether the team is ahead-of or behind-schedule — a shaded zone between
-    actual and ideal (even a translucent fill) would significantly strengthen storytelling
-    without added complexity'
+  - Annotation text 'Scope\n+8 pts' uses size=3.8 (geom mm ≈ 10.8 pt) and ANYPLOT_AMBER
+    color on light background (#FAF8F1); amber has relatively low contrast on cream
+    — consider raising to size=4.5 or adding a subtle dark stroke, and ensure it remains
+    readable at mobile scale (~400 px wide)
+  - geom_ribbon fill alpha=0.12 makes the behind/ahead-of-schedule zone barely perceptible
+    in dark render; consider raising to alpha=0.18–0.22 so the storytelling element
+    is visible on both surfaces without dominating
+  - 'panel_grid_major_y uses element_line(color=INK, size=0.3, alpha=0.12) — plotnine''s
+    element_line does not natively support alpha; the alpha kwarg may be silently
+    ignored, leaving the grid at full opacity #1A1A17 in light mode (though thin size=0.3
+    keeps it subtle). Safer: encode alpha into the hex color string (e.g. ''#1A1A1726''
+    for ~15% opacity) rather than relying on element_line alpha'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct Imprint surface, not pure white.
-      Chrome: Title "burndown-sprint · python · plotnine · anyplot.ai" in dark ink (#1A1A17), clearly readable. Y-axis label "Remaining Story Points" and X-axis label "Sprint Day" in dark ink, balanced sizes. Tick labels (Jan 8 Mon through Jan 19 Fri on x, 0-40 on y) in muted dark (INK_SOFT), all readable. Subtle horizontal y-grid lines visible. No top or right spine.
-      Data: Bright green step line (#009E73) for Actual Remaining prominently visible. Dashed grey line for Ideal Burndown clearly distinguishable. Weekend shading band (days 4.5-6.5) rendered as subtle pale grey fill. Amber (#DDCC77) dotted vertical line at Jan 12 marks scope change, with small amber "Scope +8 pts" annotation above. "Weekend" text inside band is very faint — barely readable at this canvas size.
-      Legend: Bottom-center, elevated background, shows green solid (Actual Remaining) and grey dashed (Ideal Burndown). Readable.
-      Legibility verdict: PASS overall; minor concern — Weekend annotation and Scope label are small but not critical failures.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "burndown-sprint · python · plotnine · anyplot.ai" centered at top in dark ink, occupying ~60% of width — readable. Y-axis label "Remaining Story Points" and X-axis label "Sprint Day" both clear in dark ink at 10pt. Tick labels at 0/10/20/30/40 (y) and date strings Jan 8–Jan 19 with day-of-week (x) readable at 8pt in INK_SOFT. Legend at bottom inside an elevated-bg box: "Actual Remaining" (green line) and "Ideal Burndown" (dark dashed) — clearly labeled.
+      Data: Step series in #009E73 (brand green) descends steeply from 40, jumps to 33 at scope change, then continues toward 0 — prominently visible. Dashed ideal burndown line in dark gray (INK_SOFT) runs diagonally from 40 to 0. Subtle gray weekend shading band covers the Jan 13–14 zone with "Weekend" text in muted gray. Amber dotted vertical line marks Jan 12 with "Scope +8 pts" annotation in ANYPLOT_AMBER (#DDCC77). Very subtle cream-yellow ribbon (alpha=0.12) fills the gap between actual and ideal — present but barely perceptible.
+      Legibility verdict: PASS — all primary text is readable. Minor note: ANYPLOT_AMBER annotation on cream background has reduced contrast; readable at full resolution but may be marginal at mobile scale.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct Imprint dark surface, not pure black.
-      Chrome: Title in light ink (#F0EFE8), clearly readable against dark background. Axis labels and tick labels in secondary light muted color (INK_SOFT #B8B7B0) — all readable. No dark-on-dark failures detected for main text elements.
-      Data colors: Green step line (#009E73) identical to light render — Imprint palette colors correctly unchanged. Ideal burndown now rendered as light-grey dashed line (INK_SOFT adapts to #B8B7B0 in dark mode) — visible against dark bg. Weekend band darker grey, still distinguishable. Amber dotted scope-change line visible. "Weekend" text inside band is very faint against the dark grey band — barely legible.
-      Legend: Bottom-center with elevated dark background (#242420), legend text in light muted color — readable.
-      Legibility verdict: PASS overall. No dark-on-dark failures for critical elements. Weekend label is marginally harder to read in dark mode than light mode but is a secondary annotation.
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title, axis labels, and tick labels all rendered in light cream tones (INK/INK_SOFT tokens), clearly visible against dark background. Legend box uses elevated dark bg (#242420) with light text. No dark-on-dark text failures observed.
+      Data: #009E73 step series remains identical to light render (Imprint palette colors are theme-independent) — bright green on dark background is highly visible. Ideal burndown dashed line appears in light gray (#B8B7B0 = INK_SOFT in dark mode) — clearly distinct from the green step line. Weekend shading band is a subtle slightly-lighter dark zone (INK_MUTED at alpha=0.15 on dark). Amber scope-change vline (#DDCC77) is visible. The behind/ahead ribbon is very faint at alpha=0.12 on the dark background — barely visible but present.
+      Legibility verdict: PASS — all text is readable. Data colors are identical to light render (only chrome flips). The amber ribbon is less visible in dark mode due to low alpha against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -60,84 +66,83 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels all readable in both themes. Weekend
-          annotation (size=3.0mm) and Scope +8 pts label (size=3.2mm) are small; faint
-          in both renders. Mobile-scale readability slightly impaired for these secondary
-          labels.
+        comment: Title/axis/tick labels all readable in both themes. Annotation 'Scope
+          +8 pts' in ANYPLOT_AMBER on cream background has reduced contrast and uses
+          small geom size=3.8; borderline at mobile scale.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps with other text or data elements. Scope annotation
-          placed left of vline, Weekend label centered in band — no collisions.
+        comment: No text or data element collisions. Scope annotation placed above
+          plot area (y=40.5) avoids overlap with data lines.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Green step line and grey dashed ideal line both clearly visible.
-          Weekend band and amber vline prominently placed. 12-point step series shows
-          discrete burndown clearly.
+        comment: Green step line highly visible (size=1.4). Ideal dashed line clear.
+          Weekend band visible. Ribbon alpha=0.12 is very faint especially in dark
+          render — functional but barely perceptible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs grey/white two-series contrast is adequate. Amber scope
-          marker distinct from both. No red-green sole discriminator issue.
+        comment: Green vs neutral reference line well differentiated. No red-green
+          sole signal. Imprint CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Good proportions, no text overflow,
-          legend at bottom with appropriate whitespace. Title fills ~65% of plot width
-          — expected for the mandated title format.
+        comment: 3200x1800 canvas correct. Title proportional (~60% width). Legend
+          at bottom clean. No text overflow or clipping. coord_cartesian clips weekend
+          rect properly.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y: ''Remaining Story Points'' clear with implicit unit context.
-          X: ''Sprint Day'' with date labels. Title matches required format exactly.'
+        comment: Y-axis 'Remaining Story Points' descriptive. X-axis 'Sprint Day'
+          clear. Title in exact required format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series = #009E73 (brand green). Ideal line uses INK_SOFT (theme-adaptive
-          neutral anchor — correct for a reference line). Amber anchor for scope-change
-          warning. Backgrounds #FAF8F1 (light) and #1A1A17 (dark) correct. Data colors
-          identical between themes.'
+        comment: 'First series #009E73 (brand green). Ideal burndown uses INK_SOFT
+          (theme-adaptive neutral reference) — semantically correct. ANYPLOT_AMBER
+          for warning/scope-change. Backgrounds #FAF8F1/#1A1A17 correct.'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above default (4). Intentional color hierarchy: green for actual,
-          muted neutral for ideal, amber for warning. Clean visual weight. No superfluous
-          embellishments.'
+        comment: Multiple layers working together (step+line+ribbon+rect+vline+annotate).
+          Semantic color choices throughout. Imprint palette applied correctly with
+          appropriate anchor usage. Intentional visual hierarchy.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Above default (2). Top and right spines removed. Y-axis grid only,
-          very subtle (alpha=0.12). Weekend band appropriately transparent. Clean
-          minimal look achieved.
+        comment: 'panel_border removed, top/right spines absent. Y-axis-only grid
+          is subtle. Clean legend box. axis_line on left/bottom only. Minor: grid
+          alpha via element_line may not function as intended in plotnine.'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Above default (2). Step series + scope-change event + weekend shading
-          tells the burndown story. Lacks an explicit ahead/behind-schedule visual
-          cue (shaded zone between actual and ideal) that would elevate storytelling.
+        comment: Ribbon immediately communicates ahead/behind-schedule status. Scope
+          change annotated with dotted line + text. Weekend shading explains flat
+          burndown segments. Clear narrative structure guides the viewer through the
+          sprint story.
     spec_compliance:
       score: 15
       max: 15
@@ -147,29 +152,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct burndown chart: geom_step for actual, geom_line dashed for
-          ideal. Chart type matches spec exactly.'
+        comment: Correct sprint burndown chart. geom_step for actual (discrete work
+          chunks), geom_line (dashed) for ideal — exactly as spec requires.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required: step series, dashed ideal line, weekend shading, scope
-          change marker (vline + amber dotted + annotation), legend.'
+        comment: Step series ✓, ideal reference line (dashed, visually distinct) ✓,
+          weekend shading ✓, scope change marker+annotation ✓, legend distinguishing
+          actual vs ideal ✓.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: sprint timeline with date labels. Y-axis: remaining story
-          points starting at 0. Both series mapped correctly.'
+        comment: X=sprint timeline (Jan 8–19), Y=remaining story points starting at
+          0. All 12 days shown including weekends. Scope change on day 4 correctly
+          represented.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''burndown-sprint · python · plotnine · anyplot.ai'' — exact
-          required format. Legend distinguishes Actual Remaining from Ideal Burndown.'
+        comment: Title exactly 'burndown-sprint · python · plotnine · anyplot.ai'.
+          Legend labels 'Actual Remaining' and 'Ideal Burndown' — clear and accurate.
     data_quality:
       score: 15
       max: 15
@@ -179,22 +186,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all key aspects: step burndown, ideal reference, scope change
-          event, weekend non-working days. Complete demonstration of the chart type.'
+        comment: Step series, ideal line, weekend shading, scope change event, ahead/behind
+          ribbon — covers all key burndown chart features including the optional ribbon
+          enhancement.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 10-working-day sprint (Jan 8-19 2024), 40 story points, +8 scope
-          addition on day 4 — all realistic and neutral. No controversial framing.
+        comment: 10 working-day sprint (Jan 8–19 2024), 40 story points, +8 scope
+          addition on day 4 — realistic agile scenario, neutral business context,
+          plausible values.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 40 story points for a 10-day sprint, scope change of +8, burndown
-          to 0 — all sensible values for the domain.
+        comment: 0–40 story points is appropriate for a single-team sprint. Daily
+          granularity over 12 days (includes weekends) is correct for this chart type.
     code_quality:
       score: 10
       max: 10
@@ -204,27 +213,29 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes. Data inline, clean layered
-          ggplot build.
+        comment: No functions or classes. Linear script style with clear data → plot
+          → save flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — no random elements, hardcoded sprint data.
+        comment: Fully deterministic — hardcoded sprint data arrays, no randomness
+          needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported plotnine symbols are used. sys, os, pd all used.
+        comment: All 19 imported plotnine symbols are used in the implementation.
+          sys and os are required. pandas used for DataFrames.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Layer ordering logical (background → reference → data → annotations).
-          Good use of named constants for colors.
+        comment: Appropriate complexity for the chart type. No fake UI. zip(strict=True)
+          is a nice modern Python touch.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -233,26 +244,26 @@ review:
         comment: Saves as plot-{THEME}.png with correct dpi=400, width=8, height=4.5,
           units='in'.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Proper ggplot grammar: ggplot() + geom_* + scale_* + labs() + theme()
+          chain. scale_color_manual with named breaks for legend control. coord_cartesian
+          for view clipping. theme_minimal as base. All idiomatic.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Above default (3). Uses grammar of graphics idiomatically: separate
-          data frames per geom, scale_color_manual for legend, coord_cartesian for
-          view-clipping, theme() overrides. Correct plotnine layer composition pattern.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Above default (1). geom_step() is idiomatic for discrete burndown
-          data. coord_cartesian() for proper clipping without data exclusion (weekend
-          rect extends to ymin=-2). Multiple geom layers showing plotnine's composability.
-          annotate() for text without a data frame.
+        comment: geom_step (native plotnine step chart), geom_ribbon (shaded band),
+          geom_rect (background regions), geom_vline — all plotnine-native grammar
+          constructs used appropriately. coord_cartesian clipping is idiomatic ggplot
+          technique.
   verdict: APPROVED
 impl_tags:
   dependencies: []

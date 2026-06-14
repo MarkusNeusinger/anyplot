@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 burndown-sprint: Agile Sprint Burndown Chart
 Library: plotnine 0.15.7 | Python 3.13.13
-Quality: 86/100 | Created: 2026-06-14
+Quality: 91/100 | Created: 2026-06-14
 """
 
 import sys
