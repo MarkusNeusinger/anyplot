@@ -1,0 +1,283 @@
+library: bokeh
+language: python
+specification_id: bar-heart-rate-zones
+created: '2026-06-14T21:43:52Z'
+updated: '2026-06-14T21:50:55Z'
+generated_by: claude-sonnet
+workflow_run: 27512561367
+issue: 8649
+language_version: 3.13.13
+library_version: 3.9.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/python/bokeh/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Semantic zone colors using full Imprint palette: Z1→muted grey, Z2→#4467A3 (Imprint
+    blue), Z3→#009E73 (brand green), Z4→#DDCC77 (amber anchor), Z5→#AE3030 (matte
+    red) — matches universal fitness-platform conventions perfectly'
+  - 'Dual-LabelSet annotation system: bold duration labels (36pt) stacked above smaller
+    HR-range labels (26pt) adds rich per-bar info without clutter'
+  - Idiomatic Bokeh ColumnDataSource with vectorized color column — bar colors declared
+    as data, not loops
+  - 'Complete spec compliance: all 5 zones, correct Z1→Z5 order, duration labels,
+    HR boundary annotations, Y-axis time scale'
+  - Theme adaptation is complete and correct — chrome (background, text, grid) flips;
+    data colors stay identical across light and dark renders
+  - Title fontsize auto-scales with title length (47pt for 72-char title) — no overflow,
+    fits ~70% canvas width
+  - 'Data is highly realistic: 60-minute tempo run summing exactly to 60 min, HR ranges
+    match standard adult runner zones'
+  weaknesses:
+  - Plot border outline (p.outline_line_color = INK_SOFT) renders a full 4-sided box
+    around the plot area instead of the L-shaped frame the style guide prefers (top+right
+    spines should be removed) — set outline_line_color=None and keep only the axis
+    lines via axis_line_color
+  - 'DE-01 cap: design is intentional and semantic but stops short of publication-ready
+    sophistication — no spine removal, no font weight variation beyond bold duration
+    labels; adding `p.outline_line_color=None` and `p.title.text_font_style="bold"`
+    would lift polish'
+  - 'LM-02: interactive HTML artifact (plot-{THEME}.html) is generated but no Bokeh-specific
+    interactive feature (HoverTool, tooltip) is wired — adding a simple HoverTool
+    showing zone name and duration would demonstrate a distinctly Bokeh capability'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, clearly not pure white
+      Chrome: Title "60-Minute Tempo Run · bar-heart-rate-zones · python · bokeh · anyplot.ai" in dark INK (#1A1A17) at ~47pt — fits ~70% canvas width with no overflow. Y-axis label "Time (minutes)" in dark INK at 42pt, clearly readable. X-axis tick labels (zone names) in INK_SOFT at 34pt, clearly readable. Y-axis tick labels (0–25) in INK_SOFT at 34pt, balanced with x-axis ticks. Thin box outline border in INK_SOFT (subtle).
+      Data: 5 vertical bars in Z1→Z5 order: Z1 Recovery (muted grey), Z2 Endurance (#4467A3 Imprint blue), Z3 Aerobic (#009E73 Imprint brand green), Z4 Threshold (#DDCC77 Imprint amber), Z5 Maximum (#AE3030 Imprint red). Each bar annotated with bold duration label (e.g. "22 min") and smaller HR range label (e.g. "115–138 bpm") stacked above the bar top. Subtle horizontal y-grid only (alpha=0.15). No x-grid. Y-range 0–27, bars well-proportioned.
+      Legibility verdict: PASS — all text clearly readable against light background, no light-on-light issues detected.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, clearly not pure black
+      Chrome: Title in light INK (#F0EFE8) — clearly visible against dark background. Y-axis label "Time (minutes)" in light INK, readable. X-axis and Y-axis tick labels in INK_SOFT (#B8B7B0 light grey) — readable. Duration labels in light INK (bold), HR range labels in INK_SOFT — both readable. No dark-on-dark failures detected. Subtle box border in INK_SOFT.
+      Data: All 5 bar colors are identical to the light render: Z1 grey (theme-adaptive #A8A79F on dark), Z2 #4467A3, Z3 #009E73 (brand green visible and strong), Z4 #DDCC77, Z5 #AE3030. Data colors successfully maintained across both themes. Grid lines subtle (alpha=0.15) and visible against dark background.
+      Legibility verdict: PASS — all text clearly readable against dark background, chrome correctly flipped to light tokens, no dark-on-dark failures, brand green #009E73 remains clearly visible.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title ~47pt (auto-scaled for 72-char
+          string), y-axis label 42pt, tick labels 34pt, duration labels 36pt bold,
+          HR range labels 26pt. Proportions correct in both renders. No overflow.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap detected. Dual LabelSet annotations stack cleanly
+          above each bar with y_offset=12 (duration) and y_offset=72 (HR range). Even
+          Z5 at y=3 has no collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 5 bars clearly visible in both themes. Bar width 0.65 provides
+          good visual weight. Colors distinct across all 5 zones. No visibility issues.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 5 zones use distinctly different hue families (grey / blue / green
+          / amber / red). CVD-safe — no red-green sole-distinguishing pair. Zone names
+          on x-axis provide redundant text encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). min_border_* reservations correctly
+          prevent edge clipping. Plot fills canvas well with generous margins. No
+          AR-09 clipping detected in either render.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis label 'Time (minutes)' includes units. Title follows {Descriptive
+          Title} · {spec-id} · {language} · {library} · anyplot.ai format correctly.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception correctly applied: Z1→INK_MUTED (grey), Z2→#4467A3
+          (Imprint blue), Z3→#009E73 (Imprint brand green), Z4→#DDCC77 (amber anchor),
+          Z5→#AE3030 (matte red). All from Imprint palette. Background #FAF8F1 light
+          / #1A1A17 dark. Data colors identical across themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured defaults: semantic zone color assignment is
+          intentional and domain-correct, explicit typographic hierarchy (bold duration
+          vs regular HR range), clean professional appearance matching Garmin/Strava
+          style. Not quite FiveThirtyEight level — outline border and plain title
+          weight hold it below ''strong design''.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: x-grid removed, y-grid subtle (alpha=0.15), FixedTicker
+          for clean tick intervals. Minor: outline_line_color creates a 4-sided box
+          border instead of L-frame — style guide prefers removing top+right spines.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color ramp grey→blue→green→amber→red creates intuitive intensity
+          narrative. Dual annotations (duration + HR range) give immediate data density.
+          The Z2-heavy distribution clearly tells the 'base endurance tempo' story
+          without requiring annotations.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct vertical bar chart with categorical x-axis.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: zone-specific colors, Z1→Z5 order, duration
+          labels per bar, HR boundary annotations, Y-axis as time in minutes.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X-axis: zone names in Z1→Z5 order. Y-axis: time in minutes. All
+          5 zones visible. Y-range 0–27 accommodates tallest bar (22 min) with annotation
+          headroom.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''60-Minute Tempo Run · bar-heart-rate-zones · python · bokeh
+          · anyplot.ai'' matches {Descriptive Title} · {spec-id} · {language} · {library}
+          · anyplot.ai. No legend needed (zone names on x-axis + category-specific
+          colors suffice).'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all 5 zones with varied durations (3–22 min) demonstrating
+          the full training intensity distribution. Both duration and HR range annotations
+          present.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 60-minute tempo run is a specific, real fitness activity. Zone distribution
+          matches typical tempo run profile (Z2 dominant). Neutral sports/fitness
+          topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Durations sum to exactly 60 minutes (8+22+15+12+3). HR ranges (115–166+
+          bpm) align with standard adult runner zones assuming max HR ~185 bpm. All
+          values factually plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear structure: constants → data → figure → glyphs → labels →
+          chrome → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data is hardcoded literals — fully deterministic, no random seed
+          needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imported modules are used: bokeh models, PIL for crop, selenium
+          for screenshot, os/sys/time/io/Path for infrastructure.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code. Title fontsize formula is concise. No over-engineering.
+          Selenium approach follows library guidance (not export_png).
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html for both themes. PIL
+          crop ensures exact 3200x1800 dimensions.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert Bokeh usage: ColumnDataSource with vectorized color column,
+          categorical x_range, vbar with source binding, LabelSet linked to source,
+          FixedTicker for explicit ticks. All idiomatic patterns.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Two stacked LabelSets both bound to ColumnDataSource — distinctly
+          Bokeh's columnar model (matplotlib equivalent would be ax.text() loops).
+          Also generates interactive HTML artifact. However, no HoverTool or callback
+          wired, which would push to 5/5.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  - pillow
+  techniques:
+  - html-export
+  - annotations
+  - manual-ticks
+  patterns:
+  - columndatasource
+  dataprep: []
+  styling:
+  - grid-styling
