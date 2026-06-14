@@ -1,0 +1,247 @@
+library: chartjs
+language: javascript
+specification_id: burndown-sprint
+created: '2026-06-14T22:56:08Z'
+updated: '2026-06-14T23:14:11Z'
+generated_by: claude-sonnet
+workflow_run: 27514479029
+issue: 8654
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/javascript/chartjs/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Step-line burndown with semantic fill (red above ideal, green below) communicates
+    behind/ahead schedule at a glance
+  - Custom Chart.js plugins for weekend band shading and scope-change annotation are
+    idiomatic and well-implemented
+  - Conditional fill relative to the ideal dataset uses Chart.js fill API correctly
+  - 'All required spec features present: step series, ideal line, weekend bands, scope
+    change marker, legend'
+  - Full theme adaptation with no dark-on-dark issues in dark render
+  - Clean, readable code with no unnecessary functions or classes
+  weaknesses:
+  - '"Weekend" label is rendered at 13px CSS with rgba alpha 0.25 — very faint at
+    bottom of the weekend band; could be slightly larger or less transparent for better
+    readability on mobile-scaled thumbnails'
+  - Y-axis grid extends to both axes (full grid) rather than y-axis-only, which is
+    slightly cluttered for a line chart; y-only grid would look cleaner
+  - 'LM-02: stepping line and conditional fill are solid Chart.js features, but the
+    custom plugin pattern could demonstrate more advanced use (e.g., drawing a custom
+    arrow rather than plain text for the scope change annotation)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white.
+      Chrome: Title "burndown-sprint · javascript · chartjs · anyplot.ai" bold at 22px CSS, dark ink, spans ~65% of plot width — readable. X-axis label "Sprint Day" and Y-axis label "Remaining Story Points" at 16px CSS — readable. Tick labels at 14px CSS in inkSoft — readable. Amber "+9 pts / scope added" annotation at top of scope-change line — readable.
+      Data: Actual Remaining step-line in #009E73 (Imprint brand green) with filled circles (radius 5) and white border; Ideal Burndown dashed gray line (inkSoft) with no markers. Semantic fill: red above ideal (behind schedule), green below ideal (ahead). Weekend bands (Jul 12-13 and Jul 19-20) rendered as subtle off-ink shading with "Weekend" label at bottom. Amber dashed vertical line at Jul 10 marks scope change.
+      Legibility verdict: PASS — all text readable against warm-cream background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black.
+      Chrome: Title visible in light ink (#F0EFE8) against dark background. Axis labels and tick labels in appropriate light inkSoft colors. No dark-on-dark issues detected.
+      Data: Colors identical to light render — #009E73 step-line, dashed inkSoft ideal, amber scope change line and text. Fills use higher opacity (0.22) vs light (0.12) making them appropriately visible on dark surface. Weekend bands rendered with light-adaptive fill (rgba 240,239,232,0.055).
+      Legibility verdict: PASS — all text readable against near-black background; no dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All primary text readable in both themes. 'Weekend' label is intentionally
+          tertiary (13px/alpha 0.25) — faint but present; minor deduction for mobile-scale
+          readability.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or data overlaps in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 14-point dataset with radius-5 markers and width-3 step line. Appropriate
+          for sparse data; conditional fill adds area context.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs dashed gray; red/green fill uses area shape as redundant
+          encoding — not sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Landscape 3200x1800, canvas gate passed. Proportions correct, no
+          clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title in correct format; descriptive axis labels with domain context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series = #009E73, ideal = inkSoft (muted), scope change =
+          amber. Fills use semantic red/green with opacity. Backgrounds correct per
+          theme.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom plugins for weekend bands and scope-change annotation. Conditional
+          fill with semantic color logic. Intentional visual hierarchy.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Axis borders removed (border: {display: false}). Subtle grid. Point
+          style in legend. Marker white-border for definition. Full grid on both axes
+          is slightly cluttered.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Red/green fill makes ahead/behind reading immediate. Scope change
+          clearly annotated. Weekend bands explain flat segments. Strong focal point.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct burndown chart with step series and ideal reference line.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required: step series, ideal dashed line, weekend shading, scope
+          change marker, legend.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=sprint timeline, Y=remaining story points (0-40). Scope jump on
+          Jul 10 correctly modeled.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''burndown-sprint · javascript · chartjs · anyplot.ai''.
+          Legend: ''Actual Remaining'' and ''Ideal Burndown''.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Full coverage: step line, ideal, scope change, weekends, fill zones.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 10 working-day sprint, 40 initial story points, +9 scope addition
+          on day 4. Realistic and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Y-axis 0-40, beginAtZero. 14-day calendar period. Sensible values.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes; clean linear script with plugin objects.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded and deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses only Chart.js globals and ANYPLOT_TOKENS.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Custom plugins are appropriately structured; conditional fill API
+          used correctly.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness handles output; landscape orientation directive present.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'stepped: ''after'', fill: {target: 1, above, below}, custom plugin
+          lifecycle hooks — all idiomatic Chart.js patterns.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Plugin system, conditional fill, stepped line are Chart.js-specific.
+          Scope change annotation could be more visually distinctive (e.g., arrow
+          vs plain text).
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
