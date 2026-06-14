@@ -1,0 +1,247 @@
+library: plotnine
+language: python
+specification_id: bar-heart-rate-zones
+created: '2026-06-14T21:41:04Z'
+updated: '2026-06-14T21:59:17Z'
+generated_by: claude-sonnet
+workflow_run: 27512662954
+issue: 8649
+language_version: 3.13.13
+library_version: 0.15.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Semantic color exception correctly applied with explicit documentation — Z1–Z5
+    fitness conventions mapped to nearest Imprint palette members with justification
+    in comments
+  - Alpha emphasis aesthetic (scale_alpha_manual with mapped aes(alpha='emphasis'))
+    is a distinctly ggplot2/plotnine technique used for real data storytelling — Z2
+    Endurance highlighted as the dominant zone (51% of training time)
+  - Perfect spec compliance — all 5 zones, duration labels on each bar, HR boundary
+    caption, correct Z1→Z5 ordering, proper semantic zone colors
+  - Both themes properly handled with no dark-on-dark failures; data colors correctly
+    fixed as theme-independent while chrome tokens (INK, INK_SOFT, INK_MUTED) flip
+    correctly
+  - Realistic and plausible training data (75-minute endurance run, total Z1:12+Z2:38+Z3:14+Z4:9+Z5:2=75
+    min) with a believable polarized training distribution
+  weaknesses:
+  - Bar duration labels (geom_text size=4.0mm ≈ 11pt) are slightly small for mobile
+    readability — at ~400px viewport these may be hard to read. Increase geom_text
+    size from 4.0 to 4.5–5.0 for better legibility when image is scaled to mobile
+    widths.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface
+      Chrome: Title "bar-heart-rate-zones · python · plotnine · anyplot.ai" centered in dark (#1A1A17) text, clearly readable. Y-axis label "Duration (minutes)" in dark ink. Zone labels (Z1\nRecovery through Z5\nMaximum) and tick labels (0, 10, 20, 30, 40) in INK_SOFT (#4A4A44). Caption "HR bounds: Z1 < 120 | Z2: 120–139 | Z3: 140–154 | Z4: 155–169 | Z5: ≥ 170 bpm" in INK_MUTED (#6B6A63) at bottom right. All text clearly readable.
+      Data: Five bars in semantic zone colors — Z1 grey (#6B6A63), Z2 blue (#4467A3), Z3 brand green (#009E73), Z4 ochre (#BD8233), Z5 matte red (#AE3030). Z2 bar at full opacity (38 min dominant), others at 70% alpha. Duration labels above each bar in dark ink. First data series contributing to chart is Z1 (grey semantic zone color, not brand green — justified semantic exception).
+      Legibility verdict: PASS — all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface
+      Chrome: Title in light text (#F0EFE8) clearly readable. Y-axis label, zone labels, and tick labels in INK_SOFT dark token (#B8B7B0) — clearly visible against dark background. Caption in INK_MUTED dark token (#A8A79F). Duration bar labels in light ink (#F0EFE8). No dark-on-dark failures detected.
+      Data: All five bar colors are identical to the light render — Z1 grey (#6B6A63), Z2 blue (#4467A3), Z3 brand green (#009E73), Z4 ochre (#BD8233), Z5 matte red (#AE3030). Data colors correctly fixed as theme-independent. Z2 emphasis (full opacity) preserved.
+      Legibility verdict: PASS — all text readable against dark background, chrome correctly inverted
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title 12pt, axis labels 10pt, tick labels 8pt all explicitly set
+          and readable in both themes. Bar duration labels (geom_text size=4.0mm)
+          slightly small for mobile viewports.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element collisions. Short Z5 bar (2 min) label cleanly
+          nudged clear with nudge_y=0.8.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 5 bars clearly visible with distinct zone colors. Alpha distinction
+          (1.0 vs 0.7) enhances not reduces visibility.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Zone colors CVD-safe via Imprint palette members. Zone name labels
+          provide redundant encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). Title fits well. Proportions balanced
+          with breathing room above tallest bar.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis 'Duration (minutes)' clear with units. Title matches exact
+          required format. Caption provides HR boundaries per spec.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception correctly invoked and documented. Z3 uses brand
+          green #009E73. Z1 fixed to #6B6A63 (not theme-adaptive) so data colors stay
+          identical across renders. Backgrounds #FAF8F1/#1A1A17 correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above default (4). Alpha emphasis via mapped aesthetic is intentional
+          design. Documented semantic color exception shows design reasoning.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Above default (2). Panel border removed, axis ticks removed, Y-only
+          subtle grid, bottom axis line only. Clean minimal frame.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Above default (2). Alpha emphasis communicates Z2 dominance (51%
+          training time). Caption provides zone context. Clear focal point.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Vertical bar chart — correct.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Conventional zone colors, duration labels on each bar, Z1→Z5 fixed
+          order, HR boundary annotations in caption, all 5 zones.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: zones in Z1→Z5 order. Y: duration in minutes. All data represented.
+          Total 75 min realistic.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches required format. No legend — correct since
+          zone names are on X-axis.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 5 zones with semantic colors, duration labels, HR boundaries,
+          emphasis on dominant zone.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 75-min endurance run with threshold intervals. Z2:38, Z1:12, Z3:14,
+          Z4:9, Z5:2 matches realistic polarized training pattern.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Y-axis 0–45, data max 38. Clean range with breathing room.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes. Flat sequential code.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data. No randomness.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imported symbols are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean use of zip(..., strict=True), pd.Categorical for ordering,
+          aes() mapped aesthetics.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png correctly.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Proper grammar of graphics: mapped aes(fill, alpha), scale_fill_manual
+          + scale_alpha_manual, pd.Categorical for ordering, geom_text with nudge_y.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Alpha as mapped aesthetic (aes(alpha=...)) with scale_alpha_manual
+          for emphasis encoding is distinctly ggplot2/plotnine. Categorical axis ordering
+          via pd.Categorical is idiomatic.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  patterns: []
+  dataprep: []
+  styling:
+  - alpha-blending
