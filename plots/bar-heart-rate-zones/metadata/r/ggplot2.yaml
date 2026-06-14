@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: bar-heart-rate-zones
 created: '2026-06-14T21:44:35Z'
-updated: '2026-06-14T21:50:38Z'
+updated: '2026-06-14T22:00:13Z'
 generated_by: claude-sonnet
 workflow_run: 27512860999
 issue: 8649
@@ -12,48 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-heart
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - 'Semantically-driven Imprint palette mapping: Z1=muted(grey), Z2=blue(#4467A3),
-    Z3=green(#009E73), Z4=ochre(#BD8233), Z5=red(#AE3030) — all standard HR zone associations
-    correctly resolved to Imprint members'
-  - Bold bar-value annotations with correct vjust placement, clean KISS code with
-    no unnecessary complexity
-  - Multi-line x-axis tick labels (zone · name + bpm range on second line, lineheight=1.3)
-    convey all required metadata cleanly
-  - 'Both themes fully theme-adaptive: INK/INK_SOFT/PAGE_BG tokens applied consistently
-    to every chrome element; no dark-on-dark or light-on-light text failures'
-  - Correct ggsave canvas (8×4.5in @ 400dpi = 3200×1800px), ragg device, and output
-    filenames sprintf('plot-%s.png', THEME)
+  - Semantic zone colors (Z1 grey, Z2 Imprint blue, Z3 Imprint brand green, Z4 Imprint
+    ochre, Z5 Imprint matte red) correctly apply the spec's domain-convention exception
+    and fully match Imprint palette members
+  - Alpha intensity gradient (0.55→1.0 from Z1→Z5) adds a meaningful visual metaphor
+    — bars saturate as workout intensity increases, creating a readable hierarchy
+    without annotations
+  - Multi-line x-axis labels combine zone code, zone name, and HR range into a compact
+    and informative tick label
+  - 'Both themes render correctly: warm off-white (#FAF8F1) light background and near-black
+    (#1A1A17) dark background with all chrome tokens properly adaptive'
+  - Fully deterministic data with realistic 60-min tempo run profile (total = 60 min,
+    Z2-heavy distribution matches a base-endurance session)
+  - 'Expert-level ggplot2 idiom: I() identity aesthetic for per-bar alpha avoids a
+    separate scale and is idiomatic in the grammar-of-graphics model'
   weaknesses:
-  - 'Z1 bar uses INK_MUTED (theme-adaptive: #6B6A63 light / #A8A79F dark) as its fill
-    color — this causes Z1''s data color to differ between the two renders (dark grey
-    vs light grey), technically violating the rule that data colors must be identical
-    across themes. Consider using a fixed grey (#6B6A63 or #8A8A82) as the Z1 fill
-    color regardless of theme, so the bar colour is stable while the chrome around
-    it adapts.'
-  - DE-01/DE-02 are at baseline — no visual hierarchy enhancements (e.g. subtle alpha
-    on Z1/Z2 to de-emphasise vs Z4/Z5, gradient-width bars keyed to intensity, or
-    a faint zone-colour background stripe) that would elevate the chart above a generic
-    bar chart appearance.
-  - 'Y-axis grid lines use full INK color (#1A1A17 / #F0EFE8) at linewidth=0.2mm;
-    style guide recommends ~15% opacity for grid rules. The thin linewidth partially
-    compensates but the result is slightly crisper than intended. Consider an intermediate
-    muted hex (e.g. ''#D0CFC7'' light / ''#3A3A36'' dark) for the grid line color
-    to better approximate the 15% opacity rule without needing rgba alpha.'
+  - 'VQ-01 minor: x-axis tick labels at 7.5pt carry three lines of text each (zone
+    code, name, HR range) — consider bumping to 8pt to match y-axis ticks and improve
+    mobile legibility'
+  - 'DE-01 ceiling: implementation is above defaults but falls short of publication-ready
+    — the alpha gradient is clever but the overall composition lacks a focal-point
+    highlight or a second differentiation layer (e.g. a thin INK-color stroke on the
+    top edge of the tallest bar, or a subtle annotation calling out the dominant zone)'
+  - 'DE-02 ceiling: spines are removed by theme_minimal but no explicit panel.border
+    = element_blank() is set, and the baseline at y=0 could benefit from a light axis.line.x
+    to ground the bars'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "60-Minute Tempo Run · bar-heart-rate-zones · r · ggplot2 · anyplot.ai" in dark ink at ~12pt, spanning ~65-70% of plot width — fully readable. Y-axis label "Time (minutes)" in dark ink at 10pt. Y-axis tick labels ("0 min" to "25 min") in INK_SOFT at 8pt. X-axis two-line tick labels ("Z1 – Recovery / 100–119 bpm" etc.) at 7.5pt with 1.3 lineheight — readable but slightly compact. All text clearly visible against light background.
-      Data: 5 bars in Z1→Z5 order: Z1 dark muted-grey, Z2 blue (#4467A3), Z3 brand-green (#009E73), Z4 ochre (#BD8233), Z5 matte-red (#AE3030). Each bar topped with a bold "X min" label in INK. Horizontal y-grid lines subtle (INK @ linewidth=0.2). No legend.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1), clearly not pure white — correct theme surface.
+      Chrome: Title "60-Minute Tempo Run · bar-heart-rate-zones · r · ggplot2 · anyplot.ai" in dark ink, fills ~78% of canvas width; y-axis label "Time (minutes)" in dark ink; x-axis tick labels in INK_SOFT (slightly muted dark) with zone code + name + HR range on three lines; y-axis ticks labeled "0 min" through "25 min". All text is clearly readable against the light background.
+      Data: Five vertical bars in semantic zone colors — Z1 grey (#6B6A63, alpha≈0.55), Z2 steel blue (#4467A3, alpha≈0.70), Z3 brand green (#009E73, alpha≈0.82), Z4 ochre (#BD8233, alpha≈0.92), Z5 matte red (#AE3030, alpha=1.0). Bar labels above each bar ("8 min", "22 min", "15 min", "12 min", "3 min") in bold dark ink. Subtle horizontal grid lines at 5-min intervals.
+      Legibility verdict: PASS — all text readable; alpha gradient progresses naturally from Z1→Z5.
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title and all axis/tick labels rendered in light cream (INK=#F0EFE8 / INK_SOFT=#B8B7B0). All text clearly visible against the dark background. No dark-on-dark failure observed. Bar-value annotations appear in INK (light cream) against the dark canvas.
-      Data: Bar colors Z2–Z5 are identical to the light render (blue, green, ochre, red). Z1 appears as lighter grey (#A8A79F, the dark-theme INK_MUTED) versus the darker grey in the light render (#6B6A63) — a minor theme-adaptive deviation in the data layer. All 5 bars clearly distinguishable. Brand green #009E73 (Z3) is fully visible on the dark surface.
-      Legibility verdict: PASS (minor note: Z1 color differs across themes due to INK_MUTED being theme-adaptive)
+      Background: Warm near-black (#1A1A17), clearly not pure black — correct theme surface.
+      Chrome: Title in light cream text; y-axis label in light text; x-axis and y-axis tick labels in INK_SOFT for dark (muted light, #B8B7B0). All chrome elements flip correctly to light-on-dark. Subtle grid lines in GRID_COLOR (#3A3A36).
+      Data: Identical zone colors to light render — Z1 grey, Z2 blue, Z3 brand green, Z4 ochre, Z5 red with same alpha values. Bar labels rendered in INK (light cream on dark), clearly readable above each bar. No dark-on-dark failures detected.
+      Legibility verdict: PASS — all text readable on near-black background; no chrome inversion failures.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -64,57 +62,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title (12pt), y-axis label (10pt), y-tick labels (8pt), and bold
-          bar annotations (~10pt) all clearly readable in both themes. X-axis two-line
-          tick labels at 7.5pt (slightly below 8pt guideline) but compensated by 1.3
-          lineheight and clean two-line structure.
+        comment: All sizes explicitly set (title=12, axis.title.y=10, axis.text.x=7.5,
+          axis.text.y=8, geom_text size=3.5). Well proportioned; x-axis tick labels
+          slightly small at 7.5pt given three-line content.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All elements have clear separation. Bar annotations above bars do
-          not overlap each other or the bars. X-axis multi-line labels well-spaced.
+        comment: No overlapping elements. Bar labels clear of bar tops, x-axis tick
+          labels spaced well.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 5 bars clearly visible with bar width=0.62 providing good breathing
-          room. Semantic colors are all distinct and saturated.
+        comment: Five bars clearly visible with alpha gradient. Even Z1 at alpha=0.55
+          is clearly distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 5 distinct hue families from Imprint palette; semantic mapping follows
-          standard HR zone conventions; CVD-safe selection.
+        comment: Semantic zone colors span distinct hue families (grey, blue, green,
+          ochre, red). Imprint palette CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas at exactly 3200x1800px (8x4.5in @ 400dpi). No text clipping,
-          generous margins (16,20,16,16), y-axis expansion=20% provides headroom for
-          bar annotations.
+        comment: Canvas at 3200x1800. Plot fills 50-80% of canvas. Balanced margins.
+          No clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Time (minutes)' with units. X-axis NULL (zone labels in tick
-          text). Title includes descriptive prefix and mandatory format.
+        comment: 'Y-axis: ''Time (minutes)'' with units. X-axis NULL (zone info in
+          tick labels). Title descriptive.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Backgrounds #FAF8F1 (light) / #1A1A17 (dark). Z2-Z5 use fixed Imprint
-          members identical across themes. Z1 uses INK_MUTED (semantic anchor for
-          recovery/rest) — theme-adaptive but semantically justified. Minor concern
-          noted in weaknesses.'
+        comment: 'Valid semantic exception: spec explicitly mandates conventional
+          zone colors. All five map to Imprint palette members or muted anchor. Backgrounds
+          #FAF8F1/#1A1A17 correct. Chrome adaptive.'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -122,24 +117,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful semantic palette mapping (all 5 zone colors resolved to
-          Imprint members), bold bar annotations, multi-line informative tick labels.
-          Overall aesthetic is clean but still within standard bar chart territory.
+        comment: 'Above defaults: alpha intensity gradient is a clever design metaphor,
+          semantic color mapping is thoughtful, typography hierarchy clear. Not quite
+          publication-ready — lacks a focal-point highlight.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: X-grid removed, y-grid only at linewidth=0.2, tick marks removed,
-          minimal theme. Appropriate bar width=0.62. No visual hierarchy enhancements.
+        comment: Y-axis-only grid, tick marks removed, good margins, subtle grid color.
+          No top/right spines. Polished.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Color progression from cool (grey, blue, green) to warm (ochre, red)
-          naturally communicates increasing intensity. Descriptive title 'tempo run'
-          gives context. Z1-Z5 ordering tells the training distribution story.
+        comment: Alpha gradient creates clear intensity narrative. Z2-heavy distribution
+          immediately readable as base/endurance session. Visual hierarchy guides
+          viewer.
     spec_compliance:
       score: 15
       max: 15
@@ -149,30 +144,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Vertical bar chart — exactly what spec requires.
+        comment: Correct vertical bar chart, Z1-Z5 zones on x-axis, time in minutes
+          on y-axis.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Conventional zone colors (grey/blue/green/orange/red), fixed Z1-Z5
-          ordering, bar duration labels ('X min'), HR boundary ranges in x-axis tick
-          labels.
+        comment: All 5 zones, duration labels, HR range annotations in tick labels,
+          zone name labels — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=zones (Z1-Z5), y=minutes (8/22/15/12/3), all 5 zones present with
-          correct values summing to 60 min.
+        comment: 'X: zones Z1-Z5. Y: time in minutes. Correct mapping.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''60-Minute Tempo Run · bar-heart-rate-zones · r · ggplot2
-          · anyplot.ai'' follows {Descriptive} · {spec-id} · {lang} · {lib} · anyplot.ai
-          format. No legend (appropriate, zones identified by x-axis labels).'
+        comment: Title '60-Minute Tempo Run · bar-heart-rate-zones · r · ggplot2 ·
+          anyplot.ai' matches format. No legend needed (fill guide=none, zones labeled
+          on x-axis).
     data_quality:
       score: 15
       max: 15
@@ -182,23 +176,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 5 zones with minutes, HR boundaries, zone names (Recovery/Endurance/Aerobic/Threshold/Maximum),
-          duration annotations. Both required data fields implemented.
+        comment: All 5 zones with varied durations (3-22 min range). Non-uniform distribution
+          shows realistic workout profile.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 60-minute tempo run with realistic zone distribution (Z1:8, Z2:22,
-          Z3:15, Z4:12, Z5:3 = 60 total). HR ranges (100-185 bpm) are physiologically
-          correct. Neutral fitness context.
+        comment: 60-minute tempo run is a real, neutral fitness scenario. No controversial
+          content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-22 minutes range appropriate. 5 canonical HR zones. Values representative
-          of a real tempo workout.
+        comment: Total = 60 min (matches title). HR ranges (100-185 bpm) factually
+          correct for Z1-Z5. Z2-heavy distribution (22/60 = 37%) appropriate for tempo
+          run.
     code_quality:
       score: 10
       max: 10
@@ -208,54 +202,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flat script, no functions or classes.
+        comment: 'Flat script: tokens → data → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data, no random generation needed.
+        comment: Fully deterministic hardcoded data. No set.seed() needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ggplot2 and ragg imported, both used.
+        comment: Only ggplot2 and ragg imported and used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity. Named ZONE_COLORS vector, functional scale
-          labels, clear token definitions.
+        comment: Clean, idiomatic R/ggplot2. No fake functionality. Appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: sprintf('plot-%s.png', THEME) → plot-light.png / plot-dark.png. ragg::agg_png
-          device. No bare plot.png.
+        comment: Saves as plot-{THEME}.png using ragg::agg_png. Modern ggplot2 API
+          (linewidth, not size for lines).
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: geom_col() (correct for precomputed values), scale_fill_manual(guide='none'),
-          scale_y_continuous with expansion(), scale_x_discrete with named label vector
-          — all idiomatic ggplot2.
+        comment: 'Expert ggplot2: geom_col for precomputed values, scale_fill_manual,
+          scale_x_discrete with labels, scale_y_continuous with expansion(), theme_minimal
+          + theme layering.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: expansion(mult=c(0,0.20)) with 0 for bottom (bars start at axis baseline),
-          named vector in scale_fill_manual, functional lambda in scale_y_continuous
-          labels, multi-line axis labels via \n in setNames. Solid ggplot2 idioms
-          but no advanced grammar features (faceting, stats, coords).
+        comment: I() identity aesthetic for per-bar alpha is a distinctly ggplot2/grammar-of-graphics
+          technique. Multi-line tick labels via paste0 with \n is ggplot2-specific.
+          Expansion mult argument leverages ggplot2's axis expansion system.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -263,8 +255,7 @@ impl_tags:
   techniques:
   - annotations
   - manual-ticks
-  patterns:
-  - data-generation
+  patterns: []
   dataprep: []
   styling:
-  - grid-styling
+  - alpha-blending

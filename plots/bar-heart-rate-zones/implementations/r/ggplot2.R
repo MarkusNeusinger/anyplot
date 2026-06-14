@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' bar-heart-rate-zones: Time in Heart Rate Zones Bar Chart
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 87/100 | Created: 2026-06-14
+#' Quality: 91/100 | Created: 2026-06-14
 
 library(ggplot2)
 library(ragg)
