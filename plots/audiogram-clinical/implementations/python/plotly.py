@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 audiogram-clinical: Clinical Audiogram
 Library: plotly 6.8.0 | Python 3.13.13
 Quality: 88/100 | Created: 2026-06-14
@@ -47,16 +47,7 @@ fig = go.Figure()
 # Severity band shading (below data layer)
 for _, y0, y1, color in severity_bands:
     fig.add_shape(
-        type="rect",
-        xref="paper",
-        yref="y",
-        x0=0,
-        x1=1,
-        y0=y0,
-        y1=y1,
-        fillcolor=color,
-        line={"width": 0},
-        layer="below",
+        type="rect", xref="paper", yref="y", x0=0, x1=1, y0=y0, y1=y1, fillcolor=color, line={"width": 0}, layer="below"
     )
 
 # Severity band labels — right margin (outside plot, within figure)
@@ -69,7 +60,7 @@ for label, y0, y1, _ in severity_bands:
         text=label,
         showarrow=False,
         xanchor="left",
-        font={"size": 9, "color": INK_MUTED},
+        font={"size": 10, "color": INK_MUTED},
     )
 
 # Right ear — red circles, solid connecting line
@@ -80,7 +71,12 @@ fig.add_trace(
         name="Right Ear (O)",
         mode="lines+markers",
         line={"color": RIGHT_EAR_COLOR, "width": 2.5},
-        marker={"symbol": "circle", "size": 12, "color": RIGHT_EAR_COLOR, "line": {"color": RIGHT_EAR_COLOR, "width": 2}},
+        marker={
+            "symbol": "circle",
+            "size": 12,
+            "color": RIGHT_EAR_COLOR,
+            "line": {"color": RIGHT_EAR_COLOR, "width": 2},
+        },
     )
 )
 
