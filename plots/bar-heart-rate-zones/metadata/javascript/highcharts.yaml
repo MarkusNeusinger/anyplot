@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: bar-heart-rate-zones
 created: '2026-06-14T21:40:50Z'
-updated: '2026-06-14T21:48:58Z'
+updated: '2026-06-14T22:03:03Z'
 generated_by: claude-sonnet
 workflow_run: 27512764878
 issue: 8649
@@ -12,46 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-heart
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/javascript/highcharts/plot-dark.html
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - 'Correct and well-considered semantic color exception: fitness zone colors (grey/blue/green/ochre/red)
-    mapped to closest Imprint palette members with clear code comments documenting
-    the rationale'
-  - 'Data quality is excellent: physiologically accurate HR ranges (95-190 bpm), exact
-    60-minute total, realistic criterium race duration distribution'
-  - 'HTML x-axis labels with two-line zone name + bpm range is an elegant Highcharts-specific
-    technique using useHTML: true'
-  - 'Full spec compliance: all required features (zone colors, Z1-Z5 order, MM:SS
-    labels, HR boundary ranges) present'
-  - No tooltip, no legend — correct minimalist choices for this chart type; zone names
-    on x-axis serve as sufficient legend
+  - 'Excellent semantic zone color mapping: all 5 Imprint palette members correctly
+    assigned to fitness zone conventions (grey/blue/green/ochre/red), well-documented
+    in code comments as a semantic exception'
+  - 'Strong data storytelling: subtitle, Z2 label emphasis, and average reference
+    line work together to tell the Z2-dominant story'
+  - Dual-line HTML category labels with HR ranges add fitness-platform context without
+    crowding
+  - 'Both light and dark renders are correct: data colors identical across themes,
+    all chrome tokens properly applied, no dark-on-dark failures'
+  - 'Perfect spec compliance: all required features (zone order, semantic colors,
+    MM:SS labels, HR annotations) implemented correctly'
+  - Clean, idiomatic Highcharts code; deterministic data; all harness requirements
+    satisfied
   weaknesses:
-  - 'Z1 Recovery bar color changes between light and dark renders because the theme-adaptive
-    muted anchor is used ("#6B6A63" light / "#A8A79F" dark). This violates the data-colors-identical-between-themes
-    rule. Fix: replace the conditional with static "#6B6A63" for both themes — keeps
-    Z1 grey without the theme-variant identity shift.'
-  - 'Design storytelling underdeveloped (DE-03=3/6): all bars styled identically with
-    no focal point. The dominant Z2 Endurance bar (20:00, 33% of session) is not visually
-    emphasized. Fix: add one emphasis technique — annotation on the peak bar, a horizontal
-    mean reference line, or a distinct data label size for the tallest bar.'
-  - 'Minor KISS concern (CQ-01=2/3): toMMSS() helper function and pre-processed seriesData
-    array depart from the flat-script structure preferred for JS implementations.'
+  - HR range sub-labels at 11px CSS (22px native at 2x DPR) may be borderline-small
+    when the PNG is scaled to mobile viewport (~400px) — consider 12-13px for safer
+    mobile legibility
+  - 'Design Excellence has headroom: DE-01 is above defaults but not yet publication-ready;
+    a subtle bar gradient or zone-intensity background band could push toward 7-8'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — correct, not pure white
-      Chrome: Title "bar-heart-rate-zones · javascript · highcharts · anyplot.ai" in dark bold text, clearly readable. Subtitle in slightly lighter dark text, readable. Y-axis label "Time (minutes)" readable. X-axis labels (zone names + bpm ranges) readable. Tick labels 0–25 readable.
-      Data: Five vertical bars — Z1 Recovery (medium-dark grey #6B6A63), Z2 Endurance (Imprint blue #4467A3), Z3 Aerobic (brand green #009E73), Z4 Threshold (Imprint ochre #BD8233), Z5 Maximum (Imprint matte red #AE3030). MM:SS data labels above bars in bold dark ink. HR ranges in smaller text on x-axis.
-      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "bar-heart-rate-zones · javascript · highcharts · anyplot.ai" at 22px in dark ink, clearly readable. Subtitle in inkSoft at 14px. Y-axis title "Time (minutes)" at 16px, tick labels at 14px, all readable. X-axis two-line HTML category labels: zone name at 14px and HR range at 11px — readable at canvas size but borderline at mobile scale.
+      Data: Five bars — Z1 grey (#6B6A63), Z2 blue (#4467A3), Z3 green (#009E73), Z4 ochre (#BD8233), Z5 red (#AE3030). MM:SS data labels above each bar. Z2 "20:00" in larger 22px bold font for emphasis. Dashed avg reference line at y=12 with "avg 12:00" label.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (~#1A1A17) — correct, not pure black
-      Chrome: Title, subtitle, axis labels, tick labels all flip to light-colored text. All readable against dark background. No dark-on-dark failures. Grid lines subtle and visible.
-      Data: Z2–Z5 bar colors IDENTICAL to light render (blue, green, ochre, red unchanged). Z1 Recovery bar is visibly lighter/silver (#A8A79F vs #6B6A63 in light) — theme-adaptive muted anchor causes data color change between themes. Data labels in light ink, readable above bars. Brand green #009E73 on Z3 Aerobic clearly visible.
-      Legibility verdict: PASS for readability, but PARTIAL for palette compliance — Z1 bar color differs between themes due to theme-adaptive muted anchor
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title, subtitle, axis title, tick labels, and plotLine label all rendered in light ink tokens (#F0EFE8 / #B8B7B0). All text clearly readable against the dark surface. No dark-on-dark failures observed.
+      Data: Bar colors are pixel-identical to the light render — #6B6A63, #4467A3, #009E73, #BD8233, #AE3030. Z2 "20:00" data label inherits t.ink which resolves to #F0EFE8 in dark mode — white, clearly readable. All other data labels likewise light-colored.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -59,81 +56,80 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, subtitle 14px, axis 14px,
-          data labels 18px, y-title 16px). Readable in both themes. Data labels at
-          18px slightly generous but proportional.
+        comment: All font sizes explicitly set (title 22px, subtitle 14px, axis title
+          16px, tick/category 14px, data labels 18px/22px). HR sub-labels at 11px
+          CSS may be borderline at mobile scale.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text in either render. Data labels, x-axis HTML labels,
-          and bars all clearly separated.
+        comment: No overlapping text or bar elements. Category labels, data labels,
+          and plotLine annotation are well-separated.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars well-sized and distinct in both themes. Data labels prominent
-          and readable.
+        comment: Bars clearly visible with strong zone colors. Z2 label emphasis reinforces
+          the dominant zone.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Colors span green/blue/ochre/red — CVD-safe with text labels reinforcing
-          identity. No red-green sole signal.
+        comment: Imprint palette members are CVD-safe. Each zone has redundant encoding
+          via color and zone label text.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas well-utilized. Y-axis headroom (0-25 vs max 20) provides breathing
-          room. Well-proportioned.
+        comment: Bars fill full x-width. Y-axis to 25 gives breathing room above tallest
+          bar (20). Spacing explicitly set. Good canvas utilization.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Time (minutes)'' with units. X-axis: full zone names +
-          bpm ranges. Title follows required format exactly.'
+        comment: Y-axis 'Time (minutes)' with units; X-axis zone names with HR ranges;
+          title in correct anyplot format.
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Z2-Z5 correctly use Imprint palette members under valid semantic
-          exception. Z3 correctly uses brand green #009E73. Z1 Recovery uses theme-adaptive
-          muted anchor (#6B6A63 light / #A8A79F dark) causing Z1 bar color to visibly
-          differ between renders — violates data-colors-identical-between-themes rule.
-          All other chrome correct.'
+        passed: true
+        comment: 'Valid semantic exception: fitness zone color convention maps correctly
+          to Imprint palette members. Z1=#6B6A63 (muted anchor, static data color),
+          Z2=#4467A3, Z3=#009E73, Z4=#BD8233, Z5=#AE3030. Light bg #FAF8F1, dark bg
+          #1A1A17. Chrome tokens correct in both themes.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Thoughtful semantic color assignment, HR bpm ranges on x-axis, MM:SS
-          formatting, rounded bar corners, subtitle providing context. Above defaults
-          but not publication level.
+        comment: 'Strong design: intentional semantic color assignment, Z2 label size
+          emphasis, average reference line, rounded bar corners, two-line HTML category
+          labels. Clearly above defaults. Not yet publication-ready.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No legend, no tooltip, subtle horizontal-only grid, transparent background,
-          rounded corners, clean HTML x-axis labels. Good refinement.
+        comment: 'Good refinement: y-axis grid only (x-axis removed), tick marks suppressed,
+          no bar borders, explicit spacing. Above library defaults.'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Coherent fitness scenario with subtitle context. Grey-to-red intensity
-          progression provides implicit hierarchy. No focal point or emphasis on dominant
-          Z2 bar — viewer must extract the insight themselves.
+        passed: true
+        comment: 'Good visual hierarchy: subtitle states the story, Z2 larger label
+          guides eye to insight, average reference line frames context, zone color
+          semantics communicate intensity progression.'
     spec_compliance:
       score: 15
       max: 15
@@ -143,29 +139,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct vertical bar chart (column type).
+        comment: Correct vertical bar (column) chart for heart rate zone distribution.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: conventional zone colors (semantic exception), fixed
-          Z1-Z5 order, MM:SS duration labels, HR boundary annotations, full zone name
-          labels.'
+        comment: All 5 zones Z1-Z5 in order; conventional zone colors; MM:SS duration
+          labels; HR boundary annotations; y-axis for time in minutes.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis = zones in correct order, Y-axis = time in minutes, all 5
-          zones rendered.
+        comment: 'X-axis: zones Z1-Z5 left-to-right. Y-axis: time in minutes. All
+          data visible.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'bar-heart-rate-zones · javascript · highcharts · anyplot.ai'.
-          No legend needed (zone names on x-axis).
+        comment: Title 'bar-heart-rate-zones · javascript · highcharts · anyplot.ai'
+          correct. No legend (appropriate for labeled single series).
     data_quality:
       score: 15
       max: 15
@@ -175,91 +170,86 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 5 zones shown with realistic variation (8, 20, 17, 9, 6 min).
-          Captures full distribution shape.
+        comment: Shows all 5 zones with varied durations (6-20 min), HR boundary ranges,
+          MM:SS format, sum to 60 min. Average reference line for context.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Specific neutral fitness scenario: 60-minute criterium road race.
-          Full zone name labels (Recovery, Endurance, Aerobic, Threshold, Maximum).'
+        comment: '''60-minute criterium road race'' — real, neutral fitness scenario.
+          Z2/Z3 dominant distribution is physiologically realistic for a race.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values sum exactly to 60 minutes. HR ranges physiologically accurate
-          for cycling (95-190 bpm). Duration distribution realistic for criterium.
+        comment: HR ranges (95-190 bpm) are accurate standard zone boundaries. Durations
+          (8+20+17+9+6=60 min) sum exactly to stated session length.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Has toMMSS() helper function and pre-processed seriesData array with
-          conditional color logic. Common for JS but departs from flat-script KISS
-          criterion.
+        passed: true
+        comment: 'Flat inline structure: constants → Highcharts.chart() call. No functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data. No random elements.
+        comment: All data hardcoded; no random elements. Fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only uses window.ANYPLOT_TOKENS, window.ANYPLOT_THEME, and window.Highcharts
-          — all expected globals.
+        comment: No imports; uses only window.ANYPLOT_TOKENS and Highcharts globals
+          as intended.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, purposeful code. No over-engineering. Conditional zone colors
-          well-commented.
+        comment: Clean idiomatic Highcharts config. MM:SS formatter concise. Per-point
+          overrides well-structured.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Calls Highcharts.chart(''container'', ...) as required. animation:
-          false set in both chart and plotOptions. Harness handles PNG/HTML output.'
+        comment: 'Correct API: Highcharts.chart(''container'', ...), animation: false,
+          credits disabled, backgroundColor: transparent, no explicit width/height.'
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'colorByPoint with per-point color in data objects, useHTML: true
-          for rich x-axis labels, dataLabels.formatter, borderRadius, tickColor transparent,
-          backgroundColor transparent. Strong idiomatic usage.'
+        comment: colorByPoint with per-point color/dataLabels overrides, plotLines
+          with labeled reference annotation, useHTML in xAxis categories, MM:SS formatter
+          — all idiomatic Highcharts patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'useHTML: true on x-axis labels for two-line formatted categories
-          with size-varying text is Highcharts-specific. Per-point color assignment
-          via data array is idiomatic Highcharts.'
-  verdict: REJECTED
+        comment: Highcharts-specific plotLines API for annotated reference line, useHTML
+          in axis categories for rich two-line sub-labels, per-point dataLabels style
+          override for Z2 emphasis. Could explore plotBands for zone shading.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - manual-ticks
   - html-export
   patterns:
-  - iteration-over-groups
+  - data-generation
   dataprep: []
-  styling:
-  - minimal-chrome
-  - edge-highlighting
+  styling: []
