@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: gauge-activity-rings
 created: '2026-06-14T20:49:24Z'
-updated: '2026-06-14T20:55:24Z'
+updated: '2026-06-14T21:10:34Z'
 generated_by: claude-sonnet
 workflow_run: 27511060391
 issue: 8648
@@ -12,107 +12,97 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-act
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Rounded end caps (lineend='round') achieve the iconic Apple Watch-style activity
-    ring look perfectly
-  - Background tracks are correctly color-blended with PAGE_BG per theme (TRACK_ALPHA
-    computation) rather than a flat overlay, producing natural-looking faint tracks
-    in both light and dark renders
-  - theme_void() + coord_equal() is exactly the right pair for a circular chart —
-    no axes, no grid, perfectly round rings
-  - 'Imprint palette positions 1-3 (green #009E73, lavender #C475FD, blue #4467A3)
-    used in canonical order'
-  - 'Theme-adaptive chrome is fully correct: title, legend text, legend box all flip
-    between dark INK (#1A1A17) and light INK (#F0EFE8) correctly across renders'
-  - Legend provides full context with metric name, current value, goal, and percentage
-    — no axis labels needed
-  - 'Clean KISS code: deterministic data, no functions or classes, all imports used'
+  - 'Spec-perfect concentric ring chart: outer→inner ordering, clockwise sweep from
+    12 o clock, rounded caps via lineend=round, faint background tracks — all exactly
+    as specified'
+  - 'Imprint palette (positions 1–3: green/purple/blue) in canonical order; backgrounds
+    #FAF8F1/#1A1A17 correct; data colors identical across both themes'
+  - Center headline 76% avg provides an at-a-glance summary focal point
+  - Clean void theme with theme_void() is the right call for a radial chart — no unnecessary
+    chrome
+  - Fully deterministic, clean flat-script code; all plotnine API usage is current
+    and idiomatic
+  - Realistic Apple Watch fitness data directly from spec example; all three values
+    and percentages are accurate
   weaknesses:
-  - No center label in the ring area — the spec explicitly mentions 'Optional center
-    label area can show a headline summary'; adding a geom_text at (0,0) with a summary
-    value (e.g. overall average completion or the primary metric value) would elevate
-    storytelling significantly
-  - No per-ring endpoint annotations — small percentage labels or tick marks at each
-    arc's end would allow the viewer to read progress without consulting the legend,
-    improving data storytelling (DE-03)
-  - Library Mastery is limited — the entire radial chart is manual coordinate math
-    (theta→x,y); while plotnine lacks native coord_polar, more idiomatic plotnine-specific
-    usage (e.g. annotate(), geom_text() for ring labels) could raise LM-02
-  - Slight excess whitespace between the title and the top of the rings — coord_equal
-    xlim/ylim could be tightened to ylim=(-4.2, 4.2) or similar to reduce the gap
-    and better utilize canvas height
+  - Arc endpoint percentage labels are too small (size=2.8mm plotnine units ≈ 8pt)
+    — they become approximately 7px at 400px mobile display width, which is below
+    the mobile-readable threshold. Increase endpoint label size to at least size=3.5–4.0.
+  - Track colors are computed via manual RGB blending against page background rather
+    than using true alpha transparency. Consider using geom_path with alpha=0.18 if
+    plotnine supports alpha on paths, or document as intentional workaround.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "gauge-activity-rings · python · plotnine · anyplot.ai" in dark ink, centered, size=12pt, clearly readable. No axis labels (theme_void). Legend at bottom in a slightly elevated (#FFFDF6) box with dark INK_SOFT text, showing three entries with color swatches.
-      Data: Three concentric partial arcs with rounded end caps. Outer ring: green (#009E73) Move at 70% completion (sweeps ~252° clockwise from 12 o'clock). Middle ring: lavender (#C475FD) Exercise at 83% (~299°). Inner ring: blue (#4467A3) Stand at 75% (~270°). Each ring has a faint blended background track (ring color blended with PAGE_BG at 20% alpha) showing the full circle.
-      Legibility verdict: PASS — all title, legend text clearly readable against warm off-white background.
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "gauge-activity-rings · python · plotnine · anyplot.ai" in dark ink (#1A1A17), centered at top — readable. No axis labels (correct for radial chart). Legend at bottom with colored line swatches and metric text in #4A4A44 — readable.
+      Data: Three concentric arcs — outer (green #009E73, Move, ~70% sweep), middle (purple #C475FD, Exercise, ~83%), inner (blue #4467A3, Stand, ~75%). Background tracks as faint blended circles. Center shows "76%" and "avg" in dark ink. Endpoint labels ("70%", "75%", "83%") at arc tips on left side.
+      Legibility verdict: PASS — all primary text (title, center labels, legend) fully readable. Endpoint labels small but visible at full resolution; marginal at mobile scale.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title text is light (#F0EFE8), clearly readable against dark background. Legend box has elevated dark fill (#242420) with subtle INK_SOFT border. Legend text is light-colored and readable.
-      Data: Same three concentric arcs with identical Imprint colors (green/lavender/blue) — data colors unchanged from light render as required. Background tracks appear as dark-blended variants of each ring color (32% alpha on dark surface), giving a slightly deeper tone that remains distinguishable.
-      Legibility verdict: PASS — title and legend text are light-on-dark and clearly readable. No dark-on-dark failures detected. Brand green #009E73 visible and reads well on the dark surface.
+      Background: Near-black #1A1A17 — correct
+      Chrome: Title and center text render in light ink (#F0EFE8/#B8B7B0) — readable. Legend background #242420 (elevated dark). No dark-on-dark failures observed.
+      Data: Colors identical to light render — green, purple, blue rings unchanged. Track arcs slightly more prominent (TRACK_ALPHA=0.32 vs 0.20). All data elements clearly visible.
+      Legibility verdict: PASS — all text readable against dark background. Chrome correctly flips while data colors remain constant.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=12, legend=8). Readable in both
-          themes at full resolution.
+        comment: Title/legend/center labels fully readable in both themes. Endpoint
+          labels (size=2.8mm) are marginal at mobile scale (~7px at 400px width) —
+          below mobile-readable threshold.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Rings are well-spaced. Legend items arranged
-          in a single row without collision.
+        comment: Endpoint labels at different radii (3.55/2.55/1.55) and angular positions
+          (~252/270/299 deg). No text/data collisions in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Thick rings (size=9) clearly visible. Faint background tracks visible
-          at appropriate opacity. Both themes render all elements distinctly.
+        comment: Arcs at size=9 are bold and prominent. Background tracks clearly
+          visible as faint reference circles.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint positions 1-3 are CVD-safe by design. Three perceptually
-          distinct hue families (green/purple/blue).
+        comment: Imprint palette (green/purple/blue) spans three perceptually distinct
+          CVD-safe hue families.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good square layout with centered rings. Slight excess whitespace
-          between title and top of rings; ylim upper bound could be reduced. Rings
-          fill ~60% of canvas area — acceptable for radial charts.
+        comment: Square 2400x2400px, coord_equal ensures circular rings, canvas gate
+          passed. Well-proportioned.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format is exactly correct. Axis labels removed via theme_void()
-          — appropriate for a radial gauge chart.
+        comment: No axis labels needed; correctly suppressed. Title in correct mandated
+          format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green). Positions 2-3 are Imprint canonical
-          (#C475FD, #4467A3). Backgrounds are #FAF8F1 (light) / #1A1A17 (dark). All
-          chrome is theme-adaptive.'
+        comment: 'First series #009E73, positions 1-3 canonical order, correct bg
+          colors, data colors identical across themes.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -120,26 +110,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above configured default: rounded end caps + color-blended tracks
-          show design awareness. However, no center label, no per-ring annotations,
-          and standard typography keep it below ''strong design'' (6).'
+        comment: Apple Watch-style rings aesthetic well-executed. RGB track blending
+          is clever workaround. Center average adds depth. Above default 4.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'theme_void() is the ideal choice eliminating all chart chrome. Track
-          blending is a genuine refinement. Legend elevation is properly implemented.
-          Missing: tighter canvas margins, potential ring-gap refinements.'
+        comment: theme_void() correct for radial chart. RGB blending instead of true
+          alpha is a workaround limitation. Clean legend. Above default 2.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: outer=primary metric, concentric order matches
-          importance. Three distinct progress levels (70%/83%/75%) create visual variety.
-          Legend with value/goal/% provides full context. But no emphasis on the standout
-          metric (Exercise at 83% is closest to goal) and no center summary label.'
+        comment: Concentric ordering matches importance hierarchy. Arc sweep directly
+          encodes progress. Center 76% provides focal point. Above default 2.
     spec_compliance:
       score: 15
       max: 15
@@ -149,31 +135,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Exactly the specified chart type: concentric radial progress arcs,
-          rounded end caps, faint background tracks, starting at 12 o''clock, sweeping
-          clockwise.'
+        comment: Correct concentric radial arc chart via geom_path + coord_equal.
+          lineend=round provides iconic rounded caps. Clockwise from 12 o'clock.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: distinct color per ring, full-circle
-          background track, rounded caps (lineend=''round''), 3 rings (canonical count),
-          outer-to-inner ordering, equal axis scaling (coord_equal).'
+        comment: Background tracks, progress arcs with rounded caps, 3 rings, outer-to-inner
+          ordering, center label, endpoint labels and legend — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Progress computed as value/goal, clamped to 1.0. Move=70%, Exercise=83%,
-          Stand=75% — all correctly rendered.
+        comment: Move 420/600 (70%), Exercise 25/30 (83%), Stand 9/12 (75%). Average
+          76% correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'gauge-activity-rings · python · plotnine · anyplot.ai'.
-          Legend shows metric, value/goal, and percentage for each ring.
+        comment: 'Title: gauge-activity-rings · python · plotnine · anyplot.ai. Legend:
+          metric value/goal (pct%) format.'
     data_quality:
       score: 15
       max: 15
@@ -183,23 +167,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: multiple rings at different completion levels,
-          both arc and track components, varied progress (70%/83%/75%).'
+        comment: 'All activity ring features: concentric arcs, tracks, rounded caps,
+          clockwise sweep, center summary, endpoint labels, legend.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Uses spec''s canonical example data: Move 420/600 kcal, Exercise
-          25/30 min, Stand 9/12 hr — real-world fitness tracker context, neutral topic.'
+        comment: Apple Watch-style fitness metrics (Move/kcal, Exercise/min, Stand/hr)
+          — recognizable real-world use case from spec.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Values are factually accurate fitness goals: 600 kcal move target,
-          30 min exercise, 12 hr stand goal — all match Apple Watch / fitness tracker
-          conventions.'
+        comment: 420/600 kcal, 25/30 min, 9/12 hr — all sensible daily fitness goal
+          ranges matching spec example.
     code_quality:
       score: 10
       max: 10
@@ -209,35 +192,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → constants → data generation loop → plot
-          construction → save. No functions or classes.'
+        comment: Flat script, no functions/classes, clear linear flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: hard-coded values, no random seed needed.'
+        comment: Fully deterministic, no random generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported names are used. No unused imports.
+        comment: All plotnine imports used, no dead imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. Track color blending is compact and correct. Data
-          generation loop is clear.
+        comment: Appropriate complexity. No fake interactivity (AR-08 clear).
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png using current plotnine API.
+        comment: Saves as plot-{THEME}.png via plotnine save(). Current API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -245,23 +226,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good plotnine usage: ggplot + geom_path + coord_equal + scale_color_manual
-          + theme_void is idiomatic grammar-of-graphics. Minor gap: could use geom_text
-          for labels rather than relying solely on legend.'
+        comment: 'ggplot grammar: geom_path + geom_text + scale_color_manual + coord_equal
+          + theme_void. scale_color_manual with breaks/labels for selective legend
+          is idiomatic.'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses coord_equal and lineend='round' which are plotnine-specific.
-          However, the core chart is manual coordinate math (theta→x,y). No geom_text
-          annotations, no scale-specific features beyond manual color control.
-  verdict: REJECTED
+        passed: true
+        comment: coord_equal for circular preservation, lineend=round for rounded
+          arc caps, scale_color_manual with filtered legend breaks — characteristic
+          plotnine patterns.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - custom-legend
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
