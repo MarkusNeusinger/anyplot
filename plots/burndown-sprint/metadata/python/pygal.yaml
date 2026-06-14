@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: burndown-sprint
 created: '2026-06-14T22:44:42Z'
-updated: '2026-06-14T22:49:43Z'
+updated: '2026-06-14T23:05:21Z'
 generated_by: claude-sonnet
 workflow_run: 27514239739
 issue: 8654
@@ -12,44 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/burndown-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/python/pygal/plot-dark.html
-quality_score: 82
+quality_score: 87
 review:
   strengths:
-  - Correct brand green (#009E73) for the Actual series with clear visual distinction
-    from the dashed Ideal line
-  - 'Proper theme-adaptive chrome — both renders fully readable with correct backgrounds
-    (#FAF8F1 light / #1A1A17 dark)'
-  - 'Accurate burndown data: 40-point sprint, realistic scope change bump on Wed*,
-    flat weekends encoded in data'
-  - Correct canvas size (3200×1800) and idiomatic pygal Style() usage with all required
-    font-size tokens
-  - Title format correct; x-axis label cleverly encodes scope-change and weekend context;
-    HTML export included
+  - Perfect spec compliance — all required features (actual line, ideal line, dashed
+    style, weekend shading band, scope-change marker with annotation) implemented
+    correctly
+  - Excellent semantic color choices — brand green for actual progress, theme-adaptive
+    neutral anchor for ideal reference line, Imprint violet for scope-change annotation
+  - SVG post-processing cleverly leverages pygal's SVG-first rendering to inject custom
+    weekend rect and scope-change line/text not natively supported
+  - Both light and dark renders are fully theme-correct with readable text and identical
+    data colors
+  - Perfect data quality — realistic 2-week sprint scenario with scope creep event,
+    weekend flat segments, and clean burndown to zero
+  - Clean, well-structured code following KISS; all imports used; deterministic data;
+    saves both PNG and HTML (interactive pygal output)
   weaknesses:
-  - 'Missing weekend shading: the spec explicitly requires shading Sat–Sun with a
-    light background band to visually distinguish non-working days — the flat segments
-    are only implied by data, not highlighted'
-  - 'Missing scope-change marker: the spec requires a vertical line, arrow, or annotation
-    at the Wed* scope event — the asterisk in the x-axis label is insufficient as
-    a chart-level visual cue'
-  - Rightmost x-axis tick label (‘Fri’) is tight against the canvas right edge — risk
-    of pixel clipping; consider reducing x margins or font size slightly
-  - Design Excellence ceiling limited by absence of required narrative overlays (weekend
-    bands, scope annotation) that would also serve as storytelling elements
+  - Legend is rendered inside the plot area (top-left corner) by pygal's default layout,
+    slightly crowding the first data point at y=40 — consider repositioning via SVG
+    post-processing or using pygal's legend_at_bottom=True option
+  - Spine removal is not implemented — pygal renders an all-around frame (border box)
+    by default; SVG post-processing could remove the top and right border elements
+    to match anyplot's L-shaped-spine standard
+  - Weekend shading opacity (7%) is very subtle and may be imperceptible on high-gamma
+    displays; 12-15% fill-opacity would retain subtlety while ensuring visibility
+  - DE-02 limited by pygal defaults — with no spine removal and moderate grid customization
+    the visual refinement stays below its potential
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct Imprint light surface, not pure white.
-      Chrome: Title "burndown-sprint · python · pygal · anyplot.ai" in dark ink, clearly readable. Y-axis label "Remaining Story Points" vertical, dark text. X-axis label "Sprint Day (* Wed = scope +8 pts | Sat–Sun = weekend)" in dark text. Tick labels for all 13 sprint days (Start through Fri) in dark text; the final "Fri" tick is close to the right canvas edge but appears pixel-complete.
-      Data: "Actual" series in brand green #009E73 — solid line with filled circular markers, prominent. "Ideal" series in near-black (INK), dashed stroke with small circular markers — visually distinct reference. The Wed* scope bump is visible as an upward kink in the Actual line. Flat segments on Sat and Sun are visible in both series.
-      Legend: Top-left, two entries "Actual" (green square) and "Ideal" (dark square), readable.
-      Legibility verdict: PASS — all text is clearly readable against the warm off-white background.
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "burndown-sprint · python · pygal · anyplot.ai" displayed in dark ink at top, spanning ~75% of width (expected for the mandated format). Y-axis label "Remaining Story Points" and X-axis label "Sprint Day (* Wed = scope +8 pts | Sat–Sun = weekend)" both clearly readable. Tick labels (0, 10, 20, 30, 40 on Y; day names on X) all legible. Legend in top-left shows "Actual" and "Ideal" with color/style indicators.
+      Data: Actual line rendered in brand green (#009E73), solid, with circular dots at each data point. Ideal line in near-black (ANYPLOT_NEUTRAL = #1A1A17), dashed, with small dots. Violet dashed vertical scope-change line with "Scope +8 pts" annotation near top. Subtle gray weekend shading band over Sat-Sun region (~7% opacity). Horizontal Y-axis grid lines.
+      Legibility verdict: PASS — all text readable against the warm off-white background, no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct Imprint dark surface, not pure black.
-      Chrome: Title, axis labels, and tick labels all rendered in light/white ink (#F0EFE8 range), clearly readable against the dark background. No dark-on-dark failures detected.
-      Data: "Actual" series remains identical brand green #009E73 — same color as light render, confirming palette is theme-invariant. "Ideal" series adapts to near-white dashed line (INK in dark theme = #F0EFE8), still distinct from the green Actual line. Grid lines appear as subtle light lines. The Wed* scope bump and flat weekend segments are equally visible.
-      Legend: Top-left, "Actual" (green) and "Ideal" (white/light) squares, readable against dark background.
-      Legibility verdict: PASS — all text is clearly readable against the warm near-black background; no dark-on-dark issues.
+      Background: Warm near-black (#1A1A17) — correct theme surface, not pure black.
+      Chrome: Same title, axis labels, and tick labels now rendered in light ink (#F0EFE8 / #A8A79F range) — all clearly visible against the dark background. Legend text is light-colored and readable. "Scope +8 pts" annotation still in violet (#C475FD) — readable on dark background.
+      Data: Actual line remains identical brand green (#009E73) — data color unchanged from light render, confirming Imprint palette consistency. Ideal line now in near-white (ANYPLOT_NEUTRAL = #F0EFE8 in dark theme) with dots visible. Violet scope-change line unchanged. Weekend band appears as a slightly darker overlay. Grid lines subtle.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all text readable; data colors consistent with light render.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -60,74 +61,88 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; final 'Fri' tick is tight at right
-          edge
+        comment: 'All font sizes explicitly set (title=66, labels=56, major_label=44,
+          legend=44, value=36). Title spans ~75% of width — expected for mandated
+          format. All text readable in both themes. Minor deduction: legend text appears
+          small at thumbnail scale.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or marker collisions
+        comment: No overlapping elements. Scope annotation positioned above data area.
+          Legend in top-left does not obstruct data. X-axis tick labels all distinct.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Both lines and all 13 markers clearly visible; dots_size=8 appropriate
-          for 13-point dataset
+        comment: Both lines clearly visible with appropriate stroke widths (5 for
+          actual, 3 dashed for ideal). Data dots visible on both series. Weekend shading
+          and scope-change line clearly distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs neutral reference line; no red-green sole-signal conflict
+        comment: Actual (green) vs Ideal (neutral) are distinguishable by both color
+          and line style (solid vs dashed). CVD-safe combination.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 3200x1800 correct; rightmost tick label ('Fri') is uncomfortably
-          close to right canvas edge
+        comment: 'Canvas 3200x1800 correct (gate passed). Plot fills canvas well with
+          adequate margins. Minor deduction: legend inside plot area at top-left is
+          pygal default but slightly cramped near y=40 data start.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format; x-axis encodes sprint context; y-axis has units
+        comment: Y-axis 'Remaining Story Points' (unit is story points). X-axis 'Sprint
+          Day (* Wed = scope +8 pts | Sat-Sun = weekend)' — highly informative. Title
+          in correct mandated format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, backgrounds #FAF8F1/#1A1A17 correct, ANYPLOT_NEUTRAL
-          for ideal line is correct semantic choice'
+        comment: 'First series (Actual) = #009E73 brand green. Second series (Ideal)
+          uses ANYPLOT_NEUTRAL (theme-adaptive INK) — semantically correct for reference
+          line. Scope annotation uses Imprint violet #C475FD. Backgrounds #FAF8F1
+          (light) / #1A1A17 (dark) correct. Both renders theme-correct.'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Custom Imprint palette and dashed ideal line show intent; limited
-          by missing weekend bands and scope annotation
+        passed: true
+        comment: 'Above well-configured default: semantic color choices (neutral ideal,
+          violet scope), SVG injection for overlays, intentional stroke width hierarchy
+          (5 vs 3). Not at FiveThirtyEight level due to limited pygal typography control.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Subtle y-grid, correct background, good font hierarchy; pygal defaults
-          limit further refinement
+        passed: true
+        comment: Y-axis-only grid, custom stroke widths, subtle weekend opacity. Limited
+          by pygal's default all-around frame (no spine removal). Between default
+          (2) and good (4).
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Scope bump visible in data; flat weekend segments evident; but no
-          narrative overlays to guide the viewer
+        passed: true
+        comment: 'Clear visual hierarchy: green actual (foreground story), neutral
+          ideal (reference), violet scope event (annotated), gray weekend (contextual).
+          Viewer immediately understands: scope was added mid-sprint, team caught
+          up. Annotation text adds explicit context.'
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -135,53 +150,58 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Line chart is correct; spec allows line when step is awkward in the
-          library
+        comment: Correct chart type. Spec allows straight line if steps are awkward
+          for the library. pygal.Line() used correctly with actual remaining work
+          and ideal reference line.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Missing weekend background shading AND scope-change vertical marker/annotation
-          — both explicitly required by spec
+        passed: true
+        comment: 'All spec features present: actual series, ideal dashed reference,
+          weekend shading, scope-change vertical marker with annotation, legend distinguishing
+          actual vs ideal. Y-axis starts at 0.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=sprint days, Y=remaining story points from 40 to 0, both series
-          correctly mapped
+        comment: X-axis = sprint days (Start through final Fri). Y-axis = remaining
+          story points (0-40). All data visible. Axes show full range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend distinguishes Actual from Ideal
+        comment: Title 'burndown-sprint · python · pygal · anyplot.ai' matches mandated
+          format exactly. Legend labels 'Actual' and 'Ideal' correct.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Both series present; scope change encoded in data; flat weekends
-          visible; 13-day sprint covered
+        comment: 'Shows all burndown chart features: starting scope, ideal trajectory,
+          scope change event (+8 pts on Wed), weekend flat periods, actual progress
+          crossing ideal at various points, completion at zero.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 40-point sprint, realistic burn rate, plausible scope increase on
-          Wed, team finishes at 0
+        comment: Real-world software sprint scenario. 40 story points, 10 working
+          days, scope creep event — all realistic. Neutral business domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 40 story points over 10 working days is industry-standard for a 2-week
-          sprint
+        comment: 40 story points / 10 working days = 4 pts/day ideal velocity — realistic.
+          +8 pt scope addition is significant but plausible. Weekend flat segments
+          correctly placed. Final burndown to 0 is correct.
     code_quality:
       score: 10
       max: 10
@@ -191,34 +211,39 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; clean top-level script
+        comment: Imports → theme tokens → data → style → chart → render + SVG post-process
+          → save. No functions or classes. SVG post-processing is complex but necessary
+          for spec features and kept inline.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data
+        comment: Fully deterministic — hardcoded data arrays, no random generation
+          needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, sys, pygal, pygal.style.Style — all used
+        comment: 'All imports used: os (env + path), re (SVG regex), sys (path fix),
+          cairosvg (PNG output), pygal (chart), Style (theming).'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Smart sys.path fix for self-named file; clear token constants; minimal
-          and readable
+        comment: Clean, appropriate complexity. SVG injection is pragmatic given pygal's
+          API limitations. No fake UI elements or inappropriate patterns.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; correct API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html (both required for pygal
+          interactive library). Current API used.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -226,20 +251,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct Style() usage, stroke_style with dasharray for dashed reference
-          line, dots_size, chart-level options
+        comment: 'Idiomatic pygal: Style object for complete theming, per-series stroke_style
+          with dasharray, chart.render() for SVG access, cairosvg for PNG conversion.
+          Good pattern usage.'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: HTML export is a pygal strength and is used; interactive SVG via
-          render(); dasharray for dashed lines leverages SVG native feature
+        passed: true
+        comment: Leverages pygal's SVG-first rendering through post-processing to
+          inject custom overlay elements (weekend rect, scope line, annotation text).
+          Also saves interactive HTML with native pygal tooltips. SVG injection is
+          a technique distinctive to pygal's architecture.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - cairosvg
   techniques:
   - html-export
+  - annotations
   patterns: []
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
