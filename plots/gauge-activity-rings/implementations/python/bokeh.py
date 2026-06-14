@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 gauge-activity-rings: Activity Rings Progress Chart
 Library: bokeh 3.9.1 | Python 3.13.13
 Quality: 87/100 | Created: 2026-06-14
