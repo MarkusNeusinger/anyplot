@@ -1,0 +1,263 @@
+library: ggplot2
+language: r
+specification_id: gauge-activity-rings
+created: '2026-06-14T20:50:34Z'
+updated: '2026-06-14T21:05:45Z'
+generated_by: claude-sonnet
+workflow_run: 27511272277
+issue: 8648
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Correct Imprint palette with brand green as the outer primary ring, lavender for
+    exercise, and blue for stand — canonical order and colors identical between themes
+  - 'Complete spec compliance: concentric arcs with rounded end caps, faint background
+    tracks, center average percentage, and per-ring color-coded labels with value/goal/percentage'
+  - Square canvas (2400x2400) and theme_void are ideal choices for this radial chart
+    — no unnecessary chrome
+  - Clean, readable code with efficient arc/track helper functions using trigonometric
+    path generation in Cartesian coordinates
+  - Proper theme-adaptive chrome tokens applied throughout — background, center text,
+    and label colors adapt correctly between light and dark renders
+  weaknesses:
+  - 'Blue ring (Stand label #4467A3) has borderline contrast against the near-black
+    dark background (#1A1A17) — consider lightening the label text to INK_SOFT (#B8B7B0)
+    for the unit/percentage values while keeping the metric name in ring color'
+  - 'DE-03: Center focal point limited to a single average percentage — the storytelling
+    could be stronger by visually emphasizing the near-complete Exercise ring (83%)
+    or adding a short motivational annotation'
+  - The right-side label block (3 metrics × 3 lines each) is functional but somewhat
+    dense — a small vertical gap between label groups would improve scannability
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "gauge-activity-rings · r · ggplot2 · anyplot.ai" in dark ink (#1A1A17), centered at top, ~45% canvas width, clearly readable. Center "76%" in dark ink (large, bold), "avg" in muted gray below — both clearly readable.
+      Data: Three concentric progress arcs — outer green (#009E73, Move 70%), middle lavender (#C475FD, Exercise 83%), inner blue (#4467A3, Stand 75%). Each arc has a faint full-circle background track at alpha=0.15. Rounded end caps present. Right-side labels color-coded to match rings; metric name, value/goal/unit, and percentage all displayed.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface.
+      Chrome: Title in light cream text (#F0EFE8), readable. Center "76%" in light text, "avg" in muted warm gray — both readable against dark background. No dark-on-dark failures observed for chrome text.
+      Data: Data colors identical to light render — green outer ring, lavender middle, blue inner. Background tracks slightly more prominent against the dark surface but still subtly correct at alpha=0.15. Right-side labels use the same ring colors: the "Stand" label (#4467A3 blue) is the least vibrant against the near-black background, borderline readable but within acceptable range.
+      Legibility verdict: PASS with minor note — the blue "Stand" label (#4467A3) has reduced contrast on #1A1A17; all other text is clearly readable. No catastrophic dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Title, center labels, and ring labels readable in both themes. Minor
+          concern: blue Stand label (#4467A3) has borderline contrast on dark background
+          (#1A1A17). Overall legibility is good.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; rings are properly separated by radius,
+          labels are well-spaced at ly=1.5/0.0/-1.5.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All three progress arcs clearly visible; background tracks at alpha=0.15
+          are subtly visible; rounded end caps achieved with lineend='round'.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette positions 1-3 used in canonical order. CVD-safe selection.
+          No red-green as sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (2400x2400 square, correct for radial chart).
+          theme_void removes all unnecessary chrome. Coord_fixed ensures circular
+          rings.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches required format 'gauge-activity-rings · r · ggplot2
+          · anyplot.ai'. Per-ring color labels serve as legend/axis context in theme_void
+          setting.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First ring = #009E73 (brand green), second = #C475FD (lavender),
+          third = #4467A3 (blue) — canonical Imprint order. Backgrounds: light=#FAF8F1,
+          dark=#1A1A17. Data colors identical between themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Above default 4. Captures the iconic Apple-fitness-tracker aesthetic
+          with rounded end caps, faint background tracks, center percentage summary,
+          and color-coded per-metric labels. Not exceptional but clearly crafted.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Above default 2. theme_void is the right clean choice, background
+          tracks at subtle alpha, colored labels create cohesive visual identity.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Above default 2. Center 76% average provides a focal summary. Ring
+          ordering (outer=primary metric) mirrors real fitness tracker convention.
+          Per-ring labels contextualize each arc.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct radial progress arcs starting at 12 o'clock (pi/2), sweeping
+          clockwise, with rounded end caps and faint full-circle background tracks.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: thick partial arcs, background tracks, value/goal
+          fractions, clamped sweep, outer-to-inner ordering, per-ring labels, center
+          summary.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Exactly 3 rings with spec example data: Move 420/600 kcal (70%),
+          Exercise 25/30 min (83%), Stand 9/12 hr (75%). Arc lengths correctly proportional.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''gauge-activity-rings · r · ggplot2 · anyplot.ai'' — matches
+          required format. Color-coded labels on right side effectively serve as legend.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: concentric layout, partial arcs, background tracks,
+          rounded caps, center summary, color coding.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Fitness tracker data (Move/Exercise/Stand) is realistic, neutral,
+          and widely recognizable. Values are plausible daily fitness goals.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 420/600 kcal, 25/30 min, 9/12 hr are sensible and realistic target/current
+          values for daily fitness goals.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Two small helper functions (make_track, make_arc) are appropriate
+          — they abstract repetitive arc math without over-engineering.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Data is fully hardcoded; no random generation needed. Deterministic
+          by construction.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable, well-commented. Arc path approach is the correct
+          ggplot2 solution for custom shapes.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png via sprintf(). Uses ragg::agg_png device
+          correctly.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Above default 3. geom_path for custom arc shapes, scale_color_identity,
+          coord_fixed, lineend='round' — all idiomatic for this kind of custom radial
+          geometry in ggplot2.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Above default 1. Trigonometric arc path generation in Cartesian space,
+          multi-layer composition (tracks + arcs + labels + annotations) demonstrates
+          real ggplot2 geometry mastery.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - ragg
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
