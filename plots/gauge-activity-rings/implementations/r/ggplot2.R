@@ -4,7 +4,6 @@
 #' Quality: 88/100 | Created: 2026-06-14
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 # Theme tokens
@@ -108,7 +107,7 @@ p <- ggplot() +
   annotate(
     "text", x = 0, y = -0.42,
     label = "avg",
-    color = INK_MUTED, size = 3.8, hjust = 0.5, vjust = 0.5
+    color = INK_MUTED, size = 4.5, hjust = 0.5, vjust = 0.5
   ) +
   coord_fixed(
     xlim = c(-3.5, 5.6),
