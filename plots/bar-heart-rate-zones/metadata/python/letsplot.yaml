@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: bar-heart-rate-zones
 created: '2026-06-14T21:46:05Z'
-updated: '2026-06-14T21:55:32Z'
+updated: '2026-06-14T22:09:15Z'
 generated_by: claude-sonnet
 workflow_run: 27512814468
 issue: 8649
@@ -12,52 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-heart
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/python/letsplot/plot-dark.html
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - Conventional fitness zone colors mapped correctly to nearest Imprint palette members
-    (Z1→muted grey, Z2→blue/4467A3, Z3→green/009E73, Z4→ochre/BD8233, Z5→red/AE3030)
-    — semantic exception applied appropriately as per spec
-  - 'Full theme-adaptive chrome: background, text, grid, and axis elements all flip
-    correctly between light (#FAF8F1) and dark (#1A1A17) surfaces with no dark-on-dark
-    failures'
-  - Multi-line x-axis tick labels include zone code, zone name, and HR boundary range
-    — informative without requiring a legend
-  - 'Perfect spec compliance and data quality: exactly 60 minutes total, realistic
-    HR boundaries, correct Z1→Z5 ordering'
-  - 'Clean KISS code structure: no functions/classes, fully deterministic data, all
-    imports used, saves both PNG and HTML artifacts'
+  - 'Semantic zone palette: all five zone colors drawn from Imprint palette members
+    with documented semantic exception (grey/blue/green/ochre/red matching fitness-platform
+    convention)'
+  - 'Full spec compliance: dual-metric bar labels (minutes + %), multi-line x-axis
+    ticks showing zone code + name + HR boundary, subtitle contextualising the session'
+  - 'Excellent theme-adaptive chrome: PAGE_BG, INK, INK_SOFT, INK_MUTED, RULE all
+    correctly branched on ANYPLOT_THEME — both renders pass the readability checklist'
+  - 'Distinctive letsplot feature: layer_tooltips() with .title()/.line() API configuring
+    rich interactive HTML tooltips per zone'
+  - 'Clean, KISS structure: no functions/classes, all imports used, deterministic
+    hardcoded data, correct ggsize(800,450)+scale=4 canvas'
   weaknesses:
-  - 'DE-01 (Aesthetic Sophistication 4/8): The visual treatment is correct and functional
-    but lacks sophistication beyond convention — consider adding a subtle bar outline,
-    varying bar opacity to emphasize the dominant zone (Z2), or a refined subtitle
-    typographic treatment to push above well-configured-default territory'
-  - 'DE-02 (Visual Refinement 4/6): Refinement is good but not polished — the y-axis
-    gridlines use a solid line at opacity 1 (INK_SOFT color, size=0.3) rather than
-    the recommended near-transparent rule (rgba(..., 0.15)); consider using the RULE
-    token from the style guide for grid lines'
-  - 'VQ-01 (Text Legibility 7/8): Multi-line x-axis tick labels (3 lines: zone code,
-    name, HR range) at axis_text size=9 may be tight at 400 px mobile width; slight
-    increase to size=10 would improve legibility at small viewports'
-  - 'LM-02 (Distinctive Features 3/5): HTML export is the only lets-plot-distinctive
-    feature used; the chart is otherwise grammatically identical to ggplot2 — could
-    leverage lets-plot label layers, geom_label, or formatted tooltip specs for greater
-    differentiation'
+  - 'Z1 bar color uses theme-adaptive INK_MUTED (#6B6A63 light / #A8A79F dark), so
+    the data colour changes between renders — use a fixed grey hex (e.g. #6B6A63 or
+    #808080) so the zone identity is identical in both themes'
+  - 'Design emphasis is absent: Z2 dominance (37% of training time) is not visually
+    reinforced — consider a bolder border or a background annotation band to highlight
+    the key coaching insight'
+  - geom_text bar labels (size=4mm) may read small on mobile (~400px scaled) — size=5
+    would improve mobile legibility without crowding
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) confirmed — not pure white.
-      Chrome: Title "bar-heart-rate-zones · python · letsplot · anyplot.ai" rendered in dark ink (#1A1A17) at ~55% canvas width, well within the expected 50–70% range for a 53-character title. Subtitle "60-minute tempo run · training intensity distribution" in INK_SOFT below. Y-axis label "Time (minutes)" in dark ink. Axis tick labels and x-axis multi-line labels (zone name + HR range) in medium-dark grey — all clearly readable against the cream background.
-      Data: Five vertical bars in Z1–Z5 order. Z1 (Recovery) in warm grey (INK_MUTED ~#6B6A63), Z2 (Endurance) in Imprint blue (#4467A3), Z3 (Aerobic) in Imprint brand green (#009E73), Z4 (Threshold) in Imprint ochre (#BD8233), Z5 (Maximum) in Imprint matte red (#AE3030). Each bar has a light-ink value label above ("8 min", "22 min", "15 min", "12 min", "3 min"). Horizontal y-axis gridlines are subtle and thin. No top/right spine. Bar widths are 60% of slot, leaving clean inter-bar whitespace.
-      Legibility verdict: PASS — all text readable on the warm cream surface; no light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — confirmed not pure white, correct surface colour.
+      Chrome: Title "bar-heart-rate-zones · python · letsplot · anyplot.ai" in dark INK (#1A1A17) at ~16pt — clearly readable. Subtitle "60-minute tempo run · training intensity distribution" in INK_SOFT — clearly readable. Y-axis label "Time (minutes)" in INK at 12pt. X-axis tick labels (multi-line: zone code, name, HR range) in INK_SOFT at 10pt — all readable. Bar labels ("8 min · 13%", "22 min · 37%", etc.) in INK above each bar — readable.
+      Data: Five bars in Z1→Z5 order. Z1 Recovery = medium dark grey (#6B6A63 / INK_MUTED), Z2 Endurance = blue (#4467A3), Z3 Aerobic = brand green (#009E73), Z4 Threshold = ochre (#BD8233), Z5 Maximum = matte red (#AE3030). All bars clearly distinguishable from the warm off-white background. Heights: Z1=8, Z2=22, Z3=15, Z4=12, Z5=3 min.
+      Legibility verdict: PASS — all text is clearly readable against the #FAF8F1 surface.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) confirmed — not pure black.
-      Chrome: Title in near-white (#F0EFE8), subtitle in INK_SOFT (#B8B7B0). Y-axis label in near-white. Axis tick labels in light grey — all clearly readable against the dark surface. Grid lines visible as subtle lighter-grey lines on the dark background. No dark-on-dark failures detected.
-      Data: Bar colors are identical to the light render — Z1 grey, Z2 blue (#4467A3), Z3 green (#009E73), Z4 ochre (#BD8233), Z5 red (#AE3030) — only the chrome flips as required. Bar value labels rendered in near-white (#F0EFE8), clearly visible above each bar.
-      Legibility verdict: PASS — all text readable on the near-black surface; no dark-on-dark failures observed.
+      Background: Warm near-black (#1A1A17) — confirmed not pure black, correct surface colour.
+      Chrome: Title and subtitle in light INK (#F0EFE8) — clearly readable against dark background. Axis labels, tick labels, and bar labels in INK_SOFT (#B8B7B0) — clearly readable. No dark-on-dark text failures observed anywhere. Subtle grey grid lines at 15% opacity visible but non-dominant.
+      Data: Bar data colours mostly identical to light render — Z2 blue, Z3 green, Z4 ochre, Z5 red all unchanged. Z1 (INK_MUTED) shows as lighter grey (#A8A79F) in dark vs darker grey (#6B6A63) in light — the only data colour that shifts between themes due to use of theme-adaptive INK_MUTED anchor.
+      Legibility verdict: PASS — all text is readable against the #1A1A17 surface; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -65,89 +57,86 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set. Minor concern: 3-line x-axis tick
-          labels at size=9 may be tight at 400px mobile viewport. VQ-01 requires readability
-          at both desktop AND mobile widths.'
+        comment: 'All font sizes explicitly set (title=16, subtitle=10, axis_title_y=12,
+          axis_text=10, geom_text=4). Both renders fully readable. Minor: bar labels
+          at size=4mm may be slightly small at mobile widths.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap. Bar value labels positioned with vjust=-0.5 clear of
-          bar tops. Multi-line x-axis labels fit their slots without collision.
+        comment: No text overlaps. Bar labels positioned above bars with vjust=-0.5,
+          y-limit=27 provides adequate headroom above Z2 bar at 22 min. Multi-line
+          x-axis labels well-spaced.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All five bars clearly visible in both themes. Z5 (3 min) shortest
-          bar still clearly rendered. Bar widths (0.6) appropriate for 5 categories.
+        comment: 5 bars clearly visible in both renders. Width=0.6 provides prominent,
+          well-sized bars for 5 data points. All zone colours contrast well against
+          both backgrounds.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette members used throughout. Grey/blue/green/ochre/red
-          are perceptually distinct and CVD-safe (Imprint palette is CVD-optimized
-          via max-min deltaE). Z1 grey contrasts adequately against both cream and
-          near-black backgrounds.
+        comment: Semantic zone colours from Imprint palette are CVD-safe. Adjacent
+          bars (grey/blue, blue/green, green/ochre, ochre/red) have sufficient perceptual
+          distance.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: ggsize(800,450) + scale=4 → 3200×1800 landscape. Canvas gate passed.
-          Plot fills canvas well; headroom above tallest bar (22 min, limit 27) is
-          intentional to accommodate bar labels.
+        comment: Canvas gate passed (3200x1800). Title occupies ~65-70% of width.
+          No overflow or clipping in either render. Generous whitespace. L-shaped
+          spine frame.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Time (minutes)'' with units. X-axis uses multi-line tick
-          labels encoding zone code, name, and HR boundary range — superior to a plain
-          axis label. Title format correct.'
+        comment: Title follows required format. Y-axis 'Time (minutes)' is descriptive
+          with units. X-axis blank (zone info on tick labels). Subtitle provides context.
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Semantic exception applied correctly: spec mandates conventional
-          fitness zone colors; implementation maps each to the nearest Imprint palette
-          member (grey=muted anchor, blue=#4467A3, green=#009E73, ochre=#BD8233, red=#AE3030).
-          Backgrounds #FAF8F1/#1A1A17. Chrome theme-adaptive in both renders.'
+        passed: false
+        comment: 'Zone colours are all Imprint palette members (semantic exception
+          documented). Backgrounds correct (#FAF8F1 / #1A1A17). However Z1 uses INK_MUTED
+          which is theme-adaptive: #6B6A63 light / #A8A79F dark — data colour changes
+          between themes, violating the rule that data colours must be identical across
+          renders.'
     design_excellence:
       score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: 'Well-configured functional chart. Zone color choices are spec-mandated
-          rather than creative design decisions. Clean layout but no visual sophistication
-          beyond standard bar chart conventions. Calibration: 4 = looks like a well-configured
-          library default.'
+        passed: true
+        comment: Intentional semantic palette with documented exception, multi-dimensional
+          x-axis labels (code+name+HR range), dual-metric bar labels (minutes+%),
+          subtitle context. Meaningful design thought above default.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: false
-        comment: Horizontal grid only (x-grid blanked), no legend (replaced by informative
-          x-axis labels), theme_classic L-shaped spine. Good refinement. However,
-          grid lines use INK_SOFT at full opacity rather than the RULE token (rgba
-          ~15% opacity) recommended in the style guide — slightly heavier than ideal.
+        passed: true
+        comment: Legend suppressed (correct for this chart), y-grid only, RULE at
+          15% opacity, subtle bar edges at size=0.3, L-shaped frame. Clean execution.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: false
-        comment: Zone color progression (cool grey/blue → warm green/ochre → hot red)
-          creates inherent visual narrative of training intensity. Z2's dominance
-          as tallest bar communicates the session's character at a glance. Subtitle
-          adds workout context. No explicit annotations highlighting training distribution
-          insights, but visual hierarchy is present through bar heights + color semantics.
+        passed: true
+        comment: 'Zone colour progression (grey→blue→green→ochre→red) naturally conveys
+          intensity escalation. Dual labels give absolute and relative training load.
+          Missing: no visual emphasis on Z2 dominance (the key insight for a 60-min
+          tempo run).'
     spec_compliance:
       score: 15
       max: 15
@@ -157,31 +146,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct vertical bar chart with 5 zones in Z1→Z5 order.
+        comment: Vertical bar chart with Z1-Z5 zones in fixed order. Correct chart
+          type.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: 5 zones, conventional zone colors, duration
-          labels on each bar, fixed Z1→Z5 order, HR boundary annotations in x-axis
-          tick labels, y-axis in minutes, static render with zone-name labels for
-          unfamiliar readers.'
+        comment: 'All spec features: conventional zone colours, Z1→Z5 order, duration
+          labels, HR boundary annotations on x-axis, zone name labels.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: zones in correct order. Y-axis: time in minutes. Bar heights
-          correctly encode duration.'
+        comment: X=zones (Z1-Z5), Y=minutes. All 5 zones present with correct durations
+          (8+22+15+12+3=60 min).
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title 'bar-heart-rate-zones · python · letsplot · anyplot.ai' matches
-          required format exactly. No legend needed — zone identity conveyed via multi-line
-          x-axis labels (preferred approach).
+          required format. No legend needed (zone info on x-axis).
     data_quality:
       score: 15
       max: 15
@@ -191,25 +178,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 5 zones shown with varying durations (8/22/15/12/3 min) — covers
-          the full Z1–Z5 range including both low-intensity (Z1-Z2) and high-intensity
-          (Z4-Z5) zones. HR boundaries annotated for all zones.
+        comment: All 5 zones shown. Duration + percentage annotations. HR boundary
+          ranges. Full training intensity spectrum from recovery to maximum.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 60-minute tempo run is a real, neutral fitness scenario. Total time
-          is exactly 60 min (8+22+15+12+3). Zone distribution plausible for an endurance-focused
-          session.
+        comment: 60-minute tempo run with Z1:8, Z2:22, Z3:15, Z4:12, Z5:3 matches
+          spec example. Distribution is physiologically realistic. HR ranges are plausible.
+          Neutral fitness context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: HR boundaries factually consistent with a ~190 bpm max HR athlete
-          (Z1<114, Z2 114-133, Z3 134-151, Z4 152-171, Z5>171). Zone widths (~19 bpm
-          each) are physiologically plausible.
+        comment: Y-axis 0-27 with max bar at 22 min. HR ranges physiologically plausible
+          (<114 to >171 bpm). Scale is appropriate for a 60-minute session.
     code_quality:
       score: 10
       max: 10
@@ -219,35 +204,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → theme tokens → data → plot layers →
-          save. No functions or classes.'
+        comment: No functions or classes. Clean sequential structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data. No randomness.
+        comment: All data hardcoded as inline lists. Deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imported symbols are used: os, pandas, and all 17 lets_plot
-          symbols.'
+        comment: All imported names are used. Only necessary imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic lets-plot code. Title size formula is appropriate.
-          Zone color list well-commented. No over-engineering.
+        comment: Clean dict for zone_axis_labels. Title size scaling formula. Theme
+          token pattern is clean and readable.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=4 → 3200×1800) and plot-{THEME}.html.
-          Current API used throughout.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses ggsave with scale=4.
+          Correct.
     library_mastery:
       score: 7
       max: 10
@@ -257,27 +240,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Expertly idiomatic: ggplot grammar, scale_fill_manual for zone colors,
-          scale_x_discrete with dict labels, pd.Categorical for ordering, comprehensive
-          theme() system. All standard lets-plot patterns applied correctly.'
+        comment: geom_bar(stat='identity'), scale_x_discrete(labels=dict), scale_fill_manual,
+          theme_classic + theme overrides — all idiomatic letsplot/ggplot2 patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: HTML export via ggsave is lets-plot-distinctive (interactive chart
-          artifact). Scale parameter in ggsave for hi-res PNG is also library-specific.
-          However, the chart itself could be written identically in ggplot2 — no lets-plot-exclusive
-          visualization feature is leveraged (e.g., geom_label with tooltips, geom_livemap,
-          or interactive layer specs).
-  verdict: REJECTED
+        passed: true
+        comment: layer_tooltips() with .title()/.line() is a distinctive letsplot
+          API for configuring structured HTML tooltips. HTML export via ggsave. Above
+          default.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - hover-tooltips
   - html-export
+  - layer-composition
   - manual-ticks
   patterns: []
   dataprep: []
   styling:
-  - grid-styling
+  - edge-highlighting
