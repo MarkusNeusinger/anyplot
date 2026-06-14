@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-heart-rate-zones: Time in Heart Rate Zones Bar Chart
 Library: matplotlib 3.11.0 | Python 3.13.13
 Quality: 88/100 | Created: 2026-06-14
@@ -49,17 +49,14 @@ ax.set_facecolor(PAGE_BG)
 
 bars = ax.bar(x, minutes, color=ZONE_COLORS, width=0.55, zorder=2, edgecolor=PAGE_BG, linewidth=1.5)
 
-for bar, label in zip(bars, bar_labels, strict=True):
-    ax.text(
-        bar.get_x() + bar.get_width() / 2,
-        bar.get_height() + 0.45,
-        label,
-        ha="center",
-        va="bottom",
-        fontsize=9,
-        fontweight="bold",
-        color=INK,
-    )
+# Emphasize the dominant Z2 bar (highest duration — 22 min)
+dominant_idx = minutes.index(max(minutes))
+bars[dominant_idx].set_edgecolor(INK)
+bars[dominant_idx].set_linewidth(2.0)
+bars[dominant_idx].set_zorder(3)
+
+# Idiomatic bar labels via ax.bar_label() (available since matplotlib 3.4)
+ax.bar_label(bars, labels=bar_labels, fontsize=9, fontweight="bold", padding=4, color=INK)
 
 # Style
 title = "bar-heart-rate-zones · python · matplotlib · anyplot.ai"
@@ -68,8 +65,8 @@ ax.set_ylabel("Time (minutes)", fontsize=10, color=INK, labelpad=10)
 ax.set_xlabel("Heart Rate Training Zone", fontsize=10, color=INK, labelpad=14)
 
 ax.set_xticks(x)
-ax.set_xticklabels(tick_labels, fontsize=8, color=INK_SOFT)
-ax.tick_params(axis="both", which="both", length=0, labelsize=8, labelcolor=INK_SOFT)
+ax.tick_params(axis="both", which="both", length=0, labelsize=9, labelcolor=INK_SOFT)
+ax.set_xticklabels(tick_labels, fontsize=9, color=INK_SOFT)
 
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK, zorder=0)
 ax.spines["top"].set_visible(False)
@@ -79,6 +76,19 @@ ax.spines["bottom"].set_color(INK_SOFT)
 
 ax.set_xlim(-0.6, 4.6)
 ax.set_ylim(0, max(minutes) * 1.22)
+
+# Total training time — anchors the workout narrative
+ax.text(
+    0.98,
+    0.97,
+    "Total: 60 min",
+    ha="right",
+    va="top",
+    transform=ax.transAxes,
+    fontsize=9,
+    fontweight="medium",
+    color=INK_SOFT,
+)
 
 fig.subplots_adjust(left=0.12, right=0.97, top=0.88, bottom=0.24)
 
