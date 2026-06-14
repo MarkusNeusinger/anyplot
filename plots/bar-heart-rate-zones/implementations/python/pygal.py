@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-heart-rate-zones: Time in Heart Rate Zones Bar Chart
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 84/100 | Created: 2026-06-14
@@ -34,12 +34,13 @@ ZONE_COLORS = (
 )
 
 # Data: 90-minute polarized endurance cycling session
-zone_labels = ["Z1 Recovery", "Z2 Endurance", "Z3 Aerobic", "Z4 Threshold", "Z5 Maximum"]
+zone_names = ["Z1 Recovery", "Z2 Endurance", "Z3 Aerobic", "Z4 Threshold", "Z5 Maximum"]
 hr_ranges = ["< 120 bpm", "120–141 bpm", "141–157 bpm", "157–170 bpm", "> 170 bpm"]
 minutes = [12, 45, 20, 10, 3]
+total_min = sum(minutes)
 
-# X-axis labels with HR range; rotation avoids overlap
-x_labels = [f"{zone_labels[i]}  {hr_ranges[i]}" for i in range(5)]
+# X-axis labels combining zone name and HR range
+x_labels = [f"{zone_names[i]}  {hr_ranges[i]}" for i in range(5)]
 
 # Title with length-aware font size
 title = "Heart Rate Zones · bar-heart-rate-zones · python · pygal · anyplot.ai"
@@ -55,28 +56,30 @@ custom_style = Style(
     foreground_subtle=INK_MUTED,
     colors=ZONE_COLORS,
     title_font_size=title_font_size,
-    label_font_size=56,
+    label_font_size=40,
     major_label_font_size=44,
     legend_font_size=44,
-    value_font_size=40,
+    value_font_size=44,
     stroke_width=2.5,
 )
 
-# Chart
+# Chart — total session duration embedded in y_title for storytelling context
 chart = pygal.Bar(
     width=3200,
     height=1800,
     title=title,
-    y_title="Time (minutes)",
+    y_title=f"Time (minutes)  ·  {total_min} min total",
     style=custom_style,
     show_legend=False,
     show_x_guides=False,
     show_y_guides=True,
     truncate_label=-1,
-    x_label_rotation=30,
+    x_label_rotation=45,
     print_values=True,
     print_values_position="top",
     value_formatter=lambda x: f"{int(x)} min",
+    rounded_bars=10,
+    margin_bottom=100,
 )
 
 chart.x_labels = x_labels
