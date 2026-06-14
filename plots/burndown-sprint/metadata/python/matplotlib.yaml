@@ -1,0 +1,276 @@
+library: matplotlib
+language: python
+specification_id: burndown-sprint
+created: '2026-06-14T22:34:30Z'
+updated: '2026-06-14T22:52:00Z'
+generated_by: claude-sonnet
+workflow_run: 27513946154
+issue: 8654
+language_version: 3.13.13
+library_version: 3.11.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Complete spec compliance — step series, ideal diagonal, weekend band, scope change
+    annotation, behind-schedule fill, and legend all present
+  - 'Theme-adaptive chrome correctly applied: PAGE_BG, INK, INK_SOFT tokens used for
+    all non-data elements'
+  - 'Idiomatic matplotlib usage: ax.step(), ax.fill_between(step=''post''), mdates.WeekdayLocator,
+    pd.bdate_range() — high library fluency'
+  - 'Strong data storytelling: ''+10 pts scope'' annotation explicitly marks scope
+    change; behind-schedule fill provides at-a-glance risk status'
+  - 'Redundant encoding for accessibility: actual vs ideal distinguished by both color
+    AND linestyle (solid vs dashed)'
+  - 'Clean code structure: no functions/classes, fully deterministic, correct canvas
+    size (8×4.5 @ dpi=400 = 3200×1800), no bbox_inches=''tight'''
+  weaknesses:
+  - 'Behind-schedule red fill (alpha=0.07 of #AE3030 on #1A1A17 near-black) is nearly
+    invisible in dark mode — blend produces ~rgb(36,27,25) on ~rgb(26,26,23), barely
+    distinguishable from background. Increase alpha to 0.15–0.20 for dark theme, or
+    branch on THEME to use a higher alpha in dark mode'
+  - Palette position 2 (#C475FD lavender) skipped for ideal burndown line — uses position
+    3 (#4467A3 blue) without a clear semantic justification. The 'ideal reference
+    line → blue' convention is a soft design preference, not a strong real-world color
+    expectation that warrants overriding canonical palette order. Consider using lavender
+    (#C475FD) or adding explicit semantic rationale in code comments
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "burndown-sprint · python · matplotlib · anyplot.ai" at fontsize=12 in dark ink — fully readable and occupies ~60% of plot width. Y-axis label "Remaining Story Points" and X-axis label "Sprint Day · Jan 6 – 17 2025" at fontsize=10 — readable and appropriately sized. Tick labels at fontsize=8 in INK_SOFT — readable. Legend in upper-right with styled frame showing "Ideal burndown" and "Actual remaining" entries — readable.
+      Data: Brand green (#009E73) step series prominently shows actual remaining story points dropping from 40 to 4 with a visible jump on Jan 9 (scope change day, +10 pts). Blue dashed line (#4467A3) shows straight ideal burndown from 40 to 0. Light red fill marks behind-schedule zone (where actual exceeds ideal). Grey weekend band (Jan 11–13) with "wknd" label. "+10 pts scope" annotation box in red with rounded corners placed above the spike. Rotated "behind schedule" label in muted red in the deviation gap.
+      Legibility verdict: PASS — all text elements are readable against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title and axis labels render in near-white (#F0EFE8) tone — clearly readable against dark background. Tick labels in light secondary ink (#B8B7B0) — readable. Legend frame uses elevated dark background (#242420) with light-gray text — readable. No dark-on-dark failures for primary text elements.
+      Data: Data colors are identical to light render — brand green (#009E73) for actual, blue dashed (#4467A3) for ideal. The "+10 pts scope" annotation box uses dark elevated background — readable. ISSUE: The behind-schedule red fill at alpha=0.07 over near-black (#1A1A17) produces a blend indistinguishable from the background, rendering the fill effectively invisible in dark mode. The "behind schedule" rotated label at alpha=0.55 red is marginally visible. Weekend band is a subtle darker band.
+      Legibility verdict: CONDITIONAL PASS — main chart elements and text are readable, but the behind-schedule fill (a key semantic element) is nearly invisible on the dark background due to insufficient alpha.
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title/labels/ticks readable in both themes. Slight deduction for
+          'behind schedule' label at alpha=0.55 being intentionally faded but potentially
+          too dim in dark mode.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Mostly clean. Minor risk of visual crowding near Jan 9–13 with scope
+          change annotation, 'behind schedule' label, and step peak all in a small
+          area — but no actual overlap.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Step line and ideal line clearly visible in both themes. Behind-schedule
+          red fill (alpha=0.07) is nearly invisible in dark mode — blend with near-black
+          background produces indistinguishable coloring. Key semantic element compromised
+          in dark render.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs blue with redundant encoding (solid vs dashed linestyle)
+          ensures series distinction for CVD users. Red used semantically for warning/scope
+          signals.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). No clipping or overflow. Well-proportioned
+          layout with subplots_adjust for proper margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Remaining Story Points'' — clear. X-axis: ''Sprint Day
+          · Jan 6 – 17 2025'' — informative. Title follows correct format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'First series (actual) correctly uses #009E73 brand green. Ideal
+          burndown uses #4467A3 (position 3) skipping position 2 (#C475FD lavender)
+          without documented semantic justification. Red (#AE3030) for scope change/behind-schedule
+          fill is a valid semantic anchor use. Backgrounds correct (#FAF8F1 light
+          / #1A1A17 dark).'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Above default quality. Multiple intentional design elements: weekend
+          band, behind-schedule fill, scope change annotation box with rounded corners,
+          endpoint dot with edge color. Imprint palette used with clear visual hierarchy.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed. Y-axis grid at alpha=0.12 (subtle). Legend
+          frame styled. subplots_adjust for controlled margins. Minor deduction for
+          the rotated 'behind schedule' text feeling slightly awkward as a design
+          choice.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear narrative: team committed 40 pts, scope added (+10) on day
+          4, fell behind schedule (red zone), recovered partially. Annotations actively
+          guide the reader. Visual hierarchy is intentional. Strong storytelling.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct sprint burndown chart with step series using ax.step(where='post').
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: step series for actual, dashed diagonal
+          ideal line, weekend shading, scope change annotation, behind-schedule indicator,
+          legend distinguishing both series.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X-axis: sprint timeline (Jan 6–17, 10 working days). Y-axis: remaining
+          story points starting at 0. All data points correctly mapped.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''burndown-sprint · python · matplotlib · anyplot.ai'' —
+          correct format. Legend labels: ''Ideal burndown'' and ''Actual remaining''
+          — appropriate and distinct.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all chart features: step series, reference line, weekend band,
+          scope change marker with label, behind-schedule fill, endpoint marker.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 10-day sprint (Jan 6–17 2025), 40 story points committed, +10 scope
+          change on day 4, finishing at 4 points. All values are realistic and neutral
+          software development context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Y-axis 0–55 accommodates the post-scope-change maximum (44 pts).
+          X-axis covers correct sprint duration. Sensible story point values throughout.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes. Linear top-to-bottom structure. Well-organized
+          into logical sections.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: static numpy arrays, pd.bdate_range, np.linspace.
+          No random elements.'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports (sys, os, matplotlib.dates, matplotlib.pyplot, numpy,
+          pandas) are used. sys.path.pop(0) prevents shadowing.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately complex code. No fake interactivity. Annotation
+          styling is concise.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG) — correct.
+          No bbox_inches='tight'. Current matplotlib API used.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ax methods throughout (not pyplot). ax.step(), ax.fill_between(),
+          ax.axvspan(), ax.axvline(), fig.subplots_adjust() — all correct idiomatic
+          matplotlib.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: mdates.WeekdayLocator(byweekday=[0,2,4]) for custom business-day
+          ticks, fill_between(step='post') matching the step series, pd.bdate_range()
+          for business days, plt.setp() for batch property setting, scatter with edgecolors
+          for endpoint marker. Good library depth.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - explicit-figure
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
