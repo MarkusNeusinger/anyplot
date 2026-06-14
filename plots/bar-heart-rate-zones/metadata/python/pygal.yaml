@@ -1,0 +1,269 @@
+library: pygal
+language: python
+specification_id: bar-heart-rate-zones
+created: '2026-06-14T21:40:13Z'
+updated: '2026-06-14T21:57:20Z'
+generated_by: claude-sonnet
+workflow_run: 27512714781
+issue: 8649
+language_version: 3.13.13
+library_version: 3.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/python/pygal/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Semantic zone color mapping using Imprint palette members (INK_MUTED for Z1 grey,
+    #4467A3 for Z2 blue, #009E73 for Z3 green, #BD8233 for Z4 ochre, #AE3030 for Z5
+    red) — justified by spec''s explicit zone color requirements and fitness domain
+    convention'
+  - 'Excellent spec compliance: all 5 zones with HR boundary ranges embedded in x-axis
+    tick labels, value annotations on bars, correct Z1→Z5 ordering, realistic 90-minute
+    polarized cycling session data'
+  - 'Idiomatic pygal usage: per-bar color dicts ({"value": x, "color": c}), custom
+    Style object with full theme token coverage, html-export alongside PNG, rounded_bars=10,
+    value_formatter lambda'
+  - Title scaled via linear formula (66 × 67/len(title)) to prevent overflow — proper
+    length-aware sizing
+  - 'Theme adaptation works correctly in both renders: warm off-white bg in light
+    (#FAF8F1), near-black in dark (#1A1A17), all chrome tokens (INK, INK_SOFT, INK_MUTED)
+    applied to foreground/foreground_strong/foreground_subtle'
+  - Total session context embedded in y_title ("90 min total") adds useful data storytelling
+    without extra annotation clutter
+  weaknesses:
+  - label_font_size=40 for x-axis tick labels is below the style-guide default of
+    56 for pygal — the rotated zone+HR labels are readable but slightly smaller than
+    optimal; consider increasing to ~48–52 to better balance with the major_label_font_size=44
+    y-axis ticks
+  - DE-02 limited by pygal's characteristic full-border SVG frame — the plot area
+    shows the standard pygal box frame on all four sides with no way to remove spines
+    via the API, which reduces visual refinement compared to matplotlib/plotly implementations
+  - DE-01 and DE-03 are above baseline but not exceptional — the chart lacks visual
+    emphasis on the dominant Z2 bar (45 min / 50% of session); adding even a subtle
+    stroke or distinct border on the Z2 bar to call out 'most time here' would lift
+    the storytelling score
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light theme surface, not pure white.
+      Chrome: Title "Heart Rate Zones · bar-heart-rate-zones · python · pygal · anyplot.ai" is dark text at top, fills ~75% of canvas width — appropriate for this length. Y-axis label "Time (minutes)  ·  90 min total" is dark, rotated 90°, clearly readable. Y-axis tick labels (0–40 min) are dark and legible. X-axis tick labels show zone names with HR ranges (e.g. "Z1 Recovery  < 120 bpm") rotated 45°, readable at this size. Value labels ("12 min", "45 min", etc.) appear above each bar in dark text — clearly visible.
+      Data: 5 vertical bars in distinct zone-semantic colors — Z1 grey (INK_MUTED), Z2 steel blue (#4467A3), Z3 brand green (#009E73), Z4 ochre (#BD8233), Z5 matte red (#AE3030). Z2 (45 min) is the tallest bar. Rounded corners on bars. Subtle horizontal y-grid lines visible.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background. No light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title is light/off-white text on dark background — fully readable. Y-axis label and y-axis tick labels are light-colored and clearly visible. X-axis tick labels are light text on dark background — readable, no dark-on-dark failure. Value labels above bars are light-colored and distinct.
+      Data: Bar colors are identical to the light render — Z1 grey (muted), Z2 #4467A3 blue, Z3 #009E73 green, Z4 #BD8233 ochre, Z5 #AE3030 red — all five remain clearly distinguishable against the dark background. Subtle grid lines visible. Brand green #009E73 on Z3 reads well against dark bg.
+      Legibility verdict: PASS — all text is light-colored on the dark background. No dark-on-dark failures detected. Both data colors and chrome elements are theme-correct.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title scaled with formula; major_label
+          (44) and value (44) sizes appropriate; label_font_size=40 is below style-guide
+          default 56, making x-axis tick labels slightly smaller than optimal but
+          still readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between rotated x-axis labels, value annotations above
+          bars, or any other elements in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 5 bars clearly visible with distinct heights; value labels clearly
+          printed above each bar; rounded corners add visual definition
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Five distinct zone colors with good luminance separation; Imprint
+          palette members used; CVD-safe ordering; no red-green sole-signal issue
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 (gate passed); balanced margins; margin_bottom=100
+          provides clearance for rotated x labels; no content cut off in either render
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis 'Time (minutes) · 90 min total' includes units and total context;
+          x-axis labels embed zone name + HR boundary range
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Valid semantic exception: spec explicitly requires Z1=grey, Z2=blue,
+          Z3=green, Z4=orange, Z5=red — all mapped to Imprint palette members (INK_MUTED,
+          #4467A3, #009E73, #BD8233, #AE3030); bg #FAF8F1 light / #1A1A17 dark; data
+          colors identical across themes; theme-adaptive chrome tokens correctly applied'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured default (4): semantic zone color mapping thoughtfully
+          chosen from Imprint palette, rounded bars, contextual y-title, clean no-legend
+          layout. Not reaching strong design (6) as pygal''s native chrome limits
+          polish.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Some refinement: rounded_bars=10, show_x_guides=False (clean), no
+          legend, explicit margin_bottom. Limited by pygal''s full-border SVG frame
+          which cannot be reduced to L-shape spines via the API.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Above baseline: total session context in y_title, HR ranges on x
+          labels, natural Z2 dominance visible. Missing explicit visual emphasis on
+          the dominant Z2 bar to spotlight the polarized training insight.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct vertical bar chart (pygal.Bar) per spec
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required features: Z1→Z5 ordering, zone-specific colors, duration
+          labels (print_values), HR boundary ranges on x-axis tick labels'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=zones in Z1→Z5 order, Y=time in minutes; all 5 zones shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'Heart Rate Zones · bar-heart-rate-zones · python · pygal ·
+          anyplot.ai' matches required format with descriptive prefix; no legend (appropriate
+          — zones labeled on x-axis)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 5 zones with distinct durations; realistic variation (45/20/12/10/3
+          min); covers full Z1–Z5 spectrum including rarely-reached Z5
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, realistic 90-minute polarized endurance cycling session
+          — a common real-world fitness scenario; no controversial content
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: HR ranges (< 120, 120–141, 141–157, 157–170, > 170 bpm) physiologically
+          correct for cycling zones; Z2 dominance (50%) consistent with polarized
+          training; all values factually plausible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear structure: imports → theme tokens → zone colors → data
+          → style → chart → save; no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded deterministic data; no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, sys (used for sys.path), pygal, Style — all used, none superfluous
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code; sys.path deduplication is a legitimate module
+          isolation guard; lambda value_formatter is concise; list comprehension for
+          per-bar color dicts
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via render_to_png and plot-{THEME}.html via
+          render() — both required for pygal as an interactive library
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expertly uses pygal: Style object for full theme control, x_labels,
+          chart.add with per-bar color dicts, value_formatter, print_values/print_values_position,
+          rounded_bars, x_label_rotation, both PNG and HTML output'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Per-bar color dicts ({"value": x, "color": c}) is a pygal-distinctive
+          feature for element-level coloring; HTML interactive export; rounded_bars
+          is pygal-native. Not reaching 5 as these are fairly standard pygal usages
+          rather than advanced/creative features.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns: []
+  dataprep: []
+  styling: []
