@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-heart-rate-zones: Time in Heart Rate Zones Bar Chart
-Library: altair | Python 3.13
-Quality: pending | Created: 2026-06-14
+Library: altair 6.2.1 | Python 3.13.13
+Quality: 87/100 | Created: 2026-06-14
 """
 
 import os
