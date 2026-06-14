@@ -70,10 +70,11 @@ const LW    = 46   # device px → ×2 = 92 output px on 2400-px canvas
 
 # Draw rings outer → inner
 for (r, frac, col) in zip(ring_radii, fractions, ring_colors)
-    # Faint background track — full circle at 12 % opacity
+    # Faint background track — full circle; higher opacity in dark for contrast
+    bg_alpha = THEME == "dark" ? 0.22f0 : 0.12f0
     θ_bg = range(0.0, 2π, length = N_PTS + 1)
     lines!(ax, r .* cos.(θ_bg), r .* sin.(θ_bg);
-           linewidth = LW, color = (col, 0.12f0))
+           linewidth = LW, color = (col, bg_alpha))
 
     # Progress arc — starts at 12 o'clock (π/2), sweeps clockwise
     sweep = min(frac, 1.0) * 2π
@@ -109,7 +110,7 @@ for (i, (name, cur, goal, unit, col)) in
         enumerate(zip(metrics, val_current, val_goal, val_unit, ring_colors))
     xc = x_pos[i]
     scatter!(ax, [xc - 0.14], [(y_lbl + y_val) / 2];
-             color = col, markersize = 16, strokewidth = 0)
+             color = col, markersize = 22, strokewidth = 0)
     text!(ax, xc - 0.04, y_lbl;
           text = name, fontsize = 16, color = INK, align = (:left, :baseline))
     text!(ax, xc - 0.04, y_val;
