@@ -1,0 +1,262 @@
+library: makie
+language: julia
+specification_id: bar-heart-rate-zones
+created: '2026-06-14T21:47:49Z'
+updated: '2026-06-14T22:12:59Z'
+generated_by: claude-sonnet
+workflow_run: 27512910862
+issue: 8649
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Semantic zone colors correctly mapped to closest Imprint palette members (Z1→muted-grey,
+    Z2→Imprint blue, Z3→Imprint green, Z4→Imprint ochre, Z5→Imprint red) with clear
+    semantic-exception rationale in code comments
+  - 'Strong data storytelling: Z2 Endurance bar highlighted with bold label in its
+    zone color, callout annotation contextualising the session as a Z2-heavy base
+    ride'
+  - 'Full spec compliance: all 5 zones in fixed Z1→Z5 order, duration labels above
+    each bar, HR boundary legend below, and conventional per-zone colors all present'
+  - 'Idiomatic Makie composable layout: Legend in fig[2,1] with PolyElement patches,
+    rowsize!/rowgap! for compact but separate legend row'
+  - 'Complete theme adaptation: all chrome tokens (INK, INK_SOFT, INK_MUTED, PAGE_BG,
+    ygridcolor alpha) correctly flipped; Z1 muted-grey also flips for readability
+    on dark surface'
+  weaknesses:
+  - Legend row is very compact at 8% of figure height (144px rendered), making the
+    10pt zone-boundary text (20px at px_per_unit=2) barely legible at full resolution;
+    consider increasing rowsize to Relative(0.12–0.14) or labelsize to 11–12
+  - Callout annotation ('Base endurance ride · Z2-heavy · 53% of session') uses INK_MUTED
+    color at fontsize=11 — too faint against both backgrounds to communicate its storytelling
+    intent reliably; increase to INK_SOFT and fontsize=12
+  - Percentage labels (second line of 'X min\n53%') are at fontsize=12 (24px rendered),
+    one size smaller than the 'X min' line at fontsize=13 — minor but the two-line
+    label hierarchy is slightly hard to parse at thumbnail scale
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct Imprint surface, no pure-white.
+      Chrome: Title "90-Min Endurance Ride · bar-heart-rate-zones · julia · makie · anyplot.ai" in bold dark ink, clearly readable. Y-axis label "Time (minutes)" and x-axis label "Heart Rate Zone" in dark INK, readable. Tick labels in INK_SOFT grey — all clearly legible against the cream background. Y-axis gridlines are a barely-there horizontal rule at 40 and 20 — very subtle, correct.
+      Data: Five vertical bars — Z1 dark grey (INK_MUTED #6B6A63), Z2 Imprint blue (#4467A3), Z3 Imprint green (#009E73), Z4 Imprint ochre (#BD8233), Z5 Imprint matte red (#AE3030). Duration labels ("10 min", "48 min", "20 min", "10 min", "2 min") with percentage second lines above each bar; Z2 label rendered in zone blue bold for emphasis. Bottom legend strip (very compact at 8% height) shows zone color patches and HR boundary ranges — present but small.
+      Legibility verdict: PASS — all primary text elements readable. Minor: legend text at 10pt and callout annotation at fontsize=11 in INK_MUTED are borderline at thumbnail scale.
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct Imprint dark surface, no pure black.
+      Chrome: Title, axis labels, tick labels all switch to near-white/light-grey tones (INK = #F0EFE8, INK_SOFT = #B8B7B0). All clearly readable against the dark background. No dark-on-dark failure observed. Y-axis gridlines remain barely-there horizontal strokes — correct.
+      Data: Bar colors are identical to the light render — Z2 Imprint blue, Z3 Imprint green, Z4 ochre, Z5 matte red. Z1 bar now appears in INK_MUTED dark-mode value (#A8A79F, a lighter silver-grey), which is appropriate since this is a theme-adaptive semantic anchor, not a fixed Imprint palette slot. Duration labels above bars appear in near-white INK, Z2 label remains in zone blue. Bottom legend strip visible with light-colored text against the dark background.
+      Legibility verdict: PASS — no dark-on-dark failures; all data colors visible and identical to light render. Same minor concern about legend and callout annotation text size.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All primary labels (title, axes, tick labels, bar labels) clearly
+          readable in both themes. Minor: legend labels at labelsize=10 (20px rendered)
+          and callout annotation at fontsize=11 in INK_MUTED are borderline; not a
+          failure but leave room for improvement.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements detected across either render. Bar labels
+          well-spaced above bar tops with 1.2-unit gap.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 5 bars clearly visible, including the small Z5 bar (2 min). Zone
+          colors strongly distinct. Bar width 0.65 provides good visual weight.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Semantic zone colors drawn from Imprint palette — CVD-safe. No red-green
+          pair used as sole signal (Z3 green and Z5 red are separated by Z4).
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 correct (gate passed). Title at ~65% of width. Legend
+          row at Relative(0.08) is very compact — 144px rendered — but present. Axis
+          labels balanced. No overflow or clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis 'Time (minutes)' and x-axis 'Heart Rate Zone' are descriptive
+          with units. Title format correct with optional descriptive prefix.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Correct semantic exception: zone colors mapped to nearest Imprint
+          palette members (Z1→muted, Z2→blue, Z3→green #009E73, Z4→ochre, Z5→red).
+          Backgrounds #FAF8F1/#1A1A17 correct. Chrome correctly flips between themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful semantic color mapping with explicit rationale. Dual-information
+          bar labels (minutes + percentage). Z2 Endurance highlighted in bold zone
+          color. Callout annotation adds fitness context narrative.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed. X-grid disabled, Y-grid at 15% opacity
+          only. Frameless legend. Theme-adaptive muted colors for non-data chrome.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Z2 bar is the clear visual focal point (tallest + bold colored label).
+          Callout 'Z2-heavy · 53% of session' reinforces the endurance ride narrative.
+          Percentage labels tell the training-distribution story at a glance.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct vertical bar chart with one bar per zone.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All zones Z1-Z5 present in fixed order. Duration labels above each
+          bar. Conventional zone colors applied. HR boundary legend included.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis = zones Z1-Z5, Y-axis = time in minutes. All 5 zones shown
+          with correct durations (total 90 min).
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title '90-Min Endurance Ride · bar-heart-rate-zones · julia · makie
+          · anyplot.ai' matches required format. Legend labels match spec zone names
+          with HR boundaries.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 5 zones shown, duration labels, zone names, HR boundaries in
+          legend, percentage breakdown, training context annotation.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 90-minute endurance ride with Z2-heavy distribution (53%) is a textbook
+          base training session. Values 10+48+20+10+2=90 are internally consistent.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Y-axis range 0-67 min provides comfortable headroom above the 48-min
+          maximum. Zone durations are plausible for an endurance bike ride.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions or classes. Clean top-to-bottom flow.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: all data hardcoded as constants, no randomness
+          needed.'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie and Colors imported, both actively used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. Loop over zones for bar labels is clean.
+          No fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2. Correct.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: barplot!, text!, Legend, Figure[row,col] layout — all idiomatic Makie
+          primitives. RGBAf for transparent grid color is the correct Makie idiom.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: PolyElement for custom legend patches, composable layout with fig[2,1],
+          rowsize!(Relative) and rowgap! — features that showcase Makie's layout grammar.
+          Could push further with e.g. Axis decorations or Makie Observable patterns.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - colors
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
+  - grid-styling
