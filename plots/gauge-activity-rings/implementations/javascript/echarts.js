@@ -1,7 +1,7 @@
 // anyplot.ai
 // gauge-activity-rings: Activity Rings Progress Chart
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-06-14
+// Library: echarts 5.5.1 | JavaScript 22.22.3
+// Quality: 89/100 | Created: 2026-06-14
 //# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
