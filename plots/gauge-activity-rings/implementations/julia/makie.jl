@@ -1,7 +1,7 @@
 # anyplot.ai
 # gauge-activity-rings: Activity Rings Progress Chart
-# Library: Makie.jl 0.21 | Julia 1.11
-# Quality: pending | Created: 2026-06-14
+# Library: makie 0.22.10 | Julia 1.11.9
+# Quality: 89/100 | Created: 2026-06-14
 
 using CairoMakie
 using Colors
