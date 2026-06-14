@@ -1,0 +1,247 @@
+library: pygal
+language: python
+specification_id: gauge-activity-rings
+created: '2026-06-14T20:37:32Z'
+updated: '2026-06-14T21:05:44Z'
+generated_by: claude-sonnet
+workflow_run: 27511114186
+issue: 8648
+language_version: 3.13.13
+library_version: 3.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/python/pygal/plot-dark.html
+quality_score: 81
+review:
+  strengths:
+  - 'Perfect spec compliance: all required activity-ring features (rounded caps, background
+    tracks, center percentage labels, legend with raw values) implemented correctly'
+  - 'Correct Imprint palette (#009E73 outer, #C475FD middle, #4467A3 inner) and correct
+    theme backgrounds in both renders'
+  - Realistic, engaging fitness tracking data (Apple Watch-style Move/Exercise/Stand
+    goals)
+  - Bold font weight on the highest-completion metric (Exercise 83%) provides intentional
+    visual emphasis
+  - Technically sound SVG arc path generation including correct large-arc-flag handling
+    and full-circle edge case
+  weaknesses:
+  - Title font-size is 44 vs the recommended 66 for pygal on a 2400x2400 canvas —
+    increase to improve legibility especially at mobile scale (~400 px)
+  - Inner metric-name labels (font-size=30) are too small for the canvas — increase
+    to at least 38
+  - 'Background tracks less visible in dark theme: 20% opacity blends heavily with
+    the near-black surface — consider 30-35% opacity in dark mode for better track
+    legibility'
+  - Pygal chart API not used; only cairosvg (pygal's rendering dependency) is imported
+    — doesn't showcase the library's Style system or chart types
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct
+      Chrome: Title "Daily Fitness Goals · gauge-activity-rings · python · pygal · anyplot.ai" visible but small (font-size=44, recommended 66); legend text readable at bottom
+      Data: Outer ring green (#009E73), middle ring lavender (#C475FD), inner ring blue (#4467A3); background tracks at 20% opacity; rounded end caps; center labels 70%/83%/75% in ring colors
+      Legibility verdict: PASS (all text readable, though title and metric-name labels are undersized for the canvas)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct
+      Chrome: Title in light ink, readable; legend text readable; no dark-on-dark failures detected
+      Data: Ring colors identical to light render (#009E73, #C475FD, #4467A3); background tracks noticeably less visible (20% opacity blends with near-black — would benefit from ~30-35% in dark mode)
+      Legibility verdict: PASS (all text readable; brand green clearly visible; no dark-on-dark failures)
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 5
+        max: 8
+        passed: true
+        comment: Title font-size=44 below recommended 66 for pygal 2400x2400; metric-name
+          labels at font-size=30 also small for canvas
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions; center labels, rings, and legend are well-spaced
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Rings are prominent; stroke-width=130 well-chosen; background tracks
+          visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint positions 1-3 used; CVD-safe palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square 2400x2400 correct; slight downward offset (cy=H/2+60) to clear
+          title; clean proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No conventional axes; descriptive title + legend with values/units
+          covers information need
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Outer=#009E73, middle=#C475FD, inner=#4467A3; backgrounds #FAF8F1/#1A1A17;
+          colors identical across themes'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Professional: rounded caps, opacity tracks, bold emphasis on highest
+          metric, center percentage display'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Clean, no chart-junk; adequate whitespace but not especially generous
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Bold weight on leading metric creates hierarchy; center labels communicate
+          at-a-glance progress
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct concentric radial progress arcs starting at 12 o'clock sweeping
+          clockwise
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Rounded caps, background tracks, fraction clamping, equal stroke
+          widths, center labels, legend all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 3 rings correct values and fractions, outer-to-inner ordering correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows optional-prefix format; legend maps colors to metrics
+          with values and units
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All aspects shown: rings, tracks, center percentages, bottom legend
+          with raw values'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Apple Watch-style daily fitness goals; neutral and universally relatable
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 420/600 kcal, 25/30 min, 9/12 hr are realistic real-world fitness
+          targets
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: One helper function (arc_d) exists; justified by SVG arc-path math
+          complexity
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded; no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: math, os, sys, cairosvg — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Concise list-based SVG generation; no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 4
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Default; pygal chart API not used — raw SVG generation with cairosvg
+          for PNG; justified by chart type not being supported natively
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Default; no pygal Style object, no pygal chart types, no JS interactive
+          rendering used
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - cairosvg
+  techniques:
+  - annotations
+  - custom-legend
+  - html-export
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome

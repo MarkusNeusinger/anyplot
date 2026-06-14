@@ -1,0 +1,251 @@
+library: highcharts
+language: javascript
+specification_id: gauge-activity-rings
+created: '2026-06-14T20:40:36Z'
+updated: '2026-06-14T21:02:43Z'
+generated_by: claude-sonnet
+workflow_run: 27511168129
+issue: 8648
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/javascript/highcharts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Perfectly idiomatic Highcharts SVG Renderer usage (ren.path() arc drawing, render
+    event hook, el.destroy() cleanup)
+  - 'Full spec compliance: all activity-ring elements present (background tracks,
+    rounded caps, 12 o clock start, clockwise sweep, center focal label, three-column
+    legend)'
+  - 'Theme adaptation correct and carefully tuned: track opacity adjusted per theme
+    (0.18/0.25), all chrome tokens thread through, data colors identical across themes'
+  - Square orientation directive set appropriately for circular gauge
+  - Realistic fitness data matching spec example exactly (Move/Exercise/Stand)
+  weaknesses:
+  - Legend bottom margin is tight (~10-15px CSS from canvas edge) — increase legY
+    offset or add bottom margin of ~25px CSS so legend text has breathing room
+  - Legend detail text at 13px CSS is slightly small; bump to 14px for better mobile
+    readability
+  - render event fires on every redraw — for a static plot a one-time load event would
+    be more semantically precise (minor)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct surface
+      Chrome: Title "gauge-activity-rings · javascript · highcharts · anyplot.ai" in dark ink at 22px CSS — clearly readable. Subtitle "Daily fitness goal completion" in softer inkSoft tone. Center label "70%" at 46px bold and "Move goal" at 14px — both readable. Bottom legend: metric names at 14px, detail "420/600 kcal · 70%" at 13px — readable but slightly small.
+      Data: Three concentric rings — outer brand green #009E73 (Move 70%), middle lavender #C475FD (Exercise 83%), inner blue #4467A3 (Stand 75%). Background tracks visible at 18% opacity. Rounded end caps present. First series is #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct surface
+      Chrome: Title appears in light/white text against dark background — clearly readable. Center "70%" label in light color — readable. "Move goal" and legend labels use inkSoft dark-mode tone (#B8B7B0) — readable. No dark-on-dark failures detected.
+      Data: All three ring colors are identical to light render (brand green, lavender, blue). Background tracks at 25% opacity — slightly more visible than light but appropriate. Data colors theme-independent confirmed.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title 22px, center % 46px, labels 14px — all readable both themes.
+          Legend detail 13px CSS borderline for mobile.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between rings, center labels, or legend items.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All three progress arcs and background tracks clearly visible; rounded
+          end caps prominent.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender/blue are perceptually distinct; no red-green-only
+          encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square canvas correct for circular gauge; rings centered. Bottom
+          legend slightly tight (~10-15px CSS margin from canvas edge).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed; title correct; subtitle adds context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: palette[0] for Move, palette[1] for Exercise, palette[2] for Stand.
+          Transparent background. Chrome uses t.ink/t.inkSoft.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Center 70% label as focal point shows design thinking; Imprint palette
+          in canonical order; subtitle adds context. Refined but not exceptional.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: All Highcharts chrome removed; custom SVG renderer throughout; track
+          opacity tuned per theme; generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Center % creates visual hierarchy; rings convey relative progress;
+          legend provides actual values for numerical context.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Concentric radial progress arcs starting at 12 o'clock, sweeping
+          clockwise, with rounded end caps.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Background tracks, rounded end caps, 3 rings, outer-to-inner ordering,
+          center label, equal stroke widths — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Move 420/600 kcal, Exercise 25/30 min, Stand 9/12 hr — matches spec
+          example data exactly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: gauge-activity-rings · javascript · highcharts · anyplot.ai.
+          Custom legend with color dots, metric names, values, and percentages.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Progress arcs, background tracks, rounded caps, center focal label,
+          three-column legend with values and percentages.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Move/Exercise/Stand mirrors Apple Watch fitness ring model; values
+          (420/600 kcal, 25/30 min, 9/12 hr) are plausible daily targets. Neutral
+          context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Fractions 70%/83%/75% are realistic mid-progress values; goals (600
+          kcal, 30 min, 12 hr) are credible daily fitness targets.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: drawRings() and clearEls() helpers necessary for Highcharts render-event
+          pattern. Appropriate complexity.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hard-coded; fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; Highcharts is a global per harness contract.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean structure; render event hook + element cleanup is the correct
+          idiomatic pattern for SVG-renderer overlays.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Square orientation directive set; harness produces plot-{theme}.png
+          and plot-{theme}.html.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: chart.renderer SVG API (ren.path, ren.circle, ren.text, .css, .attr);
+          render event hook for responsive redraws; el.destroy() cleanup. Textbook
+          idiomatic Highcharts renderer usage.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'SVG Renderer + render-event pattern is Highcharts-specific. Minor:
+          render fires on every redraw; for a static plot a one-time load event would
+          be more precise.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
