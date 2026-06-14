@@ -1,7 +1,3 @@
-// anyplot.ai
-// bar-heart-rate-zones: Time in Heart Rate Zones Bar Chart
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 89/100 | Created: 2026-06-14
 //# anyplot-orientation: landscape
 // anyplot.ai
 // bar-heart-rate-zones: Time in Heart Rate Zones Bar Chart
@@ -15,20 +11,19 @@ import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// 60-minute tempo run: time distribution across heart rate training zones
 const zoneLabels = ["Z1 Recovery", "Z2 Endurance", "Z3 Aerobic", "Z4 Threshold", "Z5 Maximum"];
 const hrRanges   = ["< 125 bpm", "126–145 bpm", "146–162 bpm", "163–174 bpm", "> 174 bpm"];
 const minutes    = [8, 22, 15, 12, 3];
 
-// Conventional zone colors — semantic exception from canonical palette order:
-// fitness industry assigns grey/blue/green/orange/red per zone intensity level.
-// Mapped to nearest Imprint palette members.
+// Semantic zone colors: fitness-industry grey/blue/green/ochre/red → nearest Imprint members.
+// Z2 Endurance dominates at 22/60 min (37%) — rendered full opacity.
+// Remaining zones at 75% opacity (hex alpha BF) to direct the eye toward the dominant bar.
 const zoneColors = [
-  "#6B6A63",  // Z1 grey   — recovery  (Imprint muted anchor)
-  "#4467A3",  // Z2 blue   — endurance (Imprint position 3)
-  "#009E73",  // Z3 green  — aerobic   (Imprint position 1 / brand)
-  "#BD8233",  // Z4 ochre  — threshold (Imprint position 4)
-  "#AE3030",  // Z5 red    — maximum   (Imprint position 5 / matte red)
+  "#6B6A63BF",  // Z1 Recovery  — muted anchor, 75%
+  "#4467A3",    // Z2 Endurance — position 3 blue, full opacity (dominant)
+  "#009E73BF",  // Z3 Aerobic   — position 1 green, 75%
+  "#BD8233BF",  // Z4 Threshold — position 4 ochre, 75%
+  "#AE3030BF",  // Z5 Maximum   — position 5 matte red, 75%
 ];
 
 export default function Chart() {
@@ -63,6 +58,8 @@ export default function Chart() {
               values: zoneLabels,
               colors: zoneColors,
             },
+            disableLine: true,
+            disableTicks: true,
             tickLabelStyle: { fontSize: 15, fill: t.ink, fontWeight: 500 },
             categoryGapRatio: 0.38,
           }]}
@@ -70,6 +67,7 @@ export default function Chart() {
             label: "Time (minutes)",
             labelStyle: { fontSize: 14, fill: t.inkSoft },
             tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
+            disableTicks: true,
             max: 28,
           }]}
           series={[{
@@ -85,19 +83,18 @@ export default function Chart() {
           grid={{ horizontal: true }}
           sx={{
             "& .MuiBarLabel-root": {
-              fill: "#FAF8F1",
+              fill: "#F0EFE8",  // warm white — readable on all zone colors in both themes
               fontSize: "16px",
               fontWeight: 700,
             },
             "& .MuiChartsAxis-line": { stroke: t.inkSoft },
-            "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
             "& .MuiChartsGrid-line": { stroke: t.grid },
             "& .MuiChartsLegend-root": { display: "none" },
           }}
         />
       </Box>
 
-      {/* HR range labels below each zone (bottom strip) */}
+      {/* HR boundary ranges below each zone (bottom strip) */}
       <Box
         sx={{
           position: "absolute",
