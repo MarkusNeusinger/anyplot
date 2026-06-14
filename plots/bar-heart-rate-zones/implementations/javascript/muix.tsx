@@ -1,3 +1,7 @@
+// anyplot.ai
+// bar-heart-rate-zones: Time in Heart Rate Zones Bar Chart
+// Library: muix 7.29.1 | JavaScript 22.22.3
+// Quality: 89/100 | Created: 2026-06-14
 //# anyplot-orientation: landscape
 // anyplot.ai
 // bar-heart-rate-zones: Time in Heart Rate Zones Bar Chart
