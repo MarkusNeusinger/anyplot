@@ -1,7 +1,3 @@
-// anyplot.ai
-// gauge-activity-rings: Activity Rings Progress Chart
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 87/100 | Created: 2026-06-14
 //# anyplot-orientation: square
 // anyplot.ai
 // gauge-activity-rings: Activity Rings Progress Chart
@@ -21,6 +17,9 @@ const t = window.ANYPLOT_TOKENS;
 const W = window.ANYPLOT_SIZE.width;  // 1200 CSS px (square mount)
 const H = window.ANYPLOT_SIZE.height; // 1200 CSS px
 
+// Higher opacity in dark mode so tracks remain visible against near-black
+const trackOpacity = window.ANYPLOT_THEME === "dark" ? 0.28 : 0.18;
+
 // Daily fitness activity — Move / Exercise / Stand rings (spec example data)
 const rings = [
   { label: "Move",     value: 420, goal: 600, unit: "kcal", color: t.palette[0] },
@@ -35,6 +34,10 @@ const RING_RADII = [
   { inner: "44%", outer: "56%" }, // middle (Exercise)
   { inner: "28%", outer: "40%" }, // inner  (Stand)
 ];
+
+// Identify the lagging ring (lowest percentage) for visual emphasis
+const ringPcts = rings.map((r) => Math.round((r.value / r.goal) * 100));
+const laggingIndex = ringPcts.indexOf(Math.min(...ringPcts));
 
 export default function Chart() {
   return (
@@ -55,9 +58,10 @@ export default function Chart() {
               innerRadius={RING_RADII[i].inner}
               outerRadius={RING_RADII[i].outer}
               cornerRadius="50%"
+              skipAnimation
             >
-              {/* Faint full-circle background track */}
-              <GaugeReferenceArc style={{ fill: ring.color, opacity: 0.18 }} />
+              {/* Full-circle background track */}
+              <GaugeReferenceArc style={{ fill: ring.color, opacity: trackOpacity }} />
               {/* Colored progress arc */}
               <GaugeValueArc style={{ fill: ring.color }} />
             </GaugeContainer>
@@ -77,7 +81,7 @@ export default function Chart() {
         }}
       >
         <Typography
-          sx={{ color: t.inkSoft, fontSize: 18, fontWeight: 400, letterSpacing: "0.01em" }}
+          sx={{ color: t.inkSoft, fontSize: 22, fontWeight: 400, letterSpacing: "0.01em" }}
         >
           gauge-activity-rings · javascript · muix · anyplot.ai
         </Typography>
@@ -122,8 +126,9 @@ export default function Chart() {
           pointerEvents: "none",
         }}
       >
-        {rings.map((ring) => {
-          const pct = Math.round((ring.value / ring.goal) * 100);
+        {rings.map((ring, i) => {
+          const pct = ringPcts[i];
+          const isLagging = i === laggingIndex;
           return (
             <Box key={ring.label} sx={{ textAlign: "center" }}>
               <Typography
@@ -139,6 +144,11 @@ export default function Chart() {
               <Typography sx={{ color: t.inkSoft, fontSize: 14 }}>
                 {ring.value} / {ring.goal} {ring.unit}
               </Typography>
+              {isLagging && (
+                <Typography sx={{ color: t.amber, fontSize: 13, fontWeight: 700, mt: 0.5 }}>
+                  ↓ focus area
+                </Typography>
+              )}
             </Box>
           );
         })}
