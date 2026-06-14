@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 burndown-sprint: Agile Sprint Burndown Chart
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 88/100 | Created: 2026-06-14
