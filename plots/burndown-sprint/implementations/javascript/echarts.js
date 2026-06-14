@@ -1,3 +1,7 @@
+// anyplot.ai
+// burndown-sprint: Agile Sprint Burndown Chart
+// Library: echarts 5.5.1 | JavaScript 22.22.3
+// Quality: 86/100 | Created: 2026-06-14
 //# anyplot-orientation: landscape
 // anyplot.ai
 // burndown-sprint: Agile Sprint Burndown Chart
