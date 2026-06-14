@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 gauge-activity-rings: Activity Rings Progress Chart
 Library: pygal 3.1.0 | Python 3.13.13
+Quality: 81/100 | Created: 2026-06-14
 """
 
 import math
