@@ -17,7 +17,7 @@ const colors = [t.palette[0], t.palette[1], t.palette[2]];
 
 // --- Layout -----------------------------------------------------------------
 const cx     = width / 2;
-const cy     = Math.round(height * 0.505);
+const cy     = Math.round(height * 0.48);
 const strokeW = Math.round(width * 0.05);    // 60px track width at 1200 CSS px
 const step    = Math.round(width * 0.0708);  // 85px center-to-center ring spacing
 const outerR  = Math.round(width * 0.25);    // 300px outermost ring radius
@@ -100,14 +100,15 @@ rings.forEach((d, i) => {
   const color = colors[i];
 
   svg.append("circle")
-    .attr("cx", lx - Math.round(nameSize * 2))
+    .attr("cx", lx - Math.round(nameSize * 4.5))
     .attr("cy", legendY)
     .attr("r", dotR)
     .attr("fill", color);
 
   svg.append("text")
-    .attr("x", lx - Math.round(nameSize * 1.3))
+    .attr("x", lx)
     .attr("y", legendY + 5)
+    .attr("text-anchor", "middle")
     .attr("fill", t.ink)
     .style("font-size", `${nameSize}px`)
     .style("font-weight", "600")
