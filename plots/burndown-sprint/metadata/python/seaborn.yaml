@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: burndown-sprint
 created: '2026-06-14T22:38:17Z'
-updated: '2026-06-14T22:44:20Z'
+updated: '2026-06-14T22:54:24Z'
 generated_by: claude-sonnet
 workflow_run: 27513994520
 issue: 8654
@@ -12,134 +12,119 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/burndown-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - 'Full spec compliance: step series, ideal burndown, weekend shading, scope-change
-    marker with annotation, and legend all implemented correctly'
-  - 'Perfect Imprint palette use: brand green (#009E73) for actual burndown, semantic
-    red (#AE3030) for scope-change danger marker, neutral muted gray for reference
-    line'
-  - 'Complete theme-adaptive chrome: all tokens (PAGE_BG, INK, INK_SOFT, INK_MUTED,
-    ELEVATED_BG) applied correctly; both renders are readable with no dark-on-dark
-    failures'
-  - 'Realistic and complete dataset: 40-SP sprint with +8 scope creep on day 4, weekend
-    flat segments, and full convergence to 0 on retro day'
-  - Clean, KISS code structure with all font sizes explicitly set and generous subplots_adjust
-    layout tuning
+  - Perfect spec compliance — every required feature (step series, ideal line, weekend
+    shading, scope change marker, legend) implemented correctly
+  - Excellent data quality — realistic agile sprint scenario with realistic scale
+    and narrative arc
+  - Full theme adaptation — chrome tokens correctly applied in both light and dark
+    renders with no legibility failures
+  - Semantic color use — brand green for the primary data series, muted gray for the
+    reference line, semantic red for the scope-change alert
   weaknesses:
-  - 'Library Mastery is low (4/10): the implementation uses seaborn only for sns.set_theme()
-    theming; all actual plotting (step, ideal line, axvspan, axvline, fill_between)
-    is done via matplotlib primitives. Repair should use sns.lineplot() for the ideal
-    burndown line and/or wrap the step data into a DataFrame to use seaborn''s lineplot
-    with drawstyle=''steps-post'', boosting both LM-01 and LM-02.'
-  - 'DE-01 not at publication level (6/8): the scope-change annotation text is small
-    (7.5pt) and sits inside the weekend shading band making it slightly harder to
-    read. Consider moving the annotation above the plot line or increasing the text
-    to 9pt.'
-  - 'VQ-01 minor: x-axis tick labels at fontsize=7 are the smallest element on the
-    chart; on mobile at ~400px width the Mon/Tue labels may be borderline. Consider
-    fontsize=8 for x-axis ticks to match the legend and annotation size floor.'
+  - LM-02 is thin — the chart uses seaborn mainly as a lineplot wrapper; the weekend
+    shading, vertical markers, fill, and legend customization are all raw matplotlib.
+    A subsequent attempt could use sns.despine() instead of manual spine manipulation,
+    or leverage relplot/FacetGrid for a more distinctly seaborn approach.
+  - Legend frame visible — the legend box retains a border (edgecolor=INK_SOFT) that
+    could be removed (frameon=False) or made thinner for a cleaner visual refinement
+    finish.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "burndown-sprint · python · seaborn · anyplot.ai" in dark ink (~12pt), fully readable; Y-axis label "Remaining Story Points" and X-axis label "Sprint Day" in dark ink (10pt), readable; Y-axis tick labels (0–40) in muted dark gray, readable; X-axis day labels (Mon–Sun…Mon) in muted dark gray at 7pt — small but legible at full resolution. Legend box in upper right with elevated background (#FFFDF6), labels "Ideal burndown" and "Actual remaining" in muted dark gray.
-      Data: Actual burndown step series in brand green (#009E73) with subtle teal fill (alpha=0.07) below; ideal burndown as gray dashed line; weekend shading as light gray vertical bands (days 5–6, 12–13); red dotted vertical line at day 4 with "+8 SP / scope change" annotation in matte red (#AE3030).
-      Legibility verdict: PASS — all elements clearly readable.
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "burndown-sprint · python · seaborn · anyplot.ai" at fontsize 12, readable in dark ink. Axis labels "Sprint Day" / "Remaining Story Points" at fontsize 10, readable. Tick labels (day names + story point values) at fontsize 8, readable. Legend text at fontsize 8, readable.
+      Data: Brand green #009E73 step series for actual burndown; dashed muted-gray ideal reference line; red #AE3030 dotted scope-change marker at day 4 with "+8 SP / scope change" annotation; subtle gray weekend shading; very light green fill under actual line.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title in light ink (#F0EFE8), fully readable against dark background; axis labels in light ink, readable; tick labels in soft light gray (#B8B7B0), readable — NO dark-on-dark failures. Legend box with elevated dark background (#242420), text in light gray.
-      Data: Data colors identical to light render — green step line (#009E73), gray dashed ideal line, red scope-change marker (#AE3030). Weekend shading appears as slightly darker bands against the near-black background. The teal fill under the actual line is subtle but visible.
-      Legibility verdict: PASS — all text readable, no dark-on-dark failures detected.
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title, axis labels, tick labels all rendered in light #F0EFE8 (primary) / #B8B7B0 (secondary) — clearly readable against dark surface. Legend box uses elevated dark background #242420. No dark-on-dark failures detected.
+      Data: Brand green #009E73 step series identical to light render — Imprint palette data colors are theme-invariant as required. Muted gray ideal line, red scope-change marker both visible. Weekend shading and fill adapt naturally to dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All sizes explicitly set; title 12pt, axis labels 10pt, legend 8pt,
-          annotation 7.5pt, x-tick 7pt. X-axis day labels (7pt / 15 labels) are the
-          smallest element and may be tight at mobile width.
+        comment: All font sizes explicitly set (title=12, axes=10, ticks=8, legend=8,
+          annotation=9). Readable in both themes, well-proportioned.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data overlap. Scope change annotation
-          is positioned to the right of the vertical marker without collisions.
+        comment: No text/data collisions. Scope-change annotation clears all data;
+          legend doesn't overlap step series.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Step line (linewidth=2.8) and ideal dashed line (linewidth=2.0) are
-          prominent and clearly visible. Weekend bands and fill are appropriately
-          subtle. Scope change marker visible in both themes.
+        comment: Step series (lw=2.8) and ideal line (lw=2.0 dashed) clearly visible.
+          Weekend shading and fill intentionally subtle.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Green step vs gray dashed ideal: strong hue + linestyle redundancy.
-          CVD-safe: green-gray separation clear under deuteranopia. Red scope marker
-          uses dotted linestyle as redundant cue.'
+        comment: Green vs muted-gray with redundant solid vs dashed encoding. Red
+          scope marker is accent only.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. subplots_adjust(left=0.09, right=0.97, top=0.91,
-          bottom=0.12) gives well-balanced margins. Plot fills canvas well. No clipping.
+        comment: Canvas gate not triggered. No clipping. Balanced margins via subplots_adjust.
+          Legend anchored near data.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y: ''Remaining Story Points'' (unit implicit in name). X: ''Sprint
-          Day''. Title format correct: ''burndown-sprint · python · seaborn · anyplot.ai''.'
+        comment: Sprint Day / Remaining Story Points — descriptive and contextually
+          complete.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green). Ideal line uses INK_MUTED (semantic
-          neutral/reference — correct). Scope marker uses #AE3030 (semantic danger
-          — correct). Background #FAF8F1 light / #1A1A17 dark. All chrome tokens theme-adaptive.'
+        comment: 'First series #009E73. Ideal line INK_MUTED (semantic muted reference).
+          Scope change #AE3030 (semantic red). Backgrounds #FAF8F1/#1A1A17. Both renders
+          theme-correct.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: intentional semantic color choices (green=progress,
-          gray=reference, red=risk), fill-under-area adds depth, weekend shading contextualizes
-          flat segments. Clearly above generic defaults but not publication-ready
-          at FiveThirtyEight level.'
+        comment: Intentional visual hierarchy across three layers (bold green > dashed
+          muted > subtle weekend). Above generic default but not FiveThirtyEight-level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top and right spines removed; subtle y-axis-only grid (alpha=0.15);
-          legend frame styled with ELEVATED_BG; set_axisbelow(True). Good refinement,
-          though the scope change annotation could be more polished.
+        comment: Top/right spines removed. Subtle y-axis-only grid. Weekend shading
+          and fill at 0.07 alpha. Good whitespace. Legend frame visible — could be
+          borderless.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Good storytelling: viewer can follow the narrative — scope creep
-          on Friday week 1, weekend pauses, recovery in week 2, near-complete sprint.
-          Visual hierarchy through color contrast (green vs gray) guides the eye.
-          Annotation explains the scope jump.'
+        comment: Scope-change annotation explains why actual line jumps above ideal.
+          Weekend bands explain flat segments. Team catching up by day 14 is readable.
+          Visual hierarchy guides eye to narrative hinge.
     spec_compliance:
       score: 15
       max: 15
@@ -149,29 +134,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct burndown chart with step series (ax.step where='post'), ideal
-          straight line, weekend shading, and scope-change annotation.
+        comment: Step burndown chart with drawstyle='steps-post' exactly as specified.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: step series, ideal reference line (dashed, muted),
-          Y starts at 0, weekend shading, scope-change marker + annotation, legend.'
+        comment: Step series, ideal reference line (dashed/muted), weekend shading
+          (axvspan), scope-change marker (vertical line + annotation), legend — all
+          present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = sprint calendar days with day-name labels; Y = remaining story
-          points starting at 40 descending to 0.
+        comment: 'X: sprint days 0-14 with named labels. Y: story points 0-48 covering
+          full data range.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''burndown-sprint · python · seaborn · anyplot.ai'' — correct.
-          Legend: ''Ideal burndown'' and ''Actual remaining'' — correct and distinct.'
+        comment: 'Title: burndown-sprint · python · seaborn · anyplot.ai — correct
+          format. Legend: Ideal burndown / Actual remaining.'
     data_quality:
       score: 15
       max: 15
@@ -181,24 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all key burndown features: initial commitment (40 SP), scope
-          creep (+8 SP day 4), weekend flat segments (days 5-6, 12-13), recovery in
-          week 2, and full burndown to 0.'
+        comment: Covers actual burndown (step), ideal trajectory, scope change (+8
+          SP day 4), weekend flat segments, end-of-sprint completion.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real agile sprint scenario: 10-working-day sprint, 40 story points,
-          +8 scope change on week 1 Friday. Neutral professional topic (software development
-          project management).'
+        comment: 10-working-day / 14-calendar-day sprint, 40 SP commitment, mid-sprint
+          scope addition — canonical agile scenario, neutral business context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 40 SP starting scope is typical for a sprint. +8 SP (20%) scope increase
-          is realistic. Calendar structure (Mon-Fri work, Sat-Sun weekend) is accurate.
+        comment: 40 SP for 2-week sprint is industry-typical. +8 SP scope change (20%)
+          is realistic. Team finishing all SP on day 14 is plausible success.
     code_quality:
       score: 10
       max: 10
@@ -208,61 +191,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear Imports → Theme tokens → Data → Plot → Save. No functions
+        comment: Linear imports → theme tokens → data → plot → save. No functions
           or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Data is deterministic hardcoded arrays.
+        comment: np.random.seed(42) set. Data is hardcoded deterministic array.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: sys, os, matplotlib.pyplot, numpy, seaborn — all used.
+        comment: sys, os, matplotlib, numpy, pandas, seaborn — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable code. Appropriate complexity for the visualization.
-          No over-engineering or fake functionality.
+        comment: Appropriate complexity. Clear semantic variable names (BRAND, DANGER).
+          No over-engineering. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=400. No bbox_inches='tight' (correct
-          per seaborn canvas rule). Current API.
+        comment: Saves plot-{THEME}.png. No bbox_inches='tight'.
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: sns.set_theme() with comprehensive rc params is idiomatic for global
-          theming. However, all actual plotting uses matplotlib primitives (ax.step,
-          ax.plot, ax.axvspan, ax.axvline, ax.fill_between) — no seaborn plotting
-          functions used.
+        comment: Uses sns.lineplot with drawstyle='steps-post' and ax= parameter (axes-level
+          API). sns.set_theme for global theming. Leans on matplotlib for shading,
+          vertical lines, fill.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Seaborn's contribution is sns.set_theme() only. The chart could be
-          reproduced with pure matplotlib; seaborn adds only global styling. No seaborn
-          plotting API (lineplot, etc.) is used.
-  verdict: REJECTED
+        comment: sns.set_theme RC theming and lineplot drawstyle are seaborn-level
+          but thin as distinctive. Most structural work (axvspan, axvline, fill_between,
+          legend frame) is raw matplotlib.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - manual-ticks
+  - annotations
   patterns:
   - data-generation
   - explicit-figure

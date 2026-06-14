@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 burndown-sprint: Agile Sprint Burndown Chart
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 87/100 | Created: 2026-06-14
+Quality: 89/100 | Created: 2026-06-14
 """
 
 import sys
