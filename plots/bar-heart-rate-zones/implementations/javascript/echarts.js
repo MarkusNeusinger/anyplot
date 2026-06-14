@@ -19,9 +19,9 @@ const zoneColors = [
 ];
 
 // Data — 60-minute tempo run (polarized training example)
-const zoneNames = ["Z1\nRecovery", "Z2\nEndurance", "Z3\nAerobic", "Z4\nThreshold", "Z5\nMaximum"];
-const hrRanges  = ["< 111 bpm", "111–130 bpm", "130–148 bpm", "148–167 bpm", "> 167 bpm"];
-const minutes   = [8, 22, 15, 12, 3];
+const zoneNames  = ["Z1\nRecovery", "Z2\nEndurance", "Z3\nAerobic", "Z4\nThreshold", "Z5\nMaximum"];
+const hrRanges   = ["< 111 bpm", "111–130 bpm", "130–148 bpm", "148–167 bpm", "> 167 bpm"];
+const minutes    = [8, 22, 15, 12, 3];
 
 const barData = minutes.map((m, i) => ({
   value: m,
@@ -63,7 +63,7 @@ chart.setOption({
     left: 90,
     right: 60,
     top: 118,
-    bottom: 140,
+    bottom: 165,
   },
 
   xAxis: {
@@ -71,11 +71,16 @@ chart.setOption({
     data: zoneNames,
     axisLabel: {
       color: t.inkSoft,
-      fontSize: 15,
-      lineHeight: 22,
-      margin: 16,
+      fontSize: 14,
+      lineHeight: 21,
+      margin: 14,
+      // Add HR boundary range as a third line below zone name
+      formatter: (value, index) => `${value}\n{hr|${hrRanges[index]}}`,
+      rich: {
+        hr: { color: t.inkSoft, fontSize: 11, align: "center" },
+      },
     },
-    axisLine: { lineStyle: { color: t.inkSoft } },
+    axisLine: { show: false },
     axisTick: { show: false },
     splitLine: { show: false },
   },
@@ -91,7 +96,7 @@ chart.setOption({
     axisLabel: {
       color: t.inkSoft,
       fontSize: 14,
-      formatter: "{value} min",
+      formatter: "{value}",
     },
     axisLine: { show: false },
     axisTick: { show: false },
@@ -112,6 +117,32 @@ chart.setOption({
         fontSize: 16,
         fontWeight: "bold",
         distance: 8,
+      },
+      // Highlight Z4+Z5 as the high-intensity tempo-run signature
+      markArea: {
+        silent: true,
+        data: [
+          [
+            {
+              xAxis: "Z4\nThreshold",
+              itemStyle: {
+                color: THEME === "light"
+                  ? "rgba(174, 48, 48, 0.07)"
+                  : "rgba(174, 48, 48, 0.13)",
+              },
+              label: {
+                show: true,
+                formatter: "High Intensity",
+                position: "insideTop",
+                color: t.inkSoft,
+                fontSize: 11,
+                fontStyle: "italic",
+                distance: 8,
+              },
+            },
+            { xAxis: "Z5\nMaximum" },
+          ],
+        ],
       },
     },
   ],
