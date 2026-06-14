@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-heart-rate-zones: Time in Heart Rate Zones Bar Chart
-Library: seaborn | Python 3.13
-Quality: pending | Created: 2026-06-14
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 85/100 | Created: 2026-06-14
 """
 
 import os
