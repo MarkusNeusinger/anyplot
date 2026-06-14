@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 gauge-activity-rings: Activity Rings Progress Chart
 Library: plotnine 0.15.7 | Python 3.13.13
 Quality: 87/100 | Created: 2026-06-14
@@ -15,6 +15,7 @@ from plotnine import (
     element_rect,
     element_text,
     geom_path,
+    geom_text,
     ggplot,
     labs,
     scale_color_manual,
@@ -54,6 +55,7 @@ arc_rows = []
 color_dict = {}
 legend_breaks = []
 legend_labels = []
+ann_rows = []
 
 for i, ring in enumerate(ring_configs):
     progress = min(ring["value"] / ring["goal"], 1.0)
@@ -85,6 +87,16 @@ for i, ring in enumerate(ring_configs):
     pct = round(ring["value"] / ring["goal"] * 100)
     legend_labels.append(f"{ring['metric']}   {ring['value']} / {ring['goal']}   ({pct}%)")
 
+    # Endpoint annotation: % label placed just outside the arc tip
+    theta_end = progress * 2 * np.pi
+    r_lbl = r + 0.55
+    ann_rows.append({"x": r_lbl * np.sin(theta_end), "y": r_lbl * np.cos(theta_end), "label": f"{pct}%"})
+
+# Center headline: overall average completion
+avg_pct = round(sum(min(r["value"] / r["goal"], 1.0) for r in ring_configs) / len(ring_configs) * 100)
+df_center = pd.DataFrame({"x": [0.0, 0.0], "y": [0.22, -0.42], "label": [f"{avg_pct}%", "avg"]})
+df_ann = pd.DataFrame(ann_rows)
+
 # Tracks drawn first (underneath), arcs drawn on top
 df_tracks = pd.concat(track_rows, ignore_index=True)
 df_arcs = pd.concat(arc_rows, ignore_index=True)
@@ -99,7 +111,9 @@ plot = (
     ggplot(df, aes(x="x", y="y", group="group", color="group"))
     + geom_path(data=df_tracks, size=9, lineend="round")
     + geom_path(data=df_arcs, size=9, lineend="round")
-    + coord_equal(xlim=(-4.0, 4.0), ylim=(-4.2, 4.5))
+    + geom_text(mapping=aes(x="x", y="y", label="label"), data=df_center, color=INK, size=4.5, inherit_aes=False)
+    + geom_text(mapping=aes(x="x", y="y", label="label"), data=df_ann, color=INK_SOFT, size=2.8, inherit_aes=False)
+    + coord_equal(xlim=(-4.0, 4.0), ylim=(-4.0, 4.0))
     + scale_color_manual(values=color_dict, breaks=legend_breaks, labels=legend_labels, name="")
     + labs(title=title, x=None, y=None)
     + theme_void()
