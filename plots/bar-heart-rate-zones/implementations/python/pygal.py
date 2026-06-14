@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-heart-rate-zones: Time in Heart Rate Zones Bar Chart
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 84/100 | Created: 2026-06-14
+Quality: 89/100 | Created: 2026-06-14
 """
 
 import os
