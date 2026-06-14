@@ -1,3 +1,7 @@
+// anyplot.ai
+// gauge-activity-rings: Activity Rings Progress Chart
+// Library: muix 7.29.1 | JavaScript 22.22.3
+// Quality: 87/100 | Created: 2026-06-14
 //# anyplot-orientation: square
 // anyplot.ai
 // gauge-activity-rings: Activity Rings Progress Chart
