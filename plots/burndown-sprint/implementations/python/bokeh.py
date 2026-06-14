@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 burndown-sprint: Agile Sprint Burndown Chart
 Library: bokeh 3.9.1 | Python 3.13.13
 Quality: 86/100 | Created: 2026-06-14
@@ -29,21 +29,18 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Imprint palette — canonical order, theme-independent
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 BRAND = IMPRINT_PALETTE[0]  # actual remaining (green)
 IDEAL_CLR = IMPRINT_PALETTE[2]  # ideal burndown (blue)
 SCOPE_CLR = IMPRINT_PALETTE[4]  # scope change marker (red — semantic: bad/risk)
+# Lighter red for dark theme to meet WCAG large-text 3:1 contrast against #1A1A17
+SCOPE_ANNOTATION_CLR = SCOPE_CLR if THEME == "light" else "#D06060"
 
 
 # Data: 10-working-day sprint Jun 1–12 2026, weekends Jun 6–7
 # Scope change on Jun 8: +8 pts added, so remaining jumps from 22 → 30
-def to_ms(d: date) -> float:
-    return datetime(d.year, d.month, d.day, tzinfo=timezone.utc).timestamp() * 1000
-
-
 sprint_dates = [
     date(2026, 6, 1),  # Mon WD1 — sprint start
     date(2026, 6, 2),  # Tue WD2
@@ -63,10 +60,10 @@ remaining = [40, 36, 32, 25, 22, 22, 22, 30, 22, 14, 7, 0]
 n = len(sprint_dates)
 ideal = [40 * (1 - i / (n - 1)) for i in range(n)]
 
-dates_ms = [to_ms(d) for d in sprint_dates]
-weekend_start_ms = to_ms(date(2026, 6, 6))
-weekend_end_ms = to_ms(date(2026, 6, 7)) + 86_400_000  # through end of Sunday
-scope_ms = to_ms(date(2026, 6, 8))
+dates_ms = [datetime(d.year, d.month, d.day, tzinfo=timezone.utc).timestamp() * 1000 for d in sprint_dates]
+weekend_start_ms = datetime(2026, 6, 6, tzinfo=timezone.utc).timestamp() * 1000
+weekend_end_ms = datetime(2026, 6, 7, tzinfo=timezone.utc).timestamp() * 1000 + 86_400_000
+scope_ms = datetime(2026, 6, 8, tzinfo=timezone.utc).timestamp() * 1000
 
 # Title — 63 chars, under 67 baseline, so title_pt stays at 50
 TITLE = "Sprint Burndown · burndown-sprint · python · bokeh · anyplot.ai"
@@ -91,7 +88,7 @@ p = figure(
 
 # Weekend shading (subtle band — flat segments in the burndown fall on weekends)
 p.add_layout(
-    BoxAnnotation(left=weekend_start_ms, right=weekend_end_ms, fill_color=INK, fill_alpha=0.07, line_color=None)
+    BoxAnnotation(left=weekend_start_ms, right=weekend_end_ms, fill_color=INK, fill_alpha=0.10, line_color=None)
 )
 
 # Ideal burndown — straight reference line (blue dashed)
@@ -122,14 +119,14 @@ p.scatter(x="dates", y="remaining", source=source, size=18, color=BRAND, line_co
 # Scope change vertical marker (red dotdash line)
 p.add_layout(Span(location=scope_ms, dimension="height", line_color=SCOPE_CLR, line_width=2.5, line_dash="dotdash"))
 
-# Scope change annotation
+# Scope change annotation — lighter red on dark theme for WCAG 3:1 contrast
 p.add_layout(
     Label(
         x=scope_ms + 3_600_000,  # 1 hr right of the span
         y=33,
         text="+8 pts scope added",
-        text_color=SCOPE_CLR,
-        text_font_size="28pt",
+        text_color=SCOPE_ANNOTATION_CLR,
+        text_font_size="22pt",
         text_font_style="italic",
     )
 )
@@ -140,7 +137,7 @@ p.y_range.start = 0
 # Style — theme-adaptive chrome
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None  # remove 4-sided border; axes provide L-shaped frame
 
 p.title.text_font_size = f"{title_pt}pt"
 p.title.text_color = INK
