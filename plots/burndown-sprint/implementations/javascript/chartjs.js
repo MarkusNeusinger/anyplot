@@ -44,7 +44,7 @@ const weekendPlugin = {
     ctx.fillStyle = THEME === "light"
       ? "rgba(26,26,23,0.25)"
       : "rgba(240,239,232,0.25)";
-    ctx.font = "13px sans-serif";
+    ctx.font = `13px ${Chart.defaults.font.family}`;
     ctx.textAlign = "center";
     ctx.fillText("Weekend", midX, y.bottom - 14);
     ctx.restore();
@@ -67,10 +67,10 @@ const scopeChangePlugin = {
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.fillStyle = t.amber;
-    ctx.font = "bold 14px sans-serif";
+    ctx.font = `bold 14px ${Chart.defaults.font.family}`;
     ctx.textAlign = "left";
     ctx.fillText("+9 pts", xPos + 7, y.top + 26);
-    ctx.font = "13px sans-serif";
+    ctx.font = `13px ${Chart.defaults.font.family}`;
     ctx.fillText("scope added", xPos + 7, y.top + 44);
     ctx.restore();
   },
@@ -97,10 +97,11 @@ new Chart(canvas, {
         pointBorderWidth: 2,
         stepped: "after",
         // Red fill when actual > ideal (behind schedule); green when actual < ideal (ahead).
+        // Dark mode uses higher opacity so fills remain visible on the near-black surface.
         fill: {
           target: 1,
-          above: "rgba(174,48,48,0.12)",
-          below: "rgba(0,158,115,0.12)",
+          above: THEME === "dark" ? "rgba(174,48,48,0.22)" : "rgba(174,48,48,0.12)",
+          below: THEME === "dark" ? "rgba(0,158,115,0.22)" : "rgba(0,158,115,0.12)",
         },
       },
       {
@@ -151,6 +152,7 @@ new Chart(canvas, {
           minRotation: 0,
         },
         grid: { color: t.grid },
+        border: { display: false },
         title: {
           display: true,
           text: "Sprint Day",
@@ -166,6 +168,7 @@ new Chart(canvas, {
           font: { size: 14 },
         },
         grid: { color: t.grid },
+        border: { display: false },
         title: {
           display: true,
           text: "Remaining Story Points",
