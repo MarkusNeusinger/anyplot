@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 gauge-activity-rings: Activity Rings Progress Chart
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 83/100 | Created: 2026-06-14
@@ -38,8 +38,9 @@ n_pts = 300
 
 # Build arc path data
 track_rows, arc_rows = [], []
-for ring, r in zip(rings_data, radii):
+for ring, r in zip(rings_data, radii, strict=False):
     frac = min(ring["value"] / ring["goal"], 1.0)
+    pct = ring["value"] / ring["goal"] * 100
 
     # Background track (full circle, low opacity)
     a_track = np.linspace(np.pi / 2, np.pi / 2 - 2 * np.pi, n_pts + 1)
@@ -52,7 +53,16 @@ for ring, r in zip(rings_data, radii):
     n_arc = max(4, int(n_pts * frac) + 1)
     a_arc = np.linspace(np.pi / 2, np.pi / 2 - 2 * np.pi * frac, n_arc)
     for a in a_arc:
-        arc_rows.append({"x": r * np.cos(a), "y": r * np.sin(a), "group": f"arc_{ring['name']}", "name": ring["name"]})
+        arc_rows.append(
+            {
+                "x": r * np.cos(a),
+                "y": r * np.sin(a),
+                "group": f"arc_{ring['name']}",
+                "name": ring["name"],
+                "pct_label": f"{pct:.0f}%",
+                "progress": f"{ring['value']} / {ring['goal']} {ring['unit']}",
+            }
+        )
 
 track_df = pd.DataFrame(track_rows)
 arc_df = pd.DataFrame(arc_rows)
@@ -60,9 +70,18 @@ arc_df = pd.DataFrame(arc_rows)
 # Labels below the rings — centered under each ring's approximate x position
 label_x = [-2.4, 0.0, 2.4]
 label_rows, sub_rows = [], []
-for ring, xp in zip(rings_data, label_x):
+for ring, xp in zip(rings_data, label_x, strict=False):
     pct = ring["value"] / ring["goal"] * 100
-    label_rows.append({"x": xp, "y": -3.2, "label": f"{ring['name']}  {pct:.0f}%", "name": ring["name"]})
+    label_rows.append(
+        {
+            "x": xp,
+            "y": -3.2,
+            "label": f"{ring['name']}  {pct:.0f}%",
+            "name": ring["name"],
+            "pct_label": f"{pct:.0f}%",
+            "progress": f"{ring['value']} / {ring['goal']} {ring['unit']}",
+        }
+    )
     sub_rows.append(
         {"x": xp, "y": -3.7, "label": f"{ring['value']} / {ring['goal']} {ring['unit']}", "name": ring["name"]}
     )
@@ -81,7 +100,8 @@ title_size = max(11, round(16 * ratio))
 
 anyplot_theme = theme_void() + theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-    panel_background=element_rect(fill=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_border=element_blank(),
     plot_title=element_text(color=INK, size=title_size, hjust=0.5),
     legend_position="none",
 )
@@ -92,11 +112,23 @@ plot = (
     + geom_path(
         data=track_df, mapping=aes(x="x", y="y", group="group", color="name"), size=8, alpha=0.15, show_legend=False
     )
-    # Progress arcs
-    + geom_path(data=arc_df, mapping=aes(x="x", y="y", group="group", color="name"), size=8, show_legend=False)
-    # Ring name + percentage labels
+    # Progress arcs with rounded end caps for the iconic activity-ring look
+    + geom_path(
+        data=arc_df,
+        mapping=aes(x="x", y="y", group="group", color="name"),
+        size=8,
+        show_legend=False,
+        lineend="round",
+        tooltips=layer_tooltips().line("@name").line("Progress: @pct_label").line("@progress"),
+    )
+    # Ring name + percentage labels (with letsplot interactive tooltips)
     + geom_text(
-        data=label_df, mapping=aes(x="x", y="y", label="label", color="name"), size=4.0, hjust=0.5, show_legend=False
+        data=label_df,
+        mapping=aes(x="x", y="y", label="label", color="name"),
+        size=4.0,
+        hjust=0.5,
+        show_legend=False,
+        tooltips=layer_tooltips().line("@name").line("@pct_label").line("@progress"),
     )
     # Value / goal sub-labels
     + geom_text(
