@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 burndown-sprint: Agile Sprint Burndown Chart
 Library: plotly 6.8.0 | Python 3.13.13
 Quality: 88/100 | Created: 2026-06-14
@@ -30,6 +30,7 @@ WEEKEND_FILL = "rgba(26,26,23,0.05)" if THEME == "light" else "rgba(240,239,232,
 # Imprint palette — first series always #009E73
 BRAND = "#009E73"  # actual remaining-work line
 SCOPE_COLOR = "#AE3030"  # scope change event (semantic red — risk/addition)
+ANYPLOT_AMBER = "#DDCC77"  # behind-schedule indicator (Imprint warning anchor)
 
 # Data: 10-working-day sprint (Jan 6–17 2025), initial scope 40 SP
 # Scope addition of +8 on Jan 9 (working day 4) causes remaining to jump
@@ -39,6 +40,26 @@ remaining = [40, 36, 30, 38, 30, 30, 30, 22, 14, 8, 3, 0]
 # Ideal burndown: straight reference from (sprint start, 40) to (sprint end, 0)
 ideal_dates = [sprint_dates[0], sprint_dates[-1]]
 ideal_values = [40, 0]
+
+# Compute ideal at each sprint date for ahead/behind fill zones
+n = len(sprint_dates)
+ideal_at_dates = [40 * (1 - i / (n - 1)) for i in range(n)]
+
+# Clip to create non-overlapping fill zones on each side of the ideal line
+# ahead_y = actual clipped to ≤ ideal (fills the green zone below ideal)
+# behind_y = actual clipped to ≥ ideal (fills the amber zone above ideal)
+ahead_y = [min(r, idl) for r, idl in zip(remaining, ideal_at_dates, strict=True)]
+behind_y = [max(r, idl) for r, idl in zip(remaining, ideal_at_dates, strict=True)]
+
+AHEAD_FILL = "rgba(0,158,115,0.15)"  # brand green tint — ahead of schedule
+BEHIND_FILL = "rgba(221,204,119,0.28)"  # amber tint — behind schedule
+
+# Build closed polygons for toself fill (traces the boundary of each zone)
+fill_x = sprint_dates + sprint_dates[::-1]
+# Ahead zone: bottom=ahead_y, top=ideal (going forward then back)
+ahead_fill_y = ahead_y + ideal_at_dates[::-1]
+# Behind zone: bottom=ideal, top=behind_y (going forward then back)
+behind_fill_y = behind_y + ideal_at_dates[::-1]
 
 # Title (46 chars — under 67-char baseline, no fontsize scaling needed)
 title = "burndown-sprint · python · plotly · anyplot.ai"
@@ -56,6 +77,34 @@ fig.add_vrect(
     annotation_text="Weekend",
     annotation_position="top left",
     annotation_font={"size": 9, "color": INK_MUTED},
+)
+
+# Ahead-of-schedule fill: closed green polygon between actual and ideal (actual < ideal)
+fig.add_trace(
+    go.Scatter(
+        x=fill_x,
+        y=ahead_fill_y,
+        fill="toself",
+        fillcolor=AHEAD_FILL,
+        mode="none",
+        showlegend=False,
+        hoverinfo="none",
+        line={"color": "rgba(0,0,0,0)"},
+    )
+)
+
+# Behind-schedule fill: closed amber polygon between ideal and actual (actual > ideal)
+fig.add_trace(
+    go.Scatter(
+        x=fill_x,
+        y=behind_fill_y,
+        fill="toself",
+        fillcolor=BEHIND_FILL,
+        mode="none",
+        showlegend=False,
+        hoverinfo="none",
+        line={"color": "rgba(0,0,0,0)"},
+    )
 )
 
 # Ideal burndown reference line (dashed, theme-adaptive muted)
@@ -126,8 +175,7 @@ fig.update_layout(
     },
     legend={
         "bgcolor": ELEVATED_BG,
-        "bordercolor": INK_SOFT,
-        "borderwidth": 1,
+        "borderwidth": 0,
         "font": {"color": INK_SOFT, "size": 10},
         "x": 0.97,
         "y": 0.97,
