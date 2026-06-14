@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: burndown-sprint
 created: '2026-06-14T22:53:58Z'
-updated: '2026-06-14T23:00:55Z'
+updated: '2026-06-14T23:15:03Z'
 generated_by: claude-sonnet
 workflow_run: 27514383174
 issue: 8654
@@ -12,105 +12,109 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/burndown-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance: step series, ideal reference line, weekend shading,
-    scope change annotation, and legend all implemented correctly (15/15)'
-  - 'Perfect data quality: realistic 10-day sprint scenario with natural scope creep,
-    appropriate story point scale, neutral business context (15/15)'
-  - 'Excellent visual quality: both themes render correctly with warm off-white /
-    near-black backgrounds, all text readable in both renders, Imprint palette used
-    correctly with #009E73 for actual series and amber for scope change warning'
-  - Idiomatic geom_step for discrete work completion, annotate(rect, xmin=..., ymin=-Inf,
-    ymax=Inf) for weekend bands is clean ggplot2 idiom
-  - 'Multi-element visual hierarchy: thick solid green actual vs thin dashed blue
-    ideal vs amber dotted scope marker creates clear semantic layering'
-  - 'Canvas dimensions correct: 3200×1800 (8×4.5 in @ 400 dpi), gate passed'
+  - Step-series burndown using geom_step() natively — correct discrete-completion
+    representation
+  - Semantic use of amber (#DDCC77) for scope-change warning matches the Imprint anchor
+    intent exactly
+  - Dual color+linetype legend combined cleanly via guide_legend(override.aes) + guide_none()
+    — idiomatic ggplot2
+  - 'All Imprint palette compliance correct: #009E73 for actual, #4467A3 for ideal,
+    #FAF8F1/#1A1A17 backgrounds'
+  - Full theme-adaptive chrome — INK/INK_SOFT tokens wired through axis text, title,
+    legend, and grid
+  - Dynamic title font-size scaling formula prevents overflow for the mandated long
+    title string
+  - legend.position.inside (ggplot2 3.5+ API) cleanly places legend inside plot area
+    without margin waste
   weaknesses:
-  - 'Dead code: ideal_revised is computed (a rebaselined ideal after scope change)
-    but the df uses ideal_initial throughout — either use ideal_revised to show the
-    adjusted trajectory, or remove the dead code'
-  - 'Unused imports: library(dplyr), library(tidyr), and library(scales) are imported
-    but not called anywhere in the script — remove all three'
-  - 'Design polish could be elevated: the manual annotation legend (14+ lines of annotate
-    segments+points+text) is functional but verbose and slightly off-register compared
-    to a native ggplot2 legend; consider using a proper geom-based legend via color/linetype
-    aesthetics mapped in a long-format data frame'
-  - 'DE-01 gap: the overall aesthetic is competent but not publication-polished —
-    the grid lines could be even more subtle, and the spacing between the annotation
-    label and the amber scope line could be tighter'
+  - weekend annotation text (size=2.2, angle=90) is very small and may be hard to
+    read at mobile widths — increase to size~2.8 or remove rotation and anchor to
+    a bottom note
+  - Scope-change annotation at y=54 is close to the step jump at y=56 (day 5) — adds
+    visual crowding in a dense area; consider nudging y to 58 or placing text above
+    60
+  - 'DE-02: grid lines use INK_SOFT (#4A4A44 in light, solid) — ggplot2 cannot apply
+    grid alpha natively, but the 0.2 linewidth makes them slightly more prominent
+    than the style-guide 15%-opacity target; consider theme_minimal()s implicit lighter
+    gray instead of INK_SOFT directly'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "burndown-sprint · r · ggplot2 · anyplot.ai" in dark ink at ~19pt (computed from 42-char title), spanning ~80% of plot width — expected and fine. Axis labels "Sprint Day" (x) and "Remaining Story Points" (y) at 10pt in dark INK. Tick labels "Day 1"–"Day 10" rotated 30°, Y-ticks 0–60 in INK_SOFT — all readable. Manual legend in top-right corner (annotated segments + text) shows "Actual" (green solid with dot) and "Ideal" (blue dashed), fully visible.
-      Data: Actual burndown as a bold green step function (#009E73) with circle markers at each day; ideal as a thinner dashed blue line (#4467A3). Weekend shading between Day 5–7 as subtle gray band. Scope change at Day 4.5 shown as amber dotted vertical line (#DDCC77) with "+8 pts\nscope added" annotation. Sprint data is realistic: starts at 52 points, jumps to 56 after scope change, finishes at 0 on Day 10.
-      Legibility verdict: PASS — all text elements readable against the warm off-white background, no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "burndown-sprint · r · ggplot2 · anyplot.ai" in dark ink, well-sized via dynamic formula; X-axis tick labels ("Day 1"–"Day 10") rotated 30°, readable; Y-axis tick labels (0–60 in steps of 10) clearly visible; axis titles "Sprint Day" and "Remaining Story Points" in dark INK at 10pt.
+      Data: Actual burndown rendered as green (#009E73) step series with solid circular points; Ideal as blue (#4467A3) dashed line. Amber (#DDCC77) dotted vertical line marks scope change at day 4.5 with "+8 pts / scope added" annotation in amber. Light-gray weekend shading band between days 5.5–6.5 with small rotated "weekend" label in INK_MUTED.
+      Legend: Top-right inside plot — solid green "Actual" with point, dashed blue "Ideal". Clean background matching PAGE_BG.
+      Legibility verdict: PASS — all primary text elements clearly readable. Minor note: "weekend" label (size 2.2, angle 90°) is quite small.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title in light (#F0EFE8) text, fully readable. Axis labels in light INK, tick labels in INK_SOFT (#B8B7B0) — all visible against the dark background. No dark-on-dark failures observed. Weekend band appears as a slightly darker shade within the near-black background, still distinguishable. Manual legend text ("Actual", "Ideal") uses INK_SOFT which is #B8B7B0 on dark — readable.
-      Data: Actual and ideal series colors are IDENTICAL to light render (#009E73 green and #4467A3 blue) — only chrome elements flip. Scope change amber annotation (#DDCC77) is clearly visible on the dark surface. Grid lines are subtle.
-      Legibility verdict: PASS — no dark-on-dark failures, all text readable, brand green visible and clear.
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title in light #F0EFE8 — clearly readable against dark surface. Axis labels and tick labels in light gray (#B8B7B0 INK_SOFT) — all readable, no dark-on-dark failures. Grid lines appear as subtle lighter lines against dark background.
+      Data: Green (#009E73) step series identical to light render — data color unchanged. Blue (#4467A3) ideal dashed line identical. Amber scope change marker identical. Weekend shading appears as a slightly lighter dark band, visible but subtle.
+      Legibility verdict: PASS — no dark-on-dark failures found. All text elements render in light chrome tokens on the dark surface. Brand green #009E73 remains clearly visible.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: 'All sizes explicitly set (axis.title=10, axis.text=8, plot.title
-          dynamically computed). Both themes fully readable. Minor: ''weekend'' annotation
-          at size 2.2mm (~6pt) is the smallest element and reads as tertiary text
-          — acceptable but on the edge.'
+        comment: 'Font sizes explicitly set throughout (axis.title=10, axis.text=8,
+          legend.text=8, dynamic title size). Minor: ''weekend'' annotation at size=2.2
+          angle=90 is small; scope annotation at size=2.8 borderline for mobile. Core
+          legibility passes both themes.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text or data elements. Scope annotation, weekend label,
-          manual legend all clearly separated.
+        comment: 'Minor crowding: scope-change annotation (y=54) sits close to the
+          step jump to y=56 at day 5, adding visual density in that region. No severe
+          overlap.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 10-point sparse dataset; step line at linewidth=1.2, ideal at 0.9,
-          markers at size=3.0 — well-adapted to sparse data density.
+        comment: 10-point sparse dataset — step line at 1.2 linewidth and points at
+          size=3.0 are prominently visible. Ideal line at 0.9 linewidth is visually
+          distinct as secondary series.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs blue series + distinct linestyles (solid vs dashed) provides
-          redundant encoding. Amber for warning is CVD-distinct. No red-green sole
-          signal.
+        comment: Green (#009E73) vs blue (#4467A3) for two series — CVD-safe Imprint
+          pair. Redundant encoding via solid vs dashed linetype. Amber (#DDCC77) for
+          scope marker is distinct from both.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas gate passed. Plot fills canvas well, balanced margins
-          (20,20,15,15), no clipping.
+        comment: Canvas gate passed (3200x1800 from width=8, height=4.5, dpi=400).
+          Good canvas utilization, balanced margins (20,20,15,15), legend inside plot
+          area at top-right.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct. 'Sprint Day' and 'Remaining Story Points' are
-          descriptive with implied units.
+        comment: '''Sprint Day'' and ''Remaining Story Points'' — descriptive and
+          clear. Title format ''burndown-sprint · r · ggplot2 · anyplot.ai'' is correct.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green) for actual. Ideal line uses #4467A3
-          (palette position 3, blue — defensible semantic choice for a reference line).
-          Scope change uses #DDCC77 (amber) in its semantic warning role. Backgrounds
-          correct in both renders. Data colors identical across themes.'
+        comment: 'Actual series in #009E73 (Imprint pos 1). Ideal in #4467A3 (Imprint
+          pos 3, blue — semantic reference line choice). Amber #DDCC77 for scope warning
+          (correct anchor). Background #FAF8F1 light / #1A1A17 dark. Full theme-adaptive
+          chrome. Data colors identical across themes.'
     design_excellence:
       score: 13
       max: 20
@@ -120,28 +124,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above ''well-configured default'' (4): intentional hierarchy across
-          4 visual layers (actual/ideal/scope/weekend), semantic color choices, step
-          function matches domain. Not reaching 6+ because the overall aesthetic has
-          a slightly workmanlike quality — manual legend annotations look slightly
-          off compared to native ggplot2 legend quality.'
+        comment: 'Above library defaults: semantic Imprint palette usage, amber scope-change
+          warning, dual linetype+color legend, dynamic title sizing. Not quite FiveThirtyEight-level
+          but clearly thoughtful design.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: theme_minimal removes top/right spines, axis.line
-          provides L-frame, major grid at linewidth=0.2 is subtle, no minor grid,
-          generous margins. Weekend band alpha=0.08 is appropriately subtle.'
+        comment: panel.border=element_blank, panel.grid.minor=element_blank, subtle
+          grid at 0.2 linewidth, L-shaped axis.line frame, generous margins. Grid
+          uses INK_SOFT (#4A4A44) without alpha which is slightly more visible than
+          15%-opacity guide target, but at 0.2 linewidth it reads as subtle.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Good storytelling: scope change annotation directly labels the disruption
-          event, weekend band explains flat segments, step function semantics match
-          discrete task completion, sprint completing at exactly 0 is satisfying.
-          Visual hierarchy guides reader naturally.'
+        comment: 'Clear narrative: team on track → scope addition event clearly annotated
+          in amber → above ideal for mid-sprint → recovery to zero by day 10. Weekend
+          shading explains natural flat periods. Viewer can trace the causal chain.'
     spec_compliance:
       score: 15
       max: 15
@@ -151,30 +153,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct burndown chart with geom_step for actual, reference line
-          for ideal, weekend shading, scope change marker — all spec chart elements
-          present.
+        comment: 'Correct: sprint burndown chart with geom_step() for actual (discrete
+          completions) and geom_line() dashed for ideal guideline.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Step series, ideal diagonal, weekend shading, scope change annotation,
-          legend distinguishing actual vs ideal — all spec features implemented.
+        comment: 'All spec features present: step series, ideal line (dashed, distinct
+          color), weekend shading band, scope change marker (amber dotted vline +
+          text annotation), legend distinguishing actual vs ideal.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=sprint day (1-10), Y=remaining story points (0-60), all 10 data
-          points visible, both series shown.
+        comment: X=Sprint Day (1–10), Y=Remaining Story Points (0–62). Y-axis starts
+          at 0. All data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'burndown-sprint · r · ggplot2 · anyplot.ai' — correct format.
-          Legend labels 'Actual' and 'Ideal' are correct.
+        comment: 'Title: ''burndown-sprint · r · ggplot2 · anyplot.ai'' — correct
+          format. Legend labels: ''Actual'' (solid green) and ''Ideal'' (dashed blue)
+          — correct.'
     data_quality:
       score: 15
       max: 15
@@ -184,25 +187,27 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all burndown features: actual progress (step function), ideal
-          trajectory, mid-sprint scope creep, weekend context, full sprint from start
-          to completion at 0.'
+        comment: 'Shows all burndown features: step completions, ideal reference,
+          scope change event (+8 pts on day 4), weekend non-working period, team initially
+          on track → falls behind after scope → recovers.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 10-day sprint (2-week Scrum standard), 52 story points (typical sprint
-          velocity), +8pt scope change (realistic ~15% creep), neutral business context.
+        comment: 10-working-day sprint, 52 story points, +8 scope addition (realistic
+          ~15% mid-sprint increase). Completion pattern (52→0 with discrete steps)
+          is realistic agile team behavior.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All values within realistic agile project management norms. Sprint
-          completes at 0 points — satisfying realistic outcome.
+        comment: '52 story point sprint scope is realistic (typical team: 30–80 pts
+          per sprint). Daily burn rate ~5-8 pts/day is credible. Scope change of +8
+          on day 4 is a plausible stakeholder addition.'
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -210,69 +215,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean flat structure: imports → tokens → data → plot → legend annotations
-          → save.'
+        comment: 'Linear: imports → tokens → data → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present; actual_remaining is hand-crafted deterministic
-          data.
+        comment: set.seed(42) present. Data is deterministic (hardcoded sprint values).
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: library(dplyr), library(tidyr), and library(scales) are imported
-          but none of their functions are called in the script. Only library(ggplot2)
-          and library(ragg) are actually used.
+        passed: true
+        comment: Only library(ggplot2) and library(ragg) — both used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: ideal_revised is computed (a rebaselined ideal after scope change)
-          but never used — only ideal_initial appears in df. This is dead code. Manual
-          legend via 14+ annotate() calls is verbose.
+        passed: true
+        comment: Clean, well-structured. Dynamic title_size formula is elegant. No
+          over-engineering, no fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: ggsave() with sprintf('plot-%s.png', THEME) and ragg::agg_png — correct
-          output naming and modern device API.
+        comment: Saves as plot-{THEME}.png via ggsave() with ragg::agg_png device.
+          Modern linewidth= API used throughout.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Good ggplot2 usage: geom_step for discrete completions, annotate(rect,
-          ymin=-Inf, ymax=Inf) for spanning bands, scale_x_continuous(breaks=...,
-          labels=...), expansion() for axis padding. Slight deduction for the hybrid
-          legend approach (scale_linetype_manual with guide=''none'' + manual annotation
-          legend) which is functional but not the most idiomatic solution.'
+        comment: 'Excellent ggplot2 idioms: aesthetic mappings for color+linetype
+          in geom_step/geom_line for combined legend, guide_legend(override.aes) for
+          fine-grained legend keys, guide_none() to suppress duplicate linetype legend,
+          expansion() for axis padding, annotate() for rect and text layers.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Uses ggplot2-specific features: geom_step (ggplot2''s native step
-          renderer), Inf in annotate() for full-panel backgrounds, expansion() for
-          scale padding, annotate(''point'') for legend swatches. Not exceptional
-          but above baseline.'
-  verdict: REJECTED
+        comment: Uses ggplot2 3.5+ legend.position.inside API for floating legend,
+          override.aes with shape/linetype/linewidth control in guide_legend(), geom_step()
+          native step series, expansion(mult=) for axis expansion. Several distinctively
+          ggplot2-specific features.
+  verdict: APPROVED
 impl_tags:
-  dependencies:
-  - ragg
+  dependencies: []
   techniques:
   - annotations
   - custom-legend
-  - manual-ticks
   - layer-composition
   patterns:
   - data-generation
