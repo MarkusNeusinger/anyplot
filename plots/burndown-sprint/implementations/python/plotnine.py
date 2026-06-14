@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 burndown-sprint: Agile Sprint Burndown Chart
 Library: plotnine 0.15.7 | Python 3.13.13
 Quality: 86/100 | Created: 2026-06-14
@@ -22,6 +22,7 @@ from plotnine import (
     element_text,
     geom_line,
     geom_rect,
+    geom_ribbon,
     geom_step,
     geom_vline,
     ggplot,
@@ -55,6 +56,15 @@ actual_df = pd.DataFrame({"day": days, "value": remaining, "series": "Actual Rem
 ideal_df = pd.DataFrame({"day": days, "value": ideal, "series": "Ideal Burndown"})
 weekend_df = pd.DataFrame({"xmin": [4.5], "xmax": [6.5], "ymin": [-2.0], "ymax": [50.0]})
 
+# Behind/ahead-of-schedule ribbon: fills gap between actual and ideal lines
+ribbon_df = pd.DataFrame(
+    {
+        "day": days,
+        "ymin": [min(a, i) for a, i in zip(remaining, ideal, strict=True)],
+        "ymax": [max(a, i) for a, i in zip(remaining, ideal, strict=True)],
+    }
+)
+
 x_breaks = [0, 2, 4, 7, 9, 11]
 x_labels = ["Jan 8\n(Mon)", "Jan 10\n(Wed)", "Jan 12\n(Fri)", "Jan 15\n(Mon)", "Jan 17\n(Wed)", "Jan 19\n(Fri)"]
 
@@ -69,6 +79,8 @@ plot = (
     + geom_rect(
         data=weekend_df, mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"), fill=INK_MUTED, alpha=0.15
     )
+    # Behind/ahead-of-schedule ribbon: translucent fill shows the gap
+    + geom_ribbon(data=ribbon_df, mapping=aes(x="day", ymin="ymin", ymax="ymax"), fill=ANYPLOT_AMBER, alpha=0.12)
     # Ideal burndown: straight dashed reference from 40 → 0
     + geom_line(data=ideal_df, mapping=aes(x="day", y="value", color="series"), linetype="dashed", size=0.9)
     # Actual burndown: step series (work completed in discrete chunks)
@@ -76,9 +88,9 @@ plot = (
     # Scope change marker: amber dotted vline on day 4 (Jan 12)
     + geom_vline(xintercept=4.0, linetype="dotted", color=ANYPLOT_AMBER, size=0.8)
     # Scope change label (placed left of marker)
-    + annotate("text", x=3.8, y=40.5, label="Scope\n+8 pts", color=ANYPLOT_AMBER, size=3.2, ha="right", va="top")
+    + annotate("text", x=3.8, y=40.5, label="Scope\n+8 pts", color=ANYPLOT_AMBER, size=3.8, ha="right", va="top")
     # Weekend label inside the shaded band
-    + annotate("text", x=5.5, y=20.0, label="Weekend", color=INK_MUTED, size=3.0, ha="center", va="center")
+    + annotate("text", x=5.5, y=20.0, label="Weekend", color=INK_MUTED, size=3.5, ha="center", va="center")
     # Color scale for legend
     + scale_color_manual(
         values={"Actual Remaining": ACTUAL_COLOR, "Ideal Burndown": IDEAL_COLOR},
