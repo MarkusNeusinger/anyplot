@@ -1,0 +1,270 @@
+library: altair
+language: python
+specification_id: burndown-sprint
+created: '2026-06-14T22:42:56Z'
+updated: '2026-06-14T22:59:30Z'
+generated_by: claude-sonnet
+workflow_run: 27514141772
+issue: 8654
+language_version: 3.13.13
+library_version: 6.2.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/python/altair/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Step-after interpolation correctly represents discrete work completion, faithfully
+    capturing how story points are burned in chunks
+  - Amber semantic anchor (#DDCC77) is the correct choice for the scope-change warning
+    line — semantic role matches palette intent
+  - Weekend shading subtly explains flat segments in the actual line without distracting
+    from the data
+  - Explicit ahead/behind schedule annotations make the critical reading obvious,
+    fulfilling the spec requirement directly
+  - Seven-layer composition is clean and well-organised — each layer has a distinct
+    semantic purpose and does not duplicate logic
+  - 'Both renders pass theme-readability checks: chrome fully adapts between #FAF8F1
+    and #1A1A17 surfaces with no dark-on-dark or light-on-light failures'
+  - 'Perfect spec compliance: step series, ideal dashed reference line, weekend shading,
+    scope-change marker, legend, and ahead/behind reading all present'
+  - 'Imprint palette correctly applied: #009E73 as first series, INK_SOFT for muted
+    reference line, ANYPLOT_AMBER for warning — all semantically justified'
+  weaknesses:
+  - Ahead/Behind annotation font sizes (fontSize=9) are slightly small — increasing
+    to 10-11px would improve readability when the PNG is scaled to mobile widths
+  - Weekend shading opacity (0.08) is very subtle in light mode — nudging to 0.12
+    would make non-working days more obvious without cluttering the chart
+  - 'DE-01: Design is thoughtful and semantically correct but does not reach publication-level
+    polish — typography hierarchy between title, annotations, and axis labels could
+    be tighter'
+  - 'DE-02: Domain lines (bottom/left axis spines) remain visible; removing or softening
+    them further would push the refinement closer to minimal-chrome ideal'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface (#FAF8F1) — correct, not pure white.
+      Chrome: Title "burndown-sprint · python · altair · anyplot.ai" in dark ink at top-left, readable. Y-axis label "Story Points Remaining" in dark text (vertical). X-axis label "Sprint Date" in dark text below. Tick labels Jan 06–17 at -35° angle and 0–50 y-ticks in dark secondary ink — all clearly readable. Y-axis-only grid at low opacity (0.12), subtle and non-competing. Legend box in elevated cream (#FFFDF6) with border in upper-right: "Actual Remaining" and "Ideal Burndown" entries with correct stroke symbols.
+      Data: Brand green #009E73 thick step-after line (strokeWidth=4) as Actual Remaining, descending in discrete steps from 40 on Jan 06 to 0 on Jan 17. Dashed diagonal muted line (INK_SOFT #4A4A44) as Ideal Burndown. Amber dashed vertical rule at Jan 09 with "+8 pts" label in amber. Very subtle warm-gray weekend band (Jan 11–13) at opacity=0.08. Small "↓ Ahead" annotation in green at Jan 08; "↑ Behind" annotation in muted gray at Jan 14.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light failures detected.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title in light cream text (#F0EFE8), clearly readable. Axis labels and tick labels in secondary light ink (#B8B7B0) — all readable against dark background. Grid lines subtle in dark theme. Legend box in elevated dark (#242420) with light border; legend labels in light secondary ink.
+      Data: Brand green #009E73 step-after line is identical to light render — exact same color, same visual weight. Ideal Burndown dashed line renders in light #B8B7B0 (INK_SOFT dark) giving good contrast against the dark surface. Amber scope rule (#DDCC77) and "+8 pts" label clearly visible. Weekend band slightly more visible in dark. "↓ Ahead" annotation in green, "↑ Behind" in light muted ink — both readable.
+      Data colors identical to light render: #009E73 for Actual Remaining, amber for scope change — only chrome flips.
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome correctly adapts to the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=16, axis=12, ticks=10, annotations=9).
+          Well-proportioned in both themes. Annotation fontSize=9 is slightly small
+          at mobile widths, holding back from 8.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Step line (strokeWidth=4) prominently visible. Ideal dashed line
+          clearly distinct. All layers appropriately sized for 12-point dataset.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs muted-dashed provides both hue and linestyle redundancy
+          — CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well with balanced margins. Centered pad-to-3200x1800
+          approach. Legend properly positioned top-right.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Story Points Remaining'', X-axis: ''Sprint Date'' — descriptive.
+          Title correct format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green). Ideal line uses INK_SOFT (muted
+          semantic anchor — correct for reference line). Amber for scope change warning.
+          Backgrounds #FAF8F1 / #1A1A17. Chrome fully theme-adaptive in both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful semantic color choices, step-after interpolation, tasteful
+          amber warning accent. Above library defaults but not quite publication-ready
+          polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis-only grid at opacity=0.12 is good. configure_view stroke=None
+          removes outer box. Domain lines (L-frame) still visible. Elevated legend
+          styling. Good but not perfect minimal-chrome.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Explicit ahead/behind annotations, amber focal-point scope change,
+          weekend explanation bands — clear visual hierarchy that guides the reader
+          through the sprint story.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct burndown chart: step-after actual series + straight dashed
+          ideal reference line.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: step series, ideal line, weekend shading,
+          scope-change marker with annotation, legend, ahead/behind reading.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=date (sprint timeline), Y=story points remaining starting at 0.
+          All 12 data points visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'burndown-sprint · python · altair · anyplot.ai' correct. Legend
+          'Actual Remaining' / 'Ideal Burndown' correct.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows scope increase mid-sprint, ahead/behind schedule transitions,
+          flat weekend segments, and full completion to 0. All burndown chart features
+          demonstrated.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 10-working-day sprint Jan 6–17 2025, 40 story points, +8pt scope
+          change on day 4. Neutral software development scenario, realistic values.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 40-point sprint with 3–7 pts burned per day is realistic. Y-axis
+          0–46 (slightly above max after scope change) is appropriate.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear Imports → Tokens → Data → Layers → Compose → Save. No functions
+          or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic — all data hard-coded, no random generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports (os, sys, altair, pandas, PIL) are used. No unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic altair layer composition. sys.path fix for self-import
+          is a necessary workaround (script named altair.py). No over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses current Altair
+          API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: alt.layer() for composition, proper encoding types (T/Q/N), step-after
+          interpolation, alt.Scale/Axis/Legend/Title, configure_* chain — expertly
+          idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Layer grammar with 7 distinct layers, step-after interpolation, alt.value()
+          for fixed y positioning, Vega-Lite date format strings, HTML interactive
+          export alongside PNG — genuinely Altair-distinctive but one level short
+          of exceptional.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - pillow
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - annotations
+  - html-export
+  patterns:
+  - wide-to-long
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
