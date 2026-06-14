@@ -1,7 +1,7 @@
 // anyplot.ai
 // bar-heart-rate-zones: Time in Heart Rate Zones Bar Chart
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-06-14
+// Library: chartjs 4.4.7 | JavaScript 22.22.3
+// Quality: 92/100 | Created: 2026-06-14
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
