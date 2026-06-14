@@ -1,0 +1,248 @@
+library: bokeh
+language: python
+specification_id: gauge-activity-rings
+created: '2026-06-14T20:49:23Z'
+updated: '2026-06-14T21:11:15Z'
+generated_by: claude-sonnet
+workflow_run: 27510962980
+issue: 8648
+language_version: 3.13.13
+library_version: 3.9.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/python/bokeh/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - 'Complete Imprint palette compliance: green/lavender/blue in canonical order,
+    correct warm backgrounds (#FAF8F1 light / #1A1A17 dark), theme-adaptive chrome
+    tokens applied throughout'
+  - 'Full spec coverage: 3 rings with faint background tracks, rounded end-caps via
+    circle glyphs, clockwise sweep from π/2, match_aspect=True for true circles, center
+    summary label, detailed per-ring legend'
+  - Realistic Apple Watch fitness data with varied completion fractions (70%/93%/75%)
+    that tells a meaningful story
+  - 'Excellent code quality: deterministic, KISS structure, documented sys.path workaround,
+    correct Selenium screenshot approach'
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 surface — not pure white, correct theme background
+      Chrome: Title "gauge-activity-rings · python · bokeh · anyplot.ai" in dark ink, clearly readable. No axis labels (correct for radial chart). Legend below rings shows metric names in dark ink, value/goal in INK_SOFT, percentages colored by ring hue — all readable.
+      Data: Three concentric rings in Imprint palette canonical order — outer Move in #009E73 (brand green) at ~70% sweep, middle Exercise in #C475FD (lavender) at ~93% sweep, inner Stand in #4467A3 (blue) at ~75% sweep. Faint low-opacity background tracks (alpha 0.13) visible for each ring. Rounded end-caps via circle glyphs at arc start/end. Center shows "79%" bold and "avg complete" muted — slightly cramped against inner ring lower boundary but readable.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 surface — not pure black, correct theme background
+      Chrome: Title in near-white/cream text, clearly readable against dark bg. Legend text in light INK_SOFT color, readable. Center "79%" and "avg complete" in light-colored text — no dark-on-dark issues. Brand green #009E73 reads clearly on dark surface.
+      Data: Identical data colors to light render — green/lavender/blue at same completion fractions. Background tracks slightly more visible (alpha 0.18) against dark surface, which is intentional and correct.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 50pt, center 62pt, legend 30-36pt);
+          minor crowding of avg complete sub-label near inner ring boundary
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor visual crowding at 12 o'clock from 93%-complete Exercise ring
+          end-cap nearly meeting its start cap; all text fully readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: All rings clearly visible; inner Stand ring visually smaller in weight
+          than outer rings due to small radii
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette; green/lavender/blue perceptually well-separated;
+          track alpha provides depth without competing
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 canvas correct; canvas gate passed; match_aspect=True
+          ensures circular rings; balanced layout with legend below
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis labels required for radial chart; title matches mandated
+          format exactly
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First ring #009E73 ✓; positions 2-3 (#C475FD, #4467A3) canonical
+          Imprint order ✓; backgrounds #FAF8F1/#1A1A17 ✓; data colors identical across
+          renders ✓'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: rounded end-caps deliver fitness-tracker silhouette;
+          center summary intentional; detailed legend shows design thought; held by
+          12 o''clock crowding and small inner ring visual weight'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: All axes/grid/spines hidden; theme-adaptive chrome applied; background
+          tracks calibrated; generous whitespace; held by cramped avg complete sub-label
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Center 79% provides at-a-glance insight; per-ring colored percentages
+          reinforce completion story; varied fractions (70%/93%/75%) create interesting
+          visual narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Concentric radial progress arcs with rounded caps, clockwise sweep
+          from 12 o'clock, background tracks
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 3 rings, outer-to-inner ordering, equal ring widths, rounded end-caps,
+          center label, legend, square aspect ratio
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Move 70%, Exercise 93%, Stand 75% — all fractions correct and accurately
+          swept
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is exactly gauge-activity-rings · python · bokeh · anyplot.ai;
+          legend maps color dots to metrics with value/goal/unit and percentage
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: concentric rings, background tracks, rounded
+          caps, center summary, per-ring legend with varied completion levels'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Canonical Apple Watch-style fitness metrics — immediately recognizable,
+          neutral health context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 420/600 kcal move, 28/30 min exercise, 9/12 hr stand — all within
+          plausible daily fitness ranges
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: tokens → data → geometry → draw rings → center text
+          → legend → save; no unnecessary abstractions'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data is deterministic constants; no random elements
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: math, time, Path, os, sys, bokeh.io, bokeh.plotting,
+          selenium'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; sys.path workaround documented; no fake UI
+          elements
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Bokeh 3.9.1
+          API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: annular_wedge() with direction='clock', match_aspect=True, output_file+save+Selenium,
+          min_border_* reservations — all correct idiomatic bokeh
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: annular_wedge() with direction parameter for clockwise sweep, match_aspect=True
+          for aspect ratio enforcement, min_border_* API — distinctive bokeh capabilities
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  - annotations
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
