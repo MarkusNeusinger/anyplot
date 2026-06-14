@@ -1,0 +1,253 @@
+library: matplotlib
+language: python
+specification_id: audiogram-clinical
+created: '2026-06-14T23:43:54Z'
+updated: '2026-06-14T23:49:09Z'
+generated_by: claude-sonnet
+workflow_run: 27515663361
+issue: 8655
+language_version: 3.13.13
+library_version: 3.11.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - 'Perfect spec compliance: inverted y-axis, log x-axis, O/X markers, severity bands
+    with labels, and correct audiological color conventions all implemented correctly'
+  - Sophisticated use of blended_transform_factory for right-margin severity band
+    labels — elegantly mixes data and axes coordinate systems
+  - 'Data choice is clinically meaningful: occupational noise-induced SNHL pattern
+    with the characteristic 4k-8k Hz notch tells a real audiological story'
+  - Full theme-adaptive chrome with all tokens correctly applied; both renders are
+    clean and readable with no dark-on-dark failures
+  weaknesses:
+  - 'DE-01: Aesthetic polish stops short of publication-ready — severity band labels
+    (fontsize=7.5, INK_MUTED) are quite small; increase to 8.5-9pt or add fontweight=''medium''
+    for better clinical prominence'
+  - 'Dark render: Mild (amber) and Moderate (ochre) severity bands are visually similar
+    due to overlapping dark alpha; differentiate alphas slightly (e.g., 0.08 for Mild,
+    0.13 for Moderate) to improve distinguishability in dark theme'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "audiogram-clinical · python · matplotlib · anyplot.ai" in dark #1A1A17 ink, clearly readable; axis labels "Frequency (Hz)" and "Hearing Level (dB HL)" in dark ink at 10pt; tick labels in #4A4A44 (INK_SOFT) at 8pt — all readable; severity band labels on right margin in #6B6A63 (INK_MUTED) at 7.5pt — readable
+      Data: Right ear plotted in #AE3030 (Imprint matte red) with open-circle (O) markers and solid line; left ear in #4467A3 (Imprint blue) with cross (X) markers and solid line; severity bands use Imprint green (#009E73, 7% alpha) for Normal, amber (#DDCC77, 10% alpha) for Mild, ochre (#BD8233, 10% alpha) for Moderate, deepening red (#AE3030) for Mod. Severe/Severe/Profound
+      Legibility verdict: PASS — all text and data elements readable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title in light #F0EFE8 (INK token for dark theme), clearly readable; axis labels in same light ink; tick labels in #B8B7B0 (INK_SOFT dark); severity band labels in #A8A79F (INK_MUTED dark) — all readable; no dark-on-dark failures observed; legend frame uses elevated-dark #242420 background with light text
+      Data: Data colors identical to light render — right ear still #AE3030 red with O markers, left ear still #4467A3 blue with X markers; severity bands shift in appearance on dark background (Normal band appears dark teal, Mild/Moderate bands appear olive-brown, Severe/Profound appear dark red) but markers remain clearly visible above bands
+      Legibility verdict: PASS — all text readable in light ink on dark background; no chrome-adaptation failures
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 12pt, axis labels 10pt, tick
+          labels 8pt, legend 8pt, band labels 7.5pt); readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps with other text or data elements; legend in lower-left
+          where no data exists
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 7 sparse data points; markersize=10 (O) and 11 (X) are prominently
+          visible; linewidth=2.2 appropriate
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red vs blue (not red vs green); redundant shape encoding (O vs X)
+          provides full CVD safety
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 correct; canvas gate passed; subplots_adjust(right=0.82)
+          creates room for severity labels; no clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: Frequency (Hz), Y: Hearing Level (dB HL) — both descriptive with
+          units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception correctly applied: #AE3030 (Imprint slot 5) for
+          right ear, #4467A3 (Imprint slot 3) for left ear per audiological convention;
+          backgrounds correct; chrome tokens correct in both themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above generic default — severity band gradient communicates severity
+          intuitively; right-margin labels add clinical polish; not yet publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Tick marks removed (length=0); grid subtle at alpha=0.18; explicit
+          subplots_adjust; all 4 spines kept (appropriate for clinical audiogram convention)
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Occupational SNHL pattern with 4k-8k Hz notch is clinically meaningful;
+          bilateral asymmetric loss; severity bands provide immediate interpretive
+          scaffolding
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct audiogram: inverted y-axis, log x-axis, O markers for right
+          ear, X markers for left ear, connected per ear'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: inverted Y, log X 125-8000 Hz, red-O right,
+          blue-X left, severity bands with labels, legend, grid every 10 dB, kHz shorthand
+          ticks'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Frequencies on log x-axis, hearing thresholds on inverted y-axis;
+          both ears visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''audiogram-clinical · python · matplotlib · anyplot.ai'';
+          Legend: ''Right Ear (O)'' and ''Left Ear (X)'' with correct colors'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both ears shown; normal at low frequencies transitioning to significant
+          loss at high frequencies; asymmetric presentation; data spans Normal through
+          Mod. Severe
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Occupational noise-induced high-frequency SNHL is a well-established
+          clinical pattern; bilateral asymmetric loss is clinically realistic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Thresholds 10-75 dB HL are realistic; high-frequency notch at 4k-8k
+          Hz matches occupational SNHL; all values within normal audiometric range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports → Theme tokens → Data → Plot → Save; no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic data (no randomness)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: sys (path fix), os (theme env), pyplot, ticker
+          (NullLocator), blended_transform_factory'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic; blended_transform_factory for right-margin labels
+          is elegant; severity band data structure is concise
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png; no bbox_inches='tight'; no deprecated
+          API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses Axes methods (ax.plot, ax.axhspan, ax.text); correct tick customization
+          via set_xticks/set_xticklabels/NullLocator; idiomatic legend and spine styling
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: blended_transform_factory combining axes and data coordinates for
+          right-margin labels is distinctively matplotlib; ax.axhspan() with per-band
+          alpha; ticker.NullLocator() for log axis minor ticks
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  patterns:
+  - explicit-figure
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
