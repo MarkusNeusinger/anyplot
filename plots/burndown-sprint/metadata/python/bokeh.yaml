@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: burndown-sprint
 created: '2026-06-14T22:43:31Z'
-updated: '2026-06-14T22:50:41Z'
+updated: '2026-06-14T23:00:19Z'
 generated_by: claude-sonnet
 workflow_run: 27514089078
 issue: 8654
@@ -15,52 +15,39 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/burndown-
 quality_score: 86
 review:
   strengths:
-  - 'Complete spec coverage: step series, ideal burndown reference line, weekend shading,
-    scope change marker with annotation, and legend all implemented correctly'
-  - 'Idiomatic Bokeh usage: ColumnDataSource, BoxAnnotation, Span, Label, and p.step()
-    mode=''after'' all used appropriately for this chart type'
-  - 'Semantic Imprint color mapping: green (#009E73) for actual remaining, blue (#4467A3)
-    for reference/ideal, red (#AE3030) for scope change — semantically correct and
-    consistent with palette rules'
-  - 'Dual encoding on actual vs ideal: color (green vs blue) plus line style (solid
-    step vs dashed line) makes them immediately distinguishable even under CVD'
-  - 'Both themes correctly implemented: PAGE_BG, ELEVATED_BG, INK, INK_SOFT all theme-adaptive;
-    Imprint data colors identical across themes'
-  - 'Data storytelling: weekend context explains flat burndown segments; scope annotation
-    pinpoints the risk event; visual hierarchy (thick green step > dashed blue ideal)
-    guides eye correctly'
-  - 'Correct title format with descriptive prefix: ''Sprint Burndown · burndown-sprint
-    · python · bokeh · anyplot.ai'''
-  - HTML + PNG dual output following bokeh.md conventions; Selenium screenshot with
-    PIL crop for exact 3200×1800 canvas
+  - Step series (p.step mode='after') correctly models discrete work completion —
+    spec-appropriate chart type
+  - 'Full spec coverage: ideal burndown, step series, weekend BoxAnnotation shading,
+    scope change Span + Label, legend distinguishing both series'
+  - 'Idiomatic Bokeh usage: ColumnDataSource, BoxAnnotation, Span, and Label models
+    used appropriately'
+  - Complete theme adaptation — all INK/INK_SOFT/PAGE_BG tokens applied to every chrome
+    element (title, axis labels, tick labels, grid, legend)
+  - 'Semantic Imprint palette use: green (#009E73) for actual, blue (#4467A3) for
+    ideal (structural reference), red (#AE3030) for scope change (bad/risk)'
   weaknesses:
-  - 'Full box outline retained (outline_line_color = INK_SOFT creates visible 4-sided
-    border); style guide recommends L-shaped frame (remove top/right spines). Fix:
-    set p.outline_line_color = None to remove the rectangular border.'
-  - 'Scope annotation color #AE3030 on dark background #1A1A17 has contrast ratio
-    ~2.76:1, below WCAG large-text threshold of 3:1. Fix: on dark theme, consider
-    using a slightly lighter red or adding a subtle text shadow to bring contrast
-    above 3:1.'
-  - Weekend shading at fill_alpha=0.07 is very subtle in dark mode (INK fill on near-identical
-    background). Raising to alpha=0.10–0.12 would maintain subtlety while improving
-    perception in both themes.
-  - One helper function to_ms() present — technically violates KISS 'no functions'
-    guideline, though the use is minor and justified for repeated date conversion.
-  - Annotation font size 28pt is notably larger than tick labels (34pt) — while legible,
-    it draws slightly more visual weight than intended for a secondary annotation;
-    22–24pt would better match the tick label hierarchy.
+  - Scope change annotation text at 22pt is undersized relative to the chart hierarchy
+    (tick labels are 34pt, axis labels 42pt) — consider 28-30pt for clearer event
+    marking
+  - Scope change Span line uses SCOPE_CLR (#AE3030) in both themes; the dark-theme
+    lighter variant (#D06060) was applied only to the Label text but not to the Span
+    line — the line can be harder to distinguish from the weekend box right-edge in
+    the dark render
+  - The spec requires 'keep the ahead/behind-schedule reading obvious through color
+    or annotation' — the chart relies on implicit visual comparison without a legend
+    note or subtitle clarifying which direction is ahead vs behind
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface.
-      Chrome: Title "Sprint Burndown · burndown-sprint · python · bokeh · anyplot.ai" in bold dark ink — fully readable. X-axis label "Sprint Day" and Y-axis label "Remaining Story Points" in italic, clearly visible. Tick labels (Jun 01 / Jun 04 / Jun 07 / Jun 10 on X; 0–40 on Y) in INK_SOFT gray — legible. Legend "Ideal Burndown" / "Actual Remaining" in upper right with elevated-cream box — readable.
-      Data: Actual remaining step series in #009E73 (brand green) with circular markers (size 18). Ideal burndown as dashed #4467A3 (blue) straight line from 40→0. Weekend shading (Jun 6–7) as very subtle gray band (alpha=0.07). Red dotdash vertical span at Jun 8 for scope change with italic "+8 pts scope added" annotation in #AE3030.
-      Legibility verdict: PASS — all chrome and data labels clearly readable on light background.
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white.
+      Chrome: Title "Sprint Burndown · burndown-sprint · python · bokeh · anyplot.ai" in dark ink, occupies ~70% of canvas width. X-axis label "Sprint Day" and Y-axis label "Remaining Story Points" in dark ink at 42pt. Tick labels (Jun 01/2026, Jun 04, Jun 07, Jun 10; 0-40 pts) in INK_SOFT. Legend box (top-right) shows "Ideal Burndown" and "Actual Remaining" with correct line styles.
+      Data: Actual Remaining — solid green (#009E73) step line (line_width=5) with 18px dots with white-halo edges; Ideal Burndown — dashed blue (#4467A3) line from (Jun 1, 40) to (Jun 12, 0); Weekend shading — subtle light gray band over Jun 6-7; Scope change — dotdash red vertical line at Jun 8 with italic annotation "+8 pts scope added" in red at y=33.
+      Legibility verdict: PASS — all title, axis, and tick text clearly readable against the warm off-white background. No light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct theme surface.
-      Chrome: Title in near-white (#F0EFE8) — readable. Axis labels in light ink — readable. Tick labels in #B8B7B0 (INK_SOFT dark) — readable against near-black background. Legend box uses elevated dark (#242420) fill — readable. No dark-on-dark failures for primary chrome elements.
-      Data: Data colors identical to light render — brand green #009E73 step series, dashed blue #4467A3 ideal line. Weekend shading subtly lighter than background. Scope annotation "+8 pts scope added" in #AE3030 (matte red) — visible but contrast against #1A1A17 is approximately 2.76:1, below WCAG large-text threshold of 3:1. Borderline readable at 28pt but is a mild accessibility concern.
-      Legibility verdict: PASS (with caveat) — all primary chrome is legible; scope annotation color #AE3030 on dark background has borderline contrast (~2.76:1 vs 3:1 WCAG large text minimum).
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black.
+      Chrome: Title and axis labels render in light ink (#F0EFE8), tick labels in secondary ink (#B8B7B0). Legend box uses ELEVATED_BG (#242420) fill with INK_SOFT border. No dark-on-dark failures observed.
+      Data: Green step line and dots identical in color to light render (#009E73 — unchanged); blue dashed ideal line (#4467A3 — unchanged); weekend shading BoxAnnotation creates a slightly darker band (INK fill_alpha=0.10, which on dark bg darkens to near-invisible — the band is present but subtly different); scope change Span line uses #AE3030 for both themes (annotation label gets lighter #D06060 in dark mode, but the Span line itself does not); the remaining-work jump from 22 to 30 at Jun 8 is clearly visible in the step series.
+      Legibility verdict: PASS — all primary chrome elements (title, axis labels, tick labels, legend) readable against dark background. The scope change Span line (#AE3030) is marginally less prominent in the dark render adjacent to the weekend box, but still present.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -71,53 +58,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All chrome text readable in both themes; scope annotation at 28pt
-          italic is slightly oversized relative to surrounding tick labels
+        comment: All primary chrome readable in both themes; scope annotation at 22pt
+          is slightly small relative to 34pt tick labels
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between annotation, legend, data, or axis elements
+        comment: No text or data element overlaps observed in either render
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Step series (line_width=5) and markers (size=18) appropriately prominent
-          for 12-point sparse dataset; ideal line clearly distinct with dashed style
+        comment: Step line and dots prominent; scope change Span line partially visually
+          merged with weekend box right-edge in dark render
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Green/blue dual encoding is CVD-safe; but #AE3030 scope annotation
-          on #1A1A17 dark background has ~2.76:1 contrast ratio, below WCAG large-text
-          3:1 threshold'
+        passed: true
+        comment: CVD-safe Imprint palette; line-style redundancy (solid vs dashed)
+          distinguishes actual from ideal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; title ~60% width; axis labels balanced; no overflow
-          or clipping; min_border reservations correct
+        comment: Canvas gate passed (3200x1800); generous min_border margins; no overflow
+          or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with domain units; title format correct with
-          descriptive prefix
+        comment: Sprint Day / Remaining Story Points descriptive; title format correct
+          with descriptive prefix
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, ideal line uses #4467A3 (semantic blue for
-          reference — justified skip of position 2), scope uses #AE3030 (semantic
-          red for risk). Backgrounds #FAF8F1/#1A1A17 correct.'
+        comment: 'First series #009E73; Imprint positions 3 and 5 used semantically;
+          backgrounds #FAF8F1/#1A1A17 correct'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -125,24 +110,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful semantic color mapping; step series choice idiomatic for
-          burndown; dual encoding (color+linestyle); above-default but not exceptional
+        comment: Intentional semantic color use; clean professional styling; multiple
+          contextual visual elements coordinated well
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: X-grid suppressed for clean time-series; Y-grid subtle (alpha=0.12);
-          weekend band at alpha=0.07; BUT full 4-sided box outline retained instead
-          of L-shaped frame
+        comment: outline_line_color=None removes 4-sided border; x-grid removed; y-grid
+          subtle at alpha=0.12; clean legend
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Weekend shading contextualizes flat segments; scope change annotation
-          tells the risk story; visual hierarchy (bold green step dominates over dashed
-          blue) guides reading direction correctly
+        comment: Weekend shading explains flat segments; scope annotation contextualizes
+          work jump; ahead/behind reading not explicitly annotated per spec guidance
     spec_compliance:
       score: 15
       max: 15
@@ -152,29 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: step burndown chart with ideal reference line'
+        comment: Correct burndown chart with step series and ideal reference line
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Step series, ideal line, weekend shading, scope change marker + annotation,
+        comment: Step series, ideal line, weekend shading, scope change marker+annotation,
           legend — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=sprint dates, Y=story points remaining; Y-axis starts at 0; all
-          12 data points shown
+        comment: X=sprint dates, Y=remaining story points; scope change at Jun 8 shows
+          22→30 jump
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title 'Sprint Burndown · burndown-sprint · python · bokeh · anyplot.ai'
-          matches spec format; legend entries 'Ideal Burndown' / 'Actual Remaining'
-          clear
+          correct; legend labels clear
     data_quality:
       score: 15
       max: 15
@@ -184,60 +166,57 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows step burndown, ideal trajectory, scope change event, weekend
-          flat periods, and team reaching zero by sprint end
+        comment: 'Shows all burndown chart aspects: actual vs ideal, weekends, scope
+          change event'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 10-working-day sprint with 40 story points, +8 scope addition on
-          day 6, neutral software development context
+        comment: 10-working-day sprint Jun 1-12, 40 story points, +8 scope addition,
+          completes at 0 — realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 40 story point sprint, 8-point scope addition, 10 working days —
-          all within realistic agile sprint parameters
+        comment: 0-40 story point range; sprint length and velocity plausible for
+          a software team
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: One helper function to_ms() defined; minor violation of 'no functions'
-          guideline though usage is justified for repeated date conversion
+        passed: true
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data — no random generation needed
+        comment: Fully deterministic hardcoded data — no random seed needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols (io, os, sys, time, date/datetime/timezone,
-          Path, bokeh models, PIL Image, selenium) are actually used
+        comment: All imported modules are used in the script
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; sys.path manipulation is a legitimate shadow-module workaround;
-          reasonable complexity
+        comment: Appropriate complexity; no fake UI; clear variable naming
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png correctly; uses output_file+save
-          + Selenium+PIL crop per bokeh.md
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png; uses current Bokeh
+          3.9.1 API
     library_mastery:
       score: 7
       max: 10
@@ -247,16 +226,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource, BoxAnnotation, Span, Label, p.step(mode='after'),
-          output_file+save — all idiomatic Bokeh patterns used correctly
+        comment: ColumnDataSource, figure with proper params, p.step for burndown,
+          output_file+save pattern — all idiomatic
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: BoxAnnotation for weekend band, Span for vertical scope line, Label
-          for annotation, interactive HTML output — multiple Bokeh-specific affordances
-          leveraged
+        comment: BoxAnnotation (weekend shading), Span (scope change line), Label
+          (annotation), HTML export — multiple Bokeh-specific models used effectively
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -267,6 +245,7 @@ impl_tags:
   - html-export
   patterns:
   - columndatasource
+  - data-generation
   dataprep:
   - time-series
   styling:
