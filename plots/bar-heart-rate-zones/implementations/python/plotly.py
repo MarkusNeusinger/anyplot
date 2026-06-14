@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-heart-rate-zones: Time in Heart Rate Zones Bar Chart
 Library: plotly 6.8.0 | Python 3.13.13
 Quality: 88/100 | Created: 2026-06-14
@@ -40,6 +40,7 @@ fig = go.Figure(
         x=zones,
         y=minutes,
         marker_color=ZONE_COLORS,
+        marker_line={"width": 1, "color": INK_SOFT},
         text=[f"{m} min" for m in minutes],
         textposition="outside",
         textfont={"size": 14, "color": INK},
@@ -48,10 +49,20 @@ fig = go.Figure(
     )
 )
 
+fig.add_hline(
+    y=12,
+    line_color=INK_MUTED,
+    line_dash="dot",
+    line_width=2,
+    annotation_text="12 min / zone avg",
+    annotation_font={"size": 10, "color": INK_MUTED},
+    annotation_position="top right",
+)
+
 fig.update_layout(
     autosize=False,
-    bargap=0.35,
-    margin={"l": 80, "r": 40, "t": 80, "b": 110},
+    bargap=0.4,
+    margin={"l": 80, "r": 40, "t": 80, "b": 65},
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     title={"text": title, "font": {"size": title_size, "color": INK}, "x": 0.5, "xanchor": "center"},
@@ -60,7 +71,7 @@ fig.update_layout(
         "tickvals": zones,
         "ticktext": tick_labels,
         "tickfont": {"size": 11, "color": INK_SOFT},
-        "linecolor": INK_SOFT,
+        "showline": False,
         "showgrid": False,
         "zeroline": False,
     },
@@ -68,7 +79,7 @@ fig.update_layout(
         "title": {"text": "Time (min)", "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "gridcolor": GRID,
-        "linecolor": INK_SOFT,
+        "showline": False,
         "zeroline": False,
         "range": [0, max(minutes) * 1.4],
     },
