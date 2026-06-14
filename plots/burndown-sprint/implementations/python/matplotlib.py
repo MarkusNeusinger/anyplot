@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 burndown-sprint: Agile Sprint Burndown Chart
 Library: matplotlib 3.11.0 | Python 3.13.13
-Quality: 88/100 | Created: 2026-06-14
+Quality: 89/100 | Created: 2026-06-14
 """
 
 import sys
