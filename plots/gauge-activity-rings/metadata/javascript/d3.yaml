@@ -1,0 +1,249 @@
+library: d3
+language: javascript
+specification_id: gauge-activity-rings
+created: '2026-06-14T20:49:37Z'
+updated: '2026-06-14T21:09:01Z'
+generated_by: claude-sonnet
+workflow_run: 27511432098
+issue: 8648
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/javascript/d3/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Iconic activity-ring aesthetic with rounded linecaps achieved correctly using
+    SVG stroke arc technique
+  - 'Full Imprint palette compliance: correct first color (#009E73), theme-adaptive
+    chrome, identical data colors across themes'
+  - 'Perfect spec compliance: all required features present, exact example data, correct
+    orientation directive'
+  - Proportional sizing via width/height multipliers ensures the layout scales correctly
+  - Realistic fitness tracker data with appropriate units in legend
+  weaknesses:
+  - arcPath helper function breaks strict KISS structure; could inline the arc path
+    computation into the forEach loop
+  - 'LM-02: d3.scaleOrdinal could be used for color mapping instead of manual array
+    indexing for more idiomatic D3'
+  - Legend dot horizontal offset computed as nameSize * 4.5 is a magic-number approximation
+    that may misalign; a fixed-px offset would be more robust
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white
+      Chrome: Title "gauge-activity-rings · javascript · d3 · anyplot.ai" at 22px in dark ink (#1A1A17) — readable. Center label "76%" (~46px bold) and "complete" (~17px) in dark ink — readable. Legend metric names (~20px) and value/goal text (~16px) in dark ink and inkSoft — readable.
+      Data: Three concentric rings — outermost green (#009E73, Move 70%), middle lavender (#C475FD, Exercise 83%), innermost blue (#4467A3, Stand 75%). Background tracks at 18% opacity. Rounded linecaps on progress arcs.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black
+      Chrome: Title, center label, and legend text all render in light-colored ink (approx #F0EFE8 / #B8B7B0) — clearly readable against the dark background. No dark-on-dark text failures detected.
+      Data: Colors identical to light render — green (#009E73) outermost, lavender (#C475FD) middle, blue (#4467A3) innermost. Only chrome (text, background) flips between themes; data colors are theme-invariant.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set and proportional; 22px title reads
+          well for the square canvas but is on the smaller side for the mandated title
+          format
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between rings, center label, or legend elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Ring stroke width ~60px CSS appropriate for canvas; background tracks
+          at 18% opacity clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Three Imprint palette hues (green/lavender/blue) are perceptually
+          distinct and CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills square canvas well; rings centered above mid-canvas,
+          legend cleanly below; balanced whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes (correct for radial); legend includes metric
+          names with units; title correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; palette[0/1/2] in order; backgrounds #FAF8F1/#1A1A17;
+          chrome theme-adapts via t.ink/t.inkSoft'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional activity-ring look; intentional opacity 0.18 for tracks;
+          rounded linecaps give iconic fitness-tracker feel; above generic defaults
+          but not quite publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No unnecessary chrome; generous whitespace; clean legend. Some room
+          to refine legend dot alignment precision
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Center 76% headline gives immediate summary; per-ring labels provide
+          detail; outer-to-inner ordering follows spec intent
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct concentric radial progress arcs; iconic activity-ring implementation
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 12 o'clock start, clockwise sweep, rounded linecaps, background tracks,
+          3 rings, fraction clamped, consistent strokeW, center label, color legend,
+          square orientation
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Spec example data used exactly: Move 420/600 kcal, Exercise 25/30
+          min, Stand 9/12 hr'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is gauge-activity-rings · javascript · d3 · anyplot.ai; legend
+          correctly maps colors to metric names with values and units
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Three rings at different completion levels (70%, 83%, 75%); background
+          tracks; center summary; per-ring legend with raw values and units
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Daily fitness tracker scenario (Move/Exercise/Stand) is real-world,
+          neutral, immediately recognizable
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values match real-world fitness goals consistent with consumer wearable
+          defaults
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly linear; arcPath arrow function is a small KISS violation though
+          necessary for SVG arc math
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: D3 is the global only; no unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, concise D3 code; proportional sizing via width multipliers
+          is idiomatic
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness writes plot-{THEME}.png and .html; D3 7.9.0 API correct
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct D3 selection model; data-driven element creation; raw SVG
+          arc notation appropriate for stroke-based arcs
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses SVG stroke-linecap:round via D3 attribute setting; opacity-based
+          background tracks; could use d3.scaleOrdinal for color mapping more distinctively
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
