@@ -1,0 +1,289 @@
+library: chartjs
+language: javascript
+specification_id: gauge-activity-rings
+created: '2026-06-14T20:50:33Z'
+updated: '2026-06-14T21:11:34Z'
+generated_by: claude-sonnet
+workflow_run: 27511376220
+issue: 8648
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/javascript/chartjs/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Custom afterDraw plugin creates a radial gradient glow behind the center percentage
+    — elegant focal point that immediately communicates overall progress
+  - Glowing endpoint dots (shadowColor + shadowBlur on canvas arc) mark each ring's
+    progress tip with subtle professional polish
+  - Rich custom legend labels (value / goal / unit / percentage) pack full context
+    into a single clean row
+  - Theme-adaptive track opacity (0.15 light / 0.28 dark) ensures the background arcs
+    stay visible in both themes without overpowering the progress arcs
+  - 'Complete Imprint palette compliance: Move=#009E73, Exercise=#C475FD, Stand=#4467A3
+    in correct canonical order'
+  - Exercise ring correctly clamps to full circle visually and labels '>127%' in the
+    legend — handles goal-exceeded case per spec
+  - Square orientation correctly chosen; rotation:-90 places the start at 12 o'clock
+    exactly as the spec requires
+  - generateLabels() override produces descriptive, information-dense legend entries
+    rather than the default dataset-name labels
+  weaknesses:
+  - Legend font (17px CSS = ~34 source-px on 2400×2400 canvas) is slightly small —
+    the rich label text with value/goal/unit/% makes each legend entry very wide,
+    compressing readability at mobile scale; consider reducing label verbosity or
+    increasing legend font to 19-20px
+  - 'CQ-01: hexToRgba helper function and centerTextPlugin object add structural complexity
+    beyond pure KISS; the helper is used 4 times (justified), but the plugin object
+    could be passed inline to the plugins array without a named variable'
+  - 'DE-02: The chart rings extend very close to the canvas edges (particularly left/right
+    in the dark render); slightly reducing the chart area or adding explicit chart
+    padding would improve breathing room'
+  - 'DE-01: The glow effects are present but subtle — the radial gradient radius (90px)
+    is quite small relative to the 1200px CSS canvas, making the center glow nearly
+    invisible; consider increasing to 130-150px for a more distinctive accent'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white.
+      Chrome: Title "gauge-activity-rings · javascript · chartjs · anyplot.ai" in dark ink at top — fully readable. Legend at bottom with colored circle dots and rich text labels ("Move · 420/600 kcal · 70%", "Exercise · 38/30 min · >127%", "Stand · 9/12 hr · 75%") — readable though text is dense.
+      Data: Three concentric doughnut rings. Outer ring in #009E73 brand green (Move, 70% filled). Middle ring in #C475FD lavender (Exercise, full circle = 127% achieved). Inner ring in #4467A3 blue (Stand, 75% filled). Background tracks visible as low-opacity versions of same hues. Center shows bold "82%" (avg pct) with "avg. complete" sublabel. Glowing dots at each ring's progress endpoint. Exercise ring shows full arc with no gap (goal exceeded).
+      Legibility verdict: PASS — all text is clearly readable against the light background; center percentage is prominent; no dark-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct dark surface, warm not pure black.
+      Chrome: Title in light cream text — readable. Legend at bottom in light text — readable, though the text sits close to the bottom edge of the canvas. "avg. complete" sublabel in lighter inkSoft token color — visible. Center "82%" in light cream, clearly readable against the dark center area.
+      Data: Colors identical to light render — same green/lavender/blue rings, same background tracks. Data colors have not shifted. Track alpha is correctly increased (0.28 vs 0.15) for the dark surface, keeping them visible without overpowering the progress arcs.
+      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark failures detected; center percentage and ring colors contrast well against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, legend 17px, center 62px,
+          sublabel 20px) and readable in both themes. Legend text is dense and slightly
+          small on 2400px canvas, preventing full 8/8.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap. Concentric rings cleanly separated in their radial
+          bands. Center text clear of ring elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Rings are prominent and thick. Center percentage (62px bold) is highly
+          visible. Glowing endpoint dots add visual cues. Track arcs at appropriate
+          low opacity.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe by design. Three distinct hue families
+          (green/purple/blue) are distinguishable under deuteranopia and protanopia.
+          No red-green dependency.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas correctly fills with concentric rings. Title and legend
+          have appropriate padding. Chart uses 50-75% of canvas area effectively with
+          balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No cartesian axes (appropriate for doughnut). Title in correct format.
+          Legend entries include metric name, value/goal with units, and percentage
+          — fully descriptive.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green) for Move. Second #C475FD (lavender)
+          for Exercise. Third #4467A3 (blue) for Stand. Canonical Imprint order. Light
+          bg #FAF8F1, dark bg #1A1A17. Text uses t.ink / t.inkSoft tokens — theme-correct
+          in both renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom afterDraw plugin with radial gradient glow and canvas shadow
+          effects elevates this well above defaults. Rich center display and glowing
+          endpoint dots show intentional design hierarchy. Not quite publication-ready
+          (8) but clearly strong (6).
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Tooltips disabled, legend uses circle point styles, track opacity
+          carefully tuned per theme, no cartesian chrome. Rings extend very close
+          to canvas edges in dark render — slightly more chart padding would improve
+          breathing room.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Center '82% avg. complete' creates a clear headline focal point.
+          Exercise >127% communicates goal achievement. Glowing endpoint dots guide
+          the eye to progress tips. Fitness context is immediately recognizable and
+          meaningful.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct activity rings chart: concentric doughnut with thick arcs,
+          starting at 12 o''clock (rotation:-90), progressing clockwise, with rounded
+          end caps (borderRadius callback), faint background tracks, and a center
+          label area.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: thick partial arcs at 12 o''clock, faint
+          full-circle tracks, rounded caps, clamped fractions, goal-exceeded indication
+          (>127%), outer-to-inner ordering, center headline summary, per-ring legend,
+          3 rings, fitness data.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Each ring correctly maps value/goal to arc fraction. Move (outer)
+          → Exercise (middle) → Stand (inner) ordering matches spec. Square canvas
+          ensures circular geometry.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title exactly matches required format: ''gauge-activity-rings ·
+          javascript · chartjs · anyplot.ai''. Legend labels are descriptive with
+          values, goals, units, and percentages. Colors match rings.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all important cases: ring below goal (Move 70%, Stand 75%),
+          ring exceeding goal (Exercise 127%), different units (kcal/min/hr). Full
+          range of ring states demonstrated.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Daily fitness summary (Move/Exercise/Stand) is the canonical, real-world
+          activity rings scenario from the spec. Neutral, comprehensible, relatable.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 420/600 kcal Move, 38/30 min Exercise, 9/12 hr Stand — all factually
+          plausible for fitness tracker daily goals. Values align with typical Apple
+          Watch ring targets.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: hexToRgba helper function (used 4 times, justified) and centerTextPlugin
+          object add slight structural complexity. Plugin is idiomatic for Chart.js
+          but could be passed inline. Minor deduction.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data is hardcoded as constants — no randomness, fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports (Chart.js is a global). No unused code or dead variables.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: rings.map() for dataset construction is elegant. Plugin code is clean
+          and well-organized. No fake UI, no over-engineering. hexToRgba is a genuine
+          utility.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Uses Chart.js 4.4.7 API correctly. animation:false, responsive:true,
+          maintainAspectRatio:false all set. Canvas appended to #container. Output
+          handled by harness.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Multiple datasets for concentric rings is the idiomatic Chart.js
+          approach. Plugin system via afterDraw hook. generateLabels() override. borderRadius
+          callback. cutout, rotation, circumference options all used correctly.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom afterDraw plugin using canvas 2D context for radial gradient
+          glow and shadowBlur endpoint dots. chart.getDatasetMeta() and arc geometry
+          for endpoint position calculation. borderRadius as a callback function.
+          These are clearly Chart.js-specific patterns.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
