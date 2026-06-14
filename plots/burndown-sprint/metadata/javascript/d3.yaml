@@ -1,0 +1,259 @@
+library: d3
+language: javascript
+specification_id: burndown-sprint
+created: '2026-06-14T22:58:41Z'
+updated: '2026-06-14T23:17:57Z'
+generated_by: claude-sonnet
+workflow_run: 27514527326
+issue: 8654
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Step-after curve (d3.curveStepAfter) accurately models discrete work completion
+  - 'Full spec compliance: weekend band, scope change marker with triangle arrowhead,
+    dashed ideal line, legend — all present'
+  - All ANYPLOT_TOKENS used correctly for theme-adaptive chrome; both renders fully
+    readable with no dark-on-dark failures
+  - 'Semantic color choices: brand green for actual remaining, palette[4] matte red
+    for scope-change alert, muted inkSoft for reference line'
+  - Subtitle 'Below ideal = ahead of schedule' directly teaches the reading convention
+  - Elevated legend box with t.elevatedBg and t.grid border is a polished detail
+  - Deterministic hard-coded data is reproducible and uses realistic Jun 2026 sprint
+    dates (Jun 6–7 correctly identified as weekend)
+  weaknesses:
+  - Annotation text '+8 pts added' and 'Weekend' label use 13px, one pixel below the
+    recommended 14px floor for this canvas size — increase to 14px for consistent
+    legibility at mobile widths
+  - 'DE-02: no explicit spine cleanup (top/right domain lines default to absent in
+    D3, but tick marks are still rendered on both axes) — consider removing tick marks
+    from axes via .tickSize(0) for cleaner look'
+  - 'DE-03: the ''behind schedule / scope spike'' story is told mainly through the
+    subtitle text rather than visual emphasis — a colored fill between actual and
+    ideal lines (above = behind, below = ahead) would make the narrative immediately
+    visible without reading'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white
+      Chrome: Title "burndown-sprint · javascript · d3 · anyplot.ai" bold dark ink at 22px (~60% width, well-proportioned). Subtitle "Below ideal = ahead of schedule · 10-day sprint, Jun 1–12 2026" in muted dark ink at 14px. Y-axis label "Remaining Story Points" (rotated), X-axis label "Sprint Day" — both in dark ink at 15px, balanced and readable. Tick labels in inkSoft at 14px; X-axis date ticks rotated -35° to avoid overlap. Horizontal grid lines are subtle (rgba opacity).
+      Data: Actual remaining step curve in #009E73 (brand green, first palette slot) with circle markers (r=5, white stroke). Ideal burndown dashed line in inkSoft (gray/muted — correct semantic neutral for a reference line). Scope change: red dashed vertical line at Jun 4 with downward triangle arrowhead (t.palette[4] = #AE3030) and "+8 pts added" annotation in same red. Weekend band Jun 6–8: subtle light-gray fill rectangle with "Weekend" label at 13px. Legend box (top-right) with elevated background and three entries (actual, ideal, scope change) — all clearly labeled.
+      Legibility verdict: PASS — all text elements readable; no light-on-light failures; data is clearly distinguishable from background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black
+      Chrome: Title and subtitle flip to light ink text, clearly readable. Axis labels and tick labels flip to light inkSoft. Grid lines remain subtle (rgba with low opacity). Legend box flips to dark elevated background (#242420). Weekend band appears as a slightly darker dark-gray rectangle, visible but subtle.
+      Data: Actual remaining line remains #009E73 (identical to light render — data color unchanged). Ideal burndown dashed line appears lighter/white-ish against dark bg (inkSoft token flips to #B8B7B0). Scope change line and annotation remain in #AE3030 matte red, clearly readable on dark bg. Circle markers retain same green with pageBg stroke (now dark stroke, still distinctive).
+      Legibility verdict: PASS — all text elements readable against dark background; no dark-on-dark failures observed; brand green #009E73 remains clearly visible on dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, labels 15px, ticks 14px).
+          Annotation/weekend labels at 13px are one pixel below recommended 14px floor.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Step curve at stroke-width 3.5, ideal line at 2.5, markers at r=5
+          with white stroke — all well-sized for 10 data points.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs. gray dashed vs. red with redundant pattern encoding (solid/dashed).
+          CVD-safe distinguishable series.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization; margins balanced (top:98, right:165, bottom:85,
+          left:92); legend inside plot area, nothing clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Remaining Story Points'' (with units) and ''Sprint Day'' — both
+          descriptive.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, ideal line uses inkSoft (correct semantic
+          neutral for reference), scope change uses palette[4] matte-red (correct
+          semantic anchor for alert). Backgrounds #FAF8F1 / #1A1A17. Chrome fully
+          theme-adaptive.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: elevated legend box, triangle arrowhead, subtitle,
+          step curve with markers, weekend band — clearly above defaults. Not quite
+          publication-ready.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-only subtle grid, no top/right spines, elevated legend box, whitespace
+          generous. Tick marks still rendered on both axes — could be cleaner.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle teaches the reading convention; color hierarchy (green actual
+          vs. gray reference) guides viewer; scope change annotated. Story is present
+          but relies partly on subtitle text rather than purely visual emphasis.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Sprint burndown chart with step-after curve for actual and straight
+          ideal reference line — exactly correct.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: step curve, dashed ideal line, weekend shading,
+          scope change marker with annotation, legend distinguishing series.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis = sprint calendar dates, Y-axis = remaining story points starting
+          at 0. All 10 working days shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'burndown-sprint · javascript · d3 · anyplot.ai' matches required
+          format. Legend labels (Actual remaining, Ideal burndown, Scope change) correct.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all burndown chart features: initial scope, daily burn, scope
+          increase event, flat weekend segment, recovery to zero.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Real agile sprint scenario: 10 working days Jun 1–12 2026, 40 story
+          points, +8 scope change on day 4. Neutral software development context.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 40 story points for 10-day sprint is realistic. Jun 6–7 correctly
+          identified as weekend. Burndown to 0 by end of sprint shows successful delivery.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Sequential flat script: data → SVG mount → scales → weekend band
+          → gridlines → lines → markers → scope change → axes → labels → legend →
+          title.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data, no random numbers.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No explicit imports needed; d3 is a global, no unused packages.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic D3, no over-engineering, no fake UI elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Builds SVG into #container; harness saves plot-{theme}.png and .html.
+          Current D3 7.9.0 API used throughout.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: d3.scaleTime, d3.axisBottom/Left, d3.line with .curve(), d3.timeParse,
+          d3.symbol — all idiomatic D3 patterns used correctly.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: d3.curveStepAfter, d3.symbolTriangle via d3.symbol().type(), d3.scaleTime
+          for time domain — several D3-distinctive features. Not maximally creative
+          but solidly uses D3's unique curve and symbol APIs.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - edge-highlighting
+  - alpha-blending
