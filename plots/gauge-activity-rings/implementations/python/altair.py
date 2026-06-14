@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 gauge-activity-rings: Activity Rings Progress Chart
 Library: altair 6.2.1 | Python 3.13.13
 Quality: 85/100 | Created: 2026-06-14
@@ -23,6 +23,8 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+# Background track opacity — bumped for dark theme where it would otherwise vanish
+TRACK_OPACITY = 0.18 if THEME == "light" else 0.28
 
 # Imprint palette — positions 1-3 for three activity rings
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
@@ -48,17 +50,23 @@ title = "gauge-activity-rings · python · altair · anyplot.ai"
 n = len(title)
 title_size = max(11, round(16 * (67 / n if n > 67 else 1.0)))
 
+# Index of highest-completion ring for visual storytelling emphasis (DE-03)
+best_idx = fractions.index(max(fractions))
 
-# Build arc layers: one pair (background track + progress arc) per ring
-# scale=None on theta lets Vega-Lite treat the radian values directly.
-# innerRadius/outerRadius set per-ring in the mark definition.
-def ring_layers(frac, color, r_in, r_out, tip_metric, tip_text):
+# Build arc layers inline — no helper function (KISS / CQ-01)
+layers = []
+for metric, val, goal, unit, color, r_out, r_in, frac in zip(
+    metrics, values, goals, units, colors, outer_radii, inner_radii, fractions, strict=False
+):
+    tip = f"{val} / {goal} {unit}  ({round(frac * 100)}%)"
     full_df = pd.DataFrame([{"s": 0.0, "e": TWO_PI}])
-    arc_df = pd.DataFrame([{"s": 0.0, "e": min(frac, 1.0) * TWO_PI, "metric": tip_metric, "tip": tip_text}])
+    arc_df = pd.DataFrame([{"s": 0.0, "e": min(frac, 1.0) * TWO_PI, "metric": metric, "tip": tip}])
     track = (
         alt.Chart(full_df)
         .mark_arc(innerRadius=r_in, outerRadius=r_out, cornerRadius=22)
-        .encode(theta=alt.Theta("s:Q", scale=None), theta2="e:Q", color=alt.value(color), opacity=alt.value(0.18))
+        .encode(
+            theta=alt.Theta("s:Q", scale=None), theta2="e:Q", color=alt.value(color), opacity=alt.value(TRACK_OPACITY)
+        )
     )
     arc = (
         alt.Chart(arc_df)
@@ -71,24 +79,20 @@ def ring_layers(frac, color, r_in, r_out, tip_metric, tip_text):
             tooltip=[alt.Tooltip("metric:N", title="Activity"), alt.Tooltip("tip:N", title="Progress")],
         )
     )
-    return track + arc
+    layers.append(track + arc)
 
-
-layers = []
-for metric, val, goal, unit, color, r_out, r_in, frac in zip(
-    metrics, values, goals, units, colors, outer_radii, inner_radii, fractions, strict=False
-):
-    tip = f"{val} / {goal} {unit}  ({round(frac * 100)}%)"
-    layers.append(ring_layers(frac, color, r_in, r_out, metric, tip))
-
-# Center labels: stacked metric lines inside the inner hole (r<40 = 80px dia hole)
-center_y_positions = [VIEW_CY - 18, VIEW_CY, VIEW_CY + 18]
+# Center labels: stacked metric lines inside the inner hole
+# Best-performing ring gets a ★ prefix and slightly larger font for storytelling (DE-03)
+center_y_positions = [VIEW_CY - 20, VIEW_CY, VIEW_CY + 20]
 center_labels = []
-for metric, frac, color, cy in zip(metrics, fractions, colors, center_y_positions, strict=False):
-    lbl_df = pd.DataFrame([{"txt": f"{metric}  {round(frac * 100)}%"}])
+for i, (metric, frac, color, cy) in enumerate(zip(metrics, fractions, colors, center_y_positions, strict=False)):
+    is_best = i == best_idx
+    label_text = f"{'★ ' if is_best else ''}{metric}  {round(frac * 100)}%"
+    label_size = 14 if is_best else 12
+    lbl_df = pd.DataFrame([{"txt": label_text}])
     center_labels.append(
         alt.Chart(lbl_df)
-        .mark_text(fontSize=10, fontWeight="bold", align="center", baseline="middle")
+        .mark_text(fontSize=label_size, fontWeight="bold", align="center", baseline="middle")
         .encode(x=alt.value(VIEW_CX), y=alt.value(cy), text="txt:N", color=alt.value(color))
     )
 
