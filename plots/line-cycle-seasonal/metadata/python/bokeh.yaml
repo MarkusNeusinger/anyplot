@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: line-cycle-seasonal
 created: '2026-06-15T03:47:06Z'
-updated: '2026-06-15T03:53:44Z'
+updated: '2026-06-15T04:03:26Z'
 generated_by: claude-sonnet
 workflow_run: 27522381707
 issue: 8658
@@ -12,51 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-cycl
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/python/bokeh/plot-dark.html
-quality_score: 88
+quality_score: 85
 review:
   strengths:
-  - 'Perfect cycle plot structure: seasonal groups, chronological within-group lines,
-    horizontal mean reference lines, shared y-axis — all spec features present'
-  - CustomJSTickFormatter + FixedTicker for clean x-axis month labels is idiomatic
-    and Bokeh-distinctive
-  - 'Correct Imprint palette usage: brand green for subseries data, Imprint blue for
-    mean reference lines'
-  - Theme-adaptive chrome fully implemented for both renders — no dark-on-dark failures
-  - Dynamic title fontsize scaling (max(34, round(50*67/n_chars))) handles the 75-char
-    title correctly
-  - Efficient multi_line() batch rendering for 12 subseries + 12 mean lines + 11 group
-    dividers
-  - Realistic synthetic data with meaningful warming signal (0.05°C/year) and appropriate
-    noise (σ=0.8°C)
-  - 'Clean code structure: linear, no functions/classes, all layout math pre-computed
-    before figure construction'
+  - Complete and correct cycle plot implementation with all spec-required features
+    (seasonal groups, mean reference lines, chronological subseries, shared y-axis)
+  - 'Excellent data quality: realistic mid-latitude temperature data with climatologically
+    plausible values and warming signal'
+  - 'Strong warming-trend storytelling: amber dashed trend lines per group with annotation
+    text make the within-season signal explicit'
+  - 'Perfect code quality: clean flat structure, seeded reproducibility, all imports
+    used, correct output file naming'
+  - Both themes correctly styled — no dark-on-dark failures, correct background tokens,
+    matching data colors
   weaknesses:
-  - Group dividers between months are barely perceptible at alpha=0.25 — increase
-    to alpha=0.35–0.40 so seasonal boundaries are clearer without being dominant
-  - The within-season warming trend (the key second story of a cycle plot) is visible
-    but not emphasized — consider a subtle annotation pointing to one month's upward
-    slope or a faint regression line over the subseries to make the trend narrative
-    explicit
-  - Legend box border is present (p.legend.border_line_color = INK_SOFT) — removing
-    it or reducing its weight would improve visual refinement slightly
-  - No explicit visual emphasis guides the reader to the cross-season mean comparison
-    first, then to the within-season trends — a slight prominence difference or annotation
-    would lift the storytelling score
+  - Mean reference lines use palette position 3 (#4467A3, blue) while position 2 (#C475FD,
+    lavender) is skipped — use canonical Imprint order (position 2 for second distinct
+    element) or document the semantic exception explicitly
+  - Dashed trend lines (amber) are missing a legend entry — only explained by the
+    floating annotation text, leaving them unlabeled for legend-reading viewers
+  - Warming trend annotation text (22pt) is noticeably smaller than the rest of the
+    typography hierarchy (34-45pt), creating a slight inconsistency; consider raising
+    to ~28-30pt for better hierarchy alignment
+  - Trend line alpha=0.65 and line_width=2.0 makes them subtle in dense summer month
+    groups; consider alpha=0.8 or line_width=2.5 for better visibility
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface, not pure white
-      Chrome: Title "Monthly Air Temperature · line-cycle-seasonal · python · bokeh · anyplot.ai" in bold dark ink, clearly readable. X-axis label "Month" and y-axis label "Temperature (°C)" in italic 42pt dark ink, readable. Tick labels (Jan–Dec, numeric temps) in 34pt INK_SOFT (#4A4A44), readable. Legend in top-right with ELEVATED_BG fill, entries in 34pt INK_SOFT.
-      Data: Twelve monthly groups arranged Jan–Dec. Annual subseries lines in #009E73 (brand green, first series), scatter markers in same green with off-white edges. Horizontal mean reference lines in #4467A3 (Imprint blue, line_width=5) per group. Subtle vertical dividers at alpha=0.25. Y-axis grid lines at alpha=0.15.
-      Legibility verdict: PASS — all text elements clearly readable against the warm off-white background
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "Monthly Air Temperature · line-cycle-seasonal · python · bokeh · anyplot.ai" is bold dark (#1A1A17) and fully readable. Axis labels "Month" and "Temperature (°C)" in dark ink, clearly visible. Tick labels (month names: Jan-Dec, temperature values: 0-30) in secondary ink (#4A4A44), readable.
+      Data: Brand green #009E73 for annual subseries lines and scatter markers (first series, correct). Blue #4467A3 for horizontal mean reference lines. Amber #BD8233 for dashed trend lines and warming annotation text. Legend in top-right with elevated background, shows "Monthly mean" and "Annual values".
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title in near-white (#F0EFE8 INK token), clearly readable. Axis labels in same near-white, readable. Tick labels in #B8B7B0 (INK_SOFT dark token), readable against dark background. Legend uses ELEVATED_BG dark (#242420) with INK_SOFT border. No dark-on-dark failures detected.
-      Data: Identical data colours to light render — annual subseries in #009E73 (green), mean reference lines in #4467A3 (blue), scatter markers in green with dark edge. Y-grid lines light at alpha=0.15. Only chrome elements differ from light render.
-      Legibility verdict: PASS — all text elements clearly readable against the warm near-black background, no dark-on-dark issues
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title in light ink (#F0EFE8), fully readable against dark background. Axis labels in light ink, clearly visible. Tick labels in secondary light ink (#B8B7B0), readable. No dark-on-dark failures detected — all chrome elements correctly use light tokens on dark surface.
+      Data: Colors identical to light render — green #009E73 for annual lines/markers, blue #4467A3 for mean lines, amber #BD8233 for trend lines and annotation. Brand green #009E73 clearly visible. Legend background uses dark elevated surface (#242420).
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -64,54 +58,56 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Title dynamically scaled (45pt for 75-char title), axis labels 42pt,
-          tick labels 34pt — all readable in both themes. Minor: italic axis label
-          style (Bokeh default) slightly reduces readability at small sizes.'
+        comment: 'Title, axis labels, and tick labels readable in both themes with
+          correct token mapping. Minor deduction: warming annotation at 22pt is below
+          tick-label size of 34pt, slightly inconsistent typography hierarchy.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions in either render. Legend
-          clear of data groups.
+        comment: No text/text collisions. Minor overlap among scatter markers within
+          dense summer months (Jun-Aug) where 19 annual points compress into a narrow
+          band.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Subseries at line_width=2.5/alpha=0.8 and markers at size=8 with
-          PAGE_BG edge clearly visible. Mean lines at line_width=5/alpha=0.9 prominently
-          distinguished. Density appropriate.
+        comment: Annual subseries and mean lines clearly visible. Dashed trend lines
+          at alpha=0.65 and line_width=2.0 are somewhat subtle in dense groups.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint palette (#009E73 / #4467A3) is CVD-safe. Scatter markers
-          have PAGE_BG edges for definition.'
+        comment: Imprint palette positions used; green and blue are CVD-safe and distinguishable.
+          Amber annotation provides redundancy.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Min-border reservations (160/180/110/50)
-          prevent label clipping. No overflow or edge clips.
+        comment: Canvas gate passed. 3200x1800 canvas. Title fits within width, generous
+          min_border settings, no elements clipped at canvas edges.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis label includes units (°C). Title follows mandated format with
-          descriptive prefix.
+        comment: Title includes descriptive prefix, spec-id, language, library, and
+          brand. Y-axis includes units (deg C). Both axis labels descriptive and accurate.
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series brand green #009E73. Mean reference uses Imprint blue
-          #4467A3. Backgrounds #FAF8F1/#1A1A17. Data colours identical across renders.'
+        passed: false
+        comment: 'Brand green #009E73 first series correct. Backgrounds correct (#FAF8F1
+          light / #1A1A17 dark). Data colors identical across renders. Minor issue:
+          mean reference lines use IMPRINT_PALETTE[2] (#4467A3, position 3), skipping
+          position 2 (#C475FD lavender) without documented semantic exception.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -119,25 +115,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clean two-layer hierarchy (thick mean over thin subseries), theme-adaptive
-          chrome, edge-highlighted markers. Above default but not showcase level.
+        comment: Above default (4). Multi-encoding with solid vs dashed lines, weight
+          differentiation, scatter markers shows intentional visual hierarchy. Custom
+          JS x-axis label mapping adds sophistication.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: L-shaped frame via outline removal + axis lines, x-grid disabled,
-          y-grid at alpha=0.15, x-ticks removed, generous min-border whitespace. Well-refined.
+        comment: Above default (2). Full box outline removed, x-grid removed, y-grid
+          at 15% opacity, legend border removed, L-shaped spine treatment.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Visual hierarchy between mean lines and subseries guides viewer to
-          two key insights. Within-season warming trend visible but not emphasized
-          — no annotation or trend indicator.
+        comment: Above default (2). Amber warming trend annotation with dashed trend
+          lines explicitly highlights the within-season warming signal. Mean reference
+          lines enable direct seasonal comparison.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -145,28 +142,33 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Canonical cycle/seasonal subseries plot with correct structure.
+        comment: 'Correctly implements cycle/seasonal subseries plot: monthly groups
+          left-to-right, chronological annual subseries as thin connected lines, horizontal
+          mean reference lines, shared y-axis, subtle gaps between groups.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: 12 groups in calendar order, within-group chronological
-          lines, horizontal mean reference lines, shared y-axis, vertical dividers.'
+        comment: All 12 seasonal groups (Jan-Dec) in calendar order, chronological
+          subseries within each group, horizontal mean reference lines, shared y-axis,
+          scatter markers, vertical dividers between groups.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: season→x groups, cycle/year→within-group x, value→y. All 228 observations
-          plotted.
+        comment: X-axis maps to months (seasonal groups), y-axis to temperature in
+          deg C. Years ordered chronologically within each group. Full data range
+          covered.
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title matches {Descriptive} · {spec-id} · python · bokeh · anyplot.ai
-          format. Legend entries clear and descriptive.
+        passed: false
+        comment: 'Title format correct with descriptive prefix. Legend shows Monthly
+          mean and Annual values. Minor deduction: amber dashed trend lines have no
+          legend entry, only explained by floating annotation text.'
     data_quality:
       score: 15
       max: 15
@@ -176,22 +178,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both seasonal effect (cross-group mean differences) and within-season
-          trend (0.05°C/year warming). Full 12-month cycle covered.
+        comment: 'Demonstrates all aspects of cycle plots: within-group chronological
+          subseries, seasonal mean comparison via reference lines, individual data
+          points via scatter, and explicit within-season trend visualization.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mid-latitude station monthly temperature is a classic, neutral example.
-          Values realistic (Jan ~2°C, Jul ~25°C). No controversial content.
+        comment: Monthly average temperature for a mid-latitude station over 19 years
+          (2005-2023). Seasonal base temperatures (2-25 deg C) and +0.05 deg C/yr
+          warming trend are climatologically plausible and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 228 total points within 30-300 spec range. 12 seasonal groups (4-12
-          spec), 19 per group (5-30 spec). Noise and warming rate calibrated appropriately.
+        comment: Y-range (-3.5 to 31.5 deg C) captures full seasonal swing with appropriate
+          headroom. 228 data points (19 years x 12 months) within the spec's suggested
+          30-300 range.
     code_quality:
       score: 10
       max: 10
@@ -201,36 +206,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Linear script. Data → layout → figure →
-          styling → export.
+        comment: Flat script with no functions or classes. Sequential data preparation,
+          figure construction, and output.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports are used: io, os, sys, pathlib, time, numpy, pandas,
-          bokeh.*, PIL, selenium.'
+        comment: All imports (io, os, sys, time, pathlib, numpy, pandas, bokeh modules,
+          PIL, selenium) are actually used in the script.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: sys.path workaround necessary (file named bokeh.py). multi_line()
-          for batch rendering is efficient. Dynamic title scaling is clean. Pre-computed
-          layout is well-structured.
+        comment: sys.path manipulation is a necessary workaround for bokeh.py filename
+          conflict. Coordinate layout logic is clear. Dynamic title font scaling applied.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png. Current Bokeh API.
-          No bare plot.png.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png. toolbar_location=None
+          applied. Selenium screenshot pattern follows bokeh.md guidance.
     library_mastery:
       score: 7
       max: 10
@@ -240,29 +244,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper figure() config, multi_line() for batch series, output_file()+save()
-          for HTML, legend_label on glyphs. One point off default for absence of ColumnDataSource
-          (not required but the idiomatic Bokeh data container per library guide).
+        comment: multi_line used efficiently for batch rendering of 12 subseries in
+          a single call. CustomJSTickFormatter maps numeric positions to month labels.
+          FixedTicker for custom tick placement. Label for annotation. min_border_*
+          for clip prevention.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: CustomJSTickFormatter with inline JavaScript for month-name tick
-          labels is distinctively Bokeh. FixedTicker for custom tick placement. multi_line()
-          for grouped series rendering.
+        comment: CustomJSTickFormatter with JavaScript mapping is a distinctive bokeh
+          feature. multi_line batch rendering is bokeh-specific. HTML export as first-class
+          artifact. Headless Chrome Selenium screenshot pattern.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   - pillow
   techniques:
+  - annotations
   - manual-ticks
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - regression
   styling:
   - alpha-blending
   - edge-highlighting
