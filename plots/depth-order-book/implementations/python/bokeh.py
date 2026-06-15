@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 depth-order-book: Order Book Depth Chart
 Library: bokeh 3.9.1 | Python 3.13.13
 Quality: 87/100 | Created: 2026-06-15
@@ -18,7 +18,7 @@ from pathlib import Path
 
 import numpy as np
 from bokeh.io import output_file, save
-from bokeh.models import Label, NumeralTickFormatter, Range1d, Span
+from bokeh.models import BoxAnnotation, Label, NumeralTickFormatter, Range1d, Span
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -112,6 +112,11 @@ p.line(x=x_bid_poly[:-1], y=y_bid_poly[:-1], line_color=BID_COLOR, line_width=3.
 p.patch(x=x_ask_poly, y=y_ask_poly, fill_color=ASK_COLOR, fill_alpha=0.25, line_color=None)
 p.line(x=x_ask_poly[:-1], y=y_ask_poly[:-1], line_color=ASK_COLOR, line_width=3.5, line_alpha=0.95)
 
+# Spread gap highlight — BoxAnnotation covers the bid-ask spread region
+p.add_layout(
+    BoxAnnotation(left=bid_prices[0], right=ask_prices[0], fill_color=INK_MUTED, fill_alpha=0.07, line_color=None)
+)
+
 # Mid price dashed vertical line
 p.add_layout(
     Span(
@@ -119,13 +124,13 @@ p.add_layout(
     )
 )
 
-# Mid price and spread annotations (placed above the spread gap)
+# Mid price and spread annotations — secondary info uses smaller text for hierarchy
 p.add_layout(
     Label(
         x=mid_price + 2.0,
         y=max_cum * 0.88,
         text=f"Mid: ${mid_price:,.0f}",
-        text_font_size="30pt",
+        text_font_size="22pt",
         text_color=INK_SOFT,
         text_align="left",
         background_fill_color=None,
@@ -134,9 +139,9 @@ p.add_layout(
 p.add_layout(
     Label(
         x=mid_price + 2.0,
-        y=max_cum * 0.76,
+        y=max_cum * 0.78,
         text=f"Spread: ${spread:.0f}",
-        text_font_size="28pt",
+        text_font_size="20pt",
         text_color=INK_MUTED,
         text_align="left",
         background_fill_color=None,
@@ -176,7 +181,7 @@ p.outline_line_color = None
 
 p.title.text_color = INK
 p.title.text_font_size = title_fontsize
-p.title.text_font_style = "normal"
+p.title.text_font_style = "bold"
 
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
@@ -186,8 +191,9 @@ p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
 p.xaxis.major_label_text_font_size = "34pt"
 p.yaxis.major_label_text_font_size = "34pt"
-p.xaxis.axis_line_color = INK_SOFT
-p.yaxis.axis_line_color = INK_SOFT
+# Remove all axis spine lines for a clean open look — data and tick labels provide structure
+p.xaxis.axis_line_color = None
+p.yaxis.axis_line_color = None
 p.xaxis.major_tick_line_color = INK_SOFT
 p.yaxis.major_tick_line_color = INK_SOFT
 p.xaxis.minor_tick_line_color = None
