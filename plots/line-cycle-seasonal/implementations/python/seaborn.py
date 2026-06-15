@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-cycle-seasonal: Cycle Plot (Seasonal Subseries)
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 87/100 | Created: 2026-06-15
@@ -70,27 +70,55 @@ group_starts = np.arange(12) * (group_width + gap)
 group_centers = group_starts + group_width / 2
 year_offsets = np.linspace(0, group_width, n_years)
 
+# Compute absolute x-positions per row for seaborn plotting
+df["x_pos"] = df.apply(lambda row: group_starts[int(row["month_idx"])] + year_offsets[int(row["year"]) - 2000], axis=1)
+
 # Plot
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
+# Chronological subseries lines via seaborn lineplot — one line per month (units='month_idx')
+# estimator=None draws raw observations; each month's 24 years form a connected line
+sns.lineplot(
+    data=df,
+    x="x_pos",
+    y="temp",
+    units="month_idx",
+    estimator=None,
+    color=BRAND,
+    linewidth=1.5,
+    alpha=0.75,
+    ax=ax,
+    zorder=2,
+)
+
+# Horizontal reference lines at each group's mean (key visual for seasonal comparison)
 for mi in range(12):
-    month_data = df[df["month_idx"] == mi].sort_values("year")
-    x_base = group_starts[mi]
-    x_vals = x_base + year_offsets
-    y_vals = month_data["temp"].values
+    month_data = df[df["month_idx"] == mi]
+    mean_val = month_data["temp"].mean()
+    ax.hlines(
+        mean_val, group_starts[mi], group_starts[mi] + group_width, colors=INK, linewidth=2.0, alpha=0.85, zorder=3
+    )
 
-    # Chronological subseries line (within-season trend)
-    ax.plot(x_vals, y_vals, color=BRAND, linewidth=1.5, alpha=0.75, zorder=2)
-
-    # Horizontal reference line at the group mean (key visual for seasonal comparison)
-    mean_val = y_vals.mean()
-    ax.hlines(mean_val, x_base, x_base + group_width, colors=INK, linewidth=2.0, alpha=0.85, zorder=3)
-
-# Subtle vertical dividers between seasonal groups
+# Vertical dividers between seasonal groups (alpha=0.4 for clear but subtle separation)
 for mi in range(1, 12):
     x_div = group_starts[mi] - gap / 2
-    ax.axvline(x_div, color=INK_MUTED, linewidth=0.6, alpha=0.25, zorder=1)
+    ax.axvline(x_div, color=INK_MUTED, linewidth=0.6, alpha=0.4, zorder=1)
+
+# Warming trend annotation on July — the within-season upward slope tells the climate story
+july_df = df[df["month_idx"] == 6].sort_values("year")
+july_warming = july_df.iloc[-1]["temp"] - july_df.iloc[0]["temp"]
+july_y_max = july_df["temp"].max()
+ax.text(
+    group_centers[6],
+    july_y_max + 0.8,
+    f"+{july_warming:.1f}°C (2000→2023)",
+    ha="center",
+    va="bottom",
+    fontsize=6.5,
+    color=INK_SOFT,
+    style="italic",
+)
 
 # Style
 ax.set_xticks(group_centers)
@@ -105,8 +133,7 @@ ax.set_ylabel("Avg Temperature (°C)", fontsize=10, color=INK)
 title = "line-cycle-seasonal · python · seaborn · anyplot.ai"
 ax.set_title(title, fontsize=12, fontweight="medium", color=INK, pad=10)
 
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
+sns.despine(ax=ax, top=True, right=True)
 ax.spines["left"].set_color(INK_SOFT)
 ax.spines["bottom"].set_color(INK_SOFT)
 
@@ -126,7 +153,7 @@ ax.legend(
     labelcolor=INK_SOFT,
 )
 
-fig.subplots_adjust(left=0.08, right=0.97, top=0.92, bottom=0.12)
+fig.subplots_adjust(left=0.08, right=0.97, top=0.90, bottom=0.12)
 
 # Save — no bbox_inches='tight' (would trim canvas away from exact 3200×1800 target)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
