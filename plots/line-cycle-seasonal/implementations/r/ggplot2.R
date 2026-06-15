@@ -5,7 +5,6 @@
 
 library(ggplot2)
 library(dplyr)
-library(scales)
 library(ragg)
 
 set.seed(42)
@@ -80,7 +79,7 @@ p <- ggplot() +
   geom_line(
     data      = df,
     aes(x = x_pos, y = temp, group = month, color = "Within-month trend"),
-    linewidth = 0.85
+    linewidth = 1.05
   ) +
   # Seasonal mean reference segments (Imprint blue — third series)
   geom_segment(
@@ -93,6 +92,25 @@ p <- ggplot() +
       color = "Seasonal mean"
     ),
     linewidth = 1.6
+  ) +
+  # Annotate warming trend on July (month 7) — warmest month, most visible slope
+  annotate(
+    "text",
+    x     = 7,
+    y     = max(df$temp[df$month == 7]) + 0.9,
+    label = "+1.25 °C over 25 yrs",
+    color = INK_SOFT,
+    size  = 2.5,
+    hjust = 0.5
+  ) +
+  annotate(
+    "segment",
+    x     = 6.63,
+    xend  = 7.37,
+    y     = max(df$temp[df$month == 7]) + 0.55,
+    yend  = max(df$temp[df$month == 7]) + 0.55,
+    color = INK_MUTED,
+    linewidth = 0.3
   ) +
   scale_x_continuous(
     breaks = month_nums,
