@@ -1,0 +1,247 @@
+library: chartjs
+language: javascript
+specification_id: climograph-walter-lieth
+created: '2026-06-15T01:22:24Z'
+updated: '2026-06-15T01:28:05Z'
+generated_by: claude-sonnet
+workflow_run: 27518217438
+issue: 8656
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/javascript/chartjs/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Custom Chart.js plugin correctly implements Walter-Lieth humid/arid fill zones
+    with pixel-space crossover detection — technically sophisticated and visually
+    accurate
+  - Dual-axis configuration preserves the canonical 1:2 Walter-Lieth scaling (TEMP_MIN*2=PRCP_MIN,
+    TEMP_MAX*2=PRCP_MAX) maintaining direct curve comparability
+  - Semantic color convention (red=temperature, blue=precipitation) aligns with domain
+    expectation; axis labels colored to match their series for immediate readability
+  - Station metadata subtitle (name, elevation, period, annual means) correctly positioned
+    in the conventional Walter-Lieth header location
+  - 'Both renders fully theme-adaptive: data colors identical, all chrome (text, grid,
+    frost bands, reference line) correctly follows ANYPLOT_TOKENS'
+  weaknesses:
+  - Perhumid (>100 mm precipitation) scale compression not implemented — the canonical
+    Walter-Lieth diagram compresses the precipitation axis to 10:1 above 100 mm and
+    fills that band solid blue; the implementation omits this feature even as a dormant
+    capability
+  - Precipitation axis maximum is 80 mm (TEMP_MAX * 2 = 80) instead of the conventional
+    100 mm upper tick; spec specifies right-axis ticks at '0, 20, 40, 60, 100 mm'
+  - All four chart borders/spines retained; removing top and right borders would give
+    a cleaner L-frame aesthetic consistent with the style guide
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Bold title "climograph-walter-lieth · javascript · chartjs · anyplot.ai" at ~65% width, readable in dark ink. Two-line subtitle with station metadata in secondary ink color — readable. Left Y-axis label "Temperature (°C)" in red, right Y-axis label "Precipitation (mm)" in blue — both readable. Tick labels in respective series colors (red for temp, blue for precip). X-axis month abbreviations (J–D) in inkSoft — readable.
+      Data: Temperature line in #AE3030 (matte red), precipitation line in #4467A3 (blue). Blue semi-transparent fill for humid period (Jan–May, Sep–Dec). Red/rose fill for summer arid period (Jun–Sep). Crossover correctly detected. Dashed 0°C reference line visible. Dark gray frost bands at bottom for January (T=-3°C) and February (T=-1°C).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: All text tokens flip to light: title in light ink, subtitle in inkSoft light tone, axis labels in their respective series colors (red/blue), tick labels light — all readable. No dark-on-dark failures detected. Frost bands correctly switch to light near-white fill (rgba(240,239,232,0.85)).
+      Data: Colors are identical to light render — same #AE3030 temperature line, same #4467A3 precipitation line. Arid fill appears as deep crimson, humid fill as dark navy — both distinguishable from the near-black background. 0°C dashed reference line visible in inkSoft.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; minor deduction for subtitle being
+          quite small relative to large canvas
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 12-point sparse data with markers well-sized; 3.5px lines prominent;
+          fill zones clearly defined
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/blue encode temp/precipitation via domain convention; CVD-safe
+          Imprint palette colors
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing cut off, correct landscape canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes labeled with units; title correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception applies: temperature=red (#AE3030), precipitation=blue
+          (#4467A3); backgrounds #FAF8F1/#1A1A17; Imprint tokens via window.ANYPLOT_TOKENS'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Axis labels colored to match series, subtitle metadata, custom plugin
+          fill zones, point markers with pageBg border
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Right-axis grid disabled (drawOnChartArea: false); subtle grid tokens;
+          but all four spines retained'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Fill zones immediately communicate humid/arid seasons; frost bands
+          add cold-month context; 0°C line aids interpretation
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Walter-Lieth climograph with dual-axis line chart
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Has 1:2 scaling, fill zones, metadata, frost bands, 0°C line. Missing:
+          perhumid (>100mm) scale compression; PRCP_MAX is 80mm not conventional 100mm'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=months, Y-left=temperature, Y-right=precipitation with correct
+          2:1 alignment
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'climograph-walter-lieth · javascript · chartjs · anyplot.ai';
+          legend labels match datasets
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: dual curves, fill zones, metadata header, frost
+          indicators, 0°C line, dual-axis scaling'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Kızılırmak Basin Turkey at 1050m, 1991-2020 normals; temperature
+          and precipitation pattern realistic for continental Anatolia
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Axis bounds appropriate for data range; Walter-Lieth proportions
+          preserved; tick intervals conventional
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary abstractions; fillQuad helper genuinely needed; three
+          focused plugins
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded deterministically
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; all globals used as needed
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Plugin pattern is idiomatic Chart.js; crossover intersection math
+          concise and correct
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: No manual file saves; current Chart.js API; harness handles PNG/HTML
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct plugins API, dual yAxisID, subtitle plugin, responsive/animation
+          flags, tick callback
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom plugins with canvas-space pixel interpolation for crossovers,
+          chartArea-relative sizing, raw canvas drawing within Chart.js lifecycle
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - manual-ticks
+  - html-export
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending

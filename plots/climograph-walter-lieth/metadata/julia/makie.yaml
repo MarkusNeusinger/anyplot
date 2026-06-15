@@ -1,0 +1,279 @@
+library: makie
+language: julia
+specification_id: climograph-walter-lieth
+created: '2026-06-15T01:28:48Z'
+updated: '2026-06-15T01:36:38Z'
+generated_by: claude-sonnet
+workflow_run: 27518158053
+issue: 8656
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Correct Walter-Lieth 2:1 axis scaling with Makie GridLayout dual-axis overlay
+    — two axes at fig[1,1] with linkxaxes! and correctly scaled ylims (Y_BOT*2 / Y_TOP*2
+    for right axis)
+  - 'Semantic color exception correctly applied: temperature uses Imprint matte red
+    (#AE3030) and precipitation uses Imprint blue (#4467A3), both canonical Imprint
+    palette members with explicit domain justification comment'
+  - 'Expert Makie usage: band! for fills, custom LineElement/PolyElement legend elements,
+    colsize! layout control, and poly! with Point2f for frost indicators'
+  - 'Data deliberately showcases all three Walter-Lieth features: clear summer arid
+    period (Jun-Sep), winter humid period, and one frost month (January) with realistic
+    Anatolian continental climate normals'
+  - 'Perfect code quality: deterministic hardcoded data, clean KISS structure, only
+    used imports (CairoMakie, Colors, Statistics), no over-engineering'
+  - Both themes correctly adapted — INK/INK_SOFT tokens applied to all chrome elements;
+    legend has ELEVATED_BG background and INK labelcolor
+  weaknesses:
+  - Spec calls for hatched/dotted fill patterns (blue/hatched humid, red/dotted arid)
+    but implementation uses plain alpha fills instead — the humid fill at 40% alpha
+    on off-white (#FAF8F1) is quite subtle and the arid fill at 30% alpha on the dark
+    background (#1A1A17) renders as very dark maroon, reducing visual distinctiveness
+  - Large dead zone from 0°C dashed line down to the frost band (~11°C of empty vertical
+    space between the 0°C reference and the frost block at -11 to -13) — reducing
+    Y_BOT to around -5 and FRO_BOT to -4 would remove this wasted space while keeping
+    the frost indicator
+  - No perhumid band implementation (>100mm precipitation → compressed 10:1 scale
+    + solid blue fill) — the spec explicitly mentions this, and while the current
+    data doesn't exceed 100mm, the feature is absent
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, clearly not pure white
+      Chrome: Title "climograph-walter-lieth · julia · makie · anyplot.ai" is dark-on-light, fully readable. Station name "Anatolian Station (894 m a.s.l.)" and climate stats "Mean T = 12.6 °C · Annual P = 382 mm (1991–2020)" visible in upper left. Left axis label "Temperature (°C)" and right axis label "Precipitation (mm)" are clear. Tick labels (-10, 0, 10, 20, 30 on left; 0, 20, 40, 60 on right) are dark (#4A4A44 tone) and readable. Month labels (J-D) along x-axis are clear.
+      Data: Temperature line in matte red (#AE3030), precipitation line in Imprint blue (#4467A3). Blue humid fill (40% alpha) covers Jan-May and Sep-Dec. Rosy-pink arid fill (30% alpha) covers Jun-Sep. Both fills visible though the blue is quite subtle. Frost indicator block (solid #4467A3) below x-axis for January. Dashed 0°C reference line visible.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title, axis labels, tick labels, and legend text all appear in light (#F0EFE8/#B8B7B0 tone) — clearly readable against the dark background. No "dark-on-dark" failures. Legend box has elevated dark background (#242420) with subtle frame. Station header text in INK_SOFT (#B8B7B0) is readable.
+      Data: Temperature line color identical to light render (matte red #AE3030). Precipitation line identical blue (#4467A3). The blue humid fill at 40% alpha on near-black reads as a darker, steelier blue — still visually distinct. The arid fill at 30% alpha renders as dark maroon on the dark background, which is notably darker/more opaque than the pink of the light render. Frost block remains the same blue. Data colors are consistent with the light render as required.
+      Legibility verdict: PASS — all text readable. The arid fill appears more opaque in dark mode (dark maroon vs pink), which slightly reduces clarity of the arid/humid distinction, but this is a design quality issue rather than a legibility failure.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: titlesize=18, ylabelsize=15, tick
+          labels=13. Readable in both themes at full and mobile scale.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap. Legend in separate column (fig[1,2]) avoids chart
+          area. Station header placed at y=34 above data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines at linewidth=2.5 clearly visible. Fills visible in both themes.
+          Frost block clearly rendered.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red temperature vs blue precipitation provides strong contrast and
+          CVD-safe hue pairing.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Plot uses 82% of canvas width with colsize! — good utilization. Minor
+          deduction for large empty zone from 0°C to -10°C (frost band at -11 to -13)
+          creating ~11°C of dead space below the dashed zero line.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Temperature (°C) and Precipitation (mm) both have units. Title format
+          correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception correctly applied: #AE3030 (Imprint red) for
+          temperature and #4467A3 (Imprint blue) for precipitation — both are canonical
+          Imprint palette members, semantic assignment justified by domain convention
+          (temperature hot=red, water=blue). Backgrounds #FAF8F1/#1A1A17 correct.
+          Chrome fully theme-adaptive.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above configured default: domain-appropriate semantic colors, station
+          metadata header in chart area, intentional alpha fills. Not quite at FiveThirtyEight-level
+          — fills slightly washed-out (especially blue humid fill at 40% on off-white).'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed (L-frame), no grid (appropriate for climograph
+          where curves tell the story), subtle dashed 0°C reference line, legend frame
+          at 30% opacity. Clean and professional.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Data selection creates a clear narrative: summer drought visible
+          in large arid fill, frost risk in January shown by indicator block. The
+          crossing of temperature and precipitation curves is immediately readable.
+          No annotations to highlight key transitions, but the fills carry the story
+          well.'
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Walter-Lieth climograph: dual-axis, 2:1 scaling, temperature
+          line + precipitation line, filled periods, frost indicators.'
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Has: 2:1 scaling, humid/arid fills, header metadata, frost blocks,
+          0°C reference, dual axis. Missing: hatched/dotted fill patterns (spec specifies
+          blue/hatched and red/dotted), perhumid band >100mm (not triggered by data
+          but feature absent).'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Months on x-axis, temp on left (°C), precipitation on right (mm)
+          with correctly scaled ylims. linkxaxes! ensures x synchronization.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''climograph-walter-lieth · julia · makie · anyplot.ai''
+          — correct format. Legend has 5 entries matching all visual elements.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all climograph features: arid period (Jun-Sep), humid period
+          (Oct-May), frost month (Jan), curves crossing twice, realistic seasonal
+          pattern.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Anatolian Station, 894m, 1991-2020 climate normals — realistic, neutral,
+          scientifically plausible context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Annual mean 12.6°C, total 382mm — correct for semi-arid Anatolian
+          continental climate. Monthly values (T: -0.5 to 25°C, P: 10-52mm) within
+          expected range.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear structure: imports → constants/theme → data → figure/axes
+          → plot elements → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: all data hardcoded as const arrays. No randomness.'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie (plotting), Colors (colorant string parsing), Statistics
+          (mean for ANN_T) — all three are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and appropriate complexity. Semantic exception is explicitly
+          commented. Frost block iteration is concise.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2. Uses size= (current
+          Makie 0.22 API).
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert Makie: GridLayout dual-axis overlay at fig[1,1], linkxaxes!,
+          band!, poly! with Point2f, colsize!(Relative), Legend with custom element
+          types.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Distinctively Makie: overlaid axes via fig[1,1] for dual y-scale,
+          linkxaxes! for synchronization, LineElement/PolyElement for custom legend.
+          These patterns are specific to Makie''s layout grammar and not easily replicated
+          in other libraries.'
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - colors
+  techniques:
+  - twin-axes
+  - annotations
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
