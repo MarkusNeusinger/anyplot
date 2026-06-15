@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 depth-order-book: Order Book Depth Chart
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 87/100 | Created: 2026-06-15
+Quality: 83/100 | Created: 2026-06-15
 """
 
 import os
