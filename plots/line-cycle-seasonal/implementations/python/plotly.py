@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-cycle-seasonal: Cycle Plot (Seasonal Subseries)
 Library: plotly 6.8.0 | Python 3.13.13
 Quality: 86/100 | Created: 2026-06-15
@@ -51,13 +51,17 @@ for m, _month in enumerate(MONTHS):
     mean_val = float(y_vals.mean())
 
     # Within-season chronological subseries line
+    years = np.array([2000 + y for y in range(N_YEARS)])
     fig.add_trace(
         go.Scatter(
             x=x_vals,
             y=y_vals,
             mode="lines+markers",
             line={"color": BRAND, "width": 1.5},
-            marker={"color": BRAND, "size": 4},
+            marker={"color": BRAND, "size": 5},
+            opacity=0.7,
+            customdata=years,
+            hovertemplate="Year: %{customdata}<br>Temp: %{y:.1f}°C<extra></extra>",
             showlegend=(m == 0),
             name="Annual values",
         )
@@ -69,7 +73,8 @@ for m, _month in enumerate(MONTHS):
             x=[x_vals[0], x_vals[-1]],
             y=[mean_val, mean_val],
             mode="lines",
-            line={"color": BLUE, "width": 3.5},
+            line={"color": BLUE, "width": 4.5},
+            hovertemplate=f"{_month} mean: %{{y:.1f}}°C<extra></extra>",
             showlegend=(m == 0),
             name="Monthly mean",
         )
@@ -99,7 +104,7 @@ fig.update_layout(
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     margin={"l": 80, "r": 40, "t": 80, "b": 60},
-    title={"text": title, "font": {"size": 16, "color": INK}, "x": 0, "xanchor": "left"},
+    title={"text": title, "font": {"size": 16, "color": INK}, "x": 0.01, "xanchor": "left"},
     xaxis={
         "tickvals": tick_vals,
         "ticktext": MONTHS,
