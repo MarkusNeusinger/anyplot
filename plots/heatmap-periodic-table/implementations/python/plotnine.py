@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-periodic-table: Periodic Table Property Heatmap
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2026-06-15
+Library: plotnine 0.15.7 | Python 3.13.13
+Quality: 87/100 | Created: 2026-06-15
 """
 
 import os
