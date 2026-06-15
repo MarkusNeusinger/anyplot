@@ -1,0 +1,270 @@
+library: makie
+language: julia
+specification_id: heatmap-periodic-table
+created: '2026-06-15T05:21:11Z'
+updated: '2026-06-15T05:37:44Z'
+generated_by: claude-sonnet
+workflow_run: 27525005829
+issue: 8659
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Luminance-adaptive tile text (dark/light based on tile luminance) ensures readability
+    across the full color gradient
+  - Correct canonical periodic table layout with proper f-block offset at rows 8.5/9.5
+    and asterisk pointer tiles at group 3
+  - 'Imprint sequential colormap (#009E73 to #4467A3) correctly applied for single-polarity
+    continuous data'
+  - Theme chrome adapts perfectly in both renders — no dark-on-dark or light-on-light
+    failures
+  - Subtitle explicitly calls out the key periodic trend insight (F highest at 3.98,
+    Fr lowest at 0.70)
+  - Uses poly! + text! primitive composition for tile rendering rather than repurposing
+    heatmap! — appropriate for this non-uniform grid
+  - Factually correct Pauling electronegativity data for all 118 elements including
+    missing-value handling as gray tiles
+  weaknesses:
+  - Atomic number font size (7.5pt, 15px in output) becomes effectively invisible
+    (~2px) when the 3200px image is scaled to mobile width (~400px) — increase to
+    9.0pt
+  - Colorbar width (18 units) is narrow relative to canvas; increase to 24-28 units
+    for better proportional balance
+  - Two small helper functions (tile_color, text_color_for) used rather than inline
+    logic — minor KISS deviation from the CQ-01 ideal
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "heatmap-periodic-table · julia · makie · anyplot.ai" in dark ink clearly readable. Subtitle in dark secondary ink readable. Colorbar label "Pauling Electronegativity" and tick labels (1, 2, 3) in dark ink readable.
+      Data: Green-to-blue gradient (Imprint SEQ #009E73 → #4467A3) across 118 element tiles. Low-EN alkali metals in deep teal-green; halogens (F, Cl, Br) in blue. Missing-value elements (noble gases, period-7 transactinides) in light gray tiles. F-block rows at bottom with Ln/An labels.
+      Tile text: Element symbols (fontsize=9) clearly readable. Atomic numbers (fontsize=7.5) visible at full resolution but small. Luminance-adaptive text (dark on light tiles, light on dark tiles) throughout.
+      Legibility verdict: PASS (minor: atomic numbers marginal at mobile scale)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title flipped to light near-white color, clearly readable against dark background. Subtitle and colorbar labels in appropriate light-colored ink. No dark-on-dark failures detected.
+      Data: Colors are IDENTICAL to light render — green-to-blue gradient unchanged. Missing-value gray tiles render in dark charcoal matching the dark theme. Brand green #009E73 clearly visible on low-EN tiles.
+      Tile text: Luminance-adaptive text continues to work correctly in dark theme. Element symbols and atomic numbers readable on their respective tiles.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set. Atomic number labels (7.5pt) are small
+          at mobile scale (~400px). Element symbols (9pt), colorbar label (12pt),
+          title (20pt) all readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean tile layout with 0.10-unit gaps. No text overlaps between tiles,
+          colorbar, or annotations.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 118 element tiles clearly visible. Color gradient distinct. Gray
+          tiles for missing values differentiated.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Luminance-adaptive tile text ensures contrast at every gradient point.
+          CVD-safe Imprint sequential palette.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Periodic table fills canvas proportionally. Colorbar properly positioned.
+          F-block rows well-separated. No overflow or clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Colorbar labeled 'Pauling Electronegativity'. Subtitle states min/max
+          values and positions. No generic axis labels.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'ANYPLOT_SEQ = cgrad([#009E73, #4467A3]) — correct Imprint sequential
+          colormap. Background tokens correct. Chrome properly theme-adaptive in both
+          renders. Data colors identical across themes.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Strong design above defaults: luminance-adaptive tile text, all
+          axes/spines/ticks removed, correct Imprint SEQ colormap. Not quite FiveThirtyEight-level
+          — lacks a distinctive typographic or compositional flourish.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'All spines removed, no grid lines, no tick marks. Clean tile gap
+          sizing. Subtitle for context. Minor deduction: colorbar (width=18) is narrow;
+          slightly wider would improve proportional balance.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle explicitly calls out key insight. Color gradient makes electronegativity
+          trend immediately visible. Could go further by annotating key elements (F,
+          H, Fr) with their values.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct periodic table heatmap in canonical 18x7 layout with detached
+          f-block rows.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Element symbol and atomic number per tile, colorbar labeled, missing-value
+          elements as gray tiles, f-block pointer tiles with asterisks, luminance-adaptive
+          tile text.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Groups 1-18 on x, periods 1-7 (flipped, period 1 at top). F-block
+          at display rows 8.5/9.5. Colormap correctly maps EN range [0.70, 3.98].
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'heatmap-periodic-table · julia · makie · anyplot.ai'.
+          Colorbar labeled with property name.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 118 elements included. Both known EN values and missing values
+          shown. Main table and f-block rows fully rendered. Full EN variation range
+          covered.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Pauling electronegativity — real, well-known chemical property. Neutral
+          scientific topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: EN values range 0.70 (Fr) to 3.98 (F) — factually correct Pauling
+          electronegativity values.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Overall Imports->Constants->Helpers->Plot->Save structure. Two small
+          helper functions (tile_color, text_color_for) used — minor KISS deviation
+          but pragmatic.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded as constants. No randomness. Fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie and Colors imported; both used (Colors for colorant
+          literals and color channel accessors).
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean iteration over ELEMENTS tuple. No over-engineering. No fake
+          UI. Helper functions appropriate for complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png. Uses 'size' parameter (correct for Makie
+          0.22.x). Canvas gate passed.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good Makie idiom: poly! for rectangular tiles, text! for labels,
+          Colorbar as layout element, colsize! for layout control, Figure+Axis with
+          explicit token assignments.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom non-standard visualization (periodic table) built from poly!
+          + text! primitives rather than standard heatmap!. Colorbar layout widget
+          and colsize! ratio control are Makie-specific.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - colors
+  techniques:
+  - colorbar
+  - annotations
+  - patches
+  patterns:
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
+  - minimal-chrome

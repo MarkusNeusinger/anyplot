@@ -1,0 +1,265 @@
+library: matplotlib
+language: python
+specification_id: heatmap-periodic-table
+created: '2026-06-15T05:33:44Z'
+updated: '2026-06-15T05:56:29Z'
+generated_by: claude-sonnet
+workflow_run: 27524376317
+issue: 8659
+language_version: 3.13.13
+library_version: 3.11.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Luminance-adaptive text color (perceptual formula 0.299R+0.587G+0.114B) ensures
+    tile text is always readable regardless of EN value — a sophisticated and correct
+    implementation detail
+  - Complete canonical 118-element periodic table with proper f-block handling (dashed
+    placeholder tiles, detached lanthanide/actinide rows, rotated row labels)
+  - Correct imprint_seq colormap usage (["#009E73", "#4467A3"]) matching the mandated
+    sequential definition exactly
+  - 'Theme-adaptive chrome is thorough: all six token variables used consistently
+    across tiles, colorbar, annotations, and labels'
+  - Annotation arrows to highest/lowest EN elements clearly communicate the periodic
+    trend gradient
+  - No bbox_inches='tight' — canvas dimensions exactly 3200x1800
+  weaknesses:
+  - Secondary text (atomic numbers 2.8pt, EN values 2.6pt, period/group labels 2.5pt)
+    renders to ~14-15px at 400dpi — borderline at full resolution and unreadable when
+    scaled to mobile thumbnail (~400px) width; consider bumping to 3.5-4pt for atomic
+    numbers and period/group labels
+  - Colorbar tick positions [1.0, 1.5, 2.0, 2.5, 3.0, 3.5] don't extend to the actual
+    data extremes (vmin=0.70, vmax=3.98); while annotations compensate, adding tick
+    marks at 0.7 and 4.0 would make the colorbar self-contained without needing annotations
+    to communicate the range
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "Electronegativity · heatmap-periodic-table · python · matplotlib · anyplot.ai" in dark #1A1A17 — clearly readable. Period labels (1-7) and group labels (1-18) in INK_MUTED #6B6A63 — small (2.5-2.8pt) but visible at full resolution. Colorbar label "Electronegativity (Pauling scale)" in INK #1A1A17 — readable. Colorbar tick labels in INK_SOFT #4A4A44 — readable.
+      Data: Sequential green (#009E73) to blue (#4467A3) colormap applied to 90+ elements with defined EN. Gray tiles (#C8C7C0) for noble gases and elements without EN. Luminance-adaptive tile text: dark (#1A1A17) on bright teal/green tiles, light (#F0EFE8) on deep blue tiles — correct. Dashed placeholder tiles at period 6/7 group 3.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title in near-white #F0EFE8 — clearly readable. Period/group labels in #A8A79F (light muted gray) — visible. Colorbar label in #F0EFE8 — readable. Colorbar tick labels in #B8B7B0 — readable. No dark-on-dark failures.
+      Data: Colormap colors identical to light render (same green-to-blue gradient). Gray tiles (#3A3A37 in dark mode) clearly distinct from background. Tile text still uses luminance-adaptive switching — works correctly on dark background too.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Element symbols (5.5pt ~30px) clearly readable. Atomic numbers (2.8pt
+          ~15px), EN values (2.6pt ~14px), period/group labels (2.5pt) are borderline
+          small — readable at 3200px but not at mobile scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean tile layout with 0.06-unit gaps throughout. No text overflow
+          between tiles. Annotations placed in empty whitespace
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 118 elements clearly visible. Colormap gradient well-distinguished.
+          Gray tiles differentiated from colored tiles
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint sequential palette. Luminance-adaptive text provides adequate
+          contrast on all tile colors. No red-green encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 confirmed. Precise add_axes layout. Colorbar well-positioned.
+          Nothing clipped or overflowing
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title follows {Descriptive} · {spec-id} · python · matplotlib · anyplot.ai
+          format. Colorbar labeled with property name and Pauling scale units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq = LinearSegmentedColormap.from_list(''imprint_seq'',
+          [''#009E73'', ''#4467A3'']) matches mandated definition. Backgrounds #FAF8F1/#1A1A17
+          correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: luminance-adaptive text (0.299R+0.587G+0.114B formula),
+          custom imprint_seq, dashed placeholder tiles, annotation arrows, rotated
+          f-block labels, precise add_axes layout. Not gallery-exceptional.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: ax.axis('off') for minimal chrome, no grid (appropriate), consistent
+          tile gaps, colorbar edge/tick/label colors adapting to theme, f-block labels
+          at 90deg rotation
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Annotation arrows anchor colormap extremes to F and Fr. Green-to-blue
+          gradient visualizes the top-right/bottom-left electronegativity trend. Clear
+          focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Canonical periodic table heatmap: 18 groups x 7 periods with f-block
+          detached below. Equal-area tiles with gaps'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Canonical layout, colored tiles, colorbar with label, symbol+atomic
+          number per tile, property value shown, gray tiles for undefined EN, dashed
+          placeholder tiles
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Groups as x-axis (1-18), periods as y-axis (1-7, period 1 at top),
+          electronegativity as color. All 118 elements represented
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title format correct: Electronegativity · heatmap-periodic-table
+          · python · matplotlib · anyplot.ai. Colorbar labeled with property name
+          and scale'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 118 elements shown. F-block fully handled with separate rows,
+          placeholder tiles, rotated row labels
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Pauling electronegativity: foundational chemistry property with
+          accurate values (F=3.98, Li=0.98, Fr=0.70). Neutral scientific content'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Pauling scale 0.70-3.98, correct range. Normalization covers full
+          range. Annotation labels communicate extremes
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes. Clean sequential script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: all element data hardcoded, no random generation'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All five imports used: os, mpatches, plt, LinearSegmentedColormap,
+          Normalize'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Luminance calculation is concise and correct. Single-pass tile loop.
+          No fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG). No
+          bbox_inches='tight'. Canvas 3200x1800 correct
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: fig.add_axes() for precise layout, mpatches.Rectangle for tiles,
+          ax.annotate() with arrowprops, ScalarMappable+fig.colorbar() for colorbar.
+          Well above default
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom axes placement, rectangular patch drawing for periodic table,
+          luminance-based text color switching, dashed linestyle on placeholder patches,
+          ScalarMappable-based colorbar
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - patches
+  patterns:
+  - explicit-figure
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
+  - custom-colormap
