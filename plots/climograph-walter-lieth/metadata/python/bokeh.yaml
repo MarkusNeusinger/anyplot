@@ -1,0 +1,267 @@
+library: bokeh
+language: python
+specification_id: climograph-walter-lieth
+created: '2026-06-15T01:14:03Z'
+updated: '2026-06-15T01:36:23Z'
+generated_by: claude-sonnet
+workflow_run: 27517751970
+issue: 8656
+language_version: 3.13.13
+library_version: 3.9.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/python/bokeh/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Correct Walter-Lieth dual-axis implementation with 1:2 temperature-to-precipitation
+    scaling
+  - 'Semantic color assignments using Imprint palette: red (#AE3030) for temperature,
+    blue (#4467A3) for precipitation — matches domain convention explicitly'
+  - 'Theme-adaptive chrome with correct #FAF8F1/#1A1A17 backgrounds; dark-mode alpha
+    boost (0.32/0.38 vs 0.20) compensates for fill contrast'
+  - Station metadata header (name, elevation, annual T/P, period) rendered with elevated
+    background box
+  - Fine-grained interpolation (1200 points) for smooth crossing-point fills
+  - CustomJSTickFormatter for month labels is a distinctive Bokeh feature
+  weaknesses:
+  - Perhumid zone (>100 mm precipitation) not implemented — Walter-Lieth convention
+    compresses the scale 10:1 above 100 mm and fills it solid blue; even though current
+    data stays at 72 mm, the feature should be in the code for completeness
+  - Right axis tick range stops at 80 mm; spec specifies 0/20/40/60/100 mm ticks to
+    mark the perhumid transition point
+  - Traditional Walter-Lieth diagrams use hatching/dotting patterns inside humid/arid
+    fills (blue hatching = humid, red dotting = arid) — solid alpha fills are a simpler
+    but less distinctive treatment
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, no pure white
+      Chrome: Title "climograph-walter-lieth · python · bokeh · anyplot.ai" bold dark text, fills ~60-65% of plot width — well-proportioned. Left axis label "Temperature (°C)" in red, right axis label "Precipitation (mm)" in blue, x-axis label "Month" in dark ink — all with units, all readable. Tick labels (34pt) clearly visible in INK_SOFT (#4A4A44). Station metadata box (upper left) with semi-transparent elevated background and border — all text readable. Legend upper-right with "Precipitation (mm)" and "Temperature (°C)" entries. "humid" and "arid" italic labels at bottom of chart.
+      Data: Temperature line (#AE3030 matte red), precipitation line (#4467A3 blue) — both thick (width=5), with dot markers (size=16). Filled humid zone (blue, Jan–May) and arid zone (red, Jun–Sep) clearly visible with alpha=0.20. Zero-degree dashed reference line visible.
+      Legibility verdict: PASS — all text elements are clearly readable against the warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct dark surface, not pure black
+      Chrome: Title in light cream text (#F0EFE8 equivalent) on dark background — clearly readable. Left/right axis labels maintain their semantic colors (red/blue). Tick labels in INK_SOFT (#B8B7B0) — light gray on near-black, readable. Legend text in light gray. Station metadata box uses elevated dark background (#242420) with border.
+      Data: Temperature line (#AE3030) and precipitation line (#4467A3) — same colors as light render, consistent identity. Fills are more saturated in dark mode (alpha boosted to 0.32 for humid, 0.38 for arid) to compensate for dark background contrast. Zero-degree reference line visible.
+      Legibility verdict: PASS — no dark-on-dark failures; all text is light-colored against the dark surface; data lines and fills are clearly distinguishable
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 50pt (scaled), axis labels
+          42pt, tick labels 34pt, legend 34pt, station metadata 32pt. Well-proportioned
+          in both renders.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Station metadata box at (0.1, 37.0) is above all data curves. Humid/arid
+          labels at y=-3.5 are below the zero line, no data overlap.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line width=5, marker size=16 appropriate for 12 sparse monthly data
+          points. Fill zones visible at alpha=0.20 (light) / 0.32-0.38 (dark).
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Temperature (red) and precipitation (blue) are distinguishable under
+          CVD; additionally differentiated by fill direction and labeled.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas. Generous min_border values (200/160/110/230). Plot
+          area fills ~74% of canvas. Balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Temperature (°C) left axis, Precipitation (mm) right axis, Month
+          x-axis — all descriptive with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception applies: temperature→red (#AE3030, Imprint pos
+          5), precipitation→blue (#4467A3, Imprint pos 3). Both are Imprint palette
+          colors. Backgrounds #FAF8F1/#1A1A17 correct. Chrome fully theme-adaptive.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: semantic color assignments, styled fills with theme-adaptive
+          alpha, station metadata box with border, colored axis lines matching series,
+          italic period labels. Clearly above defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (alpha=0.10), outline_line_color=None, generous borders,
+          legend padding/spacing styled, axis lines colored semantically.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Visual hierarchy clear: filled zones directly encode humid/arid
+          periods. Explicit ''humid'' and ''arid'' labels guide the reader. Mediterranean
+          summer drought pattern immediately visible.'
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Walter-Lieth climograph with dual y-axis, 1:2 scaling, temperature
+          line, precipitation line, humid/arid fills.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: '1:2 scaling implemented, fills implemented, station header present,
+          frost indicators coded (no months triggered for this Mediterranean data),
+          zero-degree reference line present. Missing: perhumid compression zone >100mm.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Months on x-axis, temperature (°C) on left y-axis, precipitation
+          (mm) on right y-axis with 2x scaling. All 12 months visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'climograph-walter-lieth · python · bokeh · anyplot.ai' correct.
+          Legend labels 'Precipitation (mm)' and 'Temperature (°C)' correct.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Mediterranean climate pattern with clear crossing curves, summer
+          arid period (Jun-Aug), winter humid period (Jan-May, Oct-Dec), no frost
+          months.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Fictional station 'Valora' at 85m elevation with 1991-2020 normals.
+          Values (T range 9.2-27.1°C, P range 3-72mm) are realistic for a Mediterranean
+          coastal location.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Annual mean 17.4°C and 467mm total precipitation are plausible for
+          a Mediterranean station. Seasonal patterns are factually correct.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports → tokens → data → computation → figure → glyphs
+          → annotations → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data is hard-coded constants. Fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: io/os/sys/time/pathlib for setup, numpy for arrays,
+          bokeh models for chart, PIL for image crop, selenium for headless rendering.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a dual-axis specialized chart. Fine interpolation
+          for fills is well-motivated. sys.path manipulation necessary for filename
+          conflict.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Bokeh 3.x API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert use of Bokeh: figure + extra_y_ranges + add_layout, FixedTicker,
+          CustomJSTickFormatter, Span, Label, varea, line, scatter — comprehensive
+          idiomatic API usage.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: CustomJSTickFormatter (JavaScript in Python) is distinctly Bokeh.
+          extra_y_ranges + add_layout(axis, 'right') is Bokeh-specific pattern. Span
+          and Label layout objects are Bokeh-specific.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  - pillow
+  techniques:
+  - twin-axes
+  - annotations
+  - html-export
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - alpha-blending
+  - edge-highlighting
