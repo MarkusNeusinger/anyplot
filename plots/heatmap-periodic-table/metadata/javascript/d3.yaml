@@ -1,0 +1,279 @@
+library: d3
+language: javascript
+specification_id: heatmap-periodic-table
+created: '2026-06-15T05:19:52Z'
+updated: '2026-06-15T05:50:27Z'
+generated_by: claude-sonnet
+workflow_run: 27525136716
+issue: 8659
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/javascript/d3/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Perfect spec compliance: canonical 18×7 periodic table with correctly detached
+    f-block rows, all 118 elements represented including placeholder tiles for lanthanide/actinide
+    positions in the main grid'
+  - 'Excellent data quality: real Pauling electronegativity values with correct range
+    (Fr=0.70 to F=3.98), accurate per-element data for all 118 elements'
+  - Luminance-adaptive text color (textOnFill) ensures symbol/atomic-number legibility
+    across the full green-to-blue color range
+  - 'Idiomatic D3: SVG linearGradient for smooth colorbar (not discrete rect-per-step),
+    data-join tile rendering with .join(''g''), d3.scaleSequential + interpolateRgbBasis
+    for imprint_seq'
+  - 'Smart data storytelling: star annotation on fluorine highlights the global EN
+    maximum, empty tile styling for noble gases/unknown EN, F-block row labels (Ln/An)
+    with period labels (1-7) and group labels (1-18)'
+  - 'Correct theme-adaptive chrome throughout: t.ink, t.inkSoft, t.pageBg, t.grid
+    tokens applied to title, colorbar, period/group labels; EMPTY_FILL and placeholder
+    fill both theme-branched'
+  - 'Clean code quality: KISS structure, fully deterministic hardcoded data, no unused
+    globals, appropriate drawTiles helper abstraction used for both main grid and
+    f-block rows'
+  weaknesses:
+  - 'CAT_COLOR uses 10 custom hex values (#D4762A, #C4A020, #5080A0, #708070, #8060A0,
+    #308878, #9050B0, #909090, #B06040, #A08030) for element-category border strokes
+    — these violate the Imprint-only color rule (VQ-07 -1). Fix: replace with the
+    closest Imprint palette members (e.g. alkali→#BD8233, alkaline-earth→#DDCC77 amber,
+    transition→#4467A3, metalloid→#C475FD, nonmetal→#009E73, halogen→#954477, noble-gas→muted
+    token, lanthanide→#BD8233, actinide→#AE3030) or remove category borders and substitute
+    with a small colored dot in the tile corner per category'
+  - 'Atomic-number labels (9px) and EN-value labels (8px) are very small — borderline
+    legible at full 3200×1800 canvas and likely unreadable when scaled to mobile (~400
+    px wide). Fix: increase atomic number to 11px and EN value to 10px, or drop the
+    EN value from tiles and encode it only via tile color + colorbar'
+  - 'textOnFill() manually parses hex/rgb() strings instead of using d3.color() from
+    D3''s built-in color module. Fix: replace the manual parser with d3.color(c).rgb()
+    → r,g,b to use D3 idiomatically and handle all color formats automatically'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, no pure white.
+      Chrome: Title "heatmap-periodic-table · javascript · d3 · anyplot.ai" bold at 22px, dark ink (#1A1A17) — fully readable. Period labels 1–7 left of main grid, group labels 1–18 above main grid, colorbar tick labels and "Electronegativity (Pauling scale)" label all rendered in inkSoft (#4A4A44) — clear.
+      Data: Tiles use imprint_seq gradient (green #009E73 → blue #4467A3); low-EN alkali metals render as bright green, high-EN halogens (F, Cl, Br, I, At) render as deep blue, transition metals occupy the mid-range teal-to-blue tones. Noble gases and elements with null EN shown as light gray empty tiles. F-block lanthanide/actinide rows correctly detached below main grid. Fluorine tile carries a gold star (★) annotation. Category border strokes subtly differentiate element families. Colorbar rectangle spans full 18-column width with smooth SVG linearGradient from green to blue, tick values 0.5–4.0.
+      Legibility verdict: PASS — all text readable. Minor concern: atomic-number (9px) and EN-value (8px) labels are small, borderline at mobile scale but clear at full canvas.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, no pure black.
+      Chrome: Title and all axis/colorbar labels flip to light colors (F0EFE8 / B8B7B0 range) — clearly readable against the dark surface. No dark-on-dark failures observed.
+      Data: Tile fill colors are identical to the light render (imprint_seq green→blue); only the tile gap background, placeholder fills, and chrome tokens flip. Empty tiles use dark gray (#3A3A36), F-block placeholders use #2D2D29 — both correctly theme-branched.
+      Legibility verdict: PASS — all text readable in dark mode. Same small-font concern for 8–9px in-tile labels, but no unreadable elements.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title 22px, symbols 15px bold, atomic
+          numbers 9px, EN values 8px. Legible at full canvas; atomic-number and EN-value
+          labels borderline small for mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps observed. 2px tile gap prevents collisions; period/group
+          labels well-positioned outside the grid.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 118 tiles rendered; color gradient clearly visible; empty tiles
+          use appropriate gray; star annotation on F adds emphasis.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Luminance-adaptive text color (textOnFill) ensures contrast on all
+          tile fills. Green-to-blue gradient is CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Periodic table fills the canvas well; colorbar
+          at bottom; balanced margins; f-block separation visually clear.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title in correct format. Colorbar labeled 'Electronegativity (Pauling
+          scale)' with units. Period and group labels present.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Main color scale uses imprint_seq via t.seq — correct. Backgrounds
+          #FAF8F1/#1A1A17 correct. However CAT_COLOR uses 10 custom hex values for
+          category border strokes not from Imprint palette or semantic anchors — partial
+          compliance.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: luminance-adaptive tile text, star annotation on
+          F, SVG gradient colorbar, category border accents, clean overall composition
+          — clearly above library defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: subtle border strokes at 0.7 opacity, proper tile
+          rounding (rx=2), clean placeholder styling. Plain system-ui font and no
+          custom typography keep it from 6.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good storytelling: star on fluorine highlights EN maximum, gradient
+          makes the top-right trend immediately readable, empty tiles distinguish
+          no-data elements, category borders show element families.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct periodic table heatmap with canonical 18×7 layout and detached
+          f-block rows.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: canonical layout, f-block detachment,
+          continuous color encoding, colorbar with label, element symbol + atomic
+          number on tiles, EN values optionally shown, empty tiles for null values,
+          luminance-adaptive text.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Group → column, period → row, f-block correctly placed. All 118 elements
+          represented.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'heatmap-periodic-table · javascript · d3 · anyplot.ai' matches
+          required format. Colorbar labeled with property name and units.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full 118 elements, f-block rows, empty tiles for noble gases and
+          elements without EN values, complete coverage.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Pauling electronegativity is a real, canonical, neutral scientific
+          property. Values are accurate.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: FR=0.70, F=3.98 — correct known bounds. Colorbar range 0.5–4.0 appropriate.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: drawTiles helper reused for main grid and f-block rows — appropriate
+          and not over-engineered.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic — all element data hardcoded.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; d3 global used throughout.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Idiomatic D3 data joins, SVG defs API for gradient, clean separation
+          of data and rendering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: SVG sized from window.ANYPLOT_SIZE; harness saves plot-{theme}.png
+          + plot-{theme}.html correctly.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Strong D3 idioms: .join(''g'') data joins, d3.scaleSequential +
+          interpolateRgbBasis, d3.axisBottom, SVG defs/linearGradient. Minor: textOnFill
+          manually parses hex/rgb instead of d3.color().'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: SVG linearGradient colorbar via D3 defs API, data-join tile grid
+          rendering — D3-specific. Does not leverage d3.color() for luminance or d3.lab()
+          for perceptual color analysis which would be more distinctively D3.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - edge-highlighting
