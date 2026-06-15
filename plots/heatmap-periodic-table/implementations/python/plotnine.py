@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-periodic-table: Periodic Table Property Heatmap
 Library: plotnine 0.15.7 | Python 3.13.13
 Quality: 87/100 | Created: 2026-06-15
@@ -119,6 +119,14 @@ elements = [
 
 df = pd.DataFrame(elements, columns=["symbol", "atomic_num", "group", "row", "en"])
 
+# Group number labels (1-18, above main table — row=0.3 appears above row=1.0 with scale_y_reverse)
+df_groups = pd.DataFrame({"group": list(range(1, 19)), "row": [0.3] * 18, "label": [str(g) for g in range(1, 19)]})
+
+# Period number labels (1-7, left of main table — group=0.2 is left of group=1 tiles)
+df_periods = pd.DataFrame(
+    {"group": [0.2] * 7, "row": [float(p) for p in range(1, 8)], "label": [str(p) for p in range(1, 8)]}
+)
+
 # Text color: computed from tile luminance so labels stay legible on colored tiles
 cmap_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
 en_min, en_max = df["en"].min(), df["en"].max()
@@ -141,10 +149,30 @@ plot = (
     + geom_text(aes(label="symbol", color="text_color"), size=2.6, fontweight="bold", va="center", ha="center")
     # Atomic number — top-left corner
     + geom_text(
-        aes(label="label_num", color="text_color"), size=1.5, nudge_x=-0.36, nudge_y=-0.28, va="center", ha="left"
+        aes(label="label_num", color="text_color"), size=1.7, nudge_x=-0.36, nudge_y=-0.28, va="center", ha="left"
     )
     # Pauling EN value — bottom centre
-    + geom_text(aes(label="en_str", color="text_color"), size=1.4, nudge_y=0.27, va="center", ha="center")
+    + geom_text(aes(label="en_str", color="text_color"), size=1.5, nudge_y=0.27, va="center", ha="center")
+    # Group numbers (1-18) above the table
+    + geom_text(
+        data=df_groups,
+        mapping=aes(x="group", y="row", label="label"),
+        color=INK_SOFT,
+        size=1.5,
+        ha="center",
+        va="center",
+        inherit_aes=False,
+    )
+    # Period numbers (1-7) to the left of the table
+    + geom_text(
+        data=df_periods,
+        mapping=aes(x="group", y="row", label="label"),
+        color=INK_SOFT,
+        size=1.5,
+        ha="center",
+        va="center",
+        inherit_aes=False,
+    )
     + scale_fill_gradient(
         low="#009E73", high="#4467A3", na_value=NA_TILE, name="Pauling\nElectronegativity", guide=guide_colorbar()
     )
@@ -159,9 +187,10 @@ plot = (
         panel_background=element_rect(fill=PAGE_BG),
         plot_title=element_text(color=INK, size=title_size, ha="center"),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.3),
-        legend_text=element_text(color=INK_SOFT, size=7),
+        legend_text=element_text(color=INK_SOFT, size=6),
         legend_title=element_text(color=INK, size=8),
         legend_position="right",
+        plot_margin=0.05,
     )
 )
 
