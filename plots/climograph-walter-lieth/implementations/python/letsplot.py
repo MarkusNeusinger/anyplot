@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 climograph-walter-lieth: Walter-Lieth Climate Diagram
-Library: letsplot | Python 3.13
-Quality: pending | Created: 2026-06-15
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 83/100 | Created: 2026-06-15
 """
 
 import os
