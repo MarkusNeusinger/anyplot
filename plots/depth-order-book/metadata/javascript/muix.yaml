@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: depth-order-book
 created: '2026-06-15T03:00:13Z'
-updated: '2026-06-15T03:08:24Z'
+updated: '2026-06-15T03:18:37Z'
 generated_by: claude-sonnet
 workflow_run: 27521050302
 issue: 8657
@@ -12,137 +12,138 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/depth-ord
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/javascript/muix/plot-dark.html
-quality_score: 83
+quality_score: 87
 review:
   strengths:
-  - Excellent data quality — deterministic LCG-seeded BTC/USD order book with realistic
-    walls, correct cumulative calculation from best price outward, and 50 levels per
-    side within spec range
-  - 'Correct step-area visualization with `curve: "stepAfter"` on both bid and ask
-    series, with semi-transparent fills (35% opacity) and 2px solid outlines'
-  - Semantic palette usage is correct — brand green (#009E73, palette[0]) for bids,
-    matte red (#AE3030, palette[4]) for asks, a valid semantic exception for the finance
-    sell-side role specified by the spec
-  - Both themes render correctly with theme-adaptive chrome — the ThemeProvider wires
-    ink/inkSoft/grid tokens; title div explicitly uses `t.ink` for correct light/dark
-    adaptation
-  - 'Good MUI X feature usage — `ChartsReferenceLine` for the mid-price line, `connectNulls:
-    false` for the bid-ask spread gap, and `sx` targeting `.MuiAreaElement-series-*`
-    for per-series fill opacity'
-  - Full canvas utilization — the step areas fill the chart area well with appropriate
-    margins (top:20, right:50, bottom:65, left:90)
+  - 'Correct semantic color exception: bids use brand green (palette[0]=#009E73),
+    asks use matte red (palette[4]=#AE3030) — matches universal financial convention
+    perfectly'
+  - 'Full spec compliance: cumulative step-area curves, visible bid-ask spread gap,
+    dashed mid-price ChartsReferenceLine with spread annotation, and LCG seed=42 for
+    reproducible synthetic data'
+  - Clean MUI X implementation using ChartsReferenceLine, area=true with stepAfter
+    curve, and targeted sx class-name overrides (MuiAreaElement, MuiLineElement) for
+    precise per-series styling
+  - Visible order book walls (large jumps at specific levels) make liquidity structure
+    immediately readable
+  - 'Both renders are theme-correct: warm off-white (#FAF8F1-range) in light, near-black
+    (#1A1A17-range) in dark; data colors are identical across themes, only chrome
+    flips'
   weaknesses:
-  - Tick labels (11px CSS) and legend labels (13px CSS) are below the recommended
-    14–16px CSS for MUI X — at mobile scale (~400px viewport) these would render at
-    ~2–3 effective display pixels, potentially unreadable; increase tickLabelStyle
-    fontSize to 13–14px and legend labelStyle to 14px
-  - 'Missing spread value in mid-price annotation — spec says ''annotate the mid price
-    and spread value'' but the `ChartsReferenceLine` label only shows ''Mid: $60,000'';
-    add the spread: e.g. ''Mid: $60,000 | Spread: $10'''
-  - Title at 19px CSS is slightly below the recommended 22px for MUI X; increase to
-    22px to match the style guide default and improve readability at the rendered
-    resolution
-  - Design refinement could be elevated — the chart uses library defaults for most
-    chrome elements; consider removing the top/right axis borders if MUI X `axisHighlight`
-    or `sx` exposes them, and applying a very subtle grid opacity to push DE-02 above
-    default level
+  - Reference line label (labelAlign='end') is crowded at the bottom of the dashed
+    line, overlapping or very close to the '$60,000' x-axis tick label area — change
+    to labelAlign='start' or add a vertical offset so the label appears inside the
+    chart area away from axis ticks
+  - 'Grid strokeOpacity: 0.5 (50%) exceeds the style guide target of 15–25%; horizontal
+    grid lines are noticeably prominent in the dark render especially — reduce to
+    strokeOpacity: 0.15–0.20 for subtler, non-competing grid'
+  - Grid line opacity makes the horizontal lines somewhat visible through the semi-transparent
+    area fills, which can draw the eye away from the step-curve shapes in the lower
+    portion of the chart
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — correct theme surface.
-      Chrome: Title "BTC/USD Order Book · depth-order-book · javascript · muix · anyplot.ai" in dark text at top, readable. Y-axis label "Cumulative Volume (BTC)" and X-axis label "Price (USD)" both clearly visible. Tick labels ($59,750–$60,250 on X; 0–150 on Y) are small (11px CSS) but legible at full resolution. Legend "Bids" / "Asks" with colored swatches in upper center, readable.
-      Data: Bids area fills left half with brand green (#009E73) semi-transparent fill and solid step outline. Asks area fills right half with matte red (#AE3030) semi-transparent fill — appears as pink/salmon on the cream background. Clear step-staircase curves with two distinct "wall" jumps visible on each side. Bid-ask spread gap clearly visible at center between ~$59,995 and ~$60,005. Dashed vertical mid-price reference line at $60,000 with "Mid: $60,000" annotation.
-      Legibility verdict: PASS — all text readable at desktop resolution; tick labels at 11px CSS may be borderline at mobile scale (~400px).
+      Background: Warm off-white, consistent with #FAF8F1 theme surface — PASS
+      Chrome: Title "BTC/USD Order Book · depth-order-book · javascript · muix · anyplot.ai" in dark text, clearly readable. X-axis label "Price (USD)" and Y-axis label "Cumulative Volume (BTC)" both in dark text, readable. Tick labels formatted as "$59,750" through "$60,250" (x-axis) and "0" through "150" (y-axis) in slightly softer dark ink. Legend shows "Bids" and "Asks" with correct swatches (green and muted red). Dashed reference line at $60,000 with label "Mid: $60,000 · Spread: $10" near the x-axis at the bottom of the dashed line — label is crowded in proximity to the "$60,000" tick label but not strictly overlapping pixels.
+      Data: Two step-area curves: green (#009E73) cumulative bid area descending from left (~140 BTC at $59,750) toward center; muted red (#AE3030) cumulative ask area ascending from center toward right (~135 BTC at $60,250). Visible bid-ask spread gap centered at $60,000. Order book walls visible at approximately $59,850 and $59,775 on bid side and $60,050 on ask side.
+      Legibility verdict: PASS — all text elements readable against light background; minor crowding of reference line label near x-axis tick but no hard overlap.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black consistent with #1A1A17 — correct dark theme surface.
-      Chrome: Title visible in light text on dark background, correctly using t.ink token (#F0EFE8). Y-axis and X-axis labels appear in lighter colors (inkSoft token). Tick labels visible in lighter secondary text. Legend "Bids" / "Asks" visible against dark background. Grid lines appear as subtle lighter horizontal lines — appropriate contrast.
-      Data: Bids area shows brand green (#009E73) fill — appears as richer green on dark background, identical hue to light render. Asks area shows matte red (#AE3030) — composites as darker/deeper red on the near-black background (expected alpha-blending behavior; the base data color is identical). Step curves, walls, and spread gap all clearly visible. Mid-price dashed line and annotation visible in inkSoft color.
-      Legibility verdict: PASS — no dark-on-dark failures detected; all chrome correctly adapts to dark theme; data colors are identical between renders with only expected alpha-composite appearance difference.
+      Background: Warm near-black, consistent with #1A1A17 theme surface — PASS
+      Chrome: Title in light cream/off-white text, clearly readable. Axis labels and tick labels in lighter ink tones, all readable against dark background. Legend labels "Bids" and "Asks" in lighter text. Reference line label "Mid: $60,000 · Spread: $10" visible in muted light gray. No dark-on-dark failures detected. Grid lines more visually prominent than in light render due to higher contrast against dark background — strokeOpacity 0.5 is above the recommended 0.15–0.25 range.
+      Data: Colors are identical to light render — brand green (#009E73) bids and matte red (#AE3030) asks — only background and chrome have flipped. Data colors fully theme-independent as required.
+      Legibility verdict: PASS — all text elements readable against dark background; grid lines slightly more prominent than ideal but not obstructing readability.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 19px, axis labels 14px, tick
-          labels 11px, legend 13px), readable at desktop resolution; tick labels at
-          11px CSS are below recommended 14-16px and may be borderline at mobile scale
+        comment: 'Explicit font sizes (title 22px, labels 14px, ticks 14px) in CSS
+          px for browser harness. All text readable in both themes. Minor: reference
+          line label slightly crowded near x-axis tick area.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text elements; mid-price label, legend, and axis labels
-          all have clear spacing
+        comment: No major text collisions. Reference line label (labelAlign='end')
+          is crowded next to the '$60,000' x-axis tick label at bottom of reference
+          line — not a hard pixel overlap but noticeably tight.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Step areas and stroke lines perfectly visible; 35% fill opacity with
-          2px strokes ideal for this chart type
+        comment: Both step areas clearly visible with semi-transparent fills (fillOpacity
+          0.35) and solid strokes (strokeWidth 2). Order book walls clearly visible
+          as large vertical jumps. Area fills appropriately transparent.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint palette colors; bids/asks also differentiated by
-          spatial position (left/right) and legend labels
+        comment: Green (#009E73) and matte red (#AE3030) are CVD-safe and semantically
+          appropriate for bid/ask. Not used as sole ordinal differentiation — legend
+          and position provide redundant encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization; explicit margins; data fills the chart area
-          well; nothing cut off
+        comment: Canvas gate passed. Generous margins (top:20, right:60, bottom:70,
+          left:95). Title spans ~70% width as expected for long title. No elements
+          cut off. Bid-ask spread gap clearly visible and balanced.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Price (USD)'' with $ tick formatting; Y: ''Cumulative Volume
-          (BTC)'' — both descriptive with units'
+        comment: X-axis 'Price (USD)' and Y-axis 'Cumulative Volume (BTC)' — both
+          descriptive with units. Title includes descriptive prefix 'BTC/USD Order
+          Book ·' followed by spec-id · language · library · anyplot.ai.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Bids: palette[0]=#009E73 (brand green, correct first series); Asks:
-          palette[4]=#AE3030 (matte red, valid semantic exception for finance sell-side);
-          backgrounds correct in both themes'
+        comment: Bids use palette[0]=#009E73 (brand green, always first). Asks use
+          palette[4]=#AE3030 (matte red, semantic exception for ask/sell — correct).
+          Backgrounds are theme-correct. Data colors identical across renders.
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: 'Well-configured: correct palette, appropriate opacity, explicit
-          sizing. Clean but not exceptional — does not reach FiveThirtyEight-level
-          polish.'
+        passed: true
+        comment: Intentional semantic color pairing, descriptive title prefix, semi-transparent
+          area fills, reference line annotation for key information. Thoughtful but
+          not exceptional polish.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Y-axis only grid (correct choice), explicit fill opacity, stroke
-          widths set. MUI X defaults otherwise; no explicit spine removal attempt.
+        passed: true
+        comment: 'Axis line opacity reduced to 0.4. Area fills semi-transparent. However,
+          grid strokeOpacity: 0.5 significantly exceeds style guide''s 15-25% recommendation
+          — grid lines are noticeably prominent, especially in dark render.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Mid-price reference line creates a focal point; green/red contrast
-          immediately signals bid vs ask; visible walls tell a liquidity story; spread
-          gap draws the eye. Walls not annotated explicitly.
+        comment: 'The chart clearly communicates liquidity structure: visible order
+          book walls, bid-ask spread gap as a central focal point, mid-price annotation
+          with spread value. Color coding immediately signals bid vs ask. Strong functional
+          storytelling.'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -150,30 +151,33 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct chart type: cumulative step area chart with both bid and
-          ask sides'
+        comment: 'Correct depth chart type: two cumulative step-area curves with area=true
+          and curve=''stepAfter'', separated by the bid-ask spread gap.'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Step areas: yes; bid/ask gap: yes; mid-price dashed line: yes; mid
-          price annotation: yes; spread value annotation: missing (spec says ''annotate
-          the mid price and spread value'')'
+        comment: 'All spec features present: cumulative step areas for both sides,
+          visible bid-ask spread gap, dashed vertical reference line at mid price,
+          mid price and spread annotation, semi-transparent fills with solid outlines,
+          y-axis min=0.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Price on X, cumulative volume on Y, bids left of mid, asks right
-          — all correct
+        comment: Price on x-axis, cumulative quantity on y-axis. Bid area left of
+          center, ask area right of center. Accumulation from best price outward is
+          correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''BTC/USD Order Book · depth-order-book · javascript · muix
-          · anyplot.ai'' — correct format; Legend: ''Bids'' / ''Asks'' — appropriate'
+        comment: Title 'BTC/USD Order Book · depth-order-book · javascript · muix
+          · anyplot.ai' matches required format with optional descriptive prefix.
+          Legend labels 'Bids' and 'Asks' correctly identify the series.
     data_quality:
       score: 15
       max: 15
@@ -183,59 +187,65 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all key aspects: step staircase, both sides, visible walls
-          (2 per side), spread gap, mid-price anchor, cumulative volume'
+        comment: 'Covers all aspects: staircase accumulation, two-sided display, order
+          book walls (large wall jumps at specific levels), bid-ask spread gap, realistic
+          quantity distribution.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: BTC/USD at $60,000 mid price — historically realistic; 50 levels
-          per side within spec range; $5 tick plausible for BTC
+        comment: BTC/USD at $60,000 is plausible. 50 levels per side with $5 tick.
+          LCG-generated quantities with added walls at realistic positions. $10 spread
+          is wide for BTC but plausible for a snapshot.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Volume quantities (0.4–35+ BTC), wall concentrations, and cumulative
-          totals (~140 BTC) are all plausible for a BTC/USD exchange order book
+        comment: Price range ~$500 total (50 levels × $5 tick) centered at $60,000.
+          Cumulative volume up to ~140 BTC is plausible for a spot snapshot. Scale
+          is appropriate for the domain.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Has rng() and accumulate() helper functions beyond the required export;
-          justified by LCG data generation needs but slightly deviates from pure KISS
+        comment: 'Minimal structure: tiny LCG rng(), one accumulate() helper, then
+          flat data construction and chart component. No unnecessary abstraction.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed=42) provides fully deterministic data generation
+        comment: LCG with seed=42 (let _s = 42) produces fully deterministic pseudo-random
+          data on every run.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only two imports, both used: LineChart and ChartsReferenceLine'
+        comment: Only LineChart (from @mui/x-charts/LineChart) and ChartsReferenceLine
+          (from @mui/x-charts) are imported — both are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean idiomatic React/MUI X code; no over-engineering; no fake UI
-          elements
+        comment: Clean, readable code. Good variable naming (MID_PRICE, BEST_BID,
+          BEST_ASK, N, TICK). No fake UI elements. Null-gap trick for creating the
+          spread gap is elegant.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness-managed output; uses current @mui/x-charts API; no deprecated
-          functions
+        comment: Output handled by the harness (plot-light.png, plot-dark.png, .html).
+          Component exports default correctly. skipAnimation set.
     library_mastery:
       score: 7
       max: 10
@@ -245,25 +255,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Idiomatic: ChartsReferenceLine, curve=''stepAfter'', connectNulls=false,
-          slotProps.legend, sx with MUI class targeting, skipAnimation'
+        comment: 'Idiomatic: LineChart with area=true for step-area fills, skipAnimation,
+          window.ANYPLOT_TOKENS, window.ANYPLOT_SIZE, slotProps for legend customization.
+          Minor: the orientation directive //# anyplot-orientation: landscape ends
+          up between the auto-generated header and original header due to workflow
+          rewrite behavior.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: ChartsReferenceLine is MUI X-specific; sx targeting .MuiAreaElement-series-*
-          class names is a distinctive MUI X pattern; gap via connectNulls=false on
-          a shared xAxis is a library-specific technique
-  verdict: REJECTED
+        comment: ChartsReferenceLine is a distinctive MUI X community feature used
+          well. Custom sx overrides using MUI X internal class names (MuiAreaElement-series-*,
+          MuiLineElement-series-*, MuiChartsAxis-*, MuiChartsGrid-*) show good knowledge
+          of the library's CSS architecture.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - cumulative-sum
   styling:
