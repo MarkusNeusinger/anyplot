@@ -41,6 +41,11 @@ const GROUP_W = N_YEARS + GAP;  // 21 x-units per month group
 const TREND_COLOR = t.palette[0]; // #009E73 — brand green, first categorical series
 const MEAN_COLOR  = t.palette[2]; // #4467A3 — blue for mean reference lines
 
+// Theme-adaptive band color for alternating group separators
+const BAND_COLOR = window.ANYPLOT_THEME === 'dark'
+    ? 'rgba(255,255,255,0.05)'
+    : 'rgba(0,0,0,0.04)';
+
 // --- Series ---
 // 12 subseries: one connected trend line per month, plotted chronologically
 const trendSeries = MONTHS.map((name, m) => ({
@@ -49,7 +54,7 @@ const trendSeries = MONTHS.map((name, m) => ({
     color: TREND_COLOR,
     lineWidth: 1.5,
     opacity: 0.85,
-    marker: { radius: 3, symbol: 'circle', enabled: true },
+    marker: { radius: 4, symbol: 'circle', enabled: true },
     data: temps[m].map((val, y) => ({ x: m * GROUP_W + y, y: val })),
     showInLegend: m === 0,
     zIndex: 1,
@@ -78,11 +83,14 @@ const tickPositions = MONTHS.map((_, m) => m * GROUP_W + (N_YEARS - 1) / 2);
 const plotBands = MONTHS.map((_, m) => ({
     from:  m * GROUP_W - 0.5,
     to:    m * GROUP_W + N_YEARS - 0.5,
-    color: m % 2 === 0 ? 'rgba(120,120,120,0.07)' : 'transparent',
+    color: m % 2 === 0 ? BAND_COLOR : 'transparent',
 }));
 
+// Total warming to annotate
+const totalWarming = (WARMING_RATE * (N_YEARS - 1)).toFixed(1);
+
 // --- Chart ---
-Highcharts.chart('container', {
+const chart = Highcharts.chart('container', {
     chart: {
         type: 'line',
         backgroundColor: 'transparent',
@@ -142,3 +150,22 @@ Highcharts.chart('container', {
 
     series: [...trendSeries, ...meanSeries],
 });
+
+// Annotation: callout on July group (hottest month) highlighting the warming trend
+const JUL = 6; // July index (0-based)
+const annDataX = JUL * GROUP_W + (N_YEARS - 1) / 2; // midpoint of July group
+const annPx  = chart.xAxis[0].toPixels(annDataX, false);
+const annPy  = chart.plotTop + 18; // near the top of the plot area
+
+chart.renderer.text(
+    `↑ +${totalWarming} °C warming (Jul, 20 yrs)`,
+    annPx,
+    annPy
+).css({
+    color: TREND_COLOR,
+    fontSize: '11px',
+    fontWeight: '700',
+}).attr({
+    align: 'center',
+    zIndex: 6,
+}).add();
