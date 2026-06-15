@@ -1,0 +1,269 @@
+library: plotnine
+language: python
+specification_id: line-cycle-seasonal
+created: '2026-06-15T03:45:03Z'
+updated: '2026-06-15T03:51:06Z'
+generated_by: claude-sonnet
+workflow_run: 27522503764
+issue: 8658
+language_version: 3.13.13
+library_version: 0.15.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Perfect cycle plot implementation: seasonal groups left to right (Jan–Dec), within-group
+    chronological subseries as thin connected lines, horizontal mean reference segments
+    spanning each group — all required spec elements present and working'
+  - 'Dual-color visual hierarchy (brand green #009E73 for subseries trend lines, Imprint
+    blue #4467A3 for seasonal mean segments) elegantly encodes the two analytical
+    signals that make a cycle plot useful'
+  - 'Excellent data: realistic monthly temperature for a temperate mid-latitude city
+    (2000–2024), factually correct northern-hemisphere cosine seasonal model, plausible
+    warming trend (0.035°C/year), neutral domain'
+  - 'Clean minimal chrome: y-axis-only grid at alpha=0.12, no tick marks, no panel
+    border, panel background seamless with page — produces a professional, uncluttered
+    look in both themes'
+  - Full theme-adaptive implementation using correct Imprint palette, warm off-white
+    (#FAF8F1) and near-black (#1A1A17) backgrounds, and adaptive INK tokens — both
+    renders are readable and correct
+  weaknesses:
+  - 'DE-01/DE-02: Axis lines (axis_line_x, axis_line_y) are still present — removing
+    them entirely (element_blank()) would produce a cleaner, more editorial look that
+    pushes the design from ''well-configured default'' toward publication-ready'
+  - 'DE-03: No visual emphasis highlights the key seasonal comparison (e.g. summer
+    peak vs winter trough) — a subtle fill or annotation marking the hottest/coldest
+    months would make the story immediately obvious to the viewer'
+  - 'LM-02: The continuous x-coordinate arithmetic (manual GROUP_WIDTH/GAP/STEP layout)
+    is correct but is essentially matplotlib-level positional math; a plotnine-idiomatic
+    facet approach (facet_wrap with shared y) would be more distinctive to the library''s
+    grammar'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — PASS
+      Chrome: Title "line-cycle-seasonal · python · plotnine · anyplot.ai" in dark near-black text, fully readable; y-axis label "Avg Temperature (°C)" in dark ink at 10pt, clear; month tick labels (Jan–Dec) and y-axis ticks (0, 10, 20) in dark secondary ink at 8pt, all legible
+      Data: 12 month groups arranged left to right, each containing a thin connected green (#009E73) line tracing 25 years of temperature chronologically; a thick blue (#4467A3) horizontal segment overlays each group's mean; subtle light vertical dividers separate groups; very faint y-axis horizontal gridlines visible
+      Legibility verdict: PASS — all text clearly readable against warm off-white background; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — PASS
+      Chrome: Title in light cream text, fully readable; y-axis label in light ink, clear; month labels and y-axis tick labels in secondary light grey (#B8B7B0), all legible; no dark-on-dark failures detected
+      Data: Data colors are identical to light render — green (#009E73) subseries lines and blue (#4467A3) mean segments appear at same hues and saturations; background flip is the only change confirming correct theme-adaptive chrome
+      Legibility verdict: PASS — all text readable against dark background; brand green and Imprint blue both clearly visible on dark surface
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (dynamic title, 10pt y-axis, 8pt ticks);
+          proportions good; both themes readable. Minor: dynamic title_size calculation
+          is indirect rather than hardcoded.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap anywhere — month labels, tick labels, and data elements
+          all clean.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Thin subseries lines (size=0.6) appropriate for 25-point-per-group
+          density; thick mean segments (size=1.8) prominently visible — well-adapted
+          to data density.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green and blue Imprint colors have good perceptual contrast and are
+          CVD-safe (not a red-green pair).
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Landscape 3200x1800 fills well; 12 month groups span the full width
+          with balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Avg Temperature (°C)'' with units. X-axis label omitted
+          intentionally (month names serve as context). Title correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green). Second color #4467A3 (Imprint
+          blue pos 3) used semantically for structural mean lines. Backgrounds #FAF8F1/#1A1A17
+          correct. Chrome adaptive in both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Strong design with intentional dual-color semantic system (green=trend,
+          blue=mean). Clearly above configured defaults. Not yet publication-editorial
+          level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Y-grid only at alpha=0.12, no tick marks, no panel border, background
+          seamless with page. Near-perfect refinement; axis lines still present (minor).
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy through color+thickness contrast (thin green lines
+          vs thick blue segments) guides the viewer to the dual seasonal/trend message.
+          No extra emphasis on extreme seasons.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct cycle plot / seasonal subseries implementation.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: seasonal groups left to right, chronological
+          subseries as connected lines, horizontal mean reference segments, shared
+          y-axis, subtle vertical dividers, natural calendar order.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Months on x-axis, temperature on y-axis, years as chronological progression
+          within each group — all correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is exactly 'line-cycle-seasonal · python · plotnine · anyplot.ai'.
+          No legend needed (implicit from two-color data/mean encoding).
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: strong seasonal variation across months, within-group
+          year-over-year trends, mean reference clearly separating seasons.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Monthly average temperature for a temperate mid-latitude city 2000–2024.
+          Realistic, neutral, comprehensible real-world scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Winter ~2°C, summer ~25°C for a temperate city — factually plausible.
+          Northern-hemisphere cosine seasonal model is correct. Warming trend (0.035°C/year)
+          is realistic for climate records.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean flat structure: imports → data generation → layout constants
+          → theme → plot → save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at top of data generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imported symbols are used. sys/os used for path manipulation
+          and theme env var.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. Manual x-position arithmetic (GROUP_WIDTH/GAP/STEP)
+          is necessary for this non-standard layout and is cleanly expressed.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: plot.save(f'plot-{THEME}.png', dpi=400, width=8, height=4.5, units='in')
+          — correct filename pattern and dimensions.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Grammar-of-graphics approach with layered geoms, aes mappings, and
+          scale_ functions. Continuous x-coordinate with custom breaks is a smart
+          plotnine pattern for non-standard layouts.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: geom_segment for precise horizontal mean spans + geom_vline for dividers
+          + custom continuous scale positioning shows plotnine grammar fluency. Core
+          coordinate arithmetic is generic though.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - groupby-aggregation
+  styling:
+  - alpha-blending
+  - grid-styling
