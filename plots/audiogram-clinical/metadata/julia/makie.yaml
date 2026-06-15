@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: audiogram-clinical
 created: '2026-06-15T00:07:27Z'
-updated: '2026-06-15T00:14:19Z'
+updated: '2026-06-15T00:34:04Z'
 generated_by: claude-sonnet
 workflow_run: 27516142120
 issue: 8655
@@ -15,46 +15,38 @@ preview_html_dark: null
 quality_score: 89
 review:
   strengths:
-  - 'Full spec compliance: inverted Y-axis, logarithmic X-axis, conventional O/X markers,
-    solid/dashed lines, all six severity bands correctly bounded and labeled'
-  - Semantic color exception correctly applied and documented — Imprint position 5
-    (#AE3030) for right ear, position 3 (#4467A3) for left ear matching audiological
-    convention
-  - Theme-adaptive chrome fully threaded through all axis properties (title, labels,
-    ticks, spines, grid) using proper INK / INK_SOFT / INK_MUTED tokens
-  - 'Triple redundant encoding for ear discrimination: color + marker shape (circle
-    vs xcross) + linestyle (solid vs dashed)'
-  - 'Distinctive Makie features used well: hspan!, MarkerElement+LineElement legend,
-    RGBAf for grid alpha, xscale=log10, yreversed=true'
-  - Realistic noise-induced sensorineural notch data (4 kHz dip) — medically plausible
-    and clinically instructive
-  - Square canvas (2400×2400) is the correct format for audiograms
+  - 'Excellent semantic exception palette usage — right/left ear colors (#AE3030 and
+    #4467A3) drawn from Imprint positions 5 and 3, matching audiological convention
+    while staying within palette rules'
+  - 'All required clinical audiogram features implemented: inverted y-axis, log x-axis,
+    O/X marker conventions, severity bands with labels, two-ear legend'
+  - 'Strong data storytelling: 4 kHz sensorineural notch highlighted with annotation;
+    data progression across severity zones tells the clinical story clearly'
+  - Perfect spec compliance and data quality — realistic noise-induced hearing loss
+    pattern with clinically appropriate scales
+  - 'Clean idiomatic Makie: hspan! for bands, MarkerElement/LineElement for custom
+    legend, native axis transforms (yreversed, xscale=log10)'
   weaknesses:
-  - 'Severity band fills in dark render look heavy and saturated: the Normal band
-    renders as vivid teal, and the Profound band reaches ~44% alpha making it quite
-    dark maroon — the bands are more visually dominant on dark background than on
-    light'
-  - Band label fontsize=10 (effective 20px at px_per_unit=2) is on the small side
-    for the 2400px canvas; could be raised to 11-12 to improve readability at mobile
-    widths
-  - No focal-point emphasis on the clinically significant 4 kHz notch — a subtle annotation
-    or visual callout would strengthen the data storytelling without violating clinical
-    conventions
-  - 'Band fill colors for Moderate/Mod. Severe/Profound are not exact Imprint palette
-    members (e.g., orange #E58C19 for Moderate, #7F1E1E for Profound) — deriving them
-    from Imprint positions 4, 5 with alpha would be cleaner'
+  - Severity band alpha multipliers (1.4x, 1.5x, 2.0x) cause dark render to have heavily
+    saturated opaque zones — cap all dark-mode band alphas at band_alpha (0.14) without
+    multipliers, so all bands are equally subtle tints distinguished by color not
+    stacked opacity
+  - Band labels at fontsize=12 in INK_MUTED have limited contrast against saturated
+    band backgrounds in dark mode — use INK_SOFT or increase to 13pt for better legibility
+  - 4 kHz notch annotation at fontsize=10 is at the legibility floor for mobile display
+    — increase to 11pt
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "audiogram-clinical · julia · makie · anyplot.ai" in dark ink, clearly visible; Y-axis label "Hearing Level (dB HL)" and X-axis label "Frequency (Hz)" in INK color, well-proportioned; tick labels (125, 250, 500, 1k, 2k, 4k, 8k on X; -10 to 120 in 10dB steps on Y) in INK_SOFT — all readable
-      Data: Red solid line with circle markers (right ear); blue dashed line with xcross markers (left ear); six horizontal severity bands in soft pastel fills (green Normal at top, through ochre-Mild, orange-Moderate, reddish Mod.Severe, deeper red Severe, dark red Profound at bottom); band labels in muted gray text centered at 1 kHz; legend at bottom-right with framed elevated background
-      Legibility verdict: PASS — all elements clearly readable against warm off-white background
+      Background: warm off-white #FAF8F1 — correct theme surface
+      Chrome: title "audiogram-clinical · julia · makie · anyplot.ai" in dark ink, clearly readable; "Frequency (Hz)" x-label and "Hearing Level (dB HL)" y-label in dark INK; tick labels (125, 250, 500, 1k, 2k, 4k, 8k on x; -10 to 120 by 10 on y) in INK_SOFT (#4A4A44) — all clearly readable; severity band labels ("Normal", "Mild", "Moderate", "Mod. Severe", "Severe", "Profound") in INK_MUTED gray, readable but subtle
+      Data: Right ear — solid red (#AE3030) line with filled circle markers; Left ear — dashed blue (#4467A3) line with × markers. Severity bands as light semi-transparent tints (green Normal, ochre Mild/Moderate, red shades Severe/Profound). "4 kHz notch" annotation visible in small gray text.
+      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title and axis labels render in light text (INK = #F0EFE8); tick labels in INK_SOFT (#B8B7B0); band labels in INK_MUTED (#A8A79F) — all readable against dark background. No dark-on-dark failures detected.
-      Data: Data line colors identical to light render (same red #AE3030 and blue #4467A3) — Imprint palette held constant across themes as required. Severity band fills appear more saturated and visually heavy in dark mode (band_alpha raised to 0.20 base, Profound reaching ~0.44 alpha) — the Normal band renders as vivid teal-green and the red bands as quite dark maroon, making the dark render feel more oppressive than the light render
-      Legibility verdict: PASS — all text is readable, no dark-on-dark failures; the heavy band fills are an aesthetic issue rather than a readability failure
+      Background: near-black #1A1A17 — correct dark theme surface
+      Chrome: title in light #F0EFE8 text, clearly readable against dark background; axis labels and tick labels in #B8B7B0 (INK_SOFT dark variant) — all readable; band labels in #A8A79F (INK_MUTED dark variant) readable but with reduced contrast against the saturated band backgrounds; no dark-on-dark failures
+      Data: Red (#AE3030) circle markers and blue (#4467A3) × markers — identical colors to light render as required. Severity bands appear significantly more saturated/opaque in dark mode (stacked alpha multipliers 1.4x–2.0x create heavy colored zones): Normal band = dark forest teal, Mild/Moderate = dark ochre/brown, Severe/Profound = deep dark burgundy. Data lines and markers remain clearly visible above the colored bands.
+      Legibility verdict: PASS — all text readable, no dark-on-dark issues; band labels legible though contrast against saturated dark bands is reduced
   criteria_checklist:
     visual_quality:
       score: 29
@@ -65,53 +57,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All chrome text readable in both themes; band labels at fontsize=10
-          (20px effective) are slightly small for 2400px canvas but functional
+        comment: 'All font sizes explicitly set; readable in both themes. Minor deduction:
+          band labels at 12pt in INK_MUTED have reduced contrast against saturated
+          dark-mode bands; 4 kHz notch annotation at 10pt is near legibility floor.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Band labels positioned at 1 kHz midpoints; no collision with data
-          lines or markers
+        comment: No text collisions in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 7 sparse data points with markersize 16-18 and linewidth 2.5 — appropriate
-          and prominent
+        comment: Circle markers (markersize=16) and x-cross markers (markersize=18)
+          clearly visible. Lines at linewidth=2.5 prominent for 7-point sparse dataset.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Triple redundant encoding: color + marker shape (circle/xcross)
-          + linestyle (solid/dashed)'
+        comment: 'Red/blue distinction reinforced by redundant encoding: marker shape
+          (circle vs xcross) AND line style (solid vs dashed).'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400×2400 correct for audiogram; canvas gate passed; good
-          proportions throughout
+        comment: Correct 2400x2400 square canvas; no canvas gate failure. Audiogram
+          fills canvas well with balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
         comment: 'X: Frequency (Hz), Y: Hearing Level (dB HL) — both descriptive with
-          units'
+          units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Right ear #AE3030 (Imprint pos 5), left ear #4467A3 (Imprint pos
-          3) — documented semantic exception for audiological convention; backgrounds
-          #FAF8F1/#1A1A17 correct'
+        comment: 'Correct semantic exception: right ear #AE3030 (Imprint pos 5), left
+          ear #4467A3 (Imprint pos 3). Background #FAF8F1/#1A1A17. Chrome fully theme-adaptive.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -119,23 +110,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Professional clinical presentation; Imprint palette correctly applied;
-          marker strokes add definition; dark render band fills are visually heavy/saturated
+        comment: Thoughtful clinical design with semantic palette exception, combined
+          marker+line legend elements, L-shaped spines. Dark mode bands heavier and
+          muddier than light render's subtle pastels.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed; subtle grid at 15% alpha; white stroke
-          on circle markers; framed legend with elevated background
+        comment: 'Good refinement: top/right spines removed, subtle grid 0.15 alpha,
+          legend with elevated frame. Deduction: stacked band alpha multipliers (1.4x-2.0x)
+          create heavy opaque blocks in dark mode.'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Severity bands provide immediate clinical context; sensorineural
-          notch at 4 kHz is visually clear; no focal-point emphasis or annotation
-          highlighting the clinically significant notch
+        comment: 'Strong storytelling: classic noise-induced 4 kHz sensorineural notch
+          highlighted with annotation; bilateral data shows clinically realistic asymmetric
+          progression; severity bands provide immediate clinical grade context.'
     spec_compliance:
       score: 15
       max: 15
@@ -145,28 +138,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct clinical audiogram with all defining features
+        comment: 'Correct clinical audiogram: inverted y-axis, logarithmic x-axis,
+          severity bands, two-ear data.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Inverted Y-axis, log X-axis, O/X markers, solid/dashed lines, all
-          6 severity bands with labels, legend
+        comment: 'All features present: yreversed=true, xscale=log10, right ear red
+          circles, left ear blue x-cross with dashed line, severity bands with labels,
+          legend.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Frequency on log X, threshold on inverted Y; both ears correctly
-          mapped
+        comment: Frequency on log x-axis (125-8000 Hz), hearing level on inverted
+          y-axis (-10 to 120 dB HL). All data points visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: audiogram-clinical · julia · makie · anyplot.ai; Legend:
-          Right Ear (O) / Left Ear (X)'
+        comment: 'Title: ''audiogram-clinical · julia · makie · anyplot.ai'' — correct
+          format. Legend: ''Right Ear (O)'' and ''Left Ear (X)''.'
     data_quality:
       score: 15
       max: 15
@@ -176,22 +171,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All audiogram features shown: inverted axis, log frequency, conventional
-          markers, severity bands'
+        comment: Shows both ears across full frequency range, data spanning Normal
+          through Moderate-Severe zones, classic high-frequency sensorineural notch
+          pattern.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Noise-induced high-frequency sensorineural notch — medically realistic
-          and instructive
+        comment: Pure-tone audiometry is standard medical diagnostic procedure; noise-induced
+          4 kHz sensorineural notch is the most recognized audiological pattern. Not
+          controversial.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard clinical range -10 to 120 dB HL; standard audiometric frequencies
-          125–8000 Hz
+        comment: Standard audiometric range (125-8000 Hz), standard dB HL range (-10
+          to 120), threshold values (10-70 dB HL) clinically realistic for moderate
+          noise-induced hearing loss.
     code_quality:
       score: 10
       max: 10
@@ -201,34 +199,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat procedural script, no unnecessary functions or classes
+        comment: Linear Imports → Constants → Data → Plot → Save. No functions or
+          classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) present
+        comment: Random.seed!(42) set; data is also deterministic constants.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random — all imported and used
+        comment: CairoMakie, Colors, Random — all three are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean iteration over bands tuple, well-organized sections, no fake
-          UI
+        comment: Clean idiomatic Julia/Makie code. Band iteration loop appropriate.
+          No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save("plot-$(THEME).png", fig; px_per_unit = 2) — correct
+        comment: Saves as plot-$(THEME).png; uses current CairoMakie API.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -236,16 +235,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of Axis kwargs (xscale, yreversed, limits, xticks), hspan!,
-          scatter!, lines!, text! — idiomatic CairoMakie
+        comment: 'Idiomatic Makie: hspan! for horizontal bands, MarkerElement/LineElement
+          for custom legend composition, native axis properties (yreversed, xscale,
+          limits), theme tokens threaded through all chrome attributes.'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: hspan! for severity bands, MarkerElement+LineElement for custom legend,
-          RGBAf(INK.r, INK.g, INK.b, alpha) for theme-adaptive grid colors — distinctly
-          Makie
+        comment: 'Uses Makie-distinctive features: hspan! (not available in most other
+          libraries), MarkerElement/LineElement for composite legend entries, native
+          yreversed axis property, xscale=log10 as first-class axis transform.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -254,6 +254,7 @@ impl_tags:
   - annotations
   - custom-legend
   patterns:
+  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
