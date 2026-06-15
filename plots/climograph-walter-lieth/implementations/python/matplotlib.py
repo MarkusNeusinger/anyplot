@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 climograph-walter-lieth: Walter-Lieth Climate Diagram
 Library: matplotlib 3.11.0 | Python 3.13.13
 Quality: 86/100 | Created: 2026-06-15
@@ -24,19 +24,19 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Semantic color overrides — climate diagram convention takes precedence over Imprint ordinal
 TEMP_COLOR = "#AE3030"  # Imprint matte red — thermal warmth
 PRECIP_COLOR = "#4467A3"  # Imprint blue — water / precipitation
 
-# Station data — Ankara, Turkey (1991–2020 climate normals)
-station_name = "Ankara"
-station_lat = "39°57′N"
-station_elev = 891  # m a.s.l.
+# Station data — Erzurum, Turkey (1991–2020 climate normals, WMO 17096)
+# 4 frost months (J, F, M, D) showcase all four Walter-Lieth diagnostic zones
+station_name = "Erzurum"
+station_lat = "39°55′N"
+station_elev = 1869  # m a.s.l.
 months_labels = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"]
-temp = np.array([-0.8, 1.0, 5.5, 11.5, 16.3, 20.4, 23.6, 23.4, 18.5, 12.6, 6.2, 1.4])
-precip = np.array([39, 30, 31, 38, 49, 31, 12, 9, 17, 24, 33, 44])
+temp = np.array([-9.7, -8.0, -2.2, 7.0, 12.5, 16.8, 20.9, 20.7, 15.5, 9.2, 1.8, -5.3])
+precip = np.array([21, 19, 36, 58, 71, 36, 11, 10, 22, 47, 39, 27])
 
 temp_annual = float(np.mean(temp))
 precip_annual = int(np.sum(precip))
@@ -46,7 +46,7 @@ precip_annual = int(np.sum(precip))
 precip_te = np.where(precip <= 100, precip / 2.0, 50.0 + (precip - 100) / 10.0)
 
 x = np.arange(12)
-y_min = -10
+y_min = -15
 y_max = 50
 
 # Canvas — 3200 × 1800 px
@@ -54,17 +54,35 @@ fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax2 = ax.twinx()  # right axis for precipitation (created early; transparent by default)
 ax.set_facecolor(PAGE_BG)
 
-# Fills between temperature and precipitation curves
+# Humid fills (P > T) — blue/hatched per Walter-Lieth convention
 ax.fill_between(
-    x, temp, precip_te, where=(precip_te >= temp), color=PRECIP_COLOR, alpha=0.25, interpolate=True, zorder=2
+    x,
+    temp,
+    precip_te,
+    where=(precip_te >= temp),
+    facecolor=PRECIP_COLOR,
+    alpha=0.30,
+    hatch="///",
+    edgecolor=PRECIP_COLOR,
+    interpolate=True,
+    zorder=2,
 )
 
-ax.fill_between(x, temp, precip_te, where=(temp >= precip_te), color=TEMP_COLOR, alpha=0.25, interpolate=True, zorder=2)
+# Arid fills (T > P) — red/dotted per Walter-Lieth convention
+ax.fill_between(
+    x,
+    temp,
+    precip_te,
+    where=(temp >= precip_te),
+    facecolor=TEMP_COLOR,
+    alpha=0.30,
+    hatch="...",
+    edgecolor=TEMP_COLOR,
+    interpolate=True,
+    zorder=2,
+)
 
-# Frost zone: fill below 0 °C for months with negative mean temperature
-ax.fill_between(x, temp, 0, where=(temp < 0), color=INK, alpha=0.55, interpolate=True, zorder=3)
-
-# Data lines
+# Data lines (drawn above fills)
 ax.plot(x, temp, color=TEMP_COLOR, linewidth=2.5, zorder=4)
 ax.plot(x, precip_te, color=PRECIP_COLOR, linewidth=2.5, zorder=4)
 
@@ -80,7 +98,7 @@ ax.set_ylim(y_min, y_max)
 ax.set_xticks(x)
 ax.set_xticklabels(months_labels, fontsize=8, color=INK_SOFT)
 ax.tick_params(axis="x", colors=INK_SOFT, labelcolor=INK_SOFT, length=0)
-ax.set_yticks([-10, 0, 10, 20, 30, 40, 50])
+ax.set_yticks([-10, 0, 10, 20, 30, 40])
 ax.tick_params(axis="y", colors=INK_SOFT, labelcolor=INK_SOFT, labelsize=8, length=4)
 ax.set_ylabel("Temperature (°C)", fontsize=10, color=TEMP_COLOR, labelpad=6)
 ax.set_xlabel("Month", fontsize=10, color=INK, labelpad=6)
@@ -91,14 +109,23 @@ ax.spines["left"].set_color(INK_SOFT)
 ax.spines["bottom"].set_color(INK_SOFT)
 
 # Right axis — precipitation (mm) at 2× the temperature scale
-ax2.set_ylim(y_min * 2, y_max * 2)  # −20 to 100 mm
-ax2.set_yticks([0, 20, 40, 60, 80, 100])
+ax2.set_ylim(y_min * 2, y_max * 2)  # −30 to 100 mm
+ax2.set_yticks([0, 20, 40, 60, 100])  # spec: 0, 20, 40, 60, 100
 ax2.tick_params(axis="y", colors=INK_SOFT, labelcolor=INK_SOFT, labelsize=8, length=4)
 ax2.set_ylabel("Precipitation (mm)", fontsize=10, color=PRECIP_COLOR, labelpad=8)
 ax2.spines["top"].set_visible(False)
 ax2.spines["left"].set_visible(False)
 ax2.spines["bottom"].set_visible(False)
 ax2.spines["right"].set_color(INK_SOFT)
+
+# Frost month indicator blocks at the bottom of the axes (Walter-Lieth baseline convention)
+# Solid dark bars from y_min upward for each frost month (mean T < 0 °C)
+frost_band_height = 2.5
+for i in range(12):
+    if temp[i] < 0:
+        ax.bar(i, frost_band_height, bottom=y_min, color=INK, width=0.85, zorder=5, linewidth=0, alpha=0.90)
+# Thin separator above the frost band
+ax.axhline(y_min + frost_band_height, color=INK_SOFT, linewidth=0.5, alpha=0.25, zorder=4)
 
 # Station metadata header (upper-left text box)
 header = (
@@ -114,13 +141,23 @@ ax.text(
     color=INK,
     verticalalignment="top",
     linespacing=1.6,
-    bbox={"facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.88, "boxstyle": "round,pad=0.3", "linewidth": 0.6},
+    bbox={
+        "facecolor": ELEVATED_BG,
+        "edgecolor": INK_SOFT,
+        "alpha": 0.88,
+        "boxstyle": "round,pad=0.3",
+        "linewidth": 0.6,
+    },
 )
 
 # Legend (below chart area)
-humid_patch = mpatches.Patch(facecolor=PRECIP_COLOR, alpha=0.4, label="Humid period (P > T scale)")
-arid_patch = mpatches.Patch(facecolor=TEMP_COLOR, alpha=0.4, label="Arid period (T > P scale)")
-frost_patch = mpatches.Patch(facecolor=INK, alpha=0.55, label="Frost months (T < 0 °C)")
+humid_patch = mpatches.Patch(
+    facecolor=PRECIP_COLOR, hatch="///", edgecolor=PRECIP_COLOR, alpha=0.5, label="Humid period (P > T scale)"
+)
+arid_patch = mpatches.Patch(
+    facecolor=TEMP_COLOR, hatch="...", edgecolor=TEMP_COLOR, alpha=0.5, label="Arid period (T > P scale)"
+)
+frost_patch = mpatches.Patch(facecolor=INK, alpha=0.90, label="Frost months (T < 0 °C)")
 
 leg = ax.legend(
     handles=[humid_patch, arid_patch, frost_patch],
