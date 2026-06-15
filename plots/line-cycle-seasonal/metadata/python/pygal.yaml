@@ -1,0 +1,263 @@
+library: pygal
+language: python
+specification_id: line-cycle-seasonal
+created: '2026-06-15T04:00:50Z'
+updated: '2026-06-15T04:30:08Z'
+generated_by: claude-sonnet
+workflow_run: 27522560333
+issue: 8658
+language_version: 3.13.13
+library_version: 3.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/python/pygal/plot-dark.html
+quality_score: 82
+review:
+  strengths:
+  - 'Correct cycle/seasonal subseries plot implementation with all three required
+    visual layers: trend lines, mean reference lines, and natural group structure'
+  - Excellent Imprint palette compliance — brand green (#009E73) for chronological
+    trend lines, matte red (#AE3030) for seasonal mean reference lines, proper theme-adaptive
+    chrome in both light and dark renders
+  - 'Perfect code quality: clean linear KISS structure, reproducible with np.random.seed(42),
+    all font sizes explicitly set including correct title-length scaling formula (57px
+    for 77-char title)'
+  - High-quality Berlin climate data with factually accurate month-by-month temperature
+    ranges and scientifically plausible warming rate of 0.08°C/year
+  - Both renders pass all legibility and theme-readability checks — no dark-on-dark
+    or light-on-light failures, HTML output correctly included for interactive pygal
+    output
+  weaknesses:
+  - Mean reference lines span only m to m+0.9, missing the final 10% of each group's
+    x-range — extend to m+1.0 to fully span each group per spec requirement
+  - No explicit vertical dividers between month groups; adding thin vertical lines
+    at x=1,2,...,11 would clarify the cycle-plot group structure (spec mentions light
+    vertical dividers as an option)
+  - Mean reference lines (width=5) could be slightly thicker (width=8) to make the
+    key seasonal-mean comparison more visually dominant relative to the trend lines
+  - Dots (dots_size=3) appear quite small at 3200x1800 resolution; dots_size=5-6 would
+    improve individual data point visibility
+  - Design Excellence is moderate — chart reads as a well-configured library default
+    rather than publication-ready; no spine control available in pygal but group dividers
+    and bolder mean lines would improve storytelling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "Monthly Temperature Cycle · line-cycle-seasonal · python · pygal · anyplot.ai" in dark ink (~75% of chart width); Y-axis label "Average Temperature (°C)" and X-axis label "Month" clearly readable; month tick labels (Jan–Dec) and numeric Y-axis ticks all visible and proportionally sized
+      Data: Brand green (#009E73) zigzag trend lines within each monthly group connecting 10 yearly data points chronologically; matte red (#AE3030) short dashed horizontal mean reference lines within each group; seasonal arc from ~1–3°C in Jan to ~20–22°C in Jun–Aug clearly visible
+      Legibility verdict: PASS — all text and data elements readable against the warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and all axis labels/ticks render in light off-white text, clearly readable against the dark surface; no dark-on-dark failures observed; grid lines are subtle and appropriately muted
+      Data: Data colors identical to light render — brand green (#009E73) trend lines and matte red (#AE3030) dashed mean reference lines; mean lines appear slightly more visually prominent on dark due to higher contrast
+      Legibility verdict: PASS — all text readable against the warm near-black background; chrome adaptation is correct across both themes
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set with title-length scaling (57px for
+          77 chars). All text readable in both themes. Minor: Y-axis ticks slightly
+          small.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Month labels and Y-ticks don't overlap. Trend line crossings within
+          groups are expected. Mean lines partially overlaid by trend lines but visible.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Green trend lines clearly visible. Red dashed mean lines visible
+          but subtle (dots_size=3 is small at 3200px scale).
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs red CVD-distinguishable, reinforced by solid vs dashed linestyle
+          redundant encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 (gate passed). Chart fills ~75% of area. Balanced
+          margins. No clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y: ''Average Temperature (°C)'' with units; X: ''Month''; title
+          format correct with descriptive prefix.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 ✓; mean lines use Imprint #AE3030 ✓; backgrounds
+          #FAF8F1/#1A1A17 ✓; chrome adapts correctly in both themes.'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library default. Two-color design (green trend /
+          red mean) is thoughtful. Not at publication-ready level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Y-guides enabled, X-guides disabled. Custom fonts throughout. Default
+          pygal frame retained (no spine control in pygal). Grid not dominant.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Seasonal arc and mean lines tell a clear story. Above default data-dump
+          level. Vertical group dividers would sharpen the cycle-plot narrative.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct cycle/seasonal subseries plot: XY chart with month groups,
+          within-group chronological lines, horizontal mean reference lines.'
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'All key features present. Minor: mean lines extend to m+0.9 not
+          m+1.0; no explicit vertical group dividers (natural gaps present).'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: months (seasonal groups), Y: temperature in Celsius. All 12 months
+          and 10 years correctly mapped.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''Monthly Temperature Cycle · line-cycle-seasonal · python
+          · pygal · anyplot.ai'' — correct format. Legend correctly hidden for 24
+          series.'
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows seasonal level differences, within-month chronological trends,
+          mean reference comparison. Warming trend realistic but subtle (within noise
+          range).
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Berlin monthly temperature 2015–2024: textbook cycle-plot use case,
+          factually grounded, neutral topic.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temp range 1–22°C accurate for Berlin. Warming rate 0.08°C/yr scientifically
+          plausible. SD 1.1°C/yr realistic inter-annual variability.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports → tokens → data → chart → series loops → save. No
+          functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before synthetic data generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os, sys, numpy, pygal, pygal.style.Style. sys.path
+          manipulation is necessary to prevent self-shadowing.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and Pythonic. Title-length formula, palette construction, dual
+          loop structure are all appropriate.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html (both required for pygal).
+          Current API used throughout.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: XY chart correctly chosen. Style object used for all theme tokens.
+          stroke_style with dasharray for mean lines is idiomatic pygal usage.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses pygal-specific XY chart with numeric x-coordinates for group
+          positioning, stroke_style dasharray for line differentiation, and HTML interactive
+          export.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling: []
