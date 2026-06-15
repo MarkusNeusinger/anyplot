@@ -1,13 +1,9 @@
 // anyplot.ai
 // heatmap-periodic-table: Periodic Table Property Heatmap
-// Library: highcharts 12.6.0 | JavaScript 22.22.3
-// Quality: 83/100 | Created: 2026-06-15
-//# anyplot-orientation: square
-// anyplot.ai
-// heatmap-periodic-table: Periodic Table Property Heatmap
 // Library: Highcharts 12.6.0 | Node 22
 // License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
 // Quality: pending | Created: 2026-06-15
+//# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
 const isDark = window.ANYPLOT_THEME === 'dark';
@@ -38,7 +34,7 @@ function lum(rgbStr) {
 
 // --- Element data: [symbol, Z, group, period, IE1 kJ/mol | null] ---
 // period 8 = lanthanide f-block row; period 9 = actinide f-block row
-// group in f-block rows: 3=La/Ac, 4=Ce/Th, ..., 17=Lu/Lr (matches group-3 column in main grid)
+// group in f-block rows: 3=La/Ac, 4=Ce/Th, ..., 17=Lu/Lr
 const elements = [
   // Period 1
   ['H', 1, 1, 1, 1312], ['He', 2, 18, 1, 2372],
@@ -60,13 +56,13 @@ const elements = [
   ['Rh', 45, 9, 5, 720], ['Pd', 46, 10, 5, 804], ['Ag', 47, 11, 5, 731], ['Cd', 48, 12, 5, 868],
   ['In', 49, 13, 5, 558], ['Sn', 50, 14, 5, 709], ['Sb', 51, 15, 5, 834], ['Te', 52, 16, 5, 869],
   ['I', 53, 17, 5, 1008], ['Xe', 54, 18, 5, 1170],
-  // Period 6 main (group 3 left empty for La placeholder)
+  // Period 6 main (group 3 left for La placeholder)
   ['Cs', 55, 1, 6, 376], ['Ba', 56, 2, 6, 503],
   ['Hf', 72, 4, 6, 659], ['Ta', 73, 5, 6, 761], ['W', 74, 6, 6, 770], ['Re', 75, 7, 6, 760],
   ['Os', 76, 8, 6, 840], ['Ir', 77, 9, 6, 880], ['Pt', 78, 10, 6, 870], ['Au', 79, 11, 6, 890],
   ['Hg', 80, 12, 6, 1007], ['Tl', 81, 13, 6, 589], ['Pb', 82, 14, 6, 716], ['Bi', 83, 15, 6, 703],
   ['Po', 84, 16, 6, 812], ['At', 85, 17, 6, 930], ['Rn', 86, 18, 6, 1037],
-  // Period 7 main (group 3 left empty for Ac placeholder)
+  // Period 7 main (group 3 left for Ac placeholder)
   ['Fr', 87, 1, 7, 380], ['Ra', 88, 2, 7, 509],
   ['Rf', 104, 4, 7, 580], ['Db', 105, 5, 7, null], ['Sg', 106, 6, 7, null], ['Bh', 107, 7, 7, null],
   ['Hs', 108, 8, 7, null], ['Mt', 109, 9, 7, null], ['Ds', 110, 10, 7, null], ['Rg', 111, 11, 7, null],
@@ -85,7 +81,7 @@ const elements = [
 ];
 
 const ieValues = elements.map(e => e[4]).filter(v => v !== null);
-const minIE = Math.min(...ieValues);  // ~376 (Cs)
+const minIE = Math.min(...ieValues);  // 376 (Cs)
 const maxIE = Math.max(...ieValues);  // 2372 (He)
 
 // --- Layout (CSS px; mount = 1200×1200 square) ---
@@ -93,19 +89,21 @@ const PITCH = 64;
 const TILE = PITCH - 2;   // 62px tiles with 2px gap
 const GRID_LEFT = Math.round((W - 18 * PITCH) / 2);  // center 18-column grid
 
-const TITLE_H = 68;
-const MAIN_H = 7 * PITCH;         // 448px
-const FGAP_H = Math.round(PITCH * 0.55);  // 35px separator before f-block
-const FBLOCK_H = 2 * PITCH;       // 128px
-const CB_H = 22;                   // colorbar rect height
-const CB_LABEL_H = 22;             // space for colorbar labels
-const CONTENT_H = TITLE_H + MAIN_H + FGAP_H + FBLOCK_H + 28 + CB_H + CB_LABEL_H;
+const TITLE_H = 64;
+const GRP_H = 20;              // group-number row above tiles
+const MAIN_H = 7 * PITCH;     // 448px
+const FGAP_H = Math.round(PITCH * 0.55);  // 35px gap before f-block
+const FBLOCK_H = 2 * PITCH;   // 128px
+const CB_H = 22;               // colorbar height
+const CB_LABEL_H = 44;         // two label rows (tick values + property name)
+const CONTENT_H = TITLE_H + GRP_H + MAIN_H + FGAP_H + FBLOCK_H + 30 + CB_H + CB_LABEL_H;
 const TOP = Math.round((H - CONTENT_H) / 2);
 
 const TITLE_Y = TOP + Math.round(TITLE_H * 0.72);
-const GRID_TOP = TOP + TITLE_H;
+const GRP_TOP = TOP + TITLE_H;
+const GRID_TOP = GRP_TOP + GRP_H;
 const FBLOCK_TOP = GRID_TOP + MAIN_H + FGAP_H;
-const CB_TOP = FBLOCK_TOP + FBLOCK_H + 28;
+const CB_TOP = FBLOCK_TOP + FBLOCK_H + 30;
 
 // --- Render via Highcharts SVG renderer ---
 const chart = Highcharts.chart('container', {
@@ -136,6 +134,14 @@ R.text(titleText, W / 2, TITLE_Y)
   .css({ color: t.ink, fontSize: titleFS + 'px', fontWeight: '600' })
   .add();
 
+// --- Group numbers (1–18) above main table ---
+for (var g = 1; g <= 18; g++) {
+  R.text(String(g), GRID_LEFT + (g - 1) * PITCH + PITCH / 2, GRP_TOP + 14)
+    .attr({ align: 'center', zIndex: 3 })
+    .css({ color: t.inkSoft, fontSize: '9px' })
+    .add();
+}
+
 // --- Draw a single element tile ---
 function drawTile(x, y, sym, z, ie) {
   const frac = ie !== null ? (ie - minIE) / (maxIE - minIE) : null;
@@ -149,7 +155,7 @@ function drawTile(x, y, sym, z, ie) {
   const numFS = Math.round(TILE * 0.145);  // ~9px
   const symFS = Math.round(TILE * 0.265);  // ~16px
 
-  R.rect(x, y, TILE, TILE, 2)
+  R.rect(x, y, TILE, TILE, 4)   // 4px rounded corners
     .attr({ fill: fill, zIndex: 1 })
     .add();
 
@@ -174,7 +180,7 @@ elements.forEach(function(el) {
     x = GRID_LEFT + (grp - 1) * PITCH;
     y = GRID_TOP + (per - 1) * PITCH;
   } else {
-    // f-block: group 3..17 shares x coords with main table group 3..17
+    // f-block: group 3..17 aligns with main table columns
     x = GRID_LEFT + (grp - 1) * PITCH;
     y = FBLOCK_TOP + (per - 8) * PITCH;
   }
@@ -191,7 +197,7 @@ elements.forEach(function(el) {
   var y = GRID_TOP + (per - 1) * PITCH;
   var fill = isDark ? '#383834' : '#C0BFB8';
   var col = isDark ? '#6B6A63' : '#8A8A83';
-  R.rect(x, y, TILE, TILE, 2)
+  R.rect(x, y, TILE, TILE, 4)
     .attr({ fill: fill, zIndex: 1 })
     .add();
   R.text(label, x + TILE / 2, y + TILE / 2 + 5)
@@ -199,6 +205,38 @@ elements.forEach(function(el) {
     .css({ color: col, fontSize: '9px' })
     .add();
 });
+
+// --- Connector lines: placeholder tiles → f-block rows (dashed) ---
+var connColor = isDark ? '#4A4A44' : '#BEBDB6';
+var connX = GRID_LEFT + 2 * PITCH + Math.round(TILE / 2);
+
+// Period 6 placeholder → Lanthanide row
+R.path(['M', connX, GRID_TOP + 5 * PITCH + TILE + 1, 'L', connX, FBLOCK_TOP - 1])
+  .attr({ stroke: connColor, 'stroke-width': 1, 'stroke-dasharray': '3,3', zIndex: 1 })
+  .add();
+
+// Period 7 placeholder → Actinide row
+R.path(['M', connX, GRID_TOP + 6 * PITCH + TILE + 1, 'L', connX, FBLOCK_TOP + PITCH - 1])
+  .attr({ stroke: connColor, 'stroke-width': 1, 'stroke-dasharray': '3,3', zIndex: 1 })
+  .add();
+
+// --- Period numbers (1–7) to the left of main table ---
+for (var per = 1; per <= 7; per++) {
+  R.text(String(per), GRID_LEFT - 4, GRID_TOP + (per - 1) * PITCH + Math.round(PITCH / 2) + 4)
+    .attr({ align: 'right', zIndex: 3 })
+    .css({ color: t.inkSoft, fontSize: '10px' })
+    .add();
+}
+
+// --- F-block row labels ("Ln" / "An") ---
+R.text('Ln', GRID_LEFT - 4, FBLOCK_TOP + Math.round(PITCH / 2) + 4)
+  .attr({ align: 'right', zIndex: 3 })
+  .css({ color: t.inkSoft, fontSize: '10px' })
+  .add();
+R.text('An', GRID_LEFT - 4, FBLOCK_TOP + PITCH + Math.round(PITCH / 2) + 4)
+  .attr({ align: 'right', zIndex: 3 })
+  .css({ color: t.inkSoft, fontSize: '10px' })
+  .add();
 
 // --- Colorbar ---
 const CB_W = Math.round(W * 0.52);
@@ -224,16 +262,41 @@ R.rect(CB_LEFT, CB_TOP, CB_W, CB_H, 0)
   .add();
 
 // Colorbar tick marks and labels
-var labelY = CB_TOP + CB_H + 15;
-R.text(minIE + ' kJ/mol', CB_LEFT, labelY)
+var tickBotY = CB_TOP + CB_H;
+var valLabelY = tickBotY + 15;
+var propLabelY = tickBotY + 33;
+
+// Endpoint tick marks
+R.path(['M', CB_LEFT, tickBotY, 'L', CB_LEFT, tickBotY + 5])
+  .attr({ stroke: t.inkSoft, 'stroke-width': 1, zIndex: 3 }).add();
+R.path(['M', CB_LEFT + CB_W, tickBotY, 'L', CB_LEFT + CB_W, tickBotY + 5])
+  .attr({ stroke: t.inkSoft, 'stroke-width': 1, zIndex: 3 }).add();
+
+// Endpoint value labels
+R.text(String(minIE), CB_LEFT, valLabelY)
   .attr({ align: 'left', zIndex: 3 })
-  .css({ color: t.inkSoft, fontSize: '11px' })
+  .css({ color: t.inkSoft, fontSize: '10px' })
   .add();
-R.text(maxIE + ' kJ/mol', CB_LEFT + CB_W, labelY)
+R.text(String(maxIE), CB_LEFT + CB_W, valLabelY)
   .attr({ align: 'right', zIndex: 3 })
-  .css({ color: t.inkSoft, fontSize: '11px' })
+  .css({ color: t.inkSoft, fontSize: '10px' })
   .add();
-R.text('First Ionization Energy (kJ/mol)', W / 2, labelY)
+
+// Intermediate tick marks at 1000, 1500, 2000 kJ/mol
+[1000, 1500, 2000].forEach(function(val) {
+  var frac = (val - minIE) / (maxIE - minIE);
+  var tx = CB_LEFT + Math.round(frac * CB_W);
+  R.path(['M', tx, tickBotY, 'L', tx, tickBotY + 5])
+    .attr({ stroke: t.inkSoft, 'stroke-width': 1, zIndex: 3 })
+    .add();
+  R.text(String(val), tx, valLabelY)
+    .attr({ align: 'center', zIndex: 3 })
+    .css({ color: t.inkSoft, fontSize: '10px' })
+    .add();
+});
+
+// Property name label
+R.text('First Ionization Energy (kJ/mol)', W / 2, propLabelY)
   .attr({ align: 'center', zIndex: 3 })
   .css({ color: t.inkSoft, fontSize: '11px' })
   .add();
