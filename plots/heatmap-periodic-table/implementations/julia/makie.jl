@@ -121,6 +121,9 @@ ax = Axis(
     title               = "heatmap-periodic-table · julia · makie · anyplot.ai",
     titlesize           = 20,
     titlecolor          = INK,
+    subtitle            = "Pauling electronegativity: highest at F (3.98, top-right), lowest at Fr (0.70, bottom-left)",
+    subtitlesize        = 11,
+    subtitlecolor       = INK_SOFT,
     backgroundcolor     = PAGE_BG,
     xticksvisible       = false,
     yticksvisible       = false,
@@ -156,7 +159,7 @@ for (sym, z, dx, row, en) in ELEMENTS
     # Atomic number — upper-left corner of tile (dy+0.22 is visually above centre)
     text!(ax, dx - 0.33, dy + 0.22;
           text      = string(z),
-          fontsize   = 5.5,
+          fontsize   = 7.5,
           color      = ltc,
           align      = (:left, :center))
 
