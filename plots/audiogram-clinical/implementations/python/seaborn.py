@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 audiogram-clinical: Clinical Audiogram
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 87/100 | Created: 2026-06-14
+Quality: 89/100 | Updated: 2026-06-15
 """
 
 import os
