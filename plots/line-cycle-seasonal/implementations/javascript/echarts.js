@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-cycle-seasonal: Cycle Plot (Seasonal Subseries)
 // Library: echarts 5.5.1 | JavaScript 22.22.3
-// Quality: 88/100 | Created: 2026-06-15
+// Quality: 89/100 | Created: 2026-06-15
 
 const t = window.ANYPLOT_TOKENS;
 
