@@ -1,0 +1,255 @@
+library: highcharts
+language: javascript
+specification_id: audiogram-clinical
+created: '2026-06-14T23:58:20Z'
+updated: '2026-06-15T00:19:26Z'
+generated_by: claude-sonnet
+workflow_run: 27515997318
+issue: 8655
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/javascript/highcharts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Custom xcross SVG symbol registration via Highcharts.SVGRenderer.prototype.symbols
+    correctly implements the clinical X marker convention — a deep Highcharts API
+    feature requiring specialized knowledge
+  - 'Semantic color exception cleanly justified and correctly executed: #AE3030 (Imprint
+    slot 5) and #4467A3 (slot 3) match clinical audiogram conventions mandated by
+    the spec'
+  - Triple redundant encoding (hue + marker shape + line style) achieves excellent
+    CVD accessibility without sacrificing visual clarity
+  - Theme-adaptive band alpha (0.07 dark vs 0.09 light) prevents severity bands from
+    overwhelming the near-black background
+  - Medically accurate NIHL pattern with both ears reaching different severity zones
+    provides a complete, informative clinical example
+  weaknesses:
+  - 'Design Excellence ceiling: aesthetic is correct but could reach publication polish
+    with slightly more intentional typography hierarchy and a refined legend layout
+    — fine-tune spacing between severity band labels and right margin'
+  - 'LM-02 opportunity: xcross symbol and plotBands are good; adding plotLines at
+    the normal-hearing boundary (25 dB HL) or a responsive.rules block would push
+    into distinctively-Highcharts territory'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light surface
+      Chrome: Title "audiogram-clinical · javascript · highcharts · anyplot.ai" in dark bold text, clearly readable. Y-axis labels (-10 to 120 dB HL) in #4A4A44, readable. X-axis tick labels (125, 250, 500, 1k, 2k, 4k, 8k) at 14px CSS, readable. Axis titles "Frequency (Hz)" and "Hearing Level (dB HL)" at 16px, readable. Severity band labels (Normal, Mild, Moderate, Mod. Severe, Severe, Profound) in italic 13px on the right side, readable. Legend at bottom shows Right Ear (O) and Left Ear (X).
+      Data: Right ear solid red (#AE3030) line with open circle markers; left ear dashed blue (#4467A3) line with X-shaped markers. Six severity bands from Normal (light green) to Profound (deep red). High-frequency sensorineural notch pattern descending sharply at 4-8 kHz. First series is #AE3030 (semantic exception valid: clinical standard mandates red for right ear).
+      Legibility verdict: PASS — all text readable against the warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface
+      Chrome: Title, axis labels, tick labels, band labels, and legend all flip to light text (#F0EFE8 / #B8B7B0). All readable against dark background. No dark-on-dark failures observed. Severity band labels on right side remain readable.
+      Data: Data colors are identical to the light render — Right Ear in #AE3030 (matte red), Left Ear in #4467A3 (blue). The custom xcross markers and open circles remain fully visible. Severity bands use lower alpha (0.07 vs 0.09 in light) making them more subtle on the dark surface while still distinguishable (Normal = dark teal, Mild/Moderate = dark ochre, Severe/Profound = dark red).
+      Legibility verdict: PASS — all text readable against the near-black background; no dark-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis titles 16px, tick/legend
+          labels 14px, band labels 13px); well-proportioned square layout; both renders
+          fully readable
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap; co-located data points at same thresholds disambiguated
+          by redundant marker encoding
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Radius-8 open-circle and xcross markers well-sized for 7-point sparse
+          series; lineWidth 2.5 marker outline clearly visible in both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/blue with triple redundant encoding (hue + marker shape circle
+          vs X + line style solid vs dashed); CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format correctly specified; plot fills canvas well with good
+          margins; band labels on right fit within chart bounds
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Frequency (Hz) and Hearing Level (dB HL) with correct units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception valid: #AE3030 (Imprint slot 5) for right ear,
+          #4467A3 (Imprint slot 3) for left ear; severity band fills derived from
+          Imprint colors; #FAF8F1/#1A1A17 backgrounds; all chrome theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: 'Above defaults: custom xcross symbol, open-circle markers, semantic
+          band colors from Imprint palette, italic band labels; not yet at publication-ready
+          polish'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Good: plotBorderWidth:0, theme-adaptive band alpha, transparent
+          marker fills; could improve legend styling and band label spacing'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Severity bands contextualize hearing loss; NIHL ski-slope pattern
+          tells clear clinical story; left ear entering Profound at 8 kHz adds narrative
+          weight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct clinical audiogram format with all defining conventions
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Inverted y-axis, log x-axis, O/X markers, severity bands with labels,
+          legend, correct axis titles — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Frequency on log x-axis (125-8000 Hz), hearing level on inverted
+          y-axis; all 7 standard audiometric frequencies correctly plotted
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title audiogram-clinical · javascript · highcharts · anyplot.ai correct;
+          legend Right Ear (O) and Left Ear (X) with correct colors
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both ears with distinct patterns; progression across all six severity
+          bands; left ear reaches Profound (95 dB HL at 8 kHz) while right ear reaches
+          Severe (75 dB HL)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Medically realistic NIHL pattern; classic high-frequency sensorineural
+          notch for occupational noise-induced hearing loss
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard audiometric frequencies; clinically accurate dB HL values;
+          severity band boundaries match WHO/ASHA clinical standards
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: constants → SVG symbol registration → data arrays
+          → single chart call'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hard-coded as literal arrays; fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; global Highcharts used correctly per harness contract
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately concise; SVG symbol registration is idiomatic Highcharts;
+          no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Harness handles plot-{theme}.png and plot-{theme}.html; Highcharts
+          12.6.0 API; anyplot-orientation: square directive in place'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expertly follows harness contract: animation:false both places,
+          transparent bg, disabled credits, colors:t.palette, logarithmic axis, reversed
+          y-axis, plotBands with styled labels'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom Highcharts.SVGRenderer.prototype.symbols.xcross and plotBands
+          with italic labels are distinctively Highcharts; room for more (plotLines,
+          responsive config)
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
