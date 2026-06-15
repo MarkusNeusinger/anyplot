@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 depth-order-book: Order Book Depth Chart
-Library: letsplot | Python 3.13
-Quality: pending | Created: 2026-06-15
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 85/100 | Created: 2026-06-15
 """
 
 import os
