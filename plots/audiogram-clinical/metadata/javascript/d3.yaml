@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: audiogram-clinical
 created: '2026-06-15T00:10:48Z'
-updated: '2026-06-15T00:17:44Z'
+updated: '2026-06-15T00:36:18Z'
 generated_by: claude-sonnet
 workflow_run: 27516237508
 issue: 8655
@@ -12,117 +12,121 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/audiogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/javascript/d3/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
-  - 'Perfect spec compliance: all clinical audiogram conventions (inverted axis, log
-    frequency, O/X markers, solid/dashed lines, severity bands, clinical colors) faithfully
-    implemented'
-  - Excellent semantic color choice — Imprint matte red and blue correctly applied
-    as clinical convention exceptions for right/left ear
-  - Redundant encoding (shape + color) for CVD accessibility is exemplary — fully
-    CVD-safe
-  - Clinically realistic sensorineural notch data with appropriate ear asymmetry
-  - Clean, linear D3 code structure using idiomatic patterns (scaleLog, d3.line, tickValues,
-    tickFormat)
+  - 'Perfect spec implementation: log frequency axis, inverted dB HL axis, O/X clinical
+    markers, severity bands, four-sided border — textbook audiogram format'
+  - 'Excellent semantic palette exception: Imprint red (#AE3030) and blue (#4467A3)
+    used for right/left ear clinical convention; justification is unambiguous (ISO
+    8253 mandate, spec-explicit)'
+  - 'Thoughtful dark-theme handling: 1.5x opacity lift for severity bands keeps them
+    visible on dark surface; elevatedBg fill for open circles prevents blending into
+    band colors'
+  - Clinically realistic noise-induced sensorineural loss data with natural left/right
+    asymmetry; viewer immediately recognises the 4 kHz notch pattern
+  - Clean flat D3 code with all font sizes explicitly set; proper ANYPLOT_TOKENS and
+    ANYPLOT_SIZE contract observed; no code smell
   weaknesses:
-  - Severity band labels set at 12px CSS — too small for 2400px canvas; bump to 13–14px
-  - 'Dark mode severity bands too heavy: 2× opacity multiplier creates muddy oversaturated
-    fills; reduce to ~1.5× for lighter elegant bands'
-  - Right ear circle markers in dark mode use t.pageBg (near-black fill) which blends
-    with dark severity band backgrounds — use t.elevatedBg (#242420) instead for contrast
-  - 'LM-01: X markers via raw SVG line pairs; use d3.symbol().type(d3.symbolCross)
-    for more idiomatic D3'
+  - Dark-theme severity bands are slightly heavy when all stacked together — the cumulative
+    effect of six rgba overlays on a dark surface creates a more visually busy texture
+    than the light render; the Profound band at 0.39 opacity creates a heavy red block
+    at the bottom; reducing all dark-mode opacity factors slightly would improve the
+    dark aesthetic
+  - 'LM-02 could go deeper: good use of D3 symbol generator and log scale, but missing
+    a distinctly D3 technique such as a clipPath group wrapping the data layers (lines
+    + markers) to geometrically clip data to the inner plot rectangle'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "audiogram-clinical · javascript · d3 · anyplot.ai" bold at top (~62% width); axis labels "Frequency (Hz)" and "Hearing Level (dB HL)" at 16px with units; tick labels at 14px; legend at 14px — all clearly readable against light background
-      Data: Right ear red (#AE3030) circles with solid line; left ear blue (#4467A3) X markers with dashed line; both show high-frequency sensorineural notch; severity bands (green → olive → ochre → amber → pink-red) with 12px right-margin labels; horizontal gridlines every 10 dB
+      Background: Warm off-white (#FAF8F1) — correct
+      Chrome: Title "audiogram-clinical · javascript · d3 · anyplot.ai" bold 22px, dark ink, centered — readable. Axis labels "Frequency (Hz)" and "Hearing Level (dB HL)" at 16px dark ink — readable. Tick labels 14px dark — readable. Severity band labels in right margin 14px dark — readable.
+      Data: Right ear in Imprint matte red #AE3030 (open circles r=9 + solid line); left ear in Imprint blue #4467A3 (cross markers + dashed line). Six severity bands spanning full width with subtle rgba fills (green/yellow-green/ochre/amber/muted-red/deeper-red). First series red is a justified semantic exception (ISO 8253 clinical convention mandated by spec).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: All text renders in light colors — title, axis labels, tick labels, legend text, severity band labels all clearly visible against dark surface; no dark-on-dark failure detected
-      Data: Colors identical to light render — red #AE3030 right ear, blue #4467A3 left ear; severity bands more saturated in dark mode due to doubled opacity strategy (Normal band is deep teal-green, Moderate/Severe appear muddy olive/dark-brown); right ear circles filled with pageBg (near-black) showing dark centers with red outline
+      Background: Near-black (#1A1A17) — correct
+      Chrome: Title, axis labels, tick labels, band labels all render in light ink (theme-adaptive tokens) — fully readable against dark background. No dark-on-dark failures detected.
+      Data: Data colors identical to light render (red right ear, blue left ear) — only chrome flips. Severity bands more visible due to 1.5x opacity lift; slightly heavy cumulative effect but functional. Open circles use elevatedBg (#242420) fill to prevent blending.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All sizes explicitly set; 12px severity band labels slightly small
-          for 2400px canvas
+        comment: All font sizes explicitly set (22px title, 16px axis labels, 14px
+          ticks/band-labels/legend); well-proportioned in both themes; no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No readability-affecting overlap; 250 Hz data coincidence distinguished
-          by shape/color
+        comment: No text collisions; data-driven marker overlap at 250 Hz is intentional
+          and distinguishable via O/X shapes
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers well-sized (r=9 circles, 8px X arms) for 7-point sparse series;
-          lines at 2.5px clear
+        comment: Open circles (r=9) and cross symbols (size=320) well-sized for 7
+          sparse data points; solid vs dashed lines clearly differentiated
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Redundant encoding (shape + color) makes chart fully CVD-safe
+        comment: Red vs blue with redundant shape encoding (O vs X); CVD-safe; clinical
+          convention makes it semantically obvious
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square format appropriate; plot fills canvas well; right margin allocated
-          for severity labels
+        comment: Square orientation appropriate for audiogram; 165px right margin
+          for band labels; well-balanced layout
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Frequency (Hz) and Hearing Level (dB HL) with correct units
+        comment: Frequency (Hz) and Hearing Level (dB HL) both include units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Semantic exception correctly applied: Imprint matte red (#AE3030)
-          and blue (#4467A3) for clinical ear convention; backgrounds correct; chrome
-          theme-adaptive in both renders'
+        comment: 'Valid semantic exception (ISO 8253 clinical convention); Imprint
+          members #AE3030 and #4467A3 used; severity bands Imprint-derived; correct
+          theme backgrounds'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Semantic color assignment, professional clinical appearance; above
-          configured-default level but not publication-ready
+        comment: Strong domain-specific design; clinical conventions correctly honored;
+          elevatedBg detail for circle fills; clearly above generic defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clinically appropriate 4-sided border and full grid; dark mode band
-          fills heavier/muddier than optimal
+        comment: Subtle gridlines; severity bands with scaled opacity; right-margin
+          band labels; domain-appropriate border; dark-theme bands slightly heavy/saturated
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Severity bands contextualize the sensorineural notch; no annotation
-          highlighting the 4kHz notch peak
+        comment: Severity bands provide immediate clinical context; 4 kHz notch pattern
+          recognisable; slight left/right asymmetry adds realism
     spec_compliance:
       score: 15
       max: 15
@@ -132,29 +136,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Clinical audiogram with inverted Y-axis and log X-axis, all conventions
-          correct
+        comment: Correct clinical audiogram with log frequency, inverted dB HL, O/X
+          markers, connecting lines per ear
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: O/X markers, red/blue ear colors, solid/dashed lines, all 6 severity
-          bands with labels, legend, gridlines
+        comment: 'All features present: inverted Y, log X, kHz shorthand ticks, severity
+          bands with labels, legend, full grid, clinical marker symbols'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Log frequency on X, inverted dB HL on Y, high-frequency sensorineural
-          notch as specified
+        comment: Frequency on log X-axis, threshold on inverted Y-axis; both ears
+          correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches {spec-id} · javascript · d3 · anyplot.ai; legend entries
-          correct
+        comment: Title audiogram-clinical · javascript · d3 · anyplot.ai; legend shows
+          Right Ear (O) and Left Ear (X) with matching symbols
     data_quality:
       score: 15
       max: 15
@@ -164,21 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both ears shown, realistic asymmetry, full frequency range, notch
-          clearly visible, all severity zones traversed
+        comment: Both ears across all severity zones; 4 kHz notch spans Normal-to-Severe;
+          left ear slightly worse; full frequency range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Clinically plausible noise-induced sensorineural hearing loss scenario
+        comment: Noise-induced sensorineural hearing loss; clinically realistic values
+          and asymmetry; neutral medical context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard -10 to 120 dB HL range, values consistent with clinical
-          norms for NIHL
+        comment: Audiometric range -10 to 120 dB HL correct; 125-8000 Hz standard;
+          65-75 dB notch at 4 kHz realistic for occupational noise
     code_quality:
       score: 10
       max: 10
@@ -188,50 +193,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear top-to-bottom flow, no functions or classes
+        comment: 'Flat linear flow: data → scales → bands → grid → border → axes →
+          lines → markers → labels → legend → title'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded deterministic data arrays
+        comment: Fully hardcoded deterministic data; no RNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; d3 global used throughout
+        comment: Uses only d3 global; correct for browser harness
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-commented D3 code; no fake interactivity
+        comment: Clean idiomatic D3; proper data joins; no fake interactivity; no
+          over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Square orientation directive set; current D3 7.9 API used
+        comment: D3 interactive library; harness writes plot-{theme}.png + .html;
+          current D3 7.9.0 API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Good use of scaleLog, scaleLinear, d3.line(), axisBottom/Left, tickValues/tickFormat,
-          d3.range(); X markers as raw SVG lines instead of d3.symbol()
+        comment: 'Exemplary D3: scaleLog, scaleLinear inverted, axisBottom/Left with
+          custom tickValues, d3.line(), d3.symbol(symbolCross), .data().join(), ANYPLOT_TOKENS/SIZE
+          contract'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Log scale, SVG-first rect bands, custom tick format, and data-bound
-          line paths are D3-distinctive; could further leverage d3.symbol()
-  verdict: REJECTED
+        comment: Uses d3.scaleLog, symbolCross with rotate(45), SVG rects for severity
+          bands, elevatedBg for circle fills; competent but missing a truly D3-exclusive
+          technique like clipPath
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
