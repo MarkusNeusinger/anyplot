@@ -27,17 +27,19 @@ const FREQUENCIES     = Float64[125, 250, 500, 1000, 2000, 4000, 8000]
 const THRESHOLD_RIGHT = Float64[10,  10,  15,  20,   35,   65,   50]
 const THRESHOLD_LEFT  = Float64[15,  15,  20,  25,   40,   70,   55]
 
-# Severity band fill alpha (slightly higher on dark bg for visibility)
-band_alpha = THEME == "light" ? 0.12f0 : 0.20f0
+# Severity band fill alpha — dark mode reduced to prevent over-saturation
+band_alpha = THEME == "light" ? 0.12f0 : 0.14f0
 
 # Severity bands: (y_low, y_high, label, fill_color)
+# Colors derived from exact Imprint palette members:
+#   IP1 #009E73 (pos 1 — green), IP4 #BD8233 (pos 4 — ochre), IP5 #AE3030 (pos 5 — red)
 bands = [
-    (-10.0,  25.0, "Normal",      RGBAf(0.00f0, 0.62f0, 0.45f0, band_alpha)),
-    ( 25.0,  40.0, "Mild",        RGBAf(0.74f0, 0.51f0, 0.20f0, band_alpha)),
-    ( 40.0,  55.0, "Moderate",    RGBAf(0.90f0, 0.55f0, 0.10f0, band_alpha * 1.2f0)),
-    ( 55.0,  70.0, "Mod. Severe", RGBAf(0.68f0, 0.30f0, 0.19f0, band_alpha * 1.4f0)),
-    ( 70.0,  90.0, "Severe",      RGBAf(0.68f0, 0.19f0, 0.19f0, band_alpha * 1.7f0)),
-    ( 90.0, 120.0, "Profound",    RGBAf(0.50f0, 0.12f0, 0.12f0, band_alpha * 2.2f0)),
+    (-10.0,  25.0, "Normal",      RGBAf(0.000f0, 0.620f0, 0.451f0, band_alpha)),
+    ( 25.0,  40.0, "Mild",        RGBAf(0.741f0, 0.510f0, 0.200f0, band_alpha)),
+    ( 40.0,  55.0, "Moderate",    RGBAf(0.741f0, 0.510f0, 0.200f0, band_alpha * 1.4f0)),
+    ( 55.0,  70.0, "Mod. Severe", RGBAf(0.682f0, 0.188f0, 0.188f0, band_alpha)),
+    ( 70.0,  90.0, "Severe",      RGBAf(0.682f0, 0.188f0, 0.188f0, band_alpha * 1.5f0)),
+    ( 90.0, 120.0, "Profound",    RGBAf(0.682f0, 0.188f0, 0.188f0, band_alpha * 2.0f0)),
 ]
 
 # Figure — square canvas (audiograms are conventionally square)
@@ -87,9 +89,16 @@ for (y1, y2, label, band_color) in bands
     text!(ax, 1000.0, (y1 + y2) / 2;
           text     = label,
           color    = INK_MUTED,
-          fontsize = 10,
+          fontsize = 12,
           align    = (:center, :center))
 end
+
+# Focal-point emphasis on clinically significant 4 kHz sensorineural notch
+text!(ax, 4700.0, 56.0;
+      text     = "4 kHz notch",
+      color    = INK_SOFT,
+      fontsize = 10,
+      align    = (:left, :center))
 
 # Connecting lines (drawn first so markers sit on top)
 lines!(ax, FREQUENCIES, THRESHOLD_RIGHT;
