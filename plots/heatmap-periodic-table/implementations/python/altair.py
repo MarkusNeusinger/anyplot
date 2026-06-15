@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-periodic-table: Periodic Table Property Heatmap
 Library: altair 6.2.1 | Python 3.13.13
 Quality: 85/100 | Created: 2026-06-15
@@ -260,7 +260,7 @@ valid_rects = (
 # Atomic number — small text, top-left of each tile
 atomic_text = (
     alt.Chart(df)
-    .mark_text(align="left", baseline="top", fontSize=5, dy=-11)
+    .mark_text(align="left", baseline="top", fontSize=6, dy=-11)
     .encode(
         x=alt.X("x_atomnum:Q", scale=x_scale, axis=None),
         y=alt.Y("y_center:Q", scale=y_scale, axis=None),
@@ -284,7 +284,7 @@ symbol_text = (
 # IE value — small text at bottom of colored tiles
 value_text = (
     alt.Chart(df_valid)
-    .mark_text(align="center", baseline="bottom", fontSize=4.5, dy=12)
+    .mark_text(align="center", baseline="bottom", fontSize=5.5, dy=12)
     .encode(
         x=alt.X("x_center:Q", scale=x_scale, axis=None),
         y=alt.Y("y_center:Q", scale=y_scale, axis=None),
@@ -304,7 +304,7 @@ chart = (
         title=alt.Title(title_str, fontSize=title_fontsize, color=INK, offset=8),
     )
     .configure_view(continuousWidth=620, continuousHeight=295, fill=PAGE_BG, stroke="transparent")
-    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT)
+    .configure_legend(fillColor="transparent", strokeColor="transparent")
 )
 
 # Save PNG and HTML
