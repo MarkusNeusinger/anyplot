@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 audiogram-clinical: Clinical Audiogram
 Library: plotnine 0.15.7 | Python 3.13.13
 Quality: 89/100 | Created: 2026-06-15
@@ -47,6 +47,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Audiogram uses strict clinical color conventions (semantic exception)
 RIGHT_COLOR = "#AE3030"  # Imprint matte red — right ear standard
 LEFT_COLOR = "#4467A3"  # Imprint blue — left ear standard
+ANYPLOT_AMBER = "#DDCC77"  # speech frequency range indicator
 
 # Data: noise-induced high-frequency sensorineural hearing loss pattern
 frequencies = [125, 250, 500, 1000, 2000, 4000, 8000]
@@ -101,6 +102,10 @@ band_labels = pd.DataFrame(
     }
 )
 
+# Speech frequency reference band (500–4000 Hz is clinically critical for speech intelligibility)
+speech_ref = pd.DataFrame({"xmin": [500], "xmax": [4000], "ymin": [-10], "ymax": [120]})
+speech_label = pd.DataFrame({"x": [1414], "y": [-7.0], "label": ["Speech range"]})
+
 # Title font scaling
 title = "audiogram-clinical · python · plotnine · anyplot.ai"
 n = len(title)
@@ -116,6 +121,14 @@ plot = (
     )
     + scale_fill_manual(values=band_colors)
     + guides(fill=False)
+    # Speech frequency range: subtle amber vertical band highlighting clinically important region
+    + geom_rect(
+        data=speech_ref,
+        mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"),
+        inherit_aes=False,
+        fill=ANYPLOT_AMBER,
+        alpha=0.12,
+    )
     # Connecting lines per ear
     + geom_line(aes(color="ear", linetype="ear"), size=1.0)
     # Threshold markers: O for right, X for left
@@ -125,9 +138,18 @@ plot = (
         data=band_labels,
         mapping=aes(x="x", y="y", label="label"),
         inherit_aes=False,
-        size=2.5,
+        size=3.5,
         color=INK_MUTED,
         ha="right",
+    )
+    # Speech range label near top of band (y=-7 is near the top of the inverted axis)
+    + geom_text(
+        data=speech_label,
+        mapping=aes(x="x", y="y", label="label"),
+        inherit_aes=False,
+        size=2.5,
+        color=INK_MUTED,
+        ha="center",
     )
     # Color: right=red, left=blue (clinical convention); same name merges legend entries
     + scale_color_manual(values={"Right Ear (O)": RIGHT_COLOR, "Left Ear (X)": LEFT_COLOR}, name=" ")
@@ -151,10 +173,11 @@ plot = (
         axis_text=element_text(size=8, color=INK_SOFT),
         legend_text=element_text(size=8, color=INK_SOFT),
         legend_title=element_text(size=9, color=INK),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.5),
+        legend_background=element_rect(fill=ELEVATED_BG, color=None),
+        legend_key=element_blank(),
         panel_background=element_rect(fill=PAGE_BG, color=None),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_grid_major=element_line(color=INK_SOFT, size=0.3),
+        panel_grid_major=element_line(color=INK_SOFT, size=0.3, alpha=0.5),
         panel_grid_minor=element_blank(),
         panel_border=element_rect(color=INK_SOFT, fill=None, size=0.5),
         legend_position="right",
