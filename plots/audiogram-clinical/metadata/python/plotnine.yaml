@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: audiogram-clinical
 created: '2026-06-15T00:02:02Z'
-updated: '2026-06-15T00:09:04Z'
+updated: '2026-06-15T00:21:02Z'
 generated_by: claude-sonnet
 workflow_run: 27515903920
 issue: 8655
@@ -15,52 +15,41 @@ preview_html_dark: null
 quality_score: 89
 review:
   strengths:
-  - 'Perfect spec compliance: inverted y-axis, logarithmic x-axis, correct O/X markers,
-    solid/dashed line convention, all six severity bands labeled'
-  - Clinical color conventions correctly applied as semantic exception — RIGHT_COLOR=#AE3030
-    and LEFT_COLOR=#4467A3 are genuine Imprint palette members
-  - Legend merging via matching scale name= across scale_color_manual, scale_shape_manual,
-    scale_linetype_manual is an idiomatic and elegant plotnine pattern
-  - 'Full theme-adaptive chrome: PAGE_BG, INK, INK_SOFT all flip correctly; both renders
-    pass the legibility check'
-  - Realistic noise-induced high-frequency sensorineural hearing loss pattern with
-    clinically accurate thresholds; data coverage spans Normal through Severe zones
-  - 'Code structure is clean KISS: no functions/classes, deterministic data, all imports
-    used'
+  - 'Complete clinical audiogram specification fulfilled: log x-axis, inverted y-axis,
+    O/X markers with correct colors, per-ear connecting lines (solid/dashed), severity
+    bands with labels, and speech range reference.'
+  - 'Theme adaptation is thorough: severity band fills switch to dark-appropriate
+    tints, all chrome tokens applied correctly throughout — both renders are fully
+    readable.'
+  - 'Semantic color exception correctly applied: #AE3030 (right/red) and #4467A3 (left/blue)
+    are Imprint palette members used per clinical audiometric convention.'
+  - Data storytelling via severity bands and speech range band immediately communicates
+    clinical significance without annotations.
+  - Code is clean, deterministic, and idiomatically plotnine throughout.
   weaknesses:
-  - 'DE-01 (4/8): aesthetic sophistication is well-configured-default level; lacks
-    the extra polish to stand out — consider removing the legend border box or styling
-    it more subtly, adding more intentional whitespace within the plot area'
-  - 'DE-02 (4/6): visual refinement is good but not polished — the legend box border
-    adds visual weight; consider element_blank() for legend_key or a thinner/lighter
-    border; the grid at alpha=1 (INK_SOFT is opaque) could be more subtle using alpha
-    on the grid lines'
-  - 'DE-03 (4/6): data storytelling is functional via the severity bands, but there
-    is no emphasis element to highlight the clinical significance — for example, a
-    subtle annotation or reference line at the speech-frequency range (500-4000Hz)
-    would guide the viewer''s attention to the key diagnostic region'
-  - 'VQ-01 (7/8): severity band labels (geom_text size=2.5 ≈ 7pt) are very small and
-    likely unreadable at mobile widths (~400px); increase to size=3.0-3.5 to improve
-    mobile legibility'
-  - 'LM-02 (3/5): while scale_y_reverse() and scale_x_log10() with custom breaks are
-    used well, a more distinctive plotnine touch could be achieved — e.g., using theme
-    element inheritance or a coord_fixed() to enforce the clinical square aspect ratio
-    in a grammar-native way'
+  - Speech range label (size=2.5 mm ≈ 7 pt) is quite small relative to severity band
+    labels (3.5 mm); consider raising to 3.0 mm for proportional consistency.
+  - Legend box with visible frame/border is slightly prominent; removing legend border
+    via color=None in legend_background would improve visual refinement.
+  - 'LM-02 limited: multi-scale merging and geom_rect bands are standard ggplot patterns;
+    a more distinctively plotnine feature would further differentiate.'
+  - Marker size=3.5 with 7 data points is adequate but not optimally prominent for
+    sparse density; size=4.5–5.0 would better exploit the 2400×2400 canvas.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct. The panel background matches the page background for a seamless look.
-      Chrome: Bold black title "audiogram-clinical · python · plotnine · anyplot.ai" fully readable at the top. Y-axis label "Hearing Level (dB HL)" and X-axis label "Frequency (Hz)" both clearly visible in dark INK text. Tick labels (125, 250, 500, 1k, 2k, 4k, 8k on x; -10 to 120 every 10 on y) are small but readable in INK_SOFT (#4A4A44). Severity band labels ("Normal", "Mild", "Moderate", "Mod. Severe", "Severe", "Profound") appear as very small tertiary text near the right edge of the plot panel — readable at full resolution but borderline at mobile widths.
-      Data: Six horizontal severity bands span the full width from green-tinted (Normal) at top through yellow-green (Mild), tan (Moderate), peach (Mod. Severe), pink (Severe), to lavender (Profound) at bottom. Red solid line with circle markers (Right Ear O) and blue dashed line with X markers (Left Ear X) both clearly visible against the banded background. Right ear peaks at 65 dB at 8kHz; left ear at 75 dB at 8kHz. Both series show classic high-frequency sensorineural notch. First categorical series is Imprint matte red (#AE3030) for right ear — semantic exception justified by clinical convention.
-      Legibility verdict: PASS. All primary text elements are readable. Band labels are small (size≈7pt) but remain legible at full resolution.
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "audiogram-clinical · python · plotnine · anyplot.ai" in bold dark ink, clearly readable. X-axis label "Frequency (Hz)" and Y-axis label "Hearing Level (dB HL)" in dark ink (INK #1A1A17). Tick labels in secondary ink (INK_SOFT #4A4A44). All text readable against light background.
+      Data: Right ear (red #AE3030) solid line with circle markers; Left ear (blue #4467A3) dashed line with X markers. Six horizontal severity bands (Normal=green tint, Mild=yellow-green, Moderate=peach, Mod. Severe=salmon, Severe=rose, Profound=lavender). Amber speech range vertical band (500–4000 Hz). Severity labels near right edge in muted ink. First data series is #AE3030 (semantic exception: clinical right-ear red convention).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct.
-      Chrome: Title, axis labels, tick labels all render in light text (#F0EFE8 / #B8B7B0 tokens). No dark-on-dark failures observed — all chrome elements are clearly visible against the near-black background. Severity band labels visible in muted light grey. Legend box uses elevated dark background (#242420) with light border and text.
-      Data: Data series colors are identical to the light render — red (#AE3030) for Right Ear, blue (#4467A3) for Left Ear. The severity bands use dark-tinted variants that preserve band boundaries while reading well on the dark surface (dark green for Normal, dark brown for Moderate, dark red for Severe, dark purple for Profound). Band boundaries are distinguishable but low-contrast, which is acceptable for background shading. Data lines and markers are clearly distinguishable from the dark banded background.
-      Legibility verdict: PASS. No dark-on-dark failures. All text reads as light-on-dark correctly. Data colors consistent with light render.
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title in light off-white text (#F0EFE8), clearly readable against dark background. Axis labels in light ink. Tick labels in secondary light ink (#B8B7B0). Legend box uses elevated dark background (#242420). No dark-on-dark failures detected.
+      Data: Red circles (#AE3030) and blue X markers (#4467A3) are IDENTICAL to light render — only chrome flips. Severity bands shift to dark tinted equivalents (dark greens, olives, browns, reds, purples). Speech range amber band remains visible as a slightly less dark vertical region. Severity labels in tertiary muted (#A8A79F) legible against dark band backgrounds.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -68,83 +57,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title, axis labels, tick labels well-proportioned
-          in both themes. Severity band labels (geom_text size=2.5≈7pt) are borderline
-          small at mobile widths.
+        comment: All font sizes explicitly set and proportional; speech range label
+          at 2.5mm is borderline small
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or marker overlap. Severity band labels at x=9400 are sufficiently
-          offset from data points at x=8000.
+        comment: No collisions between text elements or between labels and data
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 7 data points per ear (sparse) — markers at size=3.5 are appropriately
-          prominent. O/X shapes clearly distinguishable with solid/dashed line redundancy.
+        comment: Red circles and blue X markers clearly distinct; size=3.5 adequate
+          for 7-point sparse density but could be larger
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Shape (O/X) + linestyle (solid/dashed) redundant encoding means the
-          chart is fully accessible even for red-green colorblind viewers despite
-          using red and blue.
+        comment: Red vs blue with redundant shape (O/X) and linestyle (solid/dashed)
+          encoding; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square canvas (gate passed). Plot area fills the canvas
-          well with legend to the right. Empty profound zone (90-120 dB) is clinically
-          required. No clipping.
+        comment: Square 2400x2400 px matches audiogram square-ish requirement; good
+          margins; legend properly integrated
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Frequency (Hz) and Hearing Level (dB HL) — both descriptive with
-          units. Title in correct format.
+        comment: Frequency (Hz) and Hearing Level (dB HL) both descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'RIGHT_COLOR=#AE3030 and LEFT_COLOR=#4467A3 are genuine Imprint palette
-          members (positions 5 and 3) used with documented semantic exception for
-          clinical convention. Background #FAF8F1/#1A1A17 correct. Chrome fully theme-adaptive.'
+        comment: 'Imprint palette members #AE3030 and #4467A3 with valid semantic
+          exception (clinical convention); backgrounds and chrome fully theme-correct'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Well-configured clinical plot. Severity bands add real visual value.
-          Theme-adaptive chrome. But overall aesthetic is well-configured-default,
-          not publication-exceptional. Legend border box adds unnecessary visual weight.
+        comment: 'Above generic default: theme-adaptive severity bands, speech range
+          reference, clinical color conventions; not quite strong-design level'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Minor grid removed, panel border kept (clinically appropriate). Grid
-          lines use INK_SOFT (opaque) which is slightly heavy — subtler alpha grid
-          would improve. Legend border could be thinner. Good whitespace overall.
+        comment: Subtle grid, appropriate clinical all-four-spine panel, minor gridlines
+          suppressed; legend box border slightly prominent
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Severity bands immediately contextualize hearing loss severity —
-          effective storytelling device. The sloping loss pattern is clearly depicted.
-          Missing: a reference element (e.g., speech frequency range annotation) that
-          would guide the viewer to the clinically important region.'
+        comment: Severity bands immediately contextualize clinical meaning; speech
+          range band guides viewer to communication-critical frequencies
     spec_compliance:
       score: 15
       max: 15
@@ -154,30 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Clinical audiogram with logarithmic x-axis, inverted y-axis, O/X
-          markers, severity bands — all defining features present.
+        comment: Full clinical audiogram with all defining features
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: inverted y-axis (0 at top), log x-axis (125-8kHz),
-          red O/solid for right ear, blue X/dashed for left ear, six shaded severity
-          bands with labels, legend, gridlines every 10 dB.'
+        comment: 'All required features present: O/X markers, red/blue colors, solid/dashed
+          lines, log x-axis, inverted y-axis, severity bands, speech range, legend'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Frequency on log x-axis with kHz shorthand, hearing level on inverted
-          y-axis. Both ears mapped correctly to their respective thresholds.
+        comment: Frequency on log x-axis; Hearing Level on inverted y-axis; both ears
+          correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'audiogram-clinical · python · plotnine · anyplot.ai' is correct.
-          Legend labels 'Right Ear (O)' and 'Left Ear (X)' match the O/X marker convention.
+        comment: Title format correct; legend labels Right Ear (O) / Left Ear (X)
+          with correct symbol and color associations
     data_quality:
       score: 15
       max: 15
@@ -187,25 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Data spans Normal through Severe hearing loss zones. High-frequency
-          sensorineural notch pattern clearly shows both ears with progression across
-          all 7 audiometric frequencies.
+        comment: Bilateral asymmetric high-frequency sensorineural loss demonstrates
+          all audiogram features
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Noise-induced high-frequency sensorineural hearing loss — one of
-          the most common audiological presentations. Clinically realistic, neutral
-          medical context.
+        comment: Noise-induced high-frequency sensorineural notch — most prevalent
+          audiometric pattern; clinically authentic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard audiometric frequencies (125-8000 Hz). Standard dB HL range
-          (-10 to 120). Severity boundaries precisely match clinical WHO/ASHA classifications.
-          Threshold values realistic for noise-induced loss.
+        comment: Threshold values 10-75 dB HL plausible; frequency range 125-8000
+          Hz standard; y-axis -10 to 120 dB HL matches clinical standard
     code_quality:
       score: 10
       max: 10
@@ -215,34 +189,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clear linear flow: imports → tokens → data → bands → plot → save.
-          No functions or classes.'
+        comment: 'Linear: imports → tokens → data → bands → plot → save; no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is hardcoded (deterministic). No random elements.
+        comment: All data hardcoded deterministically; no random calls
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (sys, os, pandas, plotnine elements) are actively used.
+        comment: All imports used; sys.path.pop(0) necessary filename shadow workaround
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean grammar-of-graphics composition. Dynamic title fontsize calculation
-          is a nice touch. sys.path.pop(0) is a standard project workaround. No over-engineering.
+        comment: Clean grammar-of-graphics style; title fontsize scaling formula appropriate;
+          no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct dpi/dimensions. No deprecated
-          APIs.
+        comment: Saves as plot-{THEME}.png using current plotnine API
     library_mastery:
       score: 8
       max: 10
@@ -252,26 +225,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expertly uses ggplot grammar: geom_rect + geom_line + geom_point
-          + geom_text layered composition, scale_*_manual() legend merging via matching
-          name=, inherit_aes=False for secondary data frames — all idiomatic plotnine
-          patterns.'
+        comment: 'Expert plotnine grammar: proper layer composition, inherit_aes=False
+          on annotation geoms, merged legend via identical name across three scales,
+          scale_y_reverse + scale_x_log10 with explicit breaks/labels'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Uses scale_y_reverse() and scale_x_log10() with custom breaks/labels
-          — distinctively ggplot. The three-scale legend merge (color+shape+linetype
-          all named '' '') is a notably plotnine-specific pattern. Missing opportunity:
-          coord_fixed() for grammar-native square aspect ratio enforcement.'
-  verdict: REJECTED
+        comment: Multi-scale merging, geom_rect layering, log+reverse axis combination
+          — good idiomatic use but core ggplot patterns rather than plotnine-distinctive
+          features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - manual-ticks
   - annotations
-  patterns: []
+  patterns:
+  - data-generation
+  - wide-to-long
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
+  - grid-styling
