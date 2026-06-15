@@ -1,7 +1,7 @@
 // anyplot.ai
 // audiogram-clinical: Clinical Audiogram
 // Library: highcharts 12.6.0 | JavaScript 22.22.3
-// Quality: 89/100 | Updated: 2026-06-15
+// Quality: 92/100 | Updated: 2026-06-15
 //# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
