@@ -4,7 +4,6 @@
 #' Quality: 88/100 | Created: 2026-06-15
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 # --- Theme tokens -----------------------------------------------------------
@@ -144,6 +143,19 @@ title_str <- "heatmap-periodic-table · r · ggplot2 · anyplot.ai"
 
 p <- ggplot(elements, aes(x = dx, y = dy)) +
 
+  # Element family block regions (s / d / p / f) — subtle tinted backgrounds
+  # that group related elements and showcase ggplot2 layer composition
+  annotate("rect", xmin = 0.5, xmax = 2.5, ymin = -7.5, ymax = -0.5,
+           fill = "#BD8233", alpha = 0.10, color = NA) +
+  annotate("rect", xmin = 2.5, xmax = 12.5, ymin = -7.5, ymax = -3.5,
+           fill = "#2ABCCD", alpha = 0.08, color = NA) +
+  annotate("rect", xmin = 12.5, xmax = 18.5, ymin = -7.5, ymax = -0.5,
+           fill = "#C475FD", alpha = 0.08, color = NA) +
+  annotate("rect", xmin = 2.5, xmax = 17.5, ymin = -9.0, ymax = -8.0,
+           fill = "#C475FD", alpha = 0.10, color = NA) +
+  annotate("rect", xmin = 2.5, xmax = 17.5, ymin = -10.0, ymax = -9.0,
+           fill = "#C475FD", alpha = 0.10, color = NA) +
+
   # Base tiles (NA values get TILE_EMPTY fill via na.value)
   geom_tile(aes(fill = en), width = 0.90, height = 0.90,
             color = PAGE_BG, linewidth = 0.4) +
@@ -156,14 +168,14 @@ p <- ggplot(elements, aes(x = dx, y = dy)) +
   geom_text(
     data = subset(elements, !is.na(an)),
     aes(x = dx - 0.37, y = dy + 0.30, label = an, color = txt_col),
-    size = 0.9, hjust = 0, vjust = 1
+    size = 1.2, hjust = 0, vjust = 1
   ) +
 
   # EN value label — bottom of tile (only for elements with known values)
   geom_text(
     data = subset(elements, !is.na(en)),
     aes(x = dx, y = dy - 0.27, label = sprintf("%.2f", en)),
-    color = "#F0EFE8", size = 0.75, vjust = 0
+    color = "#F0EFE8", size = 1.0, vjust = 0
   ) +
 
   # Imprint sequential colormap for continuous EN data
