@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 audiogram-clinical: Clinical Audiogram
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 87/100 | Created: 2026-06-14
@@ -74,9 +74,9 @@ ax.set_xlim(100, 9000)
 ax.set_ylim(120, -10)
 
 # Right ear: red open circles, solid line
-ax.plot(
-    frequencies,
-    threshold_right,
+sns.lineplot(
+    x=frequencies,
+    y=threshold_right,
     color=RIGHT_COLOR,
     linewidth=2.0,
     linestyle="-",
@@ -87,12 +87,13 @@ ax.plot(
     markeredgewidth=2.0,
     label="Right Ear (O)",
     zorder=4,
+    ax=ax,
 )
 
 # Left ear: blue crosses, dashed line
-ax.plot(
-    frequencies,
-    threshold_left,
+sns.lineplot(
+    x=frequencies,
+    y=threshold_left,
     color=LEFT_COLOR,
     linewidth=2.0,
     linestyle="--",
@@ -101,6 +102,7 @@ ax.plot(
     markeredgewidth=2.5,
     label="Left Ear (X)",
     zorder=4,
+    ax=ax,
 )
 
 # x-axis: audiometric frequencies only, log scale
@@ -146,9 +148,8 @@ legend = ax.legend(fontsize=8, loc="lower left", facecolor=ELEVATED_BG, edgecolo
 for text in legend.get_texts():
     text.set_color(INK_SOFT)
 
-# Spines
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
+# Spines — seaborn idiom removes top/right; color remaining spines
+sns.despine(ax=ax)
 ax.spines["left"].set_color(INK_SOFT)
 ax.spines["bottom"].set_color(INK_SOFT)
 
