@@ -1,0 +1,293 @@
+library: d3
+language: javascript
+specification_id: line-cycle-seasonal
+created: '2026-06-15T04:02:34Z'
+updated: '2026-06-15T04:20:48Z'
+generated_by: claude-sonnet
+workflow_run: 27522910576
+issue: 8658
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/javascript/d3/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Correct cycle plot implementation: 12 monthly groups laid L→R with chronological
+    subseries lines and horizontal mean reference lines exactly as the spec requires'
+  - 'Excellent palette compliance: subseries in palette[0] (#009E73), seasonal means
+    in palette[1] (#C475FD) — color choice creates strong visual contrast between
+    the two analytical layers'
+  - Nested D3 scale architecture (scaleBand for months + scaleLinear within each band)
+    is idiomatic and elegant
+  - Seeded LCG RNG guarantees fully deterministic, reproducible renders
+  - Zero-reference line with tasteful opacity adds analytical value for temperature
+    anomaly data
+  - Year range annotations (2004 / 2023) provide temporal context without cluttering
+    the layout
+  - 'Title correctly uses descriptive prefix formula: TITLE.length-driven font scaling
+    prevents overflow'
+  - 'Both themes pass readability checks: chrome tokens (t.ink, t.inkSoft, t.grid)
+    applied to all non-data elements — no dark-on-dark or light-on-light failure'
+  - 'Clean KISS code: no functions or classes, all logic flows linearly in ~170 lines'
+  weaknesses:
+  - 'Font sizes are slightly below the D3 guide''s 14px minimum: tick labels, month
+    labels, and y-axis label at 13px; legend text at 12px; year range annotations
+    at 11px italic. At mobile widths (~400px) these secondary elements become hard
+    to distinguish. Raise tick/axis labels to 14px, legend to 13px, year annotations
+    to 12px.'
+  - 'DE-03 storytelling is passive: the warming trend and seasonal amplitude differences
+    are both visible but neither is visually emphasised. Consider a subtle annotation
+    calling out e.g. December''s steeper warming slope, or a slightly thicker mean
+    line for the months with the highest seasonal mean, to guide the viewer toward
+    the plot''s key insight.'
+  - 'Duplicate header block in the file (lines 1–9): the impl-review.yml header-rewrite
+    left two // comment blocks before the //# directive. The functional code is correct
+    but the stale second header (Quality: pending) will confuse future readers. Remove
+    lines 6–9 (the old block).'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "Temperature Anomaly by Month · line-cycle-seasonal · javascript · d3 · anyplot.ai" in bold dark ink, scaled to ~18px, spans ~65% of canvas width. Y-axis label "Temperature Anomaly (°C)" rotated vertically in dark-secondary ink. Y-axis tick labels (+0.8°C → -0.2°C) with leading "+" formatting in dark-secondary ink. Month labels (Jan–Dec) below each group. Year range annotations "2004" / "2023" in italic at lower-left/right. All text readable.
+      Data: Subseries lines in Imprint green (#009E73) with opacity 0.82, small green dots (r=3) at each year's observation. Horizontal seasonal-mean lines in Imprint lavender (#C475FD), stroke-width 2.5. Dashed horizontal gridlines in very subtle grid-token color. Thin vertical group separators between months. Zero-reference dashed line at 0.0°C.
+      Legend: Top-right area shows green line swatch "Annual value" and lavender swatch "Seasonal mean" — both legible.
+      Legibility verdict: PASS — all chrome elements readable against the warm off-white background. No light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface, not pure black.
+      Chrome: Title, axis labels, tick labels, and legend text all rendered in light cream tones (t.ink = #F0EFE8 for title; t.inkSoft = #B8B7B0 for secondary). All clearly visible against the dark surface. Dashed gridlines appear as very subtle light lines, still discernible. Vertical group separators visible.
+      Data: Subseries lines and dots remain in identical Imprint green (#009E73), seasonal-mean lines in identical Imprint lavender (#C475FD) — data colors are pixel-identical to the light render as required.
+      Legibility verdict: PASS — no dark-on-dark failures. Title, tick labels, month labels, year annotations, and legend text are all readable against the dark background. Brand green #009E73 reads well on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title scaled with length-formula (18px).
+          Tick/axis labels at 13px and legend at 12px are slightly below D3 guide's
+          14px floor, raising minor mobile-readability concerns, but desktop render
+          is fully legible in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements in either render. Month labels, y-axis ticks,
+          legend, and year annotations all have adequate spacing.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Green subseries lines (stroke-width 2, opacity 0.82) and dots (r=3,
+          opacity 0.72) clearly visible. Lavender mean lines (stroke-width 2.5) distinctly
+          contrasting. Appropriate for ~20 observations per group.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette positions 0 (green) and 1 (lavender) are CVD-safe.
+          The horizontal-vs-sloped line shape also provides redundant encoding beyond
+          color.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Margins (top:90, right:55, bottom:85, left:90)
+          well-proportioned. No overflow, no clipping. Year annotations fit within
+          bottom margin (871px of 900px CSS height).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Temperature Anomaly (°C)'' with units. X-axis: self-explanatory
+          month names. Title includes descriptive prefix with full context.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series = palette[0] = #009E73. Mean lines = palette[1] = #C475FD.
+          Light bg = #FAF8F1. Dark bg = #1A1A17. Data colors identical across themes.
+          Chrome tokens (t.ink, t.inkSoft, t.grid) correctly applied to all non-data
+          elements.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above generic defaults: intentional color contrast (green data vs.
+          lavender means), zero reference line, year-range temporal annotations, descriptive
+          title. Polished and professional but not FiveThirtyEight-level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis domain line removed. Dashed subtle gridlines (stroke-dasharray:4,3).
+          Subtle group separators (t.grid, opacity 0.7). Zero reference line at 0.45
+          opacity. Clear refinement above library defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Zero reference line provides context for above/below-normal temperature
+          anomaly. Seasonal pattern and within-season warming trend are both legible
+          from the plot. However, no emphasis guides the viewer to a specific insight
+          — storytelling is passive rather than directed.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct cycle plot / seasonal subseries plot. 12 monthly groups L→R,
+          chronological subseries lines, horizontal mean reference lines — all three
+          defining features present.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: seasonal groups in natural calendar order,
+          subseries as connected lines with chronological ordering, horizontal mean
+          reference lines, shared y-axis, subtle vertical group dividers.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Season (month) on x-axis, value (temperature anomaly) on y-axis,
+          cycle (year 2004-2023) ordering within each group. All axes show full data
+          range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''Temperature Anomaly by Month · line-cycle-seasonal · javascript
+          · d3 · anyplot.ai'' — correct format with optional descriptive prefix. Legend
+          labels ''Annual value'' / ''Seasonal mean'' match the visual encoding.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows both key aspects of the cycle plot: (1) seasonal amplitude
+          differences (mean lines at different heights across months) and (2) within-season
+          warming trends (positive slope visible in the subseries lines). Full feature
+          coverage.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Monthly temperature anomaly data 2004–2023 is a canonical climate
+          science domain. Neutral, scientifically plausible, and directly referenced
+          as an example in the spec itself.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Anomaly range ~-0.2°C to +0.65°C over 20 years is physically realistic
+          for global mean temperature anomalies. Seasonal baseline differences (winter
+          months near 0, summer months positive) are scientifically plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear procedural code: data → scales → axes → groups → legend →
+          title. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG RNG (seed=42) as recommended for D3 in-browser. Fully
+          deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports — d3 is a global as required by the D3 harness. Only d3
+          and ANYPLOT_TOKENS/SIZE used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic code. groups.forEach() for multi-group rendering.
+          No over-engineering or fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts to #container, sizes SVG from window.ANYPLOT_SIZE, uses current
+          D3 7.9.0 API throughout.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert D3 usage: scaleBand for season groups, scaleLinear within
+          each band, d3.line() generator with datum binding, d3.axisLeft() with custom
+          tick format, d3.mean() and d3.extent() for statistics, selectAll/join pattern
+          for dots.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Nested scale composition (scaleBand + inner scaleLinear) is a D3-idiomatic
+          technique not easily replicated in declarative libraries. Smart use of xBand.step()
+          - xBand.bandwidth() to compute gap width for separator placement. Above
+          generic usage.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - groupby-aggregation
+  styling:
+  - alpha-blending
+  - grid-styling
