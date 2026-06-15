@@ -4,7 +4,6 @@
 #' Quality: 89/100 | Created: 2026-06-15
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 set.seed(42)
@@ -28,7 +27,7 @@ BAND_ALPHA  <- 0.12       # severity band fill opacity
 # Classic 4 kHz notch pattern from occupational noise exposure
 frequencies <- c(125, 250, 500, 1000, 2000, 4000, 8000)
 
-right_thresholds <- c(10, 10, 15, 15, 20, 55, 65)  # right ear: notch at 4 kHz
+right_thresholds <- c(10, 10, 15, 15, 20, 55, 65)  # right ear: high-freq slope
 left_thresholds  <- c(10, 15, 15, 20, 25, 60, 70)  # left ear: slightly worse
 
 df <- data.frame(
@@ -73,17 +72,17 @@ p <- ggplot(df, aes(x = frequency, y = threshold,
 
   # Severity labels at 1000 Hz (log-centre of x-axis, all data in Normal zone here)
   annotate("text", x = 1000, y = 7.5,  label = "Normal",
-           size = 3.0, color = INK_MUTED, hjust = 0.5, fontface = "italic") +
+           size = 3.5, color = INK_MUTED, hjust = 0.5, fontface = "italic") +
   annotate("text", x = 1000, y = 32.5, label = "Mild",
-           size = 3.0, color = INK_MUTED, hjust = 0.5, fontface = "italic") +
+           size = 3.5, color = INK_MUTED, hjust = 0.5, fontface = "italic") +
   annotate("text", x = 1000, y = 47.5, label = "Moderate",
-           size = 3.0, color = INK_MUTED, hjust = 0.5, fontface = "italic") +
+           size = 3.5, color = INK_MUTED, hjust = 0.5, fontface = "italic") +
   annotate("text", x = 1000, y = 62.5, label = "Mod. Severe",
-           size = 3.0, color = INK_MUTED, hjust = 0.5, fontface = "italic") +
+           size = 3.5, color = INK_MUTED, hjust = 0.5, fontface = "italic") +
   annotate("text", x = 1000, y = 80,   label = "Severe",
-           size = 3.0, color = INK_MUTED, hjust = 0.5, fontface = "italic") +
+           size = 3.5, color = INK_MUTED, hjust = 0.5, fontface = "italic") +
   annotate("text", x = 1000, y = 105,  label = "Profound",
-           size = 3.0, color = INK_MUTED, hjust = 0.5, fontface = "italic") +
+           size = 3.5, color = INK_MUTED, hjust = 0.5, fontface = "italic") +
 
   # Connecting lines drawn before points so markers appear on top
   geom_line(linewidth = 1.2) +
