@@ -4,7 +4,6 @@
 #' Quality: 83/100 | Created: 2026-06-15
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 # Theme tokens (Imprint palette — theme-adaptive chrome)
@@ -49,21 +48,65 @@ climate_df <- data.frame(
 # Walter-Lieth 1:2 scaling convention: 10°C aligns with 20 mm on the shared axis
 climate_df$prec_scaled <- climate_df$precip / 2
 
-# Smooth interpolation between months for continuous fill ribbons
+# Smooth interpolation between months for continuous fill regions
 n_interp <- 600
 x_smooth <- seq(1, 12, length.out = n_interp)
 t_smooth <- approx(climate_df$month_idx, climate_df$temp,        x_smooth)$y
 p_smooth <- approx(climate_df$month_idx, climate_df$prec_scaled, x_smooth)$y
 p_smooth <- pmin(p_smooth, 50)  # cap at 100 mm / 2 = 50 (standard WL scale maximum)
 
-# Ribbon endpoints: pmax/pmin approach naturally zeroes ribbon area at curve crossings
+# Ribbon endpoints for thin background tint under pattern fills
 fill_df <- data.frame(
   x          = x_smooth,
   temp       = t_smooth,
   prec_s     = p_smooth,
-  humid_ymax = pmax(t_smooth, p_smooth),  # top of humid band (= prec_s where prec_s > temp)
-  arid_ymin  = pmin(t_smooth, p_smooth)   # bottom of arid band (= prec_s where temp > prec_s)
+  humid_ymax = pmax(t_smooth, p_smooth),
+  arid_ymin  = pmin(t_smooth, p_smooth)
 )
+
+# --- Diagonal hatching for humid region (precipitation > temperature curve) ---
+# Slope chosen so hatch lines appear at ~45 degrees on 8×4.5-inch canvas
+# (x range 11 units at 8/11 in/unit, y range 35 units at ~4.1/35 in/unit → slope ≈ 5.5)
+hatch_slope     <- 5.5   # dy/dx in data coordinates
+hatch_spacing_y <- 2.5   # y-intercept spacing between parallel lines
+
+# Intercepts: must cover y ∈ [-0.5, 21] at x ∈ [1,12]; at x=12: y = 60.5 + b
+hatch_intercepts <- seq(-65, 25, by = hatch_spacing_y)
+
+hatch_seg_list <- lapply(hatch_intercepts, function(b) {
+  y_line  <- hatch_slope * (x_smooth - 1) + b
+  in_humid <- p_smooth > t_smooth & y_line >= t_smooth & y_line <= p_smooth
+  if (!any(in_humid)) return(NULL)
+  rle_res <- rle(in_humid)
+  pos <- 1L
+  k   <- 0L
+  out_list <- vector("list", sum(rle_res$values))
+  for (i in seq_along(rle_res$lengths)) {
+    len <- rle_res$lengths[i]
+    if (rle_res$values[i]) {
+      k <- k + 1L
+      end_pos <- pos + len - 1L
+      out_list[[k]] <- data.frame(
+        x    = x_smooth[pos],    xend = x_smooth[end_pos],
+        y    = y_line[pos],      yend = y_line[end_pos]
+      )
+    }
+    pos <- pos + len
+  }
+  if (k > 0L) do.call(rbind, out_list[seq_len(k)]) else NULL
+})
+hatch_seg_df <- do.call(rbind, Filter(Negate(is.null), hatch_seg_list))
+
+# --- Stipple dots for arid region (temperature > precipitation curve) ---
+x_dot_seq <- seq(1, 12, by = 0.6)
+y_dot_seq <- seq(-5, 30, by = 1.6)
+dot_grid  <- expand.grid(x = x_dot_seq, y = y_dot_seq)
+dot_grid$t_at_x <- approx(x_smooth, t_smooth, dot_grid$x, rule = 2)$y
+dot_grid$p_at_x <- approx(x_smooth, p_smooth, dot_grid$x, rule = 2)$y
+arid_dots <- dot_grid[
+  dot_grid$t_at_x > dot_grid$p_at_x &
+  dot_grid$y      >= dot_grid$p_at_x &
+  dot_grid$y      <= dot_grid$t_at_x, ]
 
 # Frost-month rectangles (mean temperature below 0°C)
 frost_months <- climate_df$month_idx[climate_df$temp < 0]
@@ -90,18 +133,34 @@ plot_subtitle <- sprintf(
 
 # Build plot
 p <- ggplot() +
-  # Humid fill (blue) — where precipitation curve exceeds temperature curve
+  # Humid background tint (blue, very light) under the hatching
   geom_ribbon(
     data = fill_df,
     aes(x = x, ymin = temp, ymax = humid_ymax),
-    fill = COLOR_PRECIP, alpha = 0.30, inherit.aes = FALSE
+    fill = COLOR_PRECIP, alpha = 0.10, inherit.aes = FALSE
   ) +
-  # Arid fill (red) — where temperature curve exceeds precipitation curve
+  # Diagonal hatching lines for humid period (blue/hatched per Walter-Lieth convention)
+  (if (!is.null(hatch_seg_df) && nrow(hatch_seg_df) > 0)
+    geom_segment(
+      data = hatch_seg_df,
+      aes(x = x, xend = xend, y = y, yend = yend),
+      color = COLOR_PRECIP, linewidth = 0.35, alpha = 0.65, inherit.aes = FALSE
+    )
+  else NULL) +
+  # Arid background tint (red, very light) under the stipple dots
   geom_ribbon(
     data = fill_df,
     aes(x = x, ymin = arid_ymin, ymax = temp),
-    fill = COLOR_TEMP, alpha = 0.30, inherit.aes = FALSE
+    fill = COLOR_TEMP, alpha = 0.10, inherit.aes = FALSE
   ) +
+  # Stipple dots for arid period (red/dotted per Walter-Lieth convention)
+  (if (nrow(arid_dots) > 0)
+    geom_point(
+      data = arid_dots,
+      aes(x = x, y = y),
+      color = COLOR_TEMP, size = 0.55, alpha = 0.70, inherit.aes = FALSE
+    )
+  else NULL) +
   # Frost-month indicator bands below 0°C
   (if (!is.null(frost_df))
     geom_rect(
