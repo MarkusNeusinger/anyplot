@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 climograph-walter-lieth: Walter-Lieth Climate Diagram
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-06-15
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 78/100 | Created: 2026-06-15
 """
 
 import os
