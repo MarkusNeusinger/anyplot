@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 depth-order-book: Order Book Depth Chart
 Library: altair 6.2.1 | Python 3.13.13
 Quality: 89/100 | Created: 2026-06-15
