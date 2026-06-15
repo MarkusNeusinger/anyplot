@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-cycle-seasonal: Cycle Plot (Seasonal Subseries)
 Library: matplotlib 3.11.0 | Python 3.13.13
 Quality: 87/100 | Created: 2026-06-15
@@ -52,9 +52,9 @@ for m in range(12):
     y_vals = temps[:, m]
     mean_y = y_vals.mean()
 
-    # Thin subseries line with small year markers (Imprint brand green)
-    ax.plot(x_vals, y_vals, color=BRAND, linewidth=0.9, alpha=0.75, zorder=2)
-    ax.scatter(x_vals, y_vals, color=BRAND, s=8, alpha=0.75, zorder=3, linewidths=0)
+    # Thin subseries line with year markers (Imprint brand green)
+    ax.plot(x_vals, y_vals, color=BRAND, linewidth=1.2, alpha=0.75, zorder=2)
+    ax.scatter(x_vals, y_vals, color=BRAND, s=16, alpha=0.75, zorder=3, linewidths=0)
 
     # Horizontal mean reference line spanning the full group width
     ax.hlines(mean_y, x_group_starts[m], x_group_starts[m] + group_span, colors=INK, linewidth=2.0, zorder=4)
@@ -63,6 +63,21 @@ for m in range(12):
 for m in range(1, 12):
     sep_x = x_group_starts[m] - gap_span / 2
     ax.axvline(sep_x, color=INK_MUTED, linewidth=0.5, alpha=0.3)
+
+# Warming trend annotation — Jan has the strongest signal (0.05°C/yr × 24 yr = +1.2°C)
+jan_warming = warming[0] * (n_years - 1)
+ax.text(
+    0.97,
+    0.88,
+    f"+{jan_warming:.1f}°C Jan trend\n2000 → 2024",
+    fontsize=7,
+    color=INK_SOFT,
+    ha="right",
+    va="top",
+    style="italic",
+    transform=ax.transAxes,
+    bbox={"facecolor": ELEVATED_BG, "edgecolor": INK_MUTED, "alpha": 0.85, "pad": 3, "boxstyle": "round,pad=0.3"},
+)
 
 # Axes
 ax.set_xticks(tick_positions)
