@@ -1,7 +1,7 @@
 // anyplot.ai
 // depth-order-book: Order Book Depth Chart
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-06-15
+// Library: echarts 5.5.1 | JavaScript 22.22.3
+// Quality: 93/100 | Created: 2026-06-15
 
 //# anyplot-orientation: landscape
 
