@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-periodic-table: Periodic Table Property Heatmap
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 86/100 | Created: 2026-06-15
@@ -10,7 +10,8 @@ import sys
 
 sys.path.pop(0)  # prevent this file shadowing the installed pygal package
 
-import cairosvg  # noqa: E402
+import pygal  # noqa: E402
+from pygal.style import Style  # noqa: E402
 
 
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -199,14 +200,28 @@ CANVAS_H = 1800
 TILE = 155  # tile side length (px)
 GAP = 8  # gap between tiles (px)
 STRIDE = TILE + GAP  # 163
-
-# Horizontal: centre all 18 columns on the canvas
 GRID_W = 17 * STRIDE + TILE  # 2926 px
 LEFT = (CANVAS_W - GRID_W) // 2  # 137 px left edge of column 1
-
-# Vertical
 TOP = 118  # y of the top edge of period-1 tiles
 FBLOCK_EXTRA = 40  # extra gap between period-7 row and the f-block rows
+
+TITLE_TEXT = "heatmap-periodic-table · python · pygal · anyplot.ai"
+
+# Pygal Style — carries all theme tokens into the rendering engine
+custom_style = Style(
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"),
+    title_font_size=66,
+    label_font_size=44,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    stroke_width=2.5,
+)
 
 
 def tile_xy(col, row):
@@ -220,180 +235,258 @@ def tile_xy(col, row):
     return x, y
 
 
-# SVG parts list
-parts = []
+class PeriodicHeatmap(pygal.Bar):
+    """Custom pygal chart type for periodic table heatmaps.
 
-# Canvas background
-parts.append(f'<rect x="0" y="0" width="{CANVAS_W}" height="{CANVAS_H}" fill="{PAGE_BG}"/>')
+    Subclasses pygal.Bar to leverage its SVG rendering engine, Style
+    theming, and render_to_png() infrastructure. The _plot() override
+    draws the canonical IUPAC 18×7 grid with f-block rows using
+    pygal's svg.node() API instead of the default bar chart.
+    """
 
-# Title (52 chars ≤ 67 → no scaling, use default 66px)
-title = "heatmap-periodic-table · python · pygal · anyplot.ai"
-parts.append(
-    f'<text x="{CANVAS_W / 2:.1f}" y="72" text-anchor="middle" fill="{INK}" '
-    f'style="font-size:66px;font-weight:500;font-family:{FONT}">{title}</text>'
-)
+    def _plot(self):
+        """Draw the periodic table using pygal's SVG node API."""
+        root = self.svg.root
 
-# Group numbers 1–18 above the tiles
-for g in range(1, 19):
-    gx = LEFT + (g - 1) * STRIDE + TILE / 2
-    gy = TOP - 20
-    parts.append(
-        f'<text x="{gx:.1f}" y="{gy:.1f}" text-anchor="middle" fill="{INK_MUTED}" '
-        f'style="font-size:28px;font-family:{FONT}">{g}</text>'
-    )
+        # Full-canvas background — covers any pygal chrome drawn by _decorate()
+        self.svg.node(root, "rect", x=0, y=0, width=CANVAS_W, height=CANVAS_H, fill=PAGE_BG)
 
-# Period numbers 1–7 to the left of the main grid
-for p in range(1, 8):
-    px = LEFT - 30
-    py = TOP + (p - 1) * STRIDE + TILE / 2 + 11
-    parts.append(
-        f'<text x="{px:.1f}" y="{py:.1f}" text-anchor="end" fill="{INK_MUTED}" '
-        f'style="font-size:28px;font-family:{FONT}">{p}</text>'
-    )
+        # Title
+        n = self.svg.node(
+            root,
+            "text",
+            attrib={
+                "x": str(CANVAS_W // 2),
+                "y": "72",
+                "text-anchor": "middle",
+                "fill": INK,
+                "style": f"font-size:66px;font-weight:500;font-family:{FONT}",
+            },
+        )
+        n.text = TITLE_TEXT
 
-# f-block row labels ("Ln" and "An") to the left of the f-block rows
-for fb_row, label in [(8, "Ln"), (9, "An")]:
-    _, fy = tile_xy(4, fb_row)
-    label_x = LEFT - 30
-    label_y = fy + TILE / 2 + 11
-    parts.append(
-        f'<text x="{label_x:.1f}" y="{label_y:.1f}" text-anchor="end" fill="{INK_MUTED}" '
-        f'style="font-size:28px;font-style:italic;font-family:{FONT}">{label}</text>'
-    )
+        # Group numbers 1–18 above the tiles
+        for g in range(1, 19):
+            gx = LEFT + (g - 1) * STRIDE + TILE / 2
+            n = self.svg.node(
+                root,
+                "text",
+                attrib={
+                    "x": f"{gx:.1f}",
+                    "y": f"{TOP - 20:.1f}",
+                    "text-anchor": "middle",
+                    "fill": INK_MUTED,
+                    "style": f"font-size:28px;font-family:{FONT}",
+                },
+            )
+            n.text = str(g)
 
-# Thin dashed connector lines from period 6/7 group-3 tile bottom to the f-block
-for main_row, fb_row in [(6, 8), (7, 9)]:
-    mx, my = tile_xy(3, main_row)
-    tile_bottom_x = mx + TILE / 2
-    tile_bottom_y = my + TILE
-    _, fy = tile_xy(4, fb_row)
-    fb_top_y = fy
-    fb_top_x = LEFT + 3 * STRIDE + TILE / 2
-    parts.append(
-        f'<line x1="{tile_bottom_x:.1f}" y1="{tile_bottom_y:.1f}" '
-        f'x2="{fb_top_x:.1f}" y2="{fb_top_y:.1f}" '
-        f'stroke="{INK_MUTED}" stroke-width="1.5" stroke-dasharray="6,5" '
-        f'stroke-opacity="0.50"/>'
-    )
+        # Period numbers 1–7 to the left of the main grid
+        for p in range(1, 8):
+            px = LEFT - 30
+            py = TOP + (p - 1) * STRIDE + TILE / 2 + 11
+            n = self.svg.node(
+                root,
+                "text",
+                attrib={
+                    "x": f"{px:.1f}",
+                    "y": f"{py:.1f}",
+                    "text-anchor": "end",
+                    "fill": INK_MUTED,
+                    "style": f"font-size:28px;font-family:{FONT}",
+                },
+            )
+            n.text = str(p)
 
-# Element tiles
-for sym, an, col, row, en in ELEMENTS:
-    x, y = tile_xy(col, row)
-    fill = tile_color(en)
-    text_ink = ink_for_tile(fill)
+        # f-block row labels ("Ln" and "An") to the left of the f-block rows
+        for fb_row, label in [(8, "Ln"), (9, "An")]:
+            _, fy = tile_xy(4, fb_row)
+            n = self.svg.node(
+                root,
+                "text",
+                attrib={
+                    "x": f"{LEFT - 30:.1f}",
+                    "y": f"{fy + TILE / 2 + 11:.1f}",
+                    "text-anchor": "end",
+                    "fill": INK_MUTED,
+                    "style": f"font-size:28px;font-style:italic;font-family:{FONT}",
+                },
+            )
+            n.text = label
 
-    # Tile rectangle with slight rounding
-    parts.append(f'<rect x="{x}" y="{y}" width="{TILE}" height="{TILE}" fill="{fill}" rx="3" ry="3"/>')
+        # Thin dashed connector lines from period 6/7 group-3 tile to f-block rows
+        for main_row, fb_row in [(6, 8), (7, 9)]:
+            mx, my = tile_xy(3, main_row)
+            _, fy = tile_xy(4, fb_row)
+            self.svg.node(
+                root,
+                "line",
+                attrib={
+                    "x1": f"{mx + TILE / 2:.1f}",
+                    "y1": f"{my + TILE:.1f}",
+                    "x2": f"{LEFT + 3 * STRIDE + TILE / 2:.1f}",
+                    "y2": f"{fy:.1f}",
+                    "stroke": INK_MUTED,
+                    "stroke-width": "1.5",
+                    "stroke-dasharray": "6,5",
+                    "stroke-opacity": "0.50",
+                },
+            )
 
-    # Atomic number — top-left corner, small
-    parts.append(
-        f'<text x="{x + 7}" y="{y + 22}" fill="{text_ink}" '
-        f'style="font-size:20px;opacity:0.80;font-family:{FONT}">{an}</text>'
-    )
+        # Element tiles
+        for sym, an, col, row, en in ELEMENTS:
+            x, y = tile_xy(col, row)
+            fill = tile_color(en)
+            ink = ink_for_tile(fill)
 
-    # Element symbol — centred, prominent
-    parts.append(
-        f'<text x="{x + TILE / 2:.1f}" y="{y + TILE / 2 + 22:.1f}" '
-        f'text-anchor="middle" fill="{text_ink}" '
-        f'style="font-size:50px;font-weight:700;font-family:{FONT}">{sym}</text>'
-    )
+            self.svg.node(root, "rect", x=x, y=y, width=TILE, height=TILE, fill=fill, rx=3, ry=3)
 
-    # EN value — bottom-centre, small (only when value is known)
-    if en is not None:
-        parts.append(
-            f'<text x="{x + TILE / 2:.1f}" y="{y + TILE - 11:.1f}" '
-            f'text-anchor="middle" fill="{text_ink}" '
-            f'style="font-size:20px;opacity:0.80;font-family:{FONT}">{en:.2f}</text>'
+            # Atomic number — top-left corner, small
+            n = self.svg.node(
+                root, "text", x=x + 7, y=y + 22, fill=ink, style=f"font-size:20px;opacity:0.80;font-family:{FONT}"
+            )
+            n.text = str(an)
+
+            # Element symbol — centred, prominent
+            n = self.svg.node(
+                root,
+                "text",
+                attrib={
+                    "x": f"{x + TILE / 2:.1f}",
+                    "y": f"{y + TILE / 2 + 22:.1f}",
+                    "text-anchor": "middle",
+                    "fill": ink,
+                    "style": f"font-size:50px;font-weight:700;font-family:{FONT}",
+                },
+            )
+            n.text = sym
+
+            # EN value — bottom-centre, small (only when known)
+            if en is not None:
+                n = self.svg.node(
+                    root,
+                    "text",
+                    attrib={
+                        "x": f"{x + TILE / 2:.1f}",
+                        "y": f"{y + TILE - 11:.1f}",
+                        "text-anchor": "middle",
+                        "fill": ink,
+                        "style": f"font-size:20px;opacity:0.80;font-family:{FONT}",
+                    },
+                )
+                n.text = f"{en:.2f}"
+
+        # Colorbar — placed below the f-block rows
+        _, row9_y = tile_xy(4, 9)
+        cb_label_y = row9_y + TILE + 42
+        cb_x = LEFT
+        cb_w = GRID_W
+        cb_h = 42
+        cb_y = cb_label_y + 32
+
+        # Gradient definition
+        defs = self.svg.node(root, "defs")
+        grad = self.svg.node(
+            defs, "linearGradient", attrib={"id": "cbGrad", "x1": "0", "y1": "0", "x2": "1", "y2": "0"}
+        )
+        self.svg.node(grad, "stop", attrib={"offset": "0%", "stop-color": SEQ_START})
+        self.svg.node(grad, "stop", attrib={"offset": "100%", "stop-color": SEQ_END})
+
+        # Colorbar label
+        n = self.svg.node(
+            root,
+            "text",
+            attrib={
+                "x": f"{cb_x + cb_w / 2:.1f}",
+                "y": f"{cb_label_y:.1f}",
+                "text-anchor": "middle",
+                "fill": INK,
+                "style": f"font-size:32px;font-family:{FONT}",
+            },
+        )
+        n.text = "Pauling Electronegativity"
+
+        # Colorbar gradient rectangle
+        self.svg.node(
+            root,
+            "rect",
+            attrib={
+                "x": str(cb_x),
+                "y": str(cb_y),
+                "width": str(cb_w),
+                "height": str(cb_h),
+                "fill": "url(#cbGrad)",
+                "rx": "4",
+            },
         )
 
-# Colorbar — placed below the f-block rows
-_, row9_y = tile_xy(4, 9)
-cb_top_content = row9_y + TILE  # bottom of last f-block row
-cb_label_y = cb_top_content + 42
-cb_x = LEFT
-cb_w = GRID_W
-cb_h = 42
-cb_y = cb_label_y + 32
+        # Colorbar tick marks and labels
+        for val in [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5]:
+            if EN_MIN <= val <= EN_MAX:
+                t = (val - EN_MIN) / (EN_MAX - EN_MIN)
+                tx = cb_x + t * cb_w
+                self.svg.node(
+                    root,
+                    "line",
+                    attrib={
+                        "x1": f"{tx:.1f}",
+                        "y1": f"{cb_y + cb_h:.1f}",
+                        "x2": f"{tx:.1f}",
+                        "y2": f"{cb_y + cb_h + 10:.1f}",
+                        "stroke": INK_SOFT,
+                        "stroke-width": "1.5",
+                    },
+                )
+                n = self.svg.node(
+                    root,
+                    "text",
+                    attrib={
+                        "x": f"{tx:.1f}",
+                        "y": f"{cb_y + cb_h + 36:.1f}",
+                        "text-anchor": "middle",
+                        "fill": INK_SOFT,
+                        "style": f"font-size:26px;font-family:{FONT}",
+                    },
+                )
+                n.text = f"{val:.1f}"
 
-parts.append(
-    f"""<defs>
-  <linearGradient id="cbGrad" x1="0" y1="0" x2="1" y2="0">
-    <stop offset="0%" stop-color="{SEQ_START}"/>
-    <stop offset="100%" stop-color="{SEQ_END}"/>
-  </linearGradient>
-</defs>"""
+        # Colorbar end labels (min / max values)
+        for x_pos, val in [(cb_x, EN_MIN), (cb_x + cb_w, EN_MAX)]:
+            n = self.svg.node(
+                root,
+                "text",
+                attrib={
+                    "x": f"{x_pos:.1f}",
+                    "y": f"{cb_y + cb_h + 36:.1f}",
+                    "text-anchor": "middle",
+                    "fill": INK_SOFT,
+                    "style": f"font-size:26px;font-family:{FONT}",
+                },
+            )
+            n.text = f"{val:.2f}"
+
+
+# Instantiate using pygal's Bar as base — provides SVG engine, Style theming,
+# render_to_png(), and render() without needing manual cairosvg calls
+chart = PeriodicHeatmap(
+    width=CANVAS_W,
+    height=CANVAS_H,
+    title=None,
+    show_legend=False,
+    show_x_labels=False,
+    show_y_labels=False,
+    show_x_guides=False,
+    show_y_guides=False,
+    style=custom_style,
+    margin=0,
 )
 
-# Colorbar label above the bar
-parts.append(
-    f'<text x="{cb_x + cb_w / 2:.1f}" y="{cb_label_y:.1f}" '
-    f'text-anchor="middle" fill="{INK}" '
-    f'style="font-size:32px;font-family:{FONT}">Pauling Electronegativity</text>'
-)
+# Add a minimal data point so pygal's _draw() calls _plot() (requires non-empty series)
+chart.add("EN", [1.0])
 
-# Colorbar gradient rectangle
-parts.append(f'<rect x="{cb_x}" y="{cb_y}" width="{cb_w}" height="{cb_h}" fill="url(#cbGrad)" rx="4"/>')
+# Render PNG using pygal's built-in render_to_png() (uses cairosvg internally)
+chart.render_to_png(f"plot-{THEME}.png")
 
-# Colorbar tick marks and labels
-cb_ticks = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5]
-for val in cb_ticks:
-    if EN_MIN <= val <= EN_MAX:
-        t = (val - EN_MIN) / (EN_MAX - EN_MIN)
-        tx = cb_x + t * cb_w
-        parts.append(
-            f'<line x1="{tx:.1f}" y1="{cb_y + cb_h:.1f}" '
-            f'x2="{tx:.1f}" y2="{cb_y + cb_h + 10:.1f}" '
-            f'stroke="{INK_SOFT}" stroke-width="1.5"/>'
-        )
-        parts.append(
-            f'<text x="{tx:.1f}" y="{cb_y + cb_h + 36:.1f}" '
-            f'text-anchor="middle" fill="{INK_SOFT}" '
-            f'style="font-size:26px;font-family:{FONT}">{val:.1f}</text>'
-        )
-
-# Colorbar end labels (min / max values)
-parts.append(
-    f'<text x="{cb_x:.1f}" y="{cb_y + cb_h + 36:.1f}" '
-    f'text-anchor="middle" fill="{INK_SOFT}" '
-    f'style="font-size:26px;font-family:{FONT}">{EN_MIN:.2f}</text>'
-)
-parts.append(
-    f'<text x="{cb_x + cb_w:.1f}" y="{cb_y + cb_h + 36:.1f}" '
-    f'text-anchor="middle" fill="{INK_SOFT}" '
-    f'style="font-size:26px;font-family:{FONT}">{EN_MAX:.2f}</text>'
-)
-
-# Assemble SVG
-svg = (
-    f'<?xml version="1.0" encoding="utf-8"?>\n'
-    f'<svg xmlns="http://www.w3.org/2000/svg" '
-    f'width="{CANVAS_W}" height="{CANVAS_H}" '
-    f'viewBox="0 0 {CANVAS_W} {CANVAS_H}">\n' + "\n".join(parts) + "\n</svg>"
-)
-
-# Save PNG (cairosvg renders the SVG at native resolution)
-cairosvg.svg2png(
-    bytestring=svg.encode("utf-8"), write_to=f"plot-{THEME}.png", output_width=CANVAS_W, output_height=CANVAS_H
-)
-
-# Save interactive HTML
-html = f"""<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>heatmap-periodic-table · python · pygal · anyplot.ai</title>
-  <style>
-    body {{ margin: 0; background: {PAGE_BG};
-           display: flex; justify-content: center; align-items: center;
-           min-height: 100vh; }}
-    svg {{ max-width: 100%; height: auto; }}
-  </style>
-</head>
-<body>
-{svg}
-</body>
-</html>
-"""
-
-with open(f"plot-{THEME}.html", "w", encoding="utf-8") as fh:
-    fh.write(html)
+# Render interactive HTML — pygal's render() returns SVG with embedded JS tooltips
+with open(f"plot-{THEME}.html", "wb") as fh:
+    fh.write(chart.render())
