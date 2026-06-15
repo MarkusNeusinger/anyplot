@@ -70,9 +70,11 @@ const xData = [...bidPricesAsc, ...askPricesAsc];
 const bidData = [...bidCumAsc, ...Array(N).fill(null)]; // null at ask positions → gap
 const askData = [...Array(N).fill(null), ...askCum]; // null at bid positions → gap
 
+const SPREAD = BEST_ASK - BEST_BID;
+
 const W = window.ANYPLOT_SIZE.width;
 const H = window.ANYPLOT_SIZE.height;
-const TITLE_H = 50;
+const TITLE_H = 60;
 
 // --- Chart -------------------------------------------------------------------
 export default function Chart() {
@@ -85,7 +87,7 @@ export default function Chart() {
           alignItems: "center",
           justifyContent: "center",
           color: t.ink,
-          fontSize: 19,
+          fontSize: 22,
           fontWeight: 500,
           letterSpacing: 0.3,
         }}
@@ -103,7 +105,7 @@ export default function Chart() {
             label: "Price (USD)",
             valueFormatter: (v) => `$${v.toLocaleString("en-US")}`,
             labelStyle: { fill: t.ink, fontSize: 14 },
-            tickLabelStyle: { fill: t.inkSoft, fontSize: 11 },
+            tickLabelStyle: { fill: t.inkSoft, fontSize: 14 },
             tickNumber: 10,
           },
         ]}
@@ -111,7 +113,7 @@ export default function Chart() {
           {
             label: "Cumulative Volume (BTC)",
             labelStyle: { fill: t.ink, fontSize: 14 },
-            tickLabelStyle: { fill: t.inkSoft, fontSize: 11 },
+            tickLabelStyle: { fill: t.inkSoft, fontSize: 14 },
             min: 0,
           },
         ]}
@@ -143,18 +145,21 @@ export default function Chart() {
           "& .MuiAreaElement-series-asks": { fillOpacity: 0.35 },
           "& .MuiLineElement-series-bids": { strokeWidth: 2 },
           "& .MuiLineElement-series-asks": { strokeWidth: 2 },
+          "& .MuiChartsAxis-directionX .MuiChartsAxis-line": { strokeOpacity: 0.4 },
+          "& .MuiChartsAxis-directionY .MuiChartsAxis-line": { strokeOpacity: 0.4 },
+          "& .MuiChartsGrid-line": { strokeOpacity: 0.5 },
         }}
         slotProps={{
           legend: {
-            labelStyle: { fill: t.inkSoft, fontSize: 13 },
+            labelStyle: { fill: t.inkSoft, fontSize: 14 },
           },
         }}
-        margin={{ top: 20, right: 50, bottom: 65, left: 90 }}
+        margin={{ top: 20, right: 60, bottom: 70, left: 95 }}
       >
         <ChartsReferenceLine
           x={MID_PRICE}
-          label={`Mid: $${MID_PRICE.toLocaleString("en-US")}`}
-          labelStyle={{ fill: t.inkSoft, fontSize: 12 }}
+          label={`Mid: $${MID_PRICE.toLocaleString("en-US")} · Spread: $${SPREAD}`}
+          labelStyle={{ fill: t.inkSoft, fontSize: 13 }}
           lineStyle={{
             stroke: t.inkSoft,
             strokeDasharray: "6 4",
