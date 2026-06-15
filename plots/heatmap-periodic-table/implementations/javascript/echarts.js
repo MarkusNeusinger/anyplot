@@ -1,7 +1,3 @@
-// anyplot.ai
-// heatmap-periodic-table: Periodic Table Property Heatmap
-// Library: echarts 5.5.1 | JavaScript 22.22.3
-// Quality: 83/100 | Created: 2026-06-15
 //# anyplot-orientation: square
 // anyplot.ai
 // heatmap-periodic-table: Periodic Table Property Heatmap
@@ -13,8 +9,7 @@ const W = window.ANYPLOT_SIZE.width;
 const H = window.ANYPLOT_SIZE.height;
 
 // --- Data: First Ionization Energy (kJ/mol) --------------------------------
-// col 0-17 = groups 1-18 (0-indexed)
-// row 0-6  = periods 1-7; row 7.5 = lanthanides; row 8.5 = actinides
+// col 0-17 = groups 1-18; row 0-6 = periods 1-7; lanthanides=7.5; actinides=8.5
 const ELEMENTS = [
   // Period 1
   {s:"H",  z:1,   col:0,  row:0,   v:1312.0},
@@ -75,7 +70,7 @@ const ELEMENTS = [
   {s:"Te", z:52,  col:15, row:4,   v:869.3},
   {s:"I",  z:53,  col:16, row:4,   v:1008.4},
   {s:"Xe", z:54,  col:17, row:4,   v:1170.4},
-  // Period 6 (main; col 2 gap reserved for lanthanide reference)
+  // Period 6 (col 2 gap = lanthanide reference tile)
   {s:"Cs", z:55,  col:0,  row:5,   v:375.7},
   {s:"Ba", z:56,  col:1,  row:5,   v:502.9},
   {s:"Hf", z:72,  col:3,  row:5,   v:658.5},
@@ -93,7 +88,7 @@ const ELEMENTS = [
   {s:"Po", z:84,  col:15, row:5,   v:812.1},
   {s:"At", z:85,  col:16, row:5,   v:920.0},
   {s:"Rn", z:86,  col:17, row:5,   v:1037.0},
-  // Period 7 (main; col 2 gap reserved for actinide reference)
+  // Period 7 (col 2 gap = actinide reference tile)
   {s:"Fr", z:87,  col:0,  row:6,   v:380.0},
   {s:"Ra", z:88,  col:1,  row:6,   v:509.3},
   {s:"Rf", z:104, col:3,  row:6,   v:null},
@@ -111,7 +106,7 @@ const ELEMENTS = [
   {s:"Lv", z:116, col:15, row:6,   v:null},
   {s:"Ts", z:117, col:16, row:6,   v:null},
   {s:"Og", z:118, col:17, row:6,   v:null},
-  // Lanthanide row (row 7.5)
+  // Lanthanides (row 7.5)
   {s:"La", z:57,  col:2,  row:7.5, v:538.1},
   {s:"Ce", z:58,  col:3,  row:7.5, v:534.4},
   {s:"Pr", z:59,  col:4,  row:7.5, v:527.0},
@@ -127,7 +122,7 @@ const ELEMENTS = [
   {s:"Tm", z:69,  col:14, row:7.5, v:596.7},
   {s:"Yb", z:70,  col:15, row:7.5, v:603.4},
   {s:"Lu", z:71,  col:16, row:7.5, v:523.5},
-  // Actinide row (row 8.5)
+  // Actinides (row 8.5)
   {s:"Ac", z:89,  col:2,  row:8.5, v:499.0},
   {s:"Th", z:90,  col:3,  row:8.5, v:587.0},
   {s:"Pa", z:91,  col:4,  row:8.5, v:568.0},
@@ -145,231 +140,174 @@ const ELEMENTS = [
   {s:"Lr", z:103, col:16, row:8.5, v:470.0},
 ];
 
-// --- Color utilities -------------------------------------------------------
-function hexToRgb(hex) {
-  return [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)];
+// --- Color utilities (4 functions, all essential) --------------------------
+function lerpColor(h1, h2, f) {
+  const r1=parseInt(h1.slice(1,3),16), g1=parseInt(h1.slice(3,5),16), b1=parseInt(h1.slice(5,7),16);
+  const r2=parseInt(h2.slice(1,3),16), g2=parseInt(h2.slice(3,5),16), b2=parseInt(h2.slice(5,7),16);
+  return `rgb(${Math.round(r1+(r2-r1)*f)},${Math.round(g1+(g2-g1)*f)},${Math.round(b1+(b2-b1)*f)})`;
 }
 
-function lerpColor(h1, h2, frac) {
-  const [r1,g1,b1] = hexToRgb(h1);
-  const [r2,g2,b2] = hexToRgb(h2);
-  const r = Math.round(r1 + (r2-r1)*frac);
-  const g = Math.round(g1 + (g2-g1)*frac);
-  const b = Math.round(b1 + (b2-b1)*frac);
-  return `rgb(${r},${g},${b})`;
+function getTextColor(bg) {
+  const m = bg.startsWith('#')
+    ? [parseInt(bg.slice(1,3),16), parseInt(bg.slice(3,5),16), parseInt(bg.slice(5,7),16)]
+    : bg.match(/\d+/g).map(Number);
+  const lin = c => { const s=c/255; return s<=0.03928 ? s/12.92 : Math.pow((s+0.055)/1.055, 2.4); };
+  return 0.2126*lin(m[0])+0.7152*lin(m[1])+0.0722*lin(m[2]) > 0.30 ? '#1A1A17' : '#F0EFE8';
 }
 
-function srgbLinear(c) {
-  const s = c / 255;
-  return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
-}
-
-function rgbLuminance(r, g, b) {
-  return 0.2126 * srgbLinear(r) + 0.7152 * srgbLinear(g) + 0.0722 * srgbLinear(b);
-}
-
-function getTextColor(bgColor) {
-  let r, g, b;
-  if (bgColor.startsWith('#')) {
-    [r, g, b] = hexToRgb(bgColor);
-  } else {
-    const m = bgColor.match(/\d+/g);
-    [r, g, b] = [+m[0], +m[1], +m[2]];
-  }
-  return rgbLuminance(r, g, b) > 0.30 ? '#1A1A17' : '#F0EFE8';
-}
-
-// --- Value range and color mapping -----------------------------------------
+// --- Value range -----------------------------------------------------------
 const vals = ELEMENTS.filter(e => e.v != null).map(e => e.v);
-const vMin = Math.min(...vals);   // ~376 (Cs)
-const vMax = Math.max(...vals);   // ~2372 (He)
-
+const vMin = Math.min(...vals);
+const vMax = Math.max(...vals);
 const GREY_TILE = window.ANYPLOT_THEME === 'light' ? '#C4C3BC' : '#3C3C38';
 
-function valueToColor(v) {
-  if (v == null) return GREY_TILE;
-  return lerpColor(t.seq[0], t.seq[1], (v - vMin) / (vMax - vMin));
+function tileColor(v) {
+  return v == null ? GREY_TILE : lerpColor(t.seq[0], t.seq[1], (v-vMin)/(vMax-vMin));
 }
 
-// --- Layout ----------------------------------------------------------------
+// --- Layout: rectangular tiles fill the full square canvas ----------------
+// TW from width, TH from height — separating axes avoids the 30% bottom gap
 const NCOLS = 18;
-const NROWS = 9.5;  // 7 main + 0.5 gap + 2 f-block rows
-const margin = {top: 78, bottom: 105, left: 22, right: 22};
-const availW = W - margin.left - margin.right;
-const availH = H - margin.top - margin.bottom;
-const TILE = Math.floor(Math.min(availW / NCOLS, availH / NROWS));
-const GAP = Math.max(2, Math.round(TILE * 0.05));
-const gridW = TILE * NCOLS;
-const ox = margin.left + Math.floor((availW - gridW) / 2);  // center grid horizontally
-const oy = margin.top;
+const NROWS = 9.5; // 7 main periods + 0.5 gap + 2 f-block rows
+const ML = 46, MR = 16, MT = 86, MB = 10;
+const CB_H = 22, CB_LABEL = 20, CB_GAP = 16; // colorbar section height
+const gridAvailH = H - MT - MB - CB_GAP - CB_H - CB_LABEL;
+const gridAvailW = W - ML - MR;
+const TW = Math.floor(gridAvailW / NCOLS);
+const TH = Math.floor(gridAvailH / NROWS);
+const GAP = Math.max(2, Math.round(Math.min(TW, TH) * 0.04));
+const ox = ML + Math.floor((gridAvailW - TW * NCOLS) / 2);
+const oy = MT;
 
 function tilePx(col, row) {
   return {
-    x: ox + col * TILE + GAP,
-    y: oy + row * TILE + GAP,
-    w: TILE - 2 * GAP,
-    h: TILE - 2 * GAP,
-    cx: ox + col * TILE + TILE * 0.5,
-    cy: oy + row * TILE + TILE * 0.5,
+    x:  ox + col*TW + GAP,
+    y:  oy + row*TH + GAP,
+    w:  TW - 2*GAP,
+    h:  TH - 2*GAP,
+    cx: ox + col*TW + TW*0.5,
+    cy: oy + row*TH + TH*0.5,
   };
 }
 
-const symFont   = `bold ${Math.floor(TILE * 0.34)}px sans-serif`;
-const znFont    = `${Math.floor(TILE * 0.17)}px sans-serif`;
-const valFont   = `${Math.max(6, Math.floor(TILE * 0.13))}px sans-serif`;
+const symFont = `bold ${Math.floor(TH * 0.30)}px sans-serif`;
+const znFont  = `${Math.floor(TH * 0.17)}px sans-serif`;
+const valFont = `${Math.max(9, Math.floor(TH * 0.17))}px sans-serif`;
 
 // --- Build graphic elements ------------------------------------------------
 const graphic = [];
 
-// Background fill
-graphic.push({
-  type: 'rect',
-  left: 0, top: 0, right: 0, bottom: 0,
-  style: {fill: t.pageBg},
+graphic.push({type:'rect', left:0, top:0, right:0, bottom:0, style:{fill:t.pageBg}});
+
+// Title & subtitle
+graphic.push({type:'text', left:'center', top:18,
+  style:{text:'heatmap-periodic-table · javascript · echarts · anyplot.ai',
+         font:'bold 20px sans-serif', fill:t.ink, textAlign:'center', textBaseline:'top'}});
+graphic.push({type:'text', left:'center', top:46,
+  style:{text:'First Ionization Energy (kJ/mol)',
+         font:'14px sans-serif', fill:t.inkSoft, textAlign:'center', textBaseline:'top'}});
+
+// Period labels (1–7) left of main grid — show periodic trend direction
+const pLabelFont = `${Math.max(10, Math.floor(TH * 0.20))}px sans-serif`;
+for (let p = 0; p < 7; p++) {
+  graphic.push({type:'text', style:{
+    x: ox - 6,
+    y: oy + p*TH + TH*0.5,
+    text: String(p+1),
+    font: pLabelFont, fill: t.inkSoft, textAlign:'right', textBaseline:'middle',
+  }});
+}
+
+// Lanthanide / actinide row labels on left margin
+const fLabelFont = `${Math.max(8, Math.floor(TH * 0.15))}px sans-serif`;
+[{label:'Ln', row:7.5}, {label:'Ac', row:8.5}].forEach(({label, row}) => {
+  graphic.push({type:'text', style:{
+    x: ox - 6,
+    y: oy + row*TH + TH*0.5,
+    text: label, font: fLabelFont, fill: t.inkSoft, textAlign:'right', textBaseline:'middle', opacity:0.75,
+  }});
 });
 
-// Title
-graphic.push({
-  type: 'text',
-  left: 'center', top: 20,
-  style: {
-    text: 'heatmap-periodic-table · javascript · echarts · anyplot.ai',
-    font: 'bold 20px sans-serif',
-    fill: t.ink,
-    textAlign: 'center',
-    textBaseline: 'top',
-  },
+// Group category annotations in the 0.5-TH gap between period 7 and lanthanides
+// These name the three major blocks to explain the IE trend pattern
+const gapY = oy + 7.25 * TH; // center of 0.5-row gap
+const gAnnotFont = `${Math.max(8, Math.floor(TH * 0.14))}px sans-serif`;
+[
+  {col0:0,  col1:0,  label:'Alkali'},
+  {col0:1,  col1:1,  label:'Alk. Earth'},
+  {col0:2,  col1:11, label:'Transition Metals'},
+  {col0:12, col1:16, label:'p-block'},
+  {col0:17, col1:17, label:'Noble Gases'},
+].forEach(({col0, col1, label}) => {
+  const cx = ox + col0*TW + (col1-col0+1)*TW*0.5;
+  graphic.push({type:'text', style:{
+    x: cx, y: gapY, text: label,
+    font: gAnnotFont, fill: t.inkSoft, textAlign:'center', textBaseline:'middle', opacity:0.70,
+  }});
 });
 
-// Property subtitle
-graphic.push({
-  type: 'text',
-  left: 'center', top: 48,
-  style: {
-    text: 'First Ionization Energy (kJ/mol)',
-    font: '14px sans-serif',
-    fill: t.inkSoft,
-    textAlign: 'center',
-    textBaseline: 'top',
-  },
-});
-
-// Draw each element tile
+// Element tiles
 for (const el of ELEMENTS) {
   const {x, y, w, h, cx, cy} = tilePx(el.col, el.row);
-  const bgColor = valueToColor(el.v);
+  const bgColor = tileColor(el.v);
   const textCol = getTextColor(bgColor);
 
-  // Tile background
-  graphic.push({
-    type: 'rect',
-    shape: {x, y, width: w, height: h},
-    style: {fill: bgColor, lineWidth: 0},
-  });
+  graphic.push({type:'rect', shape:{x, y, width:w, height:h}, style:{fill:bgColor, lineWidth:0}});
 
-  // Atomic number (top-left)
-  graphic.push({
-    type: 'text',
-    style: {
-      x: x + 3,
-      y: y + 2,
-      text: String(el.z),
-      font: znFont,
-      fill: textCol,
-      opacity: 0.85,
-      textAlign: 'left',
-      textBaseline: 'top',
-    },
-  });
+  graphic.push({type:'text', style:{
+    x: x+3, y: y+2, text: String(el.z),
+    font: znFont, fill: textCol, opacity:0.85, textAlign:'left', textBaseline:'top',
+  }});
 
-  // Element symbol (center)
-  graphic.push({
-    type: 'text',
-    style: {
-      x: cx,
-      y: cy + TILE * 0.03,
-      text: el.s,
-      font: symFont,
-      fill: textCol,
-      textAlign: 'center',
-      textBaseline: 'middle',
-    },
-  });
+  graphic.push({type:'text', style:{
+    x: cx, y: cy, text: el.s,
+    font: symFont, fill: textCol, textAlign:'center', textBaseline:'middle',
+  }});
 
-  // IE value (bottom, small) — only for elements with data
   if (el.v != null) {
-    graphic.push({
-      type: 'text',
-      style: {
-        x: cx,
-        y: y + h - 2,
-        text: el.v.toFixed(0),
-        font: valFont,
-        fill: textCol,
-        opacity: 0.80,
-        textAlign: 'center',
-        textBaseline: 'bottom',
-      },
-    });
+    graphic.push({type:'text', style:{
+      x: cx, y: y+h-2, text: el.v.toFixed(0),
+      font: valFont, fill: textCol, opacity:0.80, textAlign:'center', textBaseline:'bottom',
+    }});
   }
 }
 
-// Reference tiles at period 6/7, group 3 (canonical f-block gap markers)
-const refFont = `${Math.max(6, Math.floor(TILE * 0.13))}px sans-serif`;
-[
-  {col: 2, row: 5, label: '57-71'},
-  {col: 2, row: 6, label: '89-103'},
-].forEach(({col, row, label}) => {
+// f-block reference tiles (dashed border, atomic-number range)
+const refFont = `${Math.max(8, Math.floor(TH * 0.17))}px sans-serif`;
+[{col:2, row:5, label:'57–71'}, {col:2, row:6, label:'89–103'}].forEach(({col, row, label}) => {
   const {x, y, w, h, cx, cy} = tilePx(col, row);
-  graphic.push({
-    type: 'rect',
-    shape: {x, y, width: w, height: h},
-    style: {fill: 'none', stroke: t.inkSoft, lineWidth: 1, lineDash: [3, 2]},
-  });
-  graphic.push({
-    type: 'text',
-    style: {x: cx, y: cy, text: label, font: refFont, fill: t.inkSoft, textAlign: 'center', textBaseline: 'middle'},
-  });
+  graphic.push({type:'rect', shape:{x, y, width:w, height:h},
+    style:{fill:'none', stroke:t.inkSoft, lineWidth:1, lineDash:[3,2]}});
+  graphic.push({type:'text', style:{
+    x: cx, y: cy, text: label, font: refFont, fill: t.inkSoft, textAlign:'center', textBaseline:'middle',
+  }});
 });
 
 // --- Colorbar -------------------------------------------------------------
-const cbBarY = oy + 9.5 * TILE + 18;
-const cbBarH = 15;
-const cbBarW = Math.floor(gridW * 0.68);
-const cbBarX = ox + Math.floor((gridW - cbBarW) / 2);
+const cbBarY = oy + NROWS * TH + CB_GAP;
+const cbBarW = Math.floor(TW * NCOLS * 0.65);
+const cbBarX = ox + Math.floor((TW * NCOLS - cbBarW) / 2);
 const cbSteps = 160;
 
 for (let i = 0; i < cbSteps; i++) {
   const f = i / cbSteps;
-  graphic.push({
-    type: 'rect',
-    shape: {x: cbBarX + f * cbBarW, y: cbBarY, width: Math.ceil(cbBarW / cbSteps) + 1, height: cbBarH},
-    style: {fill: lerpColor(t.seq[0], t.seq[1], f), lineWidth: 0},
-  });
+  graphic.push({type:'rect',
+    shape:{x: cbBarX + f*cbBarW, y: cbBarY, width: Math.ceil(cbBarW/cbSteps)+1, height: CB_H},
+    style:{fill: lerpColor(t.seq[0], t.seq[1], f), lineWidth:0}});
 }
+graphic.push({type:'rect', shape:{x:cbBarX, y:cbBarY, width:cbBarW, height:CB_H},
+  style:{fill:'none', stroke:t.inkSoft, lineWidth:1}});
 
-// Colorbar border
-graphic.push({
-  type: 'rect',
-  shape: {x: cbBarX, y: cbBarY, width: cbBarW, height: cbBarH},
-  style: {fill: 'none', stroke: t.inkSoft, lineWidth: 1},
-});
+const cbFont = `${Math.max(10, Math.floor(TH * 0.18))}px sans-serif`;
+const cbLabelY = cbBarY + CB_H + 5;
+graphic.push({type:'text', style:{x:cbBarX,           y:cbLabelY, text:vMin.toFixed(0), font:cbFont, fill:t.inkSoft, textAlign:'left',   textBaseline:'top'}});
+graphic.push({type:'text', style:{x:cbBarX+cbBarW,    y:cbLabelY, text:vMax.toFixed(0), font:cbFont, fill:t.inkSoft, textAlign:'right',  textBaseline:'top'}});
+graphic.push({type:'text', style:{x:cbBarX+cbBarW*0.5,y:cbLabelY, text:'kJ/mol',         font:cbFont, fill:t.inkSoft, textAlign:'center', textBaseline:'top'}});
 
-// Colorbar tick labels and unit
-const cbFont = `${Math.max(10, Math.floor(TILE * 0.18))}px sans-serif`;
-graphic.push({type:'text', style:{x:cbBarX, y:cbBarY+cbBarH+4, text:vMin.toFixed(0), font:cbFont, fill:t.inkSoft, textAlign:'left', textBaseline:'top'}});
-graphic.push({type:'text', style:{x:cbBarX+cbBarW, y:cbBarY+cbBarH+4, text:vMax.toFixed(0), font:cbFont, fill:t.inkSoft, textAlign:'right', textBaseline:'top'}});
-graphic.push({type:'text', style:{x:cbBarX+cbBarW*0.5, y:cbBarY+cbBarH+4, text:'kJ/mol', font:cbFont, fill:t.inkSoft, textAlign:'center', textBaseline:'top'}});
-
-// Colorbar end labels (low / high)
-const cbLabelFont = `${Math.max(9, Math.floor(TILE * 0.15))}px sans-serif`;
-graphic.push({type:'text', style:{x:cbBarX, y:cbBarY-4, text:'low IE', font:cbLabelFont, fill:t.inkSoft, textAlign:'left', textBaseline:'bottom', opacity:0.7}});
-graphic.push({type:'text', style:{x:cbBarX+cbBarW, y:cbBarY-4, text:'high IE', font:cbLabelFont, fill:t.inkSoft, textAlign:'right', textBaseline:'bottom', opacity:0.7}});
+const cbAnnotFont = `${Math.max(9, Math.floor(TH * 0.15))}px sans-serif`;
+graphic.push({type:'text', style:{x:cbBarX,        y:cbBarY-5, text:'low IE',  font:cbAnnotFont, fill:t.inkSoft, textAlign:'left',  textBaseline:'bottom', opacity:0.70}});
+graphic.push({type:'text', style:{x:cbBarX+cbBarW, y:cbBarY-5, text:'high IE', font:cbAnnotFont, fill:t.inkSoft, textAlign:'right', textBaseline:'bottom', opacity:0.70}});
 
 // --- Render ---------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
-chart.setOption({
-  animation: false,
-  backgroundColor: t.pageBg,
-  graphic,
-});
+chart.setOption({animation:false, backgroundColor:t.pageBg, graphic});
