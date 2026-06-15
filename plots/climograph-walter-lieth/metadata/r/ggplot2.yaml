@@ -1,0 +1,277 @@
+library: ggplot2
+language: r
+specification_id: climograph-walter-lieth
+created: '2026-06-15T01:17:46Z'
+updated: '2026-06-15T01:38:26Z'
+generated_by: claude-sonnet
+workflow_run: 27518095621
+issue: 8656
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - Technically sophisticated hatching (diagonal lines via geom_segment) and arid
+    stipple dots (geom_point on filtered grid) — achieving Walter-Lieth fill conventions
+    in pure ggplot2 without native pattern-fill support is non-trivial and well-executed
+  - 'Semantic Imprint palette application is correct and well-justified: temperature→red
+    (#AE3030), precipitation→blue (#4467A3), frost→cyan (#2ABCCD) follows the style
+    guide''s domain-convention exception and is labelled in a comment'
+  - Dual y-axis with exact 1:2 Walter-Lieth scaling (sec_axis(~ . * 2)) is correctly
+    wired and the colored axis titles (temp label in red, precip label in blue) serve
+    as an implicit legend — elegant design choice
+  - 'Theme adaptation is flawless: both light and dark renders pass the readability
+    check with no dark-on-dark or light-on-light failures; all chrome tokens correctly
+    flip while data colors stay identical'
+  - Realistic station data for Ankara, Turkey (1991–2020 reference period) with authentic
+    climate normals and full metadata in subtitle (elevation, annual mean T, annual
+    ΣP)
+  weaknesses:
+  - Right y-axis ticks stop at 60 mm — the spec explicitly requires ticks at 0, 20,
+    40, 60, 100 mm on the precipitation axis. Even though Ankara's precip never exceeds
+    43 mm, the canonical Walter-Lieth layout includes the 100 mm reference tick. Add
+    breaks = c(0, 20, 40, 60, 100) and extend y limits so the right axis reaches 100
+    mm (left axis would need to reach 50°C as well, or the 100 mm label can sit at
+    the scale boundary)
+  - No legend or annotation explains the fill conventions (hatching = humid period,
+    stipple dots = arid period) — experienced climatologists know the convention but
+    general audiences do not. A small annotate() or geom_text() label ('Humid' near
+    a hatched region, 'Arid' near the dotted region) would improve accessibility
+  - Hatching line density in dark render is slightly reduced compared to light render
+    because the blue lines (alpha=0.65) on the near-black background have less contrast.
+    Increasing alpha to 0.80–0.85 for the hatch segments in the dark theme would improve
+    dark-mode readability
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, no pure white.
+      Chrome: Bold dark title "Ankara, Turkey · climograph-walter-lieth · r · ggplot2 · anyplot.ai" clearly readable. Muted subtitle "891 m a.s.l. · T = 11.8°C · ΣP = 352 mm" readable. Left axis title "Temperature (°C)" in red, right axis title "Precipitation (mm)" in blue — both clearly visible. Tick labels on both axes legible at 8pt.
+      Data: Red temperature line (#AE3030) rises from -0.5°C (Jan) to 23.5°C (Jul–Aug) and falls back. Blue precipitation line (#4467A3) shows inverse pattern with winter highs (~38mm Jan) and summer trough (~12mm Aug). Blue diagonal hatching fills humid periods (winter and autumn). Red stipple dots fill the arid summer period (Jun–Sep). Cyan/teal frost band visible below 0°C baseline for January. Dashed horizontal reference at 0°C.
+      Legibility verdict: PASS — all text readable, no light-on-light failures, data elements clearly distinguishable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, no pure black.
+      Chrome: Title switches to light text on dark background — fully readable with no dark-on-dark failure. Subtitle in muted light text (#B8B7B0) — readable. Left axis "Temperature (°C)" in red (#AE3030) and right axis "Precipitation (mm)" in blue (#4467A3) — both readable. Tick labels in #B8B7B0 — visible against dark background. No instances of dark text on dark background.
+      Data: Temperature and precipitation lines identical colors to light render. Blue hatching slightly less vivid due to lower contrast on dark bg (alpha 0.65) but still clearly visible. Arid region stipple dots (#AE3030 at alpha 0.70) visible. Frost band (cyan #2ABCCD, alpha 0.40) clearly visible against dark bg. Data colors are identical between both themes — only chrome flips.
+      Legibility verdict: PASS — all text readable, no dark-on-dark failures detected.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All text legible in both themes. Title correctly sized at 12pt (~68
+          chars). Axis labels at 10pt, tick labels at 8pt. Minor: no legend text for
+          fill conventions.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps. Month labels well-spaced. No collision between
+          data elements and labels.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Temperature and precipitation lines clearly visible (linewidth=1.3).
+          Hatching and stipple dots both distinct. Frost band visible. All elements
+          appropriately sized for 12-point dataset.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Semantic red/blue distinction has luminosity difference. Frost cyan
+          is distinct from both. No red-green sole encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 (gate passed). Title ~65-70% of width. Panel border
+          appropriate for climograph chart type. Good whitespace. No overflow.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Left axis 'Temperature (°C)' and right axis 'Precipitation (mm)'
+          with units. Subtitle carries full station metadata.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception correctly applied: temp=red (#AE3030), precip=blue
+          (#4467A3), frost=cyan (#2ABCCD). Backgrounds #FAF8F1/#1A1A17. Chrome flips
+          correctly. Data colors identical between themes.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Above default: semantic color mapping, custom hatching, stipple
+          patterns, colored axis titles. Professional appearance. Not at maximum due
+          to relatively standard typography hierarchy.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Panel border kept (appropriate for enclosed climograph style). Y-axis
+          only grid, subtle. Generous whitespace. Above default but not maximally
+          refined.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Humid/arid fills immediately communicate climate signature. Frost
+          band adds seasonal ecological context. Station name grounds the data geographically.
+          Minor: no legend for fill patterns.'
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Walter-Lieth climograph correctly implemented with all defining features.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: '1:2 scaling ✓, humid fill (hatched) ✓, arid fill (stipple) ✓, station
+          header ✓, frost indicator ✓, temp line ✓, precip line ✓. Minor miss: spec
+          calls for right axis ticks at 0,20,40,60,100mm but implementation stops
+          at 60mm.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=months, left Y=temperature, right Y=precipitation at 2x scale.
+          All 12 months shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'Ankara, Turkey · climograph-walter-lieth · r · ggplot2 · anyplot.ai'
+          follows mandatory format with descriptive prefix. Colored axis titles serve
+          as implicit legend.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Demonstrates all chart features: dual curves, 1:2 scaling, humid
+          fill, arid fill, frost indicator, zero reference, station metadata.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Ankara, Turkey is a real station with authentic continental climate.
+          Data matches real 1991-2020 normals. Elevation 891m is correct. Neutral,
+          non-controversial subject.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature -0.5 to 23.5°C and precipitation 12-43mm are realistic
+          for Ankara's semi-arid continental climate. Walter-Lieth 1:2 scaling correctly
+          preserves relationship.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat sequential script. No classes or unnecessary functions.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded real climate normals — fully deterministic, no seed required.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex for a demanding chart type. No fake interactivity.
+          Hatching implementation via geom_segment is clean and well-commented.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png using ggsave with ragg::agg_png device.
+          Correct API usage.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Proper ggplot2 grammar: layered geoms, sec_axis(), scale_*_continuous(),
+          theme system. Using geom_segment for hatching and geom_point for stipple
+          is the idiomatic ggplot2 approach.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'sec_axis() for scaled dual y-axis is distinctively ggplot2. Layered
+          geom approach showcases grammar of graphics. approx() interpolation for
+          smooth ribbons. Minor: no dplyr/tidyr data pipeline.'
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - ragg
+  techniques:
+  - twin-axes
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - alpha-blending
+  - grid-styling
