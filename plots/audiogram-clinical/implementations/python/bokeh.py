@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 audiogram-clinical: Clinical Audiogram
 Library: bokeh 3.9.1 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-06-15
@@ -73,16 +73,21 @@ p = figure(
     min_border_bottom=160,
     min_border_left=200,
     min_border_top=120,
-    min_border_right=80,
+    min_border_right=120,
 )
+
+# Theme-adaptive band alpha — subtle on light, slightly more visible on dark
+BAND_ALPHA = 0.09 if THEME == "light" else 0.13
 
 # Severity band shading
 for y_start, y_end, color, _label in severity_bands:
-    p.add_layout(BoxAnnotation(bottom=y_start, top=y_end, fill_color=color, fill_alpha=0.09, line_color=None))
+    p.add_layout(BoxAnnotation(bottom=y_start, top=y_end, fill_color=color, fill_alpha=BAND_ALPHA, line_color=None))
 
 # Severity band labels — placed at right side of each band
 for y_start, y_end, _color, band_label in severity_bands:
     y_mid = (y_start + y_end) / 2
+    if band_label == "Severe":
+        y_mid += 4  # offset down to avoid overlap with 8k right-ear marker at 80 dB
     p.add_layout(
         Label(
             x=9200,
