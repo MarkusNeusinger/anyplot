@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-periodic-table: Periodic Table Property Heatmap
 Library: plotly 6.8.0 | Python 3.13.13
 Quality: 86/100 | Created: 2026-06-15
@@ -28,6 +28,8 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Imprint sequential colormap (single-polarity, green→blue) — for IE1
 imprint_seq = [[0.0, "#009E73"], [1.0, "#4467A3"]]
 GREY_TILE = "#8A8A82" if THEME == "light" else "#5A5A55"
+# Grey tile luminance: light #8A8A82 ≈ 0.272 (use dark text), dark #5A5A55 ≈ 0.117 (use white)
+GREY_TEXT = "#1A1A17" if THEME == "light" else "#FFFFFF"
 
 # Element data: (Z, symbol, x_grid 0-17, y_grid 0-9, ie1_kJ_mol or None)
 # y=0-6: periods 1-7; y=7: visual gap row; y=8: lanthanides; y=9: actinides
@@ -177,6 +179,23 @@ for _Z, _sym, xg, yg, ie1 in ELEMENTS:
 ie1_min = min(ie1_all)
 ie1_max = max(ie1_all)
 
+
+def _srgb_lin(c):
+    """sRGB channel value (0–255) to linear light."""
+    n = c / 255.0
+    return n / 12.92 if n <= 0.04045 else ((n + 0.055) / 1.055) ** 2.4
+
+
+def _tile_text(ie1_val):
+    """Return dark or white text color based on imprint_seq tile background luminance."""
+    t = (ie1_val - ie1_min) / (ie1_max - ie1_min)
+    r, g, b = t * 68, 158 + t * (103 - 158), 115 + t * (163 - 115)
+    lum = 0.2126 * _srgb_lin(r) + 0.7152 * _srgb_lin(g) + 0.0722 * _srgb_lin(b)
+    # Crossover at lum≈0.19: dark text (#1A1A17) on lighter green tiles,
+    # white text (#FFFFFF) on darker blue tiles — theme-independent (data colors are fixed)
+    return "#1A1A17" if lum > 0.19 else "#FFFFFF"
+
+
 # Title with font-size scaled for length
 title = "First Ionization Energy · heatmap-periodic-table · python · plotly · anyplot.ai"
 n_chars = len(title)
@@ -218,17 +237,51 @@ fig.add_trace(
             "y": 0.5,
             "x": 1.01,
             "bgcolor": ELEVATED_BG,
-            "bordercolor": INK_SOFT,
-            "borderwidth": 1,
+            "bordercolor": INK_MUTED,
+            "borderwidth": 0.5,
         },
         hoverinfo="skip",
     )
 )
 
-# Build annotations: symbol (centered) + atomic number (top-left corner)
+# Build annotations: period/group orientation labels + element tiles
 annotations = []
+
+# Period numbers (1–7) on the left edge — orient readers within the table
+for period in range(7):
+    annotations.append(
+        {
+            "x": -0.80,
+            "y": period,
+            "text": str(period + 1),
+            "font": {"size": 4.5, "color": INK_MUTED, "family": "Arial"},
+            "showarrow": False,
+            "xref": "x",
+            "yref": "y",
+            "xanchor": "center",
+            "yanchor": "middle",
+        }
+    )
+
+# Group numbers (1–18) along the top edge
+for grp in range(18):
+    annotations.append(
+        {
+            "x": grp,
+            "y": -0.72,
+            "text": str(grp + 1),
+            "font": {"size": 3.8, "color": INK_MUTED, "family": "Arial"},
+            "showarrow": False,
+            "xref": "x",
+            "yref": "y",
+            "xanchor": "center",
+            "yanchor": "middle",
+        }
+    )
+
+# Element tiles: symbol (centered, bold) + atomic number (top-left corner)
 for Z, sym, xg, yg, ie1 in ELEMENTS:
-    txt_col = "#FFFFFF" if ie1 is not None else "#D8D8D0"
+    txt_col = _tile_text(ie1) if ie1 is not None else GREY_TEXT
 
     # Symbol — centered in tile, bold
     annotations.append(
@@ -245,23 +298,22 @@ for Z, sym, xg, yg, ie1 in ELEMENTS:
         }
     )
 
-    # Atomic number — top-left corner of tile
-    if Z is not None:
-        annotations.append(
-            {
-                "x": xg - 0.38,
-                "y": yg - 0.33,
-                "text": str(Z),
-                "font": {"size": 3.5, "color": txt_col, "family": "Arial"},
-                "showarrow": False,
-                "xref": "x",
-                "yref": "y",
-                "xanchor": "left",
-                "yanchor": "top",
-            }
-        )
+    # Atomic number — top-left corner of tile (raised to 5.0 px for mobile legibility)
+    annotations.append(
+        {
+            "x": xg - 0.38,
+            "y": yg - 0.33,
+            "text": str(Z),
+            "font": {"size": 5.0, "color": txt_col, "family": "Arial"},
+            "showarrow": False,
+            "xref": "x",
+            "yref": "y",
+            "xanchor": "left",
+            "yanchor": "top",
+        }
+    )
 
-# Labels in empty left cells of the f-block rows
+# Series labels in empty left cells of the f-block rows
 annotations.extend(
     [
         {
@@ -290,23 +342,36 @@ annotations.extend(
 )
 
 fig.update_layout(
-    title={"text": title, "font": {"size": title_fs, "color": INK}, "x": 0.47, "xanchor": "center", "y": 0.98, "yanchor": "top"},
+    title={
+        "text": title,
+        "font": {"size": title_fs, "color": INK},
+        "x": 0.47,
+        "xanchor": "center",
+        "y": 0.98,
+        "yanchor": "top",
+    },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     autosize=False,
     width=800,
     height=450,
-    margin={"l": 30, "r": 100, "t": 60, "b": 30},
-    xaxis={"showticklabels": False, "showgrid": False, "zeroline": False, "showline": False, "range": [-0.5, 17.5]},
+    margin={"l": 45, "r": 100, "t": 60, "b": 30},
+    xaxis={"showticklabels": False, "showgrid": False, "zeroline": False, "showline": False, "range": [-1.1, 17.5]},
     yaxis={
         "showticklabels": False,
         "showgrid": False,
         "zeroline": False,
         "showline": False,
-        "range": [9.5, -0.5],  # reversed: period 1 at top
+        "range": [9.5, -1.1],  # extended top for group number row; reversed: period 1 at top
     },
     annotations=annotations,
 )
+
+# Thin separator lines framing the f-block gap — makes the separation intentional
+for y_sep in [6.6, 7.4]:
+    fig.add_shape(
+        type="line", x0=1.6, x1=16.4, y0=y_sep, y1=y_sep, line={"color": INK_MUTED, "width": 0.8}, xref="x", yref="y"
+    )
 
 # Save
 fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
