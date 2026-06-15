@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-periodic-table: Periodic Table Property Heatmap
 Library: matplotlib 3.11.0 | Python 3.13.13
 Quality: 85/100 | Created: 2026-06-15
@@ -188,10 +188,17 @@ for p in range(1, 8):
 for g in range(1, 19):
     ax.text(g - 0.5, 10.0, str(g), fontsize=2.5, color=INK_MUTED, ha="center", va="bottom")
 
-# Draw main table elements
+# Build combined element list: (z, sym, en, x, y) — main table, lanthanides, actinides
+all_tiles = []
 for z, sym, grp, per, en in ELEMENTS:
-    x = grp - 1
-    y = 10 - per
+    all_tiles.append((z, sym, en, grp - 1, 10 - per))
+for i, (z, sym, en) in enumerate(LANTHANIDES):
+    all_tiles.append((z, sym, en, 2 + i, 1.0))
+for i, (z, sym, en) in enumerate(ACTINIDES):
+    all_tiles.append((z, sym, en, 2 + i, 0.0))
+
+# Draw all tiles in a single pass
+for z, sym, en, x, y in all_tiles:
     if en is not None:
         rgba = imprint_seq(norm(en))
         lum = 0.299 * rgba[0] + 0.587 * rgba[1] + 0.114 * rgba[2]
@@ -255,79 +262,36 @@ ax.add_patch(rect)
 ax.text(xp + 0.5, yp + 0.58, "Ac–Lr", fontsize=3.2, color=INK_SOFT, ha="center", va="center", zorder=3)
 ax.text(xp + 0.5, yp + 0.30, "89–103", fontsize=2.5, color=INK_MUTED, ha="center", va="center", zorder=3)
 
-# F-block: lanthanides at y=1, tiles span x=2 to x=16
-for i, (z, sym, en) in enumerate(LANTHANIDES):
-    x = 2 + i
-    y = 1.0
-    if en is not None:
-        rgba = imprint_seq(norm(en))
-        lum = 0.299 * rgba[0] + 0.587 * rgba[1] + 0.114 * rgba[2]
-        tile_color = rgba
-        tc = "#1A1A17" if lum > 0.45 else "#F0EFE8"
-        tiny_tc = "#2A2A27" if lum > 0.45 else "#E0DFD8"
-    else:
-        tile_color = GRAY_TILE
-        tc = INK_SOFT
-        tiny_tc = INK_MUTED
-
-    rect = mpatches.Rectangle(
-        (x + GAP / 2, y + GAP / 2), TILE_SIZE, TILE_SIZE, facecolor=tile_color, edgecolor="none", zorder=2
-    )
-    ax.add_patch(rect)
-    ax.text(
-        x + GAP / 2 + 0.07,
-        y + TILE_SIZE + GAP / 2 - 0.07,
-        str(z),
-        fontsize=2.8,
-        color=tiny_tc,
-        ha="left",
-        va="top",
-        zorder=3,
-    )
-    ax.text(x + 0.5, y + 0.52, sym, fontsize=5.5, color=tc, ha="center", va="center", fontweight="bold", zorder=3)
-    if en is not None:
-        ax.text(
-            x + 0.5, y + GAP / 2 + 0.11, f"{en:.2f}", fontsize=2.6, color=tiny_tc, ha="center", va="bottom", zorder=3
-        )
-
+# F-block row labels
 ax.text(1.0, 1.5, "Lanthanides", fontsize=2.8, color=INK_MUTED, ha="center", va="center", rotation=90)
-
-# F-block: actinides at y=0, tiles span x=2 to x=16
-for i, (z, sym, en) in enumerate(ACTINIDES):
-    x = 2 + i
-    y = 0.0
-    if en is not None:
-        rgba = imprint_seq(norm(en))
-        lum = 0.299 * rgba[0] + 0.587 * rgba[1] + 0.114 * rgba[2]
-        tile_color = rgba
-        tc = "#1A1A17" if lum > 0.45 else "#F0EFE8"
-        tiny_tc = "#2A2A27" if lum > 0.45 else "#E0DFD8"
-    else:
-        tile_color = GRAY_TILE
-        tc = INK_SOFT
-        tiny_tc = INK_MUTED
-
-    rect = mpatches.Rectangle(
-        (x + GAP / 2, y + GAP / 2), TILE_SIZE, TILE_SIZE, facecolor=tile_color, edgecolor="none", zorder=2
-    )
-    ax.add_patch(rect)
-    ax.text(
-        x + GAP / 2 + 0.07,
-        y + TILE_SIZE + GAP / 2 - 0.07,
-        str(z),
-        fontsize=2.8,
-        color=tiny_tc,
-        ha="left",
-        va="top",
-        zorder=3,
-    )
-    ax.text(x + 0.5, y + 0.52, sym, fontsize=5.5, color=tc, ha="center", va="center", fontweight="bold", zorder=3)
-    if en is not None:
-        ax.text(
-            x + 0.5, y + GAP / 2 + 0.11, f"{en:.2f}", fontsize=2.6, color=tiny_tc, ha="center", va="bottom", zorder=3
-        )
-
 ax.text(1.0, 0.5, "Actinides", fontsize=2.8, color=INK_MUTED, ha="center", va="center", rotation=90)
+
+# Annotations — highlight the key top-right vs bottom-left electronegativity gradient
+# F (group 17, period 2) is the most electronegative; Fr (group 1, period 7) is the least.
+# Group 17, period 1 is empty — use that space for the "highest" label above F.
+ax.annotate(
+    "highest (3.98)",
+    xy=(16.5, 8.94),
+    xytext=(16.5, 9.60),
+    fontsize=2.4,
+    color=INK_SOFT,
+    ha="center",
+    va="bottom",
+    arrowprops={"arrowstyle": "-", "color": INK_MUTED, "lw": 0.5, "shrinkA": 0, "shrinkB": 2},
+    zorder=5,
+)
+# Gap row (y=2–3) below period 7 is empty — use it for the "lowest" label below Fr.
+ax.annotate(
+    "lowest (0.70)",
+    xy=(0.5, 3.06),
+    xytext=(0.5, 2.50),
+    fontsize=2.4,
+    color=INK_SOFT,
+    ha="center",
+    va="top",
+    arrowprops={"arrowstyle": "-", "color": INK_MUTED, "lw": 0.5, "shrinkA": 0, "shrinkB": 2},
+    zorder=5,
+)
 
 # Style — title with scaled fontsize
 title = "Electronegativity · heatmap-periodic-table · python · matplotlib · anyplot.ai"
@@ -335,8 +299,8 @@ title_len = len(title)
 title_fs = max(8, round(12 * 67 / title_len)) if title_len > 67 else 12
 ax.set_title(title, fontsize=title_fs, fontweight="medium", color=INK, pad=6)
 
-# Colorbar
-cbar_ax = fig.add_axes([0.22, 0.035, 0.56, 0.033])
+# Colorbar — raised to y=0.050 so the label clears the canvas bottom
+cbar_ax = fig.add_axes([0.22, 0.050, 0.56, 0.033])
 sm = plt.cm.ScalarMappable(cmap=imprint_seq, norm=norm)
 sm.set_array([])
 cbar = fig.colorbar(sm, cax=cbar_ax, orientation="horizontal")
