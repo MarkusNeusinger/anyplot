@@ -1,0 +1,259 @@
+library: bokeh
+language: python
+specification_id: heatmap-periodic-table
+created: '2026-06-15T05:03:19Z'
+updated: '2026-06-15T05:27:30Z'
+generated_by: claude-sonnet
+workflow_run: 27524570171
+issue: 8659
+language_version: 3.13.13
+library_version: 3.9.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/python/bokeh/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Per-tile luminance computation (_lum() with proper sRGB linearisation) for adaptive
+    dark/light tile text — professional and correct
+  - Amber border focal highlights on He (highest IE=2372) and Fr (lowest IE=393) provide
+    a natural data storytelling entry point
+  - 'Correct Imprint sequential colormap (#009E73 → #4467A3) for single-polarity continuous
+    data; both themes pass readability checks with no dark-on-dark or light-on-light
+    failures'
+  - CDP viewport override (Emulation.setDeviceMetricsOverride) ensures exact 2400×2400
+    screenshot; outline_line_alpha=0 suppresses bokeh dark-mode frame artefact
+  - 'Full spec compliance: canonical 18x7 layout, detached f-block rows, grey tiles
+    for missing data (Z=104-118), all tile text layers (symbol, atomic number, IE
+    value) present'
+  weaknesses:
+  - IE value text on tiles at 13pt is slightly small for a 2400px canvas; bumping
+    to 15-16pt would improve legibility without causing overlap
+  - No visual separator (thin horizontal rule or text label) between the main periodic
+    table body and the detached f-block rows; a 'Lanthanides' / 'Actinides' label
+    would add clarity
+  - No annotation explaining what the amber border highlights on He/Fr represent —
+    a small p.text() label ('Highest IE' / 'Lowest IE') near those tiles would complete
+    the storytelling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "heatmap-periodic-table · python · bokeh · anyplot.ai" in dark #1A1A17 ink, prominently centered at top — readable. Colorbar title "First Ionization Energy (kJ/mol)" and tick labels (400–2200+) in dark ink — readable.
+      Data: Imprint sequential colormap (#009E73 → #4467A3) applied to 103 IE-valued elements. Grey tiles (#C8C6BE) for Z=104–118. Per-tile luminance-adaptive text (dark ink on light tiles, #F0EFE8 on dark tiles). Amber (#DDCC77) border highlights on He (group 18, period 1) and Fr (group 1, period 7).
+      Legibility verdict: PASS — all text readable, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in near-white #F0EFE8 — clearly readable against dark background. Colorbar title and tick labels in INK_SOFT (#B8B7B0) — readable. No dark-on-dark failures observed.
+      Data: Tile colors identical to light render — only chrome flips. Grey tiles use #3C3B36 (dark theme), visually distinct from #1A1A17 background. Amber borders on He/Fr clearly visible. Per-tile adaptive text color continues to work correctly in dark mode.
+      Legibility verdict: PASS — all text readable, no dark-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, colorbar, and tile symbol text readable in both themes. IE
+          values at 13pt slightly small but readable at full resolution.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Three text layers per tile (symbol, atomic number, IE value) non-overlapping;
+          minor crowding in dense transition metal rows but no actual collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 103+ IE-colored tiles render correctly with Imprint sequential
+          gradient. Grey tiles for Z=104-118 clearly distinct. Amber focal highlights
+          visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Per-tile luminance-adaptive text ensures contrast. Sequential colormap
+          CVD-safe. No red-green as sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 2400x2400 square canvas. Min border bottom=330 for colorbar.
+          F-block rows offset below. No edge clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes correctly hidden. Colorbar labeled with property name and units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint sequential (#009E73 → #4467A3) for single-polarity continuous
+          data. Backgrounds #FAF8F1 / #1A1A17.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Luminance-adaptive tile text (sRGB linearisation) and amber focal
+          highlights show professional intentional design. No period/group labels
+          or descriptive subtitle.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Axes hidden, PAGE_BG tile borders, outline_line_alpha=0 for dark
+          mode. No visual separator between main body and f-block rows.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Amber highlights on IE extremes (He/Fr) create focal points. IE values
+          enable direct reading. Missing annotation explaining the highlights.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct periodic table heatmap with canonical 18x7 layout and detached
+          f-block rows.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required features present: canonical layout, f-block rows, square
+          tiles, sequential colormap, symbol+atomic number+IE value on tiles, colorbar,
+          adaptive text, grey tiles for missing data.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 103 elements with IE data mapped; Z=104-118 as grey tiles; grid positions
+          accurate.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'heatmap-periodic-table · python · bokeh · anyplot.ai' matches
+          format. Colorbar serves as legend.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full 118 elements, canonical layout, colormap encoding, adaptive
+          text, focal highlights, per-tile IE values.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: First ionization energy in kJ/mol with accurate data (He=2372, Fr=393).
+          Neutral scientific context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: IE range 376-2372 kJ/mol is physically correct.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Three helper functions (_lerp_hex, _lum, _build_grid) present. Justified
+          by complexity but departs from pure flat-script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded; fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-pass data loop, unified ColumnDataSource, CDP viewport override.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png correctly. Current Bokeh
+          API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ColumnDataSource with vector field references, Range1d, ColorBar
+          with add_layout, toolbar_location=None, Selenium PNG export — all idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: CDP override for exact viewport, outline_line_alpha=0 for dark-mode
+          fix, vector text-color field from ColumnDataSource, horizontal ColorBar
+          positioning.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - colorbar
+  - html-export
+  - annotations
+  patterns:
+  - columndatasource
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
+  - minimal-chrome
+  - edge-highlighting
