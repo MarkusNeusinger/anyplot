@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 audiogram-clinical: Clinical Audiogram
-Library: bokeh | Python 3.13
-Quality: pending | Created: 2026-06-14
+Library: bokeh 3.9.1 | Python 3.13.13
+Quality: 85/100 | Updated: 2026-06-15
 """
 
 import io
