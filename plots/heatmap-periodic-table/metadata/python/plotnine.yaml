@@ -1,0 +1,260 @@
+library: plotnine
+language: python
+specification_id: heatmap-periodic-table
+created: '2026-06-15T05:19:37Z'
+updated: '2026-06-15T05:39:32Z'
+generated_by: claude-sonnet
+workflow_run: 27524695959
+issue: 8659
+language_version: 3.13.13
+library_version: 0.15.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - Correct canonical periodic table geometry with f-block detached at display rows
+    8.5/9.5 — the right coordinate approach for plotnine
+  - Luminance-adaptive tile text color (dark/light based on tile brightness) correctly
+    ensures legibility across the full colormap range
+  - 'Perfect palette compliance: uses imprint_seq (#009E73 → #4467A3) for continuous
+    data and fully theme-adaptive chrome throughout'
+  - scale_color_identity for pre-computed text colors is an advanced, idiomatic plotnine
+    technique showing library mastery
+  - 'Complete spec coverage: symbol, atomic number, EN value per tile; NA grey tiles;
+    colorbar; group/period reference labels — all present'
+  weaknesses:
+  - No visual hierarchy beyond the colormap gradient — no callouts, group-family shading,
+    or emphasis elements to guide the viewer toward the key periodic trend (EN rises
+    toward F, drops toward Fr); adding an annotation for max/min EN or subtle family
+    outlines would elevate DE-01 and DE-03
+  - Group/period reference labels at size=1.5 mm are near the legibility floor; increase
+    to 1.8–2.0 mm for better readability at intermediate display sizes
+  - Importing matplotlib.colors.LinearSegmentedColormap for the text-color luminance
+    computation introduces a matplotlib dependency; the luminance formula could be
+    computed directly on hex RGB values without the cmap object
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "heatmap-periodic-table · python · plotnine · anyplot.ai" in dark ink (#1A1A17), clearly readable at ~15pt. Group numbers 1–18 above main table in INK_SOFT (#4A4A44). Period numbers 1–7 to the left in INK_SOFT. Colorbar on right with title "Pauling Electronegativity" in INK (#1A1A17) and tick labels in INK_SOFT. All chrome elements readable.
+      Data: Full 118-element periodic table. Main table 18 groups × 7 periods. Lanthanides row 8.5, actinides row 9.5, detached below. Tiles colored with imprint_seq gradient: brand green #009E73 (low EN, alkali metals, lower-left) grading to blue #4467A3 (high EN, halogens, upper-right). Noble gases and placeholders shown as warm grey (#E0DFD8). Each tile shows element symbol (bold, center), atomic number (top-left, small), and EN value (bottom center, smaller). Text color luminance-adapted (dark text on green tiles, light text on blue tiles).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title in light cream (#F0EFE8), clearly readable against dark background. Group numbers 1–18 in INK_SOFT dark token (#B8B7B0), subtle but visible. Period numbers 1–7 in #B8B7B0 similarly visible. Colorbar title and ticks readable in light text. Legend background at elevated #242420 with INK_SOFT border. No dark-on-dark failures detected.
+      Data: Data colors are identical to the light render — the imprint_seq gradient (green → blue) is unchanged between themes. NA tiles shift to #2C2C28 (dark-appropriate grey) with #B8B7B0 text. Tile text color computation yields appropriate light/dark text per tile luminance.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title/symbols/atomic numbers readable at full res. EN values and
+          group/period labels (1.5mm) borderline at mobile scale but acceptable at
+          intended display resolution.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Tile text properly spaced with nudge offsets; group and period labels
+          occupy own whitespace. No collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 118 tiles visible with clear gradient. NA/grey tiles preserve
+          canonical table silhouette.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential green→blue gradient is CVD-safe. Luminance-based tile
+          text switching ensures contrast across full range.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 landscape (gate passed). Title ~60% width at 15pt. Colorbar
+          right-positioned. F-block rows separated. No overflow/clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches mandated format. Colorbar labeled 'Pauling Electronegativity'.
+          Group and period reference numbers present.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Continuous data uses imprint_seq (#009E73 → #4467A3). Backgrounds
+          #FAF8F1/#1A1A17. Chrome fully theme-adaptive.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: luminance-based tile text computation is sophisticated;
+          f-block coordinate trick (rows 8.5/9.5) elegant; custom title font scaling.
+          Not top tier — no emphasis elements or group-family callouts.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: theme_void() correct for this layout. Tile gap 0.92 gives breathing
+          room. Legend has elevated background. Slightly above default.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Canonical periodic table layout inherently encodes family membership
+          and trend direction. Above default but no added callouts or annotations
+          to actively guide the viewer.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct periodic table heatmap in canonical 18x7 layout with detached
+          f-block rows.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required: equal-sized tiles with gap, f-block separation, sequential
+          colormap, symbol+atomic number+EN per tile, luminance-adaptive text, NA
+          as grey tiles, labeled colorbar.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: group→x, display_row→y (reversed), Pauling EN→fill. Full 118-element
+          dataset with correct placement.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches mandated format. Colorbar labeled with property
+          name.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full element set with symbol, atomic number, EN value per tile. NA
+          coverage correct.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Pauling electronegativity values are accurate standard reference
+          data. Scientifically neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: EN range 0.70–3.98 matches known Pauling scale. Colorbar range reflects
+          actual data.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes. Linear procedural structure. Data as inline
+          list of tuples.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic — hardcoded reference data, no random elements.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports verified used. matplotlib.colors for luminance computation;
+          all plotnine imports confirmed used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Luminance formula compact and correct. fmt:off/on guards data block.
+          Placeholder elements handled cleanly.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: plot.save(f'plot-{THEME}.png', dpi=400, width=8, height=4.5, units='in')
+          — correct format.
+    library_features:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Fully idiomatic: geom_tile, scale_fill_gradient, scale_color_identity
+          for pre-computed colors, coord_fixed, scale_y_reverse, inherit_aes=False
+          for secondary annotation layers.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Good use of scale_color_identity and multiple geom_text layers.
+          Slight deduction: luminance computation imports matplotlib.colors rather
+          than staying within plotnine''s abstraction.'
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - matplotlib
+  techniques:
+  - colorbar
+  - layer-composition
+  patterns: []
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
+  - custom-colormap
