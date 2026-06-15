@@ -18,13 +18,13 @@ Highcharts.SVGRenderer.prototype.symbols.xcross = function (x, y, w, h) {
 // Data: high-frequency sensorineural notch — typical noise-induced hearing loss pattern
 const frequencies = [125, 250, 500, 1000, 2000, 4000, 8000];
 const rightThresh = [10,  10,  15,  20,   30,   65,   75];  // dB HL, right ear
-const leftThresh  = [5,   10,  15,  25,   35,   70,   80];  // dB HL, left ear
+const leftThresh  = [5,   10,  15,  25,   35,   70,   95];  // dB HL, left ear — 95 dB enters Profound zone
 
 const rightData = frequencies.map((f, i) => [f, rightThresh[i]]);
 const leftData  = frequencies.map((f, i) => [f, leftThresh[i]]);
 
-// Severity band fill — slightly stronger on dark theme
-const a = window.ANYPLOT_THEME === 'dark' ? 0.13 : 0.09;
+// Severity band fill — lighter on dark theme to avoid heavy banding on near-black bg
+const a = window.ANYPLOT_THEME === 'dark' ? 0.07 : 0.09;
 
 Highcharts.chart('container', {
     chart: {
@@ -32,6 +32,7 @@ Highcharts.chart('container', {
         animation: false,
         style: { fontFamily: 'inherit' },
         spacing: [20, 20, 20, 20],
+        plotBorderWidth: 0,
     },
     credits: { enabled: false },
     colors: t.palette,
@@ -86,7 +87,7 @@ Highcharts.chart('container', {
                 color: `rgba(0,158,115,${a})`,
                 label: {
                     text: 'Normal', align: 'right', x: -8, y: 14,
-                    style: { color: t.inkSoft, fontSize: '11px', fontStyle: 'italic' },
+                    style: { color: t.inkSoft, fontSize: '13px', fontStyle: 'italic' },
                 },
             },
             {
@@ -94,7 +95,7 @@ Highcharts.chart('container', {
                 color: `rgba(221,204,119,${a + 0.03})`,
                 label: {
                     text: 'Mild', align: 'right', x: -8, y: 14,
-                    style: { color: t.inkSoft, fontSize: '11px', fontStyle: 'italic' },
+                    style: { color: t.inkSoft, fontSize: '13px', fontStyle: 'italic' },
                 },
             },
             {
@@ -102,7 +103,7 @@ Highcharts.chart('container', {
                 color: `rgba(189,130,51,${a + 0.04})`,
                 label: {
                     text: 'Moderate', align: 'right', x: -8, y: 14,
-                    style: { color: t.inkSoft, fontSize: '11px', fontStyle: 'italic' },
+                    style: { color: t.inkSoft, fontSize: '13px', fontStyle: 'italic' },
                 },
             },
             {
@@ -110,7 +111,7 @@ Highcharts.chart('container', {
                 color: `rgba(189,130,51,${a + 0.08})`,
                 label: {
                     text: 'Mod. Severe', align: 'right', x: -8, y: 14,
-                    style: { color: t.inkSoft, fontSize: '11px', fontStyle: 'italic' },
+                    style: { color: t.inkSoft, fontSize: '13px', fontStyle: 'italic' },
                 },
             },
             {
@@ -118,7 +119,7 @@ Highcharts.chart('container', {
                 color: `rgba(174,48,48,${a + 0.09})`,
                 label: {
                     text: 'Severe', align: 'right', x: -8, y: 14,
-                    style: { color: t.inkSoft, fontSize: '11px', fontStyle: 'italic' },
+                    style: { color: t.inkSoft, fontSize: '13px', fontStyle: 'italic' },
                 },
             },
             {
@@ -126,7 +127,7 @@ Highcharts.chart('container', {
                 color: `rgba(174,48,48,${a + 0.17})`,
                 label: {
                     text: 'Profound', align: 'right', x: -8, y: 14,
-                    style: { color: t.inkSoft, fontSize: '11px', fontStyle: 'italic' },
+                    style: { color: t.inkSoft, fontSize: '13px', fontStyle: 'italic' },
                 },
             },
         ],
