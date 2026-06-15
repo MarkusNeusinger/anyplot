@@ -1,0 +1,274 @@
+library: muix
+language: javascript
+specification_id: audiogram-clinical
+created: '2026-06-15T00:18:38Z'
+updated: '2026-06-15T00:41:29Z'
+generated_by: claude-sonnet
+workflow_run: 27516348096
+issue: 8655
+language_version: 22.22.3
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/javascript/muix/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Excellent spec compliance: inverted y-axis, log x-axis, custom O/X marks, severity
+    bands, legend, and solid/dashed line distinction all correctly implemented'
+  - 'Expert MUI X usage: custom marks via the slots API and SVG overlays using useDrawingArea
+    + useYScale hooks from @mui/x-charts/hooks — genuinely distinctive library features'
+  - 'Valid semantic exception for clinical red/blue convention using Imprint palette
+    colors (#AE3030 matte red for right ear, #4467A3 blue for left ear) with additional
+    redundant encoding (shape + linestyle) for CVD safety'
+  - Severity bands correctly drawn with ASHA grading regions (Normal/Mild/Moderate/Mod.
+    Severe/Severe/Profound) at appropriate alpha values that don't obscure data
+  - Realistic occupational health scenario (noise-induced high-frequency sensorineural
+    notch) with audiometrically correct threshold values and standard frequency range
+  weaknesses:
+  - 'Minor overlap: ''Severe'' band label positioned at right edge (~80 dB HL y-position)
+    overlaps with the 8k Hz data markers for both ears (right=80 dB, left=75 dB) —
+    consider shifting label to a slightly higher y or using a wider right margin'
+  - All 4 axis spines remain visible (MUI X default); removing the top and right spines
+    via sx would improve visual refinement (DE-02)
+  - Severity band labels at fontSize=11 CSS px are the smallest text in the chart
+    — bumping to 12-13 px would improve legibility at mobile-scaled widths (VQ-01)
+  - Duplicate header block in file (lines 1-4 new header + line 5 directive + lines
+    6-10 old header) — CI artifact from the directive not being on line 1 of the original
+    file; functionally harmless but messy
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1 — never pure white.
+      Chrome: Title "audiogram-clinical · javascript · muix · anyplot.ai" in dark ink, centered above the drawing area. Y-axis label "Hearing Level (dB HL)" rotated on the left in dark ink. X-axis label "Frequency (Hz)" at the bottom in dark ink. Tick labels (−10 to 120 on y-axis, 125/250/500/1k/2k/4k/8k on x-axis) in inkSoft color. All text is clearly readable against the light background.
+      Data: Right ear (red #AE3030) solid line with open circle markers (O); left ear (blue #4467A3) dashed line with X markers. Six horizontal severity bands from top to bottom: Normal (green tint), Mild (blue tint), Moderate (ochre tint), Mod. Severe (ochre tint, denser), Severe (red tint), Profound (red tint, denser). Band labels on right edge at 11 CSS px. Legend in top-right corner: "Right Ear (O)" and "Left Ear (X)" with color swatches. Both series show a typical high-frequency sensorineural notch with thresholds worsening from 500 Hz onward.
+      Legibility verdict: PASS — all text readable. Minor proximity between "Severe" label and 8k Hz data markers at the right edge.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black consistent with #1A1A17 — never pure black.
+      Chrome: Same title, axis labels, and tick labels now rendered in light ink (F0EFE8 / B8B7B0 adaptive tokens). All text is clearly readable against the dark background. No dark-on-dark failures observed — the implementation correctly threads t.ink and t.inkSoft tokens through to all text elements.
+      Data: Data colors are IDENTICAL to the light render — right ear #AE3030 (solid + circles) and left ear #4467A3 (dashed + X marks) are unchanged. Severity bands retain the same hex colors at the same alpha values; they appear slightly more vibrant against the dark background. Legend and title remain clearly legible.
+      Legibility verdict: PASS — all text readable in dark theme. The ThemeProvider correctly handles chrome adaptation; no dark-on-dark issues detected.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set via labelStyle/tickLabelStyle; readable
+          in both themes. Band labels at 11 CSS px are the smallest element — slightly
+          small for mobile-scaled viewing but acceptable as supplementary labels.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor overlap between 'Severe' band label (positioned at right edge
+          ~80 dB y) and 8k Hz data markers (right ear 80 dB, left ear 75 dB). Text
+          remains readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Custom circle (r=10) and X (d=7) marks are well-sized for 7 data
+          points per ear. Severity bands at low alpha don't obscure data markers.
+          Lines at strokeWidth=2.5 are prominent.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'CVD-safe: red vs blue with redundant encoding (solid vs dashed line,
+          O vs X marker shape). Adequate luminance difference between the two series.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square orientation (2400x2400) appropriate for the 'square-ish' audiogram
+          requirement. Canvas gate passed. Generous margins (top:80, bottom:90, left:100,
+          right:160) give room for axis labels and band labels.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Frequency (Hz)'', Y: ''Hearing Level (dB HL)'' — both descriptive
+          with units as specified.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception justified: clinical convention (right=red, left=blue)
+          with Imprint palette colors (#AE3030 matte red, #4467A3 blue). Severity
+          band fills use Imprint palette colors. Background #FAF8F1 (light) / #1A1A17
+          (dark). Data colors identical across themes; chrome correctly adapts.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: custom SVG O/X marks via slots API, severity band
+          overlays with clinical grading, clinical color conventions. Clearly above
+          well-configured defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: subtle grid using t.grid token, low-alpha severity
+          bands, theme-adaptive axis line/tick colors via sx. All 4 spines still visible
+          as axis lines — top/right spine removal would improve polish.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good storytelling: severity bands immediately contextualize the
+          clinical significance of each threshold, and the sloping loss pattern from
+          1k–8k Hz clearly illustrates the high-frequency noise-induced notch.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct audiogram (line chart with log x-axis and inverted y-axis).
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: inverted y-axis (reverse:true), log x-axis
+          (scaleType:log), O markers for right ear (custom SVG circle), X markers
+          for left ear (custom SVG cross), solid right / dashed left line distinction,
+          all 6 severity bands with labels, legend.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: frequency in Hz (log, 125–8000), Y: dB HL (inverted, −10 to 120),
+          right ear red circles, left ear blue X marks.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''audiogram-clinical · javascript · muix · anyplot.ai'' ✓.
+          Legend: ''Right Ear (O)'' and ''Left Ear (X)'' ✓.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all 7 standard audiometric frequencies (125–8000 Hz), both
+          ears across the full severity range, classic noise-induced high-frequency
+          notch pattern.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic occupational health scenario with audiometrically plausible
+          noise-induced hearing loss (flat low-frequency, steeply sloping 1k–4k, slightly
+          recovering at 8k). Neutral clinical context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard audiometric range (−10 to 120 dB HL). Frequency range 125–8000
+          Hz matches clinical practice. Threshold values (15–80 dB HL) consistent
+          with mild-to-severe noise-induced pattern.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Helper components (SeverityBands, ChartTitle, RightMark, LeftMark,
+          MarkDispatcher) are all necessary for MUI X slots/hooks pattern — not gratuitous
+          abstraction.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hard-coded in const arrays (FREQUENCIES, RIGHT_EAR, LEFT_EAR).
+          Fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: React, LineChart, useDrawingArea, useYScale — all three imports are
+          used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, clean component design. No fake UI elements.
+          MarkDispatcher pattern is clean.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: MUI X is an interactive library; harness produces plot-light.png
+          + plot-dark.png + plot-light.html + plot-dark.html. Uses window.ANYPLOT_TOKENS
+          and window.ANYPLOT_SIZE correctly.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert usage: slots API for custom mark components, hooks from @mui/x-charts/hooks,
+          sx for CSS-level customization, chart-level props (scaleType, reverse, tickInterval,
+          grid).'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Distinctive MUI X features: useDrawingArea + useYScale hooks for
+          precise SVG overlay positioning, slots.mark with a dispatcher component
+          for per-series custom markers. This pattern is specific to MUI X''s drawing-area
+          coordinate system.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
