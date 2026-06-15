@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 climograph-walter-lieth: Walter-Lieth Climate Diagram
 Library: plotly 6.8.0 | Python 3.13.13
 Quality: 89/100 | Created: 2026-06-15
@@ -74,11 +74,6 @@ def extract_segs(x, lo, hi, mask):
     return segs
 
 
-def closed_poly(sx, sl, sh):
-    """Build closed-polygon x, y arrays from lower/upper curve segments."""
-    return (np.concatenate([sx, sx[::-1]]).tolist(), np.concatenate([sh, sl[::-1]]).tolist())
-
-
 # Classify each fine-grid point
 humid_mask = p_fine > t_fine
 perhumid_mask = p_fine > P100
@@ -93,7 +88,8 @@ fig = go.Figure()
 for sx, sl, sh in humid_segs:
     sh_clip = np.minimum(sh, P100)
     if np.any(sh_clip > sl + 0.05):
-        px, py = closed_poly(sx, sl, sh_clip)
+        px = np.concatenate([sx, sx[::-1]]).tolist()
+        py = np.concatenate([sh_clip, sl[::-1]]).tolist()
         fig.add_trace(
             go.Scatter(
                 x=px,
@@ -108,7 +104,8 @@ for sx, sl, sh in humid_segs:
 
 # Perhumid fill — solid blue above the 100 mm threshold line
 for sx, sl, sh in perhumid_segs:
-    px, py = closed_poly(sx, sl, sh)
+    px = np.concatenate([sx, sx[::-1]]).tolist()
+    py = np.concatenate([sh, sl[::-1]]).tolist()
     fig.add_trace(
         go.Scatter(
             x=px,
@@ -123,7 +120,8 @@ for sx, sl, sh in perhumid_segs:
 
 # Arid fill — light red, between precipitation curve and temperature curve
 for sx, sl, sh in arid_segs:
-    px, py = closed_poly(sx, sl, sh)
+    px = np.concatenate([sx, sx[::-1]]).tolist()
+    py = np.concatenate([sh, sl[::-1]]).tolist()
     fig.add_trace(
         go.Scatter(
             x=px,
@@ -250,12 +248,12 @@ fig.update_layout(
         "tickfont": {"size": 10, "color": INK_SOFT},
         "gridcolor": GRID,
         "linecolor": INK_SOFT,
-        "showgrid": True,
+        "showgrid": False,
         "range": [-0.5, 11.5],
         "title": {"text": "Month", "font": {"size": 12, "color": INK}},
     },
     yaxis={
-        "title": {"text": "Temperature (°C)", "font": {"size": 12, "color": TEMP_COLOR}},
+        "title": {"text": "Temperature (°C)", "font": {"size": 12, "color": INK}},
         "tickvals": [-10, 0, 10, 20, 30],
         "ticktext": ["-10", "0", "10", "20", "30"],
         "tickfont": {"size": 10, "color": INK_SOFT},
@@ -272,7 +270,7 @@ fig.update_layout(
         "range": [Y_MIN, Y_MAX],
         "tickvals": raxis_y,
         "ticktext": [f"{m}" for m in raxis_mm],
-        "title": {"text": "Precipitation (mm)", "font": {"size": 12, "color": PRECIP_COLOR}},
+        "title": {"text": "Precipitation (mm)", "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "linecolor": INK_SOFT,
         "showgrid": False,
