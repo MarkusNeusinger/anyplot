@@ -1,7 +1,7 @@
 // anyplot.ai
 // climograph-walter-lieth: Walter-Lieth Climate Diagram
 // Library: highcharts 12.6.0 | JavaScript 22.22.3
-// Quality: 75/100 | Created: 2026-06-15
+// Quality: 85/100 | Created: 2026-06-15
 
 //# anyplot-orientation: landscape
 
