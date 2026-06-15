@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 depth-order-book: Order Book Depth Chart
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 87/100 | Created: 2026-06-15
@@ -77,13 +77,18 @@ bid_y = bid_cum[::-1]  # [total_cum, ..., min_cum]
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Bid area: semi-transparent fill + solid step outline
-ax.fill_between(bid_x, bid_y, step="post", alpha=0.22, color=BID_COLOR)
-ax.step(bid_x, bid_y, where="post", color=BID_COLOR, linewidth=1.8, label="Bids (Buy)")
+# Dark mode: raise fill alpha so areas remain visible against near-black background
+FILL_ALPHA = 0.22 if THEME == "light" else 0.35
 
-# Ask area: semi-transparent fill + solid step outline
-ax.fill_between(ask_prices, ask_cum, step="post", alpha=0.22, color=ASK_COLOR)
-ax.step(ask_prices, ask_cum, where="post", color=ASK_COLOR, linewidth=1.8, label="Asks (Sell)")
+# Bid area: semi-transparent fill + solid step outline via seaborn lineplot
+ax.fill_between(bid_x, bid_y, step="post", alpha=FILL_ALPHA, color=BID_COLOR)
+sns.lineplot(x=bid_x, y=bid_y, drawstyle="steps-post", ax=ax, color=BID_COLOR, linewidth=1.8, label="Bids (Buy)")
+
+# Ask area: semi-transparent fill + solid step outline via seaborn lineplot
+ax.fill_between(ask_prices, ask_cum, step="post", alpha=FILL_ALPHA, color=ASK_COLOR)
+sns.lineplot(
+    x=ask_prices, y=ask_cum, drawstyle="steps-post", ax=ax, color=ASK_COLOR, linewidth=1.8, label="Asks (Sell)"
+)
 
 # Mid price dashed vertical line
 ax.axvline(mid_price, color=INK_SOFT, linestyle="--", linewidth=1.0, alpha=0.7)
