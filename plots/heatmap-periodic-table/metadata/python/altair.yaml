@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: heatmap-periodic-table
 created: '2026-06-15T05:43:06Z'
-updated: '2026-06-15T05:49:31Z'
+updated: '2026-06-15T06:01:07Z'
 generated_by: claude-sonnet
 workflow_run: 27524636315
 issue: 8659
@@ -12,48 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-p
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/python/altair/plot-dark.html
-quality_score: 85
+quality_score: 89
 review:
   strengths:
-  - Complete and accurate data for all 118 elements with correct first ionization
-    energy values
-  - Correct canonical periodic table layout including lanthanide and actinide detachment
-    with placeholder tiles
-  - 'Perfect Imprint sequential colormap usage (green #009E73 → blue #4467A3) for
-    continuous IE data'
-  - Full theme-adaptive chrome throughout — backgrounds, legend fill, legend text,
-    title color all correctly branch on ANYPLOT_THEME
-  - 'Tile text hierarchy well implemented: atomic number small top-left, symbol bold
-    center, IE value small below'
-  - Grey null tiles preserve the recognizable table shape for superheavy elements
-    without IE values
-  - Correct PAD-only approach to achieve exact 3200×1800 canvas dimensions without
-    cropping
-  - Idiomatic Altair layer composition combining null rects, valid rects, atomic text,
-    symbol text, and value text
+  - 'Spec fully met: canonical periodic table layout with all 118 positions, f-block
+    rows, colorbar with units, per-tile symbol/atomic-number/IE-value labels, and
+    greyed null tiles for unmeasured elements'
+  - Imprint imprint_seq (green to blue) applied precisely; both renders theme-adapt
+    correctly with zero dark-on-dark or light-on-light failures
+  - Factually accurate first ionization energy data (NIST reference values) makes
+    this a trustworthy scientific visualization
+  - 'Perfect code quality: KISS structure, deterministic, clean imports, canonical
+    PIL padding guard'
+  - Altair layer composition is idiomatic and expressive — five mark layers composed
+    cleanly in alt.layer()
   weaknesses:
-  - At mobile width (~400px) the atomic number (fontSize=5) and IE value (fontSize=4.5)
-    text within tiles becomes essentially unreadable — these are too small even for
-    a dense 18-column grid; consider a minimum effective fontSize of 6 and 5 respectively
-  - 'White space: the right portion of the canvas (~20%) and bottom (~15%) are blank
-    padding due to the asymmetric periodic table shape; while inherent to the layout,
-    the f-block separator gap and bottom empty area could be tightened'
-  - The legend frame box adds visual weight; a frameless gradient bar would look cleaner
-    for this plot type
-  - 'DE-02: spines are not removed (no spines is the correct choice for a periodic
-    table) but the legend box stroke slightly clutters the lower-left area'
+  - 'Tile text contrast on low-IE (bright green) tiles: near-white #F0EFE8 against
+    #009E73 achieves ~3.5:1 contrast — sufficient for bold symbols but marginal for
+    smaller atomic-number and IE-value text (6px and 5.5px). Spec recommends switching
+    text color based on tile luminance. Fix: extend the np.where text_color logic
+    to use INK_SOFT (dark) for IE < ~8 eV tiles and TEXT_ON_TILE (near-white) for
+    higher IE tiles.'
+  - 'DE-01 not at publication level — additional polish opportunities: a label row
+    explicitly annotating the lanthanide/actinide f-block connector, or subtle block-type
+    background tinting (d-block, p-block, s-block, f-block) would lift aesthetic sophistication
+    and data storytelling.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, fills the full 3200×1800 canvas
-      Chrome: Bold title "Ionization Energy · heatmap-periodic-table · python · altair · anyplot.ai" rendered in near-black #1A1A17, ~65% of canvas width, clearly readable. No traditional axis labels (correct for a grid-based periodic table). Legend "1st Ionization Energy (eV)" title in dark #1A1A17, tick labels in #4A4A44 — all readable. Legend box has elevated fill #FFFDF6 with a visible border.
-      Data: Sequential Imprint colormap from #009E73 (green, low IE) to #4467A3 (blue, high IE). Noble gases (He, Ne, Ar, Kr, Xe, Rn) clearly blue/high-IE; alkali metals (Li, Na, K, Rb, Cs) clearly green/low-IE. Null tiles (superheavy Rf–Og, placeholder * and **) rendered in mid-grey #C0BFB8. All 118 element tiles visible, equal-area, with small gaps. Element symbols bold and centered; atomic numbers small at top-left; IE values small at bottom.
-      Legibility verdict: PASS — all chrome text and tile labels readable at full resolution; IE values are very small (fontSize=4.5) but legible in the full PNG
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "Ionization Energy · heatmap-periodic-table · python · altair · anyplot.ai" in dark ink (#1A1A17) — fully readable. Colorbar label "1st Ionization Energy (eV)" and tick labels (5, 10, 15, 20) in dark/soft-ink — readable. No axis labels (appropriate for tile-based heatmap).
+      Data: Tiles colored on green (#009E73) to blue (#4467A3) gradient. Noble gases darkest blue (He=24.59 eV), alkali metals brightest green (Cs=3.89 eV). Null tiles grey (#C0BFB8). Near-white tile text (#F0EFE8) for element symbols, atomic numbers, IE values.
+      Legibility verdict: PASS — all chrome text readable; tile text appropriately sized for 118-element layout
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct. The canvas background matches and the tiles are clearly distinct.
-      Chrome: Title in light #F0EFE8 on dark background — clearly readable, no dark-on-dark issue. Legend title and tick labels appear in light tones. Legend box has dark elevated fill #242420 with visible border in #B8B7B0. No dark-on-dark failures observed for any text element.
-      Data: Data colors are IDENTICAL to the light render — Imprint sequential green→blue range is preserved. Null tiles use dark grey #3A3A37 (slightly lighter than background), with light grey #B8B7B0 text — readable. Brand green #009E73 (lowest IE elements) is clearly visible on the dark surface.
-      Legibility verdict: PASS — all text elements readable against the dark background; theme adaptation is correct throughout
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and colorbar label/ticks in light near-white text against dark background — fully readable. No dark-on-dark failures observed.
+      Data: Tile gradient colors IDENTICAL to light render (green #009E73 to blue #4467A3) — only chrome (background, text colors) changed between themes. Null tiles use darker grey (#3A3A37) for dark theme appropriately.
+      Legibility verdict: PASS — all elements readable in dark theme; theme tokens correctly applied throughout
   criteria_checklist:
     visual_quality:
       score: 27
@@ -64,55 +59,53 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Title, legend, and element symbols readable in both themes. Atomic
-          numbers (fontSize=5) and IE values (fontSize=4.5) are very small — legible
-          at 3200px but borderline at mobile scale.
+        comment: All font sizes explicitly set (atomic 6px, symbol 8px bold, IE 5.5px,
+          title scaled by length formula). Readable at full resolution in both themes;
+          tile text small but inherent to 118-element layout.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text overlaps — tile gap (HALF=0.47) cleanly separates all tiles;
-          text stays within tile bounds.
+        comment: No inter-tile collisions; slight tightness in period-7 superheavy
+          tiles but no visible overlap.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All element tiles clearly visible. Null tiles (grey) visually distinct
-          from colored tiles. Color gradient communicates IE range effectively.
+        comment: Full gradient visible; null tiles clearly distinguished; tile borders
+          via PAGE_BG stroke clean.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential colormap (green→blue) is CVD-safe. White text
-          on colored tiles provides adequate contrast across the full IE range.
+        comment: Green-to-blue gradient CVD-safe with distinct luminance channels;
+          near-white tile text adequate contrast.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200×1800). Layout correct. Right side and bottom
-          have ~20-15% blank padding due to asymmetric periodic table shape — inherent
-          to the plot type.
+        comment: Canvas gate passed (3200x1800). Balanced margins, f-block rows properly
+          offset, colorbar within bounds.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No traditional axis labels (appropriate). Colorbar labeled '1st Ionization
-          Energy (eV)' with units. Title in correct format.
+        comment: Colorbar titled '1st Ionization Energy (eV)' with units; title includes
+          descriptive 'Ionization Energy' prefix.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint sequential colormap (two-stop range: #009E73→#4467A3) used
-          for continuous IE data. Both renders have correct backgrounds (#FAF8F1 light
-          / #1A1A17 dark). No forbidden colormaps.'
+        comment: 'imprint_seq exactly (#009E73 to #4467A3). Light bg #FAF8F1, dark
+          bg #1A1A17. Theme-adaptive INK/INK_SOFT tokens throughout both renders.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -120,25 +113,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above-default: custom Imprint sequential colormap, white-on-tile
-          text contrast, gap between tiles, theme-adaptive null tiles, title font
-          size scaled to length. Could go further with a tighter layout or more refined
-          typography.'
+        comment: 'Above generic default: Imprint cmap, theme-adaptive chrome, adaptive
+          tile text color, length-scaled title. Clean and professional but not publication-polished.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: No axes or spines (appropriate), clean tile gaps via stroke=PAGE_BG,
-          legend well-configured. Legend box border adds some visual weight.
+        comment: No axes/spines appropriate; tile gaps via PAGE_BG stroke elegant;
+          transparent legend frame; f-block gap visual separation.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Periodic trend (noble gas high, alkali metal low) immediately apparent
-          from color gradient. F-block separation is visually distinct. IE values
-          on tiles allow precise reading.
+        comment: IE data naturally reveals periodic trends (noble gas peaks, alkali
+          metal troughs) via color gradient. Title contextualizes encoding. Above
+          default but no explicit annotations.
     spec_compliance:
       score: 15
       max: 15
@@ -148,30 +139,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: periodic table heatmap with canonical layout.'
+        comment: 'Canonical periodic table: 18 groups x 7 periods + 2 f-block rows
+          offset below with gap at group 3.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required: 18-group layout, lanthanide/actinide rows detached,
-          equal-area tiles with gaps, sequential colormap, symbol + atomic number
-          + property value per tile, grey null tiles, colorbar with label.'
+        comment: Colorbar with units, bold symbol centered, atomic number top-left,
+          IE value at tile bottom, greyed null tiles, equal-area tiles, f-block separation
+          — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Group→X, period→Y (inverted, period 1 at top), IE→color. All 118
-          elements represented.
+        comment: Groups 1-18 x-axis, periods 1-7 y-axis reversed (period 1 top), all
+          118 positions, placeholder tiles for La/Ac gaps, IE color encoding correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: 'Title: ''Ionization Energy · heatmap-periodic-table · python · altair
-          · anyplot.ai'' — correct format with descriptive prefix. Legend: ''1st Ionization
-          Energy (eV)'' — descriptive with units.'
+          · anyplot.ai''. Colorbar legend: ''1st Ionization Energy (eV)''.'
     data_quality:
       score: 15
       max: 15
@@ -181,23 +172,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 118 elements present. Canonical layout including lanthanide/actinide
-          detachment. Placeholder tiles (* and **) for gaps in periods 6 and 7.
+        comment: All 118 positions, full IE range ~3.9-24.6 eV, measured and unmeasured
+          elements, all periods + f-block rows, periodic trends demonstrated.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real first ionization energy values in eV from published literature.
-          Neutral chemistry data. Physically plausible range (~3.9 eV Cs to ~24.6
-          eV He).
+        comment: NIST first ionization energies in eV — real scientific reference
+          data, fully neutral domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: IE values range 3.9–24.6 eV, physically realistic. Colorbar shows
-          5–20 eV range capturing the bulk of the data.
+        comment: 'Factually correct: H=13.598, He=24.587, Cs=3.894 eV — match NIST
+          reference values.'
     code_quality:
       score: 10
       max: 10
@@ -207,53 +197,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes. Logically sectioned by layer
-          type.
+        comment: 'Linear: path fix -> imports -> data -> df -> chart layers -> save+pad.
+          No functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded — deterministic, no randomness.
+        comment: All data hardcoded; fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, altair, numpy, pandas, PIL.Image — all actually used.
+        comment: os, sys, altair, numpy, pandas, PIL — all used, no dead imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, no unnecessary complexity. Path manipulation at top serves
-          a legitimate purpose.
+        comment: Appropriate complexity; sys.path guard is necessary workaround; PIL
+          padding canonical.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; Altair 6 API; PIL pad
+          to 3200x1800.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: alt.layer() composition, mark_rect/mark_text, x2/y2 rect encoding,
+          alt.Scale/Title/Legend, configure_view/configure_legend — all idiomatic
+          Altair.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic layer composition with alt.layer(), proper :Q/:N encoding
-          types, alt.Scale for axis domains, alt.Color with custom range, alt.Legend
-          with detailed config, .properties()/.configure_*() for theming.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: mark_rect() with x/x2/y/y2 for precise tile bounds, alt.layer() for
-          multi-mark composition, gradient legend for continuous data, per-mark tooltip
-          encoding.
+        comment: Five-layer composition via alt.layer(), x2/y2 rect encoding, interactive
+          HTML with rich tooltips. -1 for direct geometric translation rather than
+          using higher-level Vega-Lite transforms.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -266,4 +257,4 @@ impl_tags:
   dataprep: []
   styling:
   - custom-colormap
-  - edge-highlighting
+  - minimal-chrome

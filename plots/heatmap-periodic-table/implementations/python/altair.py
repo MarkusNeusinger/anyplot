@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-periodic-table: Periodic Table Property Heatmap
 Library: altair 6.2.1 | Python 3.13.13
-Quality: 85/100 | Created: 2026-06-15
+Quality: 89/100 | Created: 2026-06-15
 """
 
 import os
