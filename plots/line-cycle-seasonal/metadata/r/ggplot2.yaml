@@ -1,0 +1,255 @@
+library: ggplot2
+language: r
+specification_id: line-cycle-seasonal
+created: '2026-06-15T03:54:04Z'
+updated: '2026-06-15T04:12:29Z'
+generated_by: claude-sonnet
+workflow_run: 27522740108
+issue: 8658
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - 'Perfect spec compliance — all required elements present: within-month trend lines,
+    seasonal mean bars, vertical dividers, calendar order, shared y-axis'
+  - 'Both themes render correctly with proper background colors (#FAF8F1 / #1A1A17)
+    and fully readable text in both renders'
+  - Informative annotation highlighting the +1.25°C warming trend over 25 years adds
+    meaningful data storytelling
+  - Clean KISS code structure with correct set.seed(42), proper theme tokens, and
+    correct ggsave canvas (3200×1800)
+  - Realistic temperate Northern Hemisphere temperature dataset with plausible seasonal
+    values and warming trend
+  weaknesses:
+  - Palette uses positions 1 and 3 (green + blue) for the two series instead of canonical
+    positions 1 and 2 (green + lavender). For a 2-series abstract dataset, canonical
+    order should be 1→2.
+  - Within-month trend lines are tightly clustered (year x-offset ±0.36 is small)
+    making the chronological slope within each season hard to discern visually — spec
+    emphasizes this slope as a key insight.
+  - Annotation text size=2.5mm (~7pt) is at the lower edge of readability when the
+    image is scaled to mobile width (~400px).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Bold title "Monthly Temperature Trends · line-cycle-seasonal · r · ggplot2 · anyplot.ai" in near-black ink, well-proportioned at computed size (~10pt). Subtitle in soft gray. Y-axis label "Avg. temperature (°C)" in dark ink at 10pt, readable. Month tick labels (Jan–Dec) at 9pt, clear. Y-axis tick labels at 8pt, clear. Caption "Synthetic data — warming trend ≈0.05 °C / yr" at 7pt, legible. Legend at top-right with colored line swatches.
+      Data: 12 seasonal groups (Jan–Dec) each with green (#009E73, Imprint position 1) lines tracing 25 years of temperature readings. Blue (#4467A3, Imprint position 3) horizontal segments mark each month's mean. Subtle vertical dividers between month groups in muted ink. "+1.25 °C over 25 yrs" annotation above July with a short line marker.
+      Legibility verdict: PASS — all text elements are clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title in near-white (#F0EFE8) ink, bold, clearly visible. Subtitle in medium-light gray (#B8B7B0). Y-axis label and tick labels in light gray, readable. Month tick labels in light gray. Legend text light-colored and readable. Caption in soft gray. No dark-on-dark failures observed.
+      Data: Green (#009E73) and blue (#4467A3) data colors are identical to the light render — only chrome has flipped. Both series remain clearly distinguishable against the dark background.
+      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark failures detected.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set; well-proportioned in both themes.
+          Minor: annotation text (size=2.5mm) is small at mobile scale.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements; legend clear of data area; annotation
+          above July cluster.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Trend lines (linewidth=1.05) and mean segments (linewidth=1.6) clearly
+          visible in both renders.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green and blue are perceptually distinct, Imprint palette is CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 3200×1800 (gate passed), good margin balance, legend near
+          data.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis 'Avg. temperature (°C)' is descriptive with units. X-axis
+          uses month name tick labels — no redundant label needed.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'First series correctly uses #009E73 (Imprint position 1). Second
+          series uses position 3 (#4467A3 blue) instead of canonical position 2 (#C475FD
+          lavender) for an abstract 2-series dataset. Backgrounds correct (#FAF8F1
+          / #1A1A17). Chrome theme-correct in both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above generic defaults: Imprint palette applied, subtle dividers,
+          informative annotation, clean spine management. Not quite FiveThirtyEight
+          level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear refinement visible: y-only subtle grid, bottom axis line only
+          (others removed), generous margins. Good whitespace.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Annotation highlights the warming trend. Color hierarchy (green trend
+          vs. blue reference) guides interpretation. Subtitle explains encoding.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct cycle/seasonal subseries plot with all required components.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Within-month chronological trend lines, horizontal mean bars, vertical
+          dividers, shared y-axis, calendar order — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Seasons (months) on x-axis, temperature on y-axis, years ordered
+          chronologically within each group via x_pos offset.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''Monthly Temperature Trends · line-cycle-seasonal · r ·
+          ggplot2 · anyplot.ai'' — correct format with optional descriptive prefix.
+          Legend labels informative.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all cycle plot aspects: seasonal variation across months,
+          within-group trend (year-over-year), and mean reference comparison.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Temperate Northern Hemisphere city temperature data — realistic,
+          neutral, comprehensible scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Seasonal baseline -1.8°C to 23.1°C plausible for temperate NH city.
+          Warming trend 0.05°C/yr (~1.25°C/25yr) factually consistent with modern
+          climate science.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat structure: imports → tokens → data → plot → save. No functions/classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized R code. Dynamic title_size scaling is a smart
+          touch.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave with sprintf('plot-%s.png', THEME), ragg device, width=8 height=4.5
+          dpi=400.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper grammar-of-graphics layering, dplyr pipes, scale_color_manual
+          with named mapping, expansion() for axis control. Idiomatic R/ggplot2.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses scale_color_manual's named-vector approach to generate clean
+          legend labels from aesthetic mappings — a distinctly ggplot2 pattern. geom_segment
+          for mean bars, annotate() for both text and segment overlays.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending

@@ -1,0 +1,277 @@
+library: echarts
+language: javascript
+specification_id: line-cycle-seasonal
+created: '2026-06-15T04:04:08Z'
+updated: '2026-06-15T04:21:57Z'
+generated_by: claude-sonnet
+workflow_run: 27522972239
+issue: 8658
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/javascript/echarts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Perfect spec compliance — 12 monthly groups, 6-year chronological subseries per
+    group, and horizontal mean reference lines all correctly implemented
+  - Idiomatic ECharts null-separator technique cleanly breaks lines between seasonal
+    groups on a value-type x-axis without faceting
+  - 'Two-tier visual hierarchy: thin (2.5px) green trend lines vs thick (4px) lavender
+    mean lines, reinforced by different colors from the Imprint palette, immediately
+    signals which layer encodes what'
+  - Informative subtitle 'slope of each group reveals within-month trend · bar marks
+    seasonal mean' guides interpretation without requiring annotations
+  - Dynamic title font scaling (Math.max(14, Math.round(22 * 67 / titleText.length)))
+    handles the long descriptive prefix elegantly
+  - LCG fixed-seed RNG gives fully deterministic synthetic data despite the browser
+    environment lacking seeded Math.random()
+  - 'Theme-adaptive chrome is complete: t.ink, t.inkSoft, t.grid tokens used throughout;
+    both renders are fully legible'
+  - Seasonal pattern (winter highs, summer lows) and within-month upward trend (2018→2023)
+    are both clearly visible — demonstrates the dual-pattern insight that defines
+    the cycle plot
+  weaknesses:
+  - Secondary text (subtitle, legend, y-axis name) at fontSize 13px is slightly small
+    for the 3200×1800 canvas; the ECharts library guide recommends ~14px for labels
+    — nudge these to 14px for better mobile readability when scaled to 400px
+  - 'DE-01 limited at 5/8: the design is clean but not exceptional — consider adding
+    subtle vertical dividers or band fills between month groups to strengthen the
+    seasonal-panel visual idiom and separate the spec''s ''subtle gaps or light vertical
+    dividers'' requirement more explicitly'
+  - 'DE-02 limited at 4/6: the x-axis spine (axisLine with inkSoft color) is still
+    present; removing it (axisLine: { show: false }) would give the chart a more refined,
+    open look consistent with the y-axis treatment'
+  - No top-level color array set (option.color = t.palette is missing); colors are
+    set at the series level which works, but following the library pattern guide to
+    set the top-level palette improves consistency
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light theme surface, not pure white.
+      Chrome: Title "Monthly Electricity Demand · line-cycle-seasonal · javascript · echarts · anyplot.ai" in dark ink centered at top, clearly readable. Subtitle in softer dark text below, readable. Y-axis name "Electricity Demand (TWh)" rotated vertically on the left in inkSoft. Tick labels (25–50 on y-axis; Jan–Dec on x-axis) all in dark inkSoft, clearly legible. Legend at bottom with green line+circle for "Monthly demand" and lavender line+circle for "Seasonal mean" — readable.
+      Data: 12 seasonal groups (Jan–Dec) arranged left to right. Each group has 6 connected data points (2018–2023) in #009E73 brand green with size-7 circle markers. A thicker horizontal lavender (#C475FD) mean reference line spans each group. Seasonal pattern clearly visible: Jan/Feb/Dec highest (~47–50 TWh), Jun/Jul lowest (~29–34 TWh). Within-group upward trend (2018→2023) visible especially in Jan, Feb, Dec.
+      Legibility verdict: PASS — all text elements are clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title in light (#F0EFE8) ink, clearly visible against dark background. Subtitle and axis labels in lighter inkSoft — all readable. Y-axis name in light text — readable. X-axis month labels in light text — readable. Legend text in light color — readable. No dark-on-dark failures observed.
+      Data: Data colors are IDENTICAL to light render — #009E73 green trend lines with circle markers, #C475FD lavender mean reference lines. The color identity across themes is preserved correctly. Grid lines are subtle and visible.
+      Legibility verdict: PASS — all text elements are clearly readable against the warm near-black background. No dark-on-dark issues detected.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title scaling formula handles long
+          title well. Secondary text (subtitle, legend, y-axis name) at 13px is slightly
+          small for this canvas — one point deduction.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element overlaps in either render. Month labels well-spaced
+          along x-axis.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Trend lines 2.5px, mean lines 4px, circle markers size 7 — all appropriate
+          for 6 data points per group. Both series clearly distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green (#009E73) and lavender (#C475FD) are perceptually distinct
+          under CVD. No red-green sole distinguishing signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Good margins (left:90, right:45, top:120, bottom:68).
+          Plot fills ~75% of canvas. Legend well-positioned at bottom.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Electricity Demand (TWh)'' — descriptive with units. Title
+          includes descriptive prefix ''Monthly Electricity Demand''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: First series uses palette[0]=#009E73, second uses palette[1]=#C475FD.
+          Background transparent (→pageBg). Chrome tokens (t.ink, t.inkSoft, t.grid)
+          used throughout. Both renders theme-correct.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default (4): descriptive title prefix, informative subtitle,
+          deliberate two-color hierarchy (thin trend vs thick mean), dynamic title
+          font scaling. Not exceptional (6+) as overall look remains close to a well-configured
+          default.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Multiple refinements: y-axis line hidden, both axis ticks hidden,
+          x-axis splitLine hidden, grid using subtle t.grid token, transparent background.
+          X-axis spine still present — room for further polish.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle explicitly names the dual narrative. Thicker mean lines
+          (4px) vs thinner trend lines (2.5px) create visual hierarchy. Both the seasonal
+          pattern and within-month trend are clearly communicable from the chart.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct cycle plot (seasonal subseries): 12 monthly groups left-to-right,
+          chronological subseries within each group, horizontal mean reference lines.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: seasonal groups by calendar order (Jan–Dec),
+          chronological subseries line per group, horizontal mean reference line per
+          group, shared y-axis, single panel (not faceted).'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis encodes seasons (months), y-axis encodes electricity demand
+          values. All 12×6=72 data points visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title format: ''Monthly Electricity Demand · line-cycle-seasonal
+          · javascript · echarts · anyplot.ai'' matches {Descriptive Title} · {spec-id}
+          · {language} · {library} · anyplot.ai. Legend labels ''Monthly demand''
+          and ''Seasonal mean'' accurate.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All cycle plot features present and visible: distinct seasonal pattern
+          (winter high, summer low), upward within-month trend across all groups,
+          mean reference lines enabling cross-season comparison.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Monthly electricity demand (TWh) for a regional grid, 2018–2023.
+          Realistic, neutral, real-world scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 28–50 TWh plausible for a moderate regional grid. Seasonal
+          amplitude ~9 TWh and annual growth ~0.8 TWh/yr are physically reasonable.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: LCG helper is a necessary browser workaround; remaining code is flat
+          procedural. No unnecessary abstractions.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: LCG seeded at 42 gives fully deterministic output despite browser
+          environment.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed (ECharts is a global). All variables used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. Null separators for line breaks is an elegant
+          ECharts idiom. No fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ECharts 5.5.1 current API. Output handled by harness.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Above default: null separators with connectNulls:false for grouped
+          series, customValues for axis label positioning, emphasis:disabled, scale:true
+          on y-axis — all idiomatic ECharts patterns.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: The null-separator technique for producing segmented grouped lines
+          on a value-type x-axis is distinctly ECharts. Combined with customValues,
+          this builds the cycle-plot layout without faceting — a non-trivial ECharts-specific
+          approach.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
