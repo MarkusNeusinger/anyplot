@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: climograph-walter-lieth
 created: '2026-06-15T01:11:04Z'
-updated: '2026-06-15T01:18:52Z'
+updated: '2026-06-15T01:33:15Z'
 generated_by: claude-sonnet
 workflow_run: 27517588043
 issue: 8656
@@ -12,50 +12,57 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/climograp
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - Semantically correct dual-axis 1:2 scaling (10°C↔20mm) implemented correctly
-  - fill_between with where+interpolate=True produces smooth humid/arid region fills
-    at curve crossings
-  - Station metadata header is styled nicely with adaptive ELEVATED_BG and rounded
-    bbox
-  - Color-coded axis labels (Temperature in red, Precipitation in blue) reinforce
-    the dual-axis structure
-  - 'Full theme-adaptive chrome: INK/INK_SOFT tokens applied to ticks, spines, legend
-    text, and annotation box'
-  - Code is clean and deterministic — no random state, KISS structure throughout
-  - Realistic Ankara 1991-2020 climate normals with correct factual values
+  - Correct Walter-Lieth 1:2 scaling convention (10°C ↔ 20mm) implemented accurately
+    with compressed scale logic for >100mm
+  - 'Semantic color exception correctly applied: #AE3030 (matte red) for temperature,
+    #4467A3 (blue) for precipitation — both are Imprint palette members used for their
+    real-world meaning'
+  - Hatched fills (/// for humid, ... for arid) provide redundant encoding that aids
+    CVD users
+  - Dual twinx() axes with proper right-spine-only configuration and precipitation
+    axis range (-30 to 100mm) perfectly aligned to temperature axis
+  - Station metadata header box (Erzurum, WMO 17096, 1991–2020) uses real climate
+    normals with all four Walter-Lieth diagnostic zones (frost, arid, humid transitions)
+  - 'Frost month indicator bars using INK token are theme-adaptive: dark in light
+    render, near-white in dark render — both clearly visible'
+  - Custom legend built with mpatches.Patch handles placed outside the plot area via
+    bbox_to_anchor — clean and unobtrusive
+  - 'Full theme-adaptive chrome: PAGE_BG, ELEVATED_BG, INK, INK_SOFT all correctly
+    applied to backgrounds, text, spines, legend frame, and annotation box'
+  - No bbox_inches='tight' on savefig — canvas dimensions preserved correctly at 3200×1800
+    px
   weaknesses:
-  - Frost months filled within the plot area (fill_between below 0°C) rather than
-    as a colored band/blocks beneath the x-axis as specified
-  - Spec calls for hatched blue (humid) and dotted/stippled red (arid) fills; implementation
-    uses solid alpha fills which, while acceptable, deviates from the conventional
-    Walter-Lieth rendering
-  - The frost area is extremely small (only January at -0.8°C) making the frost indicator
-    barely perceptible — a station with more pronounced frost (e.g. 2-3 months below
-    0°C) would better showcase this feature
-  - DE-01 limited by restrained aesthetic — fill alpha=0.25 is very subtle; raising
-    to 0.35-0.40 and adding hatching would increase visual richness
-  - Left axis ticks start at -10°C rather than the conventional 0°C anchor; the spec
-    notes "Left axis ticks conventionally at 0, 10, 20, 30°C"
-  - 'Right axis ticks at [0,20,40,60,80,100] include 80mm which is not in the Walter-Lieth
-    conventional tick set (spec: 0,20,40,60,100)'
+  - Station metadata header text (fontsize=8) and legend text (fontsize=8, ncol=3)
+    may be marginally tight at mobile widths (~400px) — consider bumping legend to
+    fontsize=9 or ncol=1 for better mobile readability
+  - 'DE-01: Design is domain-appropriate but not publication-exceptional — the header
+    box rounded corners and spine treatment are good, but there is room for additional
+    polish (e.g., slightly more generous inner padding on the header box, or a thin
+    colored rule below the title area)'
+  - 'DE-02: Grid is subtle (alpha=0.12) which is good, but the horizontal separator
+    line above the frost band (alpha=0.25) creates a faint extra element that could
+    be removed without loss of clarity'
+  - 'LM-02: fill_between with hatch and interpolate=True is the strongest matplotlib-distinctive
+    feature used; the implementation could further leverage matplotlib''s PathPatch
+    or BrokenBarHCollection for the frost indicators instead of ax.bar()'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct; not pure white.
-      Chrome: Title "climograph-walter-lieth · python · matplotlib · anyplot.ai" in dark INK color spans ~75% of canvas width, clearly readable. X-axis label "Month" in INK. Y-axis left "Temperature (°C)" rendered in TEMP_COLOR #AE3030 (red), Y-axis right "Precipitation (mm)" in PRECIP_COLOR #4467A3 (blue) — semantic color-coding of axis labels is a nice design touch. Tick labels in INK_SOFT (#4A4A44), well-readable. Station metadata box (Ankara, 39°57'N, 891 m a.s.l., Mean T=11.6°C, Total P=357mm, 1991-2020) in upper-left with ELEVATED_BG fill and rounded border.
-      Data: Red line (#AE3030) = temperature, peaks ~23-24°C in July-August, dips to -0.8°C in January. Blue line (#4467A3) = precipitation-scaled curve, peaks in spring/autumn (~15-25°C equivalent), troughs in summer (~4-6°C equivalent). Blue semi-transparent fill (alpha=0.25) for humid periods (Jan-May, Oct-Dec) where precipitation > temperature curve. Red semi-transparent fill (alpha=0.25) for arid summer period (Jun-Sep). Very small dark fill near January baseline for frost zone (-0.8°C). Dashed 0°C reference line. Legend at bottom with three items: humid (blue), arid (red), frost months (dark gray).
-      Legibility verdict: PASS — all text clearly readable against warm off-white background. First data series (#AE3030 red temperature line) uses Imprint semantic color correctly.
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface, no pure white.
+      Chrome: Title "climograph-walter-lieth · python · matplotlib · anyplot.ai" in dark #1A1A17 ink, well-proportioned at ~80% canvas width. Left y-axis label "Temperature (°C)" in matte red #AE3030; right y-axis label "Precipitation (mm)" in blue #4467A3 — both clearly readable. Month tick labels (J–D) visible in INK_SOFT. Temperature y-axis ticks (-10 to 40) and precipitation ticks (0–100) all readable. Station header box (Erzurum, 39°55′N, 1869 m a.s.l., Mean T = 6.6°C, Total P = 397 mm, 1991–2020) on ELEVATED_BG (#FFFDF6) with rounded corners is readable in upper-left. Bottom legend (3 items, ncol=3) clearly visible.
+      Data: Temperature line in #AE3030 arcs from −9.7°C (Jan) to 20.9°C (Jul), drawn above precipitation scale in summer (arid period). Precipitation in #4467A3 peaks in May (~71mm/2=35.5 on T scale) and shows humid periods in spring and autumn (blue hatched /// fills). Summer arid period (Jul–Aug) shows red dotted fill. Frost month bars (J, F, M, D) render as dark INK blocks at the bottom baseline.
+      Legibility verdict: PASS — all text readable against light background. No light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Dark near-black (#1A1A17) — correct; not pure black.
-      Chrome: Title, tick labels, and axis labels all render in appropriate light INK tokens. Temperature axis label retains #AE3030 red (readable against dark bg). Precipitation axis label retains #4467A3 blue (readable). Tick labels in INK_SOFT (#B8B7B0 in dark) appear as light gray — fully readable. Station header box uses ELEVATED_BG #242420 (dark elevated) with light text. Legend text set via plt.setp to INK_SOFT, appears as readable light gray text.
-      Data: Data colors identical to light render — red temperature line (#AE3030) and blue precipitation line (#4467A3) unchanged. Humid fill (alpha=0.25 blue) appears darker against dark bg but still visible as a dark-blue region. Arid fill (alpha=0.25 red) appears as a dark-maroon region in summer. Frost fill uses INK (#F0EFE8 in dark) at alpha=0.55 producing a visible cream-toned patch for the January frost dip.
-      Legibility verdict: PASS — no dark-on-dark failures detected. All text elements use light-theme tokens appropriately flipped. Chrome is correctly inverted; data colors are identical to light render.
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface, no pure black.
+      Chrome: Title visible in light #F0EFE8 ink. Left axis label "Temperature (°C)" in matte red (unchanged — data color constant), right axis label "Precipitation (mm)" in blue #4467A3 (unchanged). Month tick labels visible in INK_SOFT (#B8B7B0). Temperature and precipitation axis ticks visible in light-colored INK_SOFT. Station metadata header box uses ELEVATED_BG (#242420) with text in INK (#F0EFE8) — readable. Legend frame uses ELEVATED_BG, legend text in INK_SOFT (#B8B7B0) — readable.
+      Data: Temperature line (#AE3030) and precipitation line (#4467A3) are identical in color to light render — data colors held constant across themes. Humid fills (blue hatched) and arid fills (red dotted) have the same colors with alpha=0.30 as in the light render. Frost month bars render in near-white (#F0EFE8 = INK in dark mode), clearly visible against the dark baseline.
+      Legibility verdict: PASS — all text readable against dark background. No dark-on-dark failures. Chrome correctly flips; data colors identical to light render.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -63,55 +70,56 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=dynamic, axis labels=10pt, ticks=8pt,
-          legend=8pt). Both themes fully readable. Slight deduction for subtly tight
-          bottom margin with legend.
+        comment: 'All font sizes explicitly set (title adaptive, axis labels 10pt,
+          ticks 8pt, legend 8pt). Both renders readable. Minor deduction: station
+          header and legend at 8pt may be marginally tight at mobile widths.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Station header box is positioned at (0.02, 0.97)
-          transAxes without touching the data. Legend is outside the plot area.
+        comment: No overlapping text elements. Header box in upper-left, legend below
+          axes, month labels well-spaced.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Lines are well-visible at linewidth=2.5. Fill areas clearly show
-          humid/arid periods. Minor deduction: frost fill extremely small (only Jan
-          at -0.8°C) making it barely perceptible in the plot.'
+        comment: Temperature and precipitation lines at linewidth=2.5 clearly visible.
+          Fill areas with hatch and alpha=0.30 clearly distinguishable. Frost bars
+          prominent at baseline.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red (#AE3030) vs blue (#4467A3) is distinguishable under major CVD
-          variants. Alpha=0.25 fills are transparent enough to not create confusion.
+        comment: Red/blue distinction supplemented by hatch patterns (/// humid, ...
+          arid) providing CVD-safe redundant encoding. Frost bars use neutral ink
+          with adequate contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). subplots_adjust(top=0.88, bottom=0.22,
-          left=0.10, right=0.91) provides appropriate room for dual y-axis labels
-          and legend below. No clipping.
+        comment: Canvas gate passed (no /tmp/anyplot-canvas-gate.txt). figsize=(8,4.5)
+          dpi=400 produces 3200×1800. subplots_adjust(top=0.88, bottom=0.22, left=0.10,
+          right=0.91) gives balanced margins with room for legend below.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Temperature (°C), Precipitation (mm), Month — all descriptive with
-          units. Title is correct format.
+        comment: 'Left axis: ''Temperature (°C)'', right axis: ''Precipitation (mm)'',
+          x-axis: ''Month''. All descriptive with appropriate units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Semantic exception applies: temperature/precipitation have strong
-          domain conventions (red/blue). Both colors are Imprint palette members (#AE3030
-          position 5, #4467A3 position 3). Backgrounds #FAF8F1/#1A1A17 correct. Chrome
-          fully theme-adaptive.'
+        comment: 'Semantic exception correctly applied: #AE3030 (Imprint position
+          5, matte red) for temperature; #4467A3 (position 3, blue) for precipitation
+          — domain convention. Backgrounds #FAF8F1 light / #1A1A17 dark correct. Full
+          theme-adaptive chrome in both renders.'
     design_excellence:
       score: 13
       max: 20
@@ -121,30 +129,28 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above well-configured default (4): semantic color-coding of axis
-          labels, styled metadata box with rounded corners and elevation, alpha-blended
-          dual fills. Not quite strong design (6): fills at alpha=0.25 are very subtle,
-          no hatching/texture as the spec convention suggests.'
+        comment: 'Strong domain-appropriate design: semantic color mapping, header
+          box with elevated background and rounded corners, dual-colored axis labels
+          matching their data series. Clearly above defaults but not publication-exceptional.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: top/right spines removed from main axes, subtle
-          grid (alpha=0.12), 0°C dashed reference line, styled legend frame. Not at
-          6/6: hatching patterns absent, metadata box placement somewhat large relative
-          to chart area.'
+        comment: Subtle grid (alpha=0.12), L-shaped spine configuration on main axis,
+          right-only spine on twinx axis, styled legend frame, 0°C reference line.
+          Good refinement overall.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: The fill-between regions create clear visual hierarchy showing humid/arid
-          periods. Red/blue color contrast immediately signals the climate story.
-          Station metadata grounds the viewer. However, no additional annotation or
-          emphasis distinguishing key seasonal transitions.
+        comment: Filled regions (blue humid, red arid) immediately communicate seasonal
+          water availability — the diagram's core message. Frost indicators add a
+          third climate dimension. Visual hierarchy guides the reader through the
+          plot's meaning.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -152,62 +158,61 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Walter-Lieth climate diagram with dual axis, 1:2 scaling,
-          fill-between for humid/arid, all defining features present.
+        comment: 'Correct Walter-Lieth climograph: temperature line on left axis,
+          precipitation line on right axis, 1:2 scaling, filled humid/arid regions,
+          frost indicators.'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Most features: temperature line, precipitation curve, dual axis
-          with 1:2 scaling, humid/arid fills, station header, frost indicator, 0°C
-          reference line. Deduction: frost months shown as fill within plot area (fill_between
-          below 0°C) rather than as colored band/blocks beneath the x-axis as spec
-          describes.'
+        comment: 'All spec features present: 1:2 Walter-Lieth scaling, blue-hatched
+          humid fills, red-dotted arid fills, station metadata header, frost month
+          indicators, right-axis ticks at 0/20/40/60/100mm, compressed scale logic
+          for >100mm.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Months on x-axis, temperature on left y-axis, precipitation (scaled
-          2:1) on right y-axis. All data visible.
+        comment: 'X: 12 months in order. Left Y: temperature °C. Right Y: precipitation
+          mm at 2:1 scale. All data visible and correctly mapped.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'climograph-walter-lieth · python · matplotlib · anyplot.ai'
-          is correct. Legend labels 'Humid period (P > T scale)', 'Arid period (T
-          > P scale)', 'Frost months (T < 0°C)' are descriptive and accurate.
+        comment: 'Title: ''climograph-walter-lieth · python · matplotlib · anyplot.ai''
+          — exact format. Legend: ''Humid period (P > T scale)'', ''Arid period (T
+          > P scale)'', ''Frost months (T < 0°C)'' — domain-appropriate labels.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Shows all main Walter-Lieth features: humid and arid periods (both
-          present and clearly differentiated), frost period (minimal but correct for
-          Ankara), seasonal variation, complete 12-month coverage. Minor deduction:
-          frost period is extremely small (one month, -0.8°C) making that diagnostic
-          feature barely visible.'
+        comment: 'Dataset shows all four Walter-Lieth diagnostic zones: frost months
+          (J,F,M,D), spring/autumn humid periods, summer arid period. Full diagnostic
+          coverage of the plot type.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Ankara, Turkey is a real station. 1991-2020 is the standard WMO climate
-          normal period. Neutral scientific context, no controversy.
+        comment: Erzurum, Turkey (WMO 17096) — a real meteorological station using
+          official 1991–2020 climate normals. Science/meteorology context, completely
+          neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature range (-0.8 to 23.6°C), total precipitation (357mm),
-          elevation (891m a.s.l.) are all plausible and consistent with actual Ankara
-          climate normals.
+        comment: 'Temperature −9.7°C to 20.9°C: realistic for eastern Anatolia at
+          1869m a.s.l. Annual mean 6.6°C, total 397mm: meteorologically consistent
+          with a cold semi-arid highland climate.'
     code_quality:
       score: 10
       max: 10
@@ -217,35 +222,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save. No functions or classes.
-          sys.path manipulation is necessary boilerplate, commented.'
+        comment: 'Flat linear code: imports → data → fills → lines → axes → frost
+          → header → legend → title → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: No random state used — all data is hardcoded constants. Fully deterministic.
+        comment: All data hardcoded as climate normals (deterministic). No random
+          seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os (THEME env var), sys (path fix), matplotlib.patches (legend handles),
-          matplotlib.pyplot, numpy — all used.
+        comment: os, sys (path fix + theme), matplotlib.patches (legend handles),
+          matplotlib.pyplot (figure), numpy (array math). All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code. precip_te calculation with np.where is elegant.
-          Axis setup with twinx well-structured. No fake interactive elements.
+        comment: Clean Pythonic code. sys.path manipulation is a necessary documented
+          workaround for the matplotlib.py filename conflict. No fake interactive
+          elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. Current matplotlib
-          API used throughout.
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. No deprecated
+          API calls.
     library_mastery:
       score: 7
       max: 10
@@ -255,28 +262,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Axes methods throughout (ax.plot, ax.fill_between, ax.set_*). Correct
-          twinx() pattern. subplots_adjust for layout. mpatches.Patch for custom legend.
-          Missing: could use more advanced patterns like GridSpec or FuncFormatter.'
+        comment: Expert axes-method usage throughout. twinx() for dual axes, fill_between
+          with where= and interpolate=True, mpatches.Patch for custom legend handles,
+          bbox_to_anchor for external legend. Very idiomatic.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: fill_between with where= and interpolate=True for smooth region fills
-          at curve crossings is distinctively matplotlib and essential for Walter-Lieth
-          diagrams. ax.transAxes for the metadata annotation box. twinx() dual-axis.
-          These are genuine matplotlib-distinctive features.
-  verdict: REJECTED
+        comment: fill_between with hatch= and interpolate=True is distinctively matplotlib.
+          Custom legend via mpatches.Patch. However, frost bars use ax.bar() where
+          PathPatch/BrokenBarHCollection would be more idiomatic for horizontal band
+          indicators.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - twin-axes
   - annotations
   - custom-legend
+  - patches
   - manual-ticks
   patterns:
   - explicit-figure
+  - iteration-over-groups
   dataprep:
   - normalization
   styling:
