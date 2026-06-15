@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-cycle-seasonal: Cycle Plot (Seasonal Subseries)
-Library: matplotlib | Python 3.13
-Quality: pending | Created: 2026-06-15
+Library: matplotlib 3.11.0 | Python 3.13.13
+Quality: 87/100 | Created: 2026-06-15
 """
 
 import os
