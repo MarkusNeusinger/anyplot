@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-cycle-seasonal: Cycle Plot (Seasonal Subseries)
 Library: altair 6.2.1 | Python 3.13.13
-Quality: 85/100 | Created: 2026-06-15
+Quality: 83/100 | Created: 2026-06-15
 """
 
 import os
