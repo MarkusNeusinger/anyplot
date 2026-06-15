@@ -1,0 +1,262 @@
+library: seaborn
+language: python
+specification_id: climograph-walter-lieth
+created: '2026-06-15T01:04:17Z'
+updated: '2026-06-15T01:26:20Z'
+generated_by: claude-sonnet
+workflow_run: 27517640383
+issue: 8656
+language_version: 3.13.13
+library_version: 0.13.2
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - 'Complete Walter-Lieth implementation hitting every spec requirement: dual-scale
+    axes, humid/arid/perhumid fills, frost indicators, compressed scale above 100
+    mm, station metadata callout box'
+  - 'Semantic color assignment (temperature → Imprint red #AE3030, precipitation →
+    Imprint blue #4467A3) correctly invokes the style guide''s semantic-exception
+    rule'
+  - Theme-adaptive fill alphas (higher in dark theme) keep the arid fill visible on
+    the near-black surface
+  - Axis spine colors coded to match their respective data series — a polished Walter-Lieth
+    convention
+  - 'Perfect canvas sizing: figsize=(8,4.5) dpi=400, no bbox_inches=''tight'', confirmed
+    3200×1800'
+  weaknesses:
+  - Legend text at 7.5 pt may be marginally tight at mobile render widths (~400 px);
+    could be raised to 8 pt without crowding
+  - 'LM-02 limited: seaborn contributes only three API calls (set_theme, lineplot
+    x2, despine); the chart is fundamentally matplotlib-driven — acceptable for this
+    complex chart type but limits library-mastery score'
+  - Legend alpha patch values (0.40 for humid, 0.90 for perhumid, 0.40 for arid) are
+    hardcoded and don't reflect the theme-adaptive HUMID_ALPHA/ARID_ALPHA used in
+    the actual fills — minor visual inconsistency between legend and chart in dark
+    mode
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "climograph-walter-lieth · python · seaborn · anyplot.ai" in dark ink at top-center (~12 pt, readable). Station header callout box below title. Left Y-axis label "Temperature (°C)" in red (#AE3030) at 10 pt; right Y-axis label "Precipitation (mm)" in blue (#4467A3) at 10 pt. Tick labels 8 pt in muted ink. All text readable.
+      Data: Red temperature curve from -4°C (Jan) to 27°C (Jul). Blue precipitation curve with spring/autumn peaks and summer drought. Translucent blue humid fill, solid darker blue perhumid block (Oct, P=120mm). Translucent red/pink arid fill (Jun–Aug). Blue frost-indicator blocks below baseline for Jan, Feb, Dec. First series uses Imprint red #AE3030 (semantic exception: temperature=heat), second uses Imprint blue #4467A3 (semantic exception: water).
+      Legibility verdict: PASS — all text is clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title and header text switch to light ink (#F0EFE8), fully legible. Axis labels remain red (left) and blue (right). Tick labels in light muted ink (#B8B7B0). Legend text explicitly set to INK token. All text readable.
+      Data: Data colors identical to light render — red temperature line, blue precipitation line, same fill hues. Arid fill more visually prominent (alpha=0.45 vs 0.22) which helps readability on dark surface. Humid and perhumid fills clearly visible. Frost blocks visible.
+      Legibility verdict: PASS — no dark-on-dark failures detected. All chrome adapts correctly to the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable at full resolution in both themes. Legend text
+          at 7.5 pt is borderline at mobile scale but not clipped. Title dynamic sizing
+          (12 pt for 51-char string) appropriate.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render. Legend well-placed in upper-left
+          clear zone.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines at 2.5 pt prominent for 12 data points. Fills clearly distinguish
+          humid/arid/perhumid zones. Frost blocks visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red (#AE3030) and blue (#4467A3) have adequate contrast and are distinguishable
+          under major CVD types.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. figsize=(8,4.5) dpi=400 -> exact 3200x1800. subplots_adjust
+          margins generous. Nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Temperature (°C) and Precipitation (mm) both carry units. Title is
+          the required format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint palette slots 5 (#AE3030, heat) and 3 (#4467A3, water).
+          Semantic exception applies for Walter-Lieth convention. Backgrounds #FAF8F1
+          / #1A1A17 correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above-default: colored axis spines, styled callout box, deliberate
+          alpha differentiation, frost indicators, intentional design hierarchy.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: sns.despine removes top/right spines. Y-axis grid at alpha=0.12 subtle.
+          Generous margins. Spine colors coded to red/blue.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Fills encode the climate story directly. Frost indicators add ecological
+          context. Perhumid threshold and 0°C reference lines guide interpretation.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Walter-Lieth climograph with dual-axis, 2:1 scaling convention,
+          filled regions, and frost indicators.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: dual-scale, temp/precip lines, humid/arid/perhumid
+          fills, station header, frost blocks, correct tick conventions.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 12 months on x-axis, temperature on left, precipitation on right
+          with correct dual-scale positions.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'climograph-walter-lieth · python · seaborn · anyplot.ai' is
+          exact. Legend covers all five visual elements.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All Walter-Lieth features demonstrated: frost months, summer arid,
+          perhumid autumn, dual-scale axis, compressed scale above 100 mm, station
+          metadata.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Montsec Ridge is a real Pyrenean highland (1240 m). Climate normal
+          1991-2020 is climatologically plausible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature -4°C to 27°C and precipitation 8-120 mm realistic for
+          1240 m Iberian highland. Annual mean 11°C and total 625 mm appropriate.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: No randomness; all data is hardcoded.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: mlines, mpatches, plt, np, sns.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactivity. np.where for dual-scale transformation is
+          clean and vectorized. Theme-adaptive alphas are a good pattern.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png at dpi=400, no bbox_inches='tight'.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: sns.set_theme with rc params, sns.lineplot for data curves, sns.despine
+          for spine cleanup — all idiomatic. Heavy matplotlib use is appropriate for
+          this complex chart type.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Seaborn contributes only three API calls (set_theme, lineplot x2,
+          despine); the bulk is matplotlib. Acceptable for a specialized chart type
+          but limits library-mastery score.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - manual-ticks
+  - annotations
+  - custom-legend
+  - patches
+  patterns:
+  - explicit-figure
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - grid-styling
