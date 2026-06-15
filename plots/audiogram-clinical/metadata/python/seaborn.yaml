@@ -1,0 +1,290 @@
+library: seaborn
+language: python
+specification_id: audiogram-clinical
+created: '2026-06-14T23:49:09Z'
+updated: '2026-06-15T00:09:45Z'
+generated_by: claude-sonnet
+workflow_run: 27515710752
+issue: 8655
+language_version: 3.13.13
+library_version: 0.13.2
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - 'Clinically authentic audiogram: inverted y-axis, logarithmic x-axis, and O/X
+    marker conventions exactly match standard pure-tone audiometry format'
+  - Semantic color exception correctly applied — Imprint matte red (#AE3030) for right
+    ear and Imprint blue (#4467A3) for left ear match the universal clinical convention,
+    with both colors drawn from the Imprint palette
+  - Six severity-band fills (Normal → Profound) using distinct Imprint palette colors
+    with low alpha create meaningful visual hierarchy without obscuring markers
+  - 'Complete theme-adaptive chrome: PAGE_BG, INK, INK_SOFT, INK_MUTED, ELEVATED_BG
+    all properly tokenized and switched between light (#FAF8F1) and dark (#1A1A17)
+    renders'
+  - 'Full spec compliance: log x-scale, inverted y-axis, circle/cross marker types,
+    dashed vs solid line distinction, kHz shorthand tick labels, and severity band
+    labels in right margin'
+  - Deterministic, hardcoded pure-tone data depicting a realistic high-frequency sensorineural
+    notch (noise-induced hearing loss) — clinically plausible and medically neutral
+  weaknesses:
+  - 'LM-02 limited: seaborn is used mainly as a thin wrapper over matplotlib (sns.lineplot
+    + sns.despine + sns.set_theme); the plot could nearly be replicated in pure matplotlib
+    with minor changes — no seaborn-distinctive feature (e.g., FacetGrid, relplot
+    semantic grouping, or palette integration via hue) is leveraged'
+  - 'DE-01 moderate: the overall aesthetic is clean and domain-correct but stops short
+    of publication-ready polish — no intentional typographic hierarchy beyond the
+    standard anyplot title, no focal-point emphasis (e.g., highlighting the 4 kHz
+    notch region), keeping it at ''well-configured default'' rather than ''FiveThirtyEight-level
+    design'''
+  - 'DE-02 good but not perfect: the clinical grid (both axes) is appropriate but
+    the band fills at BAND_ALPHA=0.09/0.16 make the lower bands (Severe/Profound)
+    appear very dark on the dark render, slightly reducing fill differentiation in
+    the lower half'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — matches the expected PAGE_BG token. No pure white.
+      Chrome: Title "audiogram-clinical · python · seaborn · anyplot.ai" in dark ink at 12pt, centered above the plot — clearly readable, fills roughly 70% of the square canvas width. Y-axis label "Hearing Level (dB HL)" and X-axis label "Frequency (Hz)" both set at 10pt, balanced and readable. Tick labels at 8pt (INK_SOFT #4A4A44) on both axes: y-axis shows -10 to 120 in 10 dB steps, x-axis shows 125, 250, 500, 1k, 2k, 4k, 8k. Severity band labels in the right margin ("Normal", "Mild", "Moderate", "Mod. Severe", "Severe", "Profound") in italic INK_MUTED (#6B6A63) — legible and neatly positioned at the band midpoints. Legend in lower-left with ELEVATED_BG fill (#FFFDF6): "Right Ear (O)" in Imprint matte red, "Left Ear (X)" in Imprint blue — readable.
+      Data: Right ear — red (#AE3030) open circles with solid connecting line, following a gradual slope from 10 dB HL at 125 Hz down to 65 dB HL at 8 kHz. Left ear — blue (#4467A3) X markers with dashed connecting line, 5–10 dB worse at most frequencies, ending at 75 dB HL at 8 kHz. Six horizontal severity bands with low-alpha Imprint-color fills (green → lime → ochre → amber → red → rose) span the full plot width, providing immediate clinical context. First series color is Imprint matte red by semantic exception (clinical convention), not #009E73 — documented and correct.
+      Legibility verdict: PASS — all text is clearly readable against the warm off-white background. No light-on-light conflicts.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — matches PAGE_BG dark token. No pure black.
+      Chrome: Title and all labels render in light ink (#F0EFE8 / #B8B7B0) against the dark surface — all readable. Tick labels, axis titles, and severity band labels all adapt correctly to dark chrome tokens. Legend box uses ELEVATED_BG dark (#242420) with a light edge — readable. Grid lines remain subtle with alpha=0.15.
+      Data: Data colors are identical to the light render — right ear uses the same Imprint matte red (#AE3030) with open circles; left ear uses the same Imprint blue (#4467A3) with X markers and dashed line. Severity band fills appear slightly more saturated at the increased BAND_ALPHA=0.16 on the dark surface, making the lower bands (Severe/Profound — red/rose fills) somewhat dense but not obscuring the marker data. No dark-on-dark failures observed.
+      Legibility verdict: PASS — all text is clearly readable against the dark background. No black-on-black issues detected. Data markers and lines are distinguishable in both themes.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=12, axes=10, ticks=8, legend=8,
+          band labels=7). All text readable in both themes. Title fills ~70% of square
+          canvas — expected for mandated format. Balanced axis labels and ticks. No
+          overflow or clipping.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render. Legend in
+          lower-left is clear of the data in the plotted frequency range.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 7 data points per ear — sparse. Circles at markersize=9 and X markers
+          at markersize=10 with markeredgewidth=2.5 are well-proportioned and prominent.
+          Lines at linewidth=2.0 are clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red (#AE3030) vs blue (#4467A3) pair is CVD-distinguishable (well-separated
+          hues). Redundant encoding via marker shape (O vs X) and linestyle (solid
+          vs dashed) ensures the series remain distinct even for red-green CVD viewers.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 canvas — appropriate for clinical audiogram. Canvas
+          gate passed. subplots_adjust(left=0.11, right=0.80, top=0.92, bottom=0.12)
+          allocates right margin for band labels without crowding the axes. Plot area
+          fills ~60% of canvas — well-balanced.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: x = 'Frequency (Hz)' with units; y = 'Hearing Level (dB HL)' with
+          units. Both descriptive and clinically accurate.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception correctly applied: right ear = Imprint matte
+          red (#AE3030, position 5), left ear = Imprint blue (#4467A3, position 3)
+          — both Imprint palette members, matching the universal clinical convention
+          that the spec mandates. Severity band fills also use Imprint palette colors.
+          Backgrounds #FAF8F1 / #1A1A17 correct. Data colors identical across themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above a generic default: semantic color exception is intentional,
+          severity band palette creates meaningful visual gradient, square canvas
+          is domain-appropriate. Not yet publication-ready FiveThirtyEight level —
+          no focal-point emphasis (e.g., highlighting the 4 kHz notch region), typographic
+          hierarchy is minimal beyond the mandated title.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed (top/right via despine), remaining spines colored
+          to INK_SOFT. Grid is subtle (alpha=0.15) and appropriate for clinical audiogram
+          format (both axes). Band alpha differentiated between light/dark themes.
+          Some room for improvement in band fill differentiation on dark render.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Data depicts a clinically recognizable high-frequency sensorineural
+          notch (noise-induced hearing loss). Severity bands immediately contextualize
+          the clinical significance — viewer sees at a glance that both ears are Normal-to-Mild
+          at low frequencies but deteriorate to Mod. Severe at high frequencies. Clear
+          focal narrative for an audiology domain chart.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct clinical audiogram: inverted y-axis, logarithmic x-axis,
+          O/X marker convention, lines connecting per-ear thresholds.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: inverted y-axis (0 dB at top), log x-axis
+          (125-8000 Hz), red circle for right ear, blue cross for left ear, solid
+          vs dashed lines, all six severity bands with labels, kHz shorthand tick
+          labels, legend mapping O/X to ears.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Frequency on log x-axis, hearing threshold on inverted y-axis, right
+          ear solid red circles, left ear dashed blue X markers — all correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'audiogram-clinical · python · seaborn · anyplot.ai' exactly
+          matches the required format. Legend labels 'Right Ear (O)' and 'Left Ear
+          (X)' match spec requirements.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both ears shown with distinct threshold patterns. Data spans all
+          six severity bands (Normal through Mod. Severe). Asymmetric hearing loss
+          between ears (left slightly worse). Full audiometric frequency range covered.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic noise-induced high-frequency sensorineural notch pattern
+          — medically realistic, clinically recognized pattern, neutral domain content.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard audiometric frequencies 125-8000 Hz. Threshold values 10-75
+          dB HL — realistic for noise-induced loss. Y-axis range -10 to 120 dB HL
+          matches clinical standard.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear structure: imports → theme tokens → data → plot → save. No
+          functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded — deterministic, no random seed needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, matplotlib.pyplot, matplotlib.ticker, seaborn, matplotlib.transforms.blended_transform_factory
+          — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and Pythonic. blended_transform_factory is an elegant solution
+          for placing band labels in data/axes mixed coordinates. Band BANDS list
+          with iteration is concise.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png with correct facecolor. No bbox_inches='tight'
+          (correctly omitted per seaborn.md rules).
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses sns.lineplot with explicit ax=, sns.set_theme with detailed
+          rc overrides, sns.despine — all proper seaborn idioms. Correct pattern for
+          axes-level multi-series line plots.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Seaborn is used mainly as a thin matplotlib wrapper here. sns.lineplot
+          with markers and sns.despine are the only distinctly seaborn elements. The
+          core audiogram mechanics (log scale, inverted axis, axhspan, blended transforms)
+          are all pure matplotlib. Could be replicated with minimal changes in pure
+          matplotlib.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  patterns:
+  - explicit-figure
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
