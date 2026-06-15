@@ -1,0 +1,283 @@
+library: plotly
+language: python
+specification_id: heatmap-periodic-table
+created: '2026-06-15T05:18:31Z'
+updated: '2026-06-15T05:46:02Z'
+generated_by: claude-sonnet
+workflow_run: 27524502976
+issue: 8659
+language_version: 3.13.13
+library_version: 6.8.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/python/plotly/plot-dark.html
+quality_score: 85
+review:
+  strengths:
+  - 'Correct imprint_seq sequential colormap (#009E73 → #4467A3) for single-polarity
+    IE1 data'
+  - Luminance-adaptive text coloring on tiles (dark on green, white on blue) — non-trivial
+    design detail
+  - Grey tiles for elements with missing IE1 data preserve the recognizable periodic
+    table shape
+  - Thin separator lines framing the f-block gap are a polished visual cue
+  - All 118 elements placed in canonical positions; lanthanides/actinides correctly
+    detached into separate rows
+  - Colorbar with descriptive label IE₁ (kJ/mol) and theme-adaptive chrome
+  - 'Correct title format with descriptive prefix: First Ionization Energy · heatmap-periodic-table
+    · python · plotly · anyplot.ai'
+  - Factually accurate IE1 values (H=1312, He=2372.3, N=1402.3 — anomalous N correctly
+    higher than O)
+  - Layered heatmap approach (grey trace + colored trace) is idiomatic Plotly for
+    mixed-data tiles
+  - Fully deterministic — hardcoded element data, no random seed needed
+  weaknesses:
+  - Period numbers (4.5px) and group numbers (3.8px) are very small — at scale=4 they
+    render at ~18px and ~15px source-pixels, barely visible at full resolution and
+    essentially invisible when scaled to mobile (~400px width). Increase to at least
+    6px each.
+  - Two helper functions (_srgb_lin, _tile_text) break the KISS flat structure (Imports
+    → Data → Plot → Save). Inline the luminance check as a lambda or single expression
+    to restore strict KISS.
+  - Title font size adaptive formula (max(11, round(16 × 67/len(title)))) results
+    in 14px logical = 56px source, which is slightly on the smaller end for the long
+    mandated title. Consider floor of 13 → capped at 52px; current rendering looks
+    acceptable but is near the lower boundary.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "First Ionization Energy · heatmap-periodic-table · python · plotly · anyplot.ai" renders in dark ink (#1A1A17) at adaptive size (~14px logical), filling ~70% of width. Colorbar label "IE₁ (kJ/mol)" and tick labels visible in INK/INK_SOFT tones. Period numbers (1–7) on the left margin and group numbers (1–18) at the top are extremely small (~4.5px / ~3.8px logical) — visible at full resolution but marginal.
+      Data: Tiles graduate from #009E73 (brand green, low IE1 ~375 kJ/mol — alkali metals) to #4467A3 (blue, high IE1 ~2372 kJ/mol — noble gases) via imprint_seq. Grey tiles (#8A8A82) for period 7 superheavy elements with unknown IE1 preserve the table shape. Element symbols (bold, 6.5px) centered in each tile; atomic numbers (5.0px) in the top-left corner. Lanthanides and actinides correctly placed as detached f-block rows below, labeled "Lanthanides" / "Actinides" in INK_MUTED. Thin horizontal separator lines frame the f-block gap. Colorbar on right with ELEVATED_BG background.
+      Legibility verdict: PASS — all critical text readable at full resolution. Period/group margin labels are very small but not causing a scoring failure.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title renders in #F0EFE8 (light cream) — fully readable against the dark surface. Colorbar text uses INK_SOFT (#B8B7B0). Period/group margin labels use INK_MUTED (#A8A79F) — light enough to be visible on dark bg. No dark-on-dark failures observed.
+      Data: Data colors are identical to the light render — same green→blue gradient, same grey tiles. The adaptive tile text coloring (dark ink on lighter green tiles, white on darker blue tiles) is theme-independent and data-driven, correctly unchanged across themes.
+      Legibility verdict: PASS — chrome correctly flips for dark theme; data colors unchanged; no unreadable elements detected.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 5
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set throughout (symbol 6.5px, atomic# 5.0px,
+          title adaptive). All readable at full resolution. Period labels (4.5px)
+          and group labels (3.8px) are ~18px / ~15px source-pixels — barely visible
+          at full res, essentially gone at 400px mobile width.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; xgap=3/ygap=3 keeps tiles separated; Lanthanides/Actinides
+          labels sit in empty left cells.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Colored tiles and grey tiles all clearly visible; imprint_seq provides
+          good luminance range; adaptive text coloring ensures symbol readability
+          on both ends of the gradient.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (green→blue) is CVD-safe. Luminance-adaptive tile text
+          ensures sufficient contrast for every element.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Periodic table fills the 3200×1800 canvas well; margins (l=45, r=100,
+          t=60, b=30) leave room for colorbar and title; f-block rows correctly separated
+          below main body.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axis labels (appropriate for fixed-grid periodic table).
+          Colorbar labeled IE₁ (kJ/mol) — descriptive with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq (single-polarity sequential cmap) correctly used for
+          IE1. Backgrounds #FAF8F1 (light) / #1A1A17 (dark). Theme-adaptive chrome
+          throughout. Data colors identical across both renders.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured-default level: luminance-adaptive tile text,
+          grey missing-data tiles, period/group orientation labels, f-block separator
+          lines, title font scaling — multiple intentional design choices showing
+          care. Not quite publication-ready.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: All axis chrome removed (no ticks, no spines, no grid — appropriate
+          for fixed grid). Tile gaps (xgap/ygap=3) create breathing room. Thin f-block
+          separator lines add intentional structure. ELEVATED_BG on colorbar frame
+          is a subtle refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: IE1 trend (low alkali metals → high noble gases) is immediately visible
+          in the green→blue gradient. Noble gas column stands out clearly in blue.
+          Lanthanide plateau visible. Good visual hierarchy through colormap — above
+          the raw-data-dump default but no annotations highlight key anomalies.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct heatmap-based periodic table in canonical 18×7 layout with
+          detached f-block rows.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: canonical layout, f-block detached rows,
+          sequential colormap, element symbol + atomic number on each tile, colorbar
+          with units, grey tiles for missing values.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: IE1 correctly encoded as tile color. All 118 elements in canonical
+          positions. Groups 1–18, periods 1–7 correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''First Ionization Energy · heatmap-periodic-table · python
+          · plotly · anyplot.ai'' — correct format with optional descriptive prefix.
+          Colorbar serves as legend.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full periodic table shown including all 118 elements; grey tiles
+          for missing superheavy IE1 data preserve recognizable shape; both colored
+          and missing-value aspects demonstrated.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: First Ionization Energy is a canonical real-world property used in
+          chemistry education and materials science — exactly matching the spec's
+          stated applications.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'IE1 values are scientifically accurate: H=1312.0, He=2372.3, N=1402.3
+          (correctly anomalously high vs O=1313.9 — half-filled 2p effect), noble
+          gas series shows correct trend. Range 375–2372 kJ/mol is factually correct.'
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Two helper functions (_srgb_lin, _tile_text) break the flat KISS
+          structure. The luminance calculation could be inlined as a lambda. Otherwise
+          follows Imports → Data → Plot → Save.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic — all data hardcoded, no random seed needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, sys (path manipulation), numpy (array construction), plotly.graph_objects
+          — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, purposeful code. sys.path manipulation is a legitimate workaround
+          for self-import issue (file named plotly.py). No over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-light.png / plot-dark.png and plot-light.html / plot-dark.html.
+          Current Plotly 6.8 API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic use of go.Heatmap with layered traces, colorbar dict, fig.add_shape
+          for separator lines, fig.update_layout. Uses Plotly's annotation system
+          effectively for 200+ per-tile annotations.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Layered heatmap approach (grey trace + imprint_seq trace) is a Plotly-specific
+          technique for mixed-missing-data visualization. fig.add_shape for f-block
+          separator lines and HTML export alongside PNG are Plotly-distinctive.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - html-export
+  - layer-composition
+  patterns:
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - minimal-chrome
