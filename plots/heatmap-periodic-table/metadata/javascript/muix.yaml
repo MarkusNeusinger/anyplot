@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: heatmap-periodic-table
 created: '2026-06-15T05:23:45Z'
-updated: '2026-06-15T05:31:57Z'
+updated: '2026-06-15T05:52:26Z'
 generated_by: claude-sonnet
 workflow_run: 27525267742
 issue: 8659
@@ -12,54 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-p
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/javascript/muix/plot-dark.html
-quality_score: 82
+quality_score: 88
 review:
   strengths:
-  - 'Full canonical periodic table layout: 18×7 main grid plus detached f-block rows
-    with correct group/period placement for all 118 elements'
-  - 'Imprint sequential colormap (green #009E73 → blue #4467A3) used correctly for
-    this single-polarity continuous property'
-  - WCAG-based luminance switching for tile text (dark text on bright tiles, light
-    text on dark tiles) — sophisticated accessibility touch
-  - 'All spec features implemented: element symbol centered, atomic number top-left,
-    EN value bottom, grey tiles for undefined values, colorbar with property name
-    and units, f-block placeholder tiles with dashed borders'
-  - Perfectly accurate Pauling electronegativity data (Fr=0.70 min, F=3.98 max) with
-    informative Low/High labels identifying the extremes on the colorbar
-  - 'Theme-adaptive chrome: t.ink/t.inkSoft for all text, t.pageBg for background,
-    separate NULL_FILL per theme — both renders pass theme-readability check'
+  - Correct and complete periodic table in canonical layout with all 118 elements,
+    proper f-block detachment, and dashed placeholder tiles at group 3
+  - 'Imprint sequential colormap (#009E73 → #4467A3) implemented precisely from scratch
+    via linear interpolation — exactly matches the imprint_seq spec'
+  - WCAG luminance-based adaptive tile text color ensures strong contrast across the
+    full EN gradient in both light and dark themes
+  - Fully deterministic hardcoded element data with accurate Pauling EN values (Fr=0.70,
+    F=3.98)
+  - Named extremes in colorbar ('Low (Fr = 0.70)' / 'High (F = 3.98)') and grey tile
+    legend improve interpretability without cluttering the chart
+  - Both light and dark renders are theme-correct with identical data colors and adaptive
+    chrome
   weaknesses:
-  - 'Library mastery is near-zero: no @mui/x-charts components are used — the implementation
-    imports only Box from @mui/material and draws the entire chart with raw SVG (<rect>,
-    <text>, <line>, <linearGradient>). MUI X community surface does not include a
-    heatmap/grid chart type, so the library was bypassed entirely. Scores LM-01=1/5,
-    LM-02=1/5.'
-  - 'Significant empty canvas space at the bottom: with TILE≈63 CSS px the content
-    (title + 9 tile rows + f-block gap + colorbar + labels) ends at roughly y≈793
-    of 1200 CSS px, leaving ~34% of the square canvas blank below. Increase TILE size
-    or reduce TABLE_TOP/F_GAP padding so the content fills ~85–90% of the canvas height.'
-  - EN value labels at fontSize=6.5 CSS px are very small. At 2400×2400 source resolution
-    this is 13 source pixels — readable at full res but marginal on mobile. Increase
-    to at least fontSize=8 within tiles where space allows.
-  - 'VQ-05 layout imbalance: all empty whitespace is concentrated at the bottom while
-    the top has only 88px padding. The layout should be vertically centred or scaled
-    up so margins feel balanced on the square canvas.'
+  - Atomic number (7px CSS) and EN value (8px CSS) text is very small; at 400px mobile
+    scaled view these elements are unreadable — minimum should be 8px for atomic numbers
+    and 9px for EN values within the tile layout constraints
+  - F-block row separation is marked only by a gap distance; a thin visual rule or
+    faint bracket annotation connecting the placeholder tiles (57-71, 89-103) to the
+    f-block rows would strengthen the layout story
+  - Title font at 20px CSS is slightly below the recommended 22px for the square canvas;
+    bumping to 22px would give the title marginally more visual weight
+  - No focal points or group annotations guide the reader to key periodic trends (halogens
+    as highest-EN group, alkali metals as lowest)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
-      Chrome: Title "heatmap-periodic-table · javascript · muix · anyplot.ai" in dark ink (fontSize=20) is fully readable. Subtitle "Pauling Electronegativity — periodic trends across all elements" in softer dark ink (fontSize=13) is readable. Colorbar label, tick values, Low/High labels, and the grey-tile note are all in dark ink — legible throughout.
-      Data: 118 element tiles rendered with the Imprint sequential colormap from #009E73 (low EN, alkali metals/francium) to #4467A3 (high EN, fluorine/halogens). Tile text switches between dark and light via WCAG luminance calculation — working correctly. Grey tiles (#CCCBC3) appear for noble gases and synthetic elements. Lanthanide/actinide f-block rows detached below with a 20px gap; placeholder dashed-border tiles in group-3 positions of periods 6 and 7. Gradient colorbar at bottom with tick marks at 0.70, 1.50, 2.50, 3.50, 3.98.
-      Notable issue: Approximately 34% of the canvas height (y≈793–1200 CSS px) is empty white space below the colorbar note.
-      Legibility verdict: PASS — all text readable at full resolution; EN values at fontSize=6.5 are small but visible.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "heatmap-periodic-table · javascript · muix · anyplot.ai" in dark ink, clearly readable. Subtitle "Pauling Electronegativity — periodic trends across all elements" in softer dark ink, readable. Colorbar label "Electronegativity (Pauling Scale)" and tick labels (0.70, 1.50, 2.50, 3.50, 3.98) in dark ink, readable. Low/High annotations and grey tile note in soft ink, readable.
+      Data: Tiles colored with Imprint sequential colormap — bright teal-green (#009E73) for low EN (alkali metals, Fr=0.70) transitioning to steel blue (#4467A3) for high EN (halogens, F=3.98). Noble gases and undefined-EN elements rendered in warm grey (#CCCBC3). Tile text (symbols, atomic numbers, EN values) dynamically switches between dark (#1A1A17) and light (#F0EFE8) based on WCAG luminance — all tile text is readable.
+      Legibility verdict: PASS — all text clearly readable against the light background
 
     Dark render (plot-dark.png):
-      Background: Dark near-black #1A1A17 — correct dark theme surface, not pure black.
-      Chrome: Title and subtitle in light ink (#F0EFE8 / #B8B7B0 via t.ink / t.inkSoft) — fully readable against the dark background. Colorbar label, tick values, and all annotation text are light-coloured and legible. No dark-on-dark failures observed.
-      Data: Tile colors are identical to the light render — same Imprint sequential gradient from #009E73 → #4467A3. Null-EN tiles use dark-theme fill #3E3E3A (darker grey), correctly adapted for the dark background. WCAG-based tile text color switching is still working correctly (white text on dark/mid tiles, dark text on lighter green tiles with high EN). Data colors are confirmed identical across themes — only chrome flips.
-      Legibility verdict: PASS — all text clearly readable against the dark background; no dark-on-dark failures.
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and subtitle rendered in light ink (#F0EFE8), clearly readable against dark background. Colorbar ticks and Low/High annotations in lighter soft ink (#B8B7B0), readable. No dark-on-dark failures observed.
+      Data: Tile gradient colors are IDENTICAL to light render — same #009E73 to #4467A3 Imprint sequential progression. Null/grey tiles shift to darker grey (#3E3E3A) appropriate for the dark surface. Tile text color switching (WCAG luminance) continues to provide correct contrast on all colored tiles in the dark theme.
+      Legibility verdict: PASS — all text clearly readable against the dark background; no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -67,84 +60,89 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title/subtitle/colorbar text all readable
-          in both themes. EN values at fontSize=6.5 CSS px are very small (13 source
-          px) — readable at full resolution but marginal at mobile scale.
+        comment: 'All font sizes explicitly set (title 20px, subtitle 13px, symbols
+          13px bold, atomic numbers 7px, EN values 8px, colorbar 10-12px). Readable
+          at desktop. Minor deduction: 7-8px CSS for atomic numbers and EN values
+          is borderline at mobile widths.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Grid layout prevents overlap by design; colorbar section well-separated;
-          no collisions in either render.
+        comment: No text collisions in either render. Within-tile positioning (atomic
+          number top-left, symbol centered, EN value bottom) is clean at all tile
+          sizes.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Colored tiles clearly visible with good contrast; imprint_seq gradient
-          distinguishable across the full EN range; grey null tiles clearly distinct.
+        comment: All 118 elements clearly visible. Imprint sequential gradient renders
+          compelling perceptual range. Grey null tiles distinctly visible without
+          competing with colored tiles.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential colormap (#009E73→#4467A3) is CVD-safe green-to-blue;
-          WCAG luminance-based tile text switching ensures adequate tile/text contrast.
+        comment: Imprint sequential colormap is CVD-safe. WCAG luminance threshold
+          (0.18) used to switch tile text between dark and light — correct adaptive
+          contrast across full EN range.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Content ends at approximately y=793 of 1200 CSS px, leaving ~34%
-          of the square canvas blank at the bottom. Canvas area coverage is ~60% but
-          balance is poor — all whitespace concentrated at the bottom.
+        passed: true
+        comment: Square canvas (2400x2400) correct choice for periodic table. Canvas
+          gate passed. Vertical centering distributes whitespace proportionally. Nothing
+          clipped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Colorbar labelled 'Electronegativity (Pauling Scale)' with units;
-          Low/High extremes identified with element names and values; subtitle gives
-          full context.
+        comment: Colorbar labeled 'Electronegativity (Pauling Scale)'; subtitle adds
+          full context; Low/High extremes name specific elements and values.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint sequential colormap (#009E73→#4467A3) used correctly for
-          single-polarity EN data. Background #FAF8F1 light / #1A1A17 dark. Theme-adaptive
-          chrome via ANYPLOT_TOKENS. Data colors identical across both renders.'
+        comment: 'Continuous data uses Imprint sequential (#009E73 to #4467A3), matching
+          imprint_seq spec. Light bg #FAF8F1, dark bg #1A1A17. Chrome correctly theme-adaptive
+          in both renders. Data colors identical across themes.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Clearly above defaults: custom imprint_seq gradient, WCAG luminance
-          text switching, monospace for numeric data vs Inter for labels, dashed f-block
-          placeholder tiles. Not publication-ready due to the large empty bottom space
-          and the absence of any MUI X chart aesthetics.'
+        comment: Strongly above defaults. WCAG luminance switching for tile text is
+          sophisticated. Custom Imprint color interpolation from scratch. Vertical
+          centering computation. Dashed placeholder tiles with monospace labels. Falls
+          short of 8 due to limited hierarchy in f-block area and no element category
+          group labels.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Clean tile gaps (2px), f-block separation (20px gap), appropriate
-          font family choices. Deducted for the significant wasted canvas space at
-          the bottom which breaks the visual balance.
+        comment: 'Good refinement: no axes or spines, consistent font families (Inter/Roboto
+          for display, monospace for numeric), uniform tile gaps, subtle Low/High
+          annotations. Not ''every detail polished'' — f-block separation could be
+          more visually marked.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Periodic trend immediately visible — top-right halogens in deep blue,
-          bottom-left alkali metals in bright green. Subtitle frames the narrative.
-          Colorbar explicitly labels 'Low (Fr = 0.70)' and 'High (F = 3.98)' identifying
-          the extremes. Guides viewer to the periodicity story.
+        comment: Periodic trend (increasing EN rightward/upward) immediately visible
+          from gradient. Named extremes in colorbar anchor interpretation. Grey tile
+          legend clarifies noble gases. Above default but no focal points or group
+          annotations for key trends (halogens, alkali metals).
     spec_compliance:
       score: 15
       max: 15
@@ -154,32 +152,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct periodic table heatmap: 18-column × 7-period main grid,
-          f-block (lanthanides/actinides) detached as 2 rows below, equal-area tile
-          squares, continuous color encoding.'
+        comment: Correct periodic table heatmap in canonical 18-group x 7-period layout
+          with f-block detached rows.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: element symbol centered, atomic number
-          top-left, EN value bottom, grey tiles for undefined values, luminance-based
-          text switching, colorbar with property name and units, f-block visually
-          separated, placeholder tiles in group-3 gaps.'
+        comment: 'All spec requirements met: equal tiles with gaps, f-block rows separated,
+          gap at group 3 with dashed placeholders, Imprint sequential colormap, colorbar
+          with label, symbol/atomic number/EN value on tiles, grey tiles for undefined
+          values, all 118 elements present.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: group→column, period→row, EN→tile color all correct. F-block rows
-          use row=8/9 encoding for f-block positioning.
+        comment: Group to column, period to row, electronegativity to tile color.
+          All data mapped correctly.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'heatmap-periodic-table · javascript · muix · anyplot.ai'
-          — correct format with language=javascript per MUI X harness convention.
+        comment: Title is exactly 'heatmap-periodic-table · javascript · muix · anyplot.ai'.
+          Colorbar serves as the continuous legend.
     data_quality:
       score: 15
       max: 15
@@ -189,23 +186,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 118 elements covered; full EN range from Fr (0.70) to F (3.98);
-          null elements represented as grey; lanthanides and actinides shown in f-block;
-          both main-group and transition metals present.
+        comment: 'Shows all aspects: full 118-element table, full EN range 0.70-3.98,
+          both defined and undefined-value tiles, main-group and f-block elements,
+          canonical layout with lanthanide/actinide detachment.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Pauling electronegativity — a real, well-established chemistry property.
-          Neutral scientific topic. EN values match standard reference data.
+        comment: Pauling electronegativity is the most widely-used electronegativity
+          scale in chemistry education and research. Neutral, scientific content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: EN range 0.70–3.98 is factually correct. Individual element values
-          match established Pauling EN data (H=2.20, F=3.98, Cs=0.79, etc.).
+        comment: EN values are accurate Pauling scale values (Fr=0.70, F=3.98, transition
+          metal values realistic). Null values assigned correctly for noble gases
+          and transactinides.
     code_quality:
       score: 10
       max: 10
@@ -215,71 +213,70 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean: data constants → two small utility functions (tileColor,
-          tileTextColor) → single exported Chart component. Helper functions are necessary
-          for JSX template; not over-engineered.'
+        comment: 'Clean structure: data constants -> helper functions -> default-exported
+          component. No classes, no state, no unnecessary abstraction.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All element data hard-coded in ELEMENTS array; EN constants fixed;
-          fully deterministic, no RNG.
+        comment: All element data hardcoded as constants. Fully deterministic; no
+          RNG.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only 'Box' from @mui/material/Box — single import, used for the wrapper
-          container.
+        comment: Only ChartContainer from @mui/x-charts and Box from @mui/material/Box.
+          Both used. No unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and readable; utility functions are concise; JSX template is
-          clear; no fake UI elements; no over-engineering.
+        comment: Appropriate complexity. WCAG luminance calculation self-contained.
+          Vertical centering arithmetic clear. No fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses window.ANYPLOT_SIZE, window.ANYPLOT_TOKENS, window.ANYPLOT_THEME
-          correctly. Square orientation directive on line 1. Harness handles plot-light/dark.png
-          output.
+        comment: '//# anyplot-orientation: square directive present. Community @mui/x-charts
+          only. skipAnimation on ChartContainer. Output handled by harness.'
     library_mastery:
-      score: 2
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: No @mui/x-charts components used. The entire chart is rendered via
-          raw SVG elements (<rect>, <text>, <line>, <linearGradient>). Only Box from
-          @mui/material is used as a container. MUI X Charts' high-level API (BarChart,
-          ScatterChart, ChartContainer, etc.) is completely absent.
+        passed: true
+        comment: Correctly uses ChartContainer as MUI X composition root, skipAnimation,
+          window.ANYPLOT_TOKENS for theme tokens, Box for background. Creative workaround
+          (ChartContainer with empty series=[]) is correct approach given no native
+          heatmap in MUI X community. Most rendering is custom SVG.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: No MUI X Charts distinctive features leveraged. The SVG rendering
-          approach could be replicated identically in any browser-based React harness
-          without MUI X Charts at all. MUI X community does not include a periodic
-          table / heatmap grid chart type, so the implementation bypassed the library
-          entirely.
-  verdict: REJECTED
+        comment: 'MUI X-specific features: ChartContainer SVG surface, Box with sx.bgcolor
+          from tokens, theme-provider integration via t.pageBg/t.ink/t.inkSoft. Visualization
+          is primarily custom SVG — unavoidable since periodic table heatmaps are
+          Pro-only in MUI X. Above default (1) since MUI ecosystem is meaningfully
+          integrated.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
   patterns:
-  - iteration-over-groups
+  - data-generation
+  - matrix-construction
   dataprep:
   - normalization
   styling:
   - custom-colormap
-  - alpha-blending
+  - minimal-chrome
