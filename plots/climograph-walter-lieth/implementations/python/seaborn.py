@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 climograph-walter-lieth: Walter-Lieth Climate Diagram
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 85/100 | Created: 2026-06-15
+Quality: 88/100 | Created: 2026-06-15
 """
 
 import os
