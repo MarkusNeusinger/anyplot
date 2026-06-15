@@ -19,6 +19,7 @@ const FREQUENCIES = [125, 250, 500, 1000, 2000, 4000, 8000];
 const RIGHT_EAR   = [15, 15, 20, 25, 45, 75, 80];
 const LEFT_EAR    = [10, 15, 15, 20, 40, 70, 75];
 
+
 // Semantic colors: matte red for right (clinical convention), Imprint blue for left
 const RIGHT_COLOR = "#AE3030";
 const LEFT_COLOR  = "#4467A3";
@@ -55,7 +56,7 @@ function SeverityBands() {
             <text
               x={left + width - 8} y={bTop + bH * 0.5}
               textAnchor="end" dominantBaseline="middle"
-              fontSize={13} fill={t.inkSoft} opacity={0.85}
+              fontSize={11} fill={t.inkSoft} opacity={0.85}
             >
               {band.label}
             </text>
@@ -108,8 +109,9 @@ export default function Chart() {
       skipAnimation
       xAxis={[{
         id: "freq",
-        scaleType: "point",
+        scaleType: "log",
         data: FREQUENCIES,
+        tickInterval: FREQUENCIES,
         valueFormatter: (v: number) => v >= 1000 ? `${v / 1000}k` : `${v}`,
         label: "Frequency (Hz)",
         labelStyle: { fontSize: 16, fill: t.ink },
