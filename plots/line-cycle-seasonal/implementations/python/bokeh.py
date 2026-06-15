@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-cycle-seasonal: Cycle Plot (Seasonal Subseries)
 Library: bokeh 3.9.1 | Python 3.13.13
 Quality: 88/100 | Created: 2026-06-15
@@ -20,7 +20,7 @@ try:
     import numpy as np
     import pandas as pd
     from bokeh.io import output_file, save
-    from bokeh.models import CustomJSTickFormatter, FixedTicker
+    from bokeh.models import CustomJSTickFormatter, FixedTicker, Label
     from bokeh.plotting import figure
     from PIL import Image
     from selenium import webdriver
@@ -86,6 +86,16 @@ div_ys = [[-3.5, 31.5] for _ in range(n_months - 1)]
 all_x = [x for xs in sub_xs for x in xs]
 all_y = [y for ys in sub_ys for y in ys]
 
+# Linear trend per monthly group to show within-season warming signal
+trend_xs = []
+trend_ys = []
+for mi in range(n_months):
+    m_x = np.array(sub_xs[mi], dtype=float)
+    m_y = np.array(sub_ys[mi], dtype=float)
+    coeffs = np.polyfit(m_x, m_y, 1)
+    trend_xs.append([float(m_x[0]), float(m_x[-1])])
+    trend_ys.append([float(coeffs[0] * m_x[0] + coeffs[1]), float(coeffs[0] * m_x[-1] + coeffs[1])])
+
 # Title — scale fontsize for long title
 title_str = "Monthly Air Temperature · line-cycle-seasonal · python · bokeh · anyplot.ai"
 n_chars = len(title_str)
@@ -107,7 +117,7 @@ p = figure(
 )
 
 # Group dividers (drawn first, renders below data)
-p.multi_line(div_xs, div_ys, line_color=INK_SOFT, line_alpha=0.25, line_width=1)
+p.multi_line(div_xs, div_ys, line_color=INK_SOFT, line_alpha=0.38, line_width=1)
 
 # Seasonal mean reference lines (thick blue, drawn below annual lines)
 p.multi_line(mean_xs, mean_ys, line_color=BLUE, line_width=5, line_alpha=0.9, legend_label="Monthly mean")
@@ -117,6 +127,23 @@ p.multi_line(sub_xs, sub_ys, line_color=BRAND, line_width=2.5, line_alpha=0.8, l
 
 # Scatter markers for individual annual data points
 p.scatter(all_x, all_y, size=8, color=BRAND, line_color=PAGE_BG, line_width=0.5)
+
+# Dashed trend lines per group — make the within-season warming signal explicit
+AMBER = IMPRINT_PALETTE[3]  # #BD8233 — trend annotation distinct from data colors
+p.multi_line(trend_xs, trend_ys, line_color=AMBER, line_width=2.0, line_alpha=0.65, line_dash="dashed")
+center_x = (group_starts[0] + group_ends[-1]) / 2.0
+warming_label = Label(
+    x=center_x,
+    y=29.5,
+    text="↑ warming trend: +0.05 °C/yr",
+    text_font_size="22pt",
+    text_color=AMBER,
+    text_align="center",
+    text_alpha=0.85,
+    background_fill_alpha=0.0,
+    border_line_alpha=0.0,
+)
+p.add_layout(warming_label)
 
 # Custom x-axis: ticks at integer group midpoints mapped to month names
 js_labels = "{" + ", ".join(f'"{mid}": "{m}"' for mid, m in zip(group_mids, months, strict=True)) + "}"
@@ -159,7 +186,7 @@ p.yaxis.major_label_text_color = INK_SOFT
 
 # Legend
 p.legend.background_fill_color = ELEVATED_BG
-p.legend.border_line_color = INK_SOFT
+p.legend.border_line_color = None
 p.legend.label_text_color = INK_SOFT
 p.legend.label_text_font_size = "34pt"
 p.legend.location = "top_right"
