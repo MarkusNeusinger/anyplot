@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-periodic-table: Periodic Table Property Heatmap
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 88/100 | Created: 2026-06-15
@@ -19,6 +19,10 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 MISSING_FILL = "#C4C4BE" if THEME == "light" else "#383835"
+
+# Fixed luminance-based text colors — tile fill is theme-independent so text choice is too
+LIGHT_TEXT = "#F0EFE8"  # for dark tiles (relative luminance < 0.35)
+DARK_TEXT = "#1A1A17"  # for light tiles (relative luminance >= 0.35)
 
 # Data: (atomic_number, symbol, group_pos, period_pos, pauling_en)
 # period_pos 8.5 = lanthanide row below main table, 9.5 = actinide row
@@ -72,7 +76,7 @@ ELEMENTS = [
     (42, "Mo", 6, 5, 2.16),
     (43, "Tc", 7, 5, 1.90),
     (44, "Ru", 8, 5, 2.20),
-    (45, "Rh", 9, 5, 2.28),
+    (45, "Rh", 9, 5, 2.20),
     (46, "Pd", 10, 5, 2.20),
     (47, "Ag", 11, 5, 1.93),
     (48, "Cd", 12, 5, 1.69),
@@ -160,6 +164,23 @@ df["label_num"] = df["atomic_number"].astype(str)
 df_colored = df[df["electronegativity"].notna()].copy()
 df_missing = df[df["electronegativity"].isna()].copy()
 
+# Luminance-adaptive text: lerp gradient endpoints in sRGB, compute WCAG relative luminance
+# Gradient: #009E73 (low EN) → #4467A3 (high EN)
+en_min = df_colored["electronegativity"].min()
+en_max = df_colored["electronegativity"].max()
+t = (df_colored["electronegativity"] - en_min) / (en_max - en_min)
+r_srgb = (0x00 + t * (0x44 - 0x00)) / 255.0
+g_srgb = (0x9E + t * (0x67 - 0x9E)) / 255.0
+b_srgb = (0x73 + t * (0xA3 - 0x73)) / 255.0
+r_lin = (r_srgb / 12.92).where(r_srgb <= 0.04045, ((r_srgb + 0.055) / 1.055) ** 2.4)
+g_lin = (g_srgb / 12.92).where(g_srgb <= 0.04045, ((g_srgb + 0.055) / 1.055) ** 2.4)
+b_lin = (b_srgb / 12.92).where(b_srgb <= 0.04045, ((b_srgb + 0.055) / 1.055) ** 2.4)
+luminance = 0.2126 * r_lin + 0.7152 * g_lin + 0.0722 * b_lin
+df_colored["sym_color"] = luminance.apply(lambda lum: LIGHT_TEXT if lum < 0.35 else DARK_TEXT)
+
+df_sym_light = df_colored[df_colored["sym_color"] == LIGHT_TEXT]
+df_sym_dark = df_colored[df_colored["sym_color"] == DARK_TEXT]
+
 title = "Electronegativity · heatmap-periodic-table · python · letsplot · anyplot.ai"
 title_n = len(title)
 title_size = max(11, round(16 * 67 / title_n))
@@ -183,7 +204,14 @@ plot = (
     ggplot()
     # Grey tiles for elements with no defined electronegativity
     + geom_tile(
-        mapping=aes(x="x", y="y"), data=df_missing, fill=MISSING_FILL, color=PAGE_BG, size=0.4, width=0.93, height=0.93
+        mapping=aes(x="x", y="y"),
+        data=df_missing,
+        fill=MISSING_FILL,
+        color=PAGE_BG,
+        size=0.4,
+        width=0.93,
+        height=0.93,
+        tooltips=layer_tooltips().line("@symbol (#@atomic_number)").line("EN: not defined"),
     )
     # Colored tiles — Imprint sequential: green (low EN) → blue (high EN)
     + geom_tile(
@@ -193,18 +221,43 @@ plot = (
         size=0.4,
         width=0.93,
         height=0.93,
+        tooltips=layer_tooltips()
+        .line("@symbol (#@atomic_number)")
+        .line("Electronegativity: @electronegativity Pauling"),
     )
-    # Element symbols — centered, bold
+    # Element symbols — luminance-adaptive: LIGHT_TEXT on dark tiles, DARK_TEXT on light tiles
     + geom_text(
-        mapping=aes(x="x", y="y", label="symbol"), data=df_colored, color=INK, size=3.0, fontface="bold", vjust=0.6
+        mapping=aes(x="x", y="y", label="symbol"),
+        data=df_sym_light,
+        color=LIGHT_TEXT,
+        size=3.0,
+        fontface="bold",
+        vjust=0.6,
+    )
+    + geom_text(
+        mapping=aes(x="x", y="y", label="symbol"),
+        data=df_sym_dark,
+        color=DARK_TEXT,
+        size=3.0,
+        fontface="bold",
+        vjust=0.6,
     )
     + geom_text(
         mapping=aes(x="x", y="y", label="symbol"), data=df_missing, color=INK_SOFT, size=3.0, fontface="bold", vjust=0.6
     )
-    # Atomic numbers — top-left corner, small
+    # Atomic numbers — top-left corner; LIGHT_TEXT on colored tiles, INK_SOFT on grey tiles
     + geom_text(
         mapping=aes(x="x", y="y", label="label_num"),
-        data=df,
+        data=df_colored,
+        color=LIGHT_TEXT,
+        size=1.7,
+        nudge_x=-0.30,
+        nudge_y=0.30,
+        hjust=0,
+    )
+    + geom_text(
+        mapping=aes(x="x", y="y", label="label_num"),
+        data=df_missing,
         color=INK_SOFT,
         size=1.7,
         nudge_x=-0.30,
