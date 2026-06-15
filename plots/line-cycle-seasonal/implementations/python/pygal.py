@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-cycle-seasonal: Cycle Plot (Seasonal Subseries)
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 78/100 | Created: 2026-06-15
@@ -46,36 +46,9 @@ for y in range(n_years):
 
 month_means = temps.mean(axis=0)
 
-# Concatenated x-axis: 12 month groups × 10 year positions, separated by 1 None slot
-gap = 1
-group_width = n_years + gap  # 11 slots per group
-total_slots = n_months * n_years + (n_months - 1) * gap  # 131 total positions
-
-
-def gstart(m):
-    return m * group_width
-
-
-# x_labels: month name at center of each group, empty string elsewhere
-x_labels = [""] * total_slots
-for m in range(n_months):
-    x_labels[gstart(m) + n_years // 2] = months[m]
-
-
-def trend_series(m):
-    d = [None] * total_slots
-    for y in range(n_years):
-        d[gstart(m) + y] = round(float(temps[y, m]), 2)
-    return d
-
-
-def mean_series(m):
-    d = [None] * total_slots
-    mv = round(float(month_means[m]), 2)
-    for y in range(n_years):
-        d[gstart(m) + y] = mv
-    return d
-
+# XY approach: month m occupies x-range [m, m+1).
+# Within each month: 10 year points at x = m + y/n_years (0.0 to 0.9 within group).
+# This gives only 12 x-label positions → slot width ~267px → labels fit at large font.
 
 # Title with font size scaled to length (floor: 44)
 title = "Monthly Temperature Cycle · line-cycle-seasonal · python · pygal · anyplot.ai"
@@ -100,31 +73,35 @@ custom_style = Style(
     stroke_width=2.5,
 )
 
-# Plot
-chart = pygal.Line(
+# XY chart: x-axis is numeric, groups are [m, m+1) for month m
+chart = pygal.XY(
     style=custom_style,
     width=3200,
     height=1800,
     title=title,
+    x_title="Month",
     y_title="Average Temperature (°C)",
     show_dots=True,
-    dots_size=2.5,
+    dots_size=3,
     show_legend=False,
     show_x_guides=False,
     show_y_guides=True,
-    allow_interruptions=True,
-    x_labels_major=months,
-    show_minor_x_labels=False,
 )
-chart.x_labels = x_labels
+
+# x_labels: place month names at equal-interval positions across x range
+chart.x_labels = months
 
 # Trend line series — one per month, brand green (Imprint position 1)
+# Within-group x: 0.0, 0.1, ..., 0.9 → 10 year points connected chronologically
 for m in range(n_months):
-    chart.add(months[m], trend_series(m))
+    data = [(m + y / n_years, round(float(temps[y, m]), 2)) for y in range(n_years)]
+    chart.add(months[m], data)
 
 # Seasonal mean reference lines — one per month, matte red (Imprint position 5)
+# dasharray "12, 6" gives strong CVD-robust distinction from solid trend lines
 for m in range(n_months):
-    chart.add(f"Mean {months[m]}", mean_series(m), stroke_style={"width": 5, "dasharray": "8, 4"})
+    mv = round(float(month_means[m]), 2)
+    chart.add(f"Mean {months[m]}", [(m, mv), (m + 0.9, mv)], stroke_style={"width": 5, "dasharray": "12, 6"})
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
