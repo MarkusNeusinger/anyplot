@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 climograph-walter-lieth: Walter-Lieth Climate Diagram
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 83/100 | Created: 2026-06-15
@@ -25,6 +25,7 @@ from lets_plot import (
     ggsize,
     labs,
     scale_color_manual,
+    scale_linetype_manual,
     scale_x_continuous,
     scale_y_continuous,
     theme,
@@ -44,6 +45,9 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 # Imprint palette — semantic mapping: temperature=red, precipitation=blue
 TEMP_COLOR = "#AE3030"  # matte red (pos 5) — heat/temperature semantic
 PRECIP_COLOR = "#4467A3"  # blue (pos 3) — water/precipitation semantic
+
+# Ribbon alpha: higher in dark mode for visibility on near-black background
+ribbon_alpha = 0.28 if THEME == "light" else 0.50
 
 # Athens, Greece — classic Mediterranean climate, 1991-2020 normals
 month_labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -80,13 +84,14 @@ df_lines = pd.concat(
 # Manual right y-axis (precipitation scale) — sec_axis not available in lets-plot 4.x
 x_rax = 12.55  # right axis vertical line
 x_rtick = 12.72  # tick mark end and label start
-right_y = [0, 10, 20, 30, 40]
-right_labels = ["0", "20", "40", "60", "80"]  # mm values (= 2 × temp-scale positions)
+# Walter-Lieth convention: 0, 20, 40, 60, 100 mm ticks
+right_y = [0, 10, 20, 30, 50]  # °C-scale positions (mm/2)
+right_labels = ["0", "20", "40", "60", "100"]  # mm values
 
-df_rax_line = pd.DataFrame({"x": [x_rax], "xend": [x_rax], "y": [-4], "yend": [41]})
+df_rax_line = pd.DataFrame({"x": [x_rax], "xend": [x_rax], "y": [-4], "yend": [51]})
 df_rtick_marks = pd.DataFrame({"x": [x_rax] * 5, "xend": [x_rax + 0.13] * 5, "y": right_y, "yend": right_y})
 df_rtick_labels = pd.DataFrame({"x": [x_rtick] * 5, "y": right_y, "label": right_labels})
-df_rax_title = pd.DataFrame({"x": [14.2], "y": [20.0], "label": ["Precipitation (mm)"]})
+df_rax_title = pd.DataFrame({"x": [14.2], "y": [23.0], "label": ["Precipitation (mm)"]})
 
 # Title fontsize: scaled for long title string
 title_text = "Athens, Greece · climograph-walter-lieth · python · letsplot · anyplot.ai"
@@ -97,6 +102,7 @@ subtitle_text = "107 m a.s.l. │ Tmean = 18.5°C │ P = 383�
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
+    panel_border=element_blank(),
     panel_grid_major=element_line(color=INK_SOFT, size=0.2),
     panel_grid_minor=element_blank(),
     axis_title=element_text(color=INK, size=12),
@@ -113,19 +119,20 @@ anyplot_theme = theme(
 plot = (
     ggplot(df, aes(x="month"))
     # Humid fill (blue): precipitation curve above temperature curve (Jan-Mar, Oct-Dec)
-    + geom_ribbon(aes(ymin="temp", ymax="humid_top"), fill=PRECIP_COLOR, alpha=0.28)
+    + geom_ribbon(aes(ymin="temp", ymax="humid_top"), fill=PRECIP_COLOR, alpha=ribbon_alpha)
     # Arid fill (red): temperature curve above precipitation curve (Apr-Sep)
-    + geom_ribbon(aes(ymin="arid_bottom", ymax="temp"), fill=TEMP_COLOR, alpha=0.28)
+    + geom_ribbon(aes(ymin="arid_bottom", ymax="temp"), fill=TEMP_COLOR, alpha=ribbon_alpha)
     # Freezing-point reference
     + geom_hline(yintercept=0, color=INK_SOFT, size=0.5, linetype="dashed")
-    # Temperature and precipitation curves (mapped color → legend)
-    + geom_line(data=df_lines, mapping=aes(x="month", y="y", color="series"), size=1.2)
+    # Temperature and precipitation curves (color + linetype → CVD-safe combined legend)
+    + geom_line(data=df_lines, mapping=aes(x="month", y="y", color="series", linetype="series"), size=1.2)
     + geom_point(data=df_lines, mapping=aes(x="month", y="y", color="series"), size=2.2)
     + scale_color_manual(values={"Temperature": TEMP_COLOR, "Precipitation": PRECIP_COLOR}, name=" ")
+    + scale_linetype_manual(values={"Temperature": "solid", "Precipitation": "dashed"}, name=" ")
     # X-axis: month labels; extended range accommodates manual right axis
     + scale_x_continuous(breaks=list(range(1, 13)), labels=month_labels, limits=(0.4, 15.5))
-    # Left y-axis: temperature (°C)
-    + scale_y_continuous(name="Temperature (°C)", breaks=right_y, limits=(-5, 42))
+    # Left y-axis: temperature (°C) — extended to 53 to show 100mm right-axis tick
+    + scale_y_continuous(name="Temperature (°C)", breaks=[0, 10, 20, 30, 40], limits=(-5, 53))
     # Manual right y-axis — precipitation (mm), color-coded blue
     + geom_segment(data=df_rax_line, mapping=aes(x="x", xend="xend", y="y", yend="yend"), color=INK_SOFT, size=0.4)
     + geom_segment(data=df_rtick_marks, mapping=aes(x="x", xend="xend", y="y", yend="yend"), color=INK_SOFT, size=0.4)
