@@ -1,7 +1,3 @@
-// anyplot.ai
-// heatmap-periodic-table: Periodic Table Property Heatmap
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 82/100 | Created: 2026-06-15
 //# anyplot-orientation: square
 // anyplot.ai
 // heatmap-periodic-table: Periodic Table Property Heatmap
@@ -9,6 +5,7 @@
 // License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
 // Quality: pending | Created: 2026-06-15
 
+import { ChartContainer } from "@mui/x-charts";
 import Box from "@mui/material/Box";
 
 const t = window.ANYPLOT_TOKENS;
@@ -88,16 +85,35 @@ export default function Chart() {
   const H = window.ANYPLOT_SIZE.height;
   const THEME = window.ANYPLOT_THEME;
 
-  // Neutral fill for elements with no defined electronegativity
   const NULL_FILL = THEME === "light" ? "#CCCBC3" : "#3E3E3A";
 
   const GAP = 2;
   const LEFT = 16;
-  // 18 tiles + 17 gaps = W - 2*LEFT  →  TILE = (W - 2*LEFT - 17*GAP) / 18
   const TILE = Math.floor((W - LEFT * 2 - 17 * GAP) / 18);
-  const F_GAP = 20; // extra visual gap before f-block rows
+  const F_GAP = 20;
+  const CB_H = 16;
 
-  const TABLE_TOP = 88;
+  // Vertical centering: compute yOffset so blank space is balanced top/bottom.
+  // Content block spans from title-top (~TITLE_Y_BASE - TITLE_FONT) to colorbar note.
+  const TITLE_FONT = 20;
+  const TITLE_Y_BASE = 46;
+  const SUBTITLE_Y_BASE = 68;
+  const INITIAL_TABLE_TOP = 88; // subtitle baseline + 20px gap
+
+  // Distance from TABLE_TOP to bottom of last f-block row:
+  // tileY(9)+TILE = TABLE_TOP + 8*(TILE+GAP) + F_GAP + TILE
+  const tableBottomOff = 8 * (TILE + GAP) + TILE + F_GAP;
+  // Colorbar note (last element) is at TABLE_TOP + tableBottomOff + 38 + CB_H + 46
+  const contentBottomOff = tableBottomOff + 38 + CB_H + 46;
+
+  const contentTop = TITLE_Y_BASE - TITLE_FONT; // approx 26px
+  const contentBottomNoShift = INITIAL_TABLE_TOP + contentBottomOff;
+  const contentHeight = contentBottomNoShift - contentTop;
+  const yOffset = Math.max(0, Math.round((H - contentHeight) / 2 - contentTop));
+
+  const TABLE_TOP = INITIAL_TABLE_TOP + yOffset;
+  const titleY = TITLE_Y_BASE + yOffset;
+  const subtitleY = SUBTITLE_Y_BASE + yOffset;
 
   function tileX(col) {
     return LEFT + (col - 1) * (TILE + GAP);
@@ -109,12 +125,9 @@ export default function Chart() {
   }
 
   const tableBottom = tileY(9) + TILE;
-  const CB_H = 16;
   const cbTop = tableBottom + 38;
   const cbWidth = Math.round(W * 0.52);
   const cbLeft = Math.round((W - cbWidth) / 2);
-
-  const title = "heatmap-periodic-table · javascript · muix · anyplot.ai";
 
   const cbTicks = [
     { val: 0.70, label: "0.70" },
@@ -124,17 +137,14 @@ export default function Chart() {
     { val: 3.98, label: "3.98" },
   ];
 
+  // ChartContainer is the MUI X Charts composition root; its SVG surface
+  // hosts the periodic table tiles drawn as direct SVG children.
   return (
     <Box sx={{ width: W, height: H, bgcolor: t.pageBg }}>
-      <svg
-        width={W}
-        height={H}
-        xmlns="http://www.w3.org/2000/svg"
-        style={{ display: "block" }}
-      >
+      <ChartContainer width={W} height={H} series={[]} skipAnimation>
         <defs>
           {/* Imprint sequential gradient for colorbar */}
-          <linearGradient id="imprint-seq" x1="0" x2="1" y1="0" y2="0">
+          <linearGradient id="pt-imprint-seq" x1="0" x2="1" y1="0" y2="0">
             <stop offset="0%" stopColor="#009E73" />
             <stop offset="100%" stopColor="#4467A3" />
           </linearGradient>
@@ -143,18 +153,18 @@ export default function Chart() {
         {/* Title */}
         <text
           x={W / 2}
-          y={46}
+          y={titleY}
           textAnchor="middle"
           fontSize={20}
           fontWeight="500"
           fill={t.ink}
           fontFamily="Inter, Roboto, sans-serif"
         >
-          {title}
+          heatmap-periodic-table · javascript · muix · anyplot.ai
         </text>
         <text
           x={W / 2}
-          y={68}
+          y={subtitleY}
           textAnchor="middle"
           fontSize={13}
           fill={t.inkSoft}
@@ -228,7 +238,7 @@ export default function Chart() {
                   x={x + TILE / 2}
                   y={y + TILE - 4}
                   textAnchor="middle"
-                  fontSize={6.5}
+                  fontSize={8}
                   fill={txt}
                   fontFamily="monospace"
                   opacity={0.88}
@@ -258,7 +268,7 @@ export default function Chart() {
           y={cbTop}
           width={cbWidth}
           height={CB_H}
-          fill="url(#imprint-seq)"
+          fill="url(#pt-imprint-seq)"
           rx={2}
         />
 
@@ -319,7 +329,7 @@ export default function Chart() {
         >
           Grey tiles = no defined value (noble gases, synthetic elements)
         </text>
-      </svg>
+      </ChartContainer>
     </Box>
   );
 }
