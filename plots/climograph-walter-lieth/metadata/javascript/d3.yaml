@@ -1,0 +1,265 @@
+library: d3
+language: javascript
+specification_id: climograph-walter-lieth
+created: '2026-06-15T01:29:04Z'
+updated: '2026-06-15T01:35:42Z'
+generated_by: claude-sonnet
+workflow_run: 27518273851
+issue: 8656
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/javascript/d3/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - Technically sophisticated SVG pattern + mask approach for arid/humid fill areas
+    — a distinctly D3/SVG technique not easily replicated in higher-level libraries
+  - Perfect Walter-Lieth scaling convention (10°C ↔ 20mm) with perhumid compression
+    coded and the 2:1 axis ratio visually exact
+  - 'Excellent data choice: Palermo, Sicily shows a textbook Mediterranean climate
+    with clearly visible arid summer and humid winter periods'
+  - Complete spec compliance — dual axes, hatched/dotted pattern fills, header with
+    station metadata, color-coded annual statistics, correct tick values
+  - Theme-adaptive chrome properly implemented using Imprint tokens (t.ink, t.inkSoft,
+    t.grid) in both light and dark renders
+  - Semantic color choice (red=temperature, blue=precipitation) correctly uses Imprint
+    palette positions 5 and 3 per the scientific convention
+  weaknesses:
+  - Vertical month dividers add minor visual clutter — they are not part of the standard
+    Walter-Lieth form; removing them or reducing opacity to 0.2 would clean up the
+    plot
+  - Legend font size (13px) is slightly smaller than the 14px tick labels; raise to
+    14px for consistent sizing
+  - Station name 'Palermo' (26px bold) is visually larger than the mandated anyplot
+    title (20px) — inverted typographic hierarchy; either raise the title to 22px
+    or reduce station name to 22px
+  - Frost month indicator logic is absent from the code — while Palermo has no frost
+    months, future reuse or adaptation of the snippet would silently omit this required
+    feature; add a conditional rendering block even if it produces no visual output
+    for this data
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1 — correct, not pure white.
+      Chrome: Mandated title "climograph-walter-lieth · javascript · d3 · anyplot.ai" in dark text at ~20px, centered, occupying ~55% of width. Header below shows "Palermo" in large bold dark text (26px), location subtitle "Sicily, Italy | 15 m a.s.l. | 1991–2020" in secondary text. Annual mean temperature "18.3 °C" in red (#AE3030) and "551 mm/yr" in blue (#4467A3) on the right side of the header. A thin separator line divides the header from the plot area. Left axis ticks (0–50°C) and right axis ticks (0–100mm) with labels in dark secondary text. Month labels (Jan–Dec) along the bottom. Legend in upper-right of plot area with "Arid (T > P/2)" and "Humid (P > 2T)" entries.
+      Data: Temperature line in #AE3030 (Imprint red, position 5), precipitation line in #4467A3 (Imprint blue, position 3). Arid period (May–Sep) filled with semi-transparent red dots on light red ground. Humid periods (Jan–Apr, Oct–Dec) filled with diagonal hatching on light blue ground. Data curves are crisp at 2.5px stroke-width.
+      Legibility verdict: PASS — all text readable at full and thumbnail scale against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black consistent with #1A1A17 — correct, not pure black.
+      Chrome: All text adapts to light color correctly. Title in near-white, station name "Palermo" and subtitle in light text. Annual stats retain semantic colors (red/blue). Axis tick labels and axis labels in light secondary color — no dark-on-dark failures detected. Separator line in theme-adaptive grid color, subtle but visible.
+      Data: Temperature line still #AE3030 and precipitation line still #4467A3 — identical to light render as required. Arid dotted fill adapts to dark surface (pattern now shows as dark-red dots visible against the near-black background). Humid hatched fill remains distinguishable. Both fills rendered correctly in dark context.
+      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures; data colors identical to light render; only chrome flipped.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set; readable in both themes. Minor: station
+          name (26px) > mandated title (20px) creates slight hierarchy inversion;
+          legend at 13px slightly below tick label size of 14px.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or element collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines at 2.5px stroke-width clearly visible; pattern fills distinguishable
+          in both themes.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Pattern redundancy (dots vs. hatching) provides encoding beyond color
+          alone, addressing CVD concerns for red-blue pairing.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Plot fills good proportion of canvas; balanced
+          margins; header and plot area well-proportioned. No content cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Left axis 'Temperature (°C)', right axis 'Precipitation (mm)' — both
+          descriptive with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception applied correctly: #AE3030 (Imprint red) for
+          temperature and #4467A3 (Imprint blue) for precipitation per scientific
+          convention. Chrome theme-adaptive via ANYPLOT_TOKENS. Background #FAF8F1
+          light / #1A1A17 dark. Data colors identical across themes.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: SVG pattern fills (dots + diagonal hatching) and
+          color-coded header statistics are well above defaults. Not quite FiveThirtyEight-level
+          but clearly a professional-looking scientific chart.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: subtle grid, header separator line, and plot border
+          are thoughtful. Vertical month dividers add minor unnecessary clutter.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: The Walter-Lieth fills immediately reveal Palermo's large arid summer
+          (May–Sep) and humid winter. Color-coded header statistics reinforce the
+          story. Slightly below max because no direct period annotations.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Walter-Lieth climograph with dual axes, pattern fills, and
+          header.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: 2:1 scaling, perhumid compression (coded),
+          arid/humid fills, header with station metadata, color-coded annual statistics.
+          Frost months N/A for Palermo (all temps > 0°C).'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Months on x, temperature on left y (°C), precipitation on right y
+          (mm) at 2:1 ratio. All 12 months shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'climograph-walter-lieth · javascript · d3 · anyplot.ai' —
+          correct format. Legend labels 'Arid (T > P/2)' and 'Humid (P > 2T)' correctly
+          describe the two periods.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows both arid (summer drought) and humid (winter rains) periods
+          — all defining features of the Walter-Lieth diagram.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Palermo, Sicily — real Mediterranean climate station with 1991–2020
+          normals. Neutral scientific context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperatures 11–27°C and precipitation 3–91mm are realistic for Palermo.
+          Annual mean 18.3°C and total 551mm are factually correct.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Helper arrow functions (belowPath, addMask, extLinePath) are concise
+          and necessary for the SVG mask approach — appropriate for the complexity.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hard-coded; fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only d3 global used; no unnecessary imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable D3 code; no fake UI elements; complexity appropriate
+          for the visualization.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract; ANYPLOT_SIZE and ANYPLOT_TOKENS properly
+          consumed; no deprecated APIs.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert D3 usage: scaleBand/scaleLinear, axisLeft/Right/Bottom with
+          tickValues, method chaining, proper data binding, SVG defs.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: SVG <pattern> + <mask> combination for the arid/humid fills is distinctly
+          a D3/SVG technique — cannot be easily replicated in matplotlib, plotly,
+          or echarts. Sophisticated and correct.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - manual-ticks
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
