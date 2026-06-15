@@ -32,10 +32,13 @@ const TEMP_AXIS_ID = "tempY";
 // These follow semantic conventions: water=blue, heat/drought=red
 const HUMID_FILL = "#4467A3";
 const ARID_FILL = "#AE3030";
+// Dark blue for frost month indicator bands (mean temp < 0°C)
+const FROST_COLOR = "#2B4B8C";
 
-// Draws blue/red fills between the temperature and precipitation curves
+// Draws blue/red fills between the temperature and precipitation curves,
+// plus frost month indicator bands below the x-axis for months with mean temp < 0°C
 function WalterLiethFill() {
-  const { left, top } = useDrawingArea();
+  const { left, top, height } = useDrawingArea();
   const xScale = useXScale();
   const yScale = useYScale(TEMP_AXIS_ID);
 
@@ -47,6 +50,8 @@ function WalterLiethFill() {
   const getPY = (i) => yScale(precipScaled[i]) ?? 0;
 
   const elems = [];
+
+  // Humid/arid fills between temperature and precipitation curves
   for (let i = 0; i < months.length - 1; i++) {
     const x0 = getX(i);
     const x1 = getX(i + 1);
@@ -63,7 +68,7 @@ function WalterLiethFill() {
           key={`f${i}`}
           points={`${x0},${py0} ${x1},${py1} ${x1},${ty1} ${x0},${ty0}`}
           fill={h0 ? HUMID_FILL : ARID_FILL}
-          fillOpacity={0.28}
+          fillOpacity={0.38}
         />
       );
     } else {
@@ -77,13 +82,33 @@ function WalterLiethFill() {
           key={`f${i}a`}
           points={`${x0},${py0} ${xc},${yc} ${x0},${ty0}`}
           fill={h0 ? HUMID_FILL : ARID_FILL}
-          fillOpacity={0.28}
+          fillOpacity={0.38}
         />,
         <polygon
           key={`f${i}b`}
           points={`${xc},${yc} ${x1},${py1} ${x1},${ty1}`}
           fill={h1 ? HUMID_FILL : ARID_FILL}
-          fillOpacity={0.28}
+          fillOpacity={0.38}
+        />
+      );
+    }
+  }
+
+  // Frost month indicator: solid band just below x-axis for months with mean temp < 0°C
+  const frostBandH = 6;
+  const frostGap = 2;
+  for (let i = 0; i < months.length; i++) {
+    if (temperature[i] < 0) {
+      const xi = getX(i);
+      elems.push(
+        <rect
+          key={`frost${i}`}
+          x={xi - bw / 2}
+          y={height + frostGap}
+          width={bw}
+          height={frostBandH}
+          fill={FROST_COLOR}
+          fillOpacity={0.85}
         />
       );
     }
@@ -125,11 +150,15 @@ export default function Chart() {
   const chartH = H - 158;
   const chartW = W - 48;
 
+  const hasFrostMonths = temperature.some((t) => t < 0);
   const legendItems = [
     { color: "#AE3030", isLine: true, label: "Temperature (°C)" },
     { color: "#4467A3", isLine: true, label: "Precipitation (mm)" },
-    { color: "rgba(68,103,163,0.28)", border: "#4467A3", label: "Humid period" },
-    { color: "rgba(174,48,48,0.28)", border: "#AE3030", label: "Arid period" },
+    { color: "rgba(68,103,163,0.38)", border: "#4467A3", label: "Humid period" },
+    { color: "rgba(174,48,48,0.38)", border: "#AE3030", label: "Arid period" },
+    ...(hasFrostMonths
+      ? [{ color: "rgba(43,75,140,0.85)", border: FROST_COLOR, label: "Frost month" }]
+      : []),
   ];
 
   return (
@@ -191,6 +220,10 @@ export default function Chart() {
         ]}
         margin={{ top: 15, right: 90, bottom: 48, left: 78 }}
         skipAnimation
+        sx={{
+          // Suppress right spine — keep left + bottom L-shape only
+          "& .MuiChartsAxis-right .MuiChartsAxis-line": { display: "none" },
+        }}
       >
         <ChartsGrid horizontal />
         <WalterLiethFill />
@@ -207,6 +240,7 @@ export default function Chart() {
           position="right"
           label="Precipitation (mm)"
           labelStyle={{ fontSize: 14 }}
+          disableLine
         />
       </ChartContainer>
 
