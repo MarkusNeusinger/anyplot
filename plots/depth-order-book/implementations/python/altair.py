@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 depth-order-book: Order Book Depth Chart
 Library: altair 6.2.1 | Python 3.13.13
 Quality: 89/100 | Created: 2026-06-15
@@ -64,7 +64,7 @@ df = pd.concat([bid_df, ask_df], ignore_index=True)
 
 # Chart parameters
 x_min = int(bid_prices.min()) - 5
-x_max = int(ask_prices.max()) + 5
+x_max = int(ask_prices.max()) + 10
 y_max = max(float(bid_cumulative.max()), float(ask_cumulative.max())) * 1.08
 
 # Title with fontsize scaling
@@ -105,8 +105,18 @@ mid_rule = (
     .encode(x="price:Q")
 )
 
+# Mid-price / spread annotation label
+SPREAD = BEST_ASK - BEST_BID
+mid_label = (
+    alt.Chart(pd.DataFrame({"price": [MID_PRICE], "y": [y_max * 0.96]}))
+    .mark_text(text=f"Mid: ${MID_PRICE:,} | Spread: ${SPREAD}", color=INK_SOFT, fontSize=9, align="center", dy=-4)
+    .encode(
+        x=alt.X("price:Q", scale=alt.Scale(domain=[x_min, x_max])), y=alt.Y("y:Q", scale=alt.Scale(domain=[0, y_max]))
+    )
+)
+
 chart = (
-    alt.layer(area, mid_rule)
+    alt.layer(area, mid_rule, mid_label)
     .properties(
         width=620,
         height=320,
@@ -114,7 +124,7 @@ chart = (
         padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
         title=alt.TitleParams(text=title, fontSize=title_fontsize, color=INK),
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0.5, continuousWidth=620, continuousHeight=320)
+    .configure_view(fill=PAGE_BG, stroke=None, continuousWidth=620, continuousHeight=320)
     .configure_axis(
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
