@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 depth-order-book: Order Book Depth Chart
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 87/100 | Created: 2026-06-15
@@ -58,6 +58,21 @@ bid_cq = bid_cum[::-1]
 ask_px = ask_prices
 ask_cq = ask_cum
 
+# Max cumulative volume and mid-price annotation data
+max_vol = max(float(bid_cq[0]), float(ask_cq[-1]))
+mid_price = 60_000
+mid_line = [(mid_price, 0.0), (mid_price, max_vol * 1.05)]
+
+# Biggest bid wall: bid_qtys[24] *= 8 at price 59755.
+# Visual step (drop) appears at bid_px[26]=59765; top of the step is bid_cq[25]=bid_cum[24].
+bid_wall_price = int(bid_px[26])  # 59765
+bid_wall_vol = float(bid_cq[25])  # bid_cum[24] — height at the top of the 8× drop
+
+# Biggest ask wall: ask_qtys[27] *= 9 at price 60275.
+# Visual step (rise) at ask_px[27]=60275; peak is ask_cq[27]=ask_cum[27].
+ask_wall_price = int(ask_px[27])  # 60275
+ask_wall_vol = float(ask_cq[27])  # ask_cum[27] — height at the top of the 9× rise
+
 # Build bid staircase (descending from left/worst to right/best, close to zero at mid)
 bid_step = [(int(bid_px[0]), float(bid_cq[0]))]
 for i in range(1, len(bid_px)):
@@ -77,14 +92,14 @@ n_chars = len(title)
 ratio = 67 / n_chars if n_chars > 67 else 1.0
 title_fontsize = max(44, round(66 * ratio))
 
-# Style
+# Style — 5 colors: Bids, Asks, Mid-price line, Bid Wall dot, Ask Wall dot
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=(BID_COLOR, ASK_COLOR),
+    colors=(BID_COLOR, ASK_COLOR, INK_MUTED, BID_COLOR, ASK_COLOR),
     opacity=0.5,
     opacity_hover=0.85,
     title_font_size=title_fontsize,
@@ -93,6 +108,7 @@ custom_style = Style(
     legend_font_size=44,
     value_font_size=36,
     stroke_width=3.0,
+    dots_size=12,
 )
 
 # Chart
@@ -112,6 +128,21 @@ chart = pygal.XY(
 
 chart.add("Bids", bid_step)
 chart.add("Asks", ask_step)
+# Dashed vertical line at mid price — highlights the bid-ask spread gap
+chart.add(
+    "Mid $60,000 · Spread $10",
+    mid_line,
+    fill=False,
+    show_dots=False,
+    stroke_style={"width": 3, "dasharray": "12,6", "linecap": "round"},
+)
+# Dot callouts at the largest liquidity walls for storytelling
+chart.add(
+    "8× Bid Wall", [{"value": (bid_wall_price, bid_wall_vol), "label": "8×"}], fill=False, show_dots=True, stroke=False
+)
+chart.add(
+    "9× Ask Wall", [{"value": (ask_wall_price, ask_wall_vol), "label": "9×"}], fill=False, show_dots=True, stroke=False
+)
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
