@@ -45,7 +45,7 @@ const subDatasets = MONTHS.map((_, m) => ({
   borderColor: t.palette[0],
   backgroundColor: t.palette[0],
   borderWidth: 2,
-  pointRadius: 2.5,
+  pointRadius: 3.5,
   pointHoverRadius: 0,
 }));
 
@@ -68,9 +68,28 @@ const meanDatasets = MONTHS.map((_, m) => ({
 const TITLE = "Monthly Temperature Cycles · line-cycle-seasonal · javascript · chartjs · anyplot.ai";
 const titleSize = Math.max(13, Math.round(22 * 67 / TITLE.length));
 
-// --- Plugin: season group labels + vertical separators ----------------------
+// --- Plugin: range bands (behind data), separators, month labels ------------
 const groupPlugin = {
   id: "cycleGroups",
+  // Draw min-max range envelope behind the subseries lines
+  beforeDatasetsDraw(chart) {
+    const { ctx } = chart;
+    const xScale = chart.scales.x;
+    const yScale = chart.scales.y;
+    ctx.save();
+    MONTHS.forEach((_, m) => {
+      const vals = temps[m];
+      const minV = Math.min(...vals);
+      const maxV = Math.max(...vals);
+      const x0 = xScale.getPixelForValue(gs(m));
+      const x1 = xScale.getPixelForValue(gs(m) + N_YEARS - 1);
+      const yTop = yScale.getPixelForValue(maxV);
+      const yBot = yScale.getPixelForValue(minV);
+      ctx.fillStyle = "rgba(0,158,115,0.08)";
+      ctx.fillRect(x0, yTop, x1 - x0, yBot - yTop);
+    });
+    ctx.restore();
+  },
   afterDraw(chart) {
     const { ctx, chartArea } = chart;
     const xScale = chart.scales.x;
@@ -120,7 +139,14 @@ new Chart(canvas, {
         text: TITLE,
         color: t.ink,
         font: { size: titleSize, weight: "600" },
-        padding: { top: 8, bottom: 16 },
+        padding: { top: 8, bottom: 4 },
+      },
+      subtitle: {
+        display: true,
+        text: "Upward slopes in every group reveal consistent +1.8°C warming across all seasons (2000–2019)",
+        color: t.inkSoft,
+        font: { size: Math.max(11, Math.round(titleSize * 0.78)), style: "italic" },
+        padding: { bottom: 14 },
       },
       legend: {
         display: true,
@@ -167,7 +193,7 @@ new Chart(canvas, {
         },
         ticks: {
           color: t.inkSoft,
-          font: { size: 11 },
+          font: { size: 13 },
           maxRotation: 0,
           callback(value) {
             for (let m = 0; m < 12; m++) {
@@ -177,12 +203,12 @@ new Chart(canvas, {
           },
         },
         grid: { display: false },
-        border: { color: t.inkSoft },
+        border: { display: false },
       },
       y: {
         ticks: {
           color: t.inkSoft,
-          font: { size: 14 },
+          font: { size: 13 },
           callback: v => `${v.toFixed(0)}°C`,
         },
         grid: { color: t.grid },
@@ -192,7 +218,7 @@ new Chart(canvas, {
           color: t.ink,
           font: { size: 14 },
         },
-        border: { color: t.inkSoft },
+        border: { display: false },
       },
     },
   },
