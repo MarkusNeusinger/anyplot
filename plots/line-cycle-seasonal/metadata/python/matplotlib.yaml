@@ -1,0 +1,271 @@
+library: matplotlib
+language: python
+specification_id: line-cycle-seasonal
+created: '2026-06-15T03:35:38Z'
+updated: '2026-06-15T03:52:04Z'
+generated_by: claude-sonnet
+workflow_run: 27522204382
+issue: 8658
+language_version: 3.13.13
+library_version: 3.11.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - Perfect spec compliance — all cycle plot features implemented correctly (12 seasonal
+    groups, within-group chronological subseries, horizontal mean reference lines,
+    shared y-axis, subtle vertical separators)
+  - Full theme adaptation with all chrome tokens correctly applied in both light and
+    dark renders — no dark-on-dark or light-on-light failures
+  - Realistic monthly temperature data with embedded warming trend (0.02–0.05°C/yr)
+    creates a genuine data story; seasonal pattern is unmistakable
+  - Clean, reproducible code with np.random.seed(42), proper canvas management via
+    subplots_adjust, and no bbox_inches='tight' drift
+  - Custom legend handles built with Line2D give precise control over legend appearance
+    and correctly distinguish subseries lines from mean reference lines
+  - Warming trend annotation with styled callout box adds narrative context and demonstrates
+    intentional data storytelling
+  weaknesses:
+  - Annotation text at fontsize=7 is small — at mobile scale (~400px wide) it would
+    be unreadable; increase to fontsize=8 minimum for tertiary text
+  - Scatter marker size s=16 is quite small for 300 data points across 12 groups;
+    individual yearly observation markers are hard to distinguish — consider s=20–25
+  - Annotation is positioned at axes coordinates (0.97, 0.88), placing it over or
+    adjacent to the December data group — consider positioning near the Jan group
+    or using a clearer visual link to the annotated season
+  - 'LM-02: Implementation lacks distinctive matplotlib features (e.g., ConnectionPatch
+    for annotation arrows, FancyArrowPatch, inset_axes); library is used competently
+    but not distinctively'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct surface color, not pure white
+      Chrome: Title "line-cycle-seasonal · python · matplotlib · anyplot.ai" clearly visible in near-black text, centered above plot. Y-axis label "Avg. Temperature (°C)" readable in dark ink (fontsize=10). X-axis month tick labels (Jan–Dec) visible in INK_SOFT at fontsize=8. Y-axis tick labels (-2 to 26) readable at fontsize=8. Legend in upper-left clearly shows two entries with proper styling.
+      Data: Brand green (#009E73) subseries lines and scatter dots for 25 yearly observations per month group. Black horizontal reference lines mark each month's mean — the key visual comparison element. Subtle light-gray vertical separators between month groups. A small annotation box near the upper-right area (Dec region) shows "+1.2°C Jan trend / 2000 → 2024" in italic INK_SOFT on ELEVATED_BG.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct surface color, not pure black
+      Chrome: Title visible in near-white text (#F0EFE8) — clear against dark background. Y-axis label readable in light INK. Month tick labels and y-axis tick labels are visible in INK_SOFT (#B8B7B0 in dark mode). Legend frame uses ELEVATED_BG (#242420) with proper text coloring. No dark-on-dark failures observed.
+      Data: Brand green (#009E73) data colors are identical to the light render — only chrome flipped. Mean reference lines render white (#F0EFE8) in dark mode, creating strong contrast against the dark background. Annotation box uses ELEVATED_BG (#242420) with INK_MUTED border, readable.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures detected.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, axis labels, tick labels, legend all properly sized and readable
+          in both themes. Annotation at fontsize=7 is quite small for a 3200px canvas
+          and would be unreadable at mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data collisions detected in either render.
+          Annotation box has background that overlays data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Brand green lines and mean reference lines clearly visible. Scatter
+          markers at s=16 are small for 300 total points; connected lines compensate
+          but individual markers are harder to spot.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Only two visual elements — brand green data and INK-colored mean
+          lines. CVD-safe; no red-green as sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Good proportions, generous whitespace. subplots_adjust
+          used correctly, no clipping or overflow.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title in correct format. Y-axis label 'Avg. Temperature (°C)' descriptive
+          with units. Month names serve as self-labeling x-axis.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (and only) series uses #009E73 brand green. Mean lines use
+          INK (neutral semantic anchor, theme-adaptive). Plot backgrounds #FAF8F1
+          / #1A1A17. Both renders theme-correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Clean professional design with intentional choices: subtle month
+          separators, annotation callout, proper token hierarchy. Above default 4
+          but not exceptional.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, x-axis tick marks removed, y-only grid
+          at alpha=0.15, legend and annotation styled with ELEVATED_BG. Multiple refinements
+          clearly applied.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Mean reference lines enable clear seasonal comparison. Warming trend
+          annotation adds explicit narrative. The U-shaped seasonal pattern is unmistakable.
+          Above default 2 due to annotation and intentional data selection.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct cycle/seasonal subseries plot — 12 month groups, within-group
+          chronological lines, horizontal mean reference lines, shared y-axis.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: seasonal groups left-to-right, subseries
+          chronological lines, horizontal mean lines, shared y-axis, subtle group
+          separators.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Seasonal groups on x-axis, temperature values on y-axis, years ordering
+          the within-group subseries. All axes show full data range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'line-cycle-seasonal · python · matplotlib · anyplot.ai' correct.
+          Legend labels 'Yearly observations (2000–2024)' and 'Monthly mean' are accurate.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all cycle plot aspects: seasonal variation (mean height differences),
+          within-group trend (upward slopes showing warming), and the interplay between
+          them.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Average monthly temperature for a mid-latitude city, 2000–2024. Realistic
+          values (-2°C Jan to 24°C Jul), realistic warming trend (0.02–0.05°C/yr).
+          Neutral topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 12 seasonal groups (within spec 4–12), 25 years (~5–30 per group),
+          300 total points (within spec 30–300). Temperature range appropriate for
+          mid-latitude Northern Hemisphere.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'No functions or classes. Clean linear script: tokens → data → layout
+          → plotting loop → axes styling → output.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at the top.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All 4 imports used: os, matplotlib.pyplot, numpy, matplotlib.lines.Line2D.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. Logical organization. No fake UI or AR-08
+          violations.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. Uses subplots_adjust.
+          Uses ax. methods throughout. No deprecated APIs.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper ax. method usage throughout. ax.hlines for reference lines,
+          ax.axvline for separators, proper tick_params, spine management. Custom
+          Line2D legend handles are idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: ax.hlines and ax.transAxes annotation are matplotlib-specific, but
+          no truly distinctive features (ConnectionPatch, FancyArrowPatch, inset_axes,
+          etc.) that showcase library depth.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
