@@ -1,0 +1,251 @@
+library: chartjs
+language: javascript
+specification_id: depth-order-book
+created: '2026-06-15T02:52:15Z'
+updated: '2026-06-15T03:11:32Z'
+generated_by: claude-sonnet
+workflow_run: 27520878462
+issue: 8657
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/javascript/chartjs/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Complete spec compliance: all required features implemented (step areas, cumulative
+    accumulation, dashed mid-price line, spread annotation, bid-ask gap)'
+  - 'Correct cumulative accumulation direction: bids from best bid outward, asks from
+    best ask outward — staircase shape is accurate'
+  - 'Theme adaptation: bgPlugin correctly paints pageBg surface, all chrome tokens
+    (t.ink, t.inkSoft, t.grid) properly applied in both renders'
+  - Deterministic data generation with XOR-shift LCG and seed 42 — includes synthetic
+    liquidity walls for visual realism
+  - 'Idiomatic Chart.js: stepped: ''before'', fill: ''origin'', parsing: false, animation:
+    false all correctly used'
+  - Clean, proportionate layout with no text overlap or edge clipping
+  weaknesses:
+  - Ask fill color rgba(174,48,48,0.28) is hardcoded rather than derived from t.palette[4]
+    with alpha — ideally should compute the fill from the token to avoid magic numbers
+  - 'DE-01 moderate: chart is well-executed but lacks the typographic hierarchy or
+    fine-tuned visual refinement to push into the upper range'
+  - Mid-price annotation text at 14px / 13px is small relative to the 3200x1800 canvas
+    — consider bumping to 16px for the mid-price and 14px for the spread
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — bgPlugin correctly fills the canvas
+      Chrome: Title "depth-order-book · javascript · chartjs · anyplot.ai" at size 22, dark ink — readable. Axis labels "Price (USD)" and "Cumulative Volume (BTC)" at size 16 — readable. Tick labels with "$" prefix and "BTC" suffix at size 14 — readable. Legend labels "Bids (Buy)" and "Asks (Sell)" at size 16 — readable. Mid-price annotation "$60,000" (bold 14px) and "Spread: $10.00" (13px) on pageBg rectangle — readable.
+      Data: Green step area (bids, #009E73 border + rgba(0,158,115,0.28) fill) peaks at ~62 BTC at worst bid. Red step area (asks, #AE3030 border + rgba(174,48,48,0.28) fill) rises to ~60 BTC at worst ask. Dashed mid-price line at $60,000 using inkSoft token. Visible liquidity walls at distTick 15 and 32 on each side. First series is #009E73 (brand green). Semantic exception: asks use #AE3030 (financial convention).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — bgPlugin correctly fills the canvas
+      Chrome: Title, axis labels, tick labels, and legend labels all rendered in light ink — fully readable against dark surface. Mid-price annotation uses pageBg (dark #1A1A17) fill rectangle with ink (light) text — readable. No dark-on-dark failures detected. Grid lines subtle (t.grid token adapts).
+      Data: Data colors are identical to light render — same green bid area and red ask area with same semi-transparent fills. Green (#009E73) bid border clearly visible on dark surface.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes. Title at 22px well-proportioned.
+          Mid-price annotation at 14px slightly small for 3200x1800 canvas.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No element collisions. Annotations on pageBg rectangles prevent line
+          intersection.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Both step areas clearly visible. Dashed mid-price line readable.
+          Liquidity walls create distinct visual jumps.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/red follows required financial semantic exception. Text labels
+          provide CVD redundancy.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Good symmetrical layout. No text clipping. Y-axis
+          starts at zero.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis 'Price (USD)' with $-formatted ticks. Y-axis 'Cumulative Volume
+          (BTC)'. Title in exact required format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Bids use t.palette[0] (#009E73). Asks use t.palette[4] (#AE3030)
+          — correct semantic exception for financial convention. Background via t.pageBg.
+          Chrome via t.ink/t.inkSoft.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above default (4). Semi-transparent fills create visual layering.
+          Mid-price annotation with opaque rectangle is thoughtful. Synthetic walls
+          add realism.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Above default (2). Border removed. Points hidden. Grid uses t.grid
+          tokens. bgPlugin ensures correct warm surfaces.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Above default (2). Mid price and spread annotated. Liquidity walls
+          tell support/resistance story. Could add callouts to wall levels.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct order book depth chart with two cumulative step areas around
+          the mid price.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required: cumulative accumulation, stepped:''before'', semi-transparent
+          fills, bid-ask gap, dashed mid-price line, annotations.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=price, Y=cumulative quantity from zero. 50 levels per side. BTC/USD
+          at ~$60,000.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''depth-order-book · javascript · chartjs · anyplot.ai''.
+          Legend: ''Bids (Buy)'' and ''Asks (Sell)''.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both sides, cumulative accumulation, spread gap, two liquidity walls
+          per side, all core order book features shown.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: BTC/USD at $60,000 plausible. $10 spread realistic. Quantities grow
+          from mid price. Neutral educational context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 50 levels x $10 tick = $500 depth per side. 0-70 BTC cumulative credible.
+          All values sensible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes/functions. Two plugin objects are minimum required by
+          Chart.js plugin API.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: XOR-shift LCG with fixed seed 42. Fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; Chart is global. Only window.ANYPLOT_TOKENS used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. Plugins necessary. Data generation clear
+          and organized.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Chart.js harness handles output. No manual saves. Correct API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: stepped:'before', fill:'origin', parsing:false, animation:false all
+          correct. Plugin API used properly.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom plugins (bgPlugin, midLinePlugin) demonstrate Chart.js plugin
+          API. stepped and fill:'origin' are Chart.js-specific.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending

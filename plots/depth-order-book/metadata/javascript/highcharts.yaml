@@ -1,0 +1,278 @@
+library: highcharts
+language: javascript
+specification_id: depth-order-book
+created: '2026-06-15T02:42:08Z'
+updated: '2026-06-15T03:00:35Z'
+generated_by: claude-sonnet
+workflow_run: 27520649410
+issue: 8657
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/javascript/highcharts/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - Perfect spec compliance — correctly implements cumulative bid/ask step areas with
+    proper directionality, spread gap, mid-price dashed line, and realistic BTC/USD
+    data including liquidity walls at deliberate price levels
+  - 'Excellent semantic color use: brand green (#009E73) for bids and matte red (#AE3030)
+    for asks — both Imprint palette members, fitting the finance domain convention
+    mandated by the spec'
+  - Beautiful linearGradient fillColor with transparency that shows area depth while
+    keeping the staircase sharp and readable in both themes
+  - Deterministic data via fixed-seed LCG (seed=42) with realistic BTC/USD snapshot
+    near $60,000 and a plausible $6 bid-ask spread (0.01%)
+  - Both light and dark themes render correctly — warm off-white (#FAF8F1) and near-black
+    (#1A1A17) backgrounds with fully theme-adaptive chrome (title, axis labels, ticks,
+    grid all use token colors)
+  weaknesses:
+  - Tick labels set at 13px instead of the 14px guideline — raise labels.style.fontSize
+    to '14px' in both xAxis and yAxis for consistency with the Highcharts style guide
+  - Liquidity walls (at bid levels 8, 22, 40 and ask levels 10, 24, 37) are present
+    in the data but invisible as emphasized features — consider annotating the largest
+    wall with a plotLine or a text annotation so viewers can spot 'support/resistance
+    walls' as described in the spec applications
+  - 'Red/green distinction relies on hue and position (left/right of center) but no
+    secondary line-style encoding — adding dashStyle: ''Dash'' or ''ShortDash'' to
+    one series would improve accessibility for red-green color-blind users without
+    harming readability'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white consistent with #FAF8F1 — the canvas has the correct cream surface
+      Chrome: Title "depth-order-book · javascript · highcharts · anyplot.ai" is dark, bold, clearly readable at 22px. Subtitle "BTC/USD · Mid: $60,000 · Spread: $6" is readable in inkSoft gray. Y-axis label "Cumulative BTC Volume" and X-axis label "Price (USD)" are visible in 16px inkSoft. Tick labels at 13px display prices like "$59,750" through "$60,250" — readable but slightly small. Grid lines are subtle.
+      Data: Bids (Buy) rendered as a descending green (#009E73) step area from ~130 BTC cumulative at $59,750 to near-zero at $59,997 (best bid). Asks (Sell) rendered as ascending red (#AE3030) step area from near-zero at $60,003 (best ask) to ~130 BTC at $60,250. Gradient fills with rgba transparency give each area depth. A dashed mid-price line at $60,000 with "Mid $60,000" label marks the center. The bid-ask spread gap is clearly visible. Liquidity walls (step spikes) appear at several price levels on each side.
+      Legibility verdict: PASS — all text elements are clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black consistent with #1A1A17 — the correct dark surface
+      Chrome: Title is light-colored and fully readable against the dark background. Subtitle, axis labels, and tick labels all appear in light/gray tones appropriate to the dark theme. Grid lines are subtle against the near-black surface. No dark-on-dark failures observed.
+      Data: Data colors are identical to the light render — green (#009E73) for bids and red (#AE3030) for asks with matching gradient fills. The mid-price dashed line and its label remain visible. Legend at bottom shows "Bids (Buy)" and "Asks (Sell)" in readable light text.
+      Legibility verdict: PASS — all text elements are clearly readable against the near-black background; no dark-on-dark failures detected.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 22px, axis titles 16px, tick
+          labels 13px, subtitle 14px). Both themes fully readable. Minor: tick labels
+          at 13px are slightly below the 14px guideline.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. X-axis labels are dense but the landscape
+          canvas provides sufficient room for all price labels without collision.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Both step area series clearly visible. Gradient fills show depth.
+          Walls/spikes are present and distinguishable in the staircase curves.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: true
+        comment: Red/green distinction uses Imprint semantic anchors as mandated by
+          the spec. Position (left/right of center) provides spatial redundant encoding,
+          and legend distinguishes Bids vs Asks. No secondary line-style encoding
+          for CVD users.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions. Canvas gate passed (no /tmp/anyplot-canvas-gate.txt).
+          Title fits well (~55% width). No content cut off. Legend positioned cleanly
+          at bottom.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X-axis: ''Price (USD)'', Y-axis: ''Cumulative BTC Volume'' — both
+          descriptive with units. Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Bids use #009E73 (brand green, palette[0]). Asks use #AE3030 (matte
+          red, semantic anchor for loss/sell — correct finance convention). Background
+          #FAF8F1 light / #1A1A17 dark. Data colors identical across themes. Chrome
+          correctly theme-adaptive in both renders.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Professional polish: custom gradient fills with transparency, appropriate
+          semantic color choices, informative subtitle, mid-price reference line.
+          Above defaults but not quite publication-grade — walls not highlighted.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid via t.grid token, transparent background, markers disabled
+          for clean step curves, generous marginRight for visual balance. Some refinement
+          visible beyond library defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Mid-price dashed line guides the viewer to the spread. The V-shaped
+          gap draws the eye to the market center. Subtitle provides immediate context.
+          Walls are present but not emphasized — a viewer must look carefully to spot
+          the liquidity spikes.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct chart type: two cumulative step area series (step:''left'')
+          forming the classic market depth V-shape.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required features present: step curves, green/red semantic colors,
+          semi-transparent gradient fills, bid-ask spread gap, dashed mid-price vertical
+          line with annotation, spread value in subtitle, Y-axis at 0, 50 levels per
+          side, cumulative from mid outward.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X-axis: price (USD). Y-axis: cumulative BTC volume. Bids to left
+          of mid, asks to right. Accumulation direction correct (from mid price outward).'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''depth-order-book · javascript · highcharts · anyplot.ai''
+          — correct format. Legend: ''Bids (Buy)'' and ''Asks (Sell)'' — descriptive
+          and accurate.'
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Shows both sides of the order book, cumulative calculation, spread
+          gap, BTC/USD context, liquidity walls at deliberate price levels. Minor:
+          walls not explicitly highlighted as a feature.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: BTC/USD snapshot near $60,000 — realistic, neutral, and comprehensible
+          scenario. Spread of $6 is plausible for a major crypto pair.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: $60,000 BTC price realistic. $6 spread (~0.01%) typical for liquid
+          BTC/USD pairs. 50 levels per side at $5 increments is a realistic order
+          book snapshot. Cumulative volume up to ~130 BTC is plausible for a major
+          exchange.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: constants → LCG helper (5-line utility, acceptable)
+          → data generation → chart call. No unnecessary classes or complex abstractions.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed LCG seed (42). Fully deterministic data generation — same output
+          on every run.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed — Highcharts and ANYPLOT_TOKENS are globals provided
+          by the harness. All variables defined and used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity for the visualization. No fake UI elements.
+          Gradient fills and plotLines used correctly.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Highcharts.chart('container', ...) called correctly. animation:false
+          set in both chart and plotOptions.series. No explicit file saving (harness
+          handles plot-light.png and plot-dark.png).
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Idiomatic Highcharts patterns: area type with step:''left'', linearGradient
+          fillColor, plotLines for reference line, custom tick formatter. Window tokens
+          properly integrated.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses Highcharts-specific features: linearGradient fillColor (not
+          just a hex fill), step:''left'' for staircase rendering, plotLines with
+          dashed style and positioned label, custom formatter function for price display.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
