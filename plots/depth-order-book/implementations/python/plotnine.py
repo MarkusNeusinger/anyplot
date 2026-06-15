@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 depth-order-book: Order Book Depth Chart
 Library: plotnine 0.15.7 | Python 3.13.13
 Quality: 84/100 | Created: 2026-06-15
@@ -15,6 +15,7 @@ import pandas as pd  # noqa: E402
 from plotnine import (  # noqa: E402
     aes,
     annotate,
+    coord_cartesian,
     element_blank,
     element_line,
     element_rect,
@@ -25,6 +26,7 @@ from plotnine import (  # noqa: E402
     ggplot,
     labs,
     scale_x_continuous,
+    scale_y_continuous,
     theme,
     theme_minimal,
 )
@@ -81,9 +83,18 @@ ask_df = pd.DataFrame({"price": ask_step_x, "cum_qty": ask_step_y, "ymin": 0.0})
 df = pd.concat([bid_df.assign(side="Bids"), ask_df.assign(side="Asks")], ignore_index=True)
 
 y_max = max(bid_cum[-1], ask_cum[-1])
-lbl_idx = 25  # label at ~50% depth along each side
 
-# Label positions inside the filled areas
+# Near-mid-price liquidity zone — first 12 levels per side, rendered with elevated alpha
+# to emphasise tight-spread, high-priority orders where market impact is greatest
+n_near = 12
+bid_near_df = pd.DataFrame(
+    {"price": bid_step_x[: 2 * n_near - 1], "cum_qty": bid_step_y[: 2 * n_near - 1], "ymin": 0.0}
+)
+ask_near_df = pd.DataFrame(
+    {"price": ask_step_x[: 2 * n_near - 1], "cum_qty": ask_step_y[: 2 * n_near - 1], "ymin": 0.0}
+)
+
+lbl_idx = 25  # label at ~50% depth along each side
 label_bid_x = bid_prices[lbl_idx]
 label_bid_y = bid_cum[lbl_idx] * 0.45
 label_ask_x = ask_prices[lbl_idx]
@@ -92,13 +103,23 @@ label_ask_y = ask_cum[lbl_idx] * 0.45
 title = "depth-order-book · python · plotnine · anyplot.ai"
 title_size = max(8, round(12 * (67 / len(title) if len(title) > 67 else 1.0)))
 
+# Y-axis: explicit breaks with integer BTC labels
+y_step = 50
+y_breaks = list(range(0, int(y_max) + y_step, y_step))
+
 # Plot
 plot = (
     ggplot(df, aes(x="price"))
-    + geom_ribbon(aes(ymin="ymin", ymax="cum_qty"), data=df[df["side"] == "Bids"], fill=BID_COLOR, alpha=0.35)
-    + geom_ribbon(aes(ymin="ymin", ymax="cum_qty"), data=df[df["side"] == "Asks"], fill=ASK_COLOR, alpha=0.35)
+    # Full depth fills — base alpha
+    + geom_ribbon(aes(ymin="ymin", ymax="cum_qty"), data=df[df["side"] == "Bids"], fill=BID_COLOR, alpha=0.25)
+    + geom_ribbon(aes(ymin="ymin", ymax="cum_qty"), data=df[df["side"] == "Asks"], fill=ASK_COLOR, alpha=0.25)
+    # Near-mid-price zone — elevated alpha for visual hierarchy
+    + geom_ribbon(aes(ymin="ymin", ymax="cum_qty"), data=bid_near_df, fill=BID_COLOR, alpha=0.35)
+    + geom_ribbon(aes(ymin="ymin", ymax="cum_qty"), data=ask_near_df, fill=ASK_COLOR, alpha=0.35)
+    # Outline strokes
     + geom_line(aes(y="cum_qty"), data=df[df["side"] == "Bids"], color=BID_COLOR, size=0.9)
     + geom_line(aes(y="cum_qty"), data=df[df["side"] == "Asks"], color=ASK_COLOR, size=0.9)
+    # Mid-price reference
     + geom_vline(xintercept=mid_price, color=INK_MUTED, linetype="dashed", size=0.5)
     + annotate(
         "text",
@@ -106,7 +127,7 @@ plot = (
         y=y_max * 0.97,
         label=f"${mid_price:,.0f}",
         color=INK_MUTED,
-        size=2.8,
+        size=3.5,
         ha="left",
         va="top",
     )
@@ -116,7 +137,7 @@ plot = (
         y=y_max * 0.87,
         label=f"Spread: ${spread:.0f}",
         color=INK_MUTED,
-        size=2.3,
+        size=3.0,
         ha="left",
         va="top",
     )
@@ -127,6 +148,10 @@ plot = (
         "text", x=label_ask_x, y=label_ask_y, label="Asks", color=ASK_COLOR, size=3.8, fontweight="bold", ha="center"
     )
     + scale_x_continuous(labels=lambda breaks: [f"${x:,.0f}" for x in breaks])
+    + scale_y_continuous(
+        breaks=y_breaks, labels=lambda breaks: [f"{int(x)}" for x in breaks], expand=(0.01, 0, 0.08, 0)
+    )
+    + coord_cartesian(xlim=(bid_prices[-1] - 5, ask_prices[-1] + 5), ylim=(0, y_max * 1.06))
     + labs(x="Price (USD)", y="Cumulative Volume (BTC)", title=title)
     + theme_minimal()
     + theme(
