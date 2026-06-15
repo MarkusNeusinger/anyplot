@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: line-cycle-seasonal
 created: '2026-06-15T04:05:59Z'
-updated: '2026-06-15T04:13:51Z'
+updated: '2026-06-15T04:28:11Z'
 generated_by: claude-sonnet
 workflow_run: 27522852445
 issue: 8658
@@ -12,46 +12,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-cycl
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/javascript/chartjs/plot-dark.html
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - 'Excellent spec compliance: all cycle plot features implemented correctly (12
-    groups, subseries lines, mean reference lines, vertical dividers, shared y-axis)'
-  - Creative use of Chart.js plugin system (afterDraw) for custom group labeling and
-    separators — non-trivial and idiomatic
-  - 'Perfect data quality: realistic climate scenario with plausible temperatures,
-    warming trend, and seasonal variation'
-  - Reproducible LCG random data with fixed seed — correctly avoids Math.random()/Date
-    in browser context
-  - 'Correct Imprint palette usage with full theme adaptation: both renders are visually
-    correct'
-  - Custom generateLabels elegantly handles the 24-dataset chart with a clean 2-item
-    legend
+  - 'Full spec compliance: all required cycle-plot elements present — seasonal groups,
+    chronological within-group subseries lines, horizontal mean reference lines, shared
+    y-axis, subtle vertical separators, natural calendar order'
+  - Custom Chart.js plugin for range bands (min-max envelope) and month labels below
+    x-axis is a sophisticated addition that shows deep library knowledge
+  - Clean consolidated legend (only 2 entries for 24 datasets) via generateLabels
+    — avoids the 12-legend-entry clutter that would normally result from the multi-dataset
+    architecture
+  - Insightful subtitle ('Upward slopes in every group reveal consistent +1.8°C warming
+    across all seasons (2000–2019)') guides the viewer directly to the story
+  - Deterministic LCG RNG with fixed seed ensures reproducibility without Math.random()
+  - Dynamic title font scaling (22 * 67 / title.length) correctly handles the long
+    descriptive title prefix
+  - 'Theme-adaptive chrome fully correct in both renders: data colors identical (#009E73),
+    only backgrounds and text flip'
+  - 'Perfect code quality: KISS structure, clean helper functions gs() and rng(),
+    no functions/classes, no over-engineering'
   weaknesses:
-  - 'DE-02 LOW: Chart scale borders visible on all four sides. Remove top and right
-    borders with border.display=false on scales for cleaner visual refinement.'
-  - 'DE-01 MODERATE: Visual treatment is functional but not aesthetically elevated.
-    Consider adding subtle area-fill under the subseries or varying line opacity to
-    create depth hierarchy.'
-  - 'DE-03 MODERATE: No visual emphasis on the key insights. Add a simple annotation
-    calling out the warming trend, or subtle background tinting behind peak summer
-    months.'
-  - 'VQ-03 MINOR: pointRadius 2.5 could be 3.5 for slightly better individual-year
-    readability within each 20-year subseries at full resolution.'
-  - 'VQ-01 MINOR: X-tick font size (11px) vs y-tick font size (14px) creates a subtle
-    balance asymmetry — consider aligning both to 13-14px.'
+  - X-axis tick labels all display '2000' repeated 12 times (once per group), which
+    is technically accurate (each subseries starts at 2000) but confusing for viewers
+    who may wonder why the axis always reads the same value — consider removing x-axis
+    ticks entirely and relying solely on month names, or show '2000–2019' as an annotation
+    or axis subtitle instead
+  - Data points within each group are compact (20 years across ~116 CSS px at pointRadius
+    3.5) — individual year identification within a group is difficult; this is inherent
+    to 20-year data in a cycle plot, but could be slightly improved with marginally
+    increased group spacing or slightly smaller point radius to reduce visual crowding
+  - Range band fill uses hardcoded rgba(0,158,115,0.08) instead of deriving from t.palette[0]
+    — should be constructed dynamically e.g. via a hex-to-rgba utility or a CSS var
+    for full theme-token purity
+  - Design lacks any focal-point emphasis distinguishing the summer-peak months or
+    highlighting the warming trend magnitude — color variation or size variation across
+    groups could elevate storytelling from 'good' to 'excellent'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "Monthly Temperature Cycles · line-cycle-seasonal · javascript · chartjs · anyplot.ai" in dark ink at top — clearly readable. Y-axis label "Avg Monthly Temperature (°C)" rotated, dark, legible. Tick labels 0°C–30°C in inkSoft gray. Month labels (Jan–Dec) drawn below x-axis via custom plugin in dark ink. Legend at top-center in dark ink.
-      Data: Twelve seasonal groups (Jan–Dec) with thin connected green (#009E73) subseries lines and horizontal mean reference lines in inkSoft gray. Warming trend visible as upward slope within each month group.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct surface, not pure white.
+      Chrome: Title "Monthly Temperature Cycles · line-cycle-seasonal · javascript · chartjs · anyplot.ai" in dark ink, well-scaled. Italic subtitle in inkSoft below. Legend shows two entries ("Annual subseries" / "Monthly mean"). Y-axis title "Avg Monthly Temperature (°C)" in dark ink, readable. Month names (Jan–Dec) drawn in bold ink below the x-axis. All text clearly readable against the light background.
+      Data: 12 grouped subseries in brand green (#009E73) with horizontal mean reference lines in inkSoft (grey). Subtle translucent green range bands behind each group. Vertical separators between groups in grid color.
+      Legibility verdict: PASS — all text, labels, and data elements are clearly readable.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title and all text elements (y-axis label, tick labels, month labels, legend) render in light ink (#F0EFE8 / inkSoft adaptive) against the dark surface. No dark-on-dark failures detected. Custom plugin month labels and vertical separators correctly use t.ink and t.grid tokens which flip for dark theme.
-      Data: Colors identical to light render — subseries lines remain #009E73 (brand green), mean reference lines appear in adaptive inkSoft (now lighter gray/white). Grid lines subtle and visible on dark background.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct surface, not pure black.
+      Chrome: Title, subtitle, legend, axis labels, and month names all render in light-colored ink (F0EFE8 range), clearly readable against the dark background. Grid lines remain subtle. No dark-on-dark failures observed.
+      Data: Colors are identical to the light render — brand green (#009E73) subseries lines, inkSoft mean reference lines, and the same translucent range bands. Only chrome flips between themes.
+      Legibility verdict: PASS — all elements are fully readable on the dark surface.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -62,77 +70,88 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set and well-proportioned. Title scaled
-          via formula. Minor x-tick (11px) vs y-tick (14px) balance asymmetry.
+        comment: 'All font sizes explicitly set and rendered proportionally. Title
+          dynamically scaled. Minor concern: x-axis tick labels all read ''2000''
+          repeated 12 times which is technically correct but potentially confusing;
+          no readability failure.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions. Custom plugin month labels placed below x-ticks
-          with adequate bottom padding.
+        comment: No text-on-text or text-on-data overlap. Month labels, tick labels,
+          legend, and title have adequate separation.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: pointRadius 2.5 appropriate for 20pts/group but could be 3.5 for
-          better individual-year readability.
+        comment: Lines and markers well-visible; 20 data points per narrow group column
+          is inherently dense for a cycle plot, making individual year identification
+          difficult within groups. Appropriate for the data volume.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green subseries vs inkSoft gray means — distinguishable by color
-          and line character. CVD-safe.
+        comment: 'Brand green #009E73 has adequate contrast on both surfaces. inkSoft
+          for mean lines provides sufficient differentiation. CVD-safe palette. No
+          red-green sole distinguishing pairs.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well. Explicit layout.padding accommodates custom
-          labels. No clipping.
+        comment: Canvas dimension gate passed. Good plot area utilization, 12 groups
+          fill the full width. Bottom padding accommodates month labels. No elements
+          cut off in either render.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: Avg Monthly Temperature (°C) with units. Title includes
-          descriptive prefix. Month labels via plugin.'
+        comment: Y-axis labeled 'Avg Monthly Temperature (°C)' with units. Month names
+          serve as categorical x-axis labels. Title follows 'Descriptive · spec-id
+          · language · library · anyplot.ai' format correctly.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'palette[0] (#009E73) for subseries. inkSoft for mean reference (semantic
-          neutral). Background #FAF8F1/#1A1A17. Chrome adapts correctly.'
+        comment: 'First (and all) subseries use t.palette[0] = #009E73. Mean reference
+          lines use t.inkSoft (theme-adaptive). Range bands use brand-green-derived
+          rgba. Backgrounds #FAF8F1 (light) / #1A1A17 (dark). Data colors identical
+          across themes. Chrome correctly flips.'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Above configured default thanks to custom canvas plugin. Functional-professional
-          rather than publication-ready. Chart frame fully visible, no typographic
-          hierarchy beyond title.
+        passed: true
+        comment: 'Clearly above defaults: custom plugin for range bands, consolidated
+          legend, dynamic title scaling, subtitle with direct insight. Monochromatic
+          palette is intentional and appropriate for a cycle plot but limits visual
+          richness relative to publication-ready.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: X-grid disabled (excellent), y-grid subtle and theme-adaptive. Explicit
-          padding. But all four scale borders visible — top/right not removed.
+        passed: true
+        comment: 'Good refinement: no x/y axis borders, Y-only subtle grid, range
+          bands at 8% opacity, vertical separators using grid color, tooltip disabled.
+          Legend border present (Chart.js default) but not distracting.'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Cycle plot structure inherently shows seasonal+trend story. Both
-          patterns clearly visible. No additional visual emphasis or focal point to
-          guide viewer.
+        passed: true
+        comment: Subtitle directly states the insight. Data choice (20-year climate
+          record with warming trend) naturally shows the key pattern. Visual hierarchy
+          guides viewer to the upward slopes. Stops short of excellent due to no focal
+          emphasis distinguishing the highest-variance or highest-impact groups.
     spec_compliance:
       score: 15
       max: 15
@@ -142,29 +161,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct cycle/seasonal subseries plot with all components.
+        comment: Correct cycle plot / seasonal subseries plot — all definitional elements
+          present.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: 12 groups, connected subseries, mean
-          reference lines, vertical dividers, shared y-axis, calendar order, single
-          panel.'
+        comment: 'All spec features: seasonal groups L-to-R, chronological within-group
+          subseries, horizontal mean reference lines, shared y-axis, subtle vertical
+          separators, natural calendar order, single shared panel. Bonus: range bands.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: season groups + chronological position. Y: temperature values.
-          All 12 months × 20 years visible.'
+        comment: Season (month) maps to x-axis groups; cycle (year) maps to within-group
+          x-position; value (temperature) maps to shared y-axis. All 240 data points
+          visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: Descriptive Title · spec-id · javascript · chartjs · anyplot.ai.
-          Legend: Annual subseries + Monthly mean.'
+        comment: Title 'Monthly Temperature Cycles · line-cycle-seasonal · javascript
+          · chartjs · anyplot.ai' follows the optional descriptive-prefix format correctly.
+          Legend labels 'Annual subseries' and 'Monthly mean' are accurate and clear.
     data_quality:
       score: 15
       max: 15
@@ -174,22 +196,26 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both seasonal effect (mean level differences) and within-season
-          warming trend (upward slope). All 12 groups, 20 years each.
+        comment: 'Shows all cycle-plot aspects: seasonal pattern (summer peak clearly
+          visible), within-group chronological trend (warming slope), mean comparison
+          across seasons, and variability within seasons via range bands.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly average temperatures over 20 years — classic climate science
-          scenario, neutral and real-world plausible.
+        comment: Monthly average temperatures over 20 years — a canonical real-world
+          cycle-plot domain. Values (Jan 2.1°C to Jul 26.2°C) plausible for temperate
+          northern hemisphere city. Topic is neutral climate science data.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Winter 2-5C, summer 24-28C (temperate European city), warming trend
-          +1.8C/20 years, noise ±1.2C. Factually plausible.
+        comment: Temperature range and seasonal amplitude are realistic. Warming trend
+          +1.8°C over 20 years is slightly high vs real-world ~0.4°C for Europe but
+          within illustrative range and clearly acknowledged in subtitle. Noise amplitude
+          ±1.2°C per observation is realistic.
     code_quality:
       score: 10
       max: 10
@@ -199,34 +225,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Data → Mount → Datasets → Plugin → Chart. Minimal inline utility
-          functions.
+        comment: 'Linear structure: tokens → data → mount → datasets → plugin → chart.
+          GroupPlugin is appropriately scoped for its purpose.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Park-Miller LCG with fixed seed 12345. No Math.random() or Date.
+        comment: Park-Miller LCG with fixed seed 12345 — fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports. All globals from window used appropriately.
+        comment: No imports (Chart.js is a global); all tokens and variables are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean idiomatic JS. MONTHS.map() for dataset construction. Custom
-          plugin well-structured. No fake functionality.
+        comment: Clean helper functions (rng, gs), well-structured plugin, elegant
+          generateLabels — no fake functionality, no over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Chart.js interactive library. Harness handles output. Current API.
-          animation:false, responsive:true, maintainAspectRatio:false all set.
+        comment: 'Harness handles file output. Uses Chart.js 4.4.7 API correctly with
+          animation: false, responsive: true, maintainAspectRatio: false.'
     library_mastery:
       score: 9
       max: 10
@@ -236,26 +262,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: scatter+showLine for non-uniform x is canonical Chart.js approach.
-          afterBuildTicks, plugin afterDraw, generateLabels all idiomatic.
+        comment: Scatter-with-showLine for custom x-positioning, afterBuildTicks for
+          precision tick control, plugin API for custom drawing, generateLabels for
+          consolidated legend — all idiomatic Chart.js patterns.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Custom afterDraw plugin for group separators and labels is distinctly
-          Chart.js. afterBuildTicks tick injection and scatter+showLine for grouped
-          subseries are creative Chart.js-specific constructions.
-  verdict: REJECTED
+        comment: Chart.js plugin API (beforeDatasetsDraw / afterDraw hooks) for range
+          bands and custom labels; afterBuildTicks scale override — clearly Chart.js-specific
+          knowledge. Not 5 because the multi-dataset approach (separate dataset per
+          group) is a generic workaround rather than a distinctive Chart.js feature.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
   - custom-legend
-  - html-export
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - grid-styling
+  - alpha-blending
