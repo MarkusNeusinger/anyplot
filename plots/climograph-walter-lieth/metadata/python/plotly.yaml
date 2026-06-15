@@ -1,0 +1,279 @@
+library: plotly
+language: python
+specification_id: climograph-walter-lieth
+created: '2026-06-15T01:06:24Z'
+updated: '2026-06-15T01:25:12Z'
+generated_by: claude-sonnet
+workflow_run: 27517694694
+issue: 8656
+language_version: 3.13.13
+library_version: 6.8.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/python/plotly/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Correct Walter-Lieth 1:2 scaling convention implemented (p_to_y with 10:1 compression
+    above 100mm)
+  - 'All three fill regions rendered correctly: humid (light blue), perhumid (solid
+    blue above 100mm), arid (light red)'
+  - PCHIP smooth interpolation produces clean, professional curves that match the
+    refined climograph aesthetic
+  - Ghost trace technique for anchoring yaxis2 is an advanced, idiomatic plotly pattern
+  - 'Semantic palette exception correctly applied: red (#AE3030) for temperature heat,
+    blue (#4467A3) for precipitation water — both Imprint palette members'
+  - Station metadata annotation box in upper-left is well-styled with border and elevated
+    background
+  - 'Both themes render correctly: warm off-white (#FAF8F1) for light, near-black
+    (#1A1A17) for dark — all chrome tokens properly applied'
+  - Real Naples 1991–2020 climate normals make compelling Mediterranean example showing
+    classic summer drought
+  - Title scaling formula correctly shrinks font for the long prefixed title string
+  - HTML output generated alongside PNG for interactive exploration
+  weaknesses:
+  - Helper functions p_to_y() and extract_segs() defined in script body — minor KISS
+    structure violation; ideally inline the transform or reduce abstraction level
+  - 'No explicit spine removal: Plotly''s default axis lines remain on all four sides
+    — removing top and right linecolor would refine the L-shaped frame aesthetic'
+  - Arid fill at rgba(174,48,48,0.22) is noticeably lighter in dark mode (muted maroon
+    on near-black) — increasing opacity slightly to ~0.35 in dark mode would improve
+    visibility without changing the data color
+  - Station metadata text at 10px is the smallest element; at mobile scale (~400px
+    wide) this may become borderline small — consider 11px
+  - 'LM-02: The PCHIP interpolation relies on scipy, not plotly-native features; leveraging
+    plotly''s native spline line shape (line.shape=''spline'') would be more idiomatic
+    for the smooth-curve effect'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface
+      Chrome: Title "Naples, Italy · climograph-walter-lieth · python · plotly · anyplot.ai" centered at top in dark ink, well-proportioned (~80% canvas width). Left Y-axis label "Temperature (°C)" and right Y-axis label "Precipitation (mm)" in dark INK at 12px. Month tick labels on X-axis and temperature/precipitation tick labels on both Y-axes in INK_SOFT at 10px — all clearly readable.
+      Data: Precipitation curve in Imprint blue (#4467A3) descends from ~97mm (Jan) through a dry summer minimum of ~14mm (Jul) then rises sharply to ~148mm (Nov). Temperature curve in Imprint matte red (#AE3030) traces a smooth U-shape peaking at 27°C in Aug. Humid fill (light blue, alpha≈0.28) covers the winter/spring and fall months where precipitation > temperature. Perhumid fill (darker blue, alpha≈0.78) appears as a solid band above the 100mm dashed reference line in October–November. Arid fill (light red, alpha≈0.22) occupies the May–August summer drought period. Station metadata annotation box in upper-left with Naples, Italy / 17 m a.s.l. / T=17.4°C · P=902mm. Legend in upper-right with all five entries.
+      Legibility verdict: PASS — all text elements are readable against the warm off-white background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface
+      Chrome: Title, axis labels, tick labels, and legend text all rendered in light ink (#F0EFE8 / #B8B7B0) and clearly visible against the dark background. Station metadata annotation box uses elevated dark background (#242420) with light text — readable. Legend box similarly uses elevated dark background.
+      Data: Data colors are identical to the light render — same Imprint blue (#4467A3) for precipitation curve and Imprint matte red (#AE3030) for temperature curve. Humid fill (semi-transparent blue) and perhumid fill (darker solid blue) are clearly visible. Arid fill (rgba(174,48,48,0.22)) appears as a subtle muted maroon against the dark background — visible but slightly less distinct than in the light render due to reduced contrast at low alpha.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all text elements have adequate contrast against the dark background. The arid period fill is marginally less vibrant in dark mode but the labeled regions still read correctly with the legend.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set with title scaling formula. Title,
+          axis labels, tick labels all readable in both themes. Minor: station metadata
+          annotation at 10px may be borderline at mobile scale.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps. Metadata box has its own background so it reads
+          clearly over the humid fill. Legend placed in clear space.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 12 monthly data points with size=7 markers at scale=4 (28px final)
+          and 3px lines are clearly visible. All three fill regions distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red (#AE3030) and blue (#4467A3) from Imprint palette — colorblind-safe
+          optimized. No red-green reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Plot fills canvas well with balanced margins.
+          Legend and metadata box well-placed within plot area.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Temperature (°C) and Precipitation (mm) have units. Month axis labeled.
+          Title follows {Descriptive} · {spec-id} · python · plotly · anyplot.ai format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Legitimate semantic exception: temperature=red (#AE3030, Imprint
+          pos 5) and precipitation=blue (#4467A3, Imprint pos 3) per strong Walter-Lieth
+          convention. Both Imprint palette members. Theme chrome correct in both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: semantic Imprint colors, PCHIP smooth curves, styled
+          metadata annotation, distinct perhumid vs humid fill differentiation. Not
+          quite publication-ready — no spine removal, fills feel slightly generic.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis grid is subtle (15% opacity), X-axis grid disabled. Whitespace
+          generous. Zero-line explicitly styled. But top/right axis lines still present
+          (no explicit spine removal).
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'The fill regions create immediate visual hierarchy: viewer sees
+          Mediterranean summer drought (red) at a glance. Station metadata provides
+          scientific context. The two-curve crossing is the natural focal point.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Walter-Lieth climograph: dual Y-axis, temperature curve,
+          precipitation curve, fill regions, 1:2 scaling.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: 1:2 scaling, 10:1 compression above 100mm, humid fill,
+          arid fill, perhumid fill, 100mm dashed reference line, metadata header,
+          frost band logic present (no frost months for Naples — correct).'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Temperature on left Y-axis, precipitation on right Y-axis via yaxis2
+          overlay. Months on X-axis. 1:2 alignment correctly preserved.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''Naples, Italy · climograph-walter-lieth · python · plotly
+          · anyplot.ai'' — correct prefixed format. Legend labels: Humid period, Perhumid
+          (> 100 mm), Arid period, Precipitation, Temperature.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Demonstrates all three climate conditions (humid, perhumid, arid),
+          the 100mm threshold crossing, dual Y-axis scaling, and the temperature/precipitation
+          relationship fully.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Naples, Italy 1991–2020 climate normals — real-world, scientifically
+          neutral, excellent Mediterranean example with classic summer drought pattern.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Naples temperature range (9–27°C) and precipitation (14–148mm) are
+          accurate for this Mediterranean coastal city. Annual mean 17.4°C and 902mm
+          match real data.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper functions p_to_y() and extract_segs() defined — minor KISS
+          violation. Functions are logically necessary for the non-linear transform
+          and segment extraction but could be inlined.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded, fully deterministic. No random number generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, sys, numpy, plotly.graph_objects, scipy.interpolate — all actually
+          used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and well-organized given the complexity. The sys.path manipulation
+          has a clear explanatory comment. No over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly. Uses write_image()
+          with autosize=False and explicit width/height/scale.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic use of go.Scatter fill='toself' for polygon fills, customdata+hovertemplate
+          for proper hover labels, add_shape() for reference lines, ghost trace for
+          yaxis2 anchoring — all proper plotly patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Ghost trace for axis anchoring and customdata hover are plotly-distinctive.
+          However, PCHIP smoothing relies on scipy rather than plotly's native line.shape='spline',
+          missing a more idiomatic plotly smooth curve option.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - twin-axes
+  - manual-ticks
+  - annotations
+  - html-export
+  - hover-tooltips
+  patterns:
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - alpha-blending
