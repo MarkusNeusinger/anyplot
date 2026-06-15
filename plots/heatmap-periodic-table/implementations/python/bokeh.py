@@ -1,12 +1,19 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-periodic-table: Periodic Table Property Heatmap
 Library: bokeh 3.9.1 | Python 3.13.13
 Quality: 86/100 | Created: 2026-06-15
 """
 
 import os
+import sys
 import time
 from pathlib import Path
+
+
+# Remove this script's own directory from sys.path so `import bokeh` resolves
+# to the installed package rather than this file (which shares its name).
+_this_dir = str(Path(__file__).resolve().parent)
+sys.path[:] = [p for p in sys.path if p != _this_dir]
 
 from bokeh.io import output_file, save
 from bokeh.models import BasicTicker, ColorBar, ColumnDataSource, LinearColorMapper, Range1d
@@ -20,6 +27,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+AMBER = "#DDCC77"
 
 
 # Imprint sequential colormap: brand-green → blue (single-polarity continuous)
@@ -34,12 +42,17 @@ def _lerp_hex(c0, c1, t):
 IMPRINT_SEQ = [_lerp_hex("#009E73", "#4467A3", t / 255.0) for t in range(256)]
 GREY_TILE = "#C8C6BE" if THEME == "light" else "#3C3B36"
 
+# Focal elements: He (Z=2, IE=2372 — highest) and Fr (Z=87, IE=393 — lowest)
+FOCAL_Z = {2, 87}
+
 
 def _lum(hx):
     def _lin(c):
         return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
 
-    return sum(w * _lin(int(hx[i : i + 2], 16) / 255.0) for w, i in zip((0.2126, 0.7152, 0.0722), (1, 3, 5), strict=False))
+    return sum(
+        w * _lin(int(hx[i : i + 2], 16) / 255.0) for w, i in zip((0.2126, 0.7152, 0.0722), (1, 3, 5), strict=False)
+    )
 
 
 # Element symbols (index = atomic number)
@@ -314,9 +327,9 @@ GRID = _build_grid()
 ie_min = min(IE.values())
 ie_max = max(IE.values())
 
-# Separate colored tiles (known IE) from grey tiles (no known IE)
-xs_c, ys_c, vals_c, syms_c, tc_c, ie_str_c, nstr_c, nx_c, ny_c, ivy_c = ([], [], [], [], [], [], [], [], [], [])
-xs_g, ys_g, syms_g, nstr_g, nx_g, ny_g = [], [], [], [], [], []
+# Build unified data arrays for all tiles (colored + grey) in a single pass
+xs, ys, fcs, tcs, syms, nstrs, nxs, nys, ie_strs, ivys = [], [], [], [], [], [], [], [], [], []
+focal_xs, focal_ys = [], []
 
 for z in range(1, 119):
     if z not in GRID:
@@ -324,28 +337,33 @@ for z in range(1, 119):
     cx, cy = GRID[z]
     sym = SYMBOLS[z] if z < len(SYMBOLS) else ""
     yd = -cy  # negate: period 1 → y=-1 (near top of Range1d upper bound)
+
     if z in IE:
         ie = IE[z]
         nrm = (ie - ie_min) / (ie_max - ie_min)
         idx = min(255, int(round(nrm * 255)))
-        tc = "#F0EFE8" if _lum(IMPRINT_SEQ[idx]) < 0.35 else "#1A1A17"
-        xs_c.append(cx)
-        ys_c.append(yd)
-        vals_c.append(ie)
-        syms_c.append(sym)
-        tc_c.append(tc)
-        ie_str_c.append(str(ie))
-        nstr_c.append(str(z))
-        nx_c.append(cx - 0.37)
-        ny_c.append(yd + 0.37)
-        ivy_c.append(yd - 0.27)
+        fc = IMPRINT_SEQ[idx]
+        tc = "#F0EFE8" if _lum(fc) < 0.35 else "#1A1A17"
+        ie_str = str(ie)
     else:
-        xs_g.append(cx)
-        ys_g.append(yd)
-        syms_g.append(sym)
-        nstr_g.append(str(z))
-        nx_g.append(cx - 0.37)
-        ny_g.append(yd + 0.37)
+        fc = GREY_TILE
+        tc = INK_MUTED
+        ie_str = ""
+
+    xs.append(cx)
+    ys.append(yd)
+    fcs.append(fc)
+    tcs.append(tc)
+    syms.append(sym)
+    nstrs.append(str(z))
+    nxs.append(cx - 0.37)
+    nys.append(yd + 0.37)
+    ie_strs.append(ie_str)
+    ivys.append(yd - 0.27)
+
+    if z in FOCAL_Z:
+        focal_xs.append(cx)
+        focal_ys.append(yd)
 
 # Figure — square canvas (2400×2400) for symmetric grid layout
 title_str = "heatmap-periodic-table · python · bokeh · anyplot.ai"
@@ -365,29 +383,27 @@ p = figure(
     min_border_right=80,
 )
 
-# Linear color mapper (Imprint sequential palette)
+# Linear color mapper (Imprint sequential palette) — used for ColorBar
 mapper = LinearColorMapper(palette=IMPRINT_SEQ, low=ie_min, high=ie_max)
 
-# Colored element tiles
-src_c = ColumnDataSource(
-    {"x": xs_c, "y": ys_c, "v": vals_c, "s": syms_c, "tc": tc_c, "ie": ie_str_c, "nstr": nstr_c, "nx": nx_c, "ny": ny_c, "ivy": ivy_c}
+# Single ColumnDataSource for all tiles (colored + grey unified)
+src = ColumnDataSource(
+    {"x": xs, "y": ys, "fc": fcs, "tc": tcs, "s": syms, "nstr": nstrs, "nx": nxs, "ny": nys, "ie": ie_strs, "ivy": ivys}
 )
-p.rect(
-    x="x",
-    y="y",
-    width=0.88,
-    height=0.88,
-    source=src_c,
-    fill_color={"field": "v", "transform": mapper},
-    line_color=PAGE_BG,
-    line_width=2,
-)
+
+# All tile rectangles (precomputed fill colors; seamless PAGE_BG borders)
+p.rect(x="x", y="y", width=0.88, height=0.88, source=src, fill_color={"field": "fc"}, line_color=PAGE_BG, line_width=2)
+
+# Amber border highlights for focal elements: He (highest IE) and Fr (lowest IE)
+src_focal = ColumnDataSource({"x": focal_xs, "y": focal_ys})
+p.rect(x="x", y="y", width=0.88, height=0.88, source=src_focal, fill_alpha=0, line_color=AMBER, line_width=3)
+
 # Element symbol — bold, centered
 p.text(
     x="x",
     y="y",
     text="s",
-    source=src_c,
+    source=src,
     text_align="center",
     text_baseline="middle",
     text_color={"field": "tc"},
@@ -399,46 +415,21 @@ p.text(
     x="nx",
     y="ny",
     text="nstr",
-    source=src_c,
+    source=src,
     text_align="left",
     text_baseline="top",
     text_color={"field": "tc"},
     text_font_size="13pt",
 )
-# IE value — small, bottom of tile
+# IE value — bottom of tile (13pt for balance; empty string for grey tiles)
 p.text(
     x="x",
     y="ivy",
     text="ie",
-    source=src_c,
+    source=src,
     text_align="center",
     text_baseline="bottom",
     text_color={"field": "tc"},
-    text_font_size="11pt",
-)
-
-# Grey tiles — elements with no known IE (Z=104–118)
-src_g = ColumnDataSource({"x": xs_g, "y": ys_g, "s": syms_g, "nstr": nstr_g, "nx": nx_g, "ny": ny_g})
-p.rect(x="x", y="y", width=0.88, height=0.88, source=src_g, fill_color=GREY_TILE, line_color=PAGE_BG, line_width=2)
-p.text(
-    x="x",
-    y="y",
-    text="s",
-    source=src_g,
-    text_align="center",
-    text_baseline="middle",
-    text_color=INK_MUTED,
-    text_font_size="20pt",
-    text_font_style="bold",
-)
-p.text(
-    x="nx",
-    y="ny",
-    text="nstr",
-    source=src_g,
-    text_align="left",
-    text_baseline="top",
-    text_color=INK_MUTED,
     text_font_size="13pt",
 )
 
@@ -466,6 +457,7 @@ p.add_layout(color_bar, "below")
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 p.outline_line_color = None
+p.outline_line_alpha = 0  # fully suppress dark-mode frame outline artifact
 
 p.title.text_color = INK
 p.title.text_font_size = title_pt
