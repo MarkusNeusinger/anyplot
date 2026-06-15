@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-cycle-seasonal: Cycle Plot (Seasonal Subseries)
-Library: bokeh | Python 3.13
-Quality: pending | Created: 2026-06-15
+Library: bokeh 3.9.1 | Python 3.13.13
+Quality: 88/100 | Created: 2026-06-15
 """
 
 import io
