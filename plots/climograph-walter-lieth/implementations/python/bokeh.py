@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 climograph-walter-lieth: Walter-Lieth Climate Diagram
 Library: bokeh 3.9.1 | Python 3.13.13
 Quality: 87/100 | Created: 2026-06-15
@@ -89,7 +89,7 @@ p = figure(
 # Theme
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None
 
 # Precipitation right axis (range 2x the temperature range for 1:2 Walter-Lieth scaling)
 p.extra_y_ranges = {"precip": Range1d(P_MIN, P_MAX)}
@@ -108,10 +108,13 @@ right_ax = LinearAxis(
 p.add_layout(right_ax, "right")
 
 # Humid fill (blue — precipitation curve above temperature line)
-p.varea(x=x_fine, y1=y1_humid, y2=y2_humid, fill_color=PRECIP_COLOR, fill_alpha=0.20)
+# Higher alpha in dark theme to compensate for low contrast on near-black background
+HUMID_ALPHA = 0.32 if THEME == "dark" else 0.20
+ARID_ALPHA = 0.38 if THEME == "dark" else 0.20
+p.varea(x=x_fine, y1=y1_humid, y2=y2_humid, fill_color=PRECIP_COLOR, fill_alpha=HUMID_ALPHA)
 
 # Arid fill (red — temperature line above precipitation curve)
-p.varea(x=x_fine, y1=y1_arid, y2=y2_arid, fill_color=TEMP_COLOR, fill_alpha=0.20)
+p.varea(x=x_fine, y1=y1_arid, y2=y2_arid, fill_color=TEMP_COLOR, fill_alpha=ARID_ALPHA)
 
 # Precipitation line (plotted in temperature-scale units on left axis)
 p.line(x=x_idx, y=temp_equiv, line_color=PRECIP_COLOR, line_width=5, legend_label="Precipitation (mm)")
