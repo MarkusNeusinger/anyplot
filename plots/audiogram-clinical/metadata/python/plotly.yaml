@@ -1,0 +1,266 @@
+library: plotly
+language: python
+specification_id: audiogram-clinical
+created: '2026-06-14T23:48:34Z'
+updated: '2026-06-15T00:05:10Z'
+generated_by: claude-sonnet
+workflow_run: 27515756668
+issue: 8655
+language_version: 3.13.13
+library_version: 6.8.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/python/plotly/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Perfect semantic color application: Imprint palette positions 3 and 5 correctly
+    match the universal audiogram convention (red-right, blue-left) with full style
+    guide compliance.'
+  - xref=paper severity band pattern elegantly spans full plot width independent of
+    data range; right-margin annotation placement at x=1.01 is an advanced plotly
+    idiom.
+  - Triple redundant encoding (color + marker symbol + line style) makes the two-ear
+    distinction CVD-safe and unambiguous.
+  - 'Realistic noise-induced 4 kHz notch data tells the full clinical story: normal
+    low-frequency hearing to progressive high-frequency loss to peak at 4 kHz to partial
+    recovery at 8 kHz.'
+  - Full theme-adaptive chrome with all INK/INK_SOFT/INK_MUTED/GRID tokens properly
+    threaded through every element; both renders fully legible.
+  weaknesses:
+  - 'DE-01 falls short of strong design: title lacks bold weight and the typographic
+    hierarchy is standard — a bolder title (weight=bold, fontsize=18) would push the
+    sophistication score higher.'
+  - 'LM-02: The interactive HTML output does not use hovertemplate to display exact
+    dB HL thresholds on hover — a natural plotly-distinctive feature for a clinical
+    tool where precision matters.'
+  - Severity band annotation size at 10px is at the minimum; increasing to 11px would
+    improve mobile readability without crowding the right margin.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface, not pure white.
+      Chrome: Title "audiogram-clinical · python · plotly · anyplot.ai" in dark INK (#1A1A17), computed 16px, spans ~55% of canvas width. Axis labels "Frequency (Hz)" and "Hearing Level (dB HL)" in dark INK at 12px. Tick labels in INK_SOFT (#4A4A44) at 10px — all clearly readable. Severity band labels on right margin in INK_MUTED (#6B6A63) at 10px — readable. Legend in lower-left with elevated background #FFFDF6, border in INK_SOFT, text in INK_SOFT — readable.
+      Data: Right ear in #AE3030 (Imprint pos 5, matte red) with solid circles and solid line. Left ear in #4467A3 (Imprint pos 3, blue) with X-cross markers and dashed line. Six horizontal severity bands with low-opacity rgba fills: green-tinted Normal, yellowish Mild, brownish Moderate, purplish Mod. Severe, reddish Severe, deeper red Profound. All markers size=12 (48 source-px), clearly visible for 7 data points per ear.
+      Legibility verdict: PASS — all text readable, no overflow, no crowding.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black.
+      Chrome: Title in #F0EFE8 (light cream INK) — clearly readable against near-black. Axis labels in #F0EFE8 at 12px — readable. Tick labels in INK_SOFT (#B8B7B0) — readable. Severity band labels in INK_MUTED (#A8A79F) — approximately 8:1 contrast against #1A1A17, readable. Legend in elevated dark background #242420 with INK_SOFT border and text — readable. No dark-on-dark failures detected.
+      Data: Right ear remains #AE3030 (identical to light render). Left ear remains #4467A3 (identical to light render). Severity band fills appear slightly more vivid against the dark background due to rgba-over-dark-surface mixing, but are not distracting and do not obscure markers. Data colors identical to light render — only chrome elements flipped.
+      Legibility verdict: PASS — all text readable in dark theme, data colors preserved, no dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 16px, axis labels 12px, tick
+          labels 10px, annotations 10px. Well-proportioned, no overflow, both renders
+          readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element collisions. Legend at bottom-left in profound-loss
+          region well below data lines. Severity band labels in right margin correctly
+          spaced.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 7 data points per ear with marker size=12 (48 source-px at scale=4)
+          clearly prominent for sparse dataset. Line width 2.5 appropriate.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Triple redundant encoding: color (red vs blue) + marker symbol (circle
+          vs cross) + line style (solid vs dashed). CVD-safe.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 canvas matches spec square-ish requirement. Right
+          margin 150px accommodates severity labels. Plot fills ~65% of canvas with
+          balanced whitespace.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: Frequency (Hz) with units; Y: Hearing Level (dB HL) with units
+          and clinical shorthand.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Semantic exception correctly applied for ISO audiogram convention
+          (red-right, blue-left). Uses Imprint pos 5 (#AE3030) and pos 3 (#4467A3).
+          Correct backgrounds and theme-adaptive chrome.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above library defaults: semantic Imprint palette, calibrated severity
+          band fills, right-margin labels. Falls short of strong design — typography
+          is standard, no bold hierarchy.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle rgba grid at 15% opacity, calibrated severity bands, generous
+          explicit margins, legend with elevated background and border. Spines retained
+          (appropriate for enclosed clinical grid).
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Severity bands guide clinical interpretation; 4kHz noise notch pattern
+          is immediately apparent; band color graduation from cool/green to warm/red
+          creates visual hierarchy.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct clinical audiogram: logarithmic x-axis, inverted y-axis,
+          ears separated, shaded severity bands.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: inverted y-axis, log x-axis with kHz shorthand, red
+          circles/solid line (right), blue crosses/dashed line (left), six severity
+          bands with labels, 10dB grid, legend.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Frequency on log x-axis, dB HL on inverted y-axis; all 7 data points
+          per ear correctly plotted in ascending frequency order.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: audiogram-clinical · python · plotly · anyplot.ai. Legend:
+          Right Ear (O) and Left Ear (X).'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows normal-range hearing at low frequencies, progressive high-frequency
+          loss, characteristic 4kHz noise notch, and partial recovery at 8kHz.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Occupational noise-induced high-frequency sensorineural notch — very
+          common audiometric finding. Both ears affected with left slightly worse
+          — clinically realistic. Neutral medical context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Normal thresholds 10-20 dB HL, 4kHz notch at 70-75 dB HL (moderate-to-severe),
+          recovery at 8kHz to 55-60 dB HL — clinically accurate for ISO 1999 noise-induced
+          pattern.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat structure: tokens -> data -> figure -> layout -> save. No functions
+          or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data; no randomness needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: import os and import plotly.graph_objects as go — both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. Adaptive title fontsize computation. Severity
+          bands as list of tuples is elegant. No over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: fig.write_image(f'plot-{THEME}.png', width=600, height=600, scale=4)
+          and fig.write_html(f'plot-{THEME}.html', include_plotlyjs='cdn').
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Expert use of go.Figure + go.Scatter; add_shape with xref=paper
+          for full-width bands; add_annotation at x=1.01 xref=paper for right-margin
+          labels — advanced plotly patterns. Minor gap: no hovertemplate customization.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: xref=paper coordinate system for cross-plot shapes and right-margin
+          annotations are distinctly plotly-architectural. Interactive HTML export
+          adds plotly's distinctive capability. Lacks custom hover content.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  - html-export
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
