@@ -7,7 +7,7 @@
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data: Seville climate normals (1991–2020) ------------------------------
+// --- Data: Seville climate normals (1991–2020) --------------------------------
 // Classic Mediterranean station with pronounced summer arid period
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
                 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -20,20 +20,65 @@ const elevation         = 34;
 const annualMeanTemp    = 18.9;
 const annualPrecipTotal = 511;
 
-// Walter-Lieth scaling: 10 °C ≡ 20 mm (right axis max = 2 × left axis max)
-// Left axis: –5 to 40 °C  →  Right axis: –10 to 80 mm
-// Humid  period: precipitation bar above the temp line (P > T*2)
-// Arid   period: temp line above precipitation bar (T*2 > P)
+// Walter-Lieth scaling: 10 °C ≡ 20 mm → right-axis max = 2 × left-axis max
+// Humid:  P > T×2  →  lighter-blue top stacked segment (humid excess above T×2 line)
+// Arid:   T×2 > P  →  red SVG fill between temperature line and precipitation bar top
 
-// Color tokens
-const PRECIP_COLOR = t.palette[2];  // "#4467A3" — Imprint blue for precipitation
-const TEMP_COLOR   = t.palette[4];  // "#AE3030" — Imprint matte-red for temperature
+// Semantic colors follow universal meteorological convention for Walter-Lieth diagrams
+const PRECIP_COLOR = t.palette[2];  // "#4467A3" — Imprint blue (precipitation)
+const TEMP_COLOR   = t.palette[4];  // "#AE3030" — Imprint matte-red (temperature)
 
-// Title auto-scaling
 const titleText = "Seville Climate · climograph-walter-lieth · javascript · highcharts · anyplot.ai";
 const titleFs   = Math.max(14, Math.round(22 * 67 / titleText.length));
 
-// --- Chart ------------------------------------------------------------------
+// Split precipitation into stacked columns that expose the humid/arid boundary.
+// Bottom segment: the portion up to the T×2 threshold (present in all months).
+// Top segment: the "humid excess" above T×2 (non-zero only in humid months).
+const precipBase  = temperature.map((temp, i) => Math.min(precipitation[i], temp * 2));
+const precipHumid = precipitation.map((p, i)  => Math.max(0, p - temperature[i] * 2));
+
+// Draw arid SVG fills (red, between temperature line and small bars in summer)
+// and frost-period indicators at the 0 °C baseline.
+// Arid fills render in the empty space above the summer bars — no z-index issues.
+function drawOverlays(chart) {
+  if (chart.wlOverlayGroup) chart.wlOverlayGroup.destroy();
+  chart.wlOverlayGroup = chart.renderer.g().attr({ zIndex: 2 }).add();
+
+  const xAxis      = chart.xAxis[0];
+  const tempAxis   = chart.yAxis[0];   // left: 0–40 °C
+  const precipAxis = chart.yAxis[1];   // right: 0–80 mm
+
+  // Pixel step between adjacent category centers (equals the category cell width)
+  const step = xAxis.toPixels(1, false) - xAxis.toPixels(0, false);
+
+  // Arid fills: red rectangle from precipitation bar top up to temperature line.
+  // Both axes share proportional range (0–40 °C ↔ 0–80 mm), so pixel Y is comparable.
+  for (let i = 0; i < 12; i++) {
+    if (precipitation[i] >= temperature[i] * 2) continue;  // skip humid months
+    const cx  = xAxis.toPixels(i, false);
+    const tY  = tempAxis.toPixels(temperature[i], false);   // temperature line (higher on screen)
+    const pY  = precipAxis.toPixels(precipitation[i], false); // bar top (lower on screen)
+    chart.renderer
+      .path(['M', cx - step / 2, tY, 'L', cx + step / 2, tY,
+             'L', cx + step / 2, pY, 'L', cx - step / 2, pY, 'Z'])
+      .attr({ fill: TEMP_COLOR, 'fill-opacity': 0.28 })
+      .add(chart.wlOverlayGroup);
+  }
+
+  // Frost-period indicators: solid colored band at the 0 °C baseline for months
+  // with mean temperature below 0 °C. Seville has none; structure required by spec.
+  const baseY = tempAxis.toPixels(0, false);
+  for (let i = 0; i < 12; i++) {
+    if (temperature[i] >= 0) continue;
+    const cx = xAxis.toPixels(i, false);
+    chart.renderer
+      .rect(cx - step / 2, baseY, step, 12)
+      .attr({ fill: PRECIP_COLOR, 'fill-opacity': 0.65 })
+      .add(chart.wlOverlayGroup);
+  }
+}
+
+// --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
   chart: {
     backgroundColor: "transparent",
@@ -43,6 +88,10 @@ Highcharts.chart("container", {
     marginBottom: 65,
     marginLeft: 80,
     marginRight: 90,
+    plotBorderWidth: 0,
+    events: {
+      render: function () { drawOverlays(this); },
+    },
   },
   credits: { enabled: false },
 
@@ -129,10 +178,10 @@ Highcharts.chart("container", {
   plotOptions: {
     series: { animation: false },
     column: {
+      stacking: "normal",
       borderWidth: 0,
       groupPadding: 0.05,
       pointPadding: 0.02,
-      opacity: 0.85,
     },
     spline: {
       lineWidth: 3,
@@ -147,13 +196,28 @@ Highcharts.chart("container", {
   },
 
   series: [
+    // Bottom segment: precipitation up to the T×2 threshold (always present)
     {
       type: "column",
       name: "Precipitation",
-      data: precipitation,
+      data: precipBase,
       color: PRECIP_COLOR,
+      opacity: 0.85,
       yAxis: 1,
       zIndex: 1,
+    },
+    // Top segment: humid excess above the T×2 line (non-zero only in humid months)
+    // Shown at lower opacity so the two segments are visually distinct
+    {
+      type: "column",
+      name: "Humid excess",
+      data: precipHumid,
+      color: PRECIP_COLOR,
+      opacity: 0.42,
+      yAxis: 1,
+      zIndex: 1,
+      showInLegend: false,
+      linkedTo: ":previous",
     },
     {
       type: "spline",
@@ -162,10 +226,7 @@ Highcharts.chart("container", {
       color: TEMP_COLOR,
       yAxis: 0,
       zIndex: 3,
-      marker: {
-        fillColor: TEMP_COLOR,
-        lineColor: "transparent",
-      },
+      marker: { fillColor: TEMP_COLOR, lineColor: "transparent" },
     },
   ],
 });
