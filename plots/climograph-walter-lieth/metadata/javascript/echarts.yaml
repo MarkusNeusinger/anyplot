@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: climograph-walter-lieth
 created: '2026-06-15T01:32:30Z'
-updated: '2026-06-15T01:39:49Z'
+updated: '2026-06-15T01:54:15Z'
 generated_by: claude-sonnet
 workflow_run: 27518333643
 issue: 8656
@@ -12,150 +12,135 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/climograp
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/javascript/echarts/plot-dark.html
-quality_score: 85
+quality_score: 91
 review:
   strengths:
-  - Correct Walter-Lieth 1:2 axis-scaling convention (10°C ↔ 20 mm) implemented cleanly
-    with dual Y-axis and precipitation formatter dividing real values by 2
-  - 'Semantically correct color choice: temperature=matte-red (#AE3030), precipitation=blue
-    (#4467A3) — both Imprint palette members, documented as semantic exception for
-    domain convention'
-  - Station metadata header executed natively with ECharts graphic layer (Barcelona,
-    5 m a.s.l., 16.3°C, 625 mm yr⁻¹)
-  - Stacked area series technique for humid/arid fill regions is idiomatic ECharts
-    — clean and correct
-  - Zero-degree markLine with dashed style provides a useful frost-reference baseline
-  - 'Theme-adaptive chrome throughout: t.ink, t.inkSoft, t.grid tokens correctly applied;
-    axis line colors match series colors (red left axis, blue right axis)'
-  - Real, factually accurate Barcelona 1991–2020 climate data clearly demonstrates
-    a Mediterranean summer-drought pattern
-  - Code is flat, deterministic, and well-commented — CQ scores full marks
+  - Correct Walter-Lieth 1:2 scaling convention with proper perhumid zone compression
+    above 100 mm — the precipNorm transform is exact
+  - 'Dual-axis implementation with domain-appropriate semantic color coding (matte-red
+    #AE3030 for temperature, blue #4467A3 for precipitation) — both are Imprint palette
+    members and match the classic climograph convention'
+  - Station header (Barcelona, elevation, annual means) cleanly rendered via ECharts
+    graphic overlay, following traditional Walter-Lieth conventions
+  - Stacked-line fill approach for humid/arid band detection is idiomatic ECharts
+    — the base+fill stack pairs correctly isolate each zone between the two curves
+  - 'Theme-adaptive fill opacities (HUMID_OPACITY/ARID_OPACITY raised in dark mode)
+    compensate for the lower contrast of translucent fills on #1A1A17'
+  - 'Realistic Barcelona 1991-2020 climate normals produce a textbook Mediterranean
+    signature: summer arid dip (Jun-Jul) and autumn rainfall peak (Oct) visible at
+    a glance'
   weaknesses:
-  - 'Arid fill nearly invisible in dark render: rgba(174,48,48,0.25) at 25% opacity
-    on #1A1A17 background blends into the near-black surface — the summer drought
-    zone (the diagram''s defining visual feature) is barely distinguishable. Fix:
-    increase opacity to ~0.55 for dark theme, or branch on window.ANYPLOT_THEME and
-    use ''rgba(174,48,48,0.55)'' in dark mode vs ''rgba(174,48,48,0.28)'' in light
-    mode'
-  - 'Frost indicator feature absent: the spec requires colored band/blocks beneath
-    the x-axis for months with mean temperature < 0°C (and lighter band for absolute
-    minima < 0°C). Barcelona has no frost months, so visually nothing is missing,
-    but the mechanism (markArea below x-axis, or custom graphic element) is not present
-    at all — a proper implementation should include the logic even if it renders nothing
-    for this dataset'
-  - 'Perhumid zone (>100 mm) handling missing: the spec states that above 100 mm the
-    precipitation scale is conventionally compressed 10:1 with a solid blue fill.
-    Barcelona''s peak (91 mm) is just below the threshold, so it doesn''t trigger,
-    but the implementation has no mechanism for this and would render incorrectly
-    for a wetter station'
-  - 'Humid fill in dark render is also darker than ideal: rgba(68,103,163,0.28) at
-    28% opacity over #1A1A17 results in a dim steel-blue that loses contrast. Consider
-    ~0.45 opacity in dark mode for the humid fill as well'
+  - 'Color-coded axis labels and ticks (temperature #AE3030 on #1A1A17 dark background)
+    have sub-3:1 contrast ratio (~2.76:1) — domain convention requires colored axes
+    but a slightly brighter shade (e.g. #CF4444) in dark mode only would pass WCAG
+    3:1 without breaking the semantic'
+  - 'Precipitation axis labels (#4467A3 on #1A1A17) are borderline at ~3.1:1 contrast
+    in dark mode — just passing, but a brighter blue (e.g. #5580CC) for dark mode
+    would give comfortable margin'
+  - Frost indicator mechanism is correctly coded but produces no visual output for
+    Barcelona (all months above 0°C); adding a station with at least one frost month
+    (e.g. Madrid or Zaragoza) would demonstrate the full feature set including the
+    colored frost band
+  - 'Legend placed top-right overlaps slightly with the right y-axis labels area —
+    bumping right: ''10%'' and using a slightly smaller legend fontSize (12) would
+    clean up that corner'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct.
-      Chrome: Title "climograph-walter-lieth · javascript · echarts · anyplot.ai" is bold, dark, centered at top — fully readable. Station header "Barcelona" in bold dark text + subtitle "5 m a.s.l. · 16.3 °C · 625 mm yr⁻¹" in softer dark text — both readable. Left Y-axis label "Temperature (°C)" in matte-red and right Y-axis label "Precipitation (mm)" in blue — both readable. Tick labels -10° to 50° on left (red), 0–100 mm on right (blue) — clear. Month labels Jan–Dec on X-axis — readable. Legend (Temperature / Precipitation with colored swatches) at upper-right — readable.
-      Data: Temperature line in #AE3030 (matte-red) with circle markers, precipitation line in #4467A3 (blue) with circle markers — both 3px width, clearly visible. Blue semi-transparent fill covers most of the year (humid period where precipitation > temperature). Pinkish-red fill in summer months Jun–Aug (arid period) is visible. Dashed 0°C reference line present.
-      Legibility verdict: PASS — all text fully readable against warm off-white background.
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface, no pure white
+      Chrome: Title "climograph-walter-lieth · javascript · echarts · anyplot.ai" centered at top in dark ink, well-proportioned (~55% width). Station header "Barcelona / 5 m a.s.l. · 16.3 °C · 625 mm yr⁻¹" at top-left in dark ink and inkSoft. Left y-axis spine and labels in matte-red (#AE3030), right y-axis spine and labels in blue (#4467A3). Month labels (Jan–Dec) along x-axis in inkSoft. Legend (Temperature/Precipitation) at top-right in dark ink. Subtle horizontal grid lines.
+      Data: Temperature line in matte-red (#AE3030), precipitation line in blue (#4467A3). Blue semi-transparent fill in humid periods (winter/spring and autumn — where precipitation > temperature). Pink/red semi-transparent fill in arid period (Jun–Aug — where temperature > precipitation). No perhumid fill visible (Barcelona peaks at 91 mm, below 100 mm threshold). 0°C dashed reference line across the chart.
+      Legibility verdict: PASS — all text clearly readable. Color-coded axis labels readable against light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct.
-      Chrome: Title text is light-colored and clearly readable against the dark background. Station header "Barcelona" is bold and light — readable. Axis labels are light-colored — readable. Tick labels use semantic colors (red for temperature, blue for precipitation) which both remain distinguishable on dark background. Month labels are light — readable. Legend text is light — readable.
-      Data: Temperature line (#AE3030) and precipitation line (#4467A3) remain identical to light render — data colors unchanged as required. Blue humid fill is visible as a dark blue region but reduced in contrast compared to light. The arid (summer drought) fill is rgba(174,48,48,0.25) = a very dark brownish-maroon on the #1A1A17 background that is nearly indistinguishable from the background — the defining visual feature of the Walter-Lieth diagram (summer drought period) is severely undercontrasted in dark mode.
-      Legibility verdict: PASS for text elements; FAIL for arid fill visibility — the summer drought fill blends into the dark background at 25% opacity.
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, no pure black
+      Chrome: Title in light text (#F0EFE8) clearly visible against dark background. Station header "Barcelona" and metadata in light ink/inkSoft. Left axis (temperature) remains matte-red, right axis (precipitation) remains blue — both readable but marginal contrast on dark background (~2.76:1 and ~3.1:1 respectively). Month tick labels in inkSoft (#B8B7B0). Legend text in light ink. No dark-on-dark text failures.
+      Data: Temperature line still #AE3030 — identical to light render. Precipitation line still #4467A3 — identical. Blue humid fills and red/pink arid fills are identically colored, with slightly higher opacity (0.45/0.55 vs 0.28/0.28) to compensate for dark surface. Grid lines adapt to the light-on-dark grid token.
+      Legibility verdict: PASS — all text readable. The color-coded axis labels (red and blue on near-black) are readable though borderline on WCAG contrast for the temperature red. No dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 22px, station name 22px, subtitle
-          15px, axis labels 14px, tick labels 13px, legend 14px. All text readable
-          in both themes.'
+        comment: 'All font sizes explicitly set (title 22px, axis labels 14px, ticks
+          13px, legend 14px). Readable in both themes. Minor: color-coded axis labels
+          (red/blue) have borderline contrast on dark background.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Station header (top-left) and legend (top-right)
-          are well-separated. Month labels evenly spaced with no collision.
+        comment: No text overlap. Station header, legend, and axes are well-separated.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: 'Temperature and precipitation lines clearly visible in both themes
-          (3px, circle markers). Arid fill (rgba(174,48,48,0.25)) nearly invisible
-          in dark render — blends into #1A1A17 background. Humid fill also reduced
-          in dark mode. Fills are the diagram''s defining visual feature.'
+        passed: true
+        comment: Lines at width:3, markers at symbolSize:7 — appropriate for 12 monthly
+          data points. Fill areas clearly visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red (#AE3030) vs blue (#4467A3) are distinguishable under deuteranopia/protanopia
-          (differ in blue channel). Axis labels colored to match series provide redundant
-          encoding.
+        comment: Red/blue distinction is CVD-safe (deuteranopia-distinguishable).
+          Fill areas use semi-transparency appropriately.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Good balanced layout. Station info top-left,
-          legend top-right. Lower chart area (below 0°C to -10°C) is empty for Barcelona
-          data — by Walter-Lieth convention but reduces vertical data density slightly.
+        comment: Canvas gate passed (no gate file). Good margins (left:95, right:100,
+          top:135, bottom:65). No content cut off. Plot fills canvas well.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
         comment: 'Left axis: ''Temperature (°C)'', right axis: ''Precipitation (mm)''.
-          Both descriptive with units.'
+          Title follows required format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint palette with documented semantic exception: temperature=#AE3030
-          (palette[4] matte-red), precipitation=#4467A3 (palette[2] blue). Domain
-          convention justifies non-green first series. Background #FAF8F1 light /
-          #1A1A17 dark. Chrome tokens (t.ink, t.inkSoft, t.grid) correctly applied.'
+        comment: 'Valid semantic exception: temperature=matte-red #AE3030 (Imprint[4]),
+          precipitation=blue #4467A3 (Imprint[2]). Both are Imprint palette members.
+          Data colors identical across themes. Backgrounds correct (#FAF8F1 light
+          / #1A1A17 dark). Chrome fully theme-adaptive.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above generic defaults: colored axis labels matching series, station
-          header with real metadata, semantic color choice. Not yet publication-ready
-          — could benefit from more refined typography and spacing around the header
-          area.'
+        comment: 'Strong design clearly above defaults: dual-color axis convention,
+          station header metadata, semantic palette exception, correct fill zones.
+          Professional climograph appearance.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid is subtle (t.grid token), x-axis tick marks disabled, split
-          line only on left axis. Some refinement visible. Right axis tick marks still
-          present; minor details could be polished.
+        comment: Subtle grid lines, clean layout, appropriate whitespace. Axis lines
+          styled to match data series colors — a refined touch. No top spine.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: The fill areas directly communicate arid vs. humid periods — the
-          diagram's story reads at a glance. Zero-degree dashed reference line aids
-          interpretation. Stops short of excellent due to missing frost indicator
-          and limited annotation of the key summer drought period.
+        comment: Mediterranean summer drought (Jun-Aug red fill) and autumn rainfall
+          peak (Oct) are immediately visible. Visual hierarchy guides viewer through
+          Barcelona's climate signature.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -163,60 +148,58 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Walter-Lieth climograph: dual Y-axis, temperature line (left),
-          precipitation line (right), fill areas for humid/arid periods.'
+        comment: Correct Walter-Lieth climograph with dual y-axes, temperature line,
+          precipitation line, and all band fills.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 'Humid/arid fills present. Zero-degree reference line present. MISSING:
-          frost indicator bands beneath x-axis (spec-required, even if no frost months
-          in Barcelona). MISSING: perhumid zone compressed scale above 100mm (spec-required,
-          not triggered by Barcelona''s 91mm max).'
+        passed: true
+        comment: 1:2 scaling convention, perhumid compression above 100mm, humid/arid
+          fills, station header, frost indicator mechanism, 0°C reference line — all
+          present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Months on X-axis, temperature (°C) on left Y-axis, precipitation
-          (mm) on right Y-axis via 2x formatter. 1:2 scaling convention correctly
-          applied.
+        comment: Months on x-axis, temperature on left y-axis (°C), precipitation
+          on right y-axis (mm) with correct 2:1 Walter-Lieth scaling.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: 'Title: ''climograph-walter-lieth · javascript · echarts · anyplot.ai''
-          — correct format. Legend: Temperature (red swatch) and Precipitation (blue
-          swatch) — correct.'
+          — exact required format. Legend: ''Temperature'' and ''Precipitation'' —
+          correct.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows dual lines, seasonal variation, arid summer period (fills),
-          station metadata header, annual means. Missing frost indicator visualization
-          element.
+        comment: Shows humid period, arid period, perhumid mechanism (correctly inactive
+          for Barcelona), frost indicator mechanism (correctly inactive), 0°C reference,
+          station metadata. All chart features demonstrated.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Barcelona, Spain — real Mediterranean city with documented 1991–2020
-          climate normals. Neutral scientific data.
+        comment: Barcelona, Spain — real Mediterranean station with 1991-2020 climate
+          normals. Neutral scientific context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Barcelona temperatures 9.3–24.5°C and precipitation 20–91mm are factually
-          accurate for a Mediterranean coast station. Annual mean 16.3°C and 625mm
-          total are realistic.
+        comment: Temperatures 9.3–24.5°C, annual mean 16.3°C, annual precip 625mm
+          — all factually accurate for Barcelona. Summer minimum 20mm (July) and autumn
+          peak 91mm (October) match known Mediterranean patterns.
     code_quality:
       score: 10
       max: 10
@@ -226,64 +209,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat: data → init → setOption. No functions or classes.'
+        comment: 'Linear flow: data → Walter-Lieth transforms → init → setOption.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded as const arrays — fully deterministic.
+        comment: Fully deterministic hard-coded climate data. No RNG used.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports (browser env, echarts is global). Clean.
+        comment: No imports (ECharts is a harness global). All accessed globals (ANYPLOT_TOKENS,
+          ANYPLOT_THEME, echarts) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured, clear comments explaining the Walter-Lieth conventions.
-          Appropriate complexity for the task.
+        comment: Appropriate complexity for a sophisticated chart. Walter-Lieth transforms
+          are clearly named. Stack pair pattern for fills is clean.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: No explicit save needed (harness handles). Current ECharts 5.x API
-          used correctly. animation:false present.
+        comment: animation:false set. No explicit size/devicePixelRatio passed to
+          echarts.init. Harness handles PNG+HTML output.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: ECharts graphic layer for station header, stacked line/area series
-          for fills, dual yAxis with formatters, markLine for 0°C reference, boundaryGap:false
-          for line chart — all idiomatic ECharts patterns.
+        comment: 'Idiomatic: stacked line series for area fills, markLine for reference
+          line, markArea for frost zones, graphic overlay for header, yAxisIndex for
+          dual axes — all high-level ECharts patterns.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: graphic overlay for custom station header text is a distinctive ECharts
-          feature. Stacked area technique for fill regions is idiomatic. Color-coded
-          axis lines/labels (axisLine color = series color) is a nice ECharts-specific
-          touch. Could further leverage ECharts markArea for frost indicators.
-  verdict: REJECTED
+        comment: Uses ECharts-distinctive markLine, markArea, graphic, and stack-based
+          fill pattern. These are ECharts-specific features not trivially replicated
+          in other libraries.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - twin-axes
   - annotations
-  - custom-legend
+  - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - alpha-blending
-  - grid-styling
