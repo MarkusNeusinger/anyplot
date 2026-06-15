@@ -1,0 +1,251 @@
+library: bokeh
+language: python
+specification_id: audiogram-clinical
+created: '2026-06-14T23:57:07Z'
+updated: '2026-06-15T00:12:02Z'
+generated_by: claude-sonnet
+workflow_run: 27515806908
+issue: 8655
+language_version: 3.13.13
+library_version: 3.9.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/python/bokeh/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - 'Perfect spec compliance: all clinical audiogram conventions (O/X symbols, inverted
+    y-axis, log x-axis, kHz shorthand, severity bands) implemented exactly as specified'
+  - Valid semantic exception for clinical ear colors (red=right, blue=left) using
+    Imprint palette members (positions 5 and 3)
+  - Hollow open-circle for right ear matches real audiological convention
+  - 'Clean Bokeh idioms: BoxAnnotation for severity bands, Label for band text, FixedTicker
+    with label overrides — no workarounds'
+  - Full theme-adaptive chrome correctly wired through all elements
+  - Data represents clinically recognizable high-frequency sensorineural notch pattern;
+    neutral and realistic
+  weaknesses:
+  - 'In dark mode, the ''Profound'' severity band (#AE3030 at 13% alpha on #1A1A17
+    background) is nearly invisible — matte-red at low alpha has insufficient contrast
+    against near-black; increase dark-mode alpha to ~0.18-0.22 for Profound band'
+  - In dark mode, the lavender 'Severe' band (#C475FD at 13% alpha) is disproportionately
+    prominent relative to other bands, creating visual imbalance in the severity gradient;
+    consider per-band alpha values based on each color's luminance on dark background
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface
+      Chrome: Title "audiogram-clinical · python · bokeh · anyplot.ai" in dark ink, clearly readable. Axis labels "Frequency (Hz)" and "Hearing Level (dB HL)" in dark ink. Tick labels (−10 to 120 dB; 125/250/500/1k/2k/4k/8k Hz) in INK_SOFT, readable. Band labels (Normal, Mild, Moderate, Mod. Severe, Severe, Profound) in INK_MUTED on right margin, readable.
+      Data: Right ear — red (#AE3030) hollow circles on solid line; Left ear — blue (#4467A3) × markers on dashed line. Both clearly distinguishable. Six severity bands with very subtle fills (9% alpha): green (Normal, top), lime (Mild), ochre (Moderate), amber (Mod. Severe), lavender (Severe), dark-red (Profound, bottom). Data first series is #AE3030 (semantic exception: clinical red for right ear).
+      Legibility verdict: PASS — all text and data elements clearly readable on light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface
+      Chrome: Title in light cream (#F0EFE8), readable. Axis labels in INK (#F0EFE8), readable. Tick labels in INK_SOFT (#B8B7B0), readable. Band labels in INK_MUTED (#A8A79F), readable. No dark-on-dark text failures found.
+      Data: Colors are identical to light render — red circles for right ear, blue × for left ear. Severity bands at 13% alpha: the lavender "Severe" band (70–90 dB) appears as a prominent purple block, disproportionately visible. The dark-red "Profound" band (90–120 dB) is nearly invisible — #AE3030 at 13% alpha on #1A1A17 has near-zero perceptible contrast.
+      Legibility verdict: PASS for all chrome text and data markers. MINOR FAIL for Profound severity band visibility in dark mode — band is functionally invisible.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All chrome text readable in both themes; minor deduction for Profound
+          band label area having low contrast in dark render
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or data collisions; band labels in right margin are well-spaced
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Data markers clearly visible; Profound severity band (#AE3030 at
+          13% alpha on #1A1A17) nearly invisible in dark mode'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/blue with redundant O/X marker encoding is CVD-safe; standard
+          audiological convention
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2400x2400 square canvas correct; canvas gate passed; min_border_*
+          properly set; no clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Frequency (Hz) and Hearing Level (dB HL) — descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct backgrounds; valid clinical semantic exception for ear colors
+          using Imprint positions 5 and 3; severity bands use Imprint palette members
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above-default: thoughtful semantic color exception; hollow open-circle
+          for right ear is authentic; intentional severity gradient thinking'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Grid subtle at 15% alpha; legend has elevated-background frame; dark-mode
+          band inconsistency (lavender over-prominent, Profound invisible) reduces
+          score
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Severity bands convey clinical significance; high-frequency notch
+          pattern is clinically recognizable; storytelling imperfect in dark mode
+          due to band visibility issues
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct clinical audiogram: inverted y-axis, log x-axis, O/X symbols,
+          shaded severity bands'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Right ear red circle solid line; left ear blue X dashed line; all
+          6 severity bands with labels; legend; kHz shorthand ticks
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = frequency (log), Y = threshold (dB HL, inverted), both ears correctly
+          mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: audiogram-clinical · python · bokeh · anyplot.ai; Legend:
+          Right Ear (O) and Left Ear (X)'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both ears with distinct clinical symbols; all 6 severity categories;
+          high-frequency sensorineural notch fully represented
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classical 4 kHz notch audiogram; threshold values (10-80 dB HL) are
+          clinically realistic; neutral occupational-health context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Frequency range 125-8000 Hz standard audiometric; y-range -10 to
+          120 dB HL full clinical range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes; clear procedural layout
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; sys.path fix for bokeh.py shadow correctly applied
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; severity band loop is clean; Selenium PIL-crop
+          approach is correct
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'BoxAnnotation, FixedTicker, Label, figure() with all required params
+          — correct Bokeh idioms; minor: raw arrays instead of ColumnDataSource'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: BoxAnnotation for shaded regions, Label for data-coordinate text,
+          FixedTicker with major_label_overrides — above-default use of Bokeh-specific
+          models
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  - pillow
+  techniques:
+  - manual-ticks
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
