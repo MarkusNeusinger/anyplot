@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 climograph-walter-lieth: Walter-Lieth Climate Diagram
 Library: plotnine 0.15.7 | Python 3.13.13
 Quality: 81/100 | Created: 2026-06-15
@@ -31,6 +31,7 @@ from plotnine import (
     geom_text,
     ggplot,
     labs,
+    scale_color_manual,
     scale_x_continuous,
     scale_y_continuous,
     theme,
@@ -48,6 +49,9 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Imprint palette — semantic override: temperature=red (heat), precipitation=blue (water)
 TEMP_COLOR = "#AE3030"
 PRECIP_COLOR = "#4467A3"
+
+# Fill alpha — higher in dark mode to keep fills visible on near-black background
+FILL_ALPHA = 0.35 if THEME == "light" else 0.60
 
 # Station: Athens, Greece — Mediterranean 1991–2020 climate normals
 months_labels = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"]
@@ -84,24 +88,34 @@ df = pd.DataFrame(
         "hum_hi": humid_ymax,
         "ari_lo": arid_ymin,
         "ari_hi": arid_ymax,
-        "g": 1,
     }
 )
 
-# Y and X axis limits
-Y_MIN, Y_MAX = -5, 42
-# Extend x to 14.5 to create space for the right-side precipitation axis annotation
+# Long-format dataframe for the two curves — enables a proper legend via color aesthetic
+TEMP_LABEL = "Temperature (°C)"
+PRECIP_LABEL = "Precipitation (mm)"
+df_lines = pd.DataFrame(
+    {
+        "month": np.tile(month_num, 2),
+        "value": np.concatenate([temperature, precip_scaled]),
+        "variable": [TEMP_LABEL] * 12 + [PRECIP_LABEL] * 12,
+    }
+)
+
+# Y and X axis limits — extend Y_MAX to 50 to accommodate the 100 mm right-axis tick
+# (Walter-Lieth convention: 100 mm ≡ 50 °C on the temperature scale)
+Y_MIN, Y_MAX = -5, 50
 X_MAX_EXTENDED = 14.5
 
-# Right-side precipitation axis: tick positions (in temperature units) and mm labels
-p_y_ticks = [0, 10, 20, 30, 40]
-p_mm_labels = ["0", "20", "40", "60", "80"]
+# Right-side precipitation axis: spec-mandated ticks 0/20/40/60/100 mm
+# In temperature units: 0/10/20/30/50 °C
+p_y_ticks = [0, 10, 20, 30, 50]
+p_mm_labels = ["0", "20", "40", "60", "100"]
 
-# Segments for tick marks and axis line
 prec_ticks_df = pd.DataFrame(
     {"x": 12.65, "xend": 12.95, "y": p_y_ticks, "yend": p_y_ticks, "lx": 13.15, "label": p_mm_labels}
 )
-prec_axis_line_df = pd.DataFrame({"x": [12.65], "xend": [12.65], "y": [0], "yend": [40]})
+prec_axis_line_df = pd.DataFrame({"x": [12.65], "xend": [12.65], "y": [0], "yend": [50]})
 
 # Title — 67 chars → default size 12
 plot_title = "Athens · climograph-walter-lieth · python · plotnine · anyplot.ai"
@@ -110,7 +124,6 @@ title_size = max(8, round(12 * 67 / title_len))
 
 subtitle = f"Athens, Greece  ·  107 m a.s.l.  ·  T̅ = {temp_annual} °C  ·  ΣP = {precip_annual} mm  ·  1991–2020"
 
-# anyplot theme
 anyplot_theme = theme(
     figure_size=(8, 4.5),
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
@@ -125,21 +138,24 @@ anyplot_theme = theme(
     axis_ticks=element_line(color=INK_SOFT, size=0.3),
     plot_title=element_text(size=title_size, color=INK, face="bold"),
     plot_subtitle=element_text(size=8, color=INK_SOFT),
-    legend_position="none",
+    legend_position="bottom",
+    legend_background=element_rect(fill=PAGE_BG, color="none"),
+    legend_key=element_rect(fill=PAGE_BG),
+    legend_text=element_text(size=8, color=INK_SOFT),
+    legend_title=element_blank(),
 )
 
 plot = (
     ggplot(df, aes(x="month"))
     # Humid fill (blue — wet periods where precip > temp curve)
-    + geom_ribbon(aes(ymin="hum_lo", ymax="hum_hi"), fill=PRECIP_COLOR, alpha=0.28)
+    + geom_ribbon(aes(ymin="hum_lo", ymax="hum_hi"), fill=PRECIP_COLOR, alpha=FILL_ALPHA)
     # Arid fill (red — dry periods where temp > precip curve)
-    + geom_ribbon(aes(ymin="ari_lo", ymax="ari_hi"), fill=TEMP_COLOR, alpha=0.28)
+    + geom_ribbon(aes(ymin="ari_lo", ymax="ari_hi"), fill=TEMP_COLOR, alpha=FILL_ALPHA)
     # 0 °C frost reference line
     + geom_hline(yintercept=0, color=INK_SOFT, size=0.5, linetype="dashed", alpha=0.55)
-    # Precipitation curve (blue, scaled to temperature axis)
-    + geom_line(aes(y="precip_sc", group="g"), color=PRECIP_COLOR, size=1.1)
-    # Temperature curve (red)
-    + geom_line(aes(y="temperature", group="g"), color=TEMP_COLOR, size=1.1)
+    # Temperature and precipitation curves — color mapped to variable for legend
+    + geom_line(data=df_lines, mapping=aes(x="month", y="value", group="variable", color="variable"), size=1.1)
+    + scale_color_manual(values={TEMP_LABEL: TEMP_COLOR, PRECIP_LABEL: PRECIP_COLOR}, name="")
     # Right-side precipitation axis: axis line
     + geom_segment(
         data=prec_axis_line_df, mapping=aes(x="x", xend="xend", y="y", yend="yend"), color=INK_SOFT, size=0.5
@@ -148,12 +164,10 @@ plot = (
     + geom_segment(data=prec_ticks_df, mapping=aes(x="x", xend="xend", y="y", yend="yend"), color=INK_SOFT, size=0.3)
     # Right-side precipitation axis: tick labels (mm)
     + geom_text(
-        data=prec_ticks_df, mapping=aes(x="lx", y="y", label="label"), size=2.8, color=INK_SOFT, ha="left", va="center"
+        data=prec_ticks_df, mapping=aes(x="lx", y="y", label="label"), size=3.2, color=INK_SOFT, ha="left", va="center"
     )
     # Right-side precipitation axis: axis title (rotated)
-    + annotate(
-        "text", x=14.1, y=20, label="Precipitation (mm)", angle=90, size=3.5, color=INK, ha="center", va="bottom"
-    )
+    + annotate("text", x=14.1, y=25, label="Precipitation (mm)", angle=90, size=4, color=INK, ha="center", va="bottom")
     + scale_x_continuous(breaks=month_num.tolist(), labels=months_labels, limits=(0.5, X_MAX_EXTENDED), expand=(0, 0))
     + scale_y_continuous(name="Temperature (°C)", breaks=[0, 10, 20, 30, 40], limits=(Y_MIN, Y_MAX))
     + labs(title=plot_title, subtitle=subtitle, x="Month")
