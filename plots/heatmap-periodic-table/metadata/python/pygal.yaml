@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: heatmap-periodic-table
 created: '2026-06-15T05:05:52Z'
-updated: '2026-06-15T05:11:33Z'
+updated: '2026-06-15T05:41:48Z'
 generated_by: claude-sonnet
 workflow_run: 27524756219
 issue: 8659
@@ -12,45 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-p
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/python/pygal/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - Perfect spec compliance — canonical 18×7 IUPAC layout with lanthanide and actinide
-    f-block rows correctly detached below, all 118 elements placed, gray tiles for
-    missing values
-  - Excellent visual quality — imprint_seq colormap (brand green → blue) vividly reveals
-    the electronegativity trend toward the upper-right; luminance-adaptive text on
-    tiles ensures readability at every color level
-  - 'Robust dual-theme implementation — both #FAF8F1 (light) and #1A1A17 (dark) renders
-    are clean, all chrome tokens correctly adapted, data colors identical between
-    themes'
-  - Rich annotation layer — group numbers (1–18) above tiles, period numbers (1–7)
-    on the left, Ln/An italic labels for f-block rows, dashed connector lines from
-    period 6/7 group-3 tile to f-block, colorbar with tick marks and end labels
+  - Luminance-adaptive tile ink (relative_luminance + ink_for_tile) ensures text contrast
+    on every tile colour across the entire green→blue gradient — a sophisticated correctness
+    detail
+  - 'Perfect IUPAC canonical layout: La/Ac placed at col 3 in their periods, f-block
+    rows at correct offset with dashed connector lines and italic Ln/An labels'
+  - 'Correct imprint_seq colormap (#009E73 → #4467A3) applied to single-polarity electronegativity
+    data; both renders theme-correct with identical data colours'
+  - Grey tiles for noble gases and transactinides preserve the familiar periodic table
+    silhouette while honestly representing missing data
+  - Interactive HTML export alongside PNG, appropriate for pygal as an interactive
+    library
   weaknesses:
-  - Pygal API not used — the implementation generates raw SVG strings directly and
-    uses cairosvg only as a PNG renderer; there is no `import pygal` statement. This
-    showcases custom SVG engineering rather than pygal's charting library capabilities.
-    A future repair should use pygal's rendering engine (e.g. pygal.treemap or a custom
-    chart subclass) or at minimum build the SVG via pygal's low-level SVG graph class
-    so the library is actually exercised.
-  - Design excellence headroom — element category backgrounds (alkali metals, alkaline
-    earths, halogens, noble gases, transition metals, etc.) rendered as very subtle
-    tinted regions behind the tiles would add a second data dimension and increase
-    storytelling depth without cluttering the view; colorbar padding could be slightly
-    more generous.
+  - 'DE-03 gap: no visual emphasis on trend extremes or notable elements (F at 3.98
+    as the global maximum, Fr at 0.70 as the minimum); a subtle text callout or slightly
+    heavier border on those tiles would lift the storytelling score'
+  - 'LM-02: pygal’s tooltip interactivity is not wired to the element tiles (tiles
+    are low-level SVG rects, not pygal data points), so hovering tiles in the HTML
+    shows no tooltip — the primary interactive differentiator of pygal is unused'
+  - 'CQ-01: the PeriodicHeatmap class and five helper functions are justified by the
+    complexity but still deviate from the preferred flat-script KISS structure'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "heatmap-periodic-table · python · pygal · anyplot.ai" in dark ink, clearly readable at top center. Group numbers 1–18 appear above the tile grid in muted ink. Period numbers 1–7 are on the left side in muted ink. "Ln" and "An" italic labels mark the f-block rows. Colorbar label "Pauling Electronegativity" and tick values (0.70–3.98) are all readable.
-      Data: Tiles use imprint_seq (brand green #009E73 for low EN → blue #4467A3 for high EN). Hydrogen (H) appears as a mid-green tile; Fluorine (F) is deep blue (highest EN 3.98); Francium (Fr) is the deepest green (lowest EN 0.70). Noble gases and transactinides (post-Lr) are rendered in gray (#CCCBC3). Element symbols are bold and prominent; atomic numbers are small (top-left of each tile); EN values appear below the symbol. Text on dark-colored tiles is light; text on light-colored tiles is dark — luminance adaptation working correctly. Dashed connector lines from La/Ac to the f-block rows are visible.
-      Legibility verdict: PASS — all text readable against the light background; no light-on-light failures detected.
+      Chrome: Title "heatmap-periodic-table · python · pygal · anyplot.ai" in dark ink at top, clearly readable. Group numbers 1–18 above the table in INK_MUTED tone. Period numbers 1–7 to the left. Colorbar label "Pauling Electronegativity" and tick labels (0.5 intervals) visible and readable.
+      Data: Sequential gradient from brand green (#009E73, low EN alkali metals) to slate blue (#4467A3, high EN halogens/H). Noble gases and transactinides rendered as neutral grey tiles. Tile text (atomic number, symbol, EN value) adapts via luminance — dark ink on light tiles, off-white on dark tiles. All legible.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title and all labels rendered in light ink (#F0EFE8), clearly visible against the dark background. Group/period numbers and "Ln"/"An" labels are in muted light ink. Colorbar label and tick values are readable. No dark-on-dark text failures observed.
-      Data: Tile colors are identical to the light render — same green-to-blue gradient, same gray for missing values. This confirms the data palette does not flip between themes, only chrome does. Luminance-adaptive text on tiles continues to work (e.g. dark text on the lighter-colored lanthanide tiles at low EN values remains in dark ink, which is still readable given the tile color).
-      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures detected.
+      Chrome: Title and period/group labels in light off-white text, clearly readable. Colorbar tick labels use INK_SOFT (#B8B7B0), readable. No dark-on-dark failures detected.
+      Data: Data tile colours identical to light render (green→blue gradient, grey empty tiles). Luminance-adaptive tile ink ensures readable contrast throughout. Brand green #009E73 clearly visible in alkali-metal tiles.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -61,85 +57,84 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, group/period numbers, element symbols, colorbar labels all
-          legible in both themes. Atomic number and EN value text at 20px is very
-          small on a 3200px canvas and may be hard to read at mobile scale, but acceptable
-          at catalog display resolution.
+        comment: All font sizes explicitly set; title/symbols/period-group labels
+          well-proportioned at full canvas. 20px atomic-number and EN-value labels
+          are intentionally small for tile density. Inherent mobile-compression limitation
+          for 18-column grid is unavoidable.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Fixed grid layout with defined tile size (155px) and gap (8px) ensures
-          no tile-to-tile overlap. Text within each tile is positioned to fit without
-          collision.
+        comment: No text collisions in either render. Intra-tile text well-spaced
+          within 155px tile footprint.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 118 elements visible. Colormap tiles clearly distinguish electronegativity
-          levels. Gray tiles for missing values are distinct. Colorbar spans the full
-          width with tick marks.
+        comment: Tile heatmap colours clearly distinguish elements. Grey tiles for
+          missing-EN elements stand out distinctly without blending into background.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (green→blue) is a CVD-safe sequential colormap. Gray
-          for missing values is neutral and clearly distinct from the data gradient.
+        comment: Sequential two-stop gradient avoids red-green sole signal. Luminance-adaptive
+          tile ink ensures adequate contrast for every tile colour.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200×1800 landscape canvas (gate passed). Periodic table fills the
-          canvas well with the colorbar below. No clipping detected. Proportions appropriate.
+        comment: Canvas gate passed. Landscape 3200x1800 correct for wide periodic
+          table. Generous margins and spacing; colorbar fits below f-block rows with
+          breathing room.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correctly formatted as 'heatmap-periodic-table · python · pygal
-          · anyplot.ai'. Colorbar labeled 'Pauling Electronegativity'. Group and period
-          numbers serve as clear axis references.
+        comment: Colorbar labelled 'Pauling Electronegativity' — descriptive with
+          domain context. Group/period numbers provide orientation. Title correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous data uses imprint_seq (#009E73 → #4467A3). Backgrounds
-          are #FAF8F1 (light) and #1A1A17 (dark). Data colors identical between themes.
-          Chrome correctly flips. Compliant.'
+        comment: 'imprint_seq (#009E73 → #4467A3) used correctly for single-polarity
+          continuous data. Background #FAF8F1 light / #1A1A17 dark. Data colours identical
+          across both renders. Chrome theme-adaptive.'
     design_excellence:
-      score: 14
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom SVG-based periodic table with luminance-adaptive tile text,
-          dashed connector lines, colorbar gradient with tick marks. Clean professional
-          appearance. Would score higher with element category regions as subtle backgrounds.
+        comment: 'Above a plain configured default: luminance-adaptive tile ink, dashed
+          connector lines with opacity, italic Ln/An f-block labels, custom colorbar
+          with tick marks. Not quite FiveThirtyEight-level — no emphasis on trend
+          extremes, no callouts for notable elements like F=3.98 or Fr=0.70.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Minimal chrome (no chart frame), slight tile rounding (rx=3), subtle
-          connectors, well-spaced tile grid. Clean and refined. Colorbar could have
-          tighter polish.
+        comment: All default pygal chrome suppressed. Tiles have subtle rounded corners
+          (rx=3). Connector lines appropriately de-emphasised with 50% opacity. Clean
+          overall presentation.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Electronegativity trend toward the upper-right is immediately readable
-          from the color gradient. Missing-value gray tiles preserve the recognizable
-          periodic table shape. Good storytelling — secondary element-category groupings
-          could add another narrative layer.
+        passed: false
+        comment: Canonical periodic table layout effectively communicates electronegativity
+          trends. However, no focal-point callouts for extremes (F=3.98 maximum, Fr=0.70
+          minimum) or notable anomalies — lifts from 'familiar layout' to 'guided
+          insight' would require emphasis.
     spec_compliance:
       score: 15
       max: 15
@@ -149,30 +144,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: periodic table property heatmap with canonical IUPAC layout.'
+        comment: 'Correct: periodic table heatmap with canonical 18-group x 7-period
+          IUPAC layout and detached f-block rows.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required: canonical 18×7 layout, lanthanide/actinide f-block
-          rows detached below, equal-sized tiles with gap, element symbol + atomic
-          number + EN value on each tile, colorbar labeled with property and units,
-          gray tiles for missing values.'
+        comment: Colorbar with property label, element symbol and atomic number on
+          every tile, EN value on coloured tiles, grey tiles for no-value elements,
+          f-block rows separated with gap and labels, luminance-adaptive tile text.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 118 elements placed at correct group/period positions. EN mapped
-          to imprint_seq colormap. Missing EN values shown as gray tiles, not omitted.
+        comment: All 118 elements at correct (group, period) positions. Lanthanides
+          (Ce-Lu) at row 8 cols 4-17, actinides (Th-Lr) at row 9 cols 4-17. La/Ac
+          at col 3 in periods 6/7 as per IUPAC.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''heatmap-periodic-table · python · pygal · anyplot.ai''
-          — correct format. Colorbar serves as the legend for the continuous data.'
+        comment: Title is exactly 'heatmap-periodic-table · python · pygal · anyplot.ai'.
+          No legend (correct for single-series heatmap; colorbar serves this role).
     data_quality:
       score: 15
       max: 15
@@ -182,85 +178,87 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects covered: full 118-element table, correct IUPAC layout,
-          continuous heatmap encoding, colorbar, text labels on tiles, missing value
-          treatment.'
+        comment: All 118 element slots represented; EN values span full Pauling scale
+          (0.70-3.98); grey tiles for noble gases and transactinides showcase no-data
+          handling; f-block lanthanides and actinides included.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Pauling electronegativity is a scientifically accurate, well-known
-          chemistry dataset. Neutral educational context. Values match real-world
-          data (Fr 0.70, F 3.98).
+        comment: Actual Pauling electronegativity values from established chemistry
+          literature. Neutral educational/science domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: EN range 0.70–3.98 matches the standard Pauling scale. Colorbar ticks
-          at 0.5 increments are sensible for this range.
+        comment: EN range 0.70 (Fr) to 3.98 (F) matches published Pauling scale. Colorbar
+          ticks at 0.5 intervals with correct min/max endpoint labels.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Flat script with small, well-named helper functions (lerp_hex, tile_color,
-          relative_luminance, ink_for_tile, tile_xy). No unnecessary abstractions.
+        passed: false
+        comment: Five helper functions plus PeriodicHeatmap class subclassing pygal.Bar.
+          Class and helpers are justified by complexity but exceed the flat-script
+          KISS ideal.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is hardcoded; no randomness. Fully reproducible.
+        comment: 'Fully deterministic: all element data and EN values hardcoded; no
+          randomness.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, sys, cairosvg imported — all used.
+        comment: Only os, sys, pygal, pygal.style.Style. All used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the task. SVG parts list pattern is clean.
-          No fake UI elements.
+        comment: No over-engineering or fake UI elements. sys.path.pop(0) workaround
+          prevents shadowing, correctly placed.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-light.png, plot-dark.png, plot-light.html, plot-dark.html
-          correctly.
+        comment: Saves plot-{THEME}.png via render_to_png() and plot-{THEME}.html
+          via render(). Current pygal 3.1.0 API.
     library_mastery:
-      score: 3
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: The pygal library API is not used at all — there is no `import pygal`
-          statement. The implementation generates raw SVG strings and uses cairosvg
-          directly as a renderer. This is not idiomatic pygal usage.
+        passed: true
+        comment: Correctly subclasses pygal chart type and overrides _plot() to inject
+          custom SVG via self.svg.node(); uses Style object for all theming; uses
+          render_to_png() and render() for dual output. Knowledgeable use of pygal
+          internals.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: 'None of pygal''s distinctive features are showcased: no interactive
-          charts, no pygal chart types, no pygal Style theming, no pygal rendering
-          engine. The implementation is effectively a raw SVG generator.'
+        comment: Leverages pygal SVG node API and Style system (both pygal-specific).
+          Interactive HTML generated. However, element tiles are raw SVG nodes without
+          pygal data-point binding, so pygal's built-in tooltip interactivity is not
+          active on tiles in the HTML output.
   verdict: APPROVED
 impl_tags:
-  dependencies:
-  - cairosvg
+  dependencies: []
   techniques:
   - colorbar
   - annotations
