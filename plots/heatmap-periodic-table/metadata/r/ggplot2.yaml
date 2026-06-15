@@ -1,0 +1,256 @@
+library: ggplot2
+language: r
+specification_id: heatmap-periodic-table
+created: '2026-06-15T05:12:56Z'
+updated: '2026-06-15T05:31:13Z'
+generated_by: claude-sonnet
+workflow_run: 27524946028
+issue: 8659
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - 'Canonical periodic table layout executed correctly: 18×7 main grid with lanthanide/actinide
+    rows repositioned, placeholder tiles at group 3'
+  - 'Correct imprint_seq colormap (#009E73 → #4467A3) — chemically meaningful green
+    for low-EN alkali metals, blue for high-EN halogens'
+  - Family block background overlays (s/d/p/f) using annotate(rect) — sophisticated
+    ggplot2 layer composition beyond the heatmap itself
+  - 'Adaptive tile text colors: near-white on colored tiles, INK_MUTED on grey tiles
+    — prevents contrast failures'
+  - 'Perfect theme adaptation: all chrome tokens flip correctly between light and
+    dark; data colors stay constant'
+  weaknesses:
+  - EN value labels (size=1.0mm ≈ 2.8pt) are too small to read at any practical viewing
+    size; increase to at least size=1.4–1.5
+  - Atomic number labels (size=1.2mm ≈ 3.4pt) are very small; increase to at least
+    size=1.5–1.6 for legibility at full resolution
+  - No explicit trend annotations for element families — would elevate storytelling
+    but is optional per spec
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "heatmap-periodic-table · r · ggplot2 · anyplot.ai" bold dark ink, clearly readable. Axis labels "Group" (x) and "Period" (y) at 9pt dark ink readable. Tick labels (1-18 groups, 1-7/Ln/An periods) at 7pt INK_SOFT readable. Colorbar label "Electronegativity (Pauling scale)" readable. Legend text at 7pt readable.
+      Data: Imprint sequential gradient from #009E73 (brand green, low EN alkali metals) to #4467A3 (blue, high EN halogens). Grey tiles (#CCC9C1) for unknown/noble gas elements. Subtle s/d/p/f family block overlays. Element symbols at size=2.2mm, atomic numbers at size=1.2mm (very small), EN values at size=1.0mm (very small).
+      Legibility verdict: PASS — all chrome text clearly readable; minor concern: inline EN values and atomic numbers extremely small but inherent to 118-element density
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title in light #F0EFE8, clearly readable against dark bg. Axis labels and tick labels in #B8B7B0 (INK_SOFT for dark theme), clearly readable. Colorbar label and legend text readable in light color. No dark-on-dark failures observed — all text elements correctly adapted to dark theme.
+      Data: Gradient colors identical to light render (#009E73 → #4467A3) — only chrome flips. Empty tile fill changes to #3A3A37. Family block overlays visible at same alpha.
+      Legibility verdict: PASS — no dark-on-dark failures; brand green #009E73 reads well on #1A1A17 surface
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 5
+        max: 8
+        passed: true
+        comment: EN value labels (size=1.0mm ~2.8pt) and atomic number labels (size=1.2mm
+          ~3.4pt) too small to read at mobile scale; element symbols at size=2.2mm
+          acceptable at full res
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Tiles neatly spaced with gap; no text collisions between any elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 118 element tiles render clearly; gradient well-differentiated;
+          grey tiles for unknowns clearly distinct
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (green→blue) is CVD-safe; no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas correct; f-block rows well-separated; colorbar cleanly
+          positioned at bottom; title ~70% width expected for this title length
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Group/Period axis labels with correct tick labels; colorbar labeled
+          with property name and units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq used correctly (low=#009E73, high=#4467A3); backgrounds
+          #FAF8F1 light / #1A1A17 dark; both renders theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Raised from default 4: family block backgrounds via annotate(rect)
+          layers; adaptive tile text colors; professional guide_colorbar styling'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Raised from default 2: no grid, no axis ticks, elevated legend background
+          ELEVATED_BG, clean frameless panel'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Raised from default 2: green→blue gradient naturally encodes EN
+          trend (alkali metals→halogens); family block overlays add context. No explicit
+          trend annotations.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct periodic table heatmap in canonical 18×7 layout with detached
+          lanthanide/actinide rows
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Equal-area square tiles; f-block detached rows; gap at group 3 with
+          placeholder tiles; colorbar with property units; symbol+atomnum+EN per tile;
+          greyed unknown tiles
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=group, y=period, fill=electronegativity; all 118 elements; lanthanides/actinides
+          repositioned correctly
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: heatmap-periodic-table · r · ggplot2 · anyplot.ai; colorbar
+          labeled Electronegativity (Pauling scale)'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All aspects shown: symbol, atomic number, property value, continuous
+          color, placeholder tiles, f-block separation, greyed unknowns'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real Pauling electronegativity values for all defined elements; scientifically
+          accurate; neutral reference data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorbar limits 0.7-4.0 match Pauling EN range; integer breaks are
+          intuitive
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat procedural script; no functions/classes; clear section comments
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded (real EN values); fully deterministic; no random
+          seed needed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported and used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured; appropriate complexity for 118-element dataset;
+          no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-%s.png via ragg::agg_png; modern ggplot2 3.5.1 API
+          with linewidth= not deprecated size=
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Raised from default 3: exemplary layer composition; scale_color_identity()
+          for tile text; guide_colorbar() custom styling; annotate(rect) for regions;
+          subset() in geom for conditional layers'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Raised from default 1: multi-layer tile annotation (3 geom_text);
+          family block annotate overlays; placeholder rows as data; na.value in scale_fill_gradient
+          for grey unknown tiles'
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - ragg
+  techniques:
+  - colorbar
+  - annotations
+  - layer-composition
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - minimal-chrome
