@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 audiogram-clinical: Clinical Audiogram
 Library: altair 6.2.1 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-15
@@ -48,7 +48,9 @@ band_rows = [
 ]
 band_data = pd.DataFrame(band_rows)
 band_data["mid_y"] = (band_data["y"] + band_data["y2"]) / 2
-band_data["x_label"] = 7000  # place labels near right edge (log scale)
+# Labels at the low-frequency left margin where ear data is always in the Normal band;
+# all Mild-to-Profound labels sit well below (larger dB HL) the ear lines at 125-250 Hz
+band_data["x_label"] = 160
 
 bands_domain = band_data["label"].tolist()
 
@@ -63,7 +65,7 @@ x_axis = alt.Axis(
 )
 y_axis = alt.Axis(title="Hearing Level (dB HL)", values=list(range(-10, 121, 10)))
 
-# Severity bands — rect marks spanning the full view width (no x/x2 = full-width fill)
+# Severity bands — rect marks spanning the full view width
 bands = (
     alt.Chart(band_data)
     .mark_rect(opacity=0.15)
@@ -74,10 +76,10 @@ bands = (
     )
 )
 
-# Severity band labels positioned near the right edge of the plot
+# Severity band labels — left-aligned from the low-frequency left margin
 band_labels = (
     alt.Chart(band_data)
-    .mark_text(align="right", fontSize=9, fontStyle="italic")
+    .mark_text(align="left", fontSize=10, fontStyle="italic")
     .encode(
         x=alt.X("x_label:Q", scale=x_scale),
         y=alt.Y("mid_y:Q", scale=y_scale),
@@ -85,6 +87,9 @@ band_labels = (
         color=alt.value(INK_MUTED),
     )
 )
+
+# Interactive selection — click a legend symbol to highlight that ear, dim the other
+selection = alt.selection_point(fields=["ear"], bind="legend")
 
 # Shared color / shape encoding for ears
 ear_domain = ["Right Ear (O)", "Left Ear (X)"]
@@ -97,12 +102,12 @@ legend_cfg = alt.Legend(
     fillColor=ELEVATED_BG,
     strokeColor=INK_SOFT,
     labelColor=INK_SOFT,
-    labelFontSize=10,
-    symbolSize=150,
+    labelFontSize=11,
+    symbolSize=160,
     symbolStrokeWidth=2.5,
 )
 
-# Connecting lines per ear (solid)
+# Connecting lines per ear — opacity driven by selection state
 lines_layer = (
     alt.Chart(df)
     .mark_line(strokeWidth=2.5)
@@ -111,6 +116,7 @@ lines_layer = (
         y=alt.Y("threshold:Q", scale=y_scale, axis=y_axis),
         color=alt.Color("ear:N", scale=color_scale_ears, legend=None),
         detail="ear:N",
+        opacity=alt.condition(selection, alt.value(1.0), alt.value(0.2)),
     )
 )
 
@@ -123,12 +129,14 @@ points_layer = (
         y=alt.Y("threshold:Q", scale=y_scale),
         color=alt.Color("ear:N", scale=color_scale_ears, legend=legend_cfg),
         shape=alt.Shape("ear:N", scale=shape_scale_ears, legend=None),
+        opacity=alt.condition(selection, alt.value(1.0), alt.value(0.2)),
         tooltip=[
             alt.Tooltip("frequency:Q", title="Frequency (Hz)"),
             alt.Tooltip("threshold:Q", title="Threshold (dB HL)"),
             alt.Tooltip("ear:N", title="Ear"),
         ],
     )
+    .add_params(selection)
 )
 
 title_text = "audiogram-clinical · python · altair · anyplot.ai"
@@ -141,10 +149,10 @@ chart = (
         width=500,
         height=460,
         background=PAGE_BG,
-        title=alt.Title(title_text, fontSize=16, color=INK),
+        title=alt.Title(title_text, fontSize=16, color=INK, fontWeight="bold"),
         padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=1, continuousWidth=500, continuousHeight=460)
+    .configure_view(fill=PAGE_BG, stroke=None, continuousWidth=500, continuousHeight=460)
     .configure_axis(
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
@@ -155,13 +163,13 @@ chart = (
         labelFontSize=10,
         titleFontSize=12,
     )
-    .configure_title(color=INK, fontSize=16)
+    .configure_title(color=INK, fontSize=16, fontWeight="bold")
     .configure_legend(
         fillColor=ELEVATED_BG,
         strokeColor=INK_SOFT,
         labelColor=INK_SOFT,
         titleColor=INK,
-        labelFontSize=10,
+        labelFontSize=11,
         titleFontSize=10,
     )
     .interactive()
