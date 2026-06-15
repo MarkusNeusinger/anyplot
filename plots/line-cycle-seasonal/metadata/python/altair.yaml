@@ -1,0 +1,261 @@
+library: altair
+language: python
+specification_id: line-cycle-seasonal
+created: '2026-06-15T03:43:05Z'
+updated: '2026-06-15T03:58:51Z'
+generated_by: claude-sonnet
+workflow_run: 27522446515
+issue: 8658
+language_version: 3.13.13
+library_version: 6.2.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/python/altair/plot-dark.html
+quality_score: 83
+review:
+  strengths:
+  - 'Perfect spec compliance: all required cycle plot elements present (trend lines,
+    mean rules, dividers, shared y-axis, calendar order)'
+  - Correct Imprint palette assignment with semantic opacity hierarchy (lighter trend
+    lines at 0.60, bolder mean rules at 0.90)
+  - Clever use of Altair detail encoding to draw separate per-month line segments
+    without inter-month connections
+  - Dynamic title font scaling for the extended descriptive prefix title
+  - Complete theme-adaptive chrome with correct backgrounds, no dark-on-dark failures
+    in either render
+  - Robust canvas handling with pad-only approach (no crop)
+  weaknesses:
+  - 'Missing x-axis title: title=None omits an explicit Month label; add title=''Month''
+    to the alt.X encoding'
+  - 'Missing global labelFontSize and titleFontSize in configure_axis: y-axis tick
+    labels and axis title rely on Altair defaults; add labelFontSize=10, titleFontSize=12
+    to configure_axis'
+  - Warming trend within months (1.5C over 25 years) is subtle relative to noise (sigma=1.2C);
+    consider increasing trend to 0.12C/year or reducing noise to sigma=0.6C to make
+    within-season trend more visually legible
+  - Axis domain lines (spines) still visible; adding domain=False to configure_axis
+    would improve visual refinement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: title "Monthly Temperature Cycles · line-cycle-seasonal · python · altair · anyplot.ai" in dark ink, left-aligned; y-axis label "Temperature (°C)" in dark ink; month abbreviations (Jan–Dec) as x-axis tick labels; y-axis tick values readable; legend box with light elevated fill showing "Yearly trend" and "Seasonal mean"
+      Data: green (#009E73) thin lines (opacity 0.60) for 25-year within-month trends; purple (#C475FD) horizontal rules (opacity 0.90) for monthly means; subtle dashed vertical dividers between groups
+      Legibility verdict: PASS — all text clearly readable against off-white background; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17) — correct, not pure black
+      Chrome: title, y-axis label, tick labels, and legend text all render in light cream tones against dark background; no dark-on-dark issues detected; legend box in elevated dark surface (#242420)
+      Data: data colors identical to light render — green (#009E73) trend lines and purple (#C475FD) mean rules unchanged; only chrome (background, text, grid) flipped between themes
+      Legibility verdict: PASS — all text clearly readable against near-black background; no dark-on-dark failures observed
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title and x-axis label font sizes explicitly set; y-axis tick labels
+          and title rely on Altair defaults (no labelFontSize/titleFontSize in configure_axis).
+          Both renders readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element collisions. Month tick labels well-spaced. Legend
+          does not overlap data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Trend lines visible at strokeWidth=1.8, opacity=0.60; mean rules
+          prominent at strokeWidth=3.2, opacity=0.9. Minor density in some month groups
+          with 25 years.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette green and purple are CVD-safe. Opacity hierarchy
+          aids distinction.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Plot fills canvas well with balanced margins
+          for 12-group landscape layout.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Y-axis: Temperature (°C) — descriptive with units. X-axis: title=None;
+          month abbreviations present but no explicit axis title (e.g. Month).'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green); second series #C475FD (Imprint
+          position 2). Backgrounds #FAF8F1 / #1A1A17. Full theme-adaptive chrome.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: intentional opacity hierarchy, dynamic title scaling,
+          subtle dividers. Still reads as well-configured library default rather than
+          exceptional design.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: configure_view(stroke=None), x-axis grid disabled, y-axis grid at
+          0.15 opacity, theme-adaptive colors. Axis domain lines (spines) still visible.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Color hierarchy between trend and mean guides eye to seasonal comparison.
+          Seasonal arc visible. No specific emphasis on warming trend.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct cycle/seasonal subseries plot with month groups, within-group
+          trend lines, mean reference rules.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Trend lines, mean horizontal rules, vertical dividers, shared y-axis,
+          natural calendar order all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X encodes seasonal group (month), y encodes temperature. All 12 months,
+          25 years visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''Monthly Temperature Cycles · line-cycle-seasonal · python
+          · altair · anyplot.ai''. Legend: ''Yearly trend'' / ''Seasonal mean''.'
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows seasonal mean variation, within-season chronological trend,
+          divider structure. Within-month warming slope (1.5°C over 25 years) subtle
+          relative to noise.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Northern hemisphere monthly temperature data with 0.06°C/year warming
+          trend. Realistic and neutral domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values -3°C to 22°C seasonal baseline with ±1.2°C noise over 25 years.
+          Factually plausible for temperate continental climate.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script, no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; sys.path workaround documented and necessary.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean layer composition, no over-engineering, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; pad-to-target logic
+          correctly applied.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Layer composition (+), configure_* theming, alt.Scale with domain/range,
+          alt.Axis with labelExpr. Missing explicit labelFontSize/titleFontSize in
+          configure_axis.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: detail encoding for per-group lines; labelExpr with JS floor expression
+          for dynamic month labels; mark_rule with x+x2 for ranged reference lines;
+          shared color scale across layers.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - pillow
+  techniques:
+  - layer-composition
+  - html-export
+  - manual-ticks
+  - annotations
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
