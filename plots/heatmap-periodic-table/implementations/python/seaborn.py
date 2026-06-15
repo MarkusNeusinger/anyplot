@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-periodic-table: Periodic Table Property Heatmap
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 88/100 | Created: 2026-06-15
@@ -188,6 +188,24 @@ cell_info[(6, 2)] = ("**", None, None)
 imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
 norm = Normalize(vmin=0.7, vmax=4.0)
 
+# Build seaborn annot array: symbols for EN-valued cells (seaborn handles coloring via annot)
+symbol_grid = np.full((n_rows, n_cols), "", dtype=object)
+for (row, col), (sym, _anum, en) in cell_info.items():
+    if en is not None:
+        symbol_grid[row, col] = sym
+
+# Pre-compute WCAG luminance-based text colors for all EN-valued cells
+lum_map = {}
+for (row, col), (_sym, _anum, en) in cell_info.items():
+    if en is not None:
+        rgba = imprint_seq(norm(en))
+        r, g, b = rgba[0], rgba[1], rgba[2]
+        r_l = r / 12.92 if r <= 0.04045 else ((r + 0.055) / 1.055) ** 2.4
+        g_l = g / 12.92 if g <= 0.04045 else ((g + 0.055) / 1.055) ** 2.4
+        b_l = b / 12.92 if b <= 0.04045 else ((b + 0.055) / 1.055) ** 2.4
+        lum = 0.2126 * r_l + 0.7152 * g_l + 0.0722 * b_l
+        lum_map[(row, col)] = "#1A1A17" if lum > 0.20 else "#F0EFE8"
+
 # Canvas: landscape 3200×1800 (periodic table is 18:10, not square)
 title = "Electronegativity Trends · heatmap-periodic-table · python · seaborn · anyplot.ai"
 title_fs = max(8, round(12 * 67 / len(title)))
@@ -195,7 +213,7 @@ title_fs = max(8, round(12 * 67 / len(title)))
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Plot
+# Plot — use seaborn annot parameter with custom symbol array (idiomatic seaborn annotation)
 sns.heatmap(
     grid_values,
     ax=ax,
@@ -207,40 +225,56 @@ sns.heatmap(
     vmax=4.0,
     cbar=True,
     cbar_kws={"shrink": 0.55, "pad": 0.02, "aspect": 18},
-    annot=False,
+    annot=symbol_grid,
+    fmt="",
+    annot_kws={"fontsize": 5.0, "fontweight": "bold"},
     xticklabels=False,
     yticklabels=False,
 )
 
-# Style
-# Grey tiles for elements with no defined electronegativity (noble gases, synthetic)
+# Update text colors for seaborn-generated symbol annotations via WCAG luminance
+for txt_obj in ax.texts:
+    x, y = txt_obj.get_position()
+    row, col = int(y), int(x)
+    txt_obj.set_color(lum_map.get((row, col), INK_SOFT))
+
+# Style: grey tiles for elements with no defined electronegativity (noble gases, synthetic)
 for (row, col), (_sym, _anum, en) in cell_info.items():
     if en is None:
         rect = plt.Rectangle((col, row), 1, 1, facecolor=GREY_TILE, edgecolor=PAGE_BG, linewidth=0.5, zorder=2)
         ax.add_patch(rect)
 
-# Text annotations: atomic number (small, top-left) + symbol (bold, center)
+# Text annotations: atomic numbers (all cells) + symbols for masked cells
 for (row, col), (sym, anum, en) in cell_info.items():
-    # Choose text color by WCAG luminance contrast
-    if en is not None:
-        rgba = imprint_seq(norm(en))
-        r, g, b = rgba[0], rgba[1], rgba[2]
-        r_l = r / 12.92 if r <= 0.04045 else ((r + 0.055) / 1.055) ** 2.4
-        g_l = g / 12.92 if g <= 0.04045 else ((g + 0.055) / 1.055) ** 2.4
-        b_l = b / 12.92 if b <= 0.04045 else ((b + 0.055) / 1.055) ** 2.4
-        lum = 0.2126 * r_l + 0.7152 * g_l + 0.0722 * b_l
-        # Dark text if it provides higher contrast; threshold ≈ lum > 0.20
-        txt_col = "#1A1A17" if lum > 0.20 else "#F0EFE8"
-    else:
-        txt_col = INK_SOFT
+    txt_col = lum_map.get((row, col), INK_SOFT)
 
-    cx, cy = col + 0.5, row + 0.5
-
+    # Atomic number top-left corner — increased to 3.5pt for readability
     if anum is not None:
-        ax.text(col + 0.08, row + 0.15, str(anum), ha="left", va="top", fontsize=2.8, color=txt_col, zorder=3)
+        ax.text(col + 0.08, row + 0.15, str(anum), ha="left", va="top", fontsize=3.5, color=txt_col, zorder=3)
 
-    sym_fs = 5.0 if sym not in ("*", "**") else 3.8
-    ax.text(cx, cy, sym, ha="center", va="center", fontsize=sym_fs, color=txt_col, fontweight="bold", zorder=3)
+    # Symbol for masked cells (seaborn annot skips masked/NaN cells)
+    if en is None:
+        sym_fs = 5.0 if sym not in ("*", "**") else 3.8
+        ax.text(
+            col + 0.5,
+            row + 0.5,
+            sym,
+            ha="center",
+            va="center",
+            fontsize=sym_fs,
+            color=txt_col,
+            fontweight="bold",
+            zorder=3,
+        )
+
+# EN value labels for max (F: 3.98) and min (Cs: 0.79, Fr: 0.70) — trend storytelling
+for ann_row, ann_col, ann_val in [(1, 16, "3.98"), (5, 0, "0.79"), (6, 0, "0.70")]:
+    txt_col = lum_map.get((ann_row, ann_col), INK)
+    ax.text(ann_col + 0.5, ann_row + 0.76, ann_val, ha="center", va="center", fontsize=2.5, color=txt_col, zorder=4)
+
+# Lanthanides / Actinides group labels in the empty left columns of f-block rows
+ax.text(1.0, 8.5, "Lanthanides", ha="center", va="center", fontsize=2.8, color=INK_SOFT, style="italic", zorder=3)
+ax.text(1.0, 9.5, "Actinides", ha="center", va="center", fontsize=2.8, color=INK_SOFT, style="italic", zorder=3)
 
 # Colorbar styling
 cbar = ax.collections[0].colorbar
