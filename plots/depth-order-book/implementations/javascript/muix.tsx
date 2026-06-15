@@ -1,3 +1,7 @@
+// anyplot.ai
+// depth-order-book: Order Book Depth Chart
+// Library: muix 7.29.1 | JavaScript 22.22.3
+// Quality: 83/100 | Created: 2026-06-15
 //# anyplot-orientation: landscape
 // anyplot.ai
 // depth-order-book: Order Book Depth Chart
