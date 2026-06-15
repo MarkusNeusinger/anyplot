@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: line-cycle-seasonal
 created: '2026-06-15T03:56:30Z'
-updated: '2026-06-15T04:02:37Z'
+updated: '2026-06-15T04:24:03Z'
 generated_by: claude-sonnet
 workflow_run: 27522796467
 issue: 8658
@@ -12,51 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-cycl
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - 'Correct cycle plot structure: 12 seasonal groups across x-axis, 30-year chronological
-    subseries within each group, and clearly visible horizontal mean reference lines
-    — spec fully implemented'
-  - All required chrome tokens (INK, INK_SOFT, PAGE_BG, ELEVATED_BG) properly threaded
-    through every Makie parameter; both themes render cleanly with no dark-on-dark
-    or light-on-light failures
-  - 'Color choices: #009E73 (brand green) for annual subseries and #4467A3 (Imprint
-    blue, palette position 3) for mean lines create clear visual separation between
-    the two encoding layers'
-  - Code is flat, reproducible (Random.seed!(42)), and idiomatic for modern Makie
-    — uses size=(1600,900) + px_per_unit=2 producing the correct 3200×1800 canvas,
-    colsize!() for layout, RGBAf for alpha, and LineElement handles for a manually
-    constructed legend
-  - Subtle vertical dividers at 10% INK opacity between month groups and y-only grid
-    at 12% opacity keep the chart readable without competing with data
+  - Perfect spec compliance — all required cycle plot elements (seasonal groups, chronological
+    subseries, horizontal mean reference lines, shared y-axis, vertical dividers,
+    calendar ordering, single panel) correctly implemented
+  - 'Three-layer visual hierarchy with intentional weight differentiation: thin alpha-blended
+    green subseries lines (1.4pw, 72% opacity), bold blue mean reference lines (3.5pw),
+    and subtle dashed seasonal arc — clear focal point around mean comparisons'
+  - Complete, correct theme adaptation — all chrome elements (title, axis labels,
+    tick labels, spines, grid, legend text) threaded through INK/INK_SOFT/INK_MUTED
+    tokens; data colors identical across both renders
+  - Realistic, scientifically meaningful dataset — 30-year monthly temperature record
+    with documented 0.04 °C/yr warming signal visible as within-group slope, demonstrating
+    the cycle plot's dual-pattern analytical power
+  - Idiomatically uses Makie's grid layout system (multi-row/col figure, colsize!,
+    rowgap!) and LineElement-based legend construction — distinctly Makie patterns
   weaknesses:
-  - 'Design Excellence / Storytelling: no annotation or highlighting of the within-group
-    warming trend (0.04°C/year) — this is one of the two key insights cycle plots
-    reveal; a short text annotation or per-group color gradient communicating the
-    upward slope across years would substantially raise DE-03'
-  - 'Within-group density: 30 annual observations squeezed into a ±0.35-unit band
-    produces visually tangled lines especially for mid-season months (May–Sep); widening
-    GROUP_HALF to 0.42–0.45 or reducing linewidth to 1.4 would improve within-group
-    trend readability'
-  - 'Design Excellence baseline: no standout visual innovation — the chart is correct
-    and professional but relies entirely on default proportioning with no focal point,
-    call-out, or emphasis element beyond the dual-color encoding'
+  - Warming trend annotation (Label in fig[2, 1:2]) appears very compressed or not
+    clearly visible in both renders — without an explicit row height constraint, rowgap!
+    of 4pt leaves insufficient space for fontsize=11 text; add rowsize!(fig.layout,
+    2, Fixed(40)) before the save call to guarantee minimum height
+  - Seasonal arc at 45% INK opacity and linewidth 1.5 is too subtle — barely distinguishable
+    in the plot area, and the 'Seasonal arc' legend swatch appears very faint against
+    the elevated background; increase to RGBAf(INK.r, INK.g, INK.b, 0.60) and linewidth
+    = 2.0 for better presence
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) covering the entire canvas including axis interior and outer margins — correct.
-      Chrome: Title "Monthly Temperature Cycles · line-cycle-seasonal · julia · makie · anyplot.ai" in dark ink at the top, font-size scaled down to ~17pt for the longer-than-67-char title, spanning ~65-70% of canvas width — well proportioned. X-axis label "Month" and Y-axis label "Average Temperature (°C)" in INK dark text. Tick labels (Jan–Dec, temperature values) in slightly lighter INK_SOFT gray. All text clearly readable against the off-white background. Top and right spines removed (L-frame). Y-only grid in subtle gray (~12% opacity). Subtle vertical dividers between month groups.
-      Data: 12 seasonal columns (Jan–Dec) left to right in calendar order. Within each column, 30 annual temperature observations (1994–2023) connected as a thin green (#009E73) subseries line at alpha=0.72. A bold blue (#4467A3) horizontal mean reference line spans each group at linewidth=3.5 — clearly visible and standing out above the subseries. Seasonal arc clearly visible: winter months (Jan, Feb, Dec) cluster around −3 to −1°C; summer months (Jun, Jul, Aug) peak at 22–26°C. Legend in upper-right corner with semi-transparent frame showing both series types.
-      Legibility verdict: PASS — all title, axis, and tick text readable; data elements clearly distinguishable; no light-on-light issues.
+      Background: Warm off-white approximately #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "Monthly Temperature Cycles · line-cycle-seasonal · julia · makie · anyplot.ai" in dark ink, clearly readable at scaled fontsize ~16pt; Y-axis label "Average Temperature (°C)" in dark ink; X-axis label "Month" in dark ink; month tick labels (Jan–Dec) and Y-axis tick values (0, 10, 20, 30) in slightly softer dark (#4A4A44 INK_SOFT) — all clearly readable
+      Data: 12 seasonal groups (Jan–Dec) along the x-axis. Each group contains 30 annual observation points connected as a thin zigzag line in brand green #009E73 at 72% opacity (linewidth 1.4). Horizontal mean reference lines in #4467A3 blue at linewidth 3.5 span each group and are visually dominant — the clear focal point for seasonal comparison. Subtle vertical dividers at 10% INK opacity separate month groups. A very faint dashed arc in semi-transparent dark ink (~45% opacity) traces the seasonal shape by connecting monthly means. Subtle horizontal y-grid lines at 12% opacity. Top and right spines removed; left and bottom spines in INK_SOFT.
+      Legend: Bottom-right, elevated background #FFFDF6, lists "Annual observations (1994–2023)" and "Monthly mean" entries clearly; "Seasonal arc" entry present but its swatch (faint semi-transparent dashed line) is hard to discern.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background; no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) across entire canvas — correct, not pure black.
-      Chrome: Title rendered in light near-white ink (#F0EFE8); axis labels and tick labels in lighter gray (INK_SOFT = #B8B7B0). Grid lines show as faint white horizontal lines on dark background. Legend has elevated dark background (#242420) with light label text. All chrome tokens correctly adapted for dark theme.
-      Data: Data colors identical to light render — green (#009E73) subseries and blue (#4467A3) mean lines unchanged between themes. Brand green #009E73 reads well on the dark surface. The mean lines remain the dominant visual element.
-      Legibility verdict: PASS — no dark-on-dark failures detected; all chrome elements correctly use light tokens against the dark background; data colors identical to light render as required.
+      Background: Warm near-black approximately #1A1A17 — correct theme surface, not pure black
+      Chrome: Title in near-white (#F0EFE8 INK), clearly readable; Y-axis label in near-white; X-axis label in near-white; month tick labels and Y-axis values in lighter secondary ink (#B8B7B0 INK_SOFT) — all clearly readable against dark background; no dark-on-dark failures
+      Data: Data colors are identical to the light render — subseries lines in #009E73 brand green, mean reference lines in #4467A3 blue; the dashed seasonal arc is in semi-transparent near-white ink at 45% opacity. Seasonal groups, dividers, and y-grid are all visible. Legend has dark elevated background (#242420) with light (#B8B7B0) label text — clearly readable.
+      Legibility verdict: PASS — all text clearly readable against warm near-black background; no dark-on-dark issues; brand green #009E73 remains clearly visible
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -64,52 +61,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title, labels, ticks readable in both
-          themes. Title fontsize correctly scaled for longer-than-67-char title.
+        comment: All font sizes explicitly set; title scaled for long string (len=82,
+          size=16); axis labels 14pt, ticks 12pt — well proportioned. Warming annotation
+          in fig[2,1:2] appears compressed/unclear due to no explicit row height.
       - id: VQ-02
         name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: No text overlaps; within-group lines slightly dense (30 obs in ±0.35
-          band) but alpha=0.72 helps. Acceptable for 30-year cycle data.
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 'Both series clearly visible: green subseries at linewidth=1.8 with
-          alpha, bold blue mean lines at linewidth=3.5.'
+        comment: No text or data overlap in either render. Month tick labels well-spaced.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Subseries lines and mean reference lines clearly visible. Seasonal
+          arc at 45% opacity is too faint — legend swatch barely distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Two Imprint palette colors (#009E73, #4467A3) — CVD-safe combination,
-          distinct hue families.'
+        comment: 'Only two Imprint palette colors used (#009E73 green, #4467A3 blue)
+          — CVD-safe, distinct in deuteranopia.'
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed. 84/16 split between axis and legend is reasonable.
-          No clipping anywhere. Good margins.
+        comment: Canvas gate passed (3200x1800). Plot fills canvas well with 84% column
+          for main axis. Bottom annotation row is very compressed — insufficient visible
+          height.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows required format with descriptive prefix. Axis labels
-          descriptive with units (°C).
+        comment: 'Y-axis: ''Average Temperature (°C)'' with units. X-axis: ''Month''.
+          Descriptive title with prefix.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 ✓. Mean line uses palette position 3 (#4467A3)
-          semantically appropriate. Backgrounds #FAF8F1 light / #1A1A17 dark correct.'
+        comment: 'First series #009E73 (Imprint[1]). Mean lines #4467A3 (Imprint[3]).
+          Backgrounds #FAF8F1 light / #1A1A17 dark. Data colors identical between
+          themes. Full chrome theme-adaptation.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -117,24 +116,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Professionally clean with good two-color contrast between subseries
-          and mean lines. Alpha on subseries adds depth. No standout innovation.
+        comment: Intentional 3-layer visual hierarchy (subseries/mean/arc), alpha-blending,
+          explicit color roles — clearly above configured defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed (L-frame), y-only grid at 12% opacity, alpha blending
-          on subseries, semi-transparent legend frame — genuine refinements above
-          default.
+        comment: Top/right spines removed, y-grid only at 12% opacity, subtle group
+          dividers at 10% opacity, elevated legend background, alpha-blended subseries
+          lines — multiple specific refinements.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Seasonal arc immediately clear. But no annotation of the warming
-          trend (the second key cycle-plot insight) and no focal point or emphasis
-          element beyond dual-color encoding.
+        comment: Bold mean reference lines create clear focal point for seasonal comparison.
+          Warming annotation explains within-group slope insight. Seasonal arc provides
+          macro annual cycle shape. Guides the viewer through two distinct insights.
     spec_compliance:
       score: 15
       max: 15
@@ -144,30 +143,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct cycle/seasonal subseries plot with all three required visual
-          layers.
+        comment: Correct cycle/seasonal subseries plot — seasonal groups left-to-right,
+          chronological subseries within each group as connected lines, horizontal
+          mean reference lines.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Seasonal groups (Jan-Dec) ✓, chronological subseries lines ✓, horizontal
-          mean reference lines ✓, subtle vertical dividers ✓.
+        comment: 'All spec elements present: seasonal groups (Jan-Dec), subseries
+          lines, mean reference lines, shared y-axis, subtle vertical dividers, calendar
+          ordering, single panel.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: month (seasonal groups), Y: temperature (°C). Shared y-axis,
-          natural calendar order.'
+        comment: Season (month) on x-axis, value (temperature) on y-axis, cycle (year
+          1-30) controls ordering within groups.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: 'Title: ''Monthly Temperature Cycles · line-cycle-seasonal · julia
-          · makie · anyplot.ai'' — correct format. Legend: ''Annual observations (1994–2023)''
-          and ''Monthly mean''.'
+          · makie · anyplot.ai'' — correct optional-prefix format. Legend labels appropriate.'
     data_quality:
       score: 15
       max: 15
@@ -177,22 +177,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all cycle-plot aspects: seasonal effect (mean height differences),
-          within-group trend (year-to-year slope), and 30 full cycles.'
+        comment: 'Shows all cycle plot aspects: seasonal pattern (mean differences
+          across months), within-group trend (warming slope), 30 years per month demonstrating
+          both analytical uses of the plot type.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly average temperature for a mid-latitude city 1994–2023 with
-          plausible base temps and realistic 0.04°C/year warming rate.
+        comment: Monthly average temperature for a mid-latitude city 1994-2023 — neutral
+          scientific scenario, real-world plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature range (-8°C to +30°C) appropriate for a mid-latitude
-          city. 30 years × 12 months = 360 data points.
+        comment: Temperature range -5°C to ~30°C realistic for a mid-latitude northern
+          hemisphere city. Warming rate 0.04°C/yr consistent with observed climate
+          trends. 30 years is ideal for seasonal analysis.
     code_quality:
       score: 10
       max: 10
@@ -202,57 +204,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes, linear top-to-bottom structure.
+        comment: 'Linear: constants → data → axis → loop over months → arc → legend
+          → annotation → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) at the top.
+        comment: Random.seed!(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random, Statistics — all used.
+        comment: CairoMakie (plotting), Colors (colorant), Random (seed), Statistics
+          (mean) — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean loop over months, no fake UI, appropriate complexity.
+        comment: Clean loop-per-month structure, appropriate complexity, no over-engineering,
+          no fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves to plot-$(THEME).png with px_per_unit=2. Uses modern Makie
-          size= parameter.
+        comment: Saves as plot-$(THEME).png with px_per_unit=2. Uses modern size=
+          parameter (Makie 0.20+ API).
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Correct Makie API: Figure/Axis composition, lines!(), vlines!(),
-          colsize!(), RGBAf for alpha colors — all idiomatic.'
+        comment: Grid layout with fig[row,col] spanning, colsize! for proportional
+          column sizing, xlims!, LineElement for legend, RGBAf for RGBA colors — all
+          idiomatic Makie patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Makie-specific layout (colsize!), LineElement for manual legend,
-          RGBAf, and fig[1,1]/fig[1,2] grid layout. Above baseline but no advanced
-          features like custom recipes or computed observables.
+        comment: 'Makie-specific: multi-row grid layout (fig[1,1], fig[1,2], fig[2,1:2]),
+          colsize!(fig.layout, 1, Relative(0.84)), rowgap!, LineElement legend construction
+          — features with no direct matplotlib equivalent.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - manual-ticks
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups

@@ -1,7 +1,7 @@
 # anyplot.ai
 # line-cycle-seasonal: Cycle Plot (Seasonal Subseries)
 # Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 88/100 | Created: 2026-06-15
+# Quality: 87/100 | Created: 2026-06-15
 
 using CairoMakie
 using Colors
