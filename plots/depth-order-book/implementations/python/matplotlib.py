@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 depth-order-book: Order Book Depth Chart
 Library: matplotlib 3.11.0 | Python 3.13.13
 Quality: 88/100 | Created: 2026-06-15
@@ -66,11 +66,13 @@ ax.set_facecolor(PAGE_BG)
 
 # Bid area — descending staircase from left toward mid price
 ax.fill_between(bid_x, bid_y, step="post", color=BID_COLOR, alpha=0.2)
-ax.step(bid_x, bid_y, where="post", color=BID_COLOR, linewidth=1.8)
+ax.fill_between(bid_x, bid_y, step="post", facecolor="none", edgecolor=BID_COLOR, linewidth=0.5, hatch="\\\\")
+ax.step(bid_x, bid_y, where="post", color=BID_COLOR, linewidth=2.0)
 
 # Ask area — ascending staircase from mid price toward right
 ax.fill_between(ask_x, ask_y, step="post", color=ASK_COLOR, alpha=0.2)
-ax.step(ask_x, ask_y, where="post", color=ASK_COLOR, linewidth=1.8)
+ax.fill_between(ask_x, ask_y, step="post", facecolor="none", edgecolor=ASK_COLOR, linewidth=0.5, hatch="////")
+ax.step(ask_x, ask_y, where="post", color=ASK_COLOR, linewidth=2.0)
 
 # Mid price dashed vertical line
 ax.axvline(MID_PRICE, color=INK_MUTED, linewidth=1.0, linestyle="--", alpha=0.7, zorder=5)
@@ -79,10 +81,10 @@ ax.axvline(MID_PRICE, color=INK_MUTED, linewidth=1.0, linestyle="--", alpha=0.7,
 y_top = max(bid_cum[-1], ask_cum[-1])
 ax.annotate(
     f"Mid ${MID_PRICE:,.0f}\nSpread ${SPREAD:.0f}",
-    xy=(MID_PRICE, y_top * 0.48),
+    xy=(MID_PRICE + 25, y_top * 0.45),
     fontsize=7.5,
     color=INK_MUTED,
-    ha="center",
+    ha="left",
     va="center",
     bbox={"facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.9, "boxstyle": "round,pad=0.35"},
 )
@@ -111,8 +113,8 @@ ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
 plt.setp(ax.get_xticklabels(), rotation=30, ha="right")
 
 # Legend
-bid_patch = mpatches.Patch(color=BID_COLOR, alpha=0.7, label="Bids (Buy)")
-ask_patch = mpatches.Patch(color=ASK_COLOR, alpha=0.7, label="Asks (Sell)")
+bid_patch = mpatches.Patch(facecolor=BID_COLOR, edgecolor=BID_COLOR, alpha=0.7, hatch="\\\\", label="Bids (Buy)")
+ask_patch = mpatches.Patch(facecolor=ASK_COLOR, edgecolor=ASK_COLOR, alpha=0.7, hatch="////", label="Asks (Sell)")
 leg = ax.legend(
     handles=[bid_patch, ask_patch], fontsize=8, loc="upper center", ncol=2, framealpha=0.9, bbox_to_anchor=(0.5, 0.97)
 )
