@@ -90,15 +90,30 @@ const midLinePlugin = {
     ctx.stroke();
     ctx.restore();
 
-    // Mid price and spread labels
+    // Mid price and spread labels with opaque background to avoid line intersection
     ctx.save();
     ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const pad = 6;
+
     ctx.font = 'bold 14px sans-serif';
+    const midText = '$' + MID.toLocaleString();
+    const midW = ctx.measureText(midText).width;
+    const midY = ys.top + 22;
+    ctx.fillStyle = t.pageBg;
+    ctx.fillRect(mx - midW / 2 - pad, midY - 9, midW + pad * 2, 18);
     ctx.fillStyle = t.ink;
-    ctx.fillText('$' + MID.toLocaleString(), mx, ys.top + 26);
+    ctx.fillText(midText, mx, midY);
+
     ctx.font = '13px sans-serif';
+    const spreadText = 'Spread: $' + SPREAD.toFixed(2);
+    const spreadW = ctx.measureText(spreadText).width;
+    const spreadY = ys.top + 42;
+    ctx.fillStyle = t.pageBg;
+    ctx.fillRect(mx - spreadW / 2 - pad, spreadY - 8, spreadW + pad * 2, 16);
     ctx.fillStyle = t.inkSoft;
-    ctx.fillText('Spread: $' + SPREAD.toFixed(2), mx, ys.top + 46);
+    ctx.fillText(spreadText, mx, spreadY);
+
     ctx.restore();
   },
 };
@@ -155,6 +170,7 @@ new Chart(canvas, {
     scales: {
       x: {
         type: 'linear',
+        border: { display: false },
         min: BEST_BID - (N - 1) * TICK - 60,
         max: BEST_ASK + (N - 1) * TICK + 60,
         ticks: {
@@ -174,6 +190,7 @@ new Chart(canvas, {
       },
       y: {
         beginAtZero: true,
+        border: { display: false },
         ticks: {
           color: t.inkSoft,
           font: { size: 14 },
