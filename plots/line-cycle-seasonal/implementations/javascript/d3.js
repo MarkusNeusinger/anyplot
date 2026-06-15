@@ -1,3 +1,7 @@
+// anyplot.ai
+// line-cycle-seasonal: Cycle Plot (Seasonal Subseries)
+// Library: d3 7.9.0 | JavaScript 22.22.3
+// Quality: 84/100 | Created: 2026-06-15
 //# anyplot-orientation: landscape
 // anyplot.ai
 // line-cycle-seasonal: Cycle Plot (Seasonal Subseries)
