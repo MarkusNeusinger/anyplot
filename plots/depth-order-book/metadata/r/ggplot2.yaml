@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: depth-order-book
 created: '2026-06-15T02:49:41Z'
-updated: '2026-06-15T02:55:46Z'
+updated: '2026-06-15T03:10:28Z'
 generated_by: claude-sonnet
 workflow_run: 27520764066
 issue: 8657
@@ -12,46 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/depth-ord
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 86
 review:
   strengths:
-  - 'Perfect spec compliance: all required features present (step areas, cumulative
-    accumulation, bid-ask gap, liquidity walls, mid-price annotation)'
-  - 'Excellent data quality: BTC/USD scenario with lognormal order sizes and injected
-    walls is realistic'
-  - 'Correct Imprint palette with valid semantic exception: green=bids, red=asks matching
-    Imprint positions and finance convention'
-  - Both theme renders pass all legibility checks; chrome adapts correctly in dark
-    mode
-  - Subtle grid (adjustcolor alpha=0.12) and appropriate fill transparency (0.22)
-    create clean visual layering
+  - Semantically correct Imprint palette assignment (green=bids, red=asks) aligned
+    with trading convention and spec requirement
+  - 'Full spec compliance: all required features (step curves, fills, spread gap,
+    mid-price line, annotation) present and correct'
+  - Realistic BTC/USD order book data with plausible liquidity walls that naturally
+    create visual focal points
+  - Theme-adaptive chrome correctly implemented in both renders — no dark-on-dark
+    failures
+  - 'Idiomatic ggplot2: grammar-of-graphics layering, guide_legend(override.aes),
+    proper expansion() usage'
   weaknesses:
-  - No legend to explicitly label bid (green) and ask (red) sides — add a two-entry
-    scale_fill_manual / scale_color_manual legend labelling Bid (Buy) / Ask (Sell)
-  - Panel border retains all 4 sides; remove top and right spines per style guide
-    default — replace panel.border with axis.line for bottom and left only
-  - 'Mid-price annotation (Mid: $60,000 / Spread: $10) uses very small text (size=2.8mm)
-    and muted color — increase to 3.5mm and use annotate(label) with elevated background
-    box for prominence'
-  - Two helper functions (make_step_poly, make_step_path) break the flat KISS structure
-    — consider inlining or replacing with geom_ribbon-based approach
-  - 'LM-02: Step construction uses manual R loops rather than ggplot2-native constructs
-    — using geom_step with custom data shaping would demonstrate more ggplot2 mastery'
+  - 'Fill alpha=0.22 is too low for the dark render — fill areas are nearly invisible
+    against #1A1A17; raising to ~0.35–0.45 would make depth areas more readable in
+    dark mode without overwhelming the outlines'
+  - Red/green semantic pairing is spec-required but adding step-direction labels or
+    a note would strengthen CVD accessibility
+  - make_step_poly helper function deviates from KISS; the polygon data could be constructed
+    inline
+  - DE-01 could reach 6/8 with slightly more refined typography (reduced weight grid,
+    legend without border box, increased annotation padding)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "BTC/USD Order Book · depth-order-book · r · ggplot2 · anyplot.ai" bold dark ink, clearly readable. Axis labels "Price (USD)" / "Cumulative Volume (BTC)" at 10pt in dark INK, readable. Tick labels at 8pt in INK_SOFT; x-axis rotated 30°, dollar-formatted. Mid-price annotation "Mid: $60,000 / Spread: $10" in INK_MUTED, small but readable.
-      Data: Green (#009E73) bid step area left of mid descending from ~600 BTC; red (#AE3030) ask step area right of mid rising to ~550 BTC. Liquidity walls visible as distinct step changes. Dashed vline at $60,000. Fill alpha 0.22 semi-transparent with solid outlines (linewidth=0.85). First series is #009E73.
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
+      Chrome: Title "BTC/USD Order Book · depth-order-book · r · ggplot2 · anyplot.ai" in bold dark ink (~65% canvas width); axis labels "Price (USD)" / "Cumulative Volume (BTC)" at 10pt; x-tick labels rotated 30° at 8pt; y-tick labels at 8pt; legend text at 8pt. All chrome elements use dark INK tokens — clearly readable.
+      Data: Bid step area in #009E73 (Imprint pos 1) descending from left toward mid-price gap, with prominent liquidity wall plateau at ~$59,750. Ask step area in #AE3030 (Imprint pos 5) ascending from mid-price rightward with wall shoulder near $60,100. Fill alpha=0.22 is subtle. Solid step outlines at linewidth=0.85 are sharp. Dashed vertical line at mid price. Annotation box "Mid: $60,000 / Spread: $10" in elevated background box.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title in light #F0EFE8, clearly readable. Axis labels and tick labels in #B8B7B0 (INK_SOFT for dark), readable against dark background. Annotation in INK_MUTED (dark: #A8A79F), readable. Grid lines subtly lighter on dark. No dark-on-dark failures observed.
-      Data: Colors identical to light render — green (#009E73) bid area and red (#AE3030) ask area are the same. Dashed mid-price line appears off-white/light. Only chrome flips between themes.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct dark surface, not pure black.
+      Chrome: Title and axis labels flip to light-cream text (#F0EFE8 / #B8B7B0) — clearly readable against the dark background. No dark-on-dark failures detected. Mid-price annotation box uses elevated dark background (#242420) with light text — readable. Legend box uses elevated dark fill with #B8B7B0 text — readable.
+      Data: Data colors are identical to light render — #009E73 for bids, #AE3030 for asks (only chrome flips). Fill areas at alpha=0.22 on dark background are very muted and nearly invisible, but the step outline strokes remain sharp and carry the visual information. Grid lines at ~12% alpha faintly visible.
+      Legibility verdict: PASS — all text readable; minor weakness is dark-mode fill areas being nearly invisible at alpha=0.22.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -59,47 +57,47 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; proportions good; mid-price annotation
-          slightly small (2.8mm)
+        comment: All font sizes explicitly set; balanced proportions; readable in
+          both themes; 30° rotated x-ticks slightly reduce mobile legibility
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements
+        comment: No overlapping elements in either render
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Step curves clearly visible; liquidity walls apparent; fill alpha
-          0.22 well-chosen
+        comment: Step outlines sharp; fills at alpha=0.22 very muted in dark render
+          — nearly invisible
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Semantic red/green with positional redundant encoding (left vs right
-          of mid)
+        comment: Red/green pairing is spec-mandated; step shapes provide directional
+          redundancy but hue-only CVD concern remains
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; good fill; balanced margins; no clipping
+        comment: Canvas 3200x1800 confirmed; well-proportioned layout; balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Price (USD) and Cumulative Volume (BTC) — both include units
+        comment: Price (USD) and Cumulative Volume (BTC) — descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Bid #009E73 (Imprint pos 1), Ask #AE3030 (Imprint pos 5 semantic).
-          Correct backgrounds. Data colors identical across themes.'
+        comment: 'Bid=#009E73 (pos 1), Ask=#AE3030 (pos 5 semantic exception); backgrounds
+          #FAF8F1/#1A1A17; chrome adaptive'
     design_excellence:
       score: 13
       max: 20
@@ -109,22 +107,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above configured-default: semantic colors, transparency, annotation,
-          panel border. Not publication-ready — no legend, passive annotation placement.'
+        comment: Intentional semantic palette; fill+stroke layering; adaptive annotation
+          box; above defaults but not publication-ready
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid (alpha 0.12), minor grid removed, good margins. 4-sided
-          panel border heavier than L-shaped default.
+        comment: Panel border removed; minor grid removed; major grid at 12% alpha;
+          L-shaped axis lines; legend border
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Semantic colors, visible walls, spread gap, mid-price annotation
-          create good market microstructure narrative.
+        comment: Mid-price annotation orients viewer; liquidity walls create natural
+          focal points; order book imbalance story visible
     spec_compliance:
       score: 15
       max: 15
@@ -134,26 +132,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct order book depth chart with cumulative step areas
+        comment: 'Correct depth chart: cumulative step areas for bid and ask flanking
+          mid price'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: cumulative sums, step curves, colors, fill+outline,
-          mid-price line, annotation, spread gap, y-axis from 0'
+        comment: 'All features present: cumulative sums, step curves, fills, spread
+          gap, mid-price line, annotation, y-axis from zero'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Price on X, cumulative volume on Y, bids left / asks right
+        comment: Price on x, cumulative volume on y; all 50 levels per side visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format with optional descriptive prefix
+        comment: 'Title format: Descriptive · spec-id · r · ggplot2 · anyplot.ai;
+          legend labels Bid (Buy) / Ask (Sell)'
     data_quality:
       score: 15
       max: 15
@@ -163,21 +163,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both sides, lognormal order sizes, injected liquidity walls, growing
-          depth trend
+        comment: Both sides, cumulative accumulation, liquidity walls, spread gap,
+          mid-price reference
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: BTC/USD at $60,000 — plausible and neutral finance scenario
+        comment: BTC/USD at $60,000; $10 spread (0.017%); 50 levels at $5 tick; log-normal
+          sizing
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: $10 spread, 50 levels per side, cumulative ~600 BTC — plausible for
-          liquid BTC/USD market
+        comment: Price range, cumulative volume ~600 BTC, wall multiples all plausible
     code_quality:
       score: 9
       max: 10
@@ -187,14 +187,14 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Two helper functions (make_step_poly, make_step_path) break flat
-          structure; justified but still a deduction
+        comment: make_step_poly helper function deviates from pure KISS structure;
+          otherwise clean
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42)
+        comment: set.seed(42) present
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -206,13 +206,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; step construction is appropriate for ggplot2
+        comment: No fake interactivity; vectorized polygon approach; clean structure
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: sprintf('plot-%s.png', THEME) + ragg::agg_png
+        comment: ggsave(sprintf('plot-%s.png', THEME), device=ragg::agg_png) — correct
     library_mastery:
       score: 7
       max: 10
@@ -222,20 +222,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct ggplot2 grammar with multiple geom layers, scales formatters,
-          expansion(), theme_minimal + overrides
+        comment: Grammar-of-graphics layering; guide_legend(override.aes); expansion();
+          theme_minimal()+theme() composition
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Grammar-of-graphics layering (polygon + path); adjustcolor for R-idiomatic
-          grid. Step construction is manual loops rather than ggplot2-native.
-  verdict: REJECTED
+        comment: geom_polygon+geom_step combination for filled step areas is ggplot2-specific;
+          direction='hv' step control
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scales
-  - ragg
   techniques:
   - annotations
   - layer-composition
@@ -245,4 +244,3 @@ impl_tags:
   - cumulative-sum
   styling:
   - alpha-blending
-  - grid-styling
