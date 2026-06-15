@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: audiogram-clinical
 created: '2026-06-15T00:13:31Z'
-updated: '2026-06-15T00:19:23Z'
+updated: '2026-06-15T00:28:08Z'
 generated_by: claude-sonnet
 workflow_run: 27516094288
 issue: 8655
@@ -12,44 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/audiogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - Perfect spec compliance — inverted y-axis, logarithmic x-axis, correct audiometric
-    symbols (O/X), severity bands with labels, all required clinical conventions respected
-  - 'Semantic palette exception correctly applied and documented — red/blue ear convention
-    is the international clinical standard; uses Imprint #AE3030 and #4467A3 rather
-    than custom hexes'
-  - Excellent ggplot2 idiomatic usage — unified multi-scale legend, coord_cartesian
-    for OOB safety, shape_manual for clinical symbols, correct scale_y_reverse + coord_cartesian
-    combination
-  - Dual-theme adaptation is clean — both renders readable; chrome tokens correctly
-    threaded through all elements including panel border, legend frame, and severity
-    band labels
+  - 'Perfect spec compliance: inverted y-axis, log x-axis, O/X symbols, red/blue per
+    ear, all 6 severity bands implemented correctly'
+  - 'Semantic color exception for clinical convention correctly executed using Imprint
+    palette members (#AE3030 matte red pos 5 for right ear, #4467A3 blue pos 3 for
+    left ear)'
+  - 'Severity band coloring encodes green-to-red severity gradient semantically using
+    Imprint anchors (#009E73, #DDCC77, #BD8233, #AE3030)'
+  - 'Advanced ggplot2: unified multi-scale legend via matching name=NULL across scale_color_manual/scale_shape_manual/scale_linetype_manual'
+  - 'Full theme adaptation: all chrome tokens (INK, INK_SOFT, INK_MUTED, PAGE_BG,
+    ELEVATED_BG) flip correctly between light and dark renders'
+  - 'Realistic clinically authentic dataset: bilateral HFSNHL with 4kHz notch pattern
+    consistent with occupational noise exposure'
   weaknesses:
-  - library(dplyr) imported but unused — only base R functions are used in the data
-    construction; remove to satisfy CQ-03
-  - Severity band annotation labels at size=3.0 are at the lower legibility boundary
-    when the 2400x2400 canvas is scaled to mobile widths (~400px) — consider increasing
-    to size=3.5
-  - The data shows monotone high-frequency sloping loss (thresholds worsen from 4k
-    to 8k) rather than a true 4 kHz notch with partial recovery at 8k; the code comment
-    says 'notch at 4 kHz' — minor discrepancy between comment and data pattern
+  - Minor inherent marker overlap at 125 Hz and 500 Hz where both ears record the
+    same threshold (10 dB and 15 dB HL respectively) — the O and X markers stack on
+    top of each other; consider a small horizontal nudge via position_nudge() on one
+    series' point layer
+  - Severity band italic label at size=3.5 (~10pt) may be slightly harder to read
+    at scaled-down mobile widths; consider increasing to size=4.0
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "audiogram-clinical · r · ggplot2 · anyplot.ai" in dark ink (#1A1A17) at 12pt — fully readable. Axis labels "Frequency (Hz)" and "Hearing Level (dB HL)" at 10pt in dark ink — readable. Tick labels (-10 through 120 on y, 125/250/500/1k/2k/4k/8k on x) at 8pt in INK_SOFT (#4A4A44) — readable. Severity band italic labels at size=3.0 in INK_MUTED (#6B6A63) — readable at full size.
-      Data: Right ear — matte red #AE3030 open circle (O) markers, solid line. Left ear — blue #4467A3 cross (X) markers, dashed line. Data colors are Imprint palette with documented semantic exception for clinical convention. Severity bands: green (#009E73) for Normal, amber (#DDCC77) for Mild, ochre (#BD8233) for Moderate/Mod. Severe, red (#AE3030) for Severe/Profound — all at BAND_ALPHA=0.12 fill opacity.
-      Legibility verdict: PASS
+      Background: warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: title "audiogram-clinical · r · ggplot2 · anyplot.ai" in dark INK (#1A1A17), clearly readable. Axis labels "Frequency (Hz)" and "Hearing Level (dB HL)" in INK at 10pt. Tick labels in INK_SOFT (#4A4A44) at 8pt, readable. Severity band labels in italic INK_MUTED (#6B6A63) at size=3.5. Legend with bordered ELEVATED_BG (#FFFDF6) box, legend text in INK_SOFT.
+      Data: Red (#AE3030) solid line with open-circle (O) markers for Right Ear; blue (#4467A3) dashed line with X markers for Left Ear. Six horizontal severity bands: green (#009E73 alpha=0.12) for Normal, amber (#DDCC77 alpha=0.12) for Mild, ochre (#BD8233 alpha=0.12) for Moderate, deeper ochre (alpha=0.18) for Mod. Severe, red (#AE3030 alpha=0.12) for Severe, darker red (alpha=0.216) for Profound.
+      Legibility verdict: PASS — all text elements clearly readable against warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
-      Chrome: Title, axis labels, tick labels all render in light ink (#F0EFE8 / #B8B7B0) — clearly visible against dark background. No dark-on-dark failures detected. Severity band labels in INK_MUTED (#A8A79F) — readable. Legend box uses elevated dark background (#242420) with border — readable text.
-      Data: Data colors identical to light render — right ear #AE3030 red circles, left ear #4467A3 blue X markers. Severity bands appear as dark overlays on the near-black background with the same hue family. No color drift between themes.
-      Legibility verdict: PASS
+      Background: warm near-black (#1A1A17) — correct, not pure black
+      Chrome: title renders in light INK (#F0EFE8), clearly readable against dark background. Axis labels in INK (#F0EFE8), tick labels in INK_SOFT (#B8B7B0), severity labels in INK_MUTED (#A8A79F). Legend box in ELEVATED_BG (#242420) with INK_SOFT border. No dark-on-dark failures detected — all text elements use correctly adapted light tokens.
+      Data: Data colors identical to light render — red (#AE3030) for Right Ear, blue (#4467A3) for Left Ear. Severity bands remain faintly visible against dark background. Only chrome has flipped.
+      Legibility verdict: PASS — all text elements readable against dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -57,75 +56,78 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title (12pt), axis labels (10pt), tick labels (8pt) all readable
-          in both themes; severity band labels (size=3.0) at lower end of mobile legibility
+        comment: All text readable in both themes. Severity band italic labels at
+          size=3.5 legible at full resolution; minor concern at mobile scale.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text or data collisions; band labels at x=1000 Hz sit cleanly
-          inside bands
+        comment: Minor inherent marker overlap at 125 Hz and 500 Hz where both ears
+          share the same threshold value. O and X shapes still distinguishable when
+          stacked.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: size=5 markers with stroke=2.0 prominent for 7 data points; linewidth=1.2
-          lines clear
+        comment: Markers at size=5 with stroke=2.0 prominent for sparse 7-point data.
+          Lines at linewidth=1.2 clearly visible against banded background.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red/blue distinction supplemented by shape (O/X) and linetype (solid/dashed)
-          redundant encodings
+        comment: Red/blue pair uses redundant encoding (color + shape + linestyle)
+          satisfying CVD safety.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400; title ~75% width; generous margins; no overflow
-          or clipping
+        comment: Square 2400x2400 canvas appropriate. Canvas gate passed. No overflow
+          or clipping. Good 20pt margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Frequency (Hz) and Hearing Level (dB HL) with units; title matches
-          required format
+        comment: 'X: Frequency (Hz), Y: Hearing Level (dB HL), Title matches required
+          format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Semantic exception for clinical convention: #AE3030 right ear, #4467A3
-          left ear; both Imprint palette; backgrounds correct'
+        comment: 'Semantic exception correctly applied: clinical convention red (#AE3030
+          Imprint pos 5) for right ear, blue (#4467A3 Imprint pos 3) for left ear.
+          Severity bands use Imprint anchors. Backgrounds #FAF8F1/#1A1A17 correct.'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Documented semantic exception, graduated band alpha, clinical symbols
-          show domain awareness
+        comment: 'Genuine clinical aesthetic: semantic color assignment per international
+          convention, severity gradient from green to red, italic band labels, panel
+          border appropriate for clinical format.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid (linewidth=0.2), translucent bands (BAND_ALPHA=0.12),
-          enclosed panel border appropriate for audiogram
+        comment: Grid at linewidth=0.2, bands at alpha=0.12, legend with elevated-background
+          bordered box. Panel border correct for clinical format.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Severity bands communicate clinical significance; high-frequency
-          sensorineural pattern is the focal story; italic labels guide interpretation
+        comment: Bilateral HFSNHL 4kHz notch clearly visible. Severity bands give
+          clinical context. Progressive pattern creates clear narrative.
     spec_compliance:
       score: 15
       max: 15
@@ -135,29 +137,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct clinical audiogram: inverted y-axis, log x-axis, O/X markers,
-          connected lines per ear'
+        comment: Clinical audiogram with inverted y-axis, log x-axis, O/X markers,
+          connecting lines per ear.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required: inverted y-axis, log x-axis, O/X markers, solid/dashed
-          line distinction, shaded severity bands with labels, legend'
+        comment: 'All required features present: inverted axis, log scale, O/X symbols,
+          red/blue colors, solid/dashed lines, all 6 severity bands with labels, legend.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Frequency on log x-axis, threshold on inverted y-axis, right=red
-          circles, left=blue X; standard audiometric range
+        comment: Log-scale frequencies 125-8kHz, inverted -10 to 120 dB HL, 10dB gridlines,
+          kHz shorthand tick labels.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches {spec-id} · {language} · {library} · anyplot.ai; legend
-          maps O/red and X/blue correctly
+        comment: Title audiogram-clinical · r · ggplot2 · anyplot.ai correct. Legend
+          shows Right Ear (O) and Left Ear (X) with correct symbols.
     data_quality:
       score: 15
       max: 15
@@ -167,24 +169,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bilateral loss, high-frequency slope, all six severity zones illustrated,
-          seven audiometric frequencies
+        comment: All 7 standard audiometric frequencies, both ears, all severity categories
+          covered, HFSNHL pattern demonstrated.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Noise-induced bilateral high-frequency sensorineural loss is clinically
-          common and neutral
+        comment: Bilateral HFSNHL with 4kHz notch — clinically valid occupational
+          noise exposure. Slightly worse left ear plausible. Neutral medical data.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: -10 to 120 dB HL is standard audiometric range; 125-8000 Hz covers
-          standard pure-tone audiometry span
+        comment: Standard audiometric range (-10 to 120 dB HL, 125-8000 Hz). Threshold
+          values (10-70 dB) realistic for moderate noise-induced loss.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -192,34 +194,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; flat linear script
+        comment: Flat script with clear sections, no unnecessary abstractions.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present; hard-coded data is fully deterministic
+        comment: set.seed(42) present; data is deterministic hand-specified values.
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: library(dplyr) imported but no dplyr verbs used; only base R functions
-          needed
+        passed: true
+        comment: Only ggplot2 and ragg imported, both used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized sections, no fake UI, clear inline comments
+        comment: Good use of annotate() for bands, clean aes() mapping, coord_cartesian()
+          for view control.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via sprintf with ragg::agg_png device
+        comment: sprintf('plot-%s.png', THEME) correct; ragg::agg_png device used.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -227,15 +229,16 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Exemplary ggplot2: scale_y_reverse + coord_cartesian for OOB safety,
-          unified multi-scale legend via name=NULL, annotate(rect) for bands, expand=FALSE'
+        comment: 'Excellent ggplot2 grammar: annotate() for bands/labels, scale_x_log10()
+          + scale_y_reverse(), coord_cartesian() with expand=FALSE.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Unified legend composition (color+shape+linetype), coord_cartesian
-          OOB safety, open hollow markers via shape=1/4 with fill=NA
+        comment: Unified multi-aesthetic legend via matching name=NULL — advanced
+          ggplot2 pattern. scale_y_reverse() + coord_cartesian coordination. Could
+          demonstrate one more advanced feature.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -243,6 +246,7 @@ impl_tags:
   - annotations
   - manual-ticks
   - layer-composition
+  - custom-legend
   patterns:
   - data-generation
   dataprep: []
