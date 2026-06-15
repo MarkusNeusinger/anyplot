@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 climograph-walter-lieth: Walter-Lieth Climate Diagram
 Library: plotnine 0.15.7 | Python 3.13.13
-Quality: 81/100 | Created: 2026-06-15
+Quality: 86/100 | Created: 2026-06-15
 """
 
 import os
