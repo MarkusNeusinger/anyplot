@@ -77,7 +77,7 @@ if (y0 >= 0 && y0 <= ih) {
 
 // --- Groups -----------------------------------------------------------------
 const LINE_COLOR = t.palette[0];  // Imprint green — first categorical series
-const MEAN_COLOR = t.palette[2];  // Imprint blue — seasonal mean reference lines
+const MEAN_COLOR = t.palette[1];  // Imprint lavender — seasonal mean reference lines
 
 const lineGen = d3.line()
   .x(d => xWithin(d.yi)).y(d => y(d.value));
