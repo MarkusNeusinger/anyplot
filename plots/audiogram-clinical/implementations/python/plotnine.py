@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 audiogram-clinical: Clinical Audiogram
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2026-06-14
+Library: plotnine 0.15.7 | Python 3.13.13
+Quality: 89/100 | Created: 2026-06-15
 """
 
 import sys
