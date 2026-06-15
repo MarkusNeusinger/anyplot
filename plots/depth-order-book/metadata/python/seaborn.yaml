@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: depth-order-book
 created: '2026-06-15T02:39:13Z'
-updated: '2026-06-15T02:45:23Z'
+updated: '2026-06-15T02:54:27Z'
 generated_by: claude-sonnet
 workflow_run: 27520295174
 issue: 8657
@@ -12,95 +12,98 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/depth-ord
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance — all required features present: step areas for both
-    sides, semi-transparent fills with solid outlines, bid-ask spread gap, dashed
-    mid-price line, mid price and spread annotated, Y-axis starts at zero'
-  - 'Correct cumulation logic: bids accumulated from best-bid outward (descending
-    price), asks from best-ask outward (ascending price) — V-shape is semantically
-    accurate'
-  - 'Semantic Imprint palette usage: brand green (#009E73) for bids, matte red (#AE3030)
-    for asks — justified by finance domain convention (buy/sell)'
-  - Clean, professional layout with well-tuned subplots_adjust margins and minimal
-    chrome (L-shaped spines, subtle y-axis-only grid)
-  - Support wall (bid ~$59,925) and resistance wall (ask ~$60,100) add authentic trading
-    depth to synthetic data and create visual storytelling
+  - 'Perfect spec compliance: all required features present and correctly implemented
+    (step staircase, cumulative sums, spread gap, mid-price annotation, simulated
+    order book walls)'
+  - 'Full visual quality score: explicit font sizing throughout, no overlaps, readable
+    in both light and dark themes, correct Imprint palette with appropriate semantic
+    colour exception for finance (green=buy/bids, red=sell/asks)'
+  - Realistic BTC/USD order book data with simulated support and resistance walls
+    demonstrating the depth chart's liquidity-wall feature highlighted in the spec
+  - 'Correct theme-adaptive chrome throughout: all INK/INK_SOFT/INK_MUTED/ELEVATED_BG
+    tokens applied to every non-data element; dark mode fill alpha raised from 0.22
+    to 0.35 to compensate for darker surface'
+  - Clean, well-structured KISS code with np.random.seed(42) for reproducibility and
+    no bbox_inches='tight' per seaborn library guide
   weaknesses:
-  - 'Semi-transparent fills at alpha=0.22 are near-invisible in dark mode (near-black
-    fill on #1A1A17 background) — raise fill alpha to ~0.32–0.35 for dark theme by
-    branching on THEME: alpha=0.22 if THEME==''light'' else 0.35'
-  - 'LM-02 limited: seaborn contribution is only the sns.set_theme() layer; step outlines
-    should use sns.lineplot(..., drawstyle=''steps-post'') instead of ax.step() to
-    use seaborn API where one exists'
+  - 'Library mastery is modest: seaborn''s contribution is primarily sns.set_theme()
+    theming and sns.lineplot() for the step outline; the fill area uses matplotlib''s
+    fill_between directly, making this partially a matplotlib implementation with
+    seaborn styling layered on top'
+  - 'Design storytelling stops short of labelling the key insight: the bid support
+    wall (~$59,925) and ask resistance wall (~$60,090) are visually present as step
+    jumps but not explicitly annotated — a short arrow and label pointing to each
+    wall would immediately guide the viewer to the ''support wall'' / ''resistance
+    wall'' insight that is the primary purpose of reading a depth chart'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct.
-      Chrome: Title "depth-order-book · python · seaborn · anyplot.ai" in dark ink, readable, ~75% canvas width. Axis labels "Price (USD)" and "Cumulative Volume (BTC)" in dark ink at 10pt. Tick labels at 8pt in INK_SOFT (#4A4A44) — all readable.
-      Data: Bid step area in #009E73 (semi-transparent fill + solid outline) descends from ~120 BTC at $59,800 to ~3 BTC near mid; ask step area in #AE3030 ascends from ~3 BTC at $60,005 to ~140 BTC at $60,200. Dashed mid-price line at $60,000. Annotation box "Mid: $60,000 / Spread: $10" with elevated background. Support wall (bid) visible at ~$59,925; resistance wall (ask) prominent at ~$60,100.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct light surface, not pure white
+      Chrome: Title "depth-order-book · python · seaborn · anyplot.ai" in dark ink at 12pt, fully readable; X-axis label "Price (USD)" and Y-axis label "Cumulative Volume (BTC)" in dark ink at 10pt with units; tick labels at 8pt in INK_SOFT (#4A4A44) formatted as "$59,800" etc.; legend "Bids (Buy)" / "Asks (Sell)" in INK_SOFT at 8pt; mid-price annotation box with rounded corners on elevated background (#FFFDF6); all text clearly readable
+      Data: Green (#009E73) step-area from $59,800 to just below mid price (~120 BTC max cumulative); red (#AE3030) step-area from just above mid price to $60,200 (~140 BTC max cumulative); semi-transparent fills (alpha=0.22) with matching solid step outlines (linewidth=1.8); visible bid support wall step ~$59,925 and ask resistance wall ~$60,090; dashed mid-price line in INK_SOFT; visible bid-ask spread gap at center
+      Legibility verdict: PASS — all text readable, no light-on-light issues, data clearly distinguishable from background
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct.
-      Chrome: Title, axis labels, tick labels all in light ink (INK = #F0EFE8, INK_SOFT = #B8B7B0) — all readable. No dark-on-dark text failures. Legend box has correct dark elevated background (#242420).
-      Data: Step outlines at #009E73 (bid) and #AE3030 (ask) are vivid against the dark surface. Semi-transparent fills at alpha=0.22 are near-invisible (dark green-tinted and dark maroon on near-black background) but the bright outlines compensate and the chart remains interpretable. Data colors identical to light render.
-      Legibility verdict: PASS — minor: fill areas near-invisible in dark mode; outlines carry visual weight.
+      Background: Warm near-black #1A1A17 — correct dark surface, not pure black
+      Chrome: Title, axis labels, tick labels all rendered in light ink (#F0EFE8 / #B8B7B0); annotation box on elevated dark background (#242420) with INK_SOFT border; legend text in light color; no dark-on-dark failures observed anywhere
+      Data: Green (#009E73) and red (#AE3030) data colors pixel-identical to light render — only chrome flips; fill alpha raised to 0.35 (vs 0.22 light) to keep fills visible against the darker surface; both step areas and outlines clearly distinguishable; order book walls still clearly visible as step jumps
+      Legibility verdict: PASS — all text readable in light colors on dark background, no dark-on-dark issues, data colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'Title 12pt, axes 10pt, ticks 8pt; readable in both themes. Minor
-          deduction: x-axis dollar-formatted tick labels slightly dense at 8pt but
-          legible.'
+        comment: All font sizes explicitly set (title=12, labels=10, ticks=8, annotation=8,
+          legend=8); well-proportioned, no overflow, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-text or text-data collisions. Mid-price annotation placed
-          cleanly in the spread gap.
+        comment: No text or element collisions; annotation box positioned cleanly
+          at y=80% of max
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Step outlines vivid in both themes. Semi-transparent fills (alpha=0.22)
-          near-invisible in dark mode; bright outlines compensate. Mild deduction.
+        comment: Step areas and fills clearly visible; fill alpha raised in dark mode
+          (0.22→0.35); linewidth=1.8 makes staircase distinct
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red is spec-mandated semantic pairing for buy/sell. Spatial
-          position (left=bids, right=asks) provides strong redundant encoding.
+        comment: Green/red semantic split mandated by spec for finance convention;
+          redundant text encoding via legend labels; adequate luminance contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: figsize=(8,4.5) @ dpi=400 = 3200x1800. subplots_adjust with good
-          margins. No overflow or clipping.
+        comment: Canvas gate passed; balanced margins via fig.subplots_adjust; plot
+          fills canvas well
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Price (USD) and Cumulative Volume (BTC) with units. Title format
-          correct.
+        comment: Price (USD) and Cumulative Volume (BTC) both descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Bid #009E73 (Imprint position 1), Ask #AE3030 (position 5, semantic
-          exception). Backgrounds #FAF8F1/#1A1A17 correct.'
+        comment: 'Bid #009E73 (Imprint pos 1), Ask #AE3030 (Imprint pos 5); semantic
+          exception for finance; backgrounds #FAF8F1/#1A1A17; all chrome tokens theme-adaptive;
+          data colors identical across renders'
     design_excellence:
       score: 13
       max: 20
@@ -110,23 +113,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above default. Semantic color mapping, polished annotation box, realistic
-          support/resistance walls.
+        comment: 'Above generic default: Imprint semantic palette, semi-transparent
+          fills with solid outlines, rounded annotation callout, L-spines, subtle
+          grid. Not at ''strong design'' tier — walls not visually emphasised.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Above default. L-shaped spines, y-axis-only grid at alpha=0.15, dollar-formatted
-          tick labels, custom legend text colors.
+        comment: Top/right spines removed; subtle y-only grid at alpha=0.15; legend
+          and annotation on elevated bg; INK_SOFT ticks; dark mode fill alpha adjusted.
+          Good refinement, margins slightly tighter than generous.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Above default. Support/resistance walls create authentic trading
-          narrative. Dashed mid-price line and spread annotation focus viewer on key
-          price gap.
+        comment: Mid-price annotation and dashed line create focal point; spread gap
+          immediately obvious; walls visible as step jumps. Walls not explicitly annotated
+          so storytelling doesn't reach 'viewer immediately sees the insight' level.
     spec_compliance:
       score: 15
       max: 15
@@ -136,30 +141,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct order book depth chart with cumulative step areas around
-          mid price.
+        comment: 'Correct: cumulative order-book depth chart with step staircase areas
+          for both bid and ask sides'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Both areas present; semi-transparent fills + solid outlines; spread
-          gap visible; dashed mid-price line; mid price and spread annotated; cumulative
-          from best bid/ask outward; Y-axis starts at zero; left-continuous steps.
+        comment: Green bid area, red ask area, left-continuous step curves, bid-ask
+          spread gap, mid-price dashed line, mid-price/spread annotation, y-axis from
+          zero, symmetric price range — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Price on x-axis, cumulative BTC on y-axis. Bids left of mid, asks
-          right. Step rendering matches discrete price levels.
+        comment: Price on x-axis, cumulative volume on y-axis; bid left of center,
+          ask right; cumulative sum correctly accumulates from best bid/ask outward
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: depth-order-book · python · seaborn · anyplot.ai. Legend:
-          Bids (Buy) / Asks (Sell).'
+        comment: 'Title: ''depth-order-book · python · seaborn · anyplot.ai''; legend:
+          ''Bids (Buy)'' / ''Asks (Sell)'''
     data_quality:
       score: 15
       max: 15
@@ -169,22 +174,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both sides, cumulative aggregation, buy wall (~$59,925) and sell
-          wall (~$60,100), mid price annotated, spread shown.
+        comment: 40 levels per side; simulated bid support wall (~+16 BTC at $59,925)
+          and ask resistance wall (~+20 BTC at $60,090); volume distribution grows
+          naturally away from mid price
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: BTC/USD at ~$60,000 with $10 spread; $5 price ticks; volumes from
-          normal distribution with walls — plausible and neutral.
+        comment: BTC/USD order book at ~$60,000 is a realistic, neutral, widely-recognisable
+          scenario; no controversial content
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range $59,800–$60,200 centered on $60,000; cumulative volumes
-          0–140 BTC for 40 levels — realistic.
+        comment: Mid $60,000, $10 spread (~0.017%), $5 tick, 40 levels covering ~$200
+          range; cumulative depth to ~120-140 BTC — all within realistic bounds for
+          a liquid exchange
     code_quality:
       score: 10
       max: 10
@@ -194,51 +201,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: 'Linear: imports → theme tokens → data generation → plot → styling
+          → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. sys.path manipulation justified to prevent self-import.
+        comment: os, sys (path fix), matplotlib.pyplot, matplotlib.ticker, numpy,
+          seaborn — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clear data construction, logical flow, no fake UI.
+        comment: Clean and Pythonic; sys.path manipulation is the anyplot pattern;
+          no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, no bbox_inches='tight', correct seaborn API.
+        comment: Saves as plot-{THEME}.png; no bbox_inches='tight'; current API
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: sns.set_theme() with comprehensive rc dict is idiomatic. Delegating
-          fill_between/step to matplotlib is correct since seaborn has no native step-area
-          methods.
+        comment: Correctly uses sns.set_theme(style='ticks', rc={...}) and sns.lineplot(drawstyle='steps-post');
+          hybrid seaborn+matplotlib approach appropriate since seaborn has no native
+          depth-chart function, but seaborn contribution limited to theming and line-drawing
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: 'Limited by chart type: seaborn contributes only theme layer. Step
-          outlines should use sns.lineplot(drawstyle=''steps-post'') where seaborn
-          API exists.'
+        comment: sns.set_theme(rc={...}) per-key override and sns.lineplot with drawstyle='steps-post'
+          are the distinctive seaborn contributions; core fill uses matplotlib fill_between
+          — no advanced seaborn patterns (FacetGrid, relplot, etc.) applicable here
   verdict: APPROVED
 impl_tags:
   dependencies: []
