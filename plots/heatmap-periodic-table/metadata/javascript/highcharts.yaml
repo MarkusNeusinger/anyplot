@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: heatmap-periodic-table
 created: '2026-06-15T05:38:35Z'
-updated: '2026-06-15T05:47:11Z'
+updated: '2026-06-15T06:07:17Z'
 generated_by: claude-sonnet
 workflow_run: 27524818187
 issue: 8659
@@ -12,119 +12,130 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-p
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/javascript/highcharts/plot-dark.html
-quality_score: 83
+quality_score: 87
 review:
   strengths:
-  - Correct canonical 18×7 periodic table layout with f-block separation
-  - Imprint sequential colormap (t.seq[0]→t.seq[1]) correctly applied
-  - Luminance-based text color switching for readability on all tiles
-  - Factually accurate first ionization energy data for 118 elements
-  - Proper gray placeholder tiles for missing-data elements
-  - Theme-adaptive chrome via t.ink / t.inkSoft tokens throughout
-  - Square canvas orientation directive present and appropriate for layout
+  - Correct canonical periodic table layout (18x7 main body + detached f-block rows
+    with connector lines and Ln/An labels)
+  - imprint_seq colormap correctly implemented from t.seq[0]/t.seq[1] tokens, applied
+    consistently across both renders
+  - Luminance-based dynamic text contrast (WCAG-correct) ensures tile text is readable
+    on both teal and blue tiles in both light and dark themes
+  - Factually accurate first ionization energy data for all 118 elements, including
+    correct period anomalies (N > O, P > S)
+  - Null-value placeholder tiles rendered as muted gray preserving the canonical periodic
+    table silhouette
+  - Colorbar with intermediate tick marks at 1000, 1500, 2000 kJ/mol provides quantitative
+    reference
+  - Dashed connector lines linking group-3 placeholder tiles to f-block rows are an
+    elegant design detail
+  - Square orientation correctly chosen for a grid-based symmetric layout
+  - Completely deterministic — all 118 element data points hard-coded
   weaknesses:
-  - 'DE-01/DE-02 low: design is technically correct but plain — colorbar has only
-    start/end labels and no intermediate tick marks (500/1000/1500/2000 kJ/mol), no
-    visual separation between element groups or subtle category borders, no depth
-    or polish beyond 2px rounded tile corners'
-  - Atomic number labels at 9px CSS (18px native) approach the limit of legibility
-    and are unreadable when scaled to mobile widths — inherent constraint of 118 tiles
-    but could be mitigated by omitting them on f-block tiles or using a more compact
-    notation
-  - Colorbar is very minimal (gradient strip + two endpoint labels only) — adding
-    3–4 intermediate tick marks at round values would significantly improve readability
-    and storytelling
+  - Atomic numbers in tile top-left corners render at ~9 px CSS (~18 px native) —
+    functionally legible at full 2400x2400 resolution but barely so; at 400 px mobile
+    thumbnail they become invisible. Consider increasing to 11-12 px CSS.
+  - Group numbers (1-18) at 9 px CSS are similarly small; bumping to 11 px CSS would
+    improve readability at thumbnail sizes without overcrowding.
+  - 'DE-01 stopped short of publication-ready polish: element family background differentiation
+    (s/p/d/f blocks with subtle shading), bolder period/group labels, or a small legend
+    for element categories would elevate to a higher tier.'
+  - No IE numeric value shown inside tiles (optional per spec, but would enhance information
+    density for this property-focused visualization).
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white matching #FAF8F1 — not pure white, correctly warm.
-      Chrome: Title "First Ionization Energy · heatmap-periodic-table · javascript · highcharts · anyplot.ai" in dark text, legible. Colorbar labels "376 kJ/mol" / "First Ionization Energy (kJ/mol)" / "2372 kJ/mol" in secondary dark text, readable.
-      Data: 18×7 main grid with lanthanide/actinide rows detached below. Sequential green→blue gradient (Imprint imprint_seq: #009E73→#4467A3). Low-IE alkali metals (K, Cs, Rb) appear bright green; high-IE noble gases (He, Ne, Ar, Xe, F) appear blue. Transition metals cluster in mid-teal. Gray placeholder tiles for superheavy elements with no known IE. Luminance-based text: dark #1A1A17 on green/teal tiles, light #F0EFE8 on blue tiles (He, Ne, Ar, Cl, Br). All element symbols clearly visible; atomic numbers small but legible at full resolution.
-      Legibility verdict: PASS — all text readable at full resolution; atomic numbers (9px CSS) approach limit at mobile scale.
+      Background: Warm off-white, approximately #FAF8F1 — correct theme surface
+      Chrome: Title "First Ionization Energy · heatmap-periodic-table · javascript · highcharts · anyplot.ai" (~17 px CSS) dark and clearly readable. Group numbers (1-18) at 9 px CSS and period numbers (1-7) at 10 px CSS are small but visible at full resolution. Colorbar labels at 10-11 px CSS are readable. Ln/An f-block row labels visible.
+      Data: Green-to-blue gradient (imprint_seq: #009E73 → #4467A3) applied to first ionization energy. Alkali metals (group 1) teal-green (low IE ~400 kJ/mol), noble gases (group 18) navy blue (high IE up to 2372 kJ/mol). Null-value period-7 tiles are muted gray (#C0BFB8). Placeholder tiles for 57-71 and 89-103 also muted gray. First data series uses brand green #009E73. Tile text adapts by luminance: dark text on teal tiles, light text on blue tiles.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black matching #1A1A17 — not pure black, correctly warm.
-      Chrome: Title text switches to light (#F0EFE8 via t.ink) — readable. Colorbar labels use t.inkSoft (#B8B7B0) — readable. No dark-on-dark failures for the main chrome elements.
-      Data: Gradient colors are identical to the light render (same green→blue Imprint seq stops) confirming data colors do not flip between themes. Tile fill colors unchanged; only the surrounding page chrome (background) flips. Placeholder gray tiles use #383834 fill with #6B6A63 muted text — intentionally low-contrast as these are "no data" elements. No unintended dark-on-dark label issues on the main colored tiles.
-      Legibility verdict: PASS — all title/label text properly light in dark theme; tile text contrast is correct via luminance-switching logic.
+      Background: Warm near-black, approximately #1A1A17 — correct dark theme surface
+      Chrome: Title and colorbar labels render as light text against the dark background (t.ink = #F0EFE8). Group/period/Ln/An labels use t.inkSoft (~#B8B7B0) — adequate contrast. No dark-on-dark failures. Placeholder tiles appear as charcoal #383834. Connector lines at #4A4A44 are subtly visible.
+      Data: Colormap colors are identical to light render — same green-to-blue gradient. Only chrome has flipped. Tile text contrast still correct via luminance check (dark text on teal, light text on blue).
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 5
         max: 8
         passed: true
-        comment: All sizes explicitly set and proportional to tile. Atomic numbers
-          at 9px CSS approach mobile legibility floor.
+        comment: Font sizes explicitly set; readable at full 2400x2400 but atomic
+          numbers (9px CSS) and group numbers (9px CSS) are too small for 400px mobile
+          thumbnails
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap — 64px pitch gives sufficient clearance for all 118 tiles.
+        comment: No text overlap anywhere; tiles uniformly sized with 2px gap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Tiles at 62px CSS are clearly visible and appropriately sized for
-          118-element layout.
+        comment: All 118 tiles clearly visible; null-value tiles rendered as distinct
+          muted gray
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential palette is CVD-safe. Luminance-based text switching
-          ensures in-tile contrast.
+        comment: imprint_seq (green-to-blue) is CVD-safe; luminance-adaptive tile
+          text contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Content centered with balanced ~18% margins top/bottom. Table fills
-          ~60% of canvas height. Slightly generous whitespace.
+        comment: Periodic table fills ~65% of square canvas with balanced margins;
+          colorbar properly positioned below f-block
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Colorbar labeled 'First Ionization Energy (kJ/mol)' with units. Title
-          has descriptive prefix.
+        comment: Colorbar labeled 'First Ionization Energy (kJ/mol)' with units; group
+          and period numbers serve as structural axes
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (t.seq[0]→t.seq[1]) correctly used. Theme-adaptive chrome
-          via t.ink/t.inkSoft. Transparent background uses page surface correctly.
+        comment: imprint_seq correctly built from t.seq[0] (#009E73) to t.seq[1] (#4467A3);
+          transparent background falls through to pageBg; all chrome uses t.ink/t.inkSoft
+          tokens; data colors identical across themes
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Professionally correct but no exceptional design touches — looks
-          like a well-configured custom renderer output.
+        passed: true
+        comment: 'Above defaults: luminance-adaptive tile text, rounded corners, dashed
+          connector lines, structured colorbar. Not publication-ready FiveThirtyEight
+          level — missing element family differentiation or typographic hierarchy.'
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Axes/grid disabled (correct for this chart type), 2px rounded tile
-          corners, uniform gaps. Minimal refinement beyond these basics.
+        passed: true
+        comment: No spines, no grid, generous whitespace, rounded tile corners, neat
+          connector lines. Missing subtler refinements like block-family shading.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Green→blue gradient immediately shows periodic trends (alkali metals
-          low, noble gases high). Title prefix adds context. No annotations but gradient
-          IS the storytelling.
+        comment: Green-to-blue gradient naturally encodes periodic trend; eye immediately
+          identifies noble gases (dark blue) vs. alkali metals (teal-green); gray
+          null-value tiles honestly communicate missing data.
     spec_compliance:
       score: 15
       max: 15
@@ -134,28 +145,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct periodic table heatmap with canonical layout.
+        comment: 'Correct periodic table heatmap: 18 groups x 7 periods + detached
+          lanthanide and actinide rows'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Canonical 18×7 layout, f-block detached rows, colorbar, element symbol,
-          atomic number, luminance text switching, gray tiles for missing data.
+        comment: Canonical layout, element symbols, atomic numbers, sequential colormap,
+          colorbar with units, greyed null tiles, equal-size tiles, luminance-adaptive
+          text contrast — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct group/period positioning for all 118 elements. Lanthanides
-          period 8, actinides period 9 as separate rows.
+        comment: Groups map to columns 1-18, periods to rows 1-7, lanthanides/actinides
+          in f-block rows, IE mapped to color gradient
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''First Ionization Energy · heatmap-periodic-table · javascript
-          · highcharts · anyplot.ai'' — correct format with optional descriptive prefix.'
+        comment: Title 'First Ionization Energy · heatmap-periodic-table · javascript
+          · highcharts · anyplot.ai' — correct {Descriptive Title} · {spec-id} · {language}
+          · {library} · anyplot.ai format
     data_quality:
       score: 15
       max: 15
@@ -165,86 +179,91 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 118 elements rendered. Full IE range shown. Missing-data elements
-          included as gray tiles. Lanthanide/actinide rows present.
+        comment: All 118 elements represented; full IE range covered; null-value elements
+          shown as grey; both main table and f-block included
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: First ionization energy is real chemistry data in neutral educational
-          context.
+        comment: First ionization energy is canonical, factually precise, neutral
+          chemical property on the universally recognized periodic table layout
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'IE values factually correct: Cs ~376 kJ/mol (lowest), He ~2372 kJ/mol
-          (highest). All values match known chemistry data.'
+        comment: IE values are factually correct NIST/IUPAC data (Cs 376 kJ/mol, He
+          2372 kJ/mol); period anomalies (N>O, P>S) correctly preserved
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Helper functions (hexToRgb, colorAt, lum, drawTile) add some complexity
-          beyond flat KISS but are justified by 118-element custom renderer task.
+        comment: 'Logical flow: tokens → utilities → data → layout → chart → tiles
+          → colorbar. Helper functions minimal and necessary.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — all element data hardcoded.
+        comment: All 118 element data points hard-coded; fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; uses only Highcharts global and ANYPLOT_TOKENS as specified.
+        comment: No imports; only uses provided globals (ANYPLOT_TOKENS, ANYPLOT_THEME,
+          ANYPLOT_SIZE, Highcharts)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake UI elements, appropriate complexity for the task.
+        comment: Clean and idiomatic; no over-engineering; no fake UI elements or
+          interactivity simulation
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: animation:false, credits disabled, square directive, transparent
-          background — all correct.
+        comment: 'Highcharts.chart(''container'', ...) correct; animation: false on
+          both chart and plotOptions.series; credits disabled; square orientation
+          directive present; no explicit width/height'
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses Highcharts SVG renderer (chart.renderer) for custom layout —
-          correct approach since heatmap module is unavailable. Chart instance is
-          effectively an empty container.
+        comment: Correct Highcharts scaffold + SVG renderer (chart.renderer) for custom
+          tile rendering — right approach given heatmap module unavailability. Empty
+          series list is a minor idiom deviation.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Highcharts.Renderer API for custom tile drawing is a distinctive
-          Highcharts feature not easily replicated in other libraries.
-  verdict: REJECTED
+        comment: Uses Highcharts SVG renderer (R.rect, R.text, R.path) — a genuinely
+          Highcharts-specific API. Creative workaround within core-bundle-only constraint.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - annotations
+  - manual-ticks
   patterns:
+  - data-generation
   - iteration-over-groups
   dataprep:
   - normalization
   styling:
   - custom-colormap
-  - minimal-chrome
