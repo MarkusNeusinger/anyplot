@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-cycle-seasonal: Cycle Plot (Seasonal Subseries)
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 88/100 | Created: 2026-06-15
@@ -17,6 +17,7 @@ from lets_plot import (
     element_text,
     geom_line,
     geom_segment,
+    geom_text,
     ggplot,
     ggsize,
     labs,
@@ -72,6 +73,9 @@ df["x_pos"] = (df["month_num"] - 1) * GROUP_WIDTH + df["y_idx"]
 means = df.groupby("month_num")["temperature"].mean().reset_index()
 means["x_start"] = (means["month_num"] - 1) * GROUP_WIDTH - 0.5
 means["x_end"] = means["x_start"] + 30.0
+means["x_center"] = (means["month_num"] - 1) * GROUP_WIDTH + 14.5
+means["label"] = means["temperature"].round(1).astype(str) + "°C"
+means["label_y"] = means["temperature"] + 0.8
 
 # Subtle vertical dividers between month groups
 divider_xs = [(m * GROUP_WIDTH - 1.0) for m in range(1, 12)]
@@ -89,6 +93,7 @@ title_size = 16
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
+    panel_border=element_blank(),
     panel_grid_major=element_line(color=GRID_LINE, size=0.25),
     panel_grid_minor=element_blank(),
     axis_title=element_text(color=INK, size=12),
@@ -107,6 +112,15 @@ plot = (
     # Seasonal mean reference lines (key visual for comparing seasons)
     + geom_segment(
         data=means, mapping=aes(x="x_start", xend="x_end", y="temperature", yend="temperature"), color=INK, size=1.5
+    )
+    # Mean temperature annotations — letsplot geom_text labels each season's average
+    + geom_text(
+        data=means,
+        mapping=aes(x="x_center", y="label_y", label="label"),
+        color=INK_SOFT,
+        size=3.5,
+        vjust=0.5,
+        hjust=0.5,
     )
     + scale_x_continuous(breaks=tick_breaks, labels=month_names)
     + labs(x="Month", y="Temperature (°C)", title=title)
