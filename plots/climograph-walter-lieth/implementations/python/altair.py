@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 climograph-walter-lieth: Walter-Lieth Climate Diagram
 Library: altair 6.2.1 | Python 3.13.13
 Quality: 84/100 | Created: 2026-06-15
@@ -18,6 +18,10 @@ Image = importlib.import_module("PIL.Image")
 
 # Theme tokens — Imprint palette chrome
 THEME = os.getenv("ANYPLOT_THEME", "light")
+
+# Theme-conditional fill opacities — dark background needs higher opacity for visibility
+ARID_OPACITY = 0.45 if THEME == "dark" else 0.22
+HUMID_OPACITY = 0.40 if THEME == "dark" else 0.22
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
@@ -66,8 +70,10 @@ df["humid_top"] = np.where(humid_mask, np.minimum(df["precip_t"], PERHUMID_THRES
 df["humid_bot"] = np.where(humid_mask, df["temp"], np.nan)
 df["phum_top"] = np.where(perhumid_mask, df["precip_t"], np.nan)
 df["phum_bot"] = np.where(perhumid_mask, PERHUMID_THRESH, np.nan)
+# Frost indicator with minimum visual height (2 °C) so near-zero months remain legible
+FROST_MIN_H = 2.0
 df["frost_top"] = np.where(df["temp"] < 0, 0.0, np.nan)
-df["frost_bot"] = np.where(df["temp"] < 0, df["temp"], np.nan)
+df["frost_bot"] = np.where(df["temp"] < 0, np.minimum(df["temp"], -FROST_MIN_H), np.nan)
 
 # Scales
 temp_scale = alt.Scale(domain=[TEMP_MIN, TEMP_MAX])
@@ -116,18 +122,18 @@ frost_fill = base.mark_bar(color=FROST_COLOR, opacity=0.45, width={"band": 0.9})
     x=x_enc, y=alt.Y("frost_bot:Q", scale=temp_scale, axis=None), y2=alt.Y2("frost_top:Q")
 )
 
-# Arid fill — red between temperature (top) and precip_t (bottom)
-arid_fill = base.mark_bar(color=TEMP_COLOR, opacity=0.22, width={"band": 0.9}).encode(
+# Arid fill — red area between temperature (top) and precip_t (bottom)
+arid_fill = base.mark_area(color=TEMP_COLOR, opacity=ARID_OPACITY).encode(
     x=x_enc, y=alt.Y("arid_bot:Q", scale=temp_scale, axis=None), y2=alt.Y2("arid_top:Q")
 )
 
-# Humid fill — blue between precip_t (top) and temperature (bottom), ≤ 100 mm
-humid_fill = base.mark_bar(color=PRECIP_COLOR, opacity=0.22, width={"band": 0.9}).encode(
+# Humid fill — blue area between precip_t (top) and temperature (bottom), ≤ 100 mm
+humid_fill = base.mark_area(color=PRECIP_COLOR, opacity=HUMID_OPACITY).encode(
     x=x_enc, y=alt.Y("humid_bot:Q", scale=temp_scale, axis=None), y2=alt.Y2("humid_top:Q")
 )
 
-# Perhumid fill — solid blue above 100 mm threshold (compressed scale zone)
-phum_fill = base.mark_bar(color=PRECIP_COLOR, opacity=0.65, width={"band": 0.9}).encode(
+# Perhumid fill — solid blue area above 100 mm threshold (compressed scale zone)
+phum_fill = base.mark_area(color=PRECIP_COLOR, opacity=0.65).encode(
     x=x_enc, y=alt.Y("phum_bot:Q", scale=temp_scale, axis=None), y2=alt.Y2("phum_top:Q")
 )
 
