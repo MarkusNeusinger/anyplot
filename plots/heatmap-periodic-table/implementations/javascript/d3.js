@@ -1,7 +1,7 @@
 // anyplot.ai
 // heatmap-periodic-table: Periodic Table Property Heatmap
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-06-15
+// Library: d3 7.9.0 | JavaScript 22.22.3
+// Quality: 88/100 | Created: 2026-06-15
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
