@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-cycle-seasonal: Cycle Plot (Seasonal Subseries)
 Library: altair 6.2.1 | Python 3.13.13
 Quality: 85/100 | Created: 2026-06-15
@@ -63,6 +63,11 @@ means.columns = ["month", "month_idx", "mean_temp"]
 means["x_start"] = means["month_idx"] * STRIDE
 means["x_end"] = means["month_idx"] * STRIDE + N_YEARS - 1
 
+# Series labels for shared legend
+df["series"] = "Yearly trend"
+means["series"] = "Seasonal mean"
+SERIES_SCALE = alt.Scale(domain=["Yearly trend", "Seasonal mean"], range=[BRAND, IMPRINT_PALETTE[1]])
+
 # Vertical dividers between month groups (centred in each gap)
 dividers_df = pd.DataFrame({"x": [i * STRIDE + N_YEARS + 1 for i in range(N_MONTHS - 1)]})
 
@@ -79,7 +84,7 @@ month_label_expr = (
 # Layer 1 — within-month chronological trend lines
 lines = (
     alt.Chart(df)
-    .mark_line(strokeWidth=1.8, color=BRAND, opacity=0.72)
+    .mark_line(strokeWidth=1.8, opacity=0.60)
     .encode(
         x=alt.X(
             "x_pos:Q",
@@ -88,18 +93,20 @@ lines = (
         ),
         y=alt.Y("temperature:Q", title="Temperature (°C)"),
         detail="month:N",
+        color=alt.Color("series:N", scale=SERIES_SCALE, legend=alt.Legend(title=None)),
     )
 )
 
 # Layer 2 — monthly mean reference lines (key seasonal comparison signal)
 mean_rules = (
     alt.Chart(means)
-    .mark_rule(
-        color=IMPRINT_PALETTE[1],  # lavender — Imprint position 2
-        strokeWidth=3.2,
-        opacity=0.9,
+    .mark_rule(strokeWidth=3.2, opacity=0.9)
+    .encode(
+        x="x_start:Q",
+        x2="x_end:Q",
+        y="mean_temp:Q",
+        color=alt.Color("series:N", scale=SERIES_SCALE, legend=alt.Legend(title=None)),
     )
-    .encode(x="x_start:Q", x2="x_end:Q", y="mean_temp:Q")
 )
 
 # Layer 3 — subtle vertical dividers between month groups
