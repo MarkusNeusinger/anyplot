@@ -16,7 +16,7 @@ keywords = [
 
 dependencies = [
     # Core Framework
-    "fastapi>=0.136.3",
+    "fastapi>=0.137.1",
     "uvicorn[standard]>=0.48.0",
     # MCP Server
     "mcp>=1.27.2",
@@ -30,14 +30,14 @@ dependencies = [
     # Data & Plotting
     "pandas>=3.0.3",
     "numpy>=2.4.6",
-    "matplotlib>=3.10.9",
+    "matplotlib>=3.11.0",
     # Data Science & ML (for plot implementations)
     "scipy>=1.14.0",
     "scikit-learn>=1.9.0",
     "statsmodels>=0.14.0",
     # AI & Cloud
-    "anthropic>=0.107.1",
-    "google-cloud-storage>=3.11.0",
+    "anthropic>=0.109.2",
+    "google-cloud-storage>=3.12.0",
     # Image Processing
     "pillow>=11.0.0",
     # HTTP Client
@@ -56,14 +56,14 @@ dependencies = [
 
 [project.optional-dependencies]
 test = [
-    "pytest>=8.4.0",
+    "pytest>=9.1.0",
     "pytest-cov>=6.2.1",
     "pytest-asyncio>=1.4.0",
     "httpx>=0.28.0",  # For testing FastAPI
     "aiosqlite>=0.20.0",  # SQLite async driver for integration tests
 ]
 dev = [
-    "ruff>=0.15.16",
+    "ruff>=0.15.17",
     "pre-commit>=4.6.0",
 ]
 typecheck = [
@@ -75,7 +75,7 @@ plotting = [
     "plotly>=6.8.0",
     "bokeh>=3.9.1",
     "altair>=6.2.1",
-    "plotnine>=0.15.5",
+    "plotnine>=0.15.7",
     "pygal>=3.0.0",
     "highcharts-core>=1.11.0",
     "lets-plot>=4.10.1",
@@ -98,12 +98,12 @@ plotting = [
     "squarify>=0.4.0",
 ]
 # Per-library dependencies for CI (minimal installs)
-lib-matplotlib = ["matplotlib>=3.10.9", "numpy>=2.4.6", "pandas>=3.0.3", "scipy>=1.14.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0"]
-lib-seaborn = ["seaborn>=0.13.0", "matplotlib>=3.10.9", "numpy>=2.4.6", "pandas>=3.0.3", "scipy>=1.14.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0"]
+lib-matplotlib = ["matplotlib>=3.11.0", "numpy>=2.4.6", "pandas>=3.0.3", "scipy>=1.14.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0"]
+lib-seaborn = ["seaborn>=0.13.0", "matplotlib>=3.11.0", "numpy>=2.4.6", "pandas>=3.0.3", "scipy>=1.14.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0"]
 lib-plotly = ["plotly>=6.8.0", "kaleido>=1.3.0", "numpy>=2.4.6", "pandas>=3.0.3", "scipy>=1.14.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0"]
 lib-bokeh = ["bokeh>=3.9.1", "numpy>=2.4.6", "pandas>=3.0.3", "scipy>=1.14.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0", "selenium>=4.44.0", "webdriver-manager>=4.1.2"]
 lib-altair = ["altair>=6.2.1", "vl-convert-python>=1.7.0", "numpy>=2.4.6", "pandas>=3.0.3", "scipy>=1.14.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0"]
-lib-plotnine = ["plotnine>=0.15.5", "numpy>=2.4.6", "pandas>=3.0.3", "scipy>=1.14.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0"]
+lib-plotnine = ["plotnine>=0.15.7", "numpy>=2.4.6", "pandas>=3.0.3", "scipy>=1.14.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0"]
 lib-pygal = ["pygal>=3.0.0", "cairosvg>=2.7.0", "pandas>=3.0.3", "scipy>=1.14.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0"]
 lib-highcharts = ["highcharts-core>=1.11.0", "numpy>=2.4.6", "pandas>=3.0.3", "scipy>=1.14.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0", "selenium>=4.44.0", "webdriver-manager>=4.1.2"]
 lib-letsplot = ["lets-plot>=4.10.1", "pandas>=3.0.3", "scipy>=1.14.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0"]
