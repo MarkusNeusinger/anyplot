@@ -1,0 +1,260 @@
+library: letsplot
+language: python
+specification_id: heatmap-periodic-table
+created: '2026-06-15T05:18:32Z'
+updated: '2026-06-15T05:40:27Z'
+generated_by: claude-sonnet
+workflow_run: 27524883701
+issue: 8659
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/python/letsplot/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Luminance-adaptive text using full WCAG sRGB linearisation formula for correct
+    tile readability across any gradient
+  - Real factually accurate Pauling electronegativity data for all 118 elements with
+    correct missing-value handling
+  - 'Perfect Imprint sequential cmap (#009E73 to #4467A3) producing immediately legible
+    periodic trend'
+  - 'Canonical periodic table layout preserved exactly: 18 groups x 7 periods, group-3
+    gap, f-block rows at correct offset'
+  - Complete theme adaptation with INK / INK_SOFT / PAGE_BG / ELEVATED_BG — both renders
+    fully chrome-correct
+  - Interactive HTML tooltips via layer_tooltips() leveraging lets-plot native interactive
+    export
+  weaknesses:
+  - Default panel border not explicitly removed — faint rectangular frame appears
+    around chart interior in both renders; add panel_border=element_blank() to anyplot_theme
+  - Atomic numbers on colored tiles always use hardcoded LIGHT_TEXT rather than same
+    luminance-adaptive logic as symbols — correct for this gradient but logically
+    inconsistent
+  - No Lanthanides / Actinides row labels to help readers identify the f-block rows;
+    small annotation would improve orientation
+  - LM-02 limited to layer_tooltips() as only clearly lets-plot-specific feature;
+    remaining grammar is identical to ggplot2/plotnine
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct
+      Chrome: Title "Electronegativity · heatmap-periodic-table · python · letsplot · anyplot.ai" in dark ink (#1A1A17), spans ~80% canvas width, clearly readable. Colorbar labeled "Pauling EN" with light-grey tick values. No axis labels (intentionally removed). All chrome text readable.
+      Data: Teal-green (#009E73) for low-EN elements (alkali metals ~0.7-1.0) grading to blue (#4467A3) for high-EN elements (halogens ~3.5-4.0). Missing-EN elements (noble gases, period-7 transactinides, some f-block) in warm grey (#C4C4BE). Element symbols (bold, centered) and atomic numbers (small, top-left) visible on all tiles.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct
+      Chrome: Title in light text (#F0EFE8), clearly readable. Colorbar labels in secondary light grey (#B8B7B0). Legend background elevated (#242420). All chrome elements theme-correct.
+      Data: Tile colors IDENTICAL to light render — same teal-green to blue gradient, same warm grey for missing elements (darker shade #383835). Element symbols and atomic numbers in #F0EFE8 on colored tiles, #B8B7B0 on grey tiles.
+      No dark-on-dark failures detected. All text readable against dark background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set including dynamic title formula. Atomic
+          numbers (size=1.7) small but appropriate for dense periodic table. Both
+          themes fully readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Tiles uniformly spaced with width/height=0.93; no text collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 118 element tiles clearly visible; colored and grey variants
+          well-distinguished.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Teal-green to blue gradient is CVD-safe. WCAG luminance-adaptive
+          text ensures adequate contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). Periodic table fills ~80% canvas
+          width with balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title includes Electronegativity descriptor. Colorbar labeled Pauling
+          EN.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'scale_fill_gradient(low=#009E73, high=#4467A3) is exactly imprint_seq.
+          Backgrounds #FAF8F1/#1A1A17 correct. Full theme chrome adaptation.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above default; luminance-adaptive text via full WCAG formula shows
+          design thinking. Theme tokens throughout. Not exceptional but clearly polished.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: All axes/grid/ticks removed. Tile borders use PAGE_BG. Legend elevated
+          background with INK_SOFT border. Default panel border not explicitly removed
+          — faint frame visible.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Electronegativity trend immediately legible: metals teal-green left,
+          non-metals blue right, halogens stand out. Grey missing tiles contextually
+          meaningful.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Canonical periodic table heatmap with geom_tile, continuous fill,
+          colorbar.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 18x7 layout, f-block rows at period_pos 8.5/9.5, group-3 gap, grey
+          missing tiles, element symbol + atomic number, labeled colorbar.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Groups 1-18 → x, periods 1-7 inverted → y, EN → fill. All 118 elements
+          positioned correctly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Electronegativity · heatmap-periodic-table · python · letsplot ·
+          anyplot.ai follows correct format.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 118 elements, full EN range 0.70-3.98, correct missing values,
+          f-block separation.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Pauling electronegativity is canonical, universally-taught periodic
+          property. Neutral scientific context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Factually correct Pauling values (Li=0.98, F=3.98, C=2.55). Missing
+          elements correctly omitted.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat: imports → constants → data → DataFrame → luminance calc →
+          plot → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: all element data hardcoded.'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, pandas, lets_plot, ggsave — all used, none superfluous.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and idiomatic. Inline luminance calc justified by lets-plot
+          API. Title size formula elegant.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html. Current API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert use of ggplot grammar: geom_tile, geom_text, scale_fill_gradient,
+          labs, ggsize, theme with element_blank/rect/text.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: layer_tooltips().line() chain for HTML interactivity is genuinely
+          lets-plot-specific. Dual PNG+HTML export leveraged. Beyond tooltips, approach
+          mirrors ggplot2/plotnine.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - hover-tooltips
+  - html-export
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
+  - minimal-chrome
