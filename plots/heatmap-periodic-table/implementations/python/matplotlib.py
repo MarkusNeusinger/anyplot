@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-periodic-table: Periodic Table Property Heatmap
 Library: matplotlib 3.11.0 | Python 3.13.13
-Quality: 85/100 | Created: 2026-06-15
+Quality: 88/100 | Created: 2026-06-15
 """
 
 import os
