@@ -1,7 +1,7 @@
 // anyplot.ai
 // climograph-walter-lieth: Walter-Lieth Climate Diagram
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-06-15
+// Library: d3 7.9.0 | JavaScript 22.22.3
+// Quality: 93/100 | Created: 2026-06-15
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
