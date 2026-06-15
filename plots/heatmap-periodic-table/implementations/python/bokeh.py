@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-periodic-table: Periodic Table Property Heatmap
 Library: bokeh 3.9.1 | Python 3.13.13
-Quality: 86/100 | Created: 2026-06-15
+Quality: 88/100 | Created: 2026-06-15
 """
 
 import os
