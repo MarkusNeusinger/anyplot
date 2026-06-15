@@ -1,8 +1,7 @@
 // anyplot.ai
 // line-cycle-seasonal: Cycle Plot (Seasonal Subseries)
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-15
+// Library: muix 7.29.1 | JavaScript 22.22.3
+// Quality: 87/100 | Created: 2026-06-15
 
 import { LineChart } from "@mui/x-charts/LineChart";
 
