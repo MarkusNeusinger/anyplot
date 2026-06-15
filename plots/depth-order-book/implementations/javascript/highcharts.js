@@ -52,9 +52,11 @@ Highcharts.chart("container", {
         type: "area",
         backgroundColor: "transparent",
         animation: false,
-        style: { fontFamily: "inherit" }
+        style: { fontFamily: "inherit" },
+        marginRight: 70
     },
     credits: { enabled: false },
+    colors: t.palette,
     title: {
         text: titleText,
         style: { color: t.ink, fontSize: "22px", fontWeight: "600" }
@@ -88,7 +90,7 @@ Highcharts.chart("container", {
                 style: { color: t.inkSoft, fontSize: "12px" },
                 rotation: 0,
                 align: "center",
-                y: -10
+                y: 30
             }
         }]
     },
