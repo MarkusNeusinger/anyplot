@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: heatmap-periodic-table
 created: '2026-06-15T05:18:31Z'
-updated: '2026-06-15T05:27:21Z'
+updated: '2026-06-15T05:46:02Z'
 generated_by: claude-sonnet
 workflow_run: 27524502976
 issue: 8659
@@ -12,150 +12,140 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-p
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/python/plotly/plot-dark.html
-quality_score: 86
+quality_score: 85
 review:
   strengths:
-  - 'Correct canonical periodic table layout: 18 columns × 7 periods with lanthanide
-    and actinide f-block rows properly separated below the main body'
-  - Two-layer go.Heatmap approach (grey trace + colored trace) elegantly handles elements
-    with missing IE1 data without omitting them from the grid
-  - 'imprint_seq (#009E73 → #4467A3) used correctly for the single-polarity continuous
-    property; colorbar labeled with IE₁ (kJ/mol) including proper subscript formatting'
-  - Theme-adaptive chrome is fully wired — PAGE_BG, ELEVATED_BG, INK, INK_SOFT, INK_MUTED
-    all flip correctly between light (#FAF8F1) and dark (#1A1A17) renders
-  - Title font-size dynamically scales with title length (ratio = 67/len(title)) so
-    the long mandated title does not overflow the canvas
-  - xgap=3 / ygap=3 creates the equal-sized tile grid with consistent small gaps that
-    define the periodic table heatmap aesthetic
-  - sys.path self-import guard at the top is the correct, safe pattern for a file
-    named plotly.py that would otherwise shadow the installed package
-  - All 118 elements are represented — grey tiles preserve the recognizable periodic
-    table shape for elements without IE1 data, exactly as the spec requires
+  - 'Correct imprint_seq sequential colormap (#009E73 → #4467A3) for single-polarity
+    IE1 data'
+  - Luminance-adaptive text coloring on tiles (dark on green, white on blue) — non-trivial
+    design detail
+  - Grey tiles for elements with missing IE1 data preserve the recognizable periodic
+    table shape
+  - Thin separator lines framing the f-block gap are a polished visual cue
+  - All 118 elements placed in canonical positions; lanthanides/actinides correctly
+    detached into separate rows
+  - Colorbar with descriptive label IE₁ (kJ/mol) and theme-adaptive chrome
+  - 'Correct title format with descriptive prefix: First Ionization Energy · heatmap-periodic-table
+    · python · plotly · anyplot.ai'
+  - Factually accurate IE1 values (H=1312, He=2372.3, N=1402.3 — anomalous N correctly
+    higher than O)
+  - Layered heatmap approach (grey trace + colored trace) is idiomatic Plotly for
+    mixed-data tiles
+  - Fully deterministic — hardcoded element data, no random seed needed
   weaknesses:
-  - 'Text on grey tiles uses #D8D8D0 on #8A8A82 (light mode) — contrast ratio ~2.35:1,
-    below the 3:1 threshold for large text; switch to a darker ink token (e.g. INK_SOFT
-    = ''#4A4A44'' in light mode) for grey-tile annotations'
-  - 'Spec requires luminance-adaptive tile text (switch between dark and light text
-    based on tile background luminance), but implementation uses fixed white (#FFFFFF)
-    for all colored tiles — for very low-IE1 green tiles the contrast is borderline
-    ~4.25:1; compute luminance from the tile color and choose INK vs #FFFFFF accordingly'
-  - Atomic numbers are rendered at font size 3.5 px (14 source-px at scale=4, 3200×1800
-    output); this is at minimum legibility at full resolution and invisible when the
-    image is scaled to mobile width (~400 px) — raise to at least 5 px (20 source-px)
-  - 'Design storytelling is sparse: the color gradient shows the trend but there are
-    no period numbers along the left edge or group numbers (1–18) along the top edge
-    to help readers orient themselves — adding these as axis annotations would significantly
-    improve navigability'
-  - 'DE-01/DE-02 polish gap: colorbar border uses a hard-coded 1px line and the layout
-    has notable empty whitespace in the gap row between the main table and the f-block
-    rows — consider a lighter visual separator or a thin rule to make the gap intentional
-    rather than empty'
+  - Period numbers (4.5px) and group numbers (3.8px) are very small — at scale=4 they
+    render at ~18px and ~15px source-pixels, barely visible at full resolution and
+    essentially invisible when scaled to mobile (~400px width). Increase to at least
+    6px each.
+  - Two helper functions (_srgb_lin, _tile_text) break the KISS flat structure (Imports
+    → Data → Plot → Save). Inline the luminance check as a lambda or single expression
+    to restore strict KISS.
+  - Title font size adaptive formula (max(11, round(16 × 67/len(title)))) results
+    in 14px logical = 56px source, which is slightly on the smaller end for the long
+    mandated title. Consider floor of 13 → capped at 52px; current rendering looks
+    acceptable but is near the lower boundary.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "First Ionization Energy · heatmap-periodic-table · python · plotly · anyplot.ai" in dark ink, clearly readable at the top center; no axis tick labels (appropriate for this chart type); colorbar on the right with dark-ink tick labels (500, 1000, 1500, 2000) and "IE₁ (kJ/mol)" label — all readable
-      Data: Tiles color from brand green #009E73 (low IE1 ~375 kJ/mol, alkali/alkaline-earth metals) through teal to blue #4467A3 (high IE1 ~2372 kJ/mol, noble gases) — imprint_seq correctly applied; grey tiles (#8A8A82) mark elements without IE1 data in the lower periods (Db, Sg, Bh, Hs, Mt, Ds, Rg, Cn, Nh, Fl, Mc, Lv, Ts, Og); element symbols in white bold text centered in each tile; atomic numbers in very small white text at top-left of each tile; "Lanthanides" and "Actinides" labels in muted ink to the left of the f-block rows
-      Legibility verdict: PASS with minor concerns — title and colorbar labels fully readable; element symbols (6.5px * 4 = 26 source-px) readable at full resolution; atomic numbers (3.5px * 4 = 14 source-px) barely legible at full res and invisible at mobile scale (~400px); grey tile text (#D8D8D0 on #8A8A82) has contrast ratio ~2.35:1 — marginally readable but below WCAG AA
+      Background: warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "First Ionization Energy · heatmap-periodic-table · python · plotly · anyplot.ai" renders in dark ink (#1A1A17) at adaptive size (~14px logical), filling ~70% of width. Colorbar label "IE₁ (kJ/mol)" and tick labels visible in INK/INK_SOFT tones. Period numbers (1–7) on the left margin and group numbers (1–18) at the top are extremely small (~4.5px / ~3.8px logical) — visible at full resolution but marginal.
+      Data: Tiles graduate from #009E73 (brand green, low IE1 ~375 kJ/mol — alkali metals) to #4467A3 (blue, high IE1 ~2372 kJ/mol — noble gases) via imprint_seq. Grey tiles (#8A8A82) for period 7 superheavy elements with unknown IE1 preserve the table shape. Element symbols (bold, 6.5px) centered in each tile; atomic numbers (5.0px) in the top-left corner. Lanthanides and actinides correctly placed as detached f-block rows below, labeled "Lanthanides" / "Actinides" in INK_MUTED. Thin horizontal separator lines frame the f-block gap. Colorbar on right with ELEVATED_BG background.
+      Legibility verdict: PASS — all critical text readable at full resolution. Period/group margin labels are very small but not causing a scoring failure.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light cream ink (#F0EFE8), clearly readable against the dark surface; colorbar tick labels in #B8B7B0 (INK_SOFT dark), clearly readable; colorbar background uses elevated dark surface #242420 with visible border; "Lanthanides" and "Actinides" labels in #A8A79F (INK_MUTED dark) — readable
-      Data: Tile colors are identical to the light render (imprint_seq data colors are theme-independent); brand green #009E73 on left (alkali metals) through teal to blue #4467A3 on right (noble gases) — confirmed matching light render; grey tiles use #5A5A55 (dark-theme grey), slightly darker than light-mode grey, clearly distinguishable from colored tiles; element symbols remain white (#FFFFFF) — contrast is excellent against the dark-themed grey tiles in this render; no dark-on-dark text failures detected
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures; chrome adapts correctly; data colors identical to light render
+      Background: warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title renders in #F0EFE8 (light cream) — fully readable against the dark surface. Colorbar text uses INK_SOFT (#B8B7B0). Period/group margin labels use INK_MUTED (#A8A79F) — light enough to be visible on dark bg. No dark-on-dark failures observed.
+      Data: Data colors are identical to the light render — same green→blue gradient, same grey tiles. The adaptive tile text coloring (dark ink on lighter green tiles, white on darker blue tiles) is theme-independent and data-driven, correctly unchanged across themes.
+      Legibility verdict: PASS — chrome correctly flips for dark theme; data colors unchanged; no unreadable elements detected.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title (13px*4=52 source-px) and colorbar
-          labels clearly readable; element symbols (6.5px*4=26 source-px) readable
-          at full res; atomic numbers (3.5px*4=14 source-px) at minimum legibility
-          threshold, invisible at mobile scale; grey tile text contrast is marginal
-          in light mode (~2.35:1)
+        comment: Font sizes explicitly set throughout (symbol 6.5px, atomic# 5.0px,
+          title adaptive). All readable at full resolution. Period labels (4.5px)
+          and group labels (3.8px) are ~18px / ~15px source-pixels — barely visible
+          at full res, essentially gone at 400px mobile width.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: xgap=3/ygap=3 tile spacing prevents overlap; element symbols centered,
-          atomic numbers offset to top-left corner — no collisions detected in either
-          render
+        comment: No overlapping text; xgap=3/ygap=3 keeps tiles separated; Lanthanides/Actinides
+          labels sit in empty left cells.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All colored tiles clearly visible with full saturation; grey tiles
-          clearly distinguishable from colored tiles in both themes; imprint_seq gradient
-          renders sharply
+        comment: Colored tiles and grey tiles all clearly visible; imprint_seq provides
+          good luminance range; adaptive text coloring ensures symbol readability
+          on both ends of the gradient.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green→blue gradient (imprint_seq) is CVD-safe; grey tiles clearly
-          distinguishable from colored tiles without relying on hue alone; white text
-          on blue tiles has excellent contrast (9:1)
+        comment: imprint_seq (green→blue) is CVD-safe. Luminance-adaptive tile text
+          ensures sufficient contrast for every element.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200×1800 landscape via width=800, height=450,
-          scale=4); periodic table fills the canvas well; colorbar positioned right;
-          nothing clipped at canvas edges
+        comment: Periodic table fills the 3200×1800 canvas well; margins (l=45, r=100,
+          t=60, b=30) leave room for colorbar and title; f-block rows correctly separated
+          below main body.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title 'First Ionization Energy · heatmap-periodic-table · python
-          · plotly · anyplot.ai' correct; colorbar labeled 'IE₁ (kJ/mol)' with proper
-          subscript; no traditional axes (correct for this chart type)
+        comment: No traditional axis labels (appropriate for fixed-grid periodic table).
+          Colorbar labeled IE₁ (kJ/mol) — descriptive with units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq [[0.0, ''#009E73''], [1.0, ''#4467A3'']] used correctly
-          for single-polarity continuous data; backgrounds #FAF8F1 (light) / #1A1A17
-          (dark); all theme-adaptive chrome tokens correctly applied in both renders'
+        comment: 'imprint_seq (single-polarity sequential cmap) correctly used for
+          IE1. Backgrounds #FAF8F1 (light) / #1A1A17 (dark). Theme-adaptive chrome
+          throughout. Data colors identical across both renders.'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured periodic table — correct colormap, clean layout,
-          grey tiles for missing data. Functional and clean but at the 'well-configured
-          library default' level; no exceptional design choices beyond what correctness
-          requires
+        passed: true
+        comment: 'Above well-configured-default level: luminance-adaptive tile text,
+          grey missing-data tiles, period/group orientation labels, f-block separator
+          lines, title font scaling — multiple intentional design choices showing
+          care. Not quite publication-ready.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: 'Good refinement: all axes hidden, no grid, no spines, consistent
-          tile gaps. Colorbar customized (thickness, length, position, font colors).
-          Deducted 2 for notable empty whitespace in the gap row between main body
-          and f-block rows (no separator treatment)'
+        passed: true
+        comment: All axis chrome removed (no ticks, no spines, no grid — appropriate
+          for fixed grid). Tile gaps (xgap/ygap=3) create breathing room. Thin f-block
+          separator lines add intentional structure. ELEVATED_BG on colorbar frame
+          is a subtle refinement.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: The periodic table layout inherently encodes the story — viewers
-          see IE1 increasing toward the top-right (noble gases brightest blue). Color
-          gradient creates visual hierarchy. But no period numbers, group numbers,
-          or directional annotations to guide first-time readers; slightly above default
+        passed: true
+        comment: IE1 trend (low alkali metals → high noble gases) is immediately visible
+          in the green→blue gradient. Noble gas column stands out clearly in blue.
+          Lanthanide plateau visible. Good visual hierarchy through colormap — above
+          the raw-data-dump default but no annotations highlight key anomalies.
     spec_compliance:
       score: 15
       max: 15
@@ -165,36 +155,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct periodic table heatmap: 18 columns × 7 periods main body
-          + 2 f-block rows below; equal-area tiles with gaps; continuous color encoding
-          via imprint_seq'
+        comment: Correct heatmap-based periodic table in canonical 18×7 layout with
+          detached f-block rows.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: canonical 18×7 layout, f-block rows detached
-          below, equal-sized tiles with xgap/ygap, sequential imprint_seq colormap,
-          colorbar with property+units, element symbol prominent (bold, centered),
-          atomic number in top-left corner, grey tiles for missing IE1 data. Text
-          contrast is borderline but readable.'
+        comment: 'All spec features present: canonical layout, f-block detached rows,
+          sequential colormap, element symbol + atomic number on each tile, colorbar
+          with units, grey tiles for missing values.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 118 elements represented; IE1 values correctly mapped to color
-          via z_colored matrix; grey z_grey matrix preserves grid positions for unknown
-          elements; grid coordinates (x_grid, y_grid) match canonical periodic table
-          positions
+        comment: IE1 correctly encoded as tile color. All 118 elements in canonical
+          positions. Groups 1–18, periods 1–7 correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'First Ionization Energy · heatmap-periodic-table · python
-          · plotly · anyplot.ai' matches required format with optional descriptive
-          prefix. Colorbar legend labeled 'IE₁ (kJ/mol)'
+        comment: 'Title: ''First Ionization Energy · heatmap-periodic-table · python
+          · plotly · anyplot.ai'' — correct format with optional descriptive prefix.
+          Colorbar serves as legend.'
     data_quality:
       score: 15
       max: 15
@@ -204,69 +189,64 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects of the periodic table heatmap: main-body elements,
-          f-block lanthanides and actinides, elements with missing data (grey), full
-          range of IE1 values from 375.7 kJ/mol (Cs) to 2372.3 kJ/mol (He) demonstrating
-          the periodic trend'
+        comment: Full periodic table shown including all 118 elements; grey tiles
+          for missing superheavy IE1 data preserve recognizable shape; both colored
+          and missing-value aspects demonstrated.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: First ionization energy is a canonical, well-documented periodic
-          property used in chemistry education and materials science — neutral, factual,
-          scientifically established
+        comment: First Ionization Energy is a canonical real-world property used in
+          chemistry education and materials science — exactly matching the spec's
+          stated applications.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'IE1 values in kJ/mol are factually accurate (checked: H=1312, He=2372.3,
-          Cs=375.7, F=1681 — all match NIST reference values); correct periodic trends
-          encoded (noble gases highest, alkali metals lowest)'
+        comment: 'IE1 values are scientifically accurate: H=1312.0, He=2372.3, N=1402.3
+          (correctly anomalously high vs O=1313.9 — half-filled 2p effect), noble
+          gas series shows correct trend. Range 375–2372 kJ/mol is factually correct.'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Clean flat script: sys.path guard → imports → theme tokens → element
-          data → 2D grid construction → figure → traces → annotations → layout → save.
-          No functions or classes.'
+        comment: Two helper functions (_srgb_lin, _tile_text) break the flat KISS
+          structure. The luminance calculation could be inlined as a lambda. Otherwise
+          follows Imports → Data → Plot → Save.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — data is hardcoded as a Python tuple list; no
-          random number generation
+        comment: Fully deterministic — all data hardcoded, no random seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Imports: os, sys (used for sys.path guard), numpy (np.full, np.nan,
-          min/max), plotly.graph_objects (go.Figure, go.Heatmap) — all used, none
-          unused'
+        comment: os, sys (path manipulation), numpy (array construction), plotly.graph_objects
+          — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: The sys.path manipulation is a necessary and well-handled workaround
-          for the self-import naming conflict. Two-trace heatmap approach is clean
-          and readable. Annotation building loop is clear. No over-engineering.
+        comment: Clean, purposeful code. sys.path manipulation is a legitimate workaround
+          for self-import issue (file named plotly.py). No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (write_image, width=800, height=450, scale=4
-          → 3200×1800) and plot-{THEME}.html (write_html, include_plotlyjs='cdn')
-          — both correct
+        comment: Saves plot-light.png / plot-dark.png and plot-light.html / plot-dark.html.
+          Current Plotly 6.8 API.
     library_mastery:
       score: 7
       max: 10
@@ -276,30 +256,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses go.Heatmap (the correct plotly type for 2D grid data); colorbar
-          configured via the colorbar dict; annotations list for tile text (idiomatic
-          plotly pattern); layout update_layout for all global settings. Goes beyond
-          basic usage by using the two-trace pattern for mixed coloring.
+        comment: Idiomatic use of go.Heatmap with layered traces, colorbar dict, fig.add_shape
+          for separator lines, fig.update_layout. Uses Plotly's annotation system
+          effectively for 200+ per-tile annotations.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Two stacked go.Heatmap traces — one with showscale=False for grey
-          tiles, one with the imprint_seq scale for colored tiles — is a distinctively
-          plotly way to handle mixed categorical/continuous coloring. xgap and ygap
-          for tile spacing are plotly-Heatmap-specific. HTML export (write_html) enables
-          interactive hover when viewed in browser.
-  verdict: REJECTED
+        comment: Layered heatmap approach (grey trace + imprint_seq trace) is a Plotly-specific
+          technique for mixed-missing-data visualization. fig.add_shape for f-block
+          separator lines and HTML export alongside PNG are Plotly-distinctive.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
   - html-export
+  - layer-composition
   patterns:
   - matrix-construction
-  - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
