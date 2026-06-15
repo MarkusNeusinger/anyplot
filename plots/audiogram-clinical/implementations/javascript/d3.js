@@ -30,21 +30,21 @@ const leftEar = [
   { freq: 8000, db: 75 },
 ];
 
-// ISO 8253 severity bands — Imprint-derived fills, opacity doubled for dark theme
+// ISO 8253 severity bands — Imprint-derived fills, 1.5× opacity lift for dark theme
 const isDark = window.ANYPLOT_THEME === "dark";
 const bands = [
   { label: "Normal",      lo: -10, hi: 25,
-    fill: isDark ? "rgba(0,158,115,0.22)"   : "rgba(0,158,115,0.10)"   },
+    fill: isDark ? "rgba(0,158,115,0.15)"   : "rgba(0,158,115,0.10)"   },
   { label: "Mild",        lo: 25,  hi: 40,
-    fill: isDark ? "rgba(153,179,20,0.25)"  : "rgba(153,179,20,0.12)"  },
+    fill: isDark ? "rgba(153,179,20,0.18)"  : "rgba(153,179,20,0.12)"  },
   { label: "Moderate",    lo: 40,  hi: 55,
-    fill: isDark ? "rgba(189,130,51,0.28)"  : "rgba(189,130,51,0.14)"  },
+    fill: isDark ? "rgba(189,130,51,0.21)"  : "rgba(189,130,51,0.14)"  },
   { label: "Mod. Severe", lo: 55,  hi: 70,
-    fill: isDark ? "rgba(221,204,119,0.35)" : "rgba(221,204,119,0.18)" },
+    fill: isDark ? "rgba(221,204,119,0.27)" : "rgba(221,204,119,0.18)" },
   { label: "Severe",      lo: 70,  hi: 90,
-    fill: isDark ? "rgba(174,48,48,0.28)"   : "rgba(174,48,48,0.14)"   },
+    fill: isDark ? "rgba(174,48,48,0.21)"   : "rgba(174,48,48,0.14)"   },
   { label: "Profound",    lo: 90,  hi: 120,
-    fill: isDark ? "rgba(174,48,48,0.50)"   : "rgba(174,48,48,0.26)"   },
+    fill: isDark ? "rgba(174,48,48,0.39)"   : "rgba(174,48,48,0.26)"   },
 ];
 
 // Semantic colors: ISO 8253 clinical convention (red = right, blue = left)
@@ -160,7 +160,8 @@ g.append("path")
   .attr("stroke-linejoin", "round");
 
 // --- Markers ----------------------------------------------------------------
-// Right ear: open circles (O), filled with page background for readability
+// Right ear: open circles (O) — elevatedBg fill avoids blending into dark severity bands
+const circleFill = isDark ? t.elevatedBg : t.pageBg;
 g.selectAll(".m-right")
   .data(rightEar)
   .join("circle")
@@ -168,27 +169,20 @@ g.selectAll(".m-right")
   .attr("cx", d => x(d.freq))
   .attr("cy", d => y(d.db))
   .attr("r", 9)
-  .attr("fill", t.pageBg)
+  .attr("fill", circleFill)
   .attr("stroke", RIGHT_COLOR)
   .attr("stroke-width", 2.5);
 
-// Left ear: X markers (two crossing line segments)
-leftEar.forEach(d => {
-  const cx = x(d.freq);
-  const cy = y(d.db);
-  const s = 8;
-  for (const [x1, y1, x2, y2] of [
-    [cx - s, cy - s, cx + s, cy + s],
-    [cx + s, cy - s, cx - s, cy + s],
-  ]) {
-    g.append("line")
-      .attr("x1", x1).attr("y1", y1)
-      .attr("x2", x2).attr("y2", y2)
-      .attr("stroke", LEFT_COLOR)
-      .attr("stroke-width", 2.5)
-      .attr("stroke-linecap", "round");
-  }
-});
+// Left ear: X markers — d3.symbolCross rotated 45° gives the correct × shape
+const xSymbol = d3.symbol().type(d3.symbolCross).size(320);
+g.selectAll(".m-left")
+  .data(leftEar)
+  .join("path")
+  .attr("class", "m-left")
+  .attr("transform", d => `translate(${x(d.freq)},${y(d.db)}) rotate(45)`)
+  .attr("d", xSymbol)
+  .attr("fill", LEFT_COLOR)
+  .attr("stroke", "none");
 
 // --- Axis labels ------------------------------------------------------------
 svg.append("text")
@@ -215,7 +209,7 @@ bands.forEach(band => {
     .attr("y", margin.top + y(band.lo) + (y(band.hi) - y(band.lo)) / 2)
     .attr("dy", "0.35em")
     .attr("fill", t.inkSoft)
-    .style("font-size", "12px")
+    .style("font-size", "14px")
     .text(band.label);
 });
 
@@ -232,7 +226,7 @@ svg.append("line")
   .attr("stroke-width", 2.5);
 svg.append("circle")
   .attr("cx", lgX1 + 17).attr("cy", lgY).attr("r", 7)
-  .attr("fill", t.pageBg)
+  .attr("fill", circleFill)
   .attr("stroke", RIGHT_COLOR)
   .attr("stroke-width", 2.5);
 svg.append("text")
@@ -248,20 +242,11 @@ svg.append("line")
   .attr("stroke", LEFT_COLOR)
   .attr("stroke-width", 2.5)
   .attr("stroke-dasharray", "7,4");
-const cxL = lgX2 + 17;
-const cyL = lgY;
-const sL  = 6;
-for (const [x1, y1, x2, y2] of [
-  [cxL - sL, cyL - sL, cxL + sL, cyL + sL],
-  [cxL + sL, cyL - sL, cxL - sL, cyL + sL],
-]) {
-  svg.append("line")
-    .attr("x1", x1).attr("y1", y1)
-    .attr("x2", x2).attr("y2", y2)
-    .attr("stroke", LEFT_COLOR)
-    .attr("stroke-width", 2.5)
-    .attr("stroke-linecap", "round");
-}
+svg.append("path")
+  .attr("transform", `translate(${lgX2 + 17},${lgY}) rotate(45)`)
+  .attr("d", d3.symbol().type(d3.symbolCross).size(220))
+  .attr("fill", LEFT_COLOR)
+  .attr("stroke", "none");
 svg.append("text")
   .attr("x", lgX2 + 44).attr("y", lgY).attr("dy", "0.35em")
   .attr("fill", t.ink)
