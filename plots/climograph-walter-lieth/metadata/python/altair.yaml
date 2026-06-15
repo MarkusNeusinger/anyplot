@@ -1,0 +1,263 @@
+library: altair
+language: python
+specification_id: climograph-walter-lieth
+created: '2026-06-15T01:19:06Z'
+updated: '2026-06-15T01:35:38Z'
+generated_by: claude-sonnet
+workflow_run: 27517807122
+issue: 8656
+language_version: 3.13.13
+library_version: 6.2.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/python/altair/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - Correct Walter-Lieth dual-axis convention with 1:2 temperature-to-precipitation
+    scaling enforced via resolve_scale(y=independent) and carefully calibrated domains
+  - 'Appropriate semantic color use from the Imprint palette: matte red (#AE3030)
+    for temperature, blue (#4467A3) for precipitation, cyan (#2ABCCD) for frost —
+    well-established domain conventions matched to correct Imprint members'
+  - Fill zones (arid red, humid blue, perhumid solid blue) correctly implemented and
+    visually communicative — the defining feature of the climograph is well-rendered
+    in both themes
+  - Real Ankara climate normals with accurate and ecologically interesting data (continental
+    climate, summer drought, January frost month)
+  - 'Solid code structure: flat, deterministic, clean imports, correct dual-file output,
+    proper padding to 3200x1800 canvas'
+  weaknesses:
+  - Right precipitation axis ticks only go to 80mm; the spec requires 0, 20, 40, 60,
+    100 mm to mark the perhumid threshold on the right axis — set right_axis values=[0,
+    20, 40, 60, 100] and extend precip_scale domain to [-20, 100] and PRECIP_MAX=100
+  - Subtitle fontsize=10 is at the lower edge of readability at canvas scale — bumping
+    to 11 or 12 would improve mobile legibility
+  - 'Humid fill opacity in dark mode (40%) is too muted over the near-black background
+    — consider increasing HUMID_OPACITY for dark mode to 0.50-0.55 so humid zones
+    stand out clearly against #1A1A17'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Chrome: Bold title "climograph-walter-lieth · python · altair · anyplot.ai" in dark ink, fully readable. Subtitle with station metadata in muted INK_MUTED (#6B6A63). Left Y-axis label "Temperature (°C)" in matte red, right Y-axis label "Precipitation (mm)" in blue, both readable. Tick labels in INK_SOFT (#4A4A44) at 10px — readable. Month labels on X-axis readable.
+      Data: Temperature line in #AE3030 (matte red), precipitation line in #4467A3 (blue), both with overlay dots. Blue humid fill (Jan-May, Oct-Dec) at 22% opacity is light and visible. Pink/red arid fill (Jun-Sep) at 22% opacity is visible. Cyan frost bar for January below 0°C. Dashed 0°C reference line visible.
+      Legibility verdict: PASS — all text and data elements clearly readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title in light cream (#F0EFE8 INK), fully readable. Subtitle in lighter muted tone, readable. Axis labels in red/blue (data colors, unchanged). Tick labels in #B8B7B0 (INK_SOFT dark) — readable against near-black. Month labels in INK_SOFT, readable. No dark-on-dark text failures detected.
+      Data: Temperature line (#AE3030) identical to light render. Precipitation line (#4467A3) identical. Data colors unchanged between themes (only chrome flips). Humid fill at 40% opacity over #1A1A17 appears as muted steel-blue — visible but less prominent than in light render. Arid fill at 45% opacity appears as dark maroon — visible. Cyan frost bar visible. Dashed 0°C reference visible.
+      Legibility verdict: PASS — all text readable; humid fill slightly muted but distinguishable from background
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; dynamically scaled title; readable
+          in both themes; minor deduction for subtitle at fontsize=10 being borderline
+          small at canvas scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element overlaps in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Lines and overlay dots clearly visible; fills rendered in both themes;
+          minor deduction for humid fill at 40% opacity appearing muted on dark background
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette members; red-blue combination CVD-safe; adequate
+          contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; no edge clipping; chart fills canvas proportionally;
+          good margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Temperature (°C) on left, Precipitation (mm) on right, both with
+          units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Valid semantic exception: matte red (#AE3030) for temperature, blue
+          (#4467A3) for precipitation, cyan (#2ABCCD) for frost — all Imprint palette
+          members. Backgrounds #FAF8F1/#1A1A17 correct. Both renders theme-correct.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clear design intent with semantic color hierarchy and effective fill
+          zones. Above generic default (4) but not strong design (6) — typography
+          minimal, no additional polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Grid at 10% opacity subtle and appropriate; dashed 0°C reference
+          line; thin view border. Better than bare defaults (2) but whitespace somewhat
+          tight
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Fill zones directly communicate humid vs arid seasons; crossing of
+          temperature and precipitation curves is the focal point; frost indicator
+          adds ecological context
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Walter-Lieth climograph with dual axes, 1:2 scaling convention,
+          temperature and precipitation lines, fill zones for humid/arid/perhumid
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'All key features present except: right axis ticks only go to 80mm;
+          spec requires 0, 20, 40, 60, 100mm — the 100mm perhumid threshold marker
+          is missing from the right axis'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis months in order, left Y-axis temperature in °C, right Y-axis
+          precipitation in mm. 1:2 ratio correctly enforced.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'climograph-walter-lieth · python · altair · anyplot.ai' matches
+          required format. No categorical legend needed — axis colors serve as legend.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all chart features: humid period, arid period, frost month,
+          perhumid fill capability. Full 12-month seasonal cycle.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Real-world station: Ankara, Turkey (capital city), standard 1991-2020
+          climate normal period. Neutral scientific topic.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values factually accurate for Ankara continental climate. Summer
+          drought, January frost, annual mean 11.7°C and 391mm total are consistent
+          with known climate data.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat code: imports → tokens → data → chart layers → compose → save.
+          No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded climate data; no randomness.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os, sys, importlib, altair, numpy, pandas, PIL.Image.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity. sys.path manipulation with importlib.import_module
+          is a legitimate self-import guard. No fake UI elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair 6.2.1
+          API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good use of Altair: alt.layer() composition, resolve_scale(y=''independent'')
+          for dual Y-axes, alt.Y2 for area fills, invisible anchor layer for right-axis,
+          alt.Title with subtitle. High-level API throughout.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses Altair-distinctive features: layered composition system, independent
+          Y-scale resolution for dual axes, invisible-anchor-layer pattern for right
+          precipitation axis.'
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - pillow
+  techniques:
+  - twin-axes
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
