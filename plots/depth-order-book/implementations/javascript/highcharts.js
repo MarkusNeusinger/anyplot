@@ -1,7 +1,7 @@
 // anyplot.ai
 // depth-order-book: Order Book Depth Chart
 // Library: highcharts 12.6.0 | JavaScript 22.22.3
-// Quality: 87/100 | Created: 2026-06-15
+// Quality: 86/100 | Created: 2026-06-15
 
 const t = window.ANYPLOT_TOKENS;
 
