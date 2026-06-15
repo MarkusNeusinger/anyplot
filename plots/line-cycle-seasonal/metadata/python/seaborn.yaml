@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: line-cycle-seasonal
 created: '2026-06-15T03:35:10Z'
-updated: '2026-06-15T03:40:41Z'
+updated: '2026-06-15T03:53:23Z'
 generated_by: claude-sonnet
 workflow_run: 27522260667
 issue: 8658
@@ -12,45 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-cycl
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - 'Correct cycle plot layout: 12 seasonal groups on shared x-axis with chronological
-    subseries lines per group'
-  - Horizontal mean reference lines using theme-adaptive INK neutral anchor — key
-    visual for seasonal comparison
-  - Both light and dark themes fully readable; all chrome tokens correctly applied
-    via sns.set_theme()
-  - Realistic mid-latitude temperature dataset with embedded warming trend (0.035°C/yr)
-    across 24 years
-  - 'Clean code: KISS structure, seed for reproducibility, correct canvas (3200×1800,
-    no bbox_inches=tight)'
-  - 'Spec-complete: all required features implemented — shared y-axis, subtle vertical
-    dividers, calendar ordering'
+  - 'Perfect spec compliance: all required cycle-plot elements (subseries lines, mean
+    reference lines, shared y-axis, calendar-ordered groups, group separators) correctly
+    implemented'
+  - 'Excellent data quality: realistic climate dataset with plausible scale and embedded
+    warming trend; covers all chart-type aspects in a single shared panel'
+  - Correct Imprint palette and full theme adaptation — both renders pass legibility
+    check with no dark-on-dark or light-on-light failures
+  - Warming trend annotation on July adds purposeful storytelling beyond the minimum
+    spec requirement
+  - Clean code with proper seed (np.random.seed(42)), correct canvas size (3200x1800),
+    and no bbox_inches='tight'
+  - Idiomatic use of sns.lineplot(..., units='month_idx', estimator=None) — the correct
+    seaborn approach to repeated-measures line drawing
   weaknesses:
-  - 'Design refinement opportunity: vertical group dividers at alpha=0.25 are nearly
-    invisible in the light render — increasing to alpha=0.4–0.5 would make the monthly
-    groupings clearer without adding visual noise'
-  - 'Library mastery limited: seaborn’s contribution is exclusively sns.set_theme();
-    all plotting is pure matplotlib ax.plot/hlines/axvline — acceptable for a custom
-    layout plot type but reduces LM score'
-  - 'DE-03 storytelling gap: the within-season warming trend is visually present but
-    no annotation or callout explicitly points to it — a small annotation on one or
-    two months would elevate the narrative'
+  - Warming annotation text is 6.5pt — borderline at mobile scale (~4-5 px at 400px
+    wide); raise to 8pt minimum for tertiary text
+  - Implementation is predominantly matplotlib-driven (mean lines via ax.hlines, dividers
+    via ax.axvline, annotation via ax.text, legend via custom Line2D handles) — seaborn's
+    distinctive higher-level features are minimally leveraged beyond lineplot with
+    units
+  - Design excellence is functional but not particularly innovative; room for more
+    polished visual treatment (e.g., light shading within each group or subtle alternating
+    background bands for better group delineation across the wide x-axis span)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white cream (#FAF8F1) — correct Imprint light surface.
-      Chrome: Title "line-cycle-seasonal · python · seaborn · anyplot.ai" in dark ink (fontsize=12), centered and fills ~70% of plot width. X-axis label "Month" and Y-axis label "Avg Temperature (°C)" in dark ink (fontsize=10), balanced. Tick labels (month names Jan–Dec, temperature values 5/10/15/20/25) in dark secondary ink (fontsize=8). All text clearly readable against the cream background.
-      Data: Brand green (#009E73) subseries lines (linewidth=1.5, alpha=0.75) for each of 12 months showing 24 chronological data points. Black horizontal reference lines (INK = #1A1A17) spanning each group's width mark the monthly mean. Subtle vertical dividers (INK_MUTED, alpha=0.25) separate month groups. Subtle y-axis gridlines at alpha=0.15. First series is #009E73 — correct.
-      Legend: Upper-left, shows "Yearly values" (green line) and "Monthly mean" (black line), readable on elevated-bg (#FFFDF6) frame.
-      Legibility verdict: PASS — all text legible; no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "line-cycle-seasonal · python · seaborn · anyplot.ai" in dark ink (#1A1A17) — clearly readable. Axis labels "Month" (x) and "Avg Temperature (°C)" (y) at 10pt in dark ink — readable. Tick labels (month names at 8pt, y-values at 8pt) in INK_SOFT (#4A4A44) — readable. Legend text in INK_SOFT — readable. Warming annotation "+0.8°C (2000→2023)" at 6.5pt in INK_SOFT — readable at full resolution, borderline at mobile scale.
+      Data: Brand green #009E73 subseries lines throughout all 12 month groups. Thick black (#1A1A17) horizontal mean reference lines at each group's mean.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct Imprint dark surface.
-      Chrome: Title, axis labels, and tick labels all appear in light ink (#F0EFE8 / #B8B7B0 tokens), clearly readable against the dark background. No dark-on-dark failures.
-      Data: Brand green (#009E73) subseries lines remain identical to light render — color unchanged between themes. Mean reference lines now appear light/near-white (INK = #F0EFE8 in dark mode), correctly adapting to the dark surface. Vertical dividers similarly lighten.
-      Legend: Shows green "Yearly values" line and white "Monthly mean" line — correctly theme-adapted. Legend background at elevated-bg (#242420).
-      Legibility verdict: PASS — all text legible on dark background; no dark-on-dark issues found.
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in near-white (#F0EFE8 INK adaptation) — clearly readable. Axis labels in INK (#F0EFE8) — readable. Tick labels in INK_SOFT dark (#B8B7B0) — readable, light gray on dark surface. Legend text in INK_SOFT dark (#B8B7B0) — readable. Warming annotation in INK_SOFT dark (#B8B7B0) — readable. No dark-on-dark failures detected.
+      Data: Brand green #009E73 subseries lines — identical to light render. Mean reference lines now near-white (#F0EFE8) due to INK dark-mode adaptation — clearly visible against dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -61,55 +60,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Title (12pt), axis labels (10pt), tick labels (8pt) all explicitly
-          set and readable in both themes. Minor deduction: subseries lines are thin
-          within groups but this is appropriate for the dense 24-point subseries.'
+        comment: Title, axis labels, tick labels, legend all readable in both themes.
+          Warming annotation at 6.5pt is borderline mobile-legible; acceptable for
+          tertiary text but noted.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps with text or data elements. Legend placed top-left
-          away from all data clusters.
+        comment: No text-to-text or text-to-data collisions. Legend in low-data winter
+          zone. Annotation above July clears data.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Brand green lines clearly visible on both surfaces. Mean reference
-          lines theme-adapt (black light / white dark). linewidth=1.5 and alpha=0.75
-          appropriate for 24-point medium-density subseries.
+        comment: Brand green lines (lw=1.5, alpha=0.75) clearly visible. Mean reference
+          lines (lw=2.0) prominent. 288 points at medium density; sizing appropriate.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Only two visual elements: brand green (#009E73) and INK neutral.
-          High contrast. No red-green-only encoding.'
+        comment: 'Two-element encoding: brand green vs. theme-adaptive neutral ink.
+          High contrast, CVD-safe.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (no gate file). figsize=(8,4.5) dpi=400 = 3200x1800.
-          No bbox_inches=tight. subplots_adjust controls margins cleanly.
+        comment: Canvas gate passed (3200x1800). All 12 groups visible. Tight margins
+          work without clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis has units (°C). Title is correct format: spec-id · python
-          · seaborn · anyplot.ai.'
+        comment: Y-axis includes units (°C). Title matches mandated format exactly.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (and only) data series = #009E73. Mean lines use INK semantic
-          neutral anchor — correct. Backgrounds #FAF8F1 light / #1A1A17 dark. Both
-          renders theme-correct.'
+        comment: 'First series #009E73. Mean lines use theme-adaptive INK (neutral
+          anchor). Backgrounds #FAF8F1/#1A1A17. Both renders theme-correct.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -117,25 +113,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default (4): thoughtful semantic color choices — brand green
-          for data, INK neutral for reference lines. Manual group layout on shared
-          x-axis rather than faceting is the correct design decision. Clean and professional.'
+        comment: Above default (4). Imprint palette correct, intentional visual hierarchy
+          (thick mean vs. thin subseries), warming annotation adds storytelling layer.
+          Professional but not exceptional.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Above default (2): top/right spines removed, x-axis tick marks removed
-          (length=0), subtle y-axis grid, legend with frame. Vertical dividers are
-          present but nearly invisible at alpha=0.25.'
+        comment: Top/right spines removed, y-only grid at alpha=0.15, x-tick marks
+          removed (length=0), vertical dividers at alpha=0.4. Clear refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Above default (2): mean reference lines as the key visual correctly
-          highlight seasonal differences. Warming trend visible as within-group upward
-          slope. No annotation to specifically call out the trend insight.'
+        comment: Mean lines as key focal point for seasonal comparison. Warming annotation
+          highlights within-season trend. Good dual-story (seasonal pattern + climate
+          trend).
     spec_compliance:
       score: 15
       max: 15
@@ -145,30 +140,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct cycle plot / seasonal subseries plot. Seasonal groups left-to-right,
-          chronological subseries within groups.
+        comment: 'Correct cycle/seasonal subseries plot: 12 month groups, chronological
+          subseries per group, horizontal mean lines.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Horizontal mean reference lines spanning each group's width. Shared
-          y-axis. Subtle vertical dividers. Calendar order (Jan–Dec).
+        comment: 'All spec features present: calendar-ordered groups, connected subseries,
+          group-mean reference lines, shared y-axis, group separators.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: months (seasonal groups). Y-axis: temperature in °C. Within-group
-          x-position encodes year order.'
+        comment: Months on x, temperature on y, year progression within groups. All
+          12x24 points represented.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''line-cycle-seasonal · python · seaborn · anyplot.ai'' —
-          correct. Legend: ''Yearly values'' and ''Monthly mean'' — matches the two
-          visual elements.'
+        comment: Title matches mandated format. Legend distinguishes Yearly values
+          and Monthly mean.
     data_quality:
       score: 15
       max: 15
@@ -178,23 +172,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 12 months. 24 chronological observations per group (2000–2023).
-          Both within-season trend and cross-season comparison enabled.
+        comment: Shows seasonal mean differences, within-group trends, horizontal
+          reference lines, single shared panel.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly avg temperatures for a mid-latitude city. Realistic base
-          temps (Jan ~1.8°C, Jul ~24.1°C). 0.035°C/yr warming trend is consistent
-          with observed climate data. Neutral, non-controversial.
+        comment: Mid-latitude monthly temperatures 2000-2023. Realistic seasonal pattern
+          and warming trend (0.035 C/year). Neutral subject.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 24 years (2000–2023) per month = solid multi-cycle dataset. σ=0.7°C
-          noise is realistic for monthly averages. Value range ~1–27°C is sensible.
+        comment: '12 groups (spec: 4-12), 24 obs each (spec: 5-30), 288 total (spec:
+          30-300). Temperature range 1-26°C plausible.'
     code_quality:
       score: 10
       max: 10
@@ -204,34 +197,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Top-level script flow. Simple and direct.
+        comment: No functions or classes. Linear structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before data generation.
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys (path fix), matplotlib.lines (legend handles),
-          plt, np, pd, sns.'
+        comment: 'All imports used: os, sys, matplotlib.lines, matplotlib.pyplot,
+          numpy, pandas, seaborn.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean loop over months, no fake UI, appropriate complexity for the
-          plot type.
+        comment: Clean code, no fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png. No bbox_inches=tight. Current seaborn/matplotlib
-          API.
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches='tight'. Current
+          seaborn 0.13.2 API.
     library_mastery:
       score: 6
       max: 10
@@ -241,23 +233,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: sns.set_theme() for theme config is idiomatic. matplotlib axes-level
-          API is appropriate since seaborn has no cycle plot primitive. mlines.Line2D
-          for custom legend handles is correct pattern.
+        comment: Good use of sns.lineplot with units parameter, sns.set_theme(), sns.despine().
+          Heavy lifting done by matplotlib for non-native elements.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Seaborn's contribution is limited to set_theme() and the theme rc
-          params. All plotting is pure matplotlib (ax.plot, hlines, axvline). This
-          is the right approach for a custom layout plot, but limits distinctively
-          seaborn features.
+        comment: units parameter in sns.lineplot is a distinctive seaborn feature.
+          Beyond that, mean lines/dividers/annotation/legend are pure matplotlib.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
+  - annotations
   - custom-legend
   patterns:
   - data-generation
