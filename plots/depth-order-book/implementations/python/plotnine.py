@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 depth-order-book: Order Book Depth Chart
 Library: plotnine 0.15.7 | Python 3.13.13
-Quality: 84/100 | Created: 2026-06-15
+Quality: 88/100 | Created: 2026-06-15
 """
 
 import os

@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: depth-order-book
 created: '2026-06-15T02:49:03Z'
-updated: '2026-06-15T02:55:16Z'
+updated: '2026-06-15T03:07:47Z'
 generated_by: claude-sonnet
 workflow_run: 27520529130
 issue: 8657
@@ -12,97 +12,102 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/depth-ord
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 88
 review:
   strengths:
-  - Full spec compliance — all required features (step areas, fills, outlines, spread
-    gap, mid-price annotation, spread value) correctly implemented
-  - 'Excellent use of semantic color mapping with Imprint palette (green bid #009E73,
-    red ask #AE3030) — appropriate financial convention'
-  - Clean code with deterministic reproducibility (np.random.seed(42)) and no unnecessary
-    abstractions
-  - Both light and dark themes render correctly with no readability failures
-  - Correct canvas dimensions (3200x1800) via canonical figure_size=(8,4.5) + save(...,
-    width=8, height=4.5, dpi=400) pattern
-  - Embedded Bids/Asks labels inside the filled areas instead of a legend — cleaner
-    visual
+  - 'Perfect spec compliance — all required features present: step curves, dual-color
+    bid/ask ribbons, mid-price dashed line, spread annotation, embedded Bids/Asks
+    labels, y-axis from zero'
+  - Dual-alpha near-mid liquidity zone highlights where market impact is greatest
+    — intentional visual hierarchy beyond basic spec requirements
+  - Semantic color choices are correct and justified (green=bids, red=asks) with text
+    labels providing CVD-safe redundant encoding
+  - Correct left-continuous step function implemented manually via interleaved arrays
+    — accurate discrete price-level representation
+  - 'Perfect code quality: flat script, seeded random, clean imports, idiomatic plotnine
+    grammar of graphics'
+  - Correct theme-adaptive chrome — all token assignments flip correctly between light
+    and dark renders with no dark-on-dark issues
   weaknesses:
-  - Mid-price annotation (size=2.8mm) and spread annotation (size=2.3mm) are too small
-    for mobile readability — increase to size=3.5 and size=3.0 respectively
-  - 'Design excellence is competent but not elevated: no visual hierarchy between
-    bid and ask walls or emphasis on near-mid-price liquidity clusters'
-  - LM-02 limited — could leverage more distinctive plotnine features such as scale_y_continuous
-    with formatted BTC labels or coord_cartesian for zoom control
+  - 'Mid-price annotations ("$60,000" and "Spread: $12") use very small text (size=3.0–3.5
+    mm ≈ 8.5–10 pt) and muted color — borderline legible at mobile scale; increase
+    size to 3.8–4.2 mm and consider slightly bolder color for Spread label'
+  - Design Excellence is solid but not exceptional — a second DE layer (e.g., thin
+    horizontal annotation line marking a notable bid wall, or a total-depth callout
+    box) would elevate storytelling beyond the current baseline
+  - Near-mid elevated alpha zone (0.35 vs 0.25) is subtle and may be invisible to
+    many viewers — consider a slightly higher contrast (0.50 for near-mid vs 0.20
+    for outer)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light surface
-      Chrome: Title "depth-order-book · python · plotnine · anyplot.ai" in dark text (~12pt) clearly readable. Axis labels "Price (USD)" and "Cumulative Volume (BTC)" in dark ink at 10pt, readable. Tick labels ($59,900/$59,950/$60,000/$60,050/$60,100 and 0/50/100/150) in INK_SOFT at 8pt, readable. Mid-price annotation "$60,000" and "Spread: $12" in INK_MUTED at size=2.8mm/2.3mm (~8pt/6.5pt) — readable at full resolution, borderline on mobile.
-      Data: Green (#009E73) bid area left of center with semi-transparent fill and solid outline. Matte-red (#AE3030) ask area right of center. Dashed vertical mid-price line. "Bids" label in green inside bid area, "Asks" label in red inside ask area.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "depth-order-book · python · plotnine · anyplot.ai" at 12pt, dark ink (#1A1A17) — clearly readable. Axis labels "Price (USD)" and "Cumulative Volume (BTC)" at 10pt, dark — readable. Tick labels ($59,900, $59,950, $60,000, $60,050, $60,100 on x; 0/50/100/150 on y) at 8pt in INK_SOFT (#4A4A44) — readable. Grid lines at alpha=0.15 — subtle, appropriate. Dashed mid-price vertical line in muted ink. "$60,000" and "Spread: $12" annotations in INK_MUTED at size ~3.0–3.5mm — small but readable at full resolution.
+      Data: Green (#009E73) staircase ribbon for bids (left side, descending from ~145 BTC cumulative at $59,850 to near zero at $59,994 best bid). Red (#AE3030) staircase ribbon for asks (right side, ascending from near zero at $60,006 best ask to ~145 BTC at $60,120). Near-mid elevated alpha zone (0.35 vs 0.25) visible as slightly brighter band near mid-price. "Bids" label in green, "Asks" in red, centered in respective areas.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface
-      Chrome: Title and all axis labels/tick labels render in light off-white text, clearly readable against the dark background. No dark-on-dark text issues found. The mid-price annotation and spread text are in INK_MUTED (#A8A79F for dark theme) — visible and readable.
-      Data: Same green (#009E73) bid area and matte-red (#AE3030) ask area — data colors are identical to light render, only chrome flipped. The "Bids" and "Asks" embedded labels remain visible in their respective colors.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and axis labels rendered in INK (#F0EFE8) — light cream text, clearly visible against dark background. Tick labels in INK_SOFT (#B8B7B0) — visible. No dark-on-dark issues observed — all chrome tokens adapt correctly. Grid lines at alpha=0.15 on dark surface — subtle but present.
+      Data: Data colors identical to light render — green (#009E73) for bids, red (#AE3030) for asks. Near-mid elevated alpha zone visible. "Bids" label in brand green pops well against dark background. "$60,000" and "Spread: $12" in INK_MUTED (#A8A79F) — small but distinguishable.
+      Legibility verdict: PASS — no dark-on-dark failures, all chrome adapts correctly
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels all readable in both renders. Mid-price
-          annotation (size=2.8mm~8pt) and spread annotation (size=2.3mm~6.5pt) are
-          small but readable at full resolution; borderline on mobile.
+        comment: Title 12pt, axis labels 10pt, tick labels 8pt — all readable. Mid-price
+          annotations at 3.0–3.5mm are small but legible at full resolution; borderline
+          at mobile scale.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or text-data collisions. Embedded labels well-placed
-          in empty space.
+        comment: No overlapping text or data elements. Bids/Asks labels well-positioned
+          within their respective areas.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Bid and ask areas clearly visible with fills and outlines. Staircase
-          steps visible especially on ask side.
+        comment: Staircase areas clearly visible. Near-mid elevated alpha zone present
+          but subtle (delta 0.10 between 0.25 and 0.35).
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Red-green combination for bids/asks is spec-mandated and financially
-          conventional. Text labels provide partial redundant encoding, but CVD concern
-          remains.
+        comment: Green/red is CVD-problematic pair but redundant text labels (Bids/Asks)
+          provide safe encoding. Semantic exception justified for financial convention.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Good proportions, clear bid-ask gap,
-          balanced layout.
+        comment: 3200x1800 landscape confirmed. No clipping. Good proportions, mid-price
+          gap clearly visible. Bid/ask areas balanced.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Price (USD) and Cumulative Volume (BTC) are descriptive with units.
-          Title correctly formatted.
+        comment: 'X: Price (USD), Y: Cumulative Volume (BTC) — descriptive with units.
+          Title in correct anyplot format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Bids use #009E73 (Imprint pos 1), asks use #AE3030 (Imprint pos
-          5, semantic exception for sell/loss). Backgrounds #FAF8F1/#1A1A17 correct.'
+        comment: 'BID=#009E73 (Imprint pos 1), ASK=#AE3030 (Imprint pos 5, semantic
+          red anchor for loss/sell). Backgrounds #FAF8F1/#1A1A17 correct. Data colors
+          identical across themes.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -110,24 +115,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Good semantic color choices, semi-transparent fills with outlines,
-          embedded side labels instead of legend, dashed mid-price reference. Above
-          default but not exceptional.
+        comment: Above default. Intentional dual-alpha (0.25 outer / 0.35 near-mid)
+          for liquidity emphasis. Semantic color choice. Clean layered composition.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: panel_border=element_blank(), minor grid removed, no legend box,
-          subtle major grid. Clean minimal chrome. L-shaped axis via axis_line.
+        comment: panel_border removed, panel_grid_minor removed, grid alpha=0.15 subtle.
+          No legend box clutter. Axis lines provide structural grounding.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Mid-price dashed line as focal point, spread annotation adds financial
-          context, directional labels guide viewer. Small annotation sizes weaken
-          impact.
+        comment: 'Clear narrative: bids/asks converging at mid-price gap. Mid-price
+          dashed line + spread annotation explain the key metric. Near-mid zone highlights
+          liquidity priority.'
     spec_compliance:
       score: 15
       max: 15
@@ -137,28 +141,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct order-book depth chart with cumulative bid/ask step areas.
+        comment: Correct market depth chart with cumulative step areas for both bid
+          and ask sides.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: cumulative step areas, green/red fills and outlines,
-          spread gap, dashed mid-price line, price annotation, spread value annotation.'
+        comment: Green bids, red asks, semi-transparent fills, solid outline strokes,
+          bid-ask spread gap, dashed mid-price line, mid-price and spread annotations,
+          y-axis from zero — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: price (USD), Y: cumulative volume (BTC) from zero. Balanced bid/ask
-          areas around mid-price.'
+        comment: Price on x, cumulative volume on y. ~50 levels per side. BTC/USD
+          near $60,000 mid-price.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: depth-order-book · python · plotnine · anyplot.ai. No legend
-          (appropriate — embedded labels used).'
+        comment: Title 'depth-order-book · python · plotnine · anyplot.ai' correct.
+          Embedded Bids/Asks labels instead of legend — appropriate choice.
     data_quality:
       score: 15
       max: 15
@@ -168,22 +174,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full coverage: step-function areas, outline strokes, mid-price reference,
-          spread annotation, embedded side labels.'
+        comment: Full bid and ask depth shown. Mid-price gap. Step function. Near-mid
+          zone highlight. Spread annotation.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: BTC/USD at ~$60,000, $12 spread, exponential order sizes growing
-          with depth — plausible for a real exchange. Neutral financial context.
+        comment: BTC/USD at $60,000 with $12 spread. Exponential quantity distribution
+          growing away from mid — plausible order book structure.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis 0-150 BTC realistic cumulative depth. X-axis ~$59,870-$60,130
-          tight and appropriate.
+        comment: Price range ~$200 span, cumulative depth ~145 BTC max — appropriate
+          for a large order book snapshot.
     code_quality:
       score: 10
       max: 10
@@ -193,34 +199,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Direct script, no functions or classes.
+        comment: 'Flat script with no functions or classes. Clear sectioning: tokens,
+          data, step expansion, plot, save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42) — fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used. noqa: E402 appropriate given sys.path guard.'
+        comment: All imported plotnine components are used. No unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clear variable names, logical structure. Manual step expansion justified
-          because geom_ribbon lacks step parameter.
+        comment: Clean readable code. Step function expansion is verbose but necessary
+          for correctness. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=400, width=8, height=4.5, units=in.
+        comment: plot.save(f'plot-{THEME}.png', dpi=400, width=8, height=4.5, units='in')
+          — correct plotnine API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -228,16 +236,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Idiomatic plotnine: geom_ribbon for fills, geom_line for outlines,
-          geom_vline for reference, annotate for text, scale_x_continuous with lambda
-          formatter, theme_minimal()+theme() overrides.'
+        comment: Grammar of graphics correctly applied. geom_ribbon, geom_line, geom_vline,
+          annotate all idiomatic. theme_minimal + theme() customization correct pattern.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses geom_ribbon and custom scale formatter — competent but not showcasing
-          highly distinctive plotnine capabilities.
+        passed: true
+        comment: Multiple ribbon layers stacked for dual-alpha effect. coord_cartesian
+          for non-clipping axis limits. Custom lambda label formatters in scale_x_continuous/scale_y_continuous.
+          expand parameter for precise axis padding.
   verdict: APPROVED
 impl_tags:
   dependencies: []
