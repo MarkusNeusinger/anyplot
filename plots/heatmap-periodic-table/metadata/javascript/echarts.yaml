@@ -1,0 +1,295 @@
+library: echarts
+language: javascript
+specification_id: heatmap-periodic-table
+created: '2026-06-15T05:22:13Z'
+updated: '2026-06-15T05:55:16Z'
+generated_by: claude-sonnet
+workflow_run: 27525201778
+issue: 8659
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/javascript/echarts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Canonical 18×7 periodic table layout with f-block correctly detached as two rows
+    below, including dashed-border reference tiles (57–71, 89–103) in group 3 positions
+    of periods 6–7
+  - Real NIST first ionization energy data for all 118 elements — values are factually
+    accurate (e.g., H=1312.0, He=2372.3, Cs=375.7 kJ/mol)
+  - 'Luminance-adaptive tile text color (getTextColor function switches between #1A1A17
+    and #F0EFE8 at L=0.30 threshold) ensures readability on every tile color in both
+    themes'
+  - Imprint sequential colormap (#009E73→#4467A3 via t.seq) correctly chosen for single-polarity
+    unipolar data; color is identical between light and dark renders
+  - Null/superheavy elements (period 7 d-block, Rf–Og) shown as theme-adaptive grey
+    tiles rather than omitted — preserves the canonical table shape
+  - Category annotations in the 0.5-row gap ('Alkali', 'Alk. Earth', 'Transition Metals',
+    'p-block', 'Noble Gases') enhance data storytelling by naming the IE trend blocks
+  - '''low IE'' / ''high IE'' colorbar annotations and min/max labels guide reader
+    interpretation without extra legend'
+  - Period labels (1–7) and f-block row labels (Ln, Ac) on left margin provide axis
+    context
+  - 'Title format correct: ''heatmap-periodic-table · javascript · echarts · anyplot.ai'''
+  weaknesses:
+  - 'CQ-01: Two helper functions (lerpColor, getTextColor) technically violate the
+    ''no functions'' KISS rule, though each is short (3–5 lines) and necessary for
+    tile color computation and luminance-based text switching'
+  - 'VQ-01: The IE value text at the bottom of tiles (valFont ≈ 36 source-px) is the
+    smallest text element and may be borderline on mobile (<400 px) where the periodic
+    table is already pixel-dense by nature'
+  - 'DE-01: Design is strong but still below ''publication-ready'' — colorbar is built
+    from discrete rect segments rather than a CSS gradient; minor inconsistency in
+    the colorbar segment rendering creates a slightly banded appearance at segment
+    boundaries'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, fills the full 2400×2400 canvas
+      Chrome: Title "heatmap-periodic-table · javascript · echarts · anyplot.ai" in bold dark ink at top-center; subtitle "First Ionization Energy (kJ/mol)" in softer ink below. Period labels "1–7" along left margin in inkSoft. Category annotations ("Alkali", "Alk. Earth", "Transition Metals", "p-block", "Noble Gases") in the 0.5-row gap between period 7 and lanthanide rows. All text is dark (#1A1A17 / #4A4A44) and clearly readable against the light background.
+      Data: Continuous gradient from brand green #009E73 (low IE, alkali metals) through mid-teal to blue #4467A3 (high IE, noble gases). Tile text (atomic number top-left, bold element symbol centered, IE value at tile bottom) adapts to tile luminance — dark text on lighter tiles, light text on darker tiles. Superheavy elements (period 7 Rf–Og) shown as grey (#C4C3BC) null tiles. F-block rows (lanthanides, actinides) correctly detached below main grid. Colorbar at bottom shows the full green→blue gradient with "376" / "kJ/mol" / "2372" labels and "low IE" / "high IE" annotations. First series: #009E73 ✓
+      Legibility verdict: PASS — all chrome text clearly readable; tile labels readable at 2400px canvas; value text is smallest but proportional to tile height
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct for dark theme
+      Chrome: Title and subtitle rendered in light ink (#F0EFE8 / #B8B7B0) — clearly readable against the dark background. Period labels, colorbar labels, category annotations all use light inkSoft colors. No dark-on-dark failures observed. F-block and reference tile text uses inkSoft appropriately.
+      Data: Tile colors are identical to the light render — same green (#009E73) to blue (#4467A3) gradient. The tile text color function correctly adapts based on tile background luminance: dark text on lighter-colored tiles (higher IE elements approaching blue), light text on darker-colored tiles. Grey null tiles (#3C3C38 in dark theme) carry light-colored text. Data colors confirmed identical to light render.
+      Legibility verdict: PASS — no dark-on-dark failures; chrome is fully theme-adaptive; data colors identical to light render
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set proportional to tile height (symFont=bold
+          33px, znFont=18px, valFont=18px CSS; ×2 in source). Title, labels, and tile
+          symbols clearly readable. IE value text at tile bottom is smallest element
+          and may be borderline at mobile scale due to periodic table information
+          density.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Atomic number (top-left), symbol (center), value
+          (bottom) are vertically stacked within each tile without collision. Gap-row
+          annotations are spaced apart.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All element tiles clearly visible. Color gradient across the full
+          IE range is evident. Null/grey tiles clearly distinct. F-block rows visible
+          and separated.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint sequential green→blue is CVD-safe (differs in both hue and
+          luminance). Luminance-adaptive text switching ensures tile-text contrast
+          regardless of tile background. Tile gaps provide clear separation.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Periodic table fills most of the 2400×2400 canvas with generous but
+          tight margins (ML=46, MR=16, MT=86, MB=10 CSS px). Colorbar fits within
+          canvas. F-block detached below with 0.5-row gap. No content clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct. Subtitle 'First Ionization Energy (kJ/mol)'
+          is descriptive with units. Colorbar labeled with kJ/mol, min/max values,
+          and low/high IE annotations.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Uses t.seq[0]→t.seq[1] (imprint_seq: #009E73→#4467A3) correctly
+          for single-polarity continuous data. Background is t.pageBg (theme-adaptive).
+          Text uses t.ink/t.inkSoft. Data colors identical between light and dark
+          renders. No forbidden colormaps.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: custom ECharts graphic API layout (not a standard
+          chart type), luminance-adaptive tile text, category annotations in gap row,
+          professional colorbar with low/high IE labels, f-block dashed-border reference
+          tiles. Clearly above library defaults but short of FiveThirtyEight-level
+          publication quality.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'No standard ECharts chart chrome visible. Custom tile rendering
+          with subtle gaps (4% of tile size). F-block visual separation. Typography
+          hierarchy: title > subtitle > symbol > atomic number/value. Minor: colorbar
+          built from discrete rect segments rather than a smooth gradient.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'First ionization energy reveals the periodic law immediately: noble
+          gases (blue) vs alkali metals (green) create a strong visual gradient. Category
+          annotations name the trend blocks. ''low IE''/''high IE'' colorbar labels
+          guide interpretation. Reader immediately grasps the periodic trend without
+          needing domain knowledge.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: periodic table heatmap with canonical 18×7 layout plus
+          detached f-block rows.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: canonical layout, element symbol + atomic number
+          + value per tile, sequential colormap, colorbar with units, grey null tiles
+          for superheavy elements, f-block visual separation, group 3 reference tiles
+          (57–71, 89–103).'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: First ionization energy correctly mapped to tile color. Elements
+          in canonical group/period positions. Lanthanides and actinides detached
+          to rows 7.5 and 8.5 respectively.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''heatmap-periodic-table · javascript · echarts · anyplot.ai''
+          — exact required format. No categorical legend needed; colorbar serves as
+          the continuous scale legend.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Complete: all 118 elements, all 7 periods, all 18 groups, f-block,
+          null values for superheavy elements, full IE range from Cs (375.7) to He
+          (2372.3) kJ/mol.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral scientific data. First ionization energies match NIST
+          reference values (H=1312.0, He=2372.3, Li=520.2 etc.). Non-controversial
+          chemistry property.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values are factually correct NIST data. Range 375.7–2372.3 kJ/mol
+          is accurate. Periodic trends (IE increases across a period, decreases down
+          a group) are correctly reflected in the color gradient.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: 'Two utility helper functions (lerpColor, getTextColor) technically
+          violate the ''no functions'' rule, though each is 3–5 lines and genuinely
+          necessary for the luminance-adaptive heatmap. Structure is otherwise clean:
+          Data → Utilities → Layout → Graphics → Render.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hard-coded from NIST values. Fully deterministic, no randomness.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No explicit imports needed. Uses window.ANYPLOT_TOKENS, window.ANYPLOT_SIZE,
+          window.echarts — all correct.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-structured JavaScript. Appropriate complexity for a custom
+          periodic table layout. No over-engineering, no fake UI elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'animation: false set. ECharts initialized correctly on #container.
+          Interactive library — generates both PNG and HTML. Current ECharts API used.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Uses ECharts'' graphic API for custom rendering — the right tool
+          for a non-standard layout. animation:false correctly set. No devicePixelRatio
+          passed. backgroundColor set. Minor: could use graphic.elements shorthand
+          instead of array push pattern.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Sophisticated use of ECharts' low-level graphic rendering API (type:'rect'
+          + type:'text' elements) to build a custom periodic table layout entirely
+          outside ECharts' standard chart types. The luminance-based text color switching
+          and tile-proportional font sizing demonstrate deep ECharts graphic knowledge.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - minimal-chrome
