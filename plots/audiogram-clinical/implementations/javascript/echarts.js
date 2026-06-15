@@ -29,8 +29,8 @@ const severityBands = [
   { name: "Profound (>90 dB)",      yMin: 90,  yMax: 120, fill: "rgba(68,103,163,0.10)"  },
 ];
 
-// X-cross symbol: 4-pointed star at 45° (concave polygon)
-const crossPath = "path://M7,-7 L3,0 L7,7 L0,3 L-7,7 L-3,0 L-7,-7 L0,-3 Z";
+// X-cross symbol: two diagonal strokes — faithful to clinical audiogram convention
+const crossPath = "path://M-8,-8 L8,8 M8,-8 L-8,8";
 
 const chart = echarts.init(document.getElementById("container"));
 
@@ -57,7 +57,7 @@ chart.setOption({
     left: 100,
     right: 50,
     top: 100,
-    bottom: 120,
+    bottom: 140,
   },
 
   xAxis: {
@@ -70,7 +70,7 @@ chart.setOption({
     axisLabel: { color: t.inkSoft, fontSize: 14 },
     axisLine: { lineStyle: { color: t.inkSoft } },
     axisTick: { lineStyle: { color: t.inkSoft } },
-    splitLine: { lineStyle: { color: t.grid } },
+    splitLine: { show: false },
   },
 
   yAxis: {
@@ -101,15 +101,16 @@ chart.setOption({
       itemStyle: { color: "transparent", borderColor: RED, borderWidth: 2.5 },
       markArea: {
         silent: true,
+        itemStyle: { borderWidth: 0 },
         data: severityBands.map(b => [
           {
             yAxis: b.yMin,
-            itemStyle: { color: b.fill, borderWidth: 0 },
+            itemStyle: { color: b.fill },
             label: {
               show: true,
               position: "insideTopRight",
               color: t.inkSoft,
-              fontSize: 11,
+              fontSize: 12,
               formatter: b.name,
             },
           },
@@ -122,9 +123,9 @@ chart.setOption({
       type: "line",
       data: leftThresholds,
       symbol: crossPath,
-      symbolSize: 18,
+      symbolSize: 20,
       lineStyle: { color: BLUE, width: 2.5, type: "dashed" },
-      itemStyle: { color: BLUE },
+      itemStyle: { color: "transparent", borderColor: BLUE, borderWidth: 2.5 },
     },
   ],
 });
