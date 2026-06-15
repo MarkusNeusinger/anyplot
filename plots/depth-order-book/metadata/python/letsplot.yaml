@@ -1,0 +1,252 @@
+library: letsplot
+language: python
+specification_id: depth-order-book
+created: '2026-06-15T02:52:39Z'
+updated: '2026-06-15T03:15:18Z'
+generated_by: claude-sonnet
+workflow_run: 27520707123
+issue: 8657
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/python/letsplot/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Semantically correct Imprint palette usage: bid green (#009E73) and ask red (#AE3030)
+    match the universal financial convention, explicitly documented as a semantic
+    exception'
+  - 'Staircase construction code is non-trivial and correct: interleaving creates
+    proper left-continuous step curves from the mid price outward on both sides'
+  - Theme-adaptive fill alpha (0.30 light / 0.42 dark) ensures ask area remains legible
+    on the near-black surface
+  - Liquidity walls (bid wall at level 12, ask wall at level 8) make the depth chart
+    more realistic and visually interesting as focal points
+  - 'Perfect spec compliance: all required features (spread gap, dashed mid-price
+    line, subtitle annotation, y-starts-at-zero) present and correct'
+  - layer_tooltips() with structured .line() formatting demonstrates letsplot-specific
+    interactive API
+  weaknesses:
+  - Subtitle text (size=10) is very small at mobile scale (~400 px width); consider
+    size=11-12 for the subtitle to maintain readability when scaled
+  - The dashed mid-price line (INK_MUTED, size=0.6) is somewhat thin — slightly increasing
+    to size=0.8-1.0 would make the mid-price anchor more prominent
+  - LM-01 is at the default threshold — idiomatic but not leveraging advanced letsplot
+    patterns beyond standard geom_area + scale_fill_manual
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "depth-order-book · python · letsplot · anyplot.ai" dark and clearly readable; subtitle "BTC/USD — Mid: $60,000 | Spread: $10" in muted gray at size=10 (readable at full res, small at mobile); axis labels "Price (USD)" and "Cumulative Volume (BTC)" readable with units; tick labels 59,500-60,500 and 0-160 all visible and unclipped; legend "Bids"/"Asks" in elevated-background box in upper right
+      Data: Bid staircase in #009E73 (Imprint position 1, brand green) descending from ~155 BTC at left to near-zero at mid price; ask staircase in #AE3030 (Imprint position 5, matte red) ascending from near-zero at mid price to ~160 BTC at right; both with semi-transparent fills (alpha=0.30) and solid outline strokes; dashed vertical line at $60,000 mid price; visible $10 spread gap at center; two liquidity walls visible as notable step jumps
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title, axis labels, tick labels, and legend text all flip to light-colored and remain clearly readable against the dark surface; no dark-on-dark text failures anywhere; legend box uses elevated dark background #242420 with light text; subtitle readable; grid lines subtle (RULE at 15% opacity)
+      Data: Bid area green and ask area red are identical to light render; fill alpha increased to 0.42 for dark mode to compensate for reduced contrast on near-black background; dashed mid-price line visible; V-shape clearly defined; staircase steps clearly distinguishable
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicitly set; subtitle size=10 very small at mobile scale
+          (~400px)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; legend placed in empty V-space without touching
+          data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Staircase steps clearly defined with solid outlines; semi-transparent
+          fills reveal V-shape cleanly
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Legend text provides redundant encoding beyond red/green hue pair;
+          position (left/right of center) adds further non-color signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 confirmed; plot fills canvas well; balanced margins; legend
+          near data
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Price (USD) and Cumulative Volume (BTC) both descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Bids #009E73 (Imprint 1); Asks #AE3030 (Imprint 5, semantic exception);
+          backgrounds #FAF8F1/#1A1A17 correct in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured default: semantic exception reasoning documented,
+          theme-adaptive fill alpha (0.30/0.42), subtitle provides trading context'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped axis frame, y-axis-only horizontal grid at subtle RULE opacity,
+          legend elevated background — noticeably above library defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: V-shape communicates market depth; dashed mid-price line as visual
+          anchor; liquidity walls as focal points; subtitle names trading pair and
+          spread
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct order book depth chart with cumulative step areas
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Both sides as left-continuous staircases; semi-transparent fills
+          with solid outlines; spread gap; dashed mid-price line; subtitle annotation;
+          y-starts-at-zero
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Price on X, cumulative volume on Y; bids left of mid, asks right;
+          cumulative from best bid/ask outward
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend Bids/Asks correct
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both sides, spread gap, cumulative staircase shape, distinct liquidity
+          walls, discrete price level steps
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: BTC/USD at ~$60,000 mid price; $10 spread realistic; exponential
+          qty distribution with asymmetric walls
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: $10 spread (~0.017%) plausible; 50 levels x $10 = $500 depth; 0-160
+          BTC cumulative realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports → tokens → data → staircase → plot → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All 15 lets_plot imports actually used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Staircase interleaving well-commented; theme tokens organized; no
+          over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with path=. for CWD
+          anchoring
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct ggplot grammar with geom_area layer composition, scale_fill_manual,
+          scale_x/y_continuous, labs, theme()
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: layer_tooltips().line() with structured formatting is letsplot-native
+          interactive tooltip API; paired HTML export activates tooltips
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending

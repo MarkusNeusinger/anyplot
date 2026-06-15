@@ -1,0 +1,257 @@
+library: bokeh
+language: python
+specification_id: depth-order-book
+created: '2026-06-15T02:45:39Z'
+updated: '2026-06-15T03:04:22Z'
+generated_by: claude-sonnet
+workflow_run: 27520414245
+issue: 8657
+language_version: 3.13.13
+library_version: 3.9.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/python/bokeh/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Full spec compliance: every required feature (step curves, fills with outlines,
+    spread gap, dashed mid-price, annotations, liquidity walls) is implemented correctly.'
+  - 'Excellent semantic color use: bid = Imprint green (#009E73), ask = Imprint matte
+    red (#AE3030) with direct labeling — no legend needed.'
+  - Both themes are fully theme-adaptive with no chrome failures; fill areas read
+    correctly on both surfaces.
+  - Clean KISS code with correct sys.path guard, seed, and all Bokeh-idiomatic models.
+  - NumeralTickFormatter for price labels is a polished Bokeh-specific touch.
+  weaknesses:
+  - '"Bids" and "Asks" direct labels at 42pt bold match the axis label size (also
+    42pt); consider sizing up the series labels slightly (e.g., 48pt) or sizing down
+    axis labels to 38pt to reinforce the visual hierarchy distinction between series
+    identity labels and axis reference labels.'
+  - The $12 spread is slightly wide for a realistic BTC/USD major exchange snapshot
+    (typical range $0.50-$2); narrowing to $3-$5 would improve DQ-02 accuracy.
+  - 'Liquidity walls at levels 15/30 (bid) and 12/28 (ask) are visible as staircase
+    jumps but are not called out; a brief annotation (e.g., ''Wall: 8 BTC'') at the
+    largest wall would improve storytelling (DE-03).'
+  - Both X and Y grid lines are enabled; for a depth chart, Y-only gridlines are typically
+    cleaner since the horizontal price reference is provided by the axis ticks themselves.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "BTC/USD Order Book Depth · depth-order-book · python · bokeh · anyplot.ai" in bold dark ink, spans ~80% of canvas width — readable. Axis labels "Price (USD)" and "Cumulative Volume (BTC)" in dark ink, 42pt — readable. Tick labels in INK_SOFT (#4A4A44), 34pt, comma-formatted prices (59,940–60,060) and volumes (0, 50, 100, 150, 200) — readable. "Mid: $60,000" and "Spread: $12" annotations in INK_SOFT — readable. "Bids" and "Asks" bold labels in their respective data colors — readable.
+      Data: Bid area in #009E73 (Imprint position 1) with 0.25 alpha fill and solid 3.5pt outline. Ask area in #AE3030 (Imprint position 5, semantic anchor) with same treatment. Spread gap highlighted with subtle BoxAnnotation. Dashed vertical mid-price line at $60,000. Staircase steps clearly visible with liquidity wall jumps at levels 15/30 (bid) and 12/28 (ask).
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title in light ink (#F0EFE8) — clearly readable. Axis labels in same light ink — readable. Tick labels in INK_SOFT (#B8B7B0) — readable, no dark-on-dark failure. "Mid: $60,000" and "Spread: $12" annotations in #B8B7B0 — visible and readable. "Bids" label in #009E73 (green) — readable. "Asks" label in #AE3030 (red) — readable.
+      Data: Data colors are identical to light render — bid outline and "Bids" label remain #009E73, ask outline and "Asks" label remain #AE3030. Semi-transparent fills (0.25 alpha) over dark background produce deep teal (bid) and dark maroon (ask) fill areas — the fill distinction is visible and the solid outlines make both curves unambiguous. Grid lines subtle at 15% alpha against the dark surface.
+      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures detected.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set. Minor: ''Bids''/''Asks'' labels at
+          42pt bold match axis label size — functional but slight hierarchy parity.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element overlaps in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Step curves and fills optimally visible for 50 levels per side. Liquidity
+          wall jumps clearly present.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/red CVD-safe Imprint pair with triple redundant encoding (fill
+          + outline + direct label).
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). Balanced margins, no edge clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Price (USD)'' and ''Cumulative Volume (BTC)'' — descriptive with
+          units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Bid=#009E73 (Imprint pos 1, semantic bid/gain), Ask=#AE3030 (Imprint
+          pos 5, semantic anchor sell/loss). Correct backgrounds and fully theme-adaptive
+          chrome.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: direct labeling, BoxAnnotation for spread, dashed
+          mid-price line, deliberate annotation hierarchy. Clearly above configured
+          defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All spines removed, 15% alpha dual-axis grid, semi-transparent fills
+          with solid outlines, no legend frame. Very refined; y-only grid would be
+          marginally cleaner.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy guides reader to spread and depth. Liquidity
+          walls visible but not explicitly labeled — storytelling opportunity left
+          on table.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct order book depth chart with left-continuous step areas for
+          bid and ask sides.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: cumulative steps, green/red fills+outlines,
+          spread gap, dashed mid-price, mid+spread annotations, y-axis from 0, liquidity
+          walls.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Price on X, cumulative volume on Y. All 50+50 levels visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''BTC/USD Order Book Depth · depth-order-book · python ·
+          bokeh · anyplot.ai'' — correct format with descriptive prefix. Direct labels
+          used instead of legend (appropriate).'
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows bid and ask sides, cumulative accumulation, spread gap, volume
+          growing outward, and 4 liquidity walls.
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: 'BTC/USD at $60,000 is realistic. $12 spread (0.02%) is slightly
+          wide for a top-tier exchange (typical: $0.50-$2) but plausible.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Individual order sizes and cumulative depth to ~220 BTC are plausible
+          real-world values.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: sys.path guard → imports → theme → data → polygon →
+          figure → glyphs → annotations → chrome → save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; no unused dependencies.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and Pythonic. sys.path guard is a necessary and documented
+          workaround.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png. Bokeh 3.9.1 current
+          API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Solid Bokeh patterns: patch+line for step areas, Range1d, NumeralTickFormatter,
+          add_layout(). Correctly skips ColumnDataSource for polygon data.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses Bokeh-specific models: BoxAnnotation (shaded spread region),
+          Span (reference line), Label (positioned annotations), NumeralTickFormatter.
+          Distinctly Bokeh.'
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
