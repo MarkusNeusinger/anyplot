@@ -1,0 +1,261 @@
+library: altair
+language: python
+specification_id: audiogram-clinical
+created: '2026-06-14T23:56:11Z'
+updated: '2026-06-15T00:17:59Z'
+generated_by: claude-sonnet
+workflow_run: 27515855730
+issue: 8655
+language_version: 3.13.13
+library_version: 6.2.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/python/altair/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Semantic Imprint color exception correctly applied — red for right ear (#AE3030),
+    blue for left ear (#4467A3) follows universally recognized audiology convention
+    using actual Imprint palette members
+  - Interactive legend selection with opacity condition is idiomatic Altair and adds
+    genuine clinical utility (focus on one ear at a time)
+  - Six severity bands at 15% opacity layer gracefully under data without obscuring
+    markers; italic muted labels are appropriately unobtrusive
+  - 'Perfect spec compliance: all clinical conventions met (inverted Y, log X, O/X
+    symbols, severity zones, per-ear connection, kHz tick labels)'
+  - Realistic noise-induced hearing loss pattern (4 kHz notch) tells a clear clinical
+    story with severity bands providing immediate interpretation context
+  weaknesses:
+  - Right and left ear markers at 125 Hz and 250 Hz are only 5 dB HL apart, causing
+    slight visual crowding at the low-frequency end where the data traces run close
+    together
+  - Severity band labels at fontSize=10 italic are at the low end of readability when
+    the chart is viewed at mobile scale (~400 px); consider fontSize=11 or regular
+    weight
+  - LM-02 could be strengthened with a more Altair-distinctive technique such as a
+    Vega-Lite calculate transform or a brush selection for frequency range highlighting
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "audiogram-clinical · python · altair · anyplot.ai" bold dark (#1A1A17), clearly readable. Y-axis label "Hearing Level (dB HL)" and X-axis label "Frequency (Hz)" dark, readable. Tick labels (125, 250, 500, 1k, 2k, 4k, 8k on X; -10 to 120 on Y) in secondary dark (#4A4A44), readable. Legend box uses elevated warm background (#FFFDF6) with soft border, labels clearly readable. Severity band italic labels in muted grey, readable.
+      Data: First series (right ear) = #AE3030 (Imprint position 5, semantic red for right ear clinical convention). Second series (left ear) = #4467A3 (Imprint position 3, blue). Six severity bands use Imprint palette at 15% opacity. Classic 4 kHz noise-induced notch clearly visible. Unfilled circle markers (right) and cross markers (left) at size=200, strokeWidth=2.5.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title text light (#F0EFE8), axis labels and tick labels in secondary light (#B8B7B0) — all clearly readable against dark surface. Legend box uses dark elevated background (#242420) with light border, labels light and readable. Severity band labels in muted light grey, readable. No dark-on-dark failures found.
+      Data: Data colors identical to light render — red circles (#AE3030) for right ear, blue crosses (#4467A3) for left ear — only chrome flipped. Severity band fills appear over dark base with same Imprint hues at same 0.15 opacity.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set. Both themes readable. Severity band
+          labels at fontSize=10 italic are slightly small at mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Right and left ear markers are 5 dB HL apart at 125/250 Hz — slight
+          visual crowding on the compressed 130-dB Y-axis. Distinguishable by shape
+          (circle vs cross).
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Unfilled markers size=200 with strokeWidth=2.5 are well-adapted to
+          7 data points per ear. Lines at strokeWidth=2.5 clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red vs. blue with distinct shapes (circle vs. cross) provides double
+          redundant encoding. CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. 2400x2400 exact. Square format appropriate for
+          audiogram. Good margins. configure_view(stroke=None) removes outer border.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: Frequency (Hz), Y: Hearing Level (dB HL) — both descriptive with
+          units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception: red (#AE3030 = Imprint pos 5) for right ear,
+          blue (#4467A3 = Imprint pos 3) for left ear — clinical domain convention.
+          Both Imprint palette members. Backgrounds #FAF8F1/#1A1A17. All chrome theme-correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: semantic Imprint colors, unfilled markers respecting
+          medical O/X standard, low-opacity severity bands, interactive legend selection.
+          Clearly above defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: configure_view(stroke=None) removes outer frame. Grid at 12% opacity
+          subtle. Severity bands at 15% opacity layer gracefully. Good refinement
+          without perfect spine control.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 4 kHz noise-induced notch pattern clearly visible. Severity bands
+          provide immediate clinical context. Interactive legend for ear-specific
+          focus. Good visual hierarchy.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct clinical audiogram: inverted Y-axis, logarithmic X-axis,
+          O/X symbols per ear convention.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: inverted Y, log X, circle (O) right ear, cross
+          (X) left ear, connected per ear, six severity bands with labels, legend.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Frequency on X (log 125-8000 Hz), threshold dB HL on Y (inverted
+          -10 to 120). Both ears correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: audiogram-clinical · python · altair · anyplot.ai. Legend:
+          Right Ear (O) / Left Ear (X).'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Bilateral data with 4 kHz sensorineural notch and 8 kHz partial recovery.
+          Spans Normal to Severe zones. Full audiogram feature coverage.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Bilateral noise-induced hearing loss with 4 kHz notch — textbook
+          clinical presentation. Medically plausible values. Neutral clinical context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: dB HL range -10 to 120 is standard audiometric axis. Standard frequencies
+          125-8000 Hz. Threshold values 10-70 dB HL are clinically realistic for noise-induced
+          hearing loss.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports → tokens → data → scales → layers → compose
+          → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data is hard-coded deterministic arrays. No random elements.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, altair, pandas, PIL — all imported and used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: selection_point(bind=legend) is legitimate Altair interactive feature,
+          not fake interactivity. opacity condition is idiomatic. Well-structured.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. PAD-only canvas block
+          correct. Current Altair 6 API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Excellent: layer composition with resolve_scale(color=independent),
+          selection_point bound to legend, condition() for opacity, log scale with
+          labelExpr, proper encoding types.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Interactive legend-bound selection with opacity fade, HTML export,
+          layered chart with independent scale resolution, custom labelExpr for kHz
+          formatting. One point off for not using a Vega-Lite transform or brush selection.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - pillow
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  - manual-ticks
+  patterns: []
+  dataprep: []
+  styling:
+  - alpha-blending
