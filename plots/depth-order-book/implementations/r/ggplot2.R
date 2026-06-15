@@ -1,7 +1,6 @@
 #' anyplot.ai
 #' depth-order-book: Order Book Depth Chart
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 88/100 | Created: 2026-06-15
 
 library(ggplot2)
 library(scales)
@@ -10,15 +9,15 @@ library(ragg)
 set.seed(42)
 
 # Theme tokens
-THEME     <- Sys.getenv("ANYPLOT_THEME", "light")
-PAGE_BG   <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
-INK       <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
-INK_SOFT  <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-INK_MUTED <- if (THEME == "light") "#6B6A63" else "#A8A79F"
+THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
+PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
+ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
+INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
+INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 
 # Imprint palette — semantic: green = bids (buy), red = asks (sell)
-BID_COLOR <- "#009E73"  # Imprint position 1 (brand green) — first series
-ASK_COLOR <- "#AE3030"  # Imprint position 5 (semantic anchor — sell/loss)
+BID_COLOR <- "#009E73"  # Imprint position 1 (brand green)
+ASK_COLOR <- "#AE3030"  # Imprint position 5 (semantic: sell/loss)
 GRID_COL  <- adjustcolor(INK, alpha.f = 0.12)
 
 # Market parameters: BTC/USD snapshot near $60,000
@@ -44,108 +43,117 @@ ask_qtys[18] <- ask_qtys[18] * 5
 bid_cum <- cumsum(bid_qtys)
 ask_cum <- cumsum(ask_qtys)
 
-# Build a closed step polygon for geom_polygon (fill)
-make_step_poly <- function(prices, cums) {
-  n  <- length(prices)
-  xs <- prices[1]
-  ys <- 0
-  for (i in seq_len(n)) {
-    xs <- c(xs, prices[i])
-    ys <- c(ys, cums[i])
-    if (i < n) {
-      xs <- c(xs, prices[i + 1])
-      ys <- c(ys, cums[i])
-    }
-  }
-  xs <- c(xs, prices[n], prices[1])
-  ys <- c(ys, 0, 0)
-  data.frame(x = xs, y = ys)
+# Build step polygon data — vectorized, no loops
+make_step_poly <- function(prices, cums, side_label) {
+    n  <- length(prices)
+    xs <- rep(prices, each = 2)
+    ys <- c(0, rep(cums, each = 2))[seq_len(2 * n)]
+    data.frame(
+        x    = c(xs, prices[n], prices[1]),
+        y    = c(ys, 0, 0),
+        side = side_label
+    )
 }
 
-# Build an open step path for geom_path (outline)
-make_step_path <- function(prices, cums) {
-  n  <- length(prices)
-  xs <- prices[1]
-  ys <- 0
-  for (i in seq_len(n)) {
-    xs <- c(xs, prices[i])
-    ys <- c(ys, cums[i])
-    if (i < n) {
-      xs <- c(xs, prices[i + 1])
-      ys <- c(ys, cums[i])
-    }
-  }
-  data.frame(x = xs, y = ys)
-}
+bid_poly <- make_step_poly(bid_prices, bid_cum, "Bid (Buy)")
+ask_poly <- make_step_poly(ask_prices, ask_cum, "Ask (Sell)")
+order_book <- rbind(bid_poly, ask_poly)
 
-bid_poly <- make_step_poly(bid_prices, bid_cum)
-ask_poly <- make_step_poly(ask_prices, ask_cum)
-bid_path <- make_step_path(bid_prices, bid_cum)
-ask_path <- make_step_path(ask_prices, ask_cum)
+# Step outline data for geom_step — prepend (best_price, 0) for clean initial vertical
+bid_step <- data.frame(
+    price   = c(bid_prices[1], bid_prices),
+    cum_vol = c(0, bid_cum),
+    side    = "Bid (Buy)"
+)
+ask_step <- data.frame(
+    price   = c(ask_prices[1], ask_prices),
+    cum_vol = c(0, ask_cum),
+    side    = "Ask (Sell)"
+)
+depth_df <- rbind(bid_step, ask_step)
 
-# Annotation
-max_cum    <- max(max(bid_cum), max(ask_cum))
+max_cum    <- max(bid_cum[n_levels], ask_cum[n_levels])
 label_text <- sprintf("Mid: $%s\nSpread: $%d",
                       format(mid_price, big.mark = ",", scientific = FALSE),
                       half_spread * 2)
 
-# Title — count chars to compute size (baseline 67 chars = 12 pt)
 plot_title <- "BTC/USD Order Book · depth-order-book · r · ggplot2 · anyplot.ai"
 title_size <- max(8, round(12 * 67 / max(nchar(plot_title), 67)))
 
-# Plot
 p <- ggplot() +
-  geom_polygon(data = bid_poly, aes(x = x, y = y),
-               fill = BID_COLOR, color = NA, alpha = 0.22) +
-  geom_polygon(data = ask_poly, aes(x = x, y = y),
-               fill = ASK_COLOR, color = NA, alpha = 0.22) +
-  geom_path(data = bid_path, aes(x = x, y = y),
-            color = BID_COLOR, linewidth = 0.85) +
-  geom_path(data = ask_path, aes(x = x, y = y),
-            color = ASK_COLOR, linewidth = 0.85) +
-  geom_vline(xintercept = mid_price,
-             linetype = "dashed", color = INK_SOFT, linewidth = 0.5) +
-  annotate("text", x = mid_price, y = max_cum * 0.90,
-           label = label_text, color = INK_MUTED, size = 2.8,
-           hjust = 0.5, lineheight = 1.3) +
-  scale_x_continuous(
-    labels = label_dollar(accuracy = 1),
-    breaks = seq(59750, 60250, by = 100),
-    expand = expansion(mult = 0.01)
-  ) +
-  scale_y_continuous(
-    labels = label_comma(accuracy = 1),
-    limits = c(0, max_cum * 1.12),
-    expand = expansion(mult = c(0, 0))
-  ) +
-  labs(
-    title = plot_title,
-    x     = "Price (USD)",
-    y     = "Cumulative Volume (BTC)"
-  ) +
-  theme_minimal(base_size = 8) +
-  theme(
-    plot.background  = element_rect(fill = PAGE_BG, color = PAGE_BG),
-    panel.background = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major = element_line(color = GRID_COL, linewidth = 0.3),
-    panel.grid.minor = element_blank(),
-    panel.border     = element_rect(color = INK_SOFT, fill = NA, linewidth = 0.4),
-    axis.title       = element_text(color = INK,     size = 10),
-    axis.text        = element_text(color = INK_SOFT, size = 8),
-    axis.text.x      = element_text(color = INK_SOFT, size = 8,
-                                    angle = 30, hjust = 1),
-    plot.title       = element_text(color = INK, size = title_size,
-                                    face = "bold", margin = margin(b = 8)),
-    plot.margin      = margin(t = 12, r = 16, b = 8, l = 8)
-  )
+    geom_polygon(
+        data  = order_book,
+        aes(x = x, y = y, fill = side, group = side),
+        color = NA, alpha = 0.22
+    ) +
+    geom_step(
+        data      = depth_df,
+        aes(x = price, y = cum_vol, color = side, group = side),
+        direction = "hv", linewidth = 0.85
+    ) +
+    geom_vline(
+        xintercept = mid_price,
+        linetype = "dashed", color = INK_SOFT, linewidth = 0.5
+    ) +
+    annotate(
+        "label",
+        x = mid_price, y = max_cum * 0.88,
+        label = label_text, color = INK, size = 3.5,
+        hjust = 0.5, lineheight = 1.3,
+        fill = ELEVATED_BG, label.size = 0.25
+    ) +
+    scale_fill_manual(
+        name   = NULL,
+        values = c("Bid (Buy)" = BID_COLOR, "Ask (Sell)" = ASK_COLOR),
+        guide  = guide_legend(override.aes = list(alpha = 0.7))
+    ) +
+    scale_color_manual(
+        name   = NULL,
+        values = c("Bid (Buy)" = BID_COLOR, "Ask (Sell)" = ASK_COLOR),
+        guide  = "none"
+    ) +
+    scale_x_continuous(
+        labels = label_dollar(accuracy = 1),
+        breaks = seq(59750, 60250, by = 100),
+        expand = expansion(mult = 0.01)
+    ) +
+    scale_y_continuous(
+        labels = label_comma(accuracy = 1),
+        limits = c(0, max_cum * 1.12),
+        expand = expansion(mult = c(0, 0))
+    ) +
+    labs(
+        title = plot_title,
+        x     = "Price (USD)",
+        y     = "Cumulative Volume (BTC)"
+    ) +
+    theme_minimal(base_size = 8) +
+    theme(
+        plot.background   = element_rect(fill = PAGE_BG,  color = PAGE_BG),
+        panel.background  = element_rect(fill = PAGE_BG,  color = NA),
+        panel.grid.major  = element_line(color = GRID_COL, linewidth = 0.3),
+        panel.grid.minor  = element_blank(),
+        panel.border      = element_blank(),
+        axis.line         = element_line(color = INK_SOFT, linewidth = 0.4),
+        axis.title        = element_text(color = INK,      size = 10),
+        axis.text         = element_text(color = INK_SOFT, size = 8),
+        axis.text.x       = element_text(color = INK_SOFT, size = 8,
+                                         angle = 30, hjust = 1),
+        plot.title        = element_text(color = INK, size = title_size,
+                                         face = "bold", margin = margin(b = 8)),
+        legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT,
+                                         linewidth = 0.3),
+        legend.text       = element_text(color = INK_SOFT, size = 8),
+        legend.key        = element_rect(fill = NA, color = NA),
+        plot.margin       = margin(t = 12, r = 16, b = 8, l = 8)
+    )
 
-# Save
 ggsave(
-  filename = sprintf("plot-%s.png", THEME),
-  plot     = p,
-  device   = ragg::agg_png,
-  width    = 8,
-  height   = 4.5,
-  units    = "in",
-  dpi      = 400
+    filename = sprintf("plot-%s.png", THEME),
+    plot     = p,
+    device   = ragg::agg_png,
+    width    = 8,
+    height   = 4.5,
+    units    = "in",
+    dpi      = 400
 )
