@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: climograph-walter-lieth
 created: '2026-06-15T01:35:07Z'
-updated: '2026-06-15T01:42:52Z'
+updated: '2026-06-15T02:00:26Z'
 generated_by: claude-sonnet
 workflow_run: 27518392247
 issue: 8656
@@ -12,48 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/climograp
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/javascript/muix/plot-dark.html
-quality_score: 86
+quality_score: 89
 review:
   strengths:
   - Correct Walter-Lieth 2:1 dual-axis scaling with right-axis formatter producing
-    accurate 0-100mm ticks
-  - Excellent use of MUI X useDrawingArea/useXScale/useYScale hooks for coordinate-aware
-    SVG polygon fills - a genuinely idiomatic and distinctive MUI X pattern
-  - Semantically correct colour assignment (temperature=red, water=blue) using Imprint
-    palette members with documented semantic exception
-  - Real, factually accurate Lisbon 1991-2020 climate data with correct annual means
-  - Custom 4-item legend elegantly distinguishing line symbols from fill symbols
-  - Both theme renders pass the theme-readability check with appropriate chrome inversion
-    via ThemeProvider
-  - Linear interpolation at curve crossing points produces mathematically correct
-    fill boundaries
+    accurate 0–100mm ticks aligned to the temperature axis
+  - Expert use of MUI X composable hooks (useDrawingArea, useXScale, useYScale) to
+    inject coordinate-aware SVG polygon fills — genuinely idiomatic and distinctive
+    MUI X pattern
+  - 'Valid semantic colour exception: temperature=#AE3030 (red) and precipitation=#4467A3
+    (blue) follow the universally recognised climate-science convention documented
+    in the Imprint palette guide'
+  - Linear interpolation at curve-crossing points produces mathematically correct
+    fill boundaries between humid and arid periods
+  - Custom 4-item legend elegantly distinguishes line symbols from fill-patch symbols
+  - 'Both theme renders pass the theme-readability check: ThemeProvider correctly
+    adapts chrome across light and dark, data colours are identical'
+  - Right spine suppressed via sx selector and disableLine, giving L-shaped axis frame
+  - 'Fill opacity raised to 0.38 (from 0.28 in attempt 1): fills are now visually
+    prominent in both light and dark renders'
+  - Frost month indicator implemented in WalterLiethFill (architecturally complete,
+    just not triggered by Lisbon's mild data)
+  - Real, factually accurate Lisbon 1991–2020 climate normals; annual mean 17.5°C
+    and total 567mm are correct
   weaknesses:
-  - 'Design Excellence is the main gap: removing top/right chart spines would improve
-    visual refinement (DE-02); explicit spine suppression achievable via sx on ChartContainer
-    or axisHighlight suppression'
-  - The semi-transparent fills (fillOpacity=0.28) are visually less distinct in the
-    dark render - increasing to 0.35-0.40 would preserve readability in both themes
-    without over-saturating the light render
-  - Frost month indicator band is absent (architecturally); even if Lisbon data shows
-    nothing, implementing the feature to draw blocks below x-axis for months < 0C
-    would make the implementation spec-complete
-  - The anyplot title at the bottom uses t.inkSoft (secondary text color); font size
-    could be slightly larger for better mobile readability
+  - Traditional Walter-Lieth hatching/dotting patterns are absent — spec describes
+    blue/hatched (humid) and red/dotted (arid) fills as 'the diagram's defining visual
+    feature'; current implementation uses solid semi-transparent fills only
+  - Tick label font size (13px CSS / 26px native) sits slightly below the muix style-guide
+    recommendation of 14–16px; readability at mobile widths (~400px) is marginal
+  - 'FROST_COLOR (#2B4B8C) is a custom hex not in the Imprint palette — if frost months
+    were ever rendered, this would be a VQ-07 violation; should use #4467A3 (Imprint
+    blue) for the frost band instead'
+  - 'Design sophistication is good but not publication-level: no explicit spine-removal
+    for top border (MUI X default), and the fills could benefit from hatching texture
+    for classical fidelity'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Bold station header "Lisbon, Portugal — 77 m a.s.l." in dark ink at top-center. Subtitle "Annual mean 17.5 °C · Annual total 567 mm · 1991–2020 climate normals" in inkSoft. Axis labels "Temperature (°C)" (left) and "Precipitation (mm)" (right) at 14px CSS. Tick labels at 13px CSS on both axes. Custom 4-item legend below chart. Bottom anyplot title at dynamic 22px. All text readable.
-      Data: Red temperature line (#AE3030) rising Jan~11°C to Aug~24.5°C then falling. Blue precipitation line (#4467A3) starting high (~38.5 scaled) in Jan, dipping to ~2 in Jul, recovering to ~46.5 in Nov. Semi-transparent blue fills (fillOpacity=0.28) in humid periods (Oct–May), red fills in arid period (Jun–Sep). First series uses semantic exception (temperature=red, not brand green) — valid domain convention.
+      Background: Warm off-white, consistent with #FAF8F1 — correct for light theme.
+      Chrome: Station header "Lisbon, Portugal — 77 m a.s.l." in bold dark ink (fontSize=20) is fully readable. Subtitle "Annual mean 17.5 °C · Annual total 567 mm · 1991–2020 climate normals" in inkSoft (fontSize=13) is readable. Left Y-axis label "Temperature (°C)" and right Y-axis label "Precipitation (mm)" are clearly visible (fontSize=14). Month tick labels (Jan–Dec) and temperature/precipitation tick labels are legible. Custom legend shows red line, blue line, blue fill patch, red fill patch. Plot title at bottom is readable.
+      Data: Matte-red (#AE3030) temperature line rises from ~11°C (Jan) to peak ~24.5°C (Aug), then falls. Blue (#4467A3) precipitation line starts high (~38.5 scaled, Jan), falls sharply to ~2 (Jul), recovers to ~45.5 (Nov). Semi-transparent blue fills (opacity 0.38) cover humid winter/autumn periods (Oct–May). Semi-transparent red fills (opacity 0.38) cover the arid summer period (Jun–Sep). Curve crossings handled correctly with interpolated intersection points. Horizontal grid lines are subtle. No overlap, no overflow.
       Legibility verdict: PASS — all text clearly readable against the warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Station header and subtitle render in light-colored text (MUI ThemeProvider correctly maps ink tokens). Axis labels and tick labels in light-gray. Grid lines visible as subtle light-on-dark rules. All chrome elements are light-on-dark — no dark-on-dark failures detected.
-      Data: Temperature line (#AE3030) and precipitation line (#4467A3) are identical to light render — data colours unchanged. Humid fills appear as dark navy blue areas; arid fill appears as dark maroon. At fillOpacity=0.28 over the near-black surface, fills are more saturated/darker than in light render but remain distinguishable from the background.
-      Legibility verdict: PASS — all text readable in dark render. No dark-on-dark failures.
+      Background: Warm near-black, consistent with #1A1A17 — correct for dark theme.
+      Chrome: Station header and subtitle text render in light cream/off-white (ThemeProvider inverts ink tokens). Axis labels "Temperature (°C)" and "Precipitation (mm)" are light-coloured and readable. Tick labels are light against the dark background. No dark-on-dark failures detected.
+      Data: Temperature line remains #AE3030 (identical to light render). Precipitation line remains #4467A3 (identical). Fills appear as deeper navy (humid) and deep wine-red (arid) due to the semi-transparent layers on the dark surface — both are distinguishable from the background and from each other. Data colours are identical between themes; only chrome flips.
+      Legibility verdict: PASS — all text readable against the warm near-black background; no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -61,49 +69,55 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set. Readable in both themes. Minor deduction:
-          13px CSS tick labels slightly small for mobile.'
+        comment: 'All font sizes explicitly set (tick: 13px, axis label: 14px, station
+          header: 20px, title dynamic). Readable in both themes. Minor deduction:
+          tick labels at 13px CSS are just below the recommended 14–16px range for
+          muix.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between any text or data elements.
+        comment: No collisions between month labels, tick labels, curves, or legend
+          items.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Lines clearly visible. Fills at 0.28 opacity adequate on light but
-          less prominent in dark render.
+        comment: Lines clearly visible. Fills at opacity 0.38 are well-visible on
+          both light and dark backgrounds (improved from 0.28 in attempt 1).
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red vs blue is CVD-safe, not red-green only.
+        comment: Red vs blue is CVD-safe; not a red-green only combination. Sufficient
+          luminance difference.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Well-balanced layout with station header, chart,
-          legend, title.
+        comment: Canvas gate passed. Station header + chart + legend + title balanced
+          layout. Good margin usage.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Temperature (°C) and Precipitation (mm) — both with units.
+        comment: Temperature (°C) and Precipitation (mm) both have units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint palette with valid semantic exception (temperature=red #AE3030,
-          water=blue #4467A3). Theme-adaptive background via t.pageBg.'
+        comment: 'Temperature=#AE3030, precipitation=#4467A3 — both Imprint palette
+          members. Valid semantic exception: temperature=red, water=blue is universally
+          recognised climate-science convention. Background t.pageBg is theme-correct
+          in both renders.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -111,23 +125,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: semantic colours, purposeful station header, custom
-          legend. Follows established scientific format without exceptional creative
-          vision.'
+        comment: 'Above default: semantic colour assignment, station header is purposeful,
+          custom legend with mixed swatch types. Falls short of exceptional because
+          it closely follows the established academic Walter-Lieth format without
+          distinctive creative vision and lacks traditional hatching patterns.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Horizontal-only grid is good. Generous whitespace. But top/right
-          spines not suppressed — MUI X default chart border retained.
+        passed: true
+        comment: Horizontal-only grid, right spine suppressed (disableLine + sx selector),
+          L-shaped frame, generous whitespace. Good refinement level.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Blue/red fills clearly communicate humid-arid contrast. Mediterranean
-          pattern (wet winter, dry summer) immediately obvious.
+        comment: Blue/red fills immediately communicate the humid–arid seasonal contrast.
+          Mediterranean pattern (wet winter, dry summer) is visually obvious. Good
+          visual hierarchy guiding viewer to the seasonal climate rhythm.
     spec_compliance:
       score: 14
       max: 15
@@ -137,30 +153,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Walter-Lieth climograph with dual-axis, temperature/precipitation
-          curves, area fills.
+        comment: 'Correct Walter-Lieth climograph: dual-axis, temperature line, scaled
+          precipitation line, fills between curves.'
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: 2:1 scaling, dual axes, fills, station header all present. Missing
-          frost month indicator band (architecturally absent, though not triggered
-          by Lisbon data).
+        comment: '2:1 scaling ✓, dual axes ✓, fills ✓, station header ✓, frost band
+          ✓ (implemented, not triggered by Lisbon data). Missing: traditional hatching/dotting
+          patterns specified as the diagram''s defining visual feature.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Months on X, temperature left Y, precipitation right Y with 2x formatter.
-          Fills logic correct.
+        comment: Months on X, temperature on left Y, precipitation on right Y with
+          correct 2× formatter.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title climograph-walter-lieth · javascript · muix · anyplot.ai matches
-          format. 4-item legend complete.
+        comment: Title 'climograph-walter-lieth · javascript · muix · anyplot.ai'
+          matches required format. 4-item legend covers all diagram elements.
     data_quality:
       score: 14
       max: 15
@@ -170,59 +186,62 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Both humid and arid periods shown. Curve crossing interpolation correct.
-          Missing perhumid band and frost markers (not triggered by this data).
+        comment: Shows both humid and arid periods with correct crossings. Mediterranean
+          seasonal pattern fully visible. No frost months or >100mm months in the
+          data, so those features are not exercised.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Lisbon Portugal real Mediterranean station, 1991-2020 WMO period,
-          77m elevation accurate, neutral topic.
+        comment: Lisbon, Portugal is a real Mediterranean station. 1991–2020 climate
+          normals is the standard WMO reference period. Neutral climatology topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 11.3-24.5°C temperature range and 4-93mm precipitation are factually
-          accurate for Lisbon climate normals.
+        comment: Temperature 11.3–24.5°C and precipitation 4–93mm are factually accurate
+          for Lisbon. Annual mean 17.5°C and total 567mm are correct.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: WalterLiethFill sub-component required for MUI X hooks — justified
-          deviation from pure flat structure.
+        comment: WalterLiethFill sub-component is required by MUI X hook constraints
+          (hooks must be called inside a React component context). Structure is appropriate
+          for the library.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hard-coded deterministically.
+        comment: All data hard-coded deterministically; no random generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: 'All imports are used: ChartContainer, LinePlot, ChartsXAxis, ChartsYAxis,
+          ChartsGrid, useDrawingArea, useXScale, useYScale, Box, Typography.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Idiomatic React/MUI X. Intersection logic concise and correct. No
-          fake UI.
+        comment: Idiomatic React/MUI X code. Intersection interpolation logic is concise
+          and correct. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-export component; harness handles output. Correct for MUI
-          X.
+        comment: Default-export component; skipAnimation set; harness handles file
+          output. Correct for MUI X.
     library_mastery:
       score: 9
       max: 10
@@ -232,25 +251,24 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Uses MUI X composition API with ChartContainer + slot components
-          and drawing hooks — canonical MUI X pattern for custom overlays.
+        comment: Expert use of MUI X composable API (ChartContainer + slot components
+          + hooks) for custom SVG overlays inside the chart coordinate system.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: useDrawingArea/useXScale/useYScale hooks for coordinate-aware SVG
-          rendering is genuinely distinctive to MUI X.
-  verdict: REJECTED
+        comment: useDrawingArea, useXScale, useYScale hooks for coordinate-aware custom
+          SVG is genuinely distinctive to MUI X and not easily replicated in other
+          charting libraries.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - twin-axes
   - custom-legend
-  - layer-composition
   patterns:
   - iteration-over-groups
-  dataprep:
-  - interpolation
+  dataprep: []
   styling:
   - alpha-blending
