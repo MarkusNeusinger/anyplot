@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 psychrometric-basic: Psychrometric Chart for HVAC
 Library: altair 6.2.1 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-16
@@ -152,12 +152,15 @@ for rh_pct in range(10, 110, 10):
 
 rh_label_df = pd.DataFrame(rh_labels)
 
-# Wet-bulb labels — placed in the interior along each line, away from the saturation crowd
+# Wet-bulb labels — placed in the interior along each line, away from the saturation crowd.
+# Per-line anchor offsets: 25 °C steps left to clear the red process marker (~35 °C, 17.8 g/kg);
+# 30 °C steps right to descend out of the crowded saturation apex.
+wb_label_offset = {25: 4, 30: 11}
 wb_labels_data = []
 for t_wb_val in range(0, 36, 5):
     p_sat_wb = float(np.interp(t_wb_val, _t_grid, _p_sat_grid))
     w_s_wb = 0.621945 * p_sat_wb / (P_ATM - p_sat_wb)
-    t_at = t_wb_val + 7
+    t_at = t_wb_val + wb_label_offset.get(t_wb_val, 7)
     w_at = (2501 * w_s_wb - 1.006 * (t_at - t_wb_val)) / (2501 + 1.86 * t_at - 4.186 * t_wb_val) * 1000
     if 0 < w_at <= 28:
         wb_labels_data.append({"t_db": float(t_at), "w": float(w_at), "label": f"{t_wb_val}°C WB"})
@@ -281,7 +284,7 @@ saturation = (
 
 rh_text = (
     alt.Chart(rh_label_df)
-    .mark_text(fontSize=11, color=CLR_RH, fontWeight="bold")
+    .mark_text(fontSize=12, color=CLR_RH, fontWeight="bold")
     .encode(x=alt.X("t_db:Q", scale=x_scale), y=alt.Y("w:Q", scale=y_scale), text="label:N")
 )
 
