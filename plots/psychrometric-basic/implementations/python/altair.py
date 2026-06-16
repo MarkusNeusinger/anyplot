@@ -1,18 +1,42 @@
-""" pyplots.ai
+"""anyplot.ai
 psychrometric-basic: Psychrometric Chart for HVAC
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 86/100 | Created: 2026-03-15
+Library: altair | Python 3.14
+Quality: pending | Created: 2026-06-16
 """
 
-import altair as alt
-import numpy as np
-import pandas as pd
+import os
+import sys
 
+
+# Strip the script directory from sys.path so `import altair` resolves to the
+# installed package, not this file (which is named altair.py).
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path[:] = [p for p in sys.path if os.path.abspath(p or ".") != _script_dir]
+
+import altair as alt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+from PIL import Image  # noqa: E402
+
+
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette — each moist-air property family gets one canonical hue.
+CLR_RH = "#009E73"  # brand green — relative humidity + saturation (first series)
+CLR_WB = "#C475FD"  # lavender — wet-bulb temperature lines
+CLR_ENTHALPY = "#4467A3"  # blue — constant enthalpy lines
+CLR_VOL = "#BD8233"  # ochre — constant specific-volume lines
+CLR_PROCESS = "#AE3030"  # matte red (semantic emphasis) — HVAC process path
+CLR_COMFORT = "#2ABCCD"  # cyan — thermal comfort zone
 
 # Constants
-P_ATM = 101325  # Pa, standard atmospheric pressure
+P_ATM = 101325  # Pa, standard sea-level atmospheric pressure
 
-# Precompute saturation pressure over a fine grid (ASHRAE formula, computed once)
+# Saturation pressure over a fine grid (ASHRAE 2017 formula), computed once.
 _t_grid = np.linspace(-10, 50, 500)
 _t_grid_k = _t_grid + 273.15
 _p_sat_grid = np.where(
@@ -36,32 +60,27 @@ _p_sat_grid = np.where(
     ),
 )
 
-# Interpolation-based saturation pressure lookup (replaces 6x formula repetition)
-p_sat_at = lambda t: np.interp(t, _t_grid, _p_sat_grid)  # noqa: E731
-
-# Data - Generate psychrometric curves
+# Data — psychrometric property curves over the -10..50 °C dry-bulb range.
 t_range = np.linspace(-10, 50, 200)
-p_sat = p_sat_at(t_range)
+p_sat = np.interp(t_range, _t_grid, _p_sat_grid)
 
-# Relative humidity curves (10% to 100%)
+# Relative-humidity curves (10% to 100%)
 rh_curves = []
 for rh_pct in range(10, 110, 10):
-    rh_frac = rh_pct / 100
-    p_w = rh_frac * p_sat
+    p_w = (rh_pct / 100) * p_sat
     w_vals = 0.621945 * p_w / (P_ATM - p_w) * 1000  # g/kg
-    w_vals = np.clip(w_vals, 0, 30)
     for t, w in zip(t_range, w_vals, strict=True):
         if 0 < w <= 30:
             rh_curves.append({"t_db": float(t), "w": float(w), "rh": f"{rh_pct}%"})
 
 rh_df = pd.DataFrame(rh_curves)
 
-# Wet-bulb temperature lines
+# Wet-bulb temperature lines (constant t_wb)
 wb_lines = []
 for t_wb_val in range(0, 36, 5):
-    p_sat_wb = float(p_sat_at(t_wb_val))
+    p_sat_wb = float(np.interp(t_wb_val, _t_grid, _p_sat_grid))
     w_s_wb = 0.621945 * p_sat_wb / (P_ATM - p_sat_wb)
-    for t_db in np.linspace(max(-10, t_wb_val), 50, 80):
+    for t_db in np.linspace(t_wb_val, 50, 80):
         w = (2501 * w_s_wb - 1.006 * (t_db - t_wb_val)) / (2501 + 1.86 * t_db - 4.186 * t_wb_val)
         w_gkg = w * 1000
         if 0 <= w_gkg <= 30:
@@ -69,7 +88,7 @@ for t_wb_val in range(0, 36, 5):
 
 wb_df = pd.DataFrame(wb_lines)
 
-# Enthalpy lines (h = 1.006*t + w*(2501 + 1.86*t), solve for w)
+# Constant-enthalpy lines (h = 1.006*t + w*(2501 + 1.86*t), solved for w)
 enthalpy_lines = []
 for h_val in range(10, 120, 10):
     for t_db in np.linspace(-10, 50, 80):
@@ -79,9 +98,9 @@ for h_val in range(10, 120, 10):
 
 enthalpy_df = pd.DataFrame(enthalpy_lines)
 
-# Specific volume lines (v = 0.287042*T_k*(1+1.6078*w)/P, solve for w)
+# Constant specific-volume lines (v = 0.287042*T_k*(1+1.6078*w)/P, solved for w)
 vol_lines = []
-for v_val in [0.75, 0.80, 0.85, 0.90, 0.95]:
+for v_val in [0.78, 0.82, 0.86, 0.90, 0.94]:
     for t_db in np.linspace(-10, 50, 80):
         w = (v_val * P_ATM / 1000 / (0.287042 * (t_db + 273.15)) - 1) / 1.6078
         w_gkg = w * 1000
@@ -90,16 +109,16 @@ for v_val in [0.75, 0.80, 0.85, 0.90, 0.95]:
 
 vol_df = pd.DataFrame(vol_lines)
 
-# Comfort zone (20-26°C, 30-60% RH)
+# Comfort zone (20-26 °C, 30-60% RH)
 comfort_temps = np.linspace(20, 26, 30)
-comfort_psat = p_sat_at(comfort_temps)
+comfort_psat = np.interp(comfort_temps, _t_grid, _p_sat_grid)
 comfort_w_lo = 0.621945 * 0.30 * comfort_psat / (P_ATM - 0.30 * comfort_psat) * 1000
 comfort_w_hi = 0.621945 * 0.60 * comfort_psat / (P_ATM - 0.60 * comfort_psat) * 1000
 comfort_df = pd.DataFrame({"t_db": comfort_temps, "w": comfort_w_lo, "w2": comfort_w_hi})
 
-# HVAC process path: cooling and dehumidification (35°C/50%RH -> 13°C/sat)
+# HVAC process path: cooling + dehumidification (35 °C/50% RH -> 13 °C/saturated)
 t1, t2 = 35.0, 13.0
-p_sat_t1, p_sat_t2 = float(p_sat_at(t1)), float(p_sat_at(t2))
+p_sat_t1, p_sat_t2 = float(np.interp(t1, _t_grid, _p_sat_grid)), float(np.interp(t2, _t_grid, _p_sat_grid))
 w1 = 0.621945 * 0.50 * p_sat_t1 / (P_ATM - 0.50 * p_sat_t1) * 1000
 w2 = 0.621945 * 1.00 * p_sat_t2 / (P_ATM - 1.00 * p_sat_t2) * 1000
 
@@ -113,113 +132,107 @@ process_points = pd.DataFrame(
     }
 )
 
-# RH label positions (staggered to avoid overlap)
+# RH labels — staggered along the curves to avoid convergence overlap near saturation
 rh_labels = []
 for rh_pct in range(10, 110, 10):
-    rh_frac = rh_pct / 100
-    # Stagger label temperatures to reduce convergence overlap
     if rh_pct == 100:
-        t_label = 33
+        t_label = 31
     elif rh_pct >= 80:
-        t_label = 36
+        t_label = 35
     elif rh_pct >= 60:
-        t_label = 40
+        t_label = 39
     elif rh_pct >= 40:
-        t_label = 44
+        t_label = 43
     else:
         t_label = 47
-    p_sat_label = float(p_sat_at(t_label))
-    w_label = 0.621945 * rh_frac * p_sat_label / (P_ATM - rh_frac * p_sat_label) * 1000
+    p_sat_label = float(np.interp(t_label, _t_grid, _p_sat_grid))
+    w_label = 0.621945 * (rh_pct / 100) * p_sat_label / (P_ATM - (rh_pct / 100) * p_sat_label) * 1000
     if w_label <= 30:
         rh_labels.append({"t_db": float(t_label), "w": float(w_label), "label": f"{rh_pct}%"})
 
 rh_label_df = pd.DataFrame(rh_labels)
 
-# Wet-bulb labels (offset from saturation curve to avoid overlap with enthalpy labels)
+# Wet-bulb labels — placed in the interior along each line, away from the saturation crowd
 wb_labels_data = []
 for t_wb_val in range(0, 36, 5):
-    p_sat_wb = float(p_sat_at(t_wb_val))
-    w_wb_label = 0.621945 * p_sat_wb / (P_ATM - p_sat_wb) * 1000
-    if w_wb_label <= 28:
-        wb_labels_data.append({"t_db": float(t_wb_val) + 1.5, "w": float(w_wb_label) + 0.8, "label": f"{t_wb_val}°C"})
+    p_sat_wb = float(np.interp(t_wb_val, _t_grid, _p_sat_grid))
+    w_s_wb = 0.621945 * p_sat_wb / (P_ATM - p_sat_wb)
+    t_at = t_wb_val + 7
+    w_at = (2501 * w_s_wb - 1.006 * (t_at - t_wb_val)) / (2501 + 1.86 * t_at - 4.186 * t_wb_val) * 1000
+    if 0 < w_at <= 28:
+        wb_labels_data.append({"t_db": float(t_at), "w": float(w_at), "label": f"{t_wb_val}°C WB"})
 
 wb_label_df = pd.DataFrame(wb_labels_data)
 
-# Enthalpy labels (along left edge, skip values that would overlap with wet-bulb labels)
+# Enthalpy labels — anchored on the left/top edges where wet-bulb labels are absent
 enthalpy_labels = []
 for h_val in range(20, 120, 20):
     w_at_left = (h_val - 1.006 * (-10)) / (2.501 + 0.00186 * (-10))
     if 0 <= w_at_left <= 30:
-        enthalpy_labels.append({"t_db": -9.5, "w": float(w_at_left), "label": f"{h_val} kJ/kg"})
+        enthalpy_labels.append({"t_db": -9.0, "w": float(w_at_left), "label": f"{h_val} kJ/kg"})
     else:
         t_at_top = (h_val - 2.501 * 30) / (1.006 + 0.00186 * 30)
         if -10 <= t_at_top <= 50:
-            enthalpy_labels.append({"t_db": float(t_at_top), "w": 30.0, "label": f"{h_val} kJ/kg"})
+            enthalpy_labels.append({"t_db": float(t_at_top), "w": 29.4, "label": f"{h_val} kJ/kg"})
 
 enthalpy_label_df = pd.DataFrame(enthalpy_labels)
 
-# Volume labels (along bottom-right)
+# Volume labels — along the lower-right where the volume lines exit the frame
 vol_labels = []
-for v_val in [0.75, 0.80, 0.85, 0.90, 0.95]:
-    w_at_bot = (v_val * P_ATM / 1000 / (0.287042 * (45 + 273.15)) - 1) / 1.6078 * 1000
-    if 0 <= w_at_bot <= 30:
-        vol_labels.append({"t_db": 45.0, "w": float(w_at_bot), "label": f"{v_val} m³/kg"})
+for v_val in [0.78, 0.82, 0.86, 0.90, 0.94]:
+    w_at = (v_val * P_ATM / 1000 / (0.287042 * (44 + 273.15)) - 1) / 1.6078 * 1000
+    if 0 <= w_at <= 30:
+        vol_labels.append({"t_db": 44.0, "w": float(w_at), "label": f"{v_val} m³/kg"})
 
 vol_label_df = pd.DataFrame(vol_labels)
-
-# Colorblind-safe palette: blue (RH), orange (wet-bulb), teal (enthalpy), purple (volume)
-CLR_RH = "#306998"
-CLR_WB = "#d97b0e"
-CLR_ENTHALPY = "#17becf"
-CLR_VOL = "#9467bd"
-CLR_COMFORT = "#2ecc71"
-CLR_PROCESS = "#c0392b"
-CLR_BG = "#fafbfc"
 
 # Plot
 x_scale = alt.Scale(domain=[-10, 50])
 y_scale = alt.Scale(domain=[0, 30])
 
-# Saturation curve (100% RH) - visually prominent
-sat_df = rh_df[rh_df["rh"] == "100%"]
-saturation = (
-    alt.Chart(sat_df)
-    .mark_line(strokeWidth=3.5, color=CLR_RH)
-    .encode(
-        x=alt.X("t_db:Q", scale=x_scale, title="Dry-Bulb Temperature (°C)"),
-        y=alt.Y("w:Q", scale=y_scale, title="Humidity Ratio (g/kg)"),
-    )
+# Comfort zone shaded band
+comfort = (
+    alt.Chart(comfort_df)
+    .mark_area(opacity=0.18, color=CLR_COMFORT)
+    .encode(x=alt.X("t_db:Q", scale=x_scale), y=alt.Y("w:Q", scale=y_scale), y2="w2:Q")
 )
 
-# Other RH curves with tooltips
-other_rh_df = rh_df[rh_df["rh"] != "100%"]
-rh_chart = (
-    alt.Chart(other_rh_df)
-    .mark_line(strokeWidth=1.5, opacity=0.55)
-    .encode(
-        x=alt.X("t_db:Q", scale=x_scale),
-        y=alt.Y("w:Q", scale=y_scale),
-        color=alt.Color("rh:N", scale=alt.Scale(scheme="blues"), legend=None),
-        detail="rh:N",
-        tooltip=[
-            alt.Tooltip("t_db:Q", title="Dry-Bulb (°C)", format=".1f"),
-            alt.Tooltip("w:Q", title="Humidity (g/kg)", format=".1f"),
-            alt.Tooltip("rh:N", title="Relative Humidity"),
-        ],
-    )
-)
-
-# RH labels
-rh_text = (
-    alt.Chart(rh_label_df)
-    .mark_text(fontSize=13, color="#4a7fb5", fontWeight="bold")
+comfort_label = (
+    alt.Chart(pd.DataFrame({"t_db": [23.0], "w": [10.8], "label": ["Comfort Zone"]}))
+    .mark_text(fontSize=12, color=CLR_COMFORT, fontWeight="bold", fontStyle="italic")
     .encode(x=alt.X("t_db:Q", scale=x_scale), y=alt.Y("w:Q", scale=y_scale), text="label:N")
 )
 
-# Wet-bulb lines (orange, colorblind-safe)
+# Specific-volume lines (ochre)
+vol_chart = (
+    alt.Chart(vol_df)
+    .mark_line(strokeWidth=1.2, strokeDash=[2, 4], opacity=0.65, color=CLR_VOL)
+    .encode(x=alt.X("t_db:Q", scale=x_scale), y=alt.Y("w:Q", scale=y_scale), detail="v:N")
+)
+
+vol_text = (
+    alt.Chart(vol_label_df)
+    .mark_text(fontSize=10, color=CLR_VOL, align="left", dx=3, dy=-4, fontWeight="bold")
+    .encode(x=alt.X("t_db:Q", scale=x_scale), y=alt.Y("w:Q", scale=y_scale), text="label:N")
+)
+
+# Constant-enthalpy lines (blue)
+enthalpy_chart = (
+    alt.Chart(enthalpy_df)
+    .mark_line(strokeWidth=1.2, strokeDash=[4, 5], opacity=0.7, color=CLR_ENTHALPY)
+    .encode(x=alt.X("t_db:Q", scale=x_scale), y=alt.Y("w:Q", scale=y_scale), detail="h:N")
+)
+
+enthalpy_text = (
+    alt.Chart(enthalpy_label_df)
+    .mark_text(fontSize=10, color=CLR_ENTHALPY, align="left", dx=2, dy=-4, fontWeight="bold")
+    .encode(x=alt.X("t_db:Q", scale=x_scale), y=alt.Y("w:Q", scale=y_scale), text="label:N")
+)
+
+# Wet-bulb lines (lavender)
 wb_chart = (
     alt.Chart(wb_df)
-    .mark_line(strokeWidth=1, strokeDash=[6, 4], opacity=0.5, color=CLR_WB)
+    .mark_line(strokeWidth=1.2, strokeDash=[6, 4], opacity=0.7, color=CLR_WB)
     .encode(
         x=alt.X("t_db:Q", scale=x_scale),
         y=alt.Y("w:Q", scale=y_scale),
@@ -232,61 +245,50 @@ wb_chart = (
     )
 )
 
-# Wet-bulb labels (offset to avoid overlap)
 wb_text = (
     alt.Chart(wb_label_df)
-    .mark_text(fontSize=12, color=CLR_WB, align="left", dx=2, dy=-6, fontWeight="bold")
+    .mark_text(fontSize=10, color=CLR_WB, align="left", dx=2, dy=-5, fontWeight="bold")
     .encode(x=alt.X("t_db:Q", scale=x_scale), y=alt.Y("w:Q", scale=y_scale), text="label:N")
 )
 
-# Enthalpy lines (teal, colorblind-safe)
-enthalpy_chart = (
-    alt.Chart(enthalpy_df)
-    .mark_line(strokeWidth=1, strokeDash=[4, 6], opacity=0.45, color=CLR_ENTHALPY)
-    .encode(x=alt.X("t_db:Q", scale=x_scale), y=alt.Y("w:Q", scale=y_scale), detail="h:N")
+# Relative-humidity curves (10%-90%, brand green, lighter than saturation)
+other_rh_df = rh_df[rh_df["rh"] != "100%"]
+rh_chart = (
+    alt.Chart(other_rh_df)
+    .mark_line(strokeWidth=1.5, opacity=0.5, color=CLR_RH)
+    .encode(
+        x=alt.X("t_db:Q", scale=x_scale),
+        y=alt.Y("w:Q", scale=y_scale),
+        detail="rh:N",
+        tooltip=[
+            alt.Tooltip("t_db:Q", title="Dry-Bulb (°C)", format=".1f"),
+            alt.Tooltip("w:Q", title="Humidity (g/kg)", format=".1f"),
+            alt.Tooltip("rh:N", title="Relative Humidity"),
+        ],
+    )
 )
 
-# Enthalpy labels
-enthalpy_text = (
-    alt.Chart(enthalpy_label_df)
-    .mark_text(fontSize=11, color=CLR_ENTHALPY, align="left", dx=2, dy=-4, fontWeight="bold")
+# Saturation curve (100% RH) — the prominent upper boundary
+sat_df = rh_df[rh_df["rh"] == "100%"]
+saturation = (
+    alt.Chart(sat_df)
+    .mark_line(strokeWidth=3.5, color=CLR_RH)
+    .encode(
+        x=alt.X("t_db:Q", scale=x_scale, title="Dry-Bulb Temperature (°C)"),
+        y=alt.Y("w:Q", scale=y_scale, title="Humidity Ratio (g/kg)"),
+    )
+)
+
+rh_text = (
+    alt.Chart(rh_label_df)
+    .mark_text(fontSize=11, color=CLR_RH, fontWeight="bold")
     .encode(x=alt.X("t_db:Q", scale=x_scale), y=alt.Y("w:Q", scale=y_scale), text="label:N")
 )
 
-# Specific volume lines
-vol_chart = (
-    alt.Chart(vol_df)
-    .mark_line(strokeWidth=1, strokeDash=[2, 4], opacity=0.4, color=CLR_VOL)
-    .encode(x=alt.X("t_db:Q", scale=x_scale), y=alt.Y("w:Q", scale=y_scale), detail="v:N")
-)
-
-# Volume labels
-vol_text = (
-    alt.Chart(vol_label_df)
-    .mark_text(fontSize=11, color=CLR_VOL, align="left", dx=3, dy=-5, fontWeight="bold")
-    .encode(x=alt.X("t_db:Q", scale=x_scale), y=alt.Y("w:Q", scale=y_scale), text="label:N")
-)
-
-# Comfort zone shaded area
-comfort = (
-    alt.Chart(comfort_df)
-    .mark_area(opacity=0.12, color=CLR_COMFORT)
-    .encode(x=alt.X("t_db:Q", scale=x_scale), y=alt.Y("w:Q", scale=y_scale), y2="w2:Q")
-)
-
-comfort_label = (
-    alt.Chart(pd.DataFrame({"t_db": [23.0], "w": [10.5], "label": ["Comfort Zone"]}))
-    .mark_text(fontSize=14, color="#27ae60", fontWeight="bold", fontStyle="italic")
-    .encode(x=alt.X("t_db:Q", scale=x_scale), y=alt.Y("w:Q", scale=y_scale), text="label:N")
-)
-
-# Interactive selection for HVAC process points
-point_selection = alt.selection_point(on="pointerover", nearest=True, fields=["t_db"])
-
-# HVAC process path with tooltips
+# HVAC process path (matte red) — focal point with state-point markers
 process_line = (
     alt.Chart(process_points)
-    .mark_line(strokeWidth=3.5, color=CLR_PROCESS, point=alt.OverlayMarkDef(size=140, filled=True, color=CLR_PROCESS))
+    .mark_line(strokeWidth=3.5, color=CLR_PROCESS, point=alt.OverlayMarkDef(size=130, filled=True, color=CLR_PROCESS))
     .encode(
         x=alt.X("t_db:Q", scale=x_scale),
         y=alt.Y("w:Q", scale=y_scale),
@@ -298,66 +300,80 @@ process_line = (
             alt.Tooltip("rh_pct:N", title="RH"),
         ],
     )
-    .add_params(point_selection)
 )
 
-# Process labels (adjusted positions to avoid overlap)
 outdoor_label = (
     alt.Chart(process_points[process_points["order"] == 0])
-    .mark_text(fontSize=12, fontWeight="bold", color=CLR_PROCESS, align="right", dx=-12, dy=-14)
+    .mark_text(fontSize=11, fontWeight="bold", color=CLR_PROCESS, align="right", dx=-14, dy=-16)
     .encode(x=alt.X("t_db:Q", scale=x_scale), y=alt.Y("w:Q", scale=y_scale), text="label:N")
 )
 
 supply_label = (
     alt.Chart(process_points[process_points["order"] == 1])
-    .mark_text(fontSize=12, fontWeight="bold", color=CLR_PROCESS, align="left", dx=12, dy=14)
+    .mark_text(fontSize=11, fontWeight="bold", color=CLR_PROCESS, align="right", dx=-14, dy=16)
     .encode(x=alt.X("t_db:Q", scale=x_scale), y=alt.Y("w:Q", scale=y_scale), text="label:N")
 )
 
-# Layer all elements
+# Layer all elements (faint property grids first, prominent features last)
 chart = (
     alt.layer(
         comfort,
+        vol_chart,
+        enthalpy_chart,
+        wb_chart,
         rh_chart,
         saturation,
-        wb_chart,
-        enthalpy_chart,
-        vol_chart,
-        rh_text,
-        wb_text,
-        enthalpy_text,
         vol_text,
+        enthalpy_text,
+        wb_text,
+        rh_text,
         comfort_label,
         process_line,
         outdoor_label,
         supply_label,
     )
     .properties(
-        width=1600,
-        height=900,
+        width=640,
+        height=330,
+        background=PAGE_BG,
         title=alt.Title(
-            text="psychrometric-basic · altair · pyplots.ai",
-            fontSize=28,
+            text="psychrometric-basic · python · altair · anyplot.ai",
+            fontSize=16,
             anchor="middle",
-            subtitle="Standard Atmosphere (101.325 kPa) · HVAC Air Properties",
-            subtitleFontSize=18,
-            subtitleColor="#888888",
-            offset=12,
+            color=INK,
+            subtitle="Standard Atmosphere (101.325 kPa) · Moist-Air Properties for HVAC",
+            subtitleFontSize=11,
+            subtitleColor=INK_SOFT,
+            offset=10,
         ),
     )
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
     .configure_axis(
-        labelFontSize=18,
-        titleFontSize=22,
-        titleColor="#444444",
-        labelColor="#555555",
+        labelFontSize=10,
+        titleFontSize=12,
+        titleColor=INK,
+        labelColor=INK_SOFT,
         grid=True,
-        gridOpacity=0.12,
-        gridColor="#cccccc",
-        domainColor="#999999",
+        gridOpacity=0.15,
+        gridColor=INK,
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
     )
-    .configure_view(strokeWidth=0, fill=CLR_BG)
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save — interactive HTML untouched; PNG padded to the exact canonical target.
+chart.save(f"plot-{THEME}.html")
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
