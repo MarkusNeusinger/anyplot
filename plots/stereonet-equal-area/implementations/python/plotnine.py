@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2026-06-16
+Library: plotnine 0.15.7 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-16
 """
 
 import os
