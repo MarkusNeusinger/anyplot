@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: hexbin-map-geographic
 created: '2026-01-20T21:14:00Z'
-updated: '2026-06-16T19:09:18Z'
+updated: '2026-06-16T19:17:10Z'
 generated_by: claude-sonnet
 workflow_run: 26513971833
 issue: 3767
@@ -12,57 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-ma
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/letsplot/plot-dark.html
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - 'Correct plot type: idiomatic geom_hex hexbin map with native lets-plot hexagonal
-    binning over 15,000 simulated NYC taxi pickups'
-  - 'VQ-07 compliant continuous colormap: scale_fill_gradient(low=''#009E73'', high=''#4467A3'')
-    is exactly imprint_seq (single-polarity), correct for density data'
-  - 'Both themes render with correct chrome: light bg #FAF8F1, dark bg #1A1A17, theme-adaptive
-    ink tokens for title/axes/legend; data colors identical across themes'
-  - Geographic context provided via geom_polygon borough outlines with alpha=0.7 transparency,
-    so the basemap shows through the hexagons as the spec requests
-  - Interactive HTML export with layer_tooltips showing per-cell Pickup count — the
-    right way to satisfy the spec's hover requirement for an interactive library
-  - 'Realistic, neutral data: clusters placed at geographically correct NYC locations
-    (Manhattan core, midtown, JFK ~40.64/-73.78, LGA ~40.77/-73.87)'
-  - 'Clean KISS code: seeded (np.random.seed(42)), linear structure, no functions/classes,
-    all imports used, title fontsize scaled to length'
+  - 'Faithful spec compliance: hexbin aggregation, sequential #009E73->#4467A3 gradient
+    with log10-scaled color legend, borough basemap overlay with transparency, and
+    hover tooltips for the interactive HTML export'
+  - Theme adaptation is correct in both renders — warm off-white (#FAF8F1) and warm
+    near-black (#1A1A17) chrome flips cleanly while the green-to-blue data gradient
+    stays identical; no dark-on-dark or light-on-light failures
+  - Realistic, neutral NYC taxi-pickup context with plausible clusters (Manhattan/Midtown/JFK/LGA)
+    anchored inside hand-traced borough outlines for geographic context
+  - 'Clean KISS script: seeded data (np.random.seed(42)), no functions/classes, only
+    used imports, correct plot-{THEME}.png + .html dual export at the mandated 3200x1800
+    canvas'
+  - 'Idiomatic lets-plot grammar-of-graphics: geom_hex + geom_polygon layering, coord_fixed,
+    layer_tooltips, scale_fill_gradient with trans=log10'
   weaknesses:
-  - 'Dark render: the trailing ''anyplot.ai'' segment of the title renders noticeably
-    dimmer/lower-contrast than the rest of the (bright white) title, an inconsistent
-    legibility result. Ensure the full mandated title string is drawn with the single
-    INK color token in dark mode; if it is a right-edge overflow effect, shrink plot_title
-    fontsize a step further so the whole title sits cleanly inside the panel width.'
-  - Borough basemap polygons are crude and geographically inaccurate — the Manhattan/Brooklyn/Queens
-    outlines are arbitrary heptagons that do not match real borough shapes, and several
-    hexbin clusters fall partly outside their nominal borough polygon. Refine the
-    outline coordinates (or use a simpler, more faithful reference shape) so the geographic
-    context reads as plausible rather than abstract.
-  - 'Continuous color resolution is weak at the low end: the vast majority of hexagons
-    sit near the bottom of the green->blue scale and read as a near-uniform green,
-    so only the dense blue cores stand out. Consider a perceptual stretch (e.g. trans=''log''
-    / sqrt on the fill scale, still using the imprint_seq stops) so mid-density variation
-    becomes visible.'
-  - 'Aggregation breadth: spec mentions supporting count/sum/mean — only count is
-    demonstrated. Acceptable since value is optional, but showing an aggregated value
-    field would strengthen feature coverage.'
+  - Title fontsize is scaled down quite small (title_size ~= 11 base) so the title,
+    while readable, sits a touch small relative to the panel — could nudge up slightly
+    without overflowing.
+  - Only the default 'count' aggregation is demonstrated; the spec also lists sum
+    and mean methods, so DQ-01 feature coverage of the plot type's full range is partial.
+  - Borough basemap polygons are fairly abstract/crude gray outlines — they convey
+    context but are visually plain; richer geographic styling would lift DE-01.
+  - Interactive tooltip only surfaces Pickups|count; the spec suggests showing count/sum/mean/coordinates
+    for fuller cell statistics.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1) across full canvas; inner panel matches.
-      Chrome: dark title "NYC Taxi Pickups · hexbin-map-geographic · python · letsplot · anyplot.ai" fully readable across ~75% width; axis titles "Longitude (°)" / "Latitude (°)" and tick labels dark and crisp; subtle gray grid; legend "Pickup Count" with green->blue gradient bar and ticks 100/200/300, all readable.
-      Data: hexagonal bins in green->blue sequential gradient (first/low = #009E73 brand green, high = #4467A3 blue). Three+ clusters (large Manhattan cluster with blue dense core, midtown cluster, JFK & LGA clusters). Gray semi-transparent borough polygons underneath.
+      Background: warm off-white (~#FAF8F1), panel and plot background match.
+      Chrome: dark title "NYC Taxi Pickups · hexbin-map-geographic · python · letsplot · anyplot.ai" centered at top, dark axis titles "Longitude (°)" / "Latitude (°)", dark tick labels, subtle muted-gray major grid. Right-side legend "Pickup Count" with log10 ticks (1, 10, 100) in elevated cream frame. All text clearly readable.
+      Data: hexagonal bins colored on a sequential gradient from green #009E73 (low count) to blue #4467A3 (high count); four density clusters over light-gray borough outlines with transparency. First/low color is the brand green.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17) across full canvas; inner panel matches.
-      Chrome: title mostly bright white and readable, BUT the trailing "anyplot.ai" segment is rendered distinctly dimmer/low-contrast — a minor legibility inconsistency (flagged). Axis titles, tick labels (light gray) and legend all readable. Grid subtle and visible.
-      Data: identical hexbin colors to light render (green->blue, brand green at low end, blue cores), confirming only chrome flipped. Borough polygons render as faint dark-gray outlines.
-      Legibility verdict: PASS (with noted dim "anyplot.ai" segment — readable but lower contrast than rest of title)
+      Background: warm near-black (~#1A1A17), panel and plot background match.
+      Chrome: light title and axis titles, light-gray tick labels, subtle grid, legend in dark elevated frame with light text. All text clearly readable — no dark-on-dark failures.
+      Data: identical hexbin gradient (#009E73 -> #4467A3) and identical cluster geometry; only chrome flipped. Borough outlines rendered in darker gray, still visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -70,47 +60,46 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Fonts explicitly set, readable; dark-mode trailing 'anyplot.ai' is
-          dimmer than rest of title
+        comment: Readable in both themes; title fontsize a touch small.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap; legend separated from plot
+        comment: No text/data collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Hexagons well sized for dense data; most read uniform green due to
-          low-end gradient compression
+        comment: Hexbins well-sized for dense data; clusters clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: green->blue sequential gradient, CVD-safe, good contrast
+        comment: Green-to-blue sequential gradient is CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; balanced margins, legend near plot
+        comment: 3200x1800 exact, nothing clipped, balanced labels.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (°) / Latitude (°) with units
+        comment: Descriptive with degree units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (#009E73->#4467A3); both backgrounds theme-correct
+        comment: 'imprint_seq gradient #009E73->#4467A3; correct theme backgrounds
+          in both renders.'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -118,21 +107,19 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Basemap overlay + sequential gradient + theme tokens, above default
-          but basemap is crude
+        comment: Custom basemap + log gradient; outlines a bit plain.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: theme_minimal, subtle grid, alpha on basemap
+        comment: theme_minimal, subtle grid, generous whitespace.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Hotspots visible but low-end gradient compression mutes mid-density
-          story
+        comment: Clusters form natural focal points; log scale emphasizes hotspots.
     spec_compliance:
       score: 15
       max: 15
@@ -142,28 +129,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Hexbin map via geom_hex
+        comment: Correct hexbin map via geom_hex.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Hex binning, sequential cmap, color legend, basemap, transparency,
-          tooltips all present
+        comment: Sequential cmap, legend, basemap overlay, transparency, tooltips.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: lon->x, lat->y correct
+        comment: lat/lon mapped correctly.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; legend 'Pickup Count'
+        comment: Descriptive prefix + mandated title format; legend labeled.
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -171,19 +157,19 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Density variation + multiple clusters; only count aggregation shown
+        comment: Only count aggregation shown; sum/mean omitted.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NYC taxi pickups — real, neutral
+        comment: NYC taxi pickups — plausible and neutral.
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Cluster coords geographically correct; borough basemap polygons inaccurate
+        comment: Sensible lat/lon range; log10 count scale.
     code_quality:
       score: 10
       max: 10
@@ -193,59 +179,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear, no functions/classes
+        comment: No functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean; tooltips legit for interactive lib
+        comment: Clean, appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png + .html
+        comment: plot-{THEME}.png + .html, current API.
     library_features:
       score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Idiomatic grammar-of-graphics layering
+        comment: Grammar-of-graphics, geom layering, scales, theme.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Native geom_hex + layer_tooltips interactivity + coord_fixed
-  verdict: REJECTED
+        comment: geom_hex + tooltips + HTML interactivity; tooltip content minimal.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - hexbin
   - colorbar
-  - hover-tooltips
-  - layer-composition
-  - html-export
+  - log-scale
+  - basemap-overlay
+  - tooltips
   patterns:
   - data-generation
+  - layered-geoms
   dataprep:
-  - binning
+  - spatial-binning
+  - log-transform
   styling:
-  - custom-colormap
+  - publication-ready
+  - theme-adaptive
   - alpha-blending
