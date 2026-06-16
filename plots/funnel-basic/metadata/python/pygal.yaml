@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: funnel-basic
 created: '2025-12-23T13:02:42Z'
-updated: '2026-06-16T19:19:16Z'
+updated: '2026-06-16T19:27:21Z'
 generated_by: claude-opus
 workflow_run: 27641284032
 issue: 789
@@ -12,49 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/funnel-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/pygal/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - Uses pygal's native Funnel chart type — the idiomatic high-level API for this
-    plot, with each stage as its own single-value series so segments carry distinct
-    Imprint colors and the legend names every stage.
+  - Uses pygal's native Funnel chart — the idiomatic high-level API for this plot
+    type — with each stage added as its own single-value series so segments carry
+    distinct Imprint colors and the legend names every stage.
   - 'Imprint palette applied correctly via the Style object: first series is brand
-    green #009E73, remaining stages follow canonical Imprint order; chrome backgrounds
-    are #FAF8F1 (light) / #1A1A17 (dark) and flip cleanly between themes while data
-    colors stay identical.'
+    green #009E73, canonical order thereafter; chrome backgrounds #FAF8F1 (light)
+    / #1A1A17 (dark) flip cleanly while the five data colors stay identical across
+    themes.'
   - Every segment is labeled with both raw value and conversion percentage via a custom
-    value_formatter (e.g. '600 (60%)'), directly satisfying the spec's value/percentage
-    labeling requirement.
-  - Deterministic hard-coded data (no RNG needed), clean KISS structure with no functions/classes,
-    only used imports, and saves theme-suffixed PNG plus interactive HTML — correct
-    for an interactive library.
-  - Canvas is exactly 3200x1800 (landscape), passing the dimension gate; minimal chrome
-    (no axes/grid) suits a funnel well.
+    value_formatter, directly satisfying the spec's value/percentage requirement;
+    the explicit symmetric range tightens pygal's default padding so the funnel commands
+    more vertical presence.
+  - Deterministic hardcoded data, KISS structure (no functions/classes), only used
+    imports, theme-suffixed PNG + interactive HTML output, exact 3200x1800 canvas
+    (dimension gate passed).
   weaknesses:
-  - pygal's native Funnel renders horizontally (narrowing left-to-right) rather than
-    the top-to-bottom orientation described in the spec notes. This is the library's
-    idiom and acceptable, but the first two segments (Awareness 1000, Interest 600)
-    render at near-identical heights, so the geometric proportionality between stage
-    values is not strongly conveyed by shape alone — the viewer relies on the printed
-    value/percent labels. Not fixable without abandoning the native Funnel chart.
-  - Large vertical whitespace above and below the funnel band; the funnel occupies
-    roughly the middle third of the canvas height. Could be tightened with a smaller
-    margin for a more commanding presence, but nothing is cut off.
-  - Design is functional but restrained — styling is essentially theme tokens + palette
-    applied to the default Funnel; no extra hierarchy or emphasis beyond the inherent
-    funnel narrowing.
+  - pygal's native Funnel renders horizontally (narrowing left->right) rather than
+    the top->bottom orientation in the spec notes. This is the library idiom and acceptable,
+    but the first two segments (Awareness 1000, Interest 600) render at near-identical
+    heights, so stage-to-stage proportionality is conveyed mainly by the printed labels
+    rather than the segment shape. Not fixable without abandoning the native Funnel
+    chart.
+  - In the dark render the on-segment value labels are dark text; on the darker blue
+    (#4467A3) and red (#AE3030) segments the value/percentage labels sit at slightly
+    reduced contrast — still readable but the least legible elements in the dark theme.
+  - Design is functional but restrained — essentially theme tokens + palette on the
+    default Funnel, with no added visual hierarchy or emphasis to direct the viewer
+    beyond the inherent narrowing.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (~#FAF8F1), correct.
-      Chrome: title "funnel-basic · python · pygal · anyplot.ai" in dark monospace, fully readable and centered at top. Bottom legend lists Awareness/Interest/Consideration/Intent/Purchase with colored swatches, dark text — all readable.
-      Data: horizontal funnel narrowing left→right. Segments in Imprint order — green #009E73 (Awareness), purple #C475FD (Interest), blue #4467A3 (Consideration), amber #BD8233 (Intent), red #AE3030 (Purchase). First series is brand green, confirmed. Each segment shows dark value+percent label (1,000 (100%), 600 (60%), 400 (40%), 200 (20%), 100 (10%)) — readable on every segment.
+      Background: warm off-white (#FAF8F1), correct light surface, no pure white.
+      Chrome: title "funnel-basic · python · pygal · anyplot.ai" in dark monospace, centered top, fully visible. Bottom legend (5 entries: Awareness, Interest, Consideration, Intent, Purchase) with color swatches in dark text — all readable.
+      Data: horizontal funnel of 5 trapezoidal segments narrowing left->right. Colors in Imprint canonical order — green #009E73 (first), lavender #C475FD, blue #4467A3, ochre #BD8233, matte red #AE3030. On-segment labels "1,000 (100%)", "600 (60%)", "400 (40%)", "200 (20%)", "100 (10%)" in dark text, all readable.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black (~#1A1A17), correct.
-      Chrome: title in light/near-white monospace, fully readable. Bottom legend labels in light text against dark background — readable, no dark-on-dark.
-      Data: identical funnel geometry and identical segment colors to the light render — only chrome flipped. Value/percent labels are dark text but sit on the bright Imprint-colored segments, so they remain legible (no dark-on-dark failure since labels are never on the dark background). Brand green still vivid.
+      Background: warm near-black (#1A1A17), correct dark surface, no pure black.
+      Chrome: title and legend labels in light off-white (#F0EFE8), clearly readable against dark background. No dark-on-dark failure on any chrome element.
+      Data: identical five data colors to the light render (only chrome flipped). On-segment value labels are dark text on the colored segments — readable on all five, slightly lower contrast on the blue and red segments but no information lost.
       Legibility verdict: PASS
+
+    AR-09 edge-clipping check: title, legend, funnel point and all value labels are fully within the canvas on both renders — no clipped pixels.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -65,47 +66,45 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set in Style; title, labels, legend readable
-          in both themes. Value labels are dark but sit on bright segments in dark
-          mode — legible.
+        comment: All fonts explicitly set and readable in both themes; on-segment
+          dark value labels slightly lower contrast on dark-mode blue/red segments.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or collisions; labels centered within segments.
+        comment: No overlapping text or data.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 5 segments distinct and visible including the thin red Purchase
-          tail.
+        comment: All five segments clearly visible with distinct saturated colors.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe with strong contrast.
+        comment: Imprint palette is CVD-safe with adequate contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, nothing cut off. Some vertical whitespace but balanced.
+        comment: Exact 3200x1800 (gate passed); good proportions, nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Funnel has no axes; title is descriptive and correctly formatted.
+        comment: Descriptive title; funnel correctly has no axes.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; canonical Imprint order; correct theme backgrounds
-          in both renders.'
+        comment: 'First series #009E73, canonical order; correct theme backgrounds;
+          identical data colors across themes.'
     design_excellence:
       score: 11
       max: 20
@@ -115,20 +114,19 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clean custom palette + theme tokens; restrained but professional.
+        comment: Clean custom palette + theme tokens, restrained.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Minimal chrome (no axes/grid), generous whitespace.
+        comment: Minimal chrome, no axes/grid clutter, good whitespace.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Funnel narrowing + value/percent labels tell the conversion story;
-          no extra emphasis.
+        comment: Funnel narrowing + labels tell the story; no added emphasis.
     spec_compliance:
       score: 15
       max: 15
@@ -138,27 +136,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Native pygal Funnel chart — correct type.
+        comment: Correct funnel chart.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct per-stage colors, value+percent labels, size proportional
-          to value. Orientation is library idiom (horizontal).
+        comment: Distinct colors, value+percentage labels, ordered largest->smallest.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Stages and values mapped correctly, ordered largest→smallest.
+        comment: Stages and values mapped correctly.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly '{spec} · python · pygal · anyplot.ai'; legend names
-          all 5 stages.
+        comment: Title matches mandated format; legend names every stage.
     data_quality:
       score: 15
       max: 15
@@ -168,19 +164,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows sequential drop-off across 5 stages, full funnel narrowing.
+        comment: 'Shows all aspects of a funnel: ordered decreasing stages with proportional
+          segments.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Sales conversion funnel — plausible and neutral.
+        comment: Sales conversion funnel — realistic and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1000→100 with clean monotonic decrease, sensible domain values.
+        comment: 1000->100 with clean conversion percentages.
     code_quality:
       score: 10
       max: 10
@@ -190,19 +187,19 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; flat script.
+        comment: No functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hard-coded data.
+        comment: Deterministic hardcoded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, pygal, Style all used.
+        comment: os, pygal, Style — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -214,7 +211,7 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png + plot-{THEME}.html; current API.
+        comment: Saves plot-{theme}.png + interactive plot-{theme}.html.
     library_features:
       score: 7
       max: 10
@@ -224,14 +221,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Native Funnel chart, Style object carries all theme tokens — idiomatic
-          pygal.
+        comment: Native Funnel type via the high-level API, palette via Style object.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Funnel chart type, custom value_formatter, interactive HTML export.
+        comment: Native Funnel chart, custom value_formatter, bottom legend, interactive
+          HTML export.
   verdict: APPROVED
 impl_tags:
   dependencies: []
