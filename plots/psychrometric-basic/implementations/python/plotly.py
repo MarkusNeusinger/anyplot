@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 psychrometric-basic: Psychrometric Chart for HVAC
 Library: plotly 6.8.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-16
@@ -17,11 +17,14 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
-LABEL_BG = "rgba(255,253,246,0.72)" if THEME == "light" else "rgba(36,36,32,0.72)"
+LABEL_BG = "rgba(255,253,246,0.85)" if THEME == "light" else "rgba(36,36,32,0.85)"
 
 # Imprint palette — one hue family per psychrometric property (theme-independent)
 SAT = "#009E73"  # brand green — saturation curve (ALWAYS first series)
 RH = (68, 103, 163)  # #4467A3 blue — relative-humidity curves
+# RH *labels* get a brighter blue in dark theme so they read as crisply as the
+# cyan/ochre labels against the near-black surface (curve color stays identical).
+RH_LABEL = RH if THEME == "light" else (143, 168, 218)  # #8FA8DA
 WB = (42, 188, 205)  # #2ABCCD cyan — wet-bulb lines
 ENTH = (189, 130, 51)  # #BD8233 ochre — enthalpy lines
 VOL = (196, 117, 253)  # #C475FD lavender — specific-volume lines
@@ -61,7 +64,9 @@ W_MAX = 30.0  # y-axis ceiling
 fig = go.Figure()
 
 # --- Relative-humidity curves (10%-90%) — graduated opacity, drawn under saturation ---
-rh_label_frac = {20: 0.62, 40: 0.55, 60: 0.48, 80: 0.40}
+# Anchor fractions chosen so RH labels fan into open pockets, clear of the
+# central process path / comfort-zone / specific-volume labels (see VQ-02).
+rh_label_frac = {20: 0.80, 40: 0.68, 60: 0.52, 80: 0.48}
 for rh_pct in range(10, 100, 10):
     p_w = (rh_pct / 100.0) * p_ws_fine
     w = 0.621945 * p_w / (P_ATM - p_w) * 1000
@@ -92,7 +97,7 @@ for rh_pct in range(10, 100, 10):
             y=float(w_plot[idx]),
             text=f"<b>{rh_pct}%</b>",
             showarrow=False,
-            font={"size": 12, "color": f"rgb({RH[0]},{RH[1]},{RH[2]})"},
+            font={"size": 12, "color": f"rgb({RH_LABEL[0]},{RH_LABEL[1]},{RH_LABEL[2]})"},
             xshift=14,
             yshift=2,
             bgcolor=LABEL_BG,
@@ -122,14 +127,17 @@ for t_wb in range(0, 35, 5):
                 ),
             )
         )
+        # Wet-bulb labels nudge DOWN-RIGHT (into the chart, below the saturation
+        # curve) while enthalpy labels go UP-LEFT — the two families converge on
+        # the curve, so opposite offsets keep their labels from stacking (VQ-02).
         fig.add_annotation(
             x=float(t_plot[0]),
             y=float(w_plot[0]),
             text=f"<b>{t_wb}°</b>",
             showarrow=False,
             font={"size": 11, "color": f"rgb({WB[0]},{WB[1]},{WB[2]})"},
-            xshift=-12,
-            yshift=8,
+            xshift=18,
+            yshift=-16,
             bgcolor=LABEL_BG,
         )
 
@@ -162,8 +170,8 @@ for h in range(20, 120, 10):
                 text=f"<i>{h}</i>",
                 showarrow=False,
                 font={"size": 11, "color": f"rgb({ENTH[0]},{ENTH[1]},{ENTH[2]})"},
-                xshift=-13,
-                yshift=9,
+                xshift=-26,
+                yshift=20,
                 bgcolor=LABEL_BG,
                 textangle=-38,
             )
@@ -192,7 +200,9 @@ for v_100 in range(80, 96, 2):
             )
         )
         if v_100 % 4 == 0:
-            idx = int(len(t_plot) * 0.5)
+            # Label lower-right along each line so '0.84' clears the central
+            # comfort-zone / process annotations rather than sitting on them.
+            idx = int(len(t_plot) * 0.68)
             fig.add_annotation(
                 x=float(t_plot[idx]),
                 y=float(w_plot[idx]),
