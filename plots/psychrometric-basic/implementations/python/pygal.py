@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 psychrometric-basic: Psychrometric Chart for HVAC
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-16
@@ -66,7 +66,9 @@ rh_curves = {}
 for rh in rh_levels:
     pw = rh * pws_curve
     w = 0.62198 * pw / (P_ATM - pw) * 1000
-    rh_curves[rh] = [(round(float(t), 2), round(float(wi), 3)) for t, wi in zip(t_curve, w, strict=True) if 0 <= wi <= 30]
+    rh_curves[rh] = [
+        (round(float(t), 2), round(float(wi), 3)) for t, wi in zip(t_curve, w, strict=True) if 0 <= wi <= 30
+    ]
 
 # Constant wet-bulb lines (ASHRAE psychrometric energy balance, analytical)
 wb_temps = [0, 5, 10, 15, 20, 25, 30]
@@ -78,7 +80,9 @@ for tw in wb_temps:
     w = ((2501 - 2.326 * tw) * w_swb - 1.006 * (t_db - tw)) / (2501 + 1.86 * t_db - 4.186 * tw) * 1000
     w_sat = np.interp(t_db, t_grid, wsat_grid)
     wb_lines[tw] = [
-        (round(float(t), 2), round(float(wi), 3)) for t, wi, ws in zip(t_db, w, w_sat, strict=True) if 0 <= wi <= min(30, ws + 0.1)
+        (round(float(t), 2), round(float(wi), 3))
+        for t, wi, ws in zip(t_db, w, w_sat, strict=True)
+        if 0 <= wi <= min(30, ws + 0.1)
     ]
 
 # Constant enthalpy and specific-volume lines share the dry-bulb sweep
@@ -198,7 +202,7 @@ for v in sv_values:
         f"v={v} m³/kg",
         sv_lines[v],
         show_dots=False,
-        stroke_style={"width": 2.4, "dasharray": "2, 9", "linecap": "round"},
+        stroke_style={"width": 2.8, "dasharray": "5, 6", "linecap": "round"},
     )
 
 # Enthalpy lines — dash-dot ochre
@@ -266,8 +270,9 @@ for line_px, keys, frac, template, color, size in diagonals:
         labels.append((sx, sy - 12, template.format(k=k), color, size, "middle", ang))
 
 # Comfort zone, HVAC state points
+# Anchored low in the zone (≈37% RH) so it clears the crowded 40%/60% RH band above
 cz_pws = float(np.interp(23, t_grid, pws_grid))
-cz_w = 0.62198 * (0.45 * cz_pws) / (P_ATM - 0.45 * cz_pws) * 1000
+cz_w = 0.62198 * (0.37 * cz_pws) / (P_ATM - 0.37 * cz_pws) * 1000
 labels.append((x_at_0 + 23 * px_per_t, y_at_0 + cz_w * px_per_w, "Comfort Zone", GREEN, 36, "middle", 0))
 
 ax, ay = x_at_0 + state_a[0] * px_per_t, y_at_0 + state_a[1] * px_per_w
