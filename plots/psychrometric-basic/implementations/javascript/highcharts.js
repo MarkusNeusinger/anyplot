@@ -24,6 +24,8 @@ const LAV = t.palette[1]; // comfort zone
 const BLUE = t.palette[2]; // relative-humidity family (water semantic)
 const OCHRE = t.palette[3]; // constant-enthalpy family
 const RED = t.palette[4]; // HVAC process path (active, highlighted)
+const CYAN = t.palette[5]; // constant wet-bulb family (evaporative-cool semantic)
+const ROSE = t.palette[6]; // constant specific-volume family
 const COMFORT_FILL =
   THEME === "light" ? "rgba(196,117,253,0.16)" : "rgba(196,117,253,0.22)";
 
@@ -72,6 +74,35 @@ function enthalpyLine(h) {
   return pts;
 }
 
+// Constant wet-bulb line (ASHRAE energy balance). It springs from the
+// saturation curve at T = twb and runs diagonally down to the right.
+function wetBulbLine(twb) {
+  const wsatWb = humidityRatio(twb, 1.0) / 1000; // kg/kg at saturation
+  const pts = [];
+  for (let T = twb; T <= 50; T += 0.5) {
+    const w =
+      ((2501 - 2.326 * twb) * wsatWb - 1.006 * (T - twb)) /
+      (2501 + 1.86 * T - 4.186 * twb); // kg/kg dry air
+    const wg = w * 1000;
+    if (wg >= 0 && wg <= YMAX) pts.push([T, wg]);
+  }
+  return pts;
+}
+
+// Constant specific-volume line (ideal moist-air state equation, Ra = 0.287042
+// kJ/kg·K). These run at a steeper angle than the enthalpy/wet-bulb diagonals.
+function specVolumeLine(v) {
+  const Ra = 0.287042;
+  const pts = [];
+  for (let T = -10; T <= 50; T += 0.5) {
+    const w = ((v * P) / (Ra * (T + 273.15)) - 1) / 1.6078; // kg/kg dry air
+    const wg = w * 1000;
+    const wsat = humidityRatio(T, 1.0);
+    if (wg >= 0 && wg <= YMAX && wg <= wsat + 0.01) pts.push([T, wg]);
+  }
+  return pts;
+}
+
 // Label styling: ink halo so direct labels stay legible over crossing lines
 function labelStyle(color) {
   return {
@@ -86,17 +117,23 @@ function labelStyle(color) {
 const series = [];
 
 // Relative-humidity curves (10%–100%); 100% saturation is the bold hero curve
-const rhLabels = { 20: "20%", 40: "40%", 60: "60%", 80: "80%" };
+// Label fraction along each curve; 60% sits lower-left so it clears State 1.
+const rhLabels = {
+  20: { text: "20%", frac: 0.82 },
+  40: { text: "40%", frac: 0.82 },
+  60: { text: "60%", frac: 0.55 },
+  80: { text: "80%", frac: 0.82 },
+};
 for (let pct = 10; pct <= 90; pct += 10) {
   const pts = rhCurve(pct / 100);
   if (rhLabels[pct]) {
-    const i = Math.round(pts.length * 0.82);
+    const i = Math.round(pts.length * rhLabels[pct].frac);
     pts[i] = {
       x: pts[i][0],
       y: pts[i][1],
       dataLabels: {
         enabled: true,
-        format: rhLabels[pct],
+        format: rhLabels[pct].text,
         align: "center",
         verticalAlign: "bottom",
         y: -2,
@@ -166,6 +203,66 @@ for (const h of enthalpies) {
   });
 }
 
+// Constant wet-bulb lines (diagonal, springing off the saturation curve).
+// Drawn thin & dotted so they stay distinct from the enthalpy diagonals.
+const wetBulbs = [5, 10, 15, 20, 25];
+for (const twb of wetBulbs) {
+  const pts = wetBulbLine(twb);
+  if (pts.length < 2) continue;
+  const li = pts.length - 1;
+  pts[li] = {
+    x: pts[li][0],
+    y: pts[li][1],
+    dataLabels: {
+      enabled: true,
+      format: `${twb}°`,
+      align: "left",
+      x: 3,
+      y: 3,
+      style: labelStyle(CYAN),
+    },
+  };
+  series.push({
+    type: "line",
+    data: pts,
+    color: CYAN,
+    lineWidth: 1,
+    dashStyle: "Dot",
+    opacity: 0.7,
+    enableMouseTracking: false,
+    zIndex: 2,
+  });
+}
+
+// Constant specific-volume lines (steeper diagonal). Thin & long-dashed.
+const specVolumes = [0.82, 0.86, 0.9, 0.94];
+for (const v of specVolumes) {
+  const pts = specVolumeLine(v);
+  if (pts.length < 2) continue;
+  pts[0] = {
+    x: pts[0][0],
+    y: pts[0][1],
+    dataLabels: {
+      enabled: true,
+      format: v.toFixed(2),
+      align: "left",
+      x: 2,
+      y: -2,
+      style: labelStyle(ROSE),
+    },
+  };
+  series.push({
+    type: "line",
+    data: pts,
+    color: ROSE,
+    lineWidth: 1,
+    dashStyle: "LongDash",
+    opacity: 0.7,
+    enableMouseTracking: false,
+    zIndex: 2,
+  });
+}
+
 // HVAC process path: cooling & dehumidification between two state points
 const stateA = { T: 32, rh: 0.6 };
 const stateB = { T: 13, rh: 0.9 };
@@ -186,8 +283,8 @@ series.push({
         enabled: true,
         format: "State 1 · 32 °C, 60% RH",
         align: "left",
-        x: 10,
-        y: -6,
+        x: 12,
+        y: -16,
         style: labelStyle(INK),
       },
     },
@@ -278,16 +375,20 @@ Highcharts.chart("container", {
           })
           .add();
 
-        // Enthalpy family note (upper-left, where the diagonal lines originate)
-        this.renderer
-          .text("Constant enthalpy (kJ/kg)", px(-9), py(28))
-          .css({
-            color: OCHRE,
-            fontSize: "13px",
-            fontWeight: "600",
-            textOutline: `3px ${PAGE_BG}`,
-          })
-          .add();
+        // Property-family key (upper-left, where the diagonal lines originate)
+        const note = (label, color, w) =>
+          this.renderer
+            .text(label, px(-9), py(w))
+            .css({
+              color,
+              fontSize: "13px",
+              fontWeight: "600",
+              textOutline: `3px ${PAGE_BG}`,
+            })
+            .add();
+        note("Constant enthalpy (kJ/kg)", OCHRE, 28.5);
+        note("Constant wet-bulb (°C)", CYAN, 26.6);
+        note("Specific volume (m³/kg)", ROSE, 24.7);
       },
     },
   },
