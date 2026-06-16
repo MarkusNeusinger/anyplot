@@ -1,10 +1,11 @@
-""" pyplots.ai
+"""anyplot.ai
 stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)
-Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 87/100 | Created: 2026-03-15
+Library: plotnine | Python 3.13
+Quality: pending | Created: 2026-06-16
 """
 
-import matplotlib
+import os
+
 import numpy as np
 import pandas as pd
 from plotnine import (
@@ -12,6 +13,7 @@ from plotnine import (
     after_stat,
     coord_fixed,
     element_blank,
+    element_rect,
     element_text,
     geom_density_2d,
     geom_path,
@@ -19,7 +21,6 @@ from plotnine import (
     geom_segment,
     geom_text,
     ggplot,
-    guides,
     labs,
     scale_alpha_continuous,
     scale_color_manual,
@@ -30,9 +31,19 @@ from plotnine import (
 )
 
 
-matplotlib.use("Agg")
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Data - Geological field measurements (strike/dip for bedding, faults, joints)
+# Imprint palette — Bedding=brand green (always first), Fault=lavender, Joint=blue
+IMPRINT = {"Bedding": "#009E73", "Fault": "#C475FD", "Joint": "#4467A3"}
+SHAPES = {"Bedding": "o", "Fault": "D", "Joint": "s"}
+
+# Data — geological field measurements (strike/dip for bedding, faults, joints)
 np.random.seed(42)
 
 bedding_strike = np.random.normal(45, 12, 40)
@@ -48,10 +59,10 @@ strikes = np.concatenate([bedding_strike, fault_strike, joint_strike]) % 360
 dips = np.concatenate([bedding_dip, fault_dip, joint_dip])
 feature_types = ["Bedding"] * 40 + ["Fault"] * 25 + ["Joint"] * 35
 
-# Primitive circle radius for equal-area projection
+# Primitive circle radius for the Schmidt equal-area projection
 r_prim = np.sqrt(2)
 
-# Compute poles (equal-area Schmidt projection)
+# Compute poles to planes (equal-area lower-hemisphere projection)
 pole_trend = np.radians((strikes + 90) % 360)
 pole_plunge = np.radians(90 - dips)
 pole_r = np.sqrt(2) * np.sin((np.pi / 2 - pole_plunge) / 2)
@@ -59,7 +70,7 @@ pole_x = pole_r * np.sin(pole_trend)
 pole_y = pole_r * np.cos(pole_trend)
 poles_df = pd.DataFrame({"x": pole_x, "y": pole_y, "feature_type": feature_types})
 
-# Compute great circles for representative planes
+# Compute great circles for a few representative planes per feature type
 gc_rows = []
 gc_indices = {"Bedding": [0, 10, 20, 30], "Fault": [40, 48, 56], "Joint": [65, 75, 85]}
 gc_id = 0
@@ -89,21 +100,21 @@ for ftype, indices in gc_indices.items():
 
 gc_df = pd.DataFrame(gc_rows)
 
-# Stereonet grid - primitive circle
+# Stereonet net — primitive circle
 circle_angles = np.linspace(0, 2 * np.pi, 361)
-prim_df = pd.DataFrame({"x": r_prim * np.cos(circle_angles), "y": r_prim * np.sin(circle_angles), "group": "primitive"})
+prim_df = pd.DataFrame({"x": r_prim * np.cos(circle_angles), "y": r_prim * np.sin(circle_angles)})
 
-# Equal-area net grid lines (small circles at 30° dip intervals)
+# Equal-area net grid — small circles at 30 deg dip intervals
 grid_rows = []
 for dip_interval in range(30, 90, 30):
     plunge_rad = np.radians(90 - dip_interval)
     r_circle = np.sqrt(2) * np.sin((np.pi / 2 - plunge_rad) / 2)
     for angle in np.linspace(0, 2 * np.pi, 181):
-        gx = r_circle * np.cos(angle)
-        gy = r_circle * np.sin(angle)
-        grid_rows.append({"x": gx, "y": gy, "grid_id": f"dip_{dip_interval}"})
+        grid_rows.append(
+            {"x": r_circle * np.cos(angle), "y": r_circle * np.sin(angle), "grid_id": f"dip_{dip_interval}"}
+        )
 
-# Radial lines at 30° azimuth intervals
+# Radial lines at 30 deg azimuth intervals
 for az in range(0, 360, 30):
     az_rad = np.radians(az)
     for t in np.linspace(0, r_prim, 50):
@@ -111,12 +122,11 @@ for az in range(0, 360, 30):
 
 grid_df = pd.DataFrame(grid_rows)
 
-# Degree tick marks every 10 degrees
+# Degree tick marks every 10 degrees around the perimeter
 tick_rows = []
 for deg in range(0, 360, 10):
     rad = np.radians(deg)
-    inner = r_prim * 0.97
-    outer = r_prim * 1.0
+    inner, outer = r_prim * 0.97, r_prim * 1.0
     tick_rows.append(
         {"x1": inner * np.sin(rad), "y1": inner * np.cos(rad), "x2": outer * np.sin(rad), "y2": outer * np.cos(rad)}
     )
@@ -126,7 +136,7 @@ tick_df = pd.DataFrame(tick_rows)
 dir_labels = []
 for deg, label in [(0, "N"), (90, "E"), (180, "S"), (270, "W")]:
     rad = np.radians(deg)
-    offset = r_prim * 1.12
+    offset = r_prim * 1.13
     dir_labels.append({"x": offset * np.sin(rad), "y": offset * np.cos(rad), "label": label})
 dir_df = pd.DataFrame(dir_labels)
 
@@ -136,80 +146,83 @@ for deg in range(0, 360, 30):
     if deg in (0, 90, 180, 270):
         continue
     rad = np.radians(deg)
-    offset = r_prim * 1.08
+    offset = r_prim * 1.09
     deg_labels.append({"x": offset * np.sin(rad), "y": offset * np.cos(rad), "label": f"{deg}°"})
 deg_label_df = pd.DataFrame(deg_labels)
 
-# Cluster centroid annotations for data storytelling
+# Mean strike/dip annotation per cluster (geological context)
 annotations = []
 for ftype in ["Bedding", "Fault", "Joint"]:
     mask = poles_df["feature_type"] == ftype
     cx, cy = poles_df.loc[mask, "x"].mean(), poles_df.loc[mask, "y"].mean()
     mean_strike = strikes[np.array(feature_types) == ftype].mean()
     mean_dip = dips[np.array(feature_types) == ftype].mean()
-    annotations.append({"x": cx, "y": cy - 0.12, "feature_type": ftype, "label": f"{mean_strike:.0f}°/{mean_dip:.0f}°"})
+    annotations.append({"x": cx, "y": cy - 0.14, "feature_type": ftype, "label": f"{mean_strike:.0f}°/{mean_dip:.0f}°"})
 annot_df = pd.DataFrame(annotations)
 
-# Colors (colorblind-safe)
-colors = {"Bedding": "#306998", "Fault": "#E5A023", "Joint": "#7B68A0"}
-shapes = {"Bedding": "o", "Fault": "D", "Joint": "s"}
-
-# Plot - using plotnine's geom_density_2d (stat_density_2d) for Kamb-style contouring
+# Plot — layered grammar of graphics on the equal-area net
 plot = (
     ggplot()
-    # Grid lines (subtle equal-area net)
-    + geom_path(aes(x="x", y="y", group="grid_id"), data=grid_df, color="#CCCCCC", size=0.3, alpha=0.5)
-    # Primitive circle
-    + geom_path(aes(x="x", y="y"), data=prim_df, color="#333333", size=1.2)
-    # Tick marks
-    + geom_segment(aes(x="x1", y="y1", xend="x2", yend="y2"), data=tick_df, color="#333333", size=0.5)
-    # Density contours using plotnine's native stat_density_2d via geom_density_2d
-    # after_stat maps computed density level to alpha for visual depth
+    # Equal-area net grid (subtle, theme-adaptive)
+    + geom_path(aes(x="x", y="y", group="grid_id"), data=grid_df, color=INK, size=0.3, alpha=0.15)
+    # Primitive circle (projection boundary)
+    + geom_path(aes(x="x", y="y"), data=prim_df, color=INK, size=1.2)
+    # Perimeter degree ticks
+    + geom_segment(aes(x="x1", y="y1", xend="x2", yend="y2"), data=tick_df, color=INK_SOFT, size=0.6)
+    # Pole concentration density contours
     + geom_density_2d(
-        aes(x="x", y="y", alpha=after_stat("level")), data=poles_df, color="#666666", size=0.6, linetype="dashed"
+        aes(x="x", y="y", alpha=after_stat("level")),
+        data=poles_df,
+        color=INK_MUTED,
+        size=0.6,
+        linetype="dashed",
+        show_legend=False,
     )
-    + scale_alpha_continuous(range=(0.3, 0.8))
-    + guides(alpha=False)
-    # Great circles
-    + geom_path(aes(x="x", y="y", color="feature_type", group="gc_id"), data=gc_df, size=0.9, alpha=0.7)
+    + scale_alpha_continuous(range=(0.25, 0.7))
+    # Great circles for representative planes
+    + geom_path(aes(x="x", y="y", color="feature_type", group="gc_id"), data=gc_df, size=0.9, alpha=0.65)
     # Poles to planes
     + geom_point(
-        aes(x="x", y="y", color="feature_type", shape="feature_type"), data=poles_df, size=3.5, alpha=0.85, stroke=0.5
+        aes(x="x", y="y", color="feature_type", shape="feature_type"), data=poles_df, size=3.5, alpha=0.9, stroke=0.5
     )
-    # Cardinal directions
-    + geom_text(aes(x="x", y="y", label="label"), data=dir_df, size=18, fontweight="bold", color="#222222")
-    # Degree labels (increased size for readability)
-    + geom_text(aes(x="x", y="y", label="label"), data=deg_label_df, size=13, color="#444444")
-    # Cluster orientation annotations
+    # Cardinal direction labels
+    + geom_text(aes(x="x", y="y", label="label"), data=dir_df, size=7, fontweight="bold", color=INK)
+    # Perimeter degree labels
+    + geom_text(aes(x="x", y="y", label="label"), data=deg_label_df, size=3.6, color=INK_SOFT)
+    # Mean strike/dip per cluster
     + geom_text(
         aes(x="x", y="y", label="label", color="feature_type"),
         data=annot_df,
-        size=11,
+        size=4.0,
         fontstyle="italic",
+        fontweight="bold",
         show_legend=False,
     )
-    + scale_color_manual(name="Feature Type", values=colors)
-    + scale_shape_manual(name="Feature Type", values=shapes)
+    + scale_color_manual(name="Feature type", values=IMPRINT)
+    + scale_shape_manual(name="Feature type", values=SHAPES)
     + coord_fixed(ratio=1)
     + scale_x_continuous(limits=(-1.85, 1.85))
     + scale_y_continuous(limits=(-1.85, 1.85))
-    + labs(title="stereonet-equal-area · plotnine · pyplots.ai")
+    + labs(title="stereonet-equal-area · python · plotnine · anyplot.ai")
     + theme(
-        figure_size=(12, 12),
-        plot_title=element_text(size=24, ha="center"),
+        figure_size=(6, 6),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_key=element_rect(fill=ELEVATED_BG, color=ELEVATED_BG),
+        plot_title=element_text(size=13, ha="center", color=INK),
+        legend_title=element_text(size=11, weight="bold", color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
+        legend_position="bottom",
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         axis_line=element_blank(),
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_background=element_blank(),
-        plot_background=element_blank(),
-        legend_title=element_text(size=16, weight="bold"),
-        legend_text=element_text(size=14),
-        legend_position="right",
+        panel_border=element_blank(),
     )
 )
 
-# Save
-plot.save("plot.png", dpi=300)
+# Save (2400 x 2400 px square at dpi=400)
+plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6, units="in")
