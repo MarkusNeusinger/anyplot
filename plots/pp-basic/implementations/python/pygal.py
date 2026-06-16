@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pp-basic: Probability-Probability (P-P) Plot
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-16
@@ -138,14 +138,16 @@ chart.add(
     show_dots=False,
     dots_size=0,
     stroke_dasharray="16, 10",
-    stroke_style={"width": 3, "linecap": "round"},
+    stroke_style={"width": 5, "linecap": "round"},
     formatter=lambda x, y: "Reference: y = x",
 )
 
-# Three severity tiers — graduated dot sizes amplify the color hierarchy
-chart.add("Good fit   |Δ| ≤ 0.01   ({} pts)".format(len(good_fit)), good_fit, dots_size=9)
-chart.add("Mild deviation   0.01 < |Δ| ≤ 0.025   ({} pts)".format(len(mild_dev)), mild_dev, dots_size=13)
-chart.add("Strong deviation   |Δ| > 0.025   ({} pts)".format(len(strong_dev)), strong_dev, dots_size=18)
+# Three severity tiers — graduated dot sizes amplify the color hierarchy. The
+# dense good-fit band uses the smallest dots to de-clutter the diagonal while
+# the sparse strong-deviation points stay large and focal.
+chart.add("Good fit  |Δ| ≤ 0.01  ({})".format(len(good_fit)), good_fit, dots_size=7)
+chart.add("Mild dev  |Δ| ≤ 0.025  ({})".format(len(mild_dev)), mild_dev, dots_size=13)
+chart.add("Strong dev  |Δ| > 0.025  ({})".format(len(strong_dev)), strong_dev, dots_size=18)
 
 # Save — theme-suffixed PNG (gallery) + interactive HTML (pygal is interactive)
 chart.render_to_png(f"plot-{THEME}.png")
