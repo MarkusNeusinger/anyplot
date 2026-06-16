@@ -1,9 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 pyramid-basic: Basic Pyramid Chart
-Library: matplotlib | Python
-
-Population pyramid: male population extends left, female extends right,
-sharing a central age-group axis. Imprint palette, theme-adaptive chrome.
+Library: matplotlib 3.11.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-06-16
 """
 
 import os
