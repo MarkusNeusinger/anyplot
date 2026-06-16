@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pyramid-basic: Basic Pyramid Chart
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-16
@@ -30,19 +30,32 @@ male_population = [45, 52, 68, 72, 65, 58, 48, 32, 18]
 female_population = [43, 50, 71, 75, 68, 62, 55, 42, 28]
 
 # Negative values place male bars on the left, female on the right of the shared axis
+signed = [-x for x in male_population] + female_population
 df = pd.DataFrame(
     {
         "age": age_groups * 2,
-        "population": [-x for x in male_population] + female_population,
+        "population": signed,
         "gender": ["Male"] * len(age_groups) + ["Female"] * len(age_groups),
+        # Absolute-value tip labels; nudge outward so text clears each bar end
+        "label": male_population + female_population,
+        "label_pos": [v - 5 for v in signed[: len(age_groups)]] + [v + 5 for v in signed[len(age_groups) :]],
     }
 )
 df["age"] = pd.Categorical(df["age"], categories=age_groups, ordered=True)
+
+# Storytelling: spotlight the dominant working-age cohorts (20-29, 30-39)
+peak = df[df["age"].isin(["20-29", "30-39"])]
 
 # Plot
 plot = (
     ggplot(df, aes(x="age", y="population", fill="gender"))
     + geom_bar(stat="identity", width=0.8, color=PAGE_BG, size=0.4)
+    # Faint central reference line anchoring the two opposing sides
+    + geom_hline(yintercept=0, color=INK_SOFT, size=0.6, linetype="dashed")
+    # Emphasis outline on the peak working-age cohorts to create a focal point
+    + geom_bar(data=peak, stat="identity", width=0.8, fill="rgba(0,0,0,0)", color=INK, size=0.9)
+    # Population value at each bar tip for direct read-off
+    + geom_text(aes(x="age", y="label_pos", label="label"), inherit_aes=False, size=4, color=INK_SOFT)
     + coord_flip()
     + scale_fill_manual(values={"Male": MALE_COLOR, "Female": FEMALE_COLOR})
     + scale_y_continuous(
@@ -58,12 +71,12 @@ plot = (
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
         panel_grid_major_y=element_line(color=GRID, size=0.3),
-        axis_title=element_text(size=12, color=INK),
-        axis_text=element_text(size=10, color=INK_SOFT),
+        axis_title=element_text(size=13, color=INK),
+        axis_text=element_text(size=12, color=INK_SOFT),
         axis_line=element_line(color=INK_SOFT),
         plot_title=element_text(size=16, color=INK),
         legend_title=element_text(size=12, color=INK),
-        legend_text=element_text(size=10, color=INK_SOFT),
+        legend_text=element_text(size=11, color=INK_SOFT),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         legend_position="right",
     )
