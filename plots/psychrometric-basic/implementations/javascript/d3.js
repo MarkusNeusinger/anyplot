@@ -1,3 +1,7 @@
+// anyplot.ai
+// psychrometric-basic: Psychrometric Chart for HVAC
+// Library: d3 7.9.0 | JavaScript 22.22.3
+// Quality: 92/100 | Created: 2026-06-16
 //# anyplot-orientation: landscape
 // anyplot.ai
 // psychrometric-basic: Psychrometric Chart for HVAC
