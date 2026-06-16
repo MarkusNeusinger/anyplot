@@ -1,0 +1,263 @@
+library: muix
+language: javascript
+specification_id: stereonet-equal-area
+created: '2026-06-16T21:45:21Z'
+updated: '2026-06-16T21:49:15Z'
+generated_by: claude-opus
+workflow_run: 27649584271
+issue: 4576
+language_version: 22.22.3
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stereonet-equal-area/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stereonet-equal-area/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/stereonet-equal-area/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stereonet-equal-area/javascript/muix/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - Genuine lower-hemisphere Lambert equal-area (Schmidt) projection built from scratch
+    — poles to planes, mean great circles, and a full meridian/small-circle graticule,
+    exactly matching the spec's structural-geology requirements.
+  - Kamb-style density field computed via exponential smoothing of pole axes and rendered
+    as marching-squares iso-contours using the Imprint sequential ramp — highlights
+    preferred orientations as required.
+  - 'Sophisticated idiomatic MUI X usage: ChartContainer with composable children
+    plus useXScale/useYScale hooks to overlay fully custom SVG (net, contours, great
+    circles, perimeter chrome) on top of the native ScatterPlot.'
+  - 'Imprint palette compliance is exact — Bedding is brand green t.palette[0], remaining
+    features follow canonical order; both renders share identical data colors with
+    only chrome flipping; backgrounds are correct #FAF8F1 / #1A1A17.'
+  - 'Complete perimeter chrome: 10-degree tick marks (major/minor), 30-degree degree
+    labels, N/E/S/W cardinals, North at top — all readable in both themes.'
+  - Deterministic in-memory data via fixed-seed LCG; realistic geological field-campaign
+    context (bedding, joint set, foliation, fault) with plausible dip/dip-direction
+    clustering.
+  weaknesses:
+  - All four density-contour rings are drawn in the green Imprint sequential ramp,
+    so the contours around the non-green clusters (purple Joint set, blue Foliation,
+    orange Fault) introduce a second green color that slightly competes with the green
+    Bedding cluster and its green great circle — consider a lower-chroma/neutral contour
+    treatment so density reads as chrome rather than a fifth category.
+  - Perimeter degree labels (30 degrees, 60 degrees, ...) are set at fontSize 13 (CSS
+    px); they are readable but on the small side relative to the 24px cardinal labels
+    — a small bump (to ~14-15px) would improve mobile legibility when scaled to ~400px.
+  - The implementation relies on many module-level helper functions (projectVec, greatCirclePath,
+    smallCirclePath, marchingSquares, hexLerp, etc.); this is justified by the genuine
+    geometric complexity, but it sits outside the strict KISS 'no functions' guideline.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1) — not pure white, not dark. Correct.
+      Chrome: dark title "stereonet-equal-area · javascript · muix · anyplot.ai" and grey subtitle, both readable. Primitive circle drawn in dark ink; subtle grey net graticule (meridians + small circles). Perimeter degree labels (30°/60°/120°/.../330°), 10° tick marks, and bold N/E/S/W cardinals all clearly visible. Bottom legend with colored dots + labels readable. Footnote about Imprint sequential ramp readable.
+      Data: four pole clusters — Bedding green (#009E73, palette[0]), Joint set purple, Foliation blue, Fault orange — each with a matching mean great circle and green sequential density contours. First series is brand green. Markers clearly distinguishable.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17) — not pure black, not light. Correct.
+      Chrome: light title and subtitle readable; primitive circle now drawn in light ink (chrome flipped correctly); net graticule subtle but visible; degree labels, tick marks, and N/E/S/W cardinals all readable as light text — no dark-on-dark failures. Legend and footnote readable.
+      Data: cluster colors are IDENTICAL to the light render (green/purple/blue/orange), great circles and green density contours unchanged — only chrome flipped. Markers clearly distinguishable against the dark surface.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable both themes; perimeter degree labels slightly small
+          at 13px CSS.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; intentional data/contour layering only.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers (size 5), great circles (3.5px) and contours all clearly
+          visible; clusters well-separated.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette, good contrast both themes.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Exact 2400x2400 square; circular projection centered with title/legend
+          bands; nothing clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title + subtitle; degree/cardinal labels serve as the
+          coordinate reference.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Imprint canonical order; density uses imprint_seq;
+          backgrounds correct; both renders theme-correct.'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom projection, graticule, contours, great circles, perimeter
+          chrome — far above generic defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, layered chrome, generous whitespace; green-on-green
+          contour overlap slightly busy.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color-coded clusters + density contours + mean planes clearly guide
+          the viewer to preferred orientations.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct lower-hemisphere equal-area Schmidt stereonet.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Great circles, poles, primitive circle, N-at-top, 10° ticks, N label,
+          legend, Kamb density contours, subtle grid — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Poles/planes projected correctly; North at top; azimuth clockwise.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; legend labels match feature types.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Poles, great circles, density, four feature types, full net — all
+          aspects covered.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible geological field-campaign orientations; neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Dips clamped 2-89°, dip directions 0-360°, realistic clustering.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Many helper functions, justified by genuine projection/contour complexity
+          but outside strict no-function guideline.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; real ChartsTooltip, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness emits plot-{theme}.png/.html; current MUI X API.
+    library_features:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ChartContainer + composable children + useXScale/useYScale hooks
+          + ScatterPlot + ChartsTooltip.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses MUI X compositional container and scale hooks to build a fully
+          custom projection overlay.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-projection
+  - scale-hooks
+  - svg-overlay
+  - contour-lines
+  - marching-squares
+  - tooltip
+  - legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - composable-components
+  dataprep:
+  - kde
+  - stereographic-projection
+  - density-estimation
+  styling:
+  - publication-ready
+  - theme-adaptive
+  - alpha-blending
