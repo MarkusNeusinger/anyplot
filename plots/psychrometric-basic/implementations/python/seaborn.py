@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 psychrometric-basic: Psychrometric Chart for HVAC
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 83/100 | Updated: 2026-03-23
+Library: seaborn | Python 3.13
+Quality: pending | Created: 2026-06-16
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,280 +13,301 @@ import seaborn as sns
 from matplotlib.lines import Line2D
 
 
+# Theme-adaptive chrome (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette — first family is brand green, then canonical order; line styles
+# reinforce colour for colourblind safety.
+RH_COLOR = "#009E73"  # brand green — relative-humidity curves (most prominent family)
+WB_COLOR = "#4467A3"  # blue — wet-bulb isotherms
+ENTH_COLOR = "#AE3030"  # matte red — constant enthalpy (energy)
+SV_COLOR = "#BD8233"  # ochre — constant specific volume
+COMFORT_COLOR = "#2ABCCD"  # cyan — comfort-zone region
+PROCESS_COLOR = "#C475FD"  # lavender — HVAC process path
+
+# Data — moist-air properties at standard sea-level pressure (101.325 kPa)
 np.random.seed(42)
+P_ATM = 101325  # Pa
+T_GRID = np.linspace(-10, 50, 600)
 
-# Constants
-P_ATM = 101325  # Pa, standard atmosphere
-T_DB = np.linspace(-10, 50, 500)
+# Saturation vapour pressure (Pa) and saturation humidity ratio (g/kg) over water
+# (ASHRAE) — a single continuous relation across the whole range keeps the curves
+# smooth (no kink at 0 °C).
+P_SAT = np.exp(23.196 - 3816.44 / (T_GRID + 227.02))
+W_SAT = 0.62198 * P_SAT / (P_ATM - P_SAT) * 1000
 
-# --- Psychrometric equations ---
+# Constant relative-humidity curves (10% – 100%)
+rh_rows = []
+for rh in np.arange(10, 101, 10):
+    p_v = (rh / 100) * P_SAT
+    w = 0.62198 * p_v / (P_ATM - p_v) * 1000
+    keep = (w >= 0) & (w <= 30)
+    for t, wv in zip(T_GRID[keep], w[keep], strict=True):
+        rh_rows.append({"t": t, "w": wv, "rh": f"{rh}%"})
+rh_df = pd.DataFrame(rh_rows)
 
+# Constant wet-bulb isotherms (line slope ≈ -0.402 g/kg per °C)
+wb_rows = []
+for t_wb in np.arange(2, 31, 4):
+    w0 = float(np.interp(t_wb, T_GRID, W_SAT))
+    t_line = np.linspace(t_wb, 50, 160)
+    w_line = w0 - 0.402 * (t_line - t_wb)
+    cap = np.minimum(np.interp(t_line, T_GRID, W_SAT), 30)
+    keep = (w_line >= 0) & (w_line <= cap)
+    for t, wv in zip(t_line[keep], w_line[keep], strict=True):
+        wb_rows.append({"t": t, "w": wv, "twb": f"{t_wb}"})
+wb_df = pd.DataFrame(wb_rows)
 
-def p_sat(t):
-    return np.where(t >= 0, np.exp(23.196 - 3816.44 / (t + 227.02)), np.exp(23.33 - 3841.0 / (t + 231.0)))
+# Constant enthalpy lines (kJ/kg dry air)
+enth_rows = []
+for h in np.arange(20, 101, 20):
+    w_line = (h - 1.006 * T_GRID) / (2.501 + 0.00186 * T_GRID)
+    keep = (w_line >= 0) & (w_line <= np.minimum(W_SAT, 30))
+    for t, wv in zip(T_GRID[keep], w_line[keep], strict=True):
+        enth_rows.append({"t": t, "w": wv, "h": f"{h}"})
+enth_df = pd.DataFrame(enth_rows)
 
+# Constant specific-volume lines (m³/kg dry air)
+sv_rows = []
+for v in np.arange(0.80, 0.93, 0.04):
+    w_line = ((v * P_ATM / 1000) / (0.287042 * (T_GRID + 273.15)) - 1) / 1.6078 * 1000
+    keep = (w_line >= 0) & (w_line <= np.minimum(W_SAT, 30))
+    for t, wv in zip(T_GRID[keep], w_line[keep], strict=True):
+        sv_rows.append({"t": t, "w": wv, "v": f"{v:.2f}"})
+sv_df = pd.DataFrame(sv_rows)
 
-def w_from_rh(t, rh):
-    return 0.62198 * (rh * p_sat(t)) / (P_ATM - rh * p_sat(t)) * 1000
+# Comfort zone (≈20–26 °C, 30–60% RH) and a cooling + dehumidification process path
+comfort_t = np.array([20, 26, 26, 20])
+comfort_w = np.array(
+    [
+        0.62198 * (0.30 * np.interp(20, T_GRID, P_SAT)) / (P_ATM - 0.30 * np.interp(20, T_GRID, P_SAT)) * 1000,
+        0.62198 * (0.30 * np.interp(26, T_GRID, P_SAT)) / (P_ATM - 0.30 * np.interp(26, T_GRID, P_SAT)) * 1000,
+        0.62198 * (0.60 * np.interp(26, T_GRID, P_SAT)) / (P_ATM - 0.60 * np.interp(26, T_GRID, P_SAT)) * 1000,
+        0.62198 * (0.60 * np.interp(20, T_GRID, P_SAT)) / (P_ATM - 0.60 * np.interp(20, T_GRID, P_SAT)) * 1000,
+    ]
+)
 
+state_points = pd.DataFrame(
+    {
+        "t": [34.0, 13.0, 24.0],
+        "w": [
+            0.62198 * (0.45 * np.interp(34, T_GRID, P_SAT)) / (P_ATM - 0.45 * np.interp(34, T_GRID, P_SAT)) * 1000,
+            float(np.interp(13, T_GRID, W_SAT)),
+            0.62198 * (0.50 * np.interp(24, T_GRID, P_SAT)) / (P_ATM - 0.50 * np.interp(24, T_GRID, P_SAT)) * 1000,
+        ],
+        "label": ["A · supply 34°C/45%", "B · cooled 13°C/100%", "C · room 24°C/50%"],
+    }
+)
 
-# --- Seaborn theme and figure setup ---
+# Plot — 16:9 canvas (8 × 4.5 in @ dpi=400 → 3200 × 1800 px)
 sns.set_theme(
     style="whitegrid",
     rc={
-        "axes.spines.top": False,
-        "axes.spines.right": False,
-        "grid.alpha": 0.15,
-        "grid.linewidth": 0.8,
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.12,
+        "grid.linewidth": 0.6,
         "font.family": "sans-serif",
     },
 )
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 
-fig, ax = plt.subplots(figsize=(16, 9))
-
-# Colors - colorblind-safe palette with line style differentiation
-rh_color = "#306998"  # Python blue
-wb_color = "#D4A017"  # Gold/amber (replaces purple for colorblind safety)
-enthalpy_color = "#C0392B"  # Red-brown
-sv_color = "#27AE60"  # Green
-comfort_color = "#306998"
-process_color = "#E67E22"  # Orange
-
-# --- Relative humidity curves (10%-100%) using seaborn lineplot ---
-rh_records = []
-for rh_val in np.arange(0.1, 1.01, 0.1):
-    w = w_from_rh(T_DB, rh_val)
-    mask = (w >= 0) & (w <= 30)
-    for t, wv in zip(T_DB[mask], w[mask], strict=True):
-        rh_records.append({"t": t, "w": wv, "rh": f"{int(rh_val * 100)}%"})
-
-rh_df = pd.DataFrame(rh_records)
-sns.lineplot(
-    data=rh_df,
-    x="t",
-    y="w",
-    hue="rh",
-    ax=ax,
-    palette={f"{int(r * 100)}%": rh_color for r in np.arange(0.1, 1.01, 0.1)},
+# Comfort zone sits behind the property lines
+ax.fill(comfort_t, comfort_w, color=COMFORT_COLOR, alpha=0.16, zorder=1)
+ax.plot(
+    np.append(comfort_t, comfort_t[0]),
+    np.append(comfort_w, comfort_w[0]),
+    color=COMFORT_COLOR,
     linewidth=1.2,
     alpha=0.7,
-    legend=False,
-    sort=True,
+    zorder=1,
 )
-# Thicken 100% saturation curve
-w_sat = w_from_rh(T_DB, 1.0)
-mask_sat = (w_sat >= 0) & (w_sat <= 30)
-ax.plot(T_DB[mask_sat], w_sat[mask_sat], color=rh_color, linewidth=2.5, alpha=1.0, zorder=3)
 
-# Label RH curves
-for rh_val in np.arange(0.1, 1.01, 0.1):
-    label_t = 40 - int(rh_val * 15)
-    w_label = float(w_from_rh(np.array([label_t]), rh_val)[0])
-    if 0.5 < w_label < 29:
-        ax.text(
-            label_t,
-            w_label + 0.4,
-            f"{int(rh_val * 100)}%",
-            fontsize=9,
-            color=rh_color,
-            alpha=0.85,
-            ha="center",
-            va="bottom",
-            fontweight="bold",
-        )
-
-# --- Wet-bulb temperature lines ---
-wb_records = []
-for t_wb in np.arange(0, 35, 5):
-    t_range = np.linspace(t_wb, min(t_wb + 35, 50), 200)
-    w_sat_wb = w_from_rh(np.array([t_wb]), 1.0)[0]
-    slope = -1.006 / 2501
-    w_wb = w_sat_wb + slope * (t_range - t_wb) * 1000
-    w_sat_limit = w_from_rh(t_range, 1.0)
-    mask = (w_wb >= 0) & (w_wb <= w_sat_limit) & (w_wb <= 30)
-    if np.any(mask):
-        for t, wv in zip(t_range[mask], w_wb[mask], strict=True):
-            wb_records.append({"t": t, "w": wv, "twb": f"{t_wb}°C"})
-
-wb_df = pd.DataFrame(wb_records)
+# Property-line families, each drawn as one seaborn lineplot (units → one line per level)
+sns.lineplot(
+    data=sv_df,
+    x="t",
+    y="w",
+    units="v",
+    estimator=None,
+    color=SV_COLOR,
+    linewidth=0.8,
+    linestyle=":",
+    alpha=0.7,
+    ax=ax,
+    legend=False,
+)
+sns.lineplot(
+    data=enth_df,
+    x="t",
+    y="w",
+    units="h",
+    estimator=None,
+    color=ENTH_COLOR,
+    linewidth=0.9,
+    linestyle="-.",
+    alpha=0.65,
+    ax=ax,
+    legend=False,
+)
 sns.lineplot(
     data=wb_df,
     x="t",
     y="w",
-    hue="twb",
-    ax=ax,
-    palette={f"{int(tw)}°C": wb_color for tw in np.arange(0, 35, 5)},
+    units="twb",
+    estimator=None,
+    color=WB_COLOR,
     linewidth=0.9,
-    alpha=0.55,
-    legend=False,
-    sort=True,
     linestyle="--",
-)
-
-# Label wet-bulb lines
-for t_wb in np.arange(0, 35, 5):
-    t_range = np.linspace(t_wb, min(t_wb + 35, 50), 200)
-    w_sat_wb = w_from_rh(np.array([t_wb]), 1.0)[0]
-    slope = -1.006 / 2501
-    w_wb = w_sat_wb + slope * (t_range - t_wb) * 1000
-    w_sat_limit = w_from_rh(t_range, 1.0)
-    mask = (w_wb >= 0) & (w_wb <= w_sat_limit) & (w_wb <= 30)
-    if np.any(mask):
-        valid_t = t_range[mask]
-        valid_w = w_wb[mask]
-        ax.text(
-            float(valid_t[-1]),
-            max(float(valid_w[-1]) - 0.5, 0.2),
-            f"{t_wb}°C",
-            fontsize=8,
-            color=wb_color,
-            alpha=0.8,
-            ha="left",
-            va="top",
-        )
-
-# --- Specific volume lines (vectorized - no nested loops) ---
-sv_values = np.arange(0.78, 0.96, 0.02)
-t_range_sv = np.linspace(-10, 50, 200)
-for sv_target in sv_values:
-    # Solve analytically: sv = 0.287042 * (t+273.15) * (1 + 1.6078*w/1000) / (P_ATM/1000)
-    # w_gkg = ((sv_target * P_ATM/1000) / (0.287042 * (t+273.15)) - 1) / 1.6078 * 1000
-    w_for_sv = ((sv_target * P_ATM / 1000) / (0.287042 * (t_range_sv + 273.15)) - 1) / 1.6078 * 1000
-    w_sat_limit = w_from_rh(t_range_sv, 1.0)
-    mask = (w_for_sv >= 0) & (w_for_sv <= 30) & (w_for_sv <= w_sat_limit)
-    if np.sum(mask) > 10:
-        ax.plot(t_range_sv[mask], w_for_sv[mask], color=sv_color, linewidth=0.7, alpha=0.45, linestyle=":")
-        valid_t = t_range_sv[mask]
-        valid_w = w_for_sv[mask]
-        mid = len(valid_t) // 3
-        if mid > 0:
-            ax.text(
-                valid_t[mid],
-                valid_w[mid],
-                f"{sv_target:.2f}",
-                fontsize=8,
-                color=sv_color,
-                alpha=0.7,
-                ha="center",
-                va="bottom",
-                rotation=-75,
-            )
-
-# --- Enthalpy lines ---
-h_values = np.arange(10, 120, 10)
-t_range_h = np.linspace(-10, 50, 200)
-for h_target in h_values:
-    w_for_h = (h_target - 1.006 * t_range_h) / (2.501 + 0.00186 * t_range_h)
-    w_sat_limit = w_from_rh(t_range_h, 1.0)
-    mask = (w_for_h >= 0) & (w_for_h <= 30) & (w_for_h <= w_sat_limit)
-    if np.sum(mask) > 5:
-        ax.plot(t_range_h[mask], w_for_h[mask], color=enthalpy_color, linewidth=0.7, alpha=0.4, linestyle="-.")
-        valid_t = t_range_h[mask]
-        valid_w = w_for_h[mask]
-        if len(valid_t) > 0:
-            ax.text(
-                valid_t[0],
-                valid_w[0] + 0.3,
-                f"{h_target}",
-                fontsize=8,
-                color=enthalpy_color,
-                alpha=0.7,
-                ha="right",
-                va="bottom",
-                rotation=-35,
-            )
-
-# --- Comfort zone (20-26°C, 30-60% RH) ---
-comfort_t = np.array([20, 26, 26, 20, 20])
-comfort_w = np.array(
-    [
-        w_from_rh(np.array([20]), 0.30)[0],
-        w_from_rh(np.array([26]), 0.30)[0],
-        w_from_rh(np.array([26]), 0.60)[0],
-        w_from_rh(np.array([20]), 0.60)[0],
-        w_from_rh(np.array([20]), 0.30)[0],
-    ]
-)
-ax.fill(comfort_t, comfort_w, alpha=0.12, color=comfort_color, zorder=2)
-ax.plot(comfort_t, comfort_w, color=comfort_color, linewidth=1.5, alpha=0.5, zorder=2)
-ax.text(
-    23,
-    (comfort_w[0] + comfort_w[2]) / 2,
-    "Comfort\nZone",
-    fontsize=11,
-    color=comfort_color,
-    ha="center",
-    va="center",
-    fontweight="bold",
     alpha=0.7,
+    ax=ax,
+    legend=False,
+)
+sns.lineplot(
+    data=rh_df, x="t", y="w", units="rh", estimator=None, color=RH_COLOR, linewidth=1.2, alpha=0.85, ax=ax, legend=False
 )
 
-# --- HVAC process path using seaborn scatterplot ---
-state_points = pd.DataFrame(
-    {
-        "t": [35, 13, 24],
-        "w": [
-            w_from_rh(np.array([35]), 0.50)[0],
-            w_from_rh(np.array([13]), 1.0)[0],
-            w_from_rh(np.array([24]), 0.50)[0],
-        ],
-        "label": ["A (35°C, 50%)", "B (13°C, 100%)", "C (24°C, 50%)"],
-    }
-)
+# Saturation curve (100% RH) — prominent upper boundary
+sat = rh_df[rh_df["rh"] == "100%"]
+ax.plot(sat["t"], sat["w"], color=RH_COLOR, linewidth=2.6, zorder=4)
 
-# Process arrows
-ax.annotate(
-    "",
-    xy=(state_points["t"][1], state_points["w"][1]),
-    xytext=(state_points["t"][0], state_points["w"][0]),
-    arrowprops={"arrowstyle": "->", "color": process_color, "lw": 2.5},
-    zorder=5,
-)
-ax.annotate(
-    "",
-    xy=(state_points["t"][2], state_points["w"][2]),
-    xytext=(state_points["t"][1], state_points["w"][1]),
-    arrowprops={"arrowstyle": "->", "color": process_color, "lw": 2.5},
-    zorder=5,
-)
-
-# State points via seaborn scatterplot
+# HVAC process path: cooling + dehumidification (A→B), then sensible reheat (B→C)
+for i in range(2):
+    ax.annotate(
+        "",
+        xy=(state_points["t"][i + 1], state_points["w"][i + 1]),
+        xytext=(state_points["t"][i], state_points["w"][i]),
+        arrowprops={"arrowstyle": "-|>", "color": PROCESS_COLOR, "lw": 2.6},
+        zorder=5,
+    )
 sns.scatterplot(
     data=state_points,
     x="t",
     y="w",
-    ax=ax,
-    color=process_color,
-    s=120,
+    color=PROCESS_COLOR,
+    s=130,
+    edgecolor=PAGE_BG,
+    linewidth=1.6,
     zorder=6,
     legend=False,
-    edgecolor="white",
-    linewidth=1.5,
+    ax=ax,
 )
 
-# State point labels
+# Direct labels (spec: label property lines on the chart) — spread to edges to avoid crowding
+for rh in rh_df["rh"].unique():
+    seg = rh_df[rh_df["rh"] == rh]
+    ax.text(
+        float(seg["t"].iloc[-1]) + 0.3,
+        float(seg["w"].iloc[-1]),
+        rh,
+        fontsize=7,
+        color=RH_COLOR,
+        ha="left",
+        va="center",
+        fontweight="bold",
+    )
+for twb in wb_df["twb"].unique():
+    seg = wb_df[wb_df["twb"] == twb]
+    ax.text(
+        float(seg["t"].iloc[-1]) + 0.3,
+        float(seg["w"].iloc[-1]) - 0.2,
+        f"{twb}°",
+        fontsize=6.5,
+        color=WB_COLOR,
+        ha="left",
+        va="top",
+    )
+for h in enth_df["h"].unique():
+    seg = enth_df[enth_df["h"] == h]
+    ax.text(
+        float(seg["t"].iloc[0]) - 0.3,
+        float(seg["w"].iloc[0]) + 0.2,
+        h,
+        fontsize=6.5,
+        color=ENTH_COLOR,
+        ha="right",
+        va="bottom",
+        rotation=-38,
+    )
+for v in sv_df["v"].unique():
+    seg = sv_df[sv_df["v"] == v]
+    ax.text(
+        float(seg["t"].iloc[0]) + 0.2,
+        float(seg["w"].iloc[0]) - 0.2,
+        v,
+        fontsize=6.5,
+        color=SV_COLOR,
+        ha="left",
+        va="top",
+    )
+
+ax.text(
+    23,
+    float(comfort_w.mean()),
+    "Comfort\nzone",
+    fontsize=8,
+    color=COMFORT_COLOR,
+    ha="center",
+    va="center",
+    fontweight="bold",
+)
 for _, row in state_points.iterrows():
-    offset_x = -5 if "B" in row["label"] else (1.0 if "C" in row["label"] else 0.8)
-    offset_y = 0.5 if "B" in row["label"] else (-1.2 if "C" in row["label"] else 0.9)
-    ax.text(row["t"] + offset_x, row["w"] + offset_y, row["label"], fontsize=10, color=process_color, fontweight="bold")
+    dx = -0.8 if row["label"].startswith("B") else 0.8
+    ha = "right" if row["label"].startswith("B") else "left"
+    ax.text(
+        row["t"] + dx,
+        row["w"] + 0.7,
+        row["label"],
+        fontsize=7.5,
+        color=PROCESS_COLOR,
+        ha=ha,
+        va="bottom",
+        fontweight="bold",
+    )
 
-# --- Legend ---
-legend_elements = [
-    Line2D([0], [0], color=rh_color, linewidth=2, label="Relative Humidity"),
-    Line2D([0], [0], color=wb_color, linewidth=1, linestyle="--", label="Wet-Bulb Temp"),
-    Line2D([0], [0], color=enthalpy_color, linewidth=1, linestyle="-.", label="Enthalpy (kJ/kg)"),
-    Line2D([0], [0], color=sv_color, linewidth=1, linestyle=":", label="Specific Volume (m³/kg)"),
-    Line2D([0], [0], color=process_color, linewidth=2.5, marker="o", markersize=6, label="HVAC Process Path"),
+# Legend — sits in the empty upper-left zone (cold + humid is physically unreachable)
+legend_handles = [
+    Line2D([0], [0], color=RH_COLOR, lw=2.2, label="Relative humidity"),
+    Line2D([0], [0], color=WB_COLOR, lw=1.4, ls="--", label="Wet-bulb temp (°C)"),
+    Line2D([0], [0], color=ENTH_COLOR, lw=1.4, ls="-.", label="Enthalpy (kJ/kg)"),
+    Line2D([0], [0], color=SV_COLOR, lw=1.4, ls=":", label="Specific volume (m³/kg)"),
+    Line2D(
+        [0],
+        [0],
+        color=PROCESS_COLOR,
+        lw=2.4,
+        marker="o",
+        markersize=6,
+        markeredgecolor=PAGE_BG,
+        label="HVAC process path",
+    ),
 ]
-ax.legend(handles=legend_elements, loc="upper left", fontsize=11, framealpha=0.9, edgecolor="#cccccc")
+legend = ax.legend(
+    handles=legend_handles, loc="upper left", fontsize=8, framealpha=0.95, facecolor=ELEVATED_BG, edgecolor=INK_SOFT
+)
+legend.get_title().set_color(INK)
+for text in legend.get_texts():
+    text.set_color(INK_SOFT)
 
-# --- Axis styling ---
+# Style
 ax.set_xlim(-10, 50)
 ax.set_ylim(0, 30)
-ax.set_xlabel("Dry-Bulb Temperature (°C)", fontsize=20)
-ax.set_ylabel("Humidity Ratio (g/kg dry air)", fontsize=20)
-ax.set_title("psychrometric-basic · seaborn · pyplots.ai", fontsize=24, fontweight="medium")
-ax.tick_params(axis="both", labelsize=16)
+ax.set_xlabel("Dry-bulb temperature (°C)", fontsize=11, color=INK)
+ax.set_ylabel("Humidity ratio (g/kg dry air)", fontsize=11, color=INK)
+ax.set_title("psychrometric-basic · python · seaborn · anyplot.ai", fontsize=13, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=9, colors=INK_SOFT)
+sns.despine(ax=ax)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+# Save
+fig.subplots_adjust(left=0.07, right=0.97, top=0.93, bottom=0.1)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
