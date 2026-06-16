@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: stereonet-equal-area
 created: '2026-03-15T23:03:21Z'
-updated: '2026-06-16T21:29:46Z'
+updated: '2026-06-16T21:36:07Z'
 generated_by: claude-opus
 workflow_run: 27648935517
 issue: 4576
@@ -15,51 +15,43 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stereonet
 quality_score: 88
 review:
   strengths:
-  - Genuinely sophisticated custom Schmidt equal-area (Lambert) projection built from
-    scratch — lower-hemisphere poles, great circles for every plane, primitive circle,
-    10° perimeter ticks, and N/E/S/W cardinal labels all present and geometrically
-    correct.
-  - 'Imprint palette used perfectly in canonical order: Bedding=#009E73 (brand green,
-    first series), Joint=#C475FD, Fault=#4467A3, Foliation=#BD8233. Data colors are
-    identical across light and dark renders; only chrome flips.'
-  - 'Theme-adaptive chrome is fully threaded: backgrounds #FAF8F1/#1A1A17, ink/ink-soft
-    tokens applied to primitive circle, ticks, cardinal labels, mean-pole diamonds,
-    and annotations — all readable in both themes with no dark-on-dark failures.'
-  - 'Strong data storytelling: KDE density contours, per-cluster confidence ellipses,
-    and black diamond mean-pole markers with italic strike/dip annotations create
-    clear focal points for each of the four feature clusters.'
-  - Excellent spec/data quality — four distinct structural-geology feature types with
-    realistic, well-separated strike/dip distributions; reproducible (seed=42); clean
-    linear KISS script with no unused imports.
+  - Correct lower-hemisphere equal-area (Schmidt/Lambert) projection with proper pole-to-plane
+    geometry, great circles, primitive circle, and 10° perimeter ticks (longer every
+    30°)
+  - 'Imprint palette used in canonical order (green/lavender/blue/ochre), first series
+    #009E73; data colors identical across light and dark, only chrome flips'
+  - 'Rich, geologically plausible data: four feature clusters (Bedding/Joint/Fault/Foliation)
+    with realistic strike/dip distributions and circular-mean strike handling'
+  - 'Strong storytelling layers: KDE density contours, per-cluster confidence ellipses,
+    diamond mean-pole markers with italic strike/dip annotations placed via smart
+    outward nudging'
+  - Clean theme-adaptive chrome via Imprint design tokens; both renders fully legible
+    with no dark-on-dark or light-on-light failures
+  - KISS script-style code, seeded RNG (42), clean imports, saves plot-{THEME}.png
+    + .html, interactive tooltips on poles
   weaknesses:
-  - 'TITLE BRAND ERROR (SC-04): title reads ''stereonet-equal-area · letsplot · pyplots.ai''
-    — wrong domain (must be ''anyplot.ai'', not ''pyplots.ai'') AND missing the ''{language}''
-    segment. Correct it to ''stereonet-equal-area · python · letsplot · anyplot.ai''
-    (line 286). The module docstring on line 1 also says ''pyplots.ai'' — fix to ''anyplot.ai''
-    for consistency.'
-  - 'Great-circle spaghetti: with all 70 planes drawn as great circles at alpha=0.28,
-    the net is visually busy and the faint paths crisscross the mean-pole annotation
-    labels, slightly reducing refinement and readability. Consider lowering alpha
-    further (~0.18), thinning size, or drawing great circles only for cluster means
-    to reduce clutter while keeping the planar-feature representation.'
-  - Italic mean-pole annotation labels (size=7 mm) are small and sit directly inside
-    the dense pole clusters; legible but crowded against the points and faint great
-    circles — minor overlap.
+  - Great circles are rendered at alpha=0.18, size=0.35 — so faint they are nearly
+    imperceptible in both renders. The spec lists great circles as a primary feature
+    for planar data; raise alpha to ~0.30-0.40 (or size ~0.5) so they read without
+    overwhelming the poles.
+  - Legend box (lower-right, [0.86,0.16]) slightly overlaps the SE perimeter tick
+    marks of the primitive circle in both renders — nudge the legend further out or
+    shrink it so it clears the circle boundary.
+  - Density contours are gaussian KDE (geom_density2d) rather than true Kamb contours
+    the spec names; acceptable proxy but not the exact statistical method requested.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), correct. Title bar fully visible at top, not clipped.
-      Chrome: Bold dark title "stereonet-equal-area · letsplot · pyplots.ai" (NOTE: wrong domain — should read "python · letsplot · anyplot.ai"). Black primitive circle with 10° perimeter tick marks, dark N/E/S/W cardinal labels, dashed gray N-S/E-W reference cross. Black diamond mean-pole markers with italic strike/dip labels (Foliation 268/28, Joint 356/78, Bedding 43/33, Fault 151/55). Legend "Feature Type" boxed bottom-right on elevated cream fill. All text readable against the light background.
-      Data: Lower-hemisphere poles color-coded — Bedding=#009E73 green (first series ✓), Joint=#C475FD lavender, Fault=#4467A3 blue, Foliation=#BD8233 ochre. Faint same-colored great circles cross the net; subtle gray KDE density contours and 1-sigma confidence ellipses surround each cluster.
-      Legibility verdict: PASS (great-circle clutter is busy but text remains readable).
+      Background: warm off-white (#FAF8F1), correct.
+      Chrome: title "stereonet-equal-area · python · letsplot · anyplot.ai" in dark bold, centered and readable; black primitive circle with 10° ticks; bold dark cardinal labels N/E/S/W; italic dark mean-orientation annotations (e.g. "Bedding 43/33", "Joint 356/78"); legend "Feature Type" lower-right with light frame. All text clearly readable. Legibility verdict: PASS.
+      Data: four pole clusters — Bedding green (#009E73), Joint lavender (#C475FD), Fault blue (#4467A3), Foliation ochre (#BD8233); black diamond mean markers; subtle gray density contours and confidence ellipses; very faint colored great-circle arcs. First series confirmed #009E73.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17), correct.
-      Chrome: Light (#F0EFE8) title, primitive circle, ticks, cardinal labels, and white diamond mean markers — all clearly visible. Legend frame on dark elevated (#242420) fill with light text. No dark-on-dark failures. Brand green #009E73 reads well on the dark surface.
-      Data: Pole colors identical to the light render (green/lavender/blue/ochre) — only chrome flipped. Density contours rendered in light gray, subtle and visible.
-      Legibility verdict: PASS.
+      Background: warm near-black (#1A1A17), correct.
+      Chrome: title and cardinal labels in light ink, readable; primitive circle and ticks render light; mean-pole diamonds flip to near-white; italic annotations light and readable; legend frame light on elevated dark surface. No dark-on-dark failures. Legibility verdict: PASS.
+      Data: identical hues to light render (green/lavender/blue/ochre) — only chrome flipped. Great-circle arcs equally faint here.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -67,51 +59,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Sizes explicitly set; readable both themes. Italic mean labels small/crowded
-          inside clusters.
+        comment: Font sizes explicitly set; all text readable in both themes; mean-label
+          annotations small (7mm) but legible
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Great-circle spaghetti crosses annotation labels; minor overlap,
-          text still readable.
+        comment: Legend slightly overlaps SE perimeter ticks; mean labels sit close
+          to clusters but no severe collision
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Poles well-sized (4.5); great circles very faint by design; density/ellipses
-          subtle.
+        comment: Poles prominent and density-appropriate, but great circles at alpha=0.18
+          are nearly invisible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint palette, four well-separated hues, adequate contrast.
+        comment: Imprint palette is CVD-safe; no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Square 2400x2400, gate passed; circle centered, balanced margins,
-          legend inside panel.
+        comment: Valid 2400x2400 square canvas, well centered; minor legend/circle
+          overlap
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes intentionally blank for stereonet; cardinal labels + descriptive
-          title serve the role.
+        comment: Axes correctly suppressed for a stereonet; cardinal labels + title
+          present
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; canonical Imprint order; backgrounds and chrome
-          theme-correct in both renders.'
+        comment: 'Canonical Imprint order, first series #009E73, backgrounds #FAF8F1/#1A1A17,
+          both themes correct'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -119,23 +111,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Sophisticated custom stereonet well above defaults.
+        comment: 'Polished: custom net, mean diamonds, ellipses, density contours,
+          tick hierarchy'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Clean, chartjunk-free, annular mask; great-circle clutter slightly
-          hurts refinement.
+        comment: Minimal chrome, subtle grid, generous whitespace; great circles slightly
+          too washed out
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Mean diamonds + density + ellipses create focal points; spaghetti
-          competes a little.
+        comment: Clear focal clusters with labeled mean orientations guide the viewer
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -143,27 +135,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct lower-hemisphere equal-area stereonet.
+        comment: Lower-hemisphere equal-area stereonet
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: Great circles, poles, density contours, primitive circle, 10-deg
-          ticks, N label, color+legend all present.
+          ticks, N label, legend all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Poles projected correctly; North at top; all data within net.
+        comment: Strike/dip correctly mapped to poles and great circles
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title wrong: ''pyplots.ai'' should be ''anyplot.ai'' and missing
-          ''python'' segment. Legend labels correct.'
+        passed: true
+        comment: Title matches mandated format; legend labels match feature types
     data_quality:
       score: 15
       max: 15
@@ -173,20 +164,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Four distinct feature clusters with varied strike/dip; preferred
-          orientations shown.
+        comment: Shows poles, great circles, density, multiple feature sets
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral structural-geology field-mapping scenario.
+        comment: Plausible geological strike/dip clusters, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Strike 0-360, dip 0-90, geologically plausible values.
+        comment: Dips 0-90, strikes 0-360 sensible
     code_quality:
       score: 10
       max: 10
@@ -196,60 +186,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports->data->plot->save, no functions/classes.
+        comment: Script-style, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a hand-built projection; annular-mask
-          trick documented.
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png + .html via ggsave.
+        comment: Saves plot-{THEME}.png + .html
     library_features:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Idiomatic ggplot grammar: layered geoms, manual scales, theme tokens.'
+        comment: Idiomatic ggplot grammar, layered geoms, manual scales, theme tokens
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses letsplot layer_tooltips and geom_density2d for interactive HTML
-          output.
-  verdict: REJECTED
+        comment: Interactive tooltips, HTML export, geom_density2d
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - polar-projection
-  - annotations
-  - manual-ticks
   - layer-composition
-  - custom-legend
+  - annotations
   - hover-tooltips
   - html-export
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
