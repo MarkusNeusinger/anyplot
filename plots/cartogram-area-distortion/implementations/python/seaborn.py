@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
-Library: seaborn | Python 3.13
-Quality: pending | Created: 2026-06-16
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-06-16
 """
 
 import os
