@@ -180,12 +180,16 @@ for rh_val, t_label in rh_label_t.items():
         rh_labels.append({"t_db": t_label, "w": w_label, "label": f"{int(rh_val * 100)}%"})
 df_rh_labels = pd.DataFrame(rh_labels)
 
-# Wet-bulb labels — placed below the saturation curve, only every other line to declutter
+# Wet-bulb labels — nudged down each diagonal (off the saturation curve) so they
+# don't crowd the RH labels in the dense upper-left convergence zone
+wb_label_offset = 7
 df_wb_labels = pd.DataFrame(
     [
-        {"t_db": t_wb + 3.2, "w": humidity_ratio(t_wb, 1.0) * 1000 - 0.6, "label": f"{t_wb}°C wb"}
+        {"t_db": t_wb + wb_label_offset, "w": w_lbl, "label": f"{t_wb}°C wb"}
         for t_wb in wb_temps
-        if t_wb % 10 == 0 and humidity_ratio(t_wb, 1.0) * 1000 <= 27
+        if t_wb % 10 == 0
+        for w_lbl in [wet_bulb_line(t_wb, [t_wb + wb_label_offset])[0] * 1000]
+        if 0.5 < w_lbl <= 27
     ]
 )
 
