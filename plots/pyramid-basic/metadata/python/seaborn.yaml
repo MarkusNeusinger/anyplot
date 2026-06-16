@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: pyramid-basic
 created: '2025-12-23T18:13:40Z'
-updated: '2026-06-16T19:29:59Z'
+updated: '2026-06-16T19:38:21Z'
 generated_by: claude-opus
 workflow_run: 27642344364
 issue: 1000
@@ -12,38 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pyramid-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - Correct pyramid/butterfly chart via single seaborn barplot with sign-flipped male
-    values — clean, idiomatic approach
-  - 'Imprint palette compliant: Male = brand green #009E73, Female = lavender #C475FD,
-    with a thoughtful code comment justifying canonical order for gender categories'
-  - Symmetric x-axis with absolute-value tick labels (negative sign hidden) — exactly
-    what a population pyramid needs for fair comparison
-  - Both light and dark renders are fully readable; data colors identical across themes,
-    only chrome flips
-  - Subtle central reference line at x=0 anchors the two sides; clean L-frame with
-    top/right spines removed and a faint x-only grid
-  - Title matches the mandated format and data is realistic, neutral, deterministic
+  - 'Textbook population pyramid: green Male bars extend left, lavender Female bars
+    extend right from a shared central axis, with a symmetric x-axis (±6,000) for
+    fair side-by-side comparison.'
+  - 'Imprint palette compliance is exact — first series Male = #009E73 brand green,
+    second series Female = #C475FD lavender, identical data colors across light and
+    dark renders with only chrome flipping.'
+  - 'Both themes are fully readable: warm off-white #FAF8F1 in light, warm near-black
+    #1A1A17 in dark; title, axis labels, ticks, legend, and annotation are all legible
+    with no dark-on-dark or light-on-light failures.'
+  - Strong data storytelling — the three oldest cohorts (60-69, 70-79, 80+) carry
+    crisp ink edge-highlighting and an annotated arrow ('Women outlive men — female-skewed
+    60+ cohorts') creating a clear focal point.
+  - 'Idiomatic seaborn: sns.set_theme rc-driven chrome, sns.barplot with hue/hue_order/palette,
+    sns.despine for the clean L-frame, plus a subtle theme-adaptive center reference
+    line and x-only grid.'
+  - Canvas is exactly 3200×1800 px (figsize=(8,4.5) @ 400 dpi), no bbox_inches='tight',
+    deterministic hardcoded data — fully reproducible.
   weaknesses:
-  - No data-storytelling emphasis — every bar is weighted equally; a focal annotation
-    (e.g. the female-skewed older cohorts) would lift DE-03
-  - Pyramid is built with the generic negative-value trick rather than anything uniquely
-    seaborn, so distinctive library features (LM-02) are modest
-  - Tick labels at 8pt are on the small side when the 3200x1800 canvas is scaled down
-    to ~400px mobile width — still legible but near the floor
+  - Title and axis labels are on the smaller side (title 12pt, labels 10pt, ticks
+    9pt) — readable at full size but would benefit from slightly larger type for mobile
+    (~400px) legibility.
+  - 'LM-02: pyramid is built via barplot with negated left-side values, which is a
+    sound general technique but not deeply distinctive to seaborn versus matplotlib.'
+  - 'Minor: y-axis label ''Age Group'' renders quite close to the left canvas edge
+    — all pixels visible (not AR-09), but margin is tight; a touch more left padding
+    would add breathing room.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (~#FAF8F1), correct light surface.
-      Chrome: title "pyramid-basic · python · seaborn · anyplot.ai" in dark ink, fully readable; axis labels "Population (thousands)" and "Age Group" dark and clear; x/y tick labels (6,000/4,000/2,000/0 mirrored, age groups 0-9..80+) all readable in soft ink; subtle x-only grid; legend "Gender" (Male/Female) in upper-right elevated frame.
-      Data: Male bars extend left in brand green #009E73, Female bars extend right in Imprint lavender #C475FD. First series is #009E73. Central vertical reference line at x=0.
+      Background: warm off-white ~#FAF8F1, correct light surface.
+      Chrome: dark title "pyramid-basic · python · seaborn · anyplot.ai" centered above the plot; dark "Age Group" y-label and "Population (thousands)" x-label; symmetric x-ticks (6,000 / 4,000 / 2,000 / 0 / 2,000 / 4,000 / 6,000) showing absolute values both sides; legend box (upper right) titled "Gender" with Male/Female swatches — all text clearly readable against the light background.
+      Data: Male bars = brand green #009E73 extending LEFT, Female bars = lavender #C475FD extending RIGHT from a central axis; first series is #009E73. Three oldest cohorts (60-69, 70-79, 80+) carry dark ink edge highlights and a "Women outlive men — female-skewed 60+ cohorts" annotation with arrow.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black (~#1A1A17), correct dark surface.
-      Chrome: title and axis labels render in light ink, fully readable; tick labels in soft light ink clearly visible against the near-black background — no dark-on-dark failures; grid subtle; legend frame uses elevated dark surface with readable light text.
-      Data: identical colors to light render — green #009E73 (Male, left) and lavender #C475FD (Female, right). Only chrome flipped between themes.
+      Background: warm near-black ~#1A1A17, correct dark surface.
+      Chrome: light/near-white title, axis labels, tick labels, legend text and annotation — all clearly readable; no dark-on-dark failures.
+      Data: identical to light render — Male #009E73 green (left), Female #C475FD lavender (right). Only chrome flipped; data colors unchanged. Focal cohorts show light ink edge highlights on dark surface.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -55,66 +63,69 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; 8pt ticks near the floor at mobile
-          scale
+        comment: All text readable in both themes; fonts explicitly set but on the
+          smaller side for ~400px mobile.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements
+        comment: No overlapping text; annotation sits clear of bars and legend.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars prominent and clearly distinguishable
+        comment: Bars prominent with subtle edge separation; focal cohorts emphasized.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender high contrast and CVD-safe
+        comment: Green/lavender are CVD-safe with strong contrast; not red-green dependent.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; balanced proportions, nothing clipped
+        comment: Exact 3200x1800 canvas; balanced proportions, nothing clipped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units
+        comment: Descriptive labels with units (thousands); absolute-value ticks both
+          sides.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Imprint second color, correct theme backgrounds'
+        comment: 'First series #009E73, second #C475FD; backgrounds #FAF8F1/#1A1A17;
+          both renders theme-correct.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Professional Imprint styling, intentional palette
+        comment: Custom Imprint palette, intentional focal hierarchy, polished overall.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle grid, central reference line, generous whitespace
+        comment: Despined L-frame, subtle x-only grid, theme-adaptive center line.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Pyramid shape reads naturally but no focal emphasis/annotation
+        passed: true
+        comment: Edge-highlight + annotated arrow create a clear focal point on the
+          60+ cohorts.
     spec_compliance:
       score: 15
       max: 15
@@ -124,26 +135,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct pyramid/butterfly chart
+        comment: Correct pyramid/butterfly chart.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Symmetric scale, distinct colors, central category axis, legend,
-          absolute-value ticks
+        comment: Central axis, symmetric scale, distinct colors, category labels,
+          legend all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Left=male, right=female, age groups on shared axis
+        comment: Category on y, left/right values mapped correctly; all 9 groups shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; Male/Female legend
+        comment: Title matches mandated format; legend labels Male/Female match data.
     data_quality:
       score: 15
       max: 15
@@ -153,19 +164,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows pyramid taper and male/female asymmetry across cohorts
+        comment: Shows asymmetry across all age groups including the older-cohort
+          skew.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral population demographics
+        comment: Plausible neutral population demographics.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible thousands-scale values
+        comment: Sensible population counts, symmetric ±6,000 range.
     code_quality:
       score: 10
       max: 10
@@ -175,31 +187,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes
+        comment: Linear script, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data
+        comment: Deterministic hardcoded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, plt, pd, sns all used
+        comment: os, plt, pd, sns all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake UI
+        comment: Clean, appropriate complexity; no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, current API
+        comment: Saves plot-{THEME}.png with facecolor; current API.
     library_features:
       score: 6
       max: 10
@@ -209,26 +221,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: High-level sns.barplot with hue/palette and sns.set_theme rc chrome
+        comment: sns.set_theme rc chrome, barplot with hue/palette, despine.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: Pyramid via generic negative-value trick; little uniquely-seaborn
-          machinery
+        passed: true
+        comment: barplot hue/dodge handling for the butterfly; technique not uniquely
+          seaborn.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - diverging-bars
+  - annotations
   - manual-ticks
-  - reference-line
   patterns:
-  - data-generation
-  dataprep:
-  - sign-flip
-  - long-form-reshape
+  - explicit-figure
+  dataprep: []
   styling:
-  - theme-adaptive
-  - publication-ready
+  - edge-highlighting
+  - grid-styling
