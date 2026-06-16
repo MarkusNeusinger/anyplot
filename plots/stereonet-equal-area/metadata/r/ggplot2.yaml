@@ -1,0 +1,264 @@
+library: ggplot2
+language: r
+specification_id: stereonet-equal-area
+created: '2026-06-16T21:30:09Z'
+updated: '2026-06-16T21:33:50Z'
+generated_by: claude-opus
+workflow_run: 27649042743
+issue: 4576
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stereonet-equal-area/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stereonet-equal-area/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Genuinely sophisticated, hand-built Schmidt equal-area projection — correct lower-hemisphere
+    math for great circles (geom_path over orthogonal strike/dip vectors) and poles
+    (plunge = 90-dip toward strike+270), all native ggplot2 with no backend shortcuts.
+  - 'Complete spec coverage: faint equal-area net grid, primitive circle, 10-degree
+    perimeter ticks with emphasized cardinal ticks, bold N + E/S/W labels, colored
+    great circles, colored poles, and Kamb-style pole-density contours.'
+  - 'Imprint palette applied correctly — Bedding is brand green #009E73 as the first
+    series, followed by lavender/blue/ochre in canonical order; data colors identical
+    across both themes with only chrome flipping.'
+  - theme_void + coord_fixed(clip='off') produces a clean, chrome-free canvas with
+    generous whitespace; net grid and great circles use low alpha so the poles and
+    density rings remain the focal point.
+  - Both light (#FAF8F1) and dark (#1A1A17) renders are fully legible with correct
+    warm backgrounds; N/E/S/W, title, subtitle, and legend all readable on both surfaces.
+  weaknesses:
+  - Great circles converge densely through the centre of the net, producing mild visual
+    clutter where many low-alpha arcs overlap — acceptable for the plot type but slightly
+    busy. Could nudge great-circle alpha down to ~0.22 or thin linewidth to 0.4 to
+    further calm the centre.
+  - Density contours read as faint concentric rings around each cluster but are not
+    labeled or filled, so the 'preferred orientation' signal is subtle; a light fill
+    ramp (imprint_seq) or a single emphasized contour level would strengthen the density
+    storytelling.
+  - Several projection helper functions (project_line, project_vec, great_circle,
+    make_set) push against the KISS-no-functions preference, though they are genuinely
+    warranted by the spherical-projection math.
+  image_description: "Light render (plot-light.png):\n  Background: warm off-white\
+    \ (#FAF8F1) across full square canvas.\n  Chrome: title \"stereonet-equal-area\
+    \ · r · ggplot2 · anyplot.ai\" and subtitle in dark/soft ink, both crisp; bold\
+    \ \"N\" at top, \"E\"/\"S\"/\"W\" cardinal labels in soft ink; 10-degree perimeter\
+    \ ticks with emphasized cardinal ticks; primitive circle in soft ink. All readable.\n\
+    \  Data: four feature types — Bedding green #009E73, Joint Set 1 lavender, Joint\
+    \ Set 2 blue, Fault ochre. Poles plotted as filled points clustered into four\
+    \ groups, great circles as low-alpha colored arcs, gray density contour rings\
+    \ around clusters, faint net grid. First series is brand green.\n  Legibility\
+    \ verdict: PASS\n\nDark render (plot-dark.png):\n  Background: warm near-black\
+    \ (#1A1A17) across full square canvas.\n  Chrome: title/subtitle in light ink,\
+    \ bold \"N\" and cardinal labels light, ticks and primitive circle in light-soft\
+    \ ink — all clearly visible, no dark-on-dark. \n  Data: identical data colors\
+    \ to light render (green/lavender/blue/ochre poles, same great circles and contour\
+    \ rings); only chrome flipped. \n  Legibility verdict: PASS"
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Fonts explicitly set; title/subtitle/cardinals/legend readable in
+          both themes. Long mandated title scales acceptably to mobile.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text collisions; great circles converge densely in the net centre
+          creating mild clutter.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Poles at size 2.8 clearly visible; great circles alpha 0.30 and net
+          grid suitably subtle.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Four-class palette CVD-distinguishable; color reinforced by spatial
+          clustering.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2400x2400 square (matches gate); nothing clipped, N label and cardinals
+          safely inside frame.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Cardinal directions serve as axes; descriptive subtitle explains
+          projection.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Imprint order; correct theme backgrounds;
+          both renders theme-correct.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom-built equal-area projection with refined chrome — well above
+          generic defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void, subtle net, generous whitespace, low-alpha arcs.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Density contours and tight clusters guide the eye; contours could
+          be more emphasized.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct lower-hemisphere Schmidt equal-area stereonet.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Great circles, poles at 90deg, primitive circle, 10-deg ticks, N
+          + cardinals, color-coded legend, density contours, subtle net all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Strike/dip projected correctly; poles trend = strike+270, plunge
+          = 90-dip.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'stereonet-equal-area · r · ggplot2 · anyplot.ai';
+          legend labels match feature types.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Bedding, two joint sets, and a fault set exercise planes, poles,
+          density, and multi-class legend.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral structural-geology field measurements.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Strikes 0-360, dips clamped 2-89 with realistic per-set spreads.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several helper functions, but warranted by the spherical-projection
+          math.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2/dplyr/scales/ragg all used (bind_rows, alpha, agg_png).
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; clean layered build.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png; modern linewidth API.
+    library_features:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Layered geoms, coord_fixed, theme_void, scale_color_manual, guide
+          override.aes — textbook ggplot2.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: geom_contour density overlay, clip='off' for off-panel cardinals,
+          legend key restyling.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - dplyr
+  - scales
+  - ragg
+  techniques:
+  - custom-projection
+  - density-contours
+  - annotations
+  - polar-layout
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  - coordinate-transform
+  styling:
+  - publication-ready
+  - theme-adaptive
+  - alpha-blending

@@ -1,0 +1,250 @@
+library: echarts
+language: javascript
+specification_id: stereonet-equal-area
+created: '2026-06-16T21:39:15Z'
+updated: '2026-06-16T21:43:35Z'
+generated_by: claude-opus
+workflow_run: 27649476267
+issue: 4576
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stereonet-equal-area/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stereonet-equal-area/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/stereonet-equal-area/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stereonet-equal-area/javascript/echarts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Builds a complete Schmidt lower-hemisphere equal-area stereonet from scratch on
+    a hidden cartesian2d grid using ECharts custom-series renderItem — equal-area
+    net (meridians + small circles every 10 deg), primitive circle, perimeter ticks,
+    cardinal N/E/S/W labels and a North arrow, all idiomatic ECharts.
+  - 'Covers every spec feature: poles to planes as scatter colored by feature_type
+    with a legend, mean great circles per feature, and Kamb-style Gaussian KDE density
+    contours rendered via marching squares.'
+  - 'Correct palette discipline: Bedding=#009E73 (brand green first), Joint sets use
+    canonical lavender/blue, Fault uses the semantic matte-red anchor (#AE3030) for
+    a hazard role, and density contours use imprint_seq (green->blue) — no disallowed
+    colormaps.'
+  - 'Theme chrome is correct in both renders: warm off-white #FAF8F1 (light) and warm
+    near-black #1A1A17 (dark); data colors identical across themes, only chrome flips.
+    All text (title, subtitle, legend, cardinals) is readable in both.'
+  - Deterministic LCG+Box-Muller data generation with realistic structural-geology
+    context (bedding, two joint sets, fault) and plausible strike/dip distributions;
+    correct square 2400x2400 canvas.
+  weaknesses:
+  - The imprint_seq density-contour colors (green->blue) partially collide perceptually
+    with the categorical Bedding green and Joint-set-2 blue, and with the green/blue
+    mean great circles — in dense regions a reader could momentarily confuse a contour
+    ring with a series element. Consider rendering the contours in a single muted
+    neutral, or reducing their opacity, to keep poles vs density vs great-circles
+    cleanly separated.
+  - The legend only identifies the four feature_type point series; it does not explain
+    the concentric density contours or the colored mean great-circle arcs. The subtitle
+    mentions them, but a small annotation or secondary legend entry would make the
+    encoding fully self-explanatory.
+  - Several geometry/math helper functions are defined (vecToXY, poleVec, greatCircleArc,
+    etc.); these are genuinely needed for a from-scratch projection so it is justified,
+    but it is a mild departure from the KISS no-functions guideline.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (~#FAF8F1), correct light surface, not pure white.
+      Chrome: bold dark title "stereonet-equal-area · javascript · echarts · anyplot.ai" with a gray subtitle; top-left vertical legend (Bedding=green, Joint set 1=lavender, Joint set 2=blue, Fault=red) all readable; cardinal N/E/S/W labels (N bold with a north arrow) and subtle gray equal-area net grid with 10-deg perimeter ticks. All text clearly readable against the light background.
+      Data: scatter poles colored by feature type (Bedding #009E73 green, Joint set 1 lavender, Joint set 2 blue, Fault matte-red), concentric Kamb density contours in green->blue (imprint_seq) over each cluster, and colored mean great-circle arcs. First series is #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (~#1A1A17), correct dark surface, not pure black.
+      Chrome: light title/subtitle, same legend with light text, N/E/S/W and north arrow visible, subtle net grid. No dark-on-dark issues — all text legible.
+      Data: identical data colors to the light render (only chrome flipped). Density contours, poles, and great circles in the same Imprint hues.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title 22px, legend 17px, cardinals 20-26px; readable both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: symbolSize 14 prominent for sparse (~111) points; contours visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette; red used semantically for fault.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400, centered net, nothing clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes (hidden); descriptive title+subtitle, cardinal
+          orientation labels.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; imprint_seq for density; correct theme backgrounds.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Layered z-order, north arrow, subtitle, semantic color — polished.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axes hidden, subtle net grid, generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Density clusters give focal points; encoding of contours/circles
+          not fully self-explanatory.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Schmidt equal-area stereonet.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Poles, great circles, density contours, net, ticks, N arrow, legend.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: strike/dip correctly projected to equal-area coords.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend labels match feature types.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all stereonet aspects.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Bedding/joints/fault with plausible orientations; neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible strike/dip ranges; projection in [-1,1].
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several geometry helpers — justified but departs from no-functions
+          ideal.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG + Box-Muller.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: echarts global only, no extra imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Complexity warranted; no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: animation:false, init without size, square directive.
+    library_features:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic custom-series renderItem + scatter + legend on cartesian2d.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Heavy use of ECharts custom rendering, z-layers, api.coord, group
+          shapes.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - matrix-construction
+  dataprep:
+  - kde
+  - contouring
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting
