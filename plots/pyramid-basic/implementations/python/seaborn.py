@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pyramid-basic: Basic Pyramid Chart
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-16
@@ -77,7 +77,7 @@ sns.barplot(
 ax.set_xlabel("Population (thousands)", fontsize=10)
 ax.set_ylabel("Age Group", fontsize=10)
 ax.set_title("pyramid-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium")
-ax.tick_params(axis="both", labelsize=8)
+ax.tick_params(axis="both", labelsize=9)
 
 # Make x-axis symmetric
 max_val = max(max(male_population), max(female_population))
@@ -95,9 +95,30 @@ ax.axvline(x=0, color=INK, linewidth=1.0, alpha=0.6)
 ax.grid(True, axis="x", alpha=0.15, linewidth=0.8)
 ax.set_axisbelow(True)
 
-# Clean L-frame
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
+# Clean L-frame — idiomatic seaborn despine
+sns.despine(ax=ax, top=True, right=True)
+
+# Data storytelling: emphasize the female-skewed older cohorts (women
+# outlive men). Female bars extend right (positive width); accent the three
+# oldest with a crisp ink edge, then annotate the crossover.
+focal_groups = ["60-69", "70-79", "80+"]
+focal_values = {female_population[age_groups.index(g)] for g in focal_groups}
+for patch in ax.patches:
+    if patch.get_width() > 0 and round(patch.get_width()) in focal_values:
+        patch.set_edgecolor(INK)
+        patch.set_linewidth(1.4)
+
+focal_idx = age_groups.index("80+")
+ax.annotate(
+    "Women outlive men —\nfemale-skewed 60+ cohorts",
+    xy=(female_population[focal_idx], focal_idx),
+    xytext=(max_val * 0.55, focal_idx - 0.55),
+    fontsize=8.5,
+    color=INK,
+    ha="left",
+    va="center",
+    arrowprops={"arrowstyle": "->", "color": INK, "lw": 1.1, "alpha": 0.85},
+)
 
 # Legend
 legend = ax.legend(title="Gender", fontsize=8, title_fontsize=9, loc="upper right")
