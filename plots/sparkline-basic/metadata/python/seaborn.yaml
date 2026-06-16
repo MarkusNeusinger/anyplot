@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: sparkline-basic
 created: '2025-12-23T20:45:18Z'
-updated: '2026-06-16T19:40:30Z'
+updated: '2026-06-16T19:48:49Z'
 generated_by: claude-opus
 workflow_run: 27642863463
 issue: 1011
@@ -12,49 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sparkline
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 92
 review:
   strengths:
-  - 'Faithful sparkline aesthetic: every cell strips axes, ticks, gridlines and all
-    four spines, leaving pure data — exactly the spec''s defining ''extreme minimalism''.'
-  - 'Implements the spec''s optional features comprehensively: min point (semantic
-    red), max point (brand green), enlarged current-value dot, and a subtle 12%-alpha
-    area fill under each trace.'
-  - Small-multiples KPI dashboard is a directly listed spec application and is executed
-    cleanly across a 3x2 grid with consistent spacing.
-  - 'Perfect theme adaptation: chrome (background, label/value text) flips between
-    light #FAF8F1 and dark #1A1A17 while the green/red data colors stay identical
-    and fully readable on both surfaces.'
-  - Direction is double-encoded (coloured value plus a unicode arrow), so up/down
-    reads correctly under colour-vision deficiency rather than relying on red/green
-    alone.
-  - 'Clean, KISS code: seeded rng(42), no functions/classes, only used imports, correct
-    plot-{THEME}.png output.'
+  - Refactored to idiomatic seaborn small-multiples via sns.relplot(col='metric',
+    col_wrap=2, kind='line') with facet_kws despine — directly addressing the Attempt-1
+    Library-Mastery feedback that flagged the prior manual subplots loop.
+  - 'True minimalist sparklines: no axes, ticks, spines or gridlines; brand-green
+    (#009E73) trace with subtle 0.12-alpha area fill and edge-stroked focal dots (min
+    in semantic red #AE3030, max + current in brand green).'
+  - Perfect theme adaptation — data colors (green trace, red/green dots, fill) are
+    pixel-identical between light and dark; only chrome (PAGE_BG, INK, INK_SOFT) flips.
+    No dark-on-dark or light-on-light text in either render.
+  - Direction is double-encoded with unicode ▲/▼ arrows plus color, so the trend signal
+    is CVD-safe and not color-alone.
+  - Exact 3200×1800 canvas (figsize 8×4.5 @ dpi 400), title in mandated '{spec-id}
+    · python · seaborn · anyplot.ai' format, deterministic data via np.random.default_rng(42).
+  - Neutral, realistic SaaS KPI dashboard context (Revenue, Active Users, Conversion,
+    Avg Session, Churn, NPS) with bold current-value labels and percent deltas vs.
+    start.
   weaknesses:
-  - 'Library mastery is modest: the small-multiples layout is built with a manual
-    plt.subplots loop, whereas the idiomatic seaborn route for small multiples is
-    FacetGrid / relplot(col=...). Only sns.lineplot and sns.set_theme are seaborn-specific;
-    the dots, fill, and text are all raw matplotlib (LM-01/LM-02).'
-  - The delta annotation at fontsize=7.5pt is the smallest text on the canvas; it
-    is legible at full 3200px resolution but sits close to the lower bound when scaled
-    to ~400px mobile width (minor VQ-01).
-  - Design hierarchy is good but per-cell uniform — no single hero KPI is emphasised
-    over the others, so the six panels read with equal weight (minor DE-03).
+  - 'VQ-01 (minor): with six facets in a 2×3 grid, the per-facet metric label (9pt)
+    and delta (8.5pt) become small when the full figure is scaled to ~400 px mobile
+    width — inherent to small-multiples sparklines, but the delta text sits near the
+    mobile-legibility floor.'
+  - 'DE-03 (minor): all six KPIs receive equal visual weight; no single hero metric
+    is emphasised, so the layout informs evenly rather than guiding the eye to one
+    focal story.'
+  - 'LM (minor): relplot builds the grid idiomatically, but the sparkline detailing
+    (fill_between, scatter dots, value/delta text) is necessarily raw matplotlib inside
+    the g.axes.flat loop — acceptable for sparklines, but not pure high-level seaborn.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1) across the whole canvas — not pure white. PASS.
-      Chrome: centered grey suptitle "sparkline-basic · python · seaborn · anyplot.ai"; each cell has a bold dark metric label (Revenue, Active Users, Conversion, Avg Session, Churn, NPS), a bold dark current value ($125.1K, 47.8K, 3.0%, 178.6s, 2.5%, 49.6), and a coloured delta with an up/down arrow. All text crisp and clearly readable against the light background.
-      Data: brand green (#009E73) sparkline traces with a faint green area fill; minimum point marked with a matte-red dot (#AE3030), maximum with a green dot, last value with a larger green dot. First/primary series is brand green as required.
+      Background: warm off-white (~#FAF8F1), not pure white. Confirmed.
+      Chrome: centered grey (INK_SOFT) suptitle "sparkline-basic · python · seaborn · anyplot.ai" reads clearly. Six bold dark metric labels (Revenue, Active Users, Conversion, Avg Session, Churn, NPS) top-left of each cell; bold dark current values ($125.1K, 47.8K, 3.0%, 178.6s, 2.5%, 49.6) top-right; green/red delta arrows below. No axes, ticks, spines or gridlines. All text crisp and readable.
+      Data: brand-green (#009E73) trace with faint green area fill; matte-red (#AE3030) dot at minimum, green dot at maximum, larger green dot at current value. First/only series is #009E73. Confirmed.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17) across the whole canvas — not pure black. PASS.
-      Chrome: same suptitle in soft grey; metric labels and current values render in light ink (#F0EFE8 / #B8B7B0) and are fully readable. Delta arrows keep their green/red colour. No dark-on-dark text anywhere.
-      Data: identical green traces, green/red highlight dots and area fill — data colours match the light render exactly; only the chrome flipped. Brand green remains clearly visible on the dark surface.
+      Background: warm near-black (~#1A1A17), not pure black. Confirmed.
+      Chrome: identical 2×3 layout; suptitle, metric labels and values render in light ink (INK/INK_SOFT) and remain fully readable. No dark-on-dark text. Delta arrows keep green/red.
+      Data: green traces, red/green highlight dots and area fill are identical to the light render — only chrome flipped. Brand green stays clearly visible on the dark surface.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -62,46 +64,44 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicit (9/10/12pt + 7.5pt delta); all readable in both
-          themes; 7.5pt delta near mobile floor
+        comment: Explicit font sizes (9/10/8.5/12pt), readable in both themes; 8.5pt
+          delta near mobile floor across six facets
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in any cell
+        comment: Value/delta text top-right, trace below; no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Sparse data with prominent dots and 2.2px lines, well-suited to small
-          panels
+        comment: Sparse data, prominent edge-stroked dots + 2.2px lines
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe palette; direction double-encoded with arrows not just colour
+        comment: Direction double-encoded with arrows, not color alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3x2 grid, 3200x1800 (canvas gate passed), nothing clipped
+        comment: Exact 3200x1800, gate passed, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes intentionally omitted per sparkline spec; title correct; metric
-          labels + values serve as context
+        comment: Axes intentionally omitted per sparkline spec; title correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Brand green first; semantic red for low; backgrounds correct on both
+        comment: Brand green first, semantic red for low, backgrounds correct both
           themes
     design_excellence:
       score: 15
@@ -112,21 +112,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Polished KPI-dashboard treatment with delta indicators; clearly above
-          generic defaults
+        comment: Polished KPI-dashboard treatment with delta indicators and focal
+          dots
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: All spines/ticks removed, generous whitespace, subtle area fill
+        comment: All spines/ticks removed, generous whitespace, subtle 0.12-alpha
+          fill
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Min/max/last focal dots and delta arrows guide the eye; no single
-          hero KPI emphasised
+        passed: false
+        comment: Focal dots + arrows guide the eye, but no single hero KPI emphasised
     spec_compliance:
       score: 15
       max: 15
@@ -136,27 +136,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine sparklines
+        comment: True sparklines (small-multiples interpretation per Applications)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: Minimalism, compact aspect, min/max + last highlights, area fill
-          — all optional features covered
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 40 sequential points per series, within the 10-100 range
+        comment: 40 sequential points per series, within 10-100
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'sparkline-basic · python · seaborn · anyplot.ai';
-          legend correctly omitted
+        comment: Title in mandated format; no legend needed
     data_quality:
       score: 15
       max: 15
@@ -166,20 +165,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Trend shape, min, max, current, area — full sparkline vocabulary
+        comment: Shows trend, area, min/max/current focal points
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible SaaS KPIs (revenue, users, conversion, session,
-          churn, NPS)
+        comment: Neutral, plausible SaaS KPIs
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible domain values and units for each metric
+        comment: Sensible values per metric domain
     code_quality:
       score: 10
       max: 10
@@ -189,7 +187,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Single loop, no functions/classes
+        comment: No functions/classes; flat loop
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -201,45 +199,46 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: os, plt, np, sns all used
+        comment: os, plt, np, pd, sns all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Readable, no fake UI/interactivity
+        comment: Clear metadata-driven loop, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png at dpi=400
+        comment: Saves plot-{THEME}.png, current relplot API
     library_features:
-      score: 4
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses sns.set_theme + sns.lineplot, but dots/fill/text are raw matplotlib
+        comment: relplot figure-level faceting, facet_kws despine, set_titles/set_axis_labels;
+          detailing is raw mpl
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: Manual subplots loop; seaborn's FacetGrid/relplot(col=) is the idiomatic
-          small-multiples tool and was not used
+        passed: true
+        comment: relplot(col=..., col_wrap=2) small-multiples — the idiomatic seaborn
+          faceting tool
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - subplots
+  - faceting
   - annotations
+  - manual-ticks
   patterns:
   - data-generation
-  - explicit-figure
   - iteration-over-groups
   dataprep:
   - cumulative-sum

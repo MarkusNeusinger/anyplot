@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 sparkline-basic: Basic Sparkline
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-06-16
+Quality: 92/100 | Updated: 2026-06-16
 """
 
 import os
