@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pp-basic: Probability-Probability (P-P) Plot
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-16
@@ -70,8 +70,8 @@ sns.scatterplot(
     y="empirical",
     hue="deviation",
     palette=imprint_seq,
-    s=70,
-    alpha=0.85,
+    s=45,
+    alpha=0.8,
     edgecolor=PAGE_BG,
     linewidth=0.5,
     legend=False,
