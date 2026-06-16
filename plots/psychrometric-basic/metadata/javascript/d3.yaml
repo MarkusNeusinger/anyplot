@@ -1,0 +1,247 @@
+library: d3
+language: javascript
+specification_id: psychrometric-basic
+created: '2026-06-16T23:27:22Z'
+updated: '2026-06-16T23:31:43Z'
+generated_by: claude-opus
+workflow_run: 27654451371
+issue: 4583
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/psychrometric-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/psychrometric-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/psychrometric-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/psychrometric-basic/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Complete spec coverage: prominent saturation curve, RH curves 10–100%, diagonal
+    wet-bulb and enthalpy families, steeper specific-volume dotted lines, shaded comfort
+    zone, and a labeled cool+dehumidify process arrow between two state points'
+  - All property families directly labeled on their curves (not just in a legend)
+    using halo (paint-order) outlines and tangent-rotated text so labels follow each
+    line — a textbook psychrometric-chart presentation
+  - 'Idiomatic, distinctive D3: d3.line with curveMonotoneX, clipPath trimming lines
+    to the moist-air region below saturation, SVG defs marker for the process arrow,
+    and per-family dash patterns as redundant CVD-safe encoding'
+  - 'Imprint palette used correctly with strong semantics — RH = brand green #009E73
+    (first series), wet-bulb = blue (water/cooling), enthalpy = red (energy/heat),
+    specific volume = ochre, comfort = lavender, process = neutral ink; data colors
+    identical across light/dark with only chrome flipping'
+  - Fully deterministic analytic data from ASHRAE/Tetens closed-form relations at
+    sea-level pressure (101.325 kPa); no network/disk access; canvas exact at 3200×1800
+  weaknesses:
+  - Specific-volume dotted ochre lines (opacity 0.7, 1.1px dotted) are faint and can
+    be hard to trace against the dense curve field, especially on the dark surface
+    — slightly increasing weight or opacity would improve element visibility
+  - Inline curve labels are ~12px in mount space (~24 source px); they are legible
+    but on the small side, and in the lower-right corner the enthalpy/specific-volume/wet-bulb
+    labels cluster near one another (halos keep them readable, but spacing is tight)
+  - Wet-bulb and enthalpy numeric labels are bare integers (e.g. '30', '60') without
+    inline units on the curve; clear from the legend but a stray unit hint on the
+    first label of each family would aid a cold read
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1), correct light surface.
+      Chrome: title "psychrometric-basic · javascript · d3 · anyplot.ai" and subtitle in dark ink, both clearly readable; bottom x-axis "Dry-Bulb Temperature (°C)" and right y-axis "Humidity Ratio (g water / kg dry air)" with integer ticks (-10..50, 0..30) in soft ink — all legible. Subtle grid visible but not dominant. Legend sits in the empty upper-left (above-saturation) region with line/dash/swatch/arrow keys, all readable.
+      Data: brand green #009E73 saturation curve prominent (thick), green RH curves below it, blue wet-bulb diagonals, red dashed enthalpy diagonals, ochre dotted specific-volume lines (steeper diagonal), lavender shaded comfort zone, black process arrow between points 1 and 2. First series is #009E73. Direct curve labels colored per family with off-white halos.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17), correct dark surface.
+      Chrome: title/subtitle in light ink, axis titles, tick labels and legend text all clearly readable against the dark background — no dark-on-dark failures. Grid subtle but visible.
+      Data: colors identical to the light render (green saturation/RH, blue wet-bulb, red enthalpy, ochre specific-volume, lavender comfort) — only chrome flipped. Process arrow now light/neutral ink. Brand green clearly visible.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All chrome readable in both themes; inline 12px curve labels small
+          but legible with halos
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Halos prevent illegibility; minor crowding of labels in lower-right
+          cluster
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Saturation prominent; specific-volume dotted lines a bit faint
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint CVD-safe; dash patterns add redundant encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Exact 3200x1800; legend in empty region; nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes labeled with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint only; first series #009E73; correct backgrounds; both themes
+          correct'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Halo-outlined tangent-rotated labels, per-family dash patterns, clip
+          to saturation envelope
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, thin lines, no chartjunk; volume lines slightly faint
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Prominent saturation focal point, comfort zone, labeled process path
+          with state points
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct psychrometric chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All spec features present incl. process path and comfort zone
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=dry-bulb, Y=humidity ratio
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend matches
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All property families shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: ASHRAE formulas at sea-level pressure; neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible -10..50 C, 0..30 g/kg ranges
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-level code; small math helper closures are justified and
+          DRY
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully analytic/deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: d3 global only, no imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Elegant; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness output; current API
+    library_features:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: d3.line/curveMonotoneX, scales, axes, defs/marker, clipPath
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: SVG clipPath to saturation envelope, marker arrows, paint-order halos,
+          tangent-rotated labels
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - publication-ready
+  - alpha-blending
+  - grid-styling
