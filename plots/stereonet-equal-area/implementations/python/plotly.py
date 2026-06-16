@@ -1,13 +1,28 @@
-""" pyplots.ai
+""" anyplot.ai
 stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 88/100 | Created: 2026-03-15
+Library: plotly 6.8.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-06-16
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 from scipy.stats import gaussian_kde
 
+
+# Theme-adaptive chrome (Imprint palette)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+RULE = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint categorical palette — feature types are abstract, so canonical order.
+# Bedding takes the brand green (always-first series).
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Field measurements from a structural geology mapping campaign
 np.random.seed(42)
@@ -34,7 +49,12 @@ feature_types = ["Bedding"] * 20 + ["Joint Set 1"] * 15 + ["Joint Set 2"] * 12 +
 strikes = strikes % 360
 dips = np.clip(dips, 0, 90)
 
-type_colors = {"Bedding": "#306998", "Joint Set 1": "#E07B39", "Joint Set 2": "#00897B", "Fault": "#8E24AA"}
+type_colors = {
+    "Bedding": IMPRINT_PALETTE[0],
+    "Joint Set 1": IMPRINT_PALETTE[1],
+    "Joint Set 2": IMPRINT_PALETTE[2],
+    "Fault": IMPRINT_PALETTE[3],
+}
 
 # Equal-area (Schmidt) projection of poles to planes
 # Pole to plane: trend = dip direction = strike + 90°, plunge = 90° - dip
@@ -47,7 +67,9 @@ pole_y = pole_r * np.cos(pole_trend_rad)
 # Plot
 fig = go.Figure()
 
-# Density contours on pole data (Kamb-style)
+# Density contours on pole data (Kamb-style KDE).
+# Continuous density → single-polarity imprint_seq (green → blue), with rising alpha
+# so low density fades into the page and the peak reads clearly over the markers.
 xy_poles = np.vstack([pole_x, pole_y])
 kde = gaussian_kde(xy_poles, bw_method=0.2)
 grid_n = 150
@@ -57,21 +79,23 @@ GX, GY = np.meshgrid(gx, gy)
 Z = kde(np.vstack([GX.ravel(), GY.ravel()])).reshape(grid_n, grid_n)
 Z[GX**2 + GY**2 > 1.0] = np.nan
 
+density_colorscale = [
+    [0.0, "rgba(0,158,115,0.0)"],  # imprint_seq low — transparent green
+    [0.25, "rgba(0,158,115,0.16)"],
+    [0.5, "rgba(0,158,115,0.34)"],
+    [0.75, "rgba(68,103,163,0.50)"],
+    [1.0, "rgba(68,103,163,0.66)"],  # imprint_seq high — blue
+]
+
 fig.add_trace(
     go.Contour(
         x=gx,
         y=gy,
         z=Z,
-        colorscale=[
-            [0, "rgba(255,255,255,0)"],
-            [0.25, "rgba(255,235,170,0.4)"],
-            [0.5, "rgba(255,180,80,0.55)"],
-            [0.75, "rgba(230,100,50,0.65)"],
-            [1, "rgba(200,40,30,0.75)"],
-        ],
+        colorscale=density_colorscale,
         showscale=False,
         contours={"coloring": "fill", "showlines": True, "showlabels": False},
-        line={"color": "rgba(160,160,160,0.4)", "width": 0.8},
+        line={"color": RULE, "width": 0.8},
         ncontours=6,
         showlegend=False,
         hoverinfo="skip",
@@ -85,7 +109,7 @@ fig.add_trace(
         x=np.cos(theta_circ).tolist(),
         y=np.sin(theta_circ).tolist(),
         mode="lines",
-        line={"color": "black", "width": 2.5},
+        line={"color": INK, "width": 2.2},
         showlegend=False,
         hoverinfo="skip",
     )
@@ -108,7 +132,7 @@ fig.add_trace(
         x=grid_x,
         y=grid_y,
         mode="lines",
-        line={"color": "rgba(190,190,190,0.5)", "width": 0.8, "dash": "dot"},
+        line={"color": RULE, "width": 0.8, "dash": "dot"},
         showlegend=False,
         hoverinfo="skip",
     )
@@ -124,7 +148,7 @@ for tick_deg in range(0, 360, 10):
 
 fig.add_trace(
     go.Scatter(
-        x=tick_x, y=tick_y, mode="lines", line={"color": "black", "width": 1.5}, showlegend=False, hoverinfo="skip"
+        x=tick_x, y=tick_y, mode="lines", line={"color": INK_SOFT, "width": 1.3}, showlegend=False, hoverinfo="skip"
     )
 )
 
@@ -162,15 +186,16 @@ for idx in gc_indices:
             x=gc_proj_x.tolist(),
             y=gc_proj_y.tolist(),
             mode="lines",
-            line={"color": type_colors[feature_types[idx]], "width": 2.2},
-            opacity=0.7,
+            line={"color": type_colors[feature_types[idx]], "width": 2.0},
+            opacity=0.65,
             legendgroup=feature_types[idx],
             showlegend=False,
             hoverinfo="skip",
         )
     )
 
-# Plot poles by feature type with Plotly customdata + hovertemplate
+# Plot poles by feature type with Plotly customdata + hovertemplate.
+# Marker edge matches the page bg for a clean halo that separates overlapping poles.
 for feat_type in ["Bedding", "Joint Set 1", "Joint Set 2", "Fault"]:
     mask = np.array([t == feat_type for t in feature_types])
     customdata = np.column_stack([strikes[mask], dips[mask], (strikes[mask] + 90) % 360])
@@ -182,9 +207,9 @@ for feat_type in ["Bedding", "Joint Set 1", "Joint Set 2", "Fault"]:
             name=feat_type,
             legendgroup=feat_type,
             marker={
-                "size": 13,
+                "size": 12,
                 "color": type_colors[feat_type],
-                "line": {"width": 1.5, "color": "white"},
+                "line": {"width": 1.5, "color": PAGE_BG},
                 "symbol": "circle",
             },
             customdata=customdata,
@@ -205,7 +230,7 @@ for label, lx, ly in [("N", 0, 1.12), ("E", 1.12, 0), ("S", 0, -1.12), ("W", -1.
         y=ly,
         text=f"<b>{label}</b>",
         showarrow=False,
-        font={"size": 22, "color": "black"},
+        font={"size": 17, "color": INK},
         xanchor="center",
         yanchor="middle",
     )
@@ -215,11 +240,11 @@ for deg in range(0, 360, 30):
         continue
     rad = np.radians(deg)
     fig.add_annotation(
-        x=1.09 * np.sin(rad),
-        y=1.09 * np.cos(rad),
+        x=1.075 * np.sin(rad),
+        y=1.075 * np.cos(rad),
         text=f"{deg}°",
         showarrow=False,
-        font={"size": 15, "color": "gray"},
+        font={"size": 10, "color": INK_MUTED},
         xanchor="center",
         yanchor="middle",
     )
@@ -232,6 +257,9 @@ density_visible_off[0] = False  # First trace is the density contour
 
 # Style
 fig.update_layout(
+    autosize=False,
+    width=600,
+    height=600,
     updatemenus=[
         {
             "type": "buttons",
@@ -241,19 +269,24 @@ fig.update_layout(
                 {"label": "Hide Density", "method": "update", "args": [{"visible": density_visible_off}]},
             ],
             "x": 0.01,
-            "y": -0.02,
+            "y": 0.04,
             "xanchor": "left",
-            "yanchor": "top",
-            "bgcolor": "rgba(255,255,255,0.9)",
-            "bordercolor": "rgba(0,0,0,0.2)",
-            "font": {"size": 14},
+            "yanchor": "bottom",
+            "bgcolor": ELEVATED_BG,
+            "bordercolor": INK_SOFT,
+            "font": {"size": 11, "color": INK},
         }
     ],
     title={
-        "text": "stereonet-equal-area · plotly · pyplots.ai<br><sup>Lower Hemisphere, Equal-Area (Schmidt) Projection</sup>",
-        "font": {"size": 28},
+        "text": (
+            "stereonet-equal-area · python · plotly · anyplot.ai"
+            f"<br><sup style='color:{INK_SOFT}'>Lower Hemisphere, Equal-Area (Schmidt) Projection</sup>"
+        ),
+        "font": {"size": 18, "color": INK},
         "x": 0.5,
         "xanchor": "center",
+        "y": 0.97,
+        "yanchor": "top",
     },
     xaxis={
         "scaleanchor": "y",
@@ -262,31 +295,32 @@ fig.update_layout(
         "zeroline": False,
         "showticklabels": False,
         "showline": False,
-        "range": [-1.4, 1.4],
+        "range": [-1.2, 1.2],
     },
-    yaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "showline": False, "range": [-1.3, 1.3]},
-    template="plotly_white",
+    yaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "showline": False, "range": [-1.2, 1.2]},
     legend={
-        "title": {"text": "Feature Type", "font": {"size": 20}},
-        "font": {"size": 18},
-        "bgcolor": "rgba(255,255,255,0.9)",
-        "bordercolor": "rgba(0,0,0,0.2)",
+        "title": {"text": "Feature Type", "font": {"size": 13, "color": INK}},
+        "font": {"size": 12, "color": INK_SOFT},
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
         "borderwidth": 1,
-        "x": 1.02,
-        "y": 0.98,
-        "xanchor": "left",
+        "x": 0.99,
+        "y": 0.99,
+        "xanchor": "right",
         "yanchor": "top",
     },
-    plot_bgcolor="white",
-    margin={"l": 40, "r": 200, "t": 80, "b": 40},
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
+    margin={"l": 20, "r": 20, "t": 70, "b": 20},
 )
 
 # Annotation highlighting dominant bedding cluster
 bedding_pole_x = pole_x[:20].mean()
 bedding_pole_y = pole_y[:20].mean()
 fig.add_annotation(
-    x=bedding_pole_x + 0.25,
-    y=bedding_pole_y - 0.15,
+    x=bedding_pole_x + 0.28,
+    y=bedding_pole_y - 0.18,
     ax=bedding_pole_x,
     ay=bedding_pole_y,
     text="Dominant NE-striking<br>bedding fabric",
@@ -294,14 +328,14 @@ fig.add_annotation(
     arrowhead=2,
     arrowsize=1,
     arrowwidth=1.5,
-    arrowcolor="#306998",
-    font={"size": 14, "color": "#306998"},
-    bgcolor="rgba(255,255,255,0.85)",
-    bordercolor="#306998",
+    arrowcolor=IMPRINT_PALETTE[0],
+    font={"size": 11, "color": INK},
+    bgcolor=ELEVATED_BG,
+    bordercolor=IMPRINT_PALETTE[0],
     borderwidth=1,
     borderpad=4,
 )
 
-# Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save — square canvas (radially symmetric stereonet): 600×600 × scale 4 = 2400×2400
+fig.write_image(f"plot-{THEME}.png", width=600, height=600, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
