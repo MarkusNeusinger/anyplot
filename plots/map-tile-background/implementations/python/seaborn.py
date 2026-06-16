@@ -1,11 +1,10 @@
-""" anyplot.ai
+"""anyplot.ai
 map-tile-background: Map with Tile Background
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-16
 """
 
 import io
-import math
 import os
 import urllib.request
 
@@ -91,21 +90,19 @@ ZOOM = 10  # city-level detail for a metro-area extent
 TILE = 256
 N = TILE * 2**ZOOM  # global pixel span at this zoom
 
+# Web Mercator: project lon/lat → global-pixel coords. Inlined (vectorized numpy)
+# to keep a flat, no-helper-functions structure; gx = (lon+180)/360·N,
+# gy = (1 − asinh(tan(lat))/π)/2·N.
+df["gx"] = (df["lon"] + 180.0) / 360.0 * N
+df["gy"] = (1.0 - np.arcsinh(np.tan(np.radians(df["lat"]))) / np.pi) / 2.0 * N
 
-def gx(lon):
-    return (lon + 180.0) / 360.0 * N
-
-
-def gy(lat):
-    r = math.radians(lat)
-    return (1.0 - math.asinh(math.tan(r)) / math.pi) / 2.0 * N
-
-
-# Padded data bounds, then expand to the 16:9 canvas aspect so the map fills the
-# whole frame without distorting the projection.
+# Padded data bounds in lon/lat, projected with the same formula, then expand to
+# the 16:9 canvas aspect so the map fills the whole frame without distorting it.
 pad_lon, pad_lat = 0.12, 0.14
-wx0, wx1 = gx(df["lon"].min() - pad_lon), gx(df["lon"].max() + pad_lon)
-wy_top, wy_bot = gy(df["lat"].max() + pad_lat), gy(df["lat"].min() - pad_lat)
+wx0 = (df["lon"].min() - pad_lon + 180.0) / 360.0 * N
+wx1 = (df["lon"].max() + pad_lon + 180.0) / 360.0 * N
+wy_top = (1.0 - np.arcsinh(np.tan(np.radians(df["lat"].max() + pad_lat))) / np.pi) / 2.0 * N
+wy_bot = (1.0 - np.arcsinh(np.tan(np.radians(df["lat"].min() - pad_lat))) / np.pi) / 2.0 * N
 W, H = wx1 - wx0, wy_bot - wy_top
 ASPECT = 16 / 9
 if W / H < ASPECT:
@@ -138,10 +135,6 @@ for tx in range(tx0, tx1 + 1):
 ox, oy = tx0 * TILE, ty0 * TILE
 cropped = stitched.crop((int(round(wx0 - ox)), int(round(wy_top - oy)), int(round(wx1 - ox)), int(round(wy_bot - oy))))
 
-# Project station coordinates into the same global-pixel space
-df["gx"] = df["lon"].map(gx)
-df["gy"] = df["lat"].map(gy)
-
 # --- Plot --------------------------------------------------------------------
 sns.set_theme(style="white", font_scale=1.0)
 
@@ -155,6 +148,18 @@ ax.set_xlim(wx0, wx1)
 ax.set_ylim(wy_bot, wy_top)
 
 norm = Normalize(vmin=df["temperature"].min(), vmax=df["temperature"].max())
+
+# Faint dark outer ring behind every marker. The white edge alone leaves the
+# near-midpoint markers (off-white fill) low-contrast on the pale OSM tiles; this
+# thin INK_SOFT ring guarantees a clean separation from the background for all
+# temperatures. Sizes mirror seaborn's linear (170→560) size mapping, scaled up.
+ring_size = 170 + (df["temperature"] - df["temperature"].min()) / (
+    df["temperature"].max() - df["temperature"].min()
+) * (560 - 170)
+ax.scatter(
+    df["gx"], df["gy"], s=ring_size * 1.16, facecolors="none", edgecolors=INK_SOFT, linewidths=0.9, alpha=0.6, zorder=2
+)
+
 sns.scatterplot(
     data=df,
     x="gx",
