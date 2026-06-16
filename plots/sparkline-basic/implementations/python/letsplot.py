@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sparkline-basic: Basic Sparkline
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-16
@@ -11,6 +11,7 @@ import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
+    element_blank,
     element_rect,
     element_text,
     facet_wrap,
@@ -21,6 +22,7 @@ from lets_plot import (
     ggsave,
     ggsize,
     labs,
+    scale_color_manual,
     theme,
     theme_void,
 )
@@ -66,21 +68,29 @@ for name, vals in series.items():
 
 df = pd.concat(frames, ignore_index=True)
 df["metric"] = pd.Categorical(df["metric"], categories=order, ordered=True)
-min_df = pd.DataFrame(mins)
-max_df = pd.DataFrame(maxs)
-last_df = pd.DataFrame(lasts)
-for frame in (min_df, max_df, last_df):
-    frame["metric"] = pd.Categorical(frame["metric"], categories=order, ordered=True)
+
+# One tidy frame of highlight dots, with a "kind" column that drives the legend key.
+kinds = ["minimum", "maximum", "latest"]
+dots = pd.concat(
+    [
+        pd.DataFrame(mins).assign(kind="minimum"),
+        pd.DataFrame(maxs).assign(kind="maximum"),
+        pd.DataFrame(lasts).assign(kind="latest"),
+    ],
+    ignore_index=True,
+)
+dots["metric"] = pd.Categorical(dots["metric"], categories=order, ordered=True)
+dots["kind"] = pd.Categorical(dots["kind"], categories=kinds, ordered=True)
 
 # Plot — pure sparklines: no axes, ticks, or gridlines; each panel free on y.
 # Subtle area anchored to each panel's floor, thin line, and red/blue/green dots.
 plot = (
     ggplot(df, aes("day", "value"))
-    + geom_ribbon(aes(ymin="floor", ymax="value"), fill=BRAND, alpha=0.12)
+    + geom_ribbon(aes(ymin="floor", ymax="value"), fill=BRAND, alpha=0.10, size=0)
     + geom_line(color=BRAND, size=1.3)
-    + geom_point(data=max_df, color=HIGH, size=4.2)  # maximum
-    + geom_point(data=min_df, color=LOW, size=4.2)  # minimum
-    + geom_point(data=last_df, color=BRAND, size=4.2)  # latest value
+    # A single mapped point layer so min/max/latest get a real legend key.
+    + geom_point(data=dots, mapping=aes(color="kind"), size=4.2)
+    + scale_color_manual(name="", values={"minimum": LOW, "maximum": HIGH, "latest": BRAND})
     + facet_wrap("metric", ncol=3, scales="free_y")
     + labs(title="sparkline-basic · python · letsplot · anyplot.ai")
     + ggsize(800, 450)  # scale=4 on export -> 3200 x 1800 px (landscape)
@@ -90,6 +100,11 @@ plot = (
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         plot_title=element_text(size=16, color=INK, hjust=0.5),
         strip_text=element_text(size=13, color=INK_SOFT, hjust=0),
+        strip_background=element_blank(),  # drop the bordered strip frame (cleaner sparkline chrome)
+        legend_position="bottom",  # compact key: red=min, blue=max, green=latest
+        legend_text=element_text(size=12, color=INK_SOFT),
+        legend_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        legend_key=element_rect(fill=PAGE_BG, color=PAGE_BG),
         plot_margin=[24, 28, 24, 28],
     )
 )
