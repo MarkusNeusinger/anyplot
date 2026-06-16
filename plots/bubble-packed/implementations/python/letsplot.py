@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 bubble-packed: Basic Packed Bubble Chart
-Library: letsplot 4.8.2 | Python 3.14.3
-Quality: 89/100 | Updated: 2026-02-23
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-06-16
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -15,6 +17,7 @@ from lets_plot import (
     geom_point,
     geom_text,
     ggplot,
+    ggsave,
     ggsize,
     guide_legend,
     guides,
@@ -27,13 +30,18 @@ from lets_plot import (
     xlim,
     ylim,
 )
-from lets_plot.export import ggsave as export_ggsave
 
 
 LetsPlot.setup_html()
 
+# Theme-adaptive chrome (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
 # Data - department budget allocation ($M)
-np.random.seed(42)
 categories = [
     "Engineering",
     "Marketing",
@@ -131,55 +139,61 @@ df = pd.DataFrame(
         "budget": [f"${v}M" for v in values],
         "diameter": radii * 2,
         "display_label": [
-            (f"{abbrev.get(c, c)}\n${v}M" if v >= 48 else (abbrev.get(c, c) if v >= 35 else ""))
+            (f"{abbrev.get(c, c)}\n${v}M" if v >= 45 else (abbrev.get(c, c) if v >= 30 else ""))
             for c, v in zip(categories, values, strict=True)
         ],
     }
 )
 
-# Axis limits ensuring all circles are fully visible
+# Axis limits ensuring all circles are fully visible (tight padding = good canvas fill)
 x_lo = min(x[i] - radii[i] for i in range(n))
 x_hi = max(x[i] + radii[i] for i in range(n))
 y_lo = min(y[i] - radii[i] for i in range(n))
 y_hi = max(y[i] + radii[i] for i in range(n))
-pad = (x_hi - x_lo) * 0.03
+pad = (x_hi - x_lo) * 0.02
 
-# Colorblind-safe palette: Python Blue + Wong (verified for all CVD types)
-palette = {"Tech": "#306998", "Business": "#E69F00", "Operations": "#009E73"}
+# Imprint palette - canonical order, Tech (dominant story) leads as brand green
+palette = {"Tech": "#009E73", "Business": "#C475FD", "Operations": "#4467A3"}
+
+# Title scaled off the 67-char baseline (see prompts/plot-generator.md)
+title = "Department Budget Allocation · bubble-packed · python · letsplot · anyplot.ai"
+title_size = max(11, round(16 * 67 / len(title))) if len(title) > 67 else 16
 
 plot = (
     ggplot(df)
     + geom_point(
         aes(x="x", y="y", fill="division", size="diameter"),
         shape=21,
-        color="white",
+        color=PAGE_BG,
         stroke=1.5,
-        alpha=0.88,
+        alpha=0.92,
         size_unit="x",
         tooltips=(layer_tooltips().title("@label").line("Budget|@budget").line("Division|@division")),
     )
     + scale_size_identity(guide="none")
-    + geom_text(aes(x="x", y="y", label="display_label"), size=9, color="white", fontface="bold")
-    + scale_fill_manual(values=palette)
+    # Dark in-bubble text reads well across green/lavender/blue fills (white fails on the lighter hues)
+    + geom_text(aes(x="x", y="y", label="display_label"), size=5, color="#1A1A17", fontface="bold")
+    + scale_fill_manual(values=palette, breaks=["Tech", "Business", "Operations"])
     + guides(fill=guide_legend(nrow=1))
     + coord_fixed()
     + xlim(x_lo - pad, x_hi + pad)
     + ylim(y_lo - pad, y_hi + pad)
     + labs(
-        title="Department Budget Allocation \u00b7 bubble-packed \u00b7 letsplot \u00b7 pyplots.ai",
-        subtitle="Tech departments dominate \u2014 8 of 15 teams control 58% of total budget",
-        fill="Division",
+        title=title, subtitle="Tech departments dominate — 8 of 15 teams control 58% of total budget", fill="Division"
     )
     + theme_void()
     + theme(
-        plot_title=element_text(size=24, hjust=0.5),
-        plot_subtitle=element_text(size=16, hjust=0.5, color="#666666"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_title=element_text(size=title_size, color=INK, hjust=0.5),
+        plot_subtitle=element_text(size=11, color=INK_SOFT, hjust=0.5),
         legend_position="bottom",
-        legend_title=element_text(size=20),
-        legend_text=element_text(size=16),
-        legend_background=element_rect(fill="white", color="#CCCCCC", size=0.5),
+        legend_title=element_text(size=12, color=INK),
+        legend_text=element_text(size=11, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.5),
     )
-    + ggsize(1200, 1200)
+    + ggsize(600, 600)
 )
 
-export_ggsave(plot, "plot.png", path=".", scale=3)
+# Save (square: ggsize 600 x scale 4 = 2400 x 2400 px)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, f"plot-{THEME}.html", path=".")
