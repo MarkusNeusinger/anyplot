@@ -162,6 +162,10 @@ const contours = d3
   .cellSize(4)
   .bandwidth(26)
   .thresholds(9)(poles);
+// Graduated neutral shading: denser inner contours read darker so the three
+// "preferred orientation" focal points pop, while strokes stay crisp.
+const densityMax = d3.max(contours, (c) => c.value) || 1;
+const densityFill = d3.scaleLinear().domain([0, densityMax]).range([0.02, 0.24]);
 svg
   .append("g")
   .attr("clip-path", "url(#primitive)")
@@ -169,10 +173,11 @@ svg
   .data(contours)
   .join("path")
   .attr("d", d3.geoPath())
-  .attr("fill", "none")
+  .attr("fill", t.inkSoft)
+  .attr("fill-opacity", (c) => densityFill(c.value))
   .attr("stroke", t.inkSoft)
-  .attr("stroke-width", 1)
-  .attr("opacity", 0.4);
+  .attr("stroke-opacity", 0.6)
+  .attr("stroke-width", 1.4);
 
 // --- Primitive circle + perimeter degree ticks (every 10°) ------------------
 svg
@@ -259,7 +264,7 @@ legend
   .append("rect")
   .attr("x", -20)
   .attr("y", -26)
-  .attr("width", 286)
+  .attr("width", 304)
   .attr("height", legendItems.length * 40 + 8)
   .attr("rx", 10)
   .attr("fill", t.elevatedBg)
@@ -286,7 +291,7 @@ legendItems.forEach((it, i) => {
     .attr("y", 0)
     .attr("dominant-baseline", "central")
     .attr("fill", t.ink)
-    .style("font-size", "16px")
+    .style("font-size", "18px")
     .text(it.label);
 });
 
