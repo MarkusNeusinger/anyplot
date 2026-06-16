@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 funnel-basic: Basic Funnel Chart
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-16
@@ -44,6 +44,12 @@ custom_style = Style(
     opacity=1,
 )
 
+# pygal's Funnel pads its y-box to [-max, +max] while the tallest segment only
+# spans [-max/2, +max/2], so by default the funnel fills just half the plot
+# height. An explicit symmetric range tightens that padding to ~0.6·max, giving
+# the funnel a more commanding vertical presence without clipping any segment.
+funnel_half = base_value * 0.6
+
 # Plot — pygal's native Funnel chart; each stage is its own series so the
 # segments carry distinct Imprint colors and the legend names every stage.
 chart = pygal.Funnel(
@@ -53,6 +59,7 @@ chart = pygal.Funnel(
     style=custom_style,
     print_values=True,
     value_formatter=lambda v: f"{v:,.0f}  ({v / base_value * 100:.0f}%)",
+    range=(-funnel_half, funnel_half),
     margin=50,
     margin_bottom=15,
     show_legend=True,
