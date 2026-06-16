@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: pp-basic
 created: '2026-03-15T20:17:56Z'
-updated: '2026-06-16T19:32:38Z'
+updated: '2026-06-16T19:40:40Z'
 generated_by: claude-opus
 workflow_run: 27642364847
 issue: 4587
@@ -15,48 +15,50 @@ preview_html_dark: null
 quality_score: 87
 review:
   strengths:
-  - 'Correct P-P plot: empirical CDF (plotting position i/(n+1)) on Y vs fitted-normal
-    theoretical CDF on X, with a 45-degree dashed reference line and a true square
-    (2400x2400) equal-aspect canvas that preserves the diagonal''s meaning'
-  - Deviation-encoded color adds genuine data storytelling — points are coloured by
-    absolute deviation from the fitted normal, so the blue cluster near the centre
-    instantly highlights where the fit is worst (the S-shaped center deviation P-P
-    plots are designed to reveal)
-  - 'Theme adaptation is fully threaded: light render on #FAF8F1 and dark render on
-    #1A1A17, with INK/INK_SOFT tokens applied to title, axis labels, ticks, colorbar
-    label/ticks and outline — no dark-on-dark or light-on-light failures in either
-    render'
-  - Uses the Imprint continuous colormap (imprint_seq green->blue) for the deviation
-    scale — no forbidden cmap; data colors identical across both themes
-  - Realistic, neutral context (steel-bolt tensile strengths in MPa for manufacturing
-    QC) with a deliberate over-hardened skewed tail that produces a visible center
-    deviation
-  - 'Clean KISS script: flat top-level code, np.random.seed(42) for reproducibility,
-    only used imports, idiomatic sns.set_theme + sns.scatterplot + sns.despine'
+  - 'Correct P-P plot: empirical CDF (i/(n+1) plotting position) vs fitted-normal
+    theoretical CDF, both axes 0-1, dashed 45-degree reference line, enforced square
+    aspect (ax.set_aspect(''equal'')) — preserves the diagonal''s visual meaning exactly
+    as the spec requires.'
+  - 'Deviation encoding adds genuine storytelling: points are coloured by absolute
+    deviation from the normal fit via the imprint_seq sequential colormap (correct
+    choice for single-polarity magnitude), with a matching colorbar — the elevated-deviation
+    blue cluster around the 0.5-0.6 S-curve bend is an immediate focal point.'
+  - 'Clean theme adaptation: light render on #FAF8F1, dark render on #1A1A17, data
+    colours identical across both, only chrome flips. All title/axis/tick/colorbar
+    text fully readable in both themes.'
+  - Neutral, plausible domain (steel-bolt tensile strength QC) with a deliberately
+    skewed hardened-bolt tail that makes the P-P deviation meaningful and pedagogically
+    clear.
+  - KISS, reproducible (np.random.seed(42)), clean imports, idiomatic seaborn (sns.set_theme
+    rc tokens, sns.scatterplot hue mapping, sns.despine), exact 2400x2400 canvas with
+    default bbox_inches.
   weaknesses:
-  - 'Marker density is slightly heavy: 200 points at s=70 pile up into a thick overlapping
-    ''string-of-beads'' band along the diagonal. The PAGE_BG edge keeps individual
-    points distinguishable, but a smaller marker (s~40-50) would reduce overplotting
-    and let the deviation colour gradient read more cleanly.'
-  - 'Library distinctiveness is moderate (LM-02): the colorbar is built manually via
-    matplotlib ScalarMappable rather than a seaborn-native mechanism, and the core
-    plot is a single sns.scatterplot — solid but not showcasing features unique to
-    seaborn.'
+  - 'DE-02 (Visual Refinement): grid is drawn on both axes via ax.grid(True); for
+    a P-P plot a slightly lighter/subtler grid would keep the diagonal and points
+    more dominant. Minor — grid.alpha=0.15 already keeps it restrained.'
+  - 'LM-02 (Distinctive Features): seaborn usage is fairly thin — scatterplot with
+    hue is the only seaborn-specific call and the colorbar is built manually in matplotlib
+    (legend=False on the scatter). A seaborn-idiomatic touch (e.g. jointplot marginals
+    to show the CDF distributions, or sns.relplot at square aspect) would lean harder
+    into the library''s strengths.'
+  - 'DE-03: the diagonal reference line at alpha=0.7 dashed INK_SOFT reads slightly
+    faintly in the dark render where it competes with the deviation colours near centre;
+    nudging its contrast would sharpen the ''perfect fit'' baseline. Cosmetic only.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1), not pure white — correct.
-      Chrome: Title "pp-basic · python · seaborn · anyplot.ai" in dark ink, centered above the axes, ~55% width — fully readable. X label "Theoretical cumulative probability (normal)" and Y label "Empirical cumulative probability" in dark ink, balanced sizes. Tick labels (0.0–1.0 both axes) in soft grey, readable. Subtle grid at low alpha. Colorbar on the right labelled "Absolute deviation from normal fit" with grey numeric ticks (0.01–0.05). All chrome readable.
-      Data: Dense band of points hugging the 45-degree dashed grey reference diagonal, coloured by deviation via imprint_seq (teal-green for low deviation, blue for the higher-deviation cluster near the centre at ~0.55–0.6). First/low-deviation colour is brand green #009E73. Square equal-aspect canvas.
-      Legibility verdict: PASS
+      Background: warm off-white (#FAF8F1), confirmed — not pure white, not dark.
+      Chrome: title "pp-basic · python · seaborn · anyplot.ai" in dark ink, centered, ~55% width, fully visible and not clipped. Axis labels "Theoretical cumulative probability (normal)" (x) and "Empirical cumulative probability" (y) in dark ink, readable. Tick labels 0.0-1.0 on both axes in soft ink, readable. Colorbar on the right labelled "Absolute deviation from normal fit" with ticks 0.01-0.05, vertical label fully visible (not clipped at right edge). Subtle grid visible but restrained.
+      Data: P-P scatter (200 points) running tightly along the dashed 45-degree reference line, coloured by deviation via imprint_seq — most points brand green (#009E73, low deviation), a small cluster near the 0.5-0.6 bend shifts toward blue (#4467A3) where the S-shaped departure occurs. First/dominant series colour is the brand green. Reference line is a grey dashed diagonal.
+      Legibility verdict: PASS — all text dark-on-light and clearly readable.
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17), not pure black — correct.
-      Chrome: Same title, axis labels and colorbar label rendered in light ink (#F0EFE8), tick labels in light-grey (#B8B7B0) — all clearly readable, no dark-on-dark. Grid subtle and visible. Colorbar outline light.
-      Data: Identical point positions and identical data colors to the light render (green->blue imprint_seq, brand green at the low end) — only the chrome flipped. Dashed reference diagonal in soft grey, visible.
-      Legibility verdict: PASS
+      Background: warm near-black (#1A1A17), confirmed — not pure black, not light.
+      Chrome: title, both axis labels, all tick labels, and the colorbar label render in light ink (#F0EFE8 / #B8B7B0) and are clearly readable. No dark-on-dark failures — every text element is light against the near-black surface. Grid subtle but visible. Colorbar outline and ticks visible.
+      Data: identical to the light render — green-to-blue imprint_seq scatter along the diagonal, same blue cluster at the centre bend, same grey dashed reference line. Only chrome (background + text) flipped; data colours unchanged.
+      Legibility verdict: PASS — all text readable; brand green visible on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -64,71 +66,70 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All fonts explicitly sized (title 12, labels 10, ticks 8, colorbar
-          10/8) and readable in both themes; minor mobile-scale concern for 8pt ticks
+        comment: All text explicitly sized (title 12, labels 10, ticks 8) and readable
+          in both themes; minor headroom only
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; colorbar well separated
+        comment: No text/data/colorbar collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers visible with bg edge + alpha 0.85, but s=70 over 200 points
-          piles up into a heavy overlapping band
+        comment: s=45 with alpha=0.8 + edgecolor suits 200 points; markers crisp
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq green->blue is CVD-safe; good contrast on both surfaces
+        comment: green-blue sequential is CVD-safe; deviation also positional
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exact 2400x2400 square, equal aspect, nothing clipped, canvas gate
-          passed
+        comment: Exact 2400x2400 square, equal aspect, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive cumulative-probability labels; correct title format
+        comment: Descriptive labels; probabilities are unitless so no units needed
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq for continuous deviation; #FAF8F1/#1A1A17 backgrounds;
-          both themes correct'
+        comment: 'imprint_seq for single-polarity deviation; backgrounds #FAF8F1/#1A1A17;
+          both renders theme-correct'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Polished: deviation colorbar, bg-edged markers, dashed reference
-          line, theme tokens'
+        comment: Deviation colour encoding + colorbar shows intentional design beyond
+          defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Despine applied, subtle grid (alpha 0.15), generous square whitespace
+        comment: despine, subtle grid (alpha 0.15), generous whitespace; grid on both
+          axes slightly busy
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Deviation coloring creates a focal point highlighting where the normal
-          fit breaks down
+        comment: Deviation cluster at the S-bend creates a clear focal point; reference
+          line guides the eye
     spec_compliance:
       score: 15
       max: 15
@@ -138,48 +139,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct P-P plot (cumulative probabilities on both axes)
+        comment: Genuine P-P plot (cumulative probs on both axes)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 45-deg reference line, 0-1 axes, square aspect, i/(n+1) plotting
-          position, fitted-normal theoretical CDF
+        comment: 45-deg line, 0-1 axes, square aspect, i/(n+1) ECDF, fitted-normal
+          CDF all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=theoretical, Y=empirical, full 0-1 range shown
+        comment: x=theoretical, y=empirical, correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact title format; colorbar replaces legend for continuous encoding
+        comment: Title exact format; colorbar serves as the legend for the deviation
+          encoding
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows diagonal fit, center deviation, tail behaviour
+        comment: Shows good-fit body + visible tail deviation; covers the P-P plot's
+          diagnostic purpose
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Steel-bolt tensile strength QC — plausible and neutral
+        comment: Steel-bolt tensile-strength QC — plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 points, CDF values 0-1, sensible MPa source domain
+        comment: Cumulative probabilities 0-1; sensible underlying MPa values
     code_quality:
       score: 10
       max: 10
@@ -189,7 +192,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-level script, no functions/classes
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -207,15 +210,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake UI
+        comment: Clear, well-commented, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, current API
+        comment: Saves plot-{THEME}.png, default bbox_inches, current API
     library_features:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -224,13 +227,14 @@ review:
         max: 5
         passed: true
         comment: sns.set_theme rc tokens, sns.scatterplot hue mapping, sns.despine
+          — idiomatic
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Colorbar built via matplotlib ScalarMappable; core is a single scatterplot
-          — solid but not deeply seaborn-distinctive
+        passed: true
+        comment: hue continuous mapping is seaborn-ish but colorbar built manually;
+          thin seaborn surface
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -240,10 +244,8 @@ impl_tags:
   patterns:
   - data-generation
   - explicit-figure
-  dataprep:
-  - distribution-fitting
+  dataprep: []
   styling:
   - custom-colormap
   - alpha-blending
   - edge-highlighting
-  - grid-styling
