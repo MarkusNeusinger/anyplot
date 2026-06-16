@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 pp-basic: Probability-Probability (P-P) Plot
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-06-16
+Quality: 92/100 | Updated: 2026-06-16
 """
 
 import math
