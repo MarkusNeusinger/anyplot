@@ -1,171 +1,179 @@
 library: letsplot
+language: python
 specification_id: pyramid-basic
 created: '2025-12-23T18:15:42Z'
-updated: '2025-12-23T18:23:46Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20468194655
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/letsplot/plot.html
+updated: '2026-06-16T19:34:59Z'
+generated_by: claude-opus
+workflow_run: 27642169620
+issue: 1000
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/python/letsplot/plot-dark.html
 quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - html-export
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - grid-styling
 review:
   strengths:
-  - Excellent implementation of the pyramid chart concept with proper symmetric axis
-    scales
-  - Clean, readable code following KISS principles with proper ggplot2 grammar
-  - Perfect spec compliance including correct title format and all required features
-  - Good use of coord_flip() to create horizontal bars with categorical y-axis
-  - Custom axis labels showing absolute values on both sides (clever use of scale_y_continuous
-    labels)
-  - Appropriate canvas utilization with 1600x900 base size scaled 3x
-  - Realistic demographic data showing typical population pyramid shape
+  - 'First categorical series is brand green #009E73 (Male) with Imprint lavender
+    #C475FD (Female) — palette-compliant, and the data colors are identical across
+    light and dark renders with only chrome flipping'
+  - 'Correct butterfly/pyramid construction: negative-signed male values place bars
+    left of a shared central axis, female bars right, with a symmetric -80..80 break/label
+    scheme for fair comparison'
+  - Strong data storytelling — a black/white emphasis outline spotlights the peak
+    working-age cohorts (20-29, 30-39) and a faint dashed central reference line anchors
+    the two opposing sides
+  - Direct read-off value labels nudged just outside each bar tip, no overlap with
+    bars or the central line
+  - 'Both renders fully theme-correct: warm off-white #FAF8F1 (light) and warm near-black
+    #1A1A17 (dark), all text legible, no dark-on-dark or light-on-light failures'
+  - Canvas exactly 3200x1800; clean KISS code, deterministic data, only used imports
   weaknesses:
-  - Color choice (blue/yellow) while distinguishable could be improved for colorblind
-    accessibility - consider using a more standard palette like blue/orange or established
-    demographic colors
-  - Library-specific features could be leveraged more - lets-plot supports tooltips
-    and interactivity that aren't utilized in the HTML output
-  image_description: The plot displays a population pyramid with 9 age groups (0-9
-    through 80+) arranged vertically on the y-axis. Male population bars extend to
-    the left in a dark blue color (#306998), while female population bars extend to
-    the right in yellow (#FFD43B). The x-axis shows "Population (thousands)" with
-    symmetric scale from 80 to 0 to 80. The pyramid shape is clearly visible, with
-    the widest bars in the 30-39 age group, tapering toward both younger and older
-    age groups. The title "pyramid-basic · letsplot · pyplots.ai" appears at the top.
-    A legend on the right identifies Male (blue) and Female (yellow). The minimal
-    theme provides a clean appearance with subtle gridlines.
+  - Spec note says category labels 'should be placed along the central axis'; here
+    they sit on the conventional left y-axis instead of straddling the center. This
+    is a standard population-pyramid convention and acceptable, but a centered-label
+    variant would match the spec wording more literally.
+  - geom_text value labels at size=4 (~11pt) are slightly small relative to the large
+    bars; bumping to ~5 would improve read-off prominence without crowding.
+  - Library-distinctive usage is moderate — interactive HTML export is leveraged,
+    but the chart could lean further into lets-plot-specific features (e.g. tooltips
+    configuration) to differentiate from a plain plotnine equivalent.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (~#FAF8F1), no pure-white panel.
+      Chrome: title "pyramid-basic · python · letsplot · anyplot.ai" in dark ink, top-left, ~50% width. Y-axis title "Age Group" and X-axis title "Population (thousands)" dark and readable. Tick labels symmetric 80/60/40/20/0/20/40/60/80 in soft ink. Subtle y-only major gridlines. Legend "Gender" on right with Male (green) / Female (lavender) swatches on elevated cream panel.
+      Data: Male bars #009E73 (green) extend left, Female bars #C475FD (lavender) extend right from a dashed central reference line. Black emphasis outline on 20-29 and 30-39 rows. Value labels just outside each bar tip.
+      Legibility verdict: PASS — all title/labels/ticks clearly readable against light background.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (~#1A1A17), not pure black.
+      Chrome: title and axis titles in light ink (#F0EFE8), tick labels in soft light ink — all clearly readable. Gridlines subtle and visible. Legend on elevated dark panel with light text. Emphasis outline flips to near-white.
+      Data: colors identical to light render — Male #009E73 green, Female #C475FD lavender. Central dashed line present.
+      Legibility verdict: PASS — no dark-on-dark; all text clearly visible against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 24pt, axis titles at 20pt, axis text at 16pt - all perfectly
-          readable
+        comment: Fonts explicitly set, readable both themes; value labels slightly
+          small at size=4
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, age group labels clearly separated
+        comment: No collisions between labels, bars, or central line
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bar widths well-proportioned, good spacing between categories
+        comment: Sparse data with prominent bars
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue and yellow have good contrast, distinguishable for colorblind
-          users, though not an ideal colorblind palette
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, legend appropriately placed
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Age Group" and "Population (thousands)" are descriptive with units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Green/lavender CVD-safe, good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Exactly 3200x1800, nothing clipped, good proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle, but y-axis grid is blanked which is good; legend
-          position is good but could be closer to the plot
+        passed: true
+        comment: Descriptive with units (thousands)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Imprint palette, correct backgrounds both
+          themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Emphasis outlines, central reference line, value labels
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle y-only grid, clean whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point on peak working-age cohorts
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct pyramid/butterfly chart with opposing horizontal bars sharing
-          central axis
+        comment: Correct pyramid/butterfly chart
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Age groups on central axis, male/female populations correctly mapped
-          to left/right
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: left/right bars, symmetric scale, distinct
-          colors, category labels on central axis, legend identifying sides'
-      - id: SC-04
-        name: Data Range
+        comment: Opposing bars, symmetric scale, distinct colors, legend
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Symmetric axis scale (-80 to 80), all data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Age groups vs signed population correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows Male and Female with corresponding colors
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses exact format: "pyramid-basic · letsplot · pyplots.ai"'
+        comment: Title format correct, Male/Female legend
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows pyramid shape with varying bar lengths, demographic pattern
-          visible; slight asymmetry between genders shown (females live longer)
+        comment: Shows bidirectional asymmetry across all categories
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Population demographics by age and gender is the canonical use case
-          for pyramid charts
+        comment: Population by age/gender, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values in thousands are sensible; the pattern shows a typical population
-          structure, though max value ~75k is a bit abstract without knowing the population
-          size context
+        comment: Thousands, sensible domain values
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -173,42 +181,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: No functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
-        passed: false
-        comment: Data is deterministic (hardcoded), but no random seed needed since
-          no random data used - however, best practice would include a seed comment
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only pandas and lets_plot used, both necessary
+        comment: os, pandas, lets_plot all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Using current lets-plot API
+        comment: Clean, appropriate complexity, no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
+        comment: Saves plot-{THEME}.png + .html
     library_features:
-      score: 3
-      max: 5
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Grammar of graphics, coord_flip, scale_fill_manual, layered geoms
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ggplot grammar, coord_flip, scale_y_continuous with custom labels,
-          theme customization, ggsize - good usage of lets-plot but no advanced interactive
-          features utilized
+        comment: Interactive HTML export, layered emphasis geom
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - diverging-bars
+  - coord-flip
+  - text-annotation
+  - reference-line
+  - emphasis-highlight
+  patterns:
+  - data-generation
+  - layered-geoms
+  dataprep:
+  - sign-transform
+  styling:
+  - publication-ready
+  - theme-adaptive
