@@ -1,59 +1,66 @@
 library: letsplot
+language: python
 specification_id: bubble-packed
 created: '2025-12-23T09:15:56Z'
-updated: '2026-02-23T16:46:36Z'
-generated_by: claude-opus-4-6
-workflow_run: 20456562981
-issue: 0
-python_version: 3.14.3
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/letsplot/plot.html
-quality_score: 89
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - hover-tooltips
-  - annotations
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - minimal-chrome
-  - alpha-blending
-  - edge-highlighting
+updated: '2026-06-16T19:46:21Z'
+generated_by: claude-opus
+workflow_run: 27643076719
+issue: 992
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/letsplot/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent force-directed packing algorithm with group-based spatial clustering
-    and collision resolution
-  - Strong data storytelling via subtitle insight and conditional label display creating
-    visual hierarchy
-  - Colorblind-safe Wong palette with white circle borders for clean visual separation
-  - 'Uses distinctive lets-plot features: size_unit=x for data-coordinate sizing and
-    layer_tooltips for interactive tooltips'
-  - Perfect spec compliance with all required features implemented
+  - 'Correct packed-bubble execution: custom force-directed collision-resolution loop
+    packs 15 circles with no overlap, and circle area (not radius) encodes value via
+    radii = sqrt(value/pi) — the most important perceptual rule for this chart type.'
+  - 'Idiomatic lets-plot: shape=21 with fill+stroke, scale_size_identity + size_unit=''x''
+    for true data-unit circle sizing, coord_fixed, theme_void, and interactive layer_tooltips
+    — distinctive high-level grammar usage.'
+  - 'Imprint palette in canonical order (Tech=#009E73 brand green, Business=#C475FD,
+    Operations=#4467A3); page backgrounds correct (#FAF8F1 light / #1A1A17 dark) with
+    only chrome flipping between renders.'
+  - 'Clear data storytelling: subtitle ''Tech departments dominate'' plus group clustering
+    and the largest bubble (Engineering $85M) give an obvious focal point; in-bubble
+    labels show name+value for large circles and fall back to tooltips for small ones.'
+  - 'Clean KISS script: seeded (np.random.seed(42)), linear, no functions/classes,
+    all imports used, saves both plot-{theme}.png and .html.'
   weaknesses:
-  - Canvas utilization could be improved - bubble cluster sits slightly off-center
-    with empty space in upper-left
-  - In-bubble text at size=9 is slightly small for medium-sized circles; could be
-    increased to 10-11
-  - Four smallest departments are completely unlabeled and only identifiable via tooltips
-  image_description: 'The plot displays a packed bubble chart of 15 department budget
-    allocations on a clean white background. Circles are colored by division: steel
-    blue (#306998) for Tech (Engineering $85M, R&D $72M, Product $68M, IT $55M, Analytics,
-    Design, QA, Security), golden amber (#E69F00) for Business (Marketing $62M, Sales
-    $58M), and teal (#009E73) for Operations (Ops $45M, Finance $48M, HR, Customer
-    Support, Legal). The title reads "Department Budget Allocation · bubble-packed
-    · letsplot · pyplots.ai" with a subtitle "Tech departments dominate — 8 of 15
-    teams control 58% of total budget". Larger circles display department name and
-    budget in bold white text; medium circles show only the name; the four smallest
-    circles are unlabeled. White borders separate adjacent circles. A legend at the
-    bottom identifies the three divisions. The bubble cluster fills roughly 50% of
-    the square canvas with some empty space in the upper-left corner.'
+  - Force packing is slightly loose/asymmetric — visible gaps between several circles
+    and the cluster leans left-of-center, leaving uneven empty margins in the square
+    canvas. Tightening collision spacing or adding a centering pass would improve
+    canvas fill.
+  - Three small circles (Legal $22M, QA $28M, plus Security/Design/Analytics show
+    name only) carry no in-bubble value label; values are reachable only via tooltip,
+    which is acceptable per spec but reduces at-a-glance completeness in the static
+    PNG.
+  - 'In-bubble text is a fixed dark #1A1A17 on all fills in both themes — readable
+    on the bright green/lavender/blue fills, but contrast on the green fill is only
+    moderate; a touch more weight or a subtle halo would harden legibility at 400px
+    mobile scale.'
+  image_description: "Light render (plot-light.png):\n  Background: warm off-white\
+    \ (#FAF8F1), correct — not pure white.\n  Chrome: title \"Department Budget Allocation\
+    \ · bubble-packed · python · letsplot · anyplot.ai\" in dark ink, fully visible\
+    \ and not clipped; gray subtitle \"Tech departments dominate — 8 of 15 teams control\
+    \ 58% of total budget\" centered below; framed bottom legend \"Division: Tech\
+    \ / Business / Operations\" with dark text. All readable.\n  Data: 15 packed circles,\
+    \ no overlap. Tech=#009E73 green, Business=#C475FD lavender, Operations=#4467A3\
+    \ blue. Circles stroked with page-bg color for clean separation. In-bubble bold\
+    \ dark labels (Engineering $85M, R&D $72M, Product $68M, Marketing $62M, etc.).\
+    \ First series Tech is #009E73. \n  Legibility verdict: PASS\n\nDark render (plot-dark.png):\n\
+    \  Background: warm near-black (#1A1A17), correct — not pure black.\n  Chrome:\
+    \ title in light ink (#F0EFE8) fully visible, no dark-on-dark; subtitle in soft\
+    \ gray readable; legend frame with light text readable. No clipping at any edge.\n\
+    \  Data: identical circle colors and positions to light render — only chrome flipped.\
+    \ Bubbles are bright, so the fixed dark in-bubble labels remain readable on green/lavender/blue\
+    \ fills. First series Tech still #009E73.\n  Legibility verdict: PASS"
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -61,69 +68,71 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=24, subtitle=16, legend=20/16,
-          bubble text=9 bold). All readable, though in-bubble text slightly small
-          for medium circles.
+        comment: All chrome readable in both themes; fixed dark in-bubble text only
+          moderate contrast on green fill
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text overlap. Circles properly separated by white stroke borders.
-          Minor crowding in bottom area.
+        comment: Circles packed with no overlap; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Circles perfectly sized with clear area-based differentiation. Alpha=0.88
-          optimal. White borders aid distinction.
+        comment: 15 prominent bubbles, sizes clearly differentiated
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint hues, good contrast
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Colorblind-safe Wong palette (#306998, #E69F00, #009E73) verified
-          for all CVD types.'
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Square format appropriate. Bubble cluster fills ~50% of canvas. Some
-          empty space in upper-left corner.
+        comment: 2400x2400 square, gate passed; slightly loose/left-leaning packing
+          but fills canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: theme_void correctly removes axes for packed bubbles. Title is descriptive
-          with proper format.
+        comment: theme_void appropriate for packed bubble; title descriptive with
+          $M units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Tech=#009E73 leads, canonical Imprint order, correct backgrounds
+          both themes
     design_excellence:
       score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom colorblind-safe palette, white circle borders, conditional
-          labeling, clean theme_void. Clearly above defaults.
+        comment: Custom force packing, stroke-on-bg separation, alpha; packing a touch
+          loose
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: theme_void for maximum chrome removal. Legend with subtle border.
-          White circle stroke. Generous whitespace.
+        comment: theme_void, no spines, framed legend, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Subtitle communicates insight. Color grouping shows Tech dominance.
-          Size hierarchy guides the eye. Conditional labels focus attention.
+        comment: Subtitle insight + group clustering + size hierarchy create clear
+          focal point
     spec_compliance:
       score: 15
       max: 15
@@ -133,28 +142,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct packed bubble chart with force-directed physics simulation.
+        comment: Correct packed bubble chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: area-based sizing, collision-free packing, labels,
-          color encoding, group clustering, tooltips.'
+        comment: Area sizing, force packing, group clustering, color, labels, tooltips
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Values correctly mapped to circle area via sqrt(value/pi). Groups
-          mapped to color and spatial clustering.
+        comment: Size=value (area), color=division group
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows format with descriptive prefix. Legend correctly shows
-          all three divisions.
+        comment: Correct title format with descriptive prefix; legend labels match
+          divisions
     data_quality:
       score: 15
       max: 15
@@ -164,20 +171,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 15 categories with wide value range ($22M-$85M). Three groups with
-          varying member counts.
+        comment: 15 items across 3 groups, varied sizes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Department budget allocation is real-world, neutral, and comprehensible.
+        comment: Department budgets — plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Budget values ($22M-$85M) realistic for mid-to-large company.
+        comment: $22M-$85M sensible for department budgets
     code_quality:
       score: 10
       max: 10
@@ -187,49 +193,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Import -> Data -> Packing Simulation -> Plot -> Save. No functions
-          or classes.
+        comment: Linear script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before both random operations.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. No unused imports.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Force-directed packing is necessary complexity. Clean loop with early
-          termination. No fake UI.
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_ggsave with scale=3. Current API.
-    library_mastery:
-      score: 7
+        comment: Saves plot-{theme}.png + .html
+    library_features:
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ggplot grammar, shape 21, scale_size_identity, size_unit='x', coord_fixed
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good ggplot grammar with layered geoms, scales, guides, themes. coord_fixed
-          and xlim/ylim used appropriately.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses lets-plot distinctive size_unit=x for data-coordinate sizing
-          and layer_tooltips with structured format.
-  verdict: REJECTED
+        comment: Interactive tooltips, data-unit circle sizing, HTML export
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - force-directed-layout
+  - circle-packing
+  - tooltips
+  - bubble-sizing-by-area
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - physics-simulation
+  dataprep:
+  - collision-resolution
+  - area-scaling
+  styling:
+  - publication-ready
+  - theme-adaptive
+  - alpha-blending

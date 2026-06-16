@@ -1,30 +1,241 @@
 library: pygal
+language: python
 specification_id: sparkline-basic
 created: '2025-12-23T20:45:18Z'
-updated: '2025-12-23T21:13:49Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20471155572
-issue: 0
-python_version: 3.13.11
+updated: '2026-06-16T19:40:59Z'
+generated_by: claude-opus
+workflow_run: 27642774625
+issue: 1011
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/pygal/plot.html
-quality_score: 78
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/pygal/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Faithful, minimalist sparkline: no axes, ticks, gridlines or legend — exactly
+    the chrome-free ''pure visualization'' the spec demands.'
+  - Implements every optional feature — min/max highlight dots, soft area fill under
+    the line, thin clean cubic-interpolated stroke.
+  - 'Perfect palette + theme compliance: trend line is brand green #009E73, peak dot
+    Imprint blue #4467A3, trough dot semantic matte-red #AE3030; backgrounds are #FAF8F1
+    (light) / #1A1A17 (dark) and data colors are identical across both renders.'
+  - Title 'sparkline-basic · python · pygal · anyplot.ai' is exact, legible in both
+    themes, well-proportioned (~55% width).
+  - Clean KISS code, deterministic hardcoded data, idiomatic pygal Style usage and
+    a neat None-padded overlay-series trick to place single extrema dots.
+  weaknesses:
+  - Large top/bottom whitespace is intrinsic to fitting a ~4.5:1 sparkline inside
+    the mandated 16:9 canvas — acceptable here, but the band could optionally be slightly
+    taller to use a touch more vertical space.
+  - Realistic context ('daily sales trend') lives only in a code comment; sparklines
+    carry no visible labels so the scenario is not conveyed to the viewer (inherent
+    to the form).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 — not pure white. Correct.
+      Chrome: only the title "sparkline-basic · python · pygal · anyplot.ai" in dark ink, centered at top, fully readable. No axes/ticks/grid/legend by design.
+      Data: brand green #009E73 trend line with a subtle green area fill (~18% opacity); one blue dot (#4467A3) marks the high point, one matte-red dot (#AE3030) marks the low point. First series is #009E73. Confirmed.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 — not pure black. Correct.
+      Chrome: title in light ink, fully readable against the dark surface — no dark-on-dark issue.
+      Data: identical colors to the light render — same green line, same green-tinted fill (darker due to surface), same blue peak dot and red trough dot. Only chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: title_font_size=66 explicitly set; title legible in both themes,
+          ~55% width, no clipping. Other text intentionally hidden (no axes for a
+          sparkline).
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line, fill and extrema dots prominent and well sized for sparse data.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/blue/red are CVD-safe and also separated by position; good
+          contrast on both surfaces.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Full width used; symmetric top/bottom margins produce the required
+          ~4.5:1 sparkline band inside the 16:9 canvas. Whitespace is intrinsic to
+          the form, balanced, nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis labels by spec design; descriptive mandated title present.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; dots use Imprint #4467A3 and #AE3030; backgrounds
+          #FAF8F1/#1A1A17; data colors identical across themes.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong, intentional minimalism: custom palette, soft fill, semantic
+          extrema dots, tuned margins — clearly above defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No spines/grid/chrome, subtle fill, generous whitespace — refined
+          for the sparkline form.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Min/max dots create a clear focal hierarchy; viewer instantly reads
+          the high and low.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Condensed line chart = correct sparkline.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'No chrome, compact aspect, plus all optional features: min/max dots,
+          area fill, thin clean line.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Sequential values rendered as a continuous trend line.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend correctly omitted for a single-trend sparkline.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Multiple peaks/troughs, clear distinct min and max — shows the trend
+          shape well.
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Plausible daily-sales scenario but conveyed only via code comment
+          (sparklines carry no labels).
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 45-105 plausible for daily sales.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports → data → plot → save; no functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, pygal, Style all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and well-commented; tidy overlay-series approach for extrema.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png plus interactive plot-{THEME}.html.
+    library_features:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: High-level pygal.Line + Style object; idiomatic config-driven chrome
+          suppression.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Cubic interpolation, fill, Style system and native interactive HTML
+          export — pygal-specific.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
+  - layer-composition
   patterns: []
   dataprep: []
-  styling: []
-review:
-  strengths:
-  - Excellent implementation of sparkline minimalism with no axes, labels, or gridlines
-  - Creative use of separate series for min/max point highlighting with distinct colors
-  - Good use of pygal Style class for comprehensive customization
-  - Appropriate 4:1 aspect ratio matching spec recommendations
-  - Smooth cubic interpolation creates clean visual appearance
-  - Fill effect adds visual weight while maintaining minimalism
-  weaknesses:
-  - Title not visibly rendering in final PNG output despite being configured
-  - Margins could be reduced further for tighter sparkline appearance
+  styling:
+  - minimal-chrome
+  - alpha-blending

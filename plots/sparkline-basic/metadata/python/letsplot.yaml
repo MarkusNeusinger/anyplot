@@ -1,147 +1,178 @@
 library: letsplot
+language: python
 specification_id: sparkline-basic
 created: '2025-12-23T20:45:29Z'
-updated: '2025-12-23T21:00:11Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20471156031
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
-  - minimal-chrome
+updated: '2026-06-16T19:44:17Z'
+generated_by: claude-opus
+workflow_run: 27642428625
+issue: 1011
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/letsplot/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent adherence to sparkline minimalist design (no axes, labels, or gridlines)
-  - Perfect aspect ratio (6:1) within the spec recommended 4:1 to 8:1 range
-  - 'All optional features implemented: min/max highlights, first/last points, area
-    fill'
-  - Realistic stock price data with appropriate volatility
-  - Clean, readable code following KISS principles
-  - Correct title format and proper output files (PNG and HTML)
+  - Small-multiples KPI dashboard is one of the spec's named applications, executed
+    cleanly with theme_void for pure sparkline chrome (no axes, ticks, or gridlines).
+  - 'Palette compliance is exact: brand green #009E73 line, semantic dots (matte red
+    #AE3030 = minimum, blue #4467A3 = maximum, green = latest), warm theme-adaptive
+    backgrounds — identical data colors across light and dark.'
+  - Distinct synthetic trend shape per metric (revenue, users, conversion, churn,
+    session, NPS) so each sparkline tells its own story; realistic and neutral KPI
+    context.
+  - 'All optional spec features present: min/max highlight dots, last-point reference
+    dot, subtle area fill anchored to each panel floor (alpha 0.10), and a thin 1.3
+    line for clarity at small size.'
+  - A single mapped geom_point layer drives a real legend key (minimum/maximum/latest),
+    an idiomatic lets-plot way to label the dots without a manual legend.
+  - 'Clean KISS code: seeded (np.random.seed(42)), no functions/classes, all imports
+    used, saves plot-{THEME}.png + .html.'
   weaknesses:
-  - Could use more distinctive lets-plot features (e.g., tooltips in HTML version)
-  - Data trend could be more dramatic to better showcase sparkline utility
-  image_description: 'The plot displays a minimal sparkline showing stock price trends
-    over 60 trading days. It features a thin blue line (#306998) with a subtle light
-    blue area fill beneath it. Four highlight points are visible: a green dot marking
-    the maximum value (positioned early in the series), a red dot marking the minimum
-    (towards the right side), and two smaller yellow dots marking the first and last
-    data points. The title "sparkline-basic · lets-plot · pyplots.ai" is centered
-    at the top in a readable font. The chart uses a ~6:1 aspect ratio (4800x800px)
-    with no axes, gridlines, or labels - adhering to the sparkline minimalist philosophy.
-    The data shows an overall slightly positive trend with volatility.'
+  - 'Facet order is not honored: the code builds an ordered Categorical (Monthly Revenue
+    first) but facet_wrap renders the panels alphabetically (Active Users, Avg Session,
+    Churn Rate, ...). Cosmetic only, but the intended ordering is silently dropped
+    — consider a numeric prefix or accept alphabetical.'
+  - Six-panel small multiples gets tight at ~400 px mobile width; strip labels (13pt)
+    and the bottom legend (12pt) are borderline-small when the full canvas is scaled
+    down. Still readable, but the least-legible aspect.
+  - Design is restrained-but-conventional small multiples; storytelling relies on
+    the dots rather than any cross-panel emphasis or focal hierarchy.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1) across plot and all six facet panels — not pure white.
+      Chrome: centered title "sparkline-basic · python · letsplot · anyplot.ai" in dark ink, fully readable. Per-panel strip titles (Active Users (K), Avg Session (min), Churn Rate (%), Conversion Rate (%), Monthly Revenue ($K), NPS Score) in soft grey, readable. Bottom legend "minimum / maximum / latest" with colored swatches, readable. No axes/ticks/gridlines (sparkline by design).
+      Data: each panel a thin brand-green (#009E73) line with a faint green area fill; dots = red minimum (#AE3030), blue maximum (#4467A3), green latest (#009E73). First/only line series is #009E73. PASS.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17) across plot and panels — not pure black.
+      Chrome: title in light ink (#F0EFE8) readable; strip titles in light-grey (#B8B7B0) readable, no dark-on-dark; legend text light-grey readable. No dark-on-dark failures.
+      Data: identical colors to light render — green lines, faint green fill, red/blue/green dots. Only chrome (bg, text) flipped. PASS.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is clearly readable at 24pt
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping elements
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Line and points are visible; line could be slightly thicker for better
-          visibility at small sizes
+        comment: Title 16pt, strip 13pt, legend 12pt readable in both themes; tight
+          at 400px mobile across 6 panels
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions; legend clear of panels
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Thin 1.3 line + size 4.2 dots appropriate for sparse data
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Green/red/yellow points are distinguishable; blue line provides good
-          contrast
+        comment: Green/red/blue CVD-safe, semantic encoding
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Excellent use of wide sparkline aspect ratio, good margins
+        comment: 3x2 grid, 3200x1800 exact, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes by design; strip titles carry units ($K, %, min)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green line, Imprint semantic dots, correct theme backgrounds,
+          both renders correct
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Polished small multiples with subtle area fill and semantic dots
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void, no strip background, generous margins, alpha 0.10 fill
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dots create focal points; distinct trend shapes per metric
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct sparkline visualization
+        comment: Correct minimalist sparklines, no chrome
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Sequential values correctly mapped to line
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'Has all optional features: min/max highlights, first/last points,
-          area fill'
-      - id: SC-04
-        name: Data Range
+        comment: Min/max dots, last-point dot, area fill, thin line all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis expanded to show full data range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: day->x, value->y, free_y per panel
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for sparklines, correctly omitted
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "{spec-id} · {library} · pyplots.ai"
+        comment: Exact mandated title; legend labels match
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows trend with volatility, upward bias, min/max differentiation;
-          could show more dramatic trend variation
+        comment: Trends + extremes + endpoints, full sparkline feature set
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Stock price simulation is realistic with ~1.8% daily volatility
+        comment: Plausible neutral KPI metrics
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 60 data points is good; prices starting at 100 are reasonable
+        comment: 45 days, sensible per-metric ranges
     code_quality:
       score: 10
       max: 10
@@ -151,40 +182,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: No functions/classes, one prep loop
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Well-commented, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png + .html
+    library_features:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ggplot grammar and theme_void() appropriately, but doesn't showcase
-          lets-plot's unique interactive features
+        comment: Grammar of graphics, facet_wrap, layered geoms, theme_void
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: free_y facets, ggsize, HTML export, mapped legend via point layer
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - faceting
+  - layer-composition
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - minimal-chrome
+  - alpha-blending

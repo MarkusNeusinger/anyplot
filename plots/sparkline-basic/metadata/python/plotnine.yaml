@@ -1,161 +1,183 @@
 library: plotnine
+language: python
 specification_id: sparkline-basic
 created: '2025-12-23T20:46:05Z'
-updated: '2025-12-23T20:54:29Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20471154067
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/plotnine/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - layer-composition
-  patterns:
-    - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-06-16T19:43:18Z'
+generated_by: claude-opus
+workflow_run: 27642684372
+issue: 1011
+language_version: 3.13.13
+library_version: 0.15.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent implementation of sparkline minimalism with proper removal of all chart
-    chrome (axes, ticks, gridlines, legend)
-  - Smart use of colored markers to highlight min (red), max (green), and first/last
-    (blue) points
-  - Perfect aspect ratio (4:1) achieved with figure_size=(16, 4)
-  - Clean, readable code following KISS principles
-  - Good use of plotnine theme system to strip away all unnecessary elements
+  - 'Textbook sparkline minimalism: all axes, ticks, gridlines, and spines stripped
+    via element_blank() for a pure-data aesthetic exactly as the spec demands.'
+  - Thin brand-green line (#009E73, size 1.3) over a subtle 12% area-fill ribbon reads
+    clean and uncluttered at small sizes.
+  - 'All four optional spec features implemented: min highlighted matte-red (#AE3030),
+    max blue (#4467A3), and both endpoints in theme-adaptive muted ink — a clear semantic
+    color story.'
+  - 'Theme-adaptive chrome is correct in both renders: warm off-white #FAF8F1 / warm
+    near-black #1A1A17 backgrounds, title flips ink color, data hues stay identical.'
+  - 'Idiomatic plotnine: layered geoms (geom_ribbon + geom_line + geom_point), a separate
+    highlight dataframe mapped through scale_color_manual, declarative theme() chrome
+    control.'
+  - 'Clean KISS script: linear flow, np.random.seed(42) for reproducibility, no unused
+    imports, well-commented intent.'
   weaknesses:
-  - Line could be slightly thinner for a more authentic sparkline appearance at very
-    small sizes
-  image_description: 'The plot displays a minimalist sparkline with a dark blue (#306998)
-    continuous line on a clean white background. The title "sparkline-basic · plotnine
-    · pyplots.ai" is centered at the top in a readable font size. The line shows a
-    clear trend: starting low-left with a blue dot (first point), dipping to a minimum
-    marked with a red dot, rising to a peak marked with a green dot (maximum), then
-    fluctuating before ending with a blue dot (last point). The aspect ratio is wide
-    (4:1) as appropriate for sparklines. Critically, there are no axes, tick marks,
-    gridlines, or legend visible - achieving the pure minimalist aesthetic required
-    by the specification.'
+  - 'Aspect-ratio tension: the spec calls for a compact 4:1–8:1 sparkline, but the
+    hard canvas rule forces 16:9 and the chart stretches to fill the entire canvas,
+    so it reads more like a full area chart than an inline sparkline. A centered narrow
+    band or small-multiples layout would better evoke the compact sparkline form (spec
+    explicitly lists small multiples as an option). Reasonable tradeoff given the
+    canvas constraint, but the defining compact aspect ratio is lost.'
+  - Endpoint markers near the left/right canvas edges sit close to the frame (all
+    pixels visible, not clipped) — slightly tight margins; a touch more horizontal
+    padding would breathe better.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1), no panel frame or grid — correct.
+      Chrome: only the title "sparkline-basic · python · plotnine · anyplot.ai" in dark ink, centered, fully readable. No axes/ticks/labels by design.
+      Data: thin brand-green line (#009E73) over a pale green area-fill ribbon. Min point matte-red (#AE3030), max point blue (#4467A3), both endpoints dark muted-ink dots. First series is #009E73 as required.
+      Legibility verdict: PASS — title clearly legible on light surface, line and markers well distinguished from background.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17), no frame/grid — correct.
+      Chrome: title in light ink, centered, fully readable. No dark-on-dark issues.
+      Data: identical brand-green line and ribbon; min red, max blue identical to light render; endpoints flip to light muted-ink (theme-adaptive neutral) and remain visible. Data hues match the light render — only chrome flipped.
+      Legibility verdict: PASS — all text and data clearly readable on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is 24pt and clearly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping elements at all
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Line and markers are clearly visible; line thickness is good, markers
-          are appropriately sized
+        comment: Title is the only text element; clearly readable in both themes at
+          12pt
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Thin line (1.3) with prominent 4.5 markers appropriate for 50 sparse
+          points
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Red/green for min/max with blue for neutral points; distinct enough
-          for colorblind users due to brightness differences
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of wide aspect ratio; slight excess whitespace at top/bottom
-          but appropriate for sparkline format
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: N/A for sparklines (no axes by design) - full points for correctly
-          omitting them
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Green/red/blue/muted are CVD-safe and high-contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas gate passed; chart fills full 16:9 and loses the compact sparkline
+          aspect ratio, endpoints near edges
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: N/A for sparklines (no grid/legend by design) - however, not applicable
-          means neutral scoring
+        comment: Axes intentionally omitted per sparkline spec; title present and
+          correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Imprint hues, correct theme backgrounds both
+          renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Subtle ribbon fill + semantic extreme/endpoint coloring shows genuine
+          design thought
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All chrome stripped, very clean minimal composition
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color-coded min/max/endpoints create clear focal points
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct sparkline visualization
+        comment: Minimal line sparkline — correct
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Sequential values correctly mapped to X/Y
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: minimal chrome, highlighted min/max points,
-          first/last point markers, compact aspect ratio'
-      - id: SC-04
-        name: Data Range
+        comment: No chrome, thin clean line, min/max highlighted, endpoints highlighted,
+          area fill — all optional features present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within the plot area
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Sequential values over day index
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed/shown (correct for sparklines)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "sparkline-basic · plotnine · pyplots.ai"'
+        comment: Title exact format; single-series legend correctly omitted
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows trend, seasonality, noise; min and max points clearly demonstrated;
-          could show a more dramatic range
+        comment: Trend with peaks/valleys, clear min/max/endpoints — full sparkline
+          demonstration
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: '"Daily sales figures" context is plausible; values around 100 are
-          reasonable'
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 50 data points is ideal for sparklines; values in sensible range
+        comment: Daily sales trend with seasonality — plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 50 points, sensible value range
     code_quality:
       score: 10
       max: 10
@@ -165,41 +187,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → plot → save'
+        comment: Linear script, no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current plotnine API
+        comment: Clean, well-commented, no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
+        comment: Saves plot-{THEME}.png via plot.save
     library_features:
-      score: 3
-      max: 5
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses ggplot grammar correctly with geom_line, geom_point, theme customization,
-          and scale_color_manual; could leverage more advanced plotnine features like
-          stat transformations
+        comment: Layered geoms, separate highlight df, declarative theme — idiomatic
+          plotnine
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: geom_ribbon + element_blank chrome stripping; otherwise standard
+          usage
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - gradient-fill
+  - alpha-blending
