@@ -1,121 +1,124 @@
-""" pyplots.ai
+""" anyplot.ai
 pp-basic: Probability-Probability (P-P) Plot
-Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-15
+Library: matplotlib 3.11.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-06-16
 """
 
-import os as _os
-import sys as _sys
+import os
+import sys
 
 
-# Avoid filename shadowing: remove script dir so 'matplotlib' resolves to the real package
-_script_dir = _os.path.abspath(_os.path.dirname(__file__))
-_sys.path = [
-    p for p in _sys.path if _os.path.abspath(p) != _script_dir and not (p == "" and _os.getcwd() == _script_dir)
-]
-_sys.modules.pop("matplotlib", None)
+# This file is named matplotlib.py; drop the script dir from sys.path so
+# `import matplotlib` resolves to the installed package, not this module.
+_script_dir = os.path.abspath(os.path.dirname(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p or os.getcwd()) != _script_dir]
+sys.modules.pop("matplotlib", None)
 
-from math import erf, sqrt  # noqa: E402
-
-import matplotlib.patheffects as pe  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
 import matplotlib.ticker as mticker  # noqa: E402
 import numpy as np  # noqa: E402
+from scipy.stats import norm  # noqa: E402
 
 
-_sys.path.insert(0, _script_dir)
+# Theme-adaptive chrome (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+BRAND = "#009E73"  # Imprint palette position 1 — always the first series
 
-# Vectorized normal CDF without scipy
-normal_cdf = np.vectorize(lambda x: 0.5 * (1 + erf(x / sqrt(2))))
-
-# Data — manufacturing quality control: bolt tensile strength measurements
-# Mixture simulates a batch with ~20% from a slightly different supplier
+# Data — manufacturing quality control: bolt tensile strength (MPa)
+# A small secondary-supplier batch creates a heavier upper tail, so the
+# sample departs from normality in the classic P-P S-shape.
 np.random.seed(42)
 sample_size = 200
-primary_batch = np.random.normal(loc=840, scale=35, size=160)  # MPa
-secondary_batch = np.random.normal(loc=910, scale=28, size=40)  # MPa
+primary_batch = np.random.normal(loc=840, scale=35, size=160)
+secondary_batch = np.random.normal(loc=910, scale=28, size=40)
 tensile_strength = np.concatenate([primary_batch, secondary_batch])
 
 observed_sorted = np.sort(tensile_strength)
 empirical_cdf = np.arange(1, sample_size + 1) / (sample_size + 1)
 
 mu, sigma = observed_sorted.mean(), observed_sorted.std(ddof=0)
-theoretical_cdf = normal_cdf((observed_sorted - mu) / sigma)
+theoretical_cdf = norm.cdf((observed_sorted - mu) / sigma)
 
-# Deviation from diagonal for color-coding
-deviation = empirical_cdf - theoretical_cdf
+# Plot — square canvas keeps the 45-degree diagonal meaningful (→ 2400×2400 px)
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Plot
-fig, ax = plt.subplots(figsize=(12, 12))
-
-# 95% confidence band using order-statistic variance
+# 95% confidence band from order-statistic variance of the cumulative probabilities
 band_x = np.linspace(0, 1, 200)
 se = np.sqrt(band_x * (1 - band_x) / sample_size)
 ax.fill_between(
-    band_x, band_x - 1.96 * se, band_x + 1.96 * se, color="#306998", alpha=0.08, zorder=0, label="95% confidence band"
+    band_x, band_x - 1.96 * se, band_x + 1.96 * se, color=INK_MUTED, alpha=0.16, zorder=0, label="95% confidence band"
 )
 
-# Reference line with path effect for visual depth
-ref_line = ax.plot([0, 1], [0, 1], color="#888888", linewidth=1.8, linestyle="--", zorder=1, label="Perfect normal fit")
-ref_line[0].set_path_effects([pe.Stroke(linewidth=3.5, foreground="#DDDDDD"), pe.Normal()])
+# Perfect-fit reference diagonal (neutral structural line)
+ax.plot([0, 1], [0, 1], color=INK, linewidth=1.6, linestyle="--", zorder=1, label="Perfect normal fit")
 
-# Scatter — color encodes deviation magnitude for storytelling
-colors = np.where(np.abs(deviation) > 0.03, "#C44E52", "#306998")
-ax.scatter(theoretical_cdf, empirical_cdf, s=70, c=colors, alpha=0.65, edgecolors="white", linewidth=0.6, zorder=3)
+# Empirical vs. theoretical cumulative probabilities
+ax.scatter(
+    theoretical_cdf,
+    empirical_cdf,
+    s=60,
+    color=BRAND,
+    alpha=0.8,
+    edgecolors=PAGE_BG,
+    linewidth=0.6,
+    zorder=3,
+    label="Sample (n=200)",
+)
 
-# Annotate the S-shaped deviation region
-dev_mask = np.abs(deviation) > 0.03
-if dev_mask.any():
-    dev_indices = np.where(dev_mask)[0]
-    mid = dev_indices[len(dev_indices) // 2]
-    ax.annotate(
-        "Heavier upper tail\n(secondary supplier batch)",
-        xy=(theoretical_cdf[mid], empirical_cdf[mid]),
-        xytext=(0.25, 0.82),
-        fontsize=14,
-        color="#C44E52",
-        fontweight="medium",
-        arrowprops={"arrowstyle": "-|>", "color": "#C44E52", "lw": 1.5, "connectionstyle": "arc3,rad=-0.2"},
-        bbox={"boxstyle": "round,pad=0.4", "facecolor": "white", "edgecolor": "#C44E52", "alpha": 0.9},
-        zorder=5,
-    )
+# Call out the S-shape: the secondary-supplier batch lifts the upper tail
+# above the diagonal. Annotate the point of largest positive departure.
+departure = empirical_cdf - theoretical_cdf
+tail_idx = int(np.argmax(departure))
+ax.annotate(
+    "heavier upper tail",
+    xy=(theoretical_cdf[tail_idx], empirical_cdf[tail_idx]),
+    xytext=(0.34, 0.84),
+    fontsize=8,
+    color=INK_SOFT,
+    ha="left",
+    va="center",
+    zorder=4,
+    arrowprops={
+        "arrowstyle": "->",
+        "color": INK_SOFT,
+        "linewidth": 0.9,
+        "alpha": 0.85,
+        "connectionstyle": "arc3,rad=-0.2",
+    },
+)
 
 # Style
-ax.set_xlabel("Theoretical Cumulative Probability (Normal)", fontsize=20)
-ax.set_ylabel("Empirical Cumulative Probability", fontsize=20)
-ax.set_title("pp-basic · matplotlib · pyplots.ai", fontsize=24, fontweight="medium", pad=12)
-ax.tick_params(axis="both", labelsize=16)
+ax.set_xlabel("Theoretical Cumulative Probability (Normal)", fontsize=10, color=INK)
+ax.set_ylabel("Empirical Cumulative Probability", fontsize=10, color=INK)
+ax.set_title("pp-basic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=10)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 ax.xaxis.set_major_locator(mticker.MultipleLocator(0.2))
 ax.yaxis.set_major_locator(mticker.MultipleLocator(0.2))
-ax.xaxis.set_minor_locator(mticker.MultipleLocator(0.1))
-ax.yaxis.set_minor_locator(mticker.MultipleLocator(0.1))
 ax.set_xlim(-0.02, 1.02)
 ax.set_ylim(-0.02, 1.02)
 ax.set_aspect("equal")
+
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
-ax.spines["left"].set_linewidth(0.8)
-ax.spines["bottom"].set_linewidth(0.8)
-ax.spines["left"].set_color("#555555")
-ax.spines["bottom"].set_color("#555555")
-ax.yaxis.grid(True, alpha=0.15, linewidth=0.6, which="major")
-ax.xaxis.grid(True, alpha=0.15, linewidth=0.6, which="major")
-ax.yaxis.grid(True, alpha=0.06, linewidth=0.4, which="minor")
-ax.xaxis.grid(True, alpha=0.06, linewidth=0.4, which="minor")
+for s in ("left", "bottom"):
+    ax.spines[s].set_color(INK_SOFT)
+    ax.spines[s].set_linewidth(0.8)
+ax.grid(True, alpha=0.15, linewidth=0.6, color=INK)
 
 # Legend
-ax.legend(fontsize=14, loc="lower right", framealpha=0.9, edgecolor="#CCCCCC")
+leg = ax.legend(fontsize=8, loc="lower right", framealpha=0.95)
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+for text in leg.get_texts():
+    text.set_color(INK_SOFT)
 
-# Subtitle with domain context
-fig.text(
-    0.5,
-    0.96,
-    "Bolt tensile strength (MPa) vs. normal distribution — quality control diagnostic",
-    ha="center",
-    fontsize=14,
-    color="#666666",
-    style="italic",
-)
+fig.subplots_adjust(left=0.11, right=0.97, top=0.93, bottom=0.09)
 
-plt.subplots_adjust(top=0.91)
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+# Save
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
