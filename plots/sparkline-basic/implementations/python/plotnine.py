@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sparkline-basic: Basic Sparkline
 Library: plotnine 0.15.7 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-16
@@ -15,6 +15,7 @@ from plotnine import (
     element_text,
     geom_line,
     geom_point,
+    geom_ribbon,
     ggplot,
     labs,
     scale_color_manual,
@@ -26,7 +27,7 @@ from plotnine import (
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+INK_MUTED = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Imprint palette — brand green is the single data series; the two extremes
 # read as a red/blue divergence (low extreme → matte red, high extreme → blue).
@@ -45,6 +46,10 @@ sales = 100 + trend * 10 + seasonal * 5 + noise * 3
 
 df = pd.DataFrame({"day": range(n_points), "sales": sales})
 
+# Baseline for the subtle area fill — sits just below the lowest value so the
+# tinted band hugs the line rather than swelling from a zero baseline.
+fill_base = df["sales"].min() - (df["sales"].max() - df["sales"].min()) * 0.15
+
 # Highlight the min, max, and the two endpoints for reference
 min_idx = int(df["sales"].idxmin())
 max_idx = int(df["sales"].idxmax())
@@ -62,11 +67,13 @@ highlight_df = pd.DataFrame(
     }
 )
 
-# Plot — minimal sparkline: thin brand line, highlighted extremes/endpoints
+# Plot — minimal sparkline: subtle area fill, thin brand line, highlighted
+# extremes/endpoints. The ribbon adds quiet storytelling without chrome.
 plot = (
     ggplot(df, aes(x="day", y="sales"))
+    + geom_ribbon(aes(ymin=fill_base, ymax="sales"), fill=BRAND, alpha=0.12)
     + geom_line(color=BRAND, size=1.3)
-    + geom_point(data=highlight_df, mapping=aes(x="day", y="sales", color="type"), size=4)
+    + geom_point(data=highlight_df, mapping=aes(x="day", y="sales", color="type"), size=4.5)
     + scale_color_manual(values={"min": LOW, "max": HIGH, "endpoint": INK_MUTED})
     + labs(title="sparkline-basic · python · plotnine · anyplot.ai")
     + theme(
