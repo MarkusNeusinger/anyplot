@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pp-basic: Probability-Probability (P-P) Plot
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-16
@@ -21,6 +21,8 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+# Subtle gridline (~15% INK over PAGE_BG, per style guide rgba(...,0.15))
+GRID = "#D8D7D0" if THEME == "light" else "#3A3A36"
 
 # Imprint diverging cmap: matte-red <-> near-neutral (page bg) <-> blue
 IMPRINT_DIV_LOW = "#AE3030"
@@ -105,8 +107,8 @@ plot = (
         data=df_pp,
         shape=21,
         color=INK_SOFT,
-        stroke=0.5,
-        alpha=0.9,
+        stroke=0.7,
+        alpha=0.65,
         tooltips=layer_tooltips()
         .format("weight", ".1f")
         .format("deviation", "+.4f")
@@ -124,7 +126,7 @@ plot = (
         midpoint=0,
         name="Deviation\n(Empirical − Theoretical)",
     )
-    + scale_size(range=[3, 7], guide="none")
+    + scale_size(range=[2, 5], guide="none")
     + labs(
         x="Theoretical CDF (Normal)",
         y="Empirical CDF",
@@ -138,7 +140,7 @@ plot = (
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_grid_major=element_line(color=INK, size=0.3),
+        panel_grid_major=element_line(color=GRID, size=0.3),
         panel_grid_minor=element_blank(),
         plot_title=element_text(size=16, face="bold", color=INK),
         plot_subtitle=element_text(size=11, color=INK_SOFT),
