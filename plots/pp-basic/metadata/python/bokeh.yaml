@@ -1,40 +1,54 @@
 library: bokeh
+language: python
 specification_id: pp-basic
 created: '2026-03-15T20:21:04Z'
-updated: '2026-03-15T20:33:25Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23118400207
+updated: '2026-06-16T19:21:53Z'
+generated_by: claude-opus
+workflow_run: 27641548846
 issue: 4587
-python_version: 3.14.3
-library_version: 3.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/pp-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/pp-basic/bokeh/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.9.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pp-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pp-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pp-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pp-basic/python/bokeh/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent use of Cividis colormap to encode deviation magnitude — transforms a
-    simple scatter into a diagnostic tool
-  - KS confidence band adds statistical rigor beyond spec requirements
-  - Annotations explain the S-shaped deviation pattern, guiding viewer interpretation
-  - Strong Bokeh mastery with HoverTool, Band, and transform-based color mapping
-  - Realistic manufacturing QC context with plausible bolt strength data
+  - 'Sophisticated P-P plot: points colored by signed deviation (Empirical − Theoretical)
+    using the theme-adaptive Imprint diverging colormap, making over/under-fit regions
+    read at a glance'
+  - Kolmogorov-Smirnov 95% confidence band (clipped to [0,1]) adds a meaningful structural
+    layer behind the data without competing for attention
+  - Square 2400×2400 canvas preserves the diagonal's visual meaning, exactly as the
+    spec requires; dashed 45-degree reference line present
+  - Theme tokens threaded through every chrome element — both light (#FAF8F1) and
+    dark (#1A1A17) renders are fully legible; data colors identical across themes,
+    only chrome flips
+  - 'Genuine Bokeh-distinctive usage: HoverTool with formatted tooltips in the HTML
+    artifact, ColorBar legend, Band layout, and transform()-driven continuous color
+    mapping'
+  - Clean flat KISS script, seeded (np.random.seed(42)), descriptive axis labels with
+    units, correct mandated title
   weaknesses:
-  - 'Minor: alpha=0.85 is slightly high for 200 points; could use 0.6-0.7 for better
-    density handling in crowded regions'
-  image_description: 'The plot displays a P-P (Probability-Probability) plot at 3600x3600px
-    with a square aspect ratio. The title "pp-basic · bokeh · pyplots.ai" appears
-    in dark charcoal at the top left. The x-axis is labeled "Theoretical Cumulative
-    Probability (Normal Fit)" and the y-axis "Empirical Cumulative Probability", both
-    ranging from 0 to 1. 200 data points trace a path near the 45-degree dashed gray
-    reference diagonal. Points are colored using the Cividis colormap based on their
-    deviation from the diagonal — darker navy-blue for negative deviations and golden-yellow
-    for positive deviations, creating a visible S-shaped pattern. A subtle light blue
-    95% KS confidence band flanks the diagonal. Two italic annotations explain the
-    deviation pattern: "Heavy right tail → points fall below diagonal" in sienna-brown
-    on the right, and "← Light left tail empirical > theoretical" in teal-blue on
-    the lower left. A smaller label notes "95% KS confidence band (D = 0.096)." The
-    background is off-white (#fafafa) with subtle dashed gridlines, no tick marks,
-    and no plot outline.'
+  - Near-zero-deviation points fade toward the background in both themes (near-white
+    in light, near-black in dark); the MUTED ring keeps them legible but they are
+    the lowest-contrast elements — acceptable but worth monitoring
+  - Colorbar diverging midpoint is theme-colored, so the central band of the colorbar
+    blends into its own background in dark mode — the gradient endpoints still read
+    clearly, minor only
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1), confirmed — not pure white, not dark.
+      Chrome: title "pp-basic · python · bokeh · anyplot.ai" in dark ink top-left; italic axis labels "Theoretical Cumulative Probability (Normal Fit)" (x) and "Empirical Cumulative Probability" (y) in dark ink; tick labels 0–1 on both axes in soft ink; subtle low-alpha grid. All readable.
+      Data: ~200 points along the diagonal colored by signed deviation via the Imprint diverging ramp (matte-red #AE3030 below the line, blue #4467A3 above), each with a soft MUTED ring; muted-gray KS confidence band behind the points; dashed dark 45-degree reference line; vertical colorbar at right titled "Empirical − Theoretical" (−0.03…0.03). Continuous encoding uses imprint_div, no categorical series so #009E73 N/A.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17), confirmed — not pure black, not light.
+      Chrome: same title/labels/ticks in light ink (#F0EFE8 / soft), clearly visible against the dark surface; grid subtle but present. No dark-on-dark failures detected.
+      Data: identical point colors and positions to the light render (red-below / blue-above diverging ramp); confidence band now a subtle lighter-than-background gray; dashed light reference line; colorbar with theme-flipped near-black midpoint. Only chrome flipped, data colors preserved.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -42,46 +56,49 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 48pt, axis labels 34pt, tick
-          labels 26pt, annotations 20-22pt'
+        comment: Fonts explicitly set (50/42/34pt + colorbar 30/26pt); readable both
+          themes; near-zero points are lowest-contrast at small scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, annotations well-positioned
+        comment: No collisions; colorbar separated to the right
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 200 points visible with white edge highlighting; slight density in
-          lower-left
+        comment: size=22 + alpha 0.65 + MUTED ring appropriate for 200 points
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Cividis is perceptually uniform and colorblind-safe
+        comment: Red-blue diverging is CVD-safe; not red-green dependent
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square aspect ratio as spec requires, balanced margins, good canvas
-          utilization
+        comment: Square 2400x2400 (gate passed); nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with context: Theoretical Cumulative Probability
-          (Normal Fit)'
+        comment: Descriptive labels; title mandated format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_div continuous ramp; correct theme backgrounds both renders
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -89,22 +106,19 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful Cividis color mapping, custom annotation colors, white
-          marker edges, off-white background
+        comment: Deviation coloring + KS band + colorbar show clear design intent
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Outline removed, ticks removed, dashed gridlines at low alpha, generous
-          margins
+        comment: Outline removed, minor ticks off, grid subtle at alpha 0.15
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color mapping creates visual hierarchy, annotations explain S-shaped
-          pattern, KS band adds context
+        comment: Color + band guide the eye to over/under-fit regions
     spec_compliance:
       score: 15
       max: 15
@@ -114,52 +128,48 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct P-P plot with both axes showing cumulative probabilities
-          0 to 1
+        comment: Correct P-P plot, both axes cumulative probability 0-1
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Reference line, square ratio, empirical CDF, theoretical CDF, S-shaped
-          deviation, plus KS band
+        comment: 45-degree line, square aspect, empirical CDF i/(n+1), fitted theoretical
+          CDF; +KS band
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=theoretical CDF, Y=empirical CDF, correctly mapped
+        comment: X theoretical, Y empirical, correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches format, no legend needed for single-series color-mapped
-          scatter
+        comment: Title exact; colorbar labeled 'Empirical − Theoretical'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows S-shaped deviation, points above and below diagonal, KS band
-          for fit assessment
+        comment: Shows diagonal fit, S-shape deviations, confidence band
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Manufacturing QC bolt tensile strength — real, neutral engineering
-          context
+        comment: Bolt tensile strength QC; plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 850 MPa mean, 45 MPa std for bolt tensile strength is realistic
+        comment: 200 points; probabilities 0-1; strength ~850 MPa
     code_quality:
       score: 10
       max: 10
@@ -169,13 +179,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, style, save'
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -187,14 +197,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, appropriate complexity
+        comment: Real interactivity in HTML, well commented
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html, current API
-    library_mastery:
+        comment: Saves plot-{THEME}.png + .html
+    library_features:
       score: 9
       max: 10
       items:
@@ -203,21 +213,22 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: ColumnDataSource, transform(), Band, HoverTool, Label — all idiomatic
-          Bokeh
+        comment: ColumnDataSource, figure, transform+LinearColorMapper, add_layout
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: HoverTool with tooltips, Band model, LinearColorMapper with transform
-          — distinctively Bokeh
+        comment: HoverTool, ColorBar, Band, transform mapping — strong distinctive
+          usage
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
+  - selenium
+  - pillow
   techniques:
-  - annotations
+  - colorbar
   - hover-tooltips
   - html-export
   patterns:
@@ -228,4 +239,3 @@ impl_tags:
   - custom-colormap
   - alpha-blending
   - edge-highlighting
-  - grid-styling
