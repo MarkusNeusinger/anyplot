@@ -1,14 +1,30 @@
-""" pyplots.ai
+"""anyplot.ai
 stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)
-Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-15
+Library: matplotlib | Python 3.13
+Quality: pending | Created: 2026-03-15
 """
+
+import os
 
 import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.collections import LineCollection
+from matplotlib.colors import LinearSegmentedColormap
 
+
+# Theme-adaptive chrome (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — Bedding is the brand green (always first series)
+colors = {"Bedding": "#009E73", "Joint": "#C475FD", "Fault": "#4467A3"}
+# Continuous density uses the Imprint sequential cmap (green -> blue), no other cmaps allowed
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
 
 # Data - structural geology field measurements (strike/dip format)
 np.random.seed(42)
@@ -31,31 +47,30 @@ all_strikes = np.concatenate([bedding_strike, joint_strike, fault_strike])
 all_dips = np.concatenate([bedding_dip, joint_dip, fault_dip])
 feature_types = ["Bedding"] * 30 + ["Joint"] * 25 + ["Fault"] * 20
 
-# Visual hierarchy: Bedding is primary focus (thicker, more opaque)
-colors = {"Bedding": "#306998", "Joint": "#E8833A", "Fault": "#8B2252"}
+# Visual hierarchy: Bedding is the primary focus (larger markers, bolder great circles)
 markers = {"Bedding": "o", "Joint": "s", "Fault": "^"}
-pole_sizes = {"Bedding": 200, "Joint": 140, "Fault": 140}
-gc_alpha = {"Bedding": 0.55, "Joint": 0.25, "Fault": 0.25}
-gc_lw = {"Bedding": 1.8, "Joint": 0.9, "Fault": 0.9}
+pole_sizes = {"Bedding": 130, "Joint": 85, "Fault": 85}
+gc_alpha = {"Bedding": 0.55, "Joint": 0.28, "Fault": 0.28}
+gc_lw = {"Bedding": 1.6, "Joint": 0.9, "Fault": 0.9}
 
 # Pole orientations in equal-area (Schmidt) projection
 pole_trend_rad = np.deg2rad((all_strikes + 90) % 360)
 pole_r = np.sqrt(2) * np.sin(np.deg2rad(all_dips) / 2)
 
-# Pole unit vectors on sphere (East, North, Down coordinates)
+# Pole unit vectors on the sphere (East, North, Down coordinates)
 pole_colat = np.deg2rad(all_dips)
 pole_vx = np.sin(pole_colat) * np.sin(pole_trend_rad)
 pole_vy = np.sin(pole_colat) * np.cos(pole_trend_rad)
 pole_vz = np.cos(pole_colat)
 
-# Plot
-fig = plt.figure(figsize=(12, 12), facecolor="white")
+# Plot — square canvas (figsize 6 x 6, dpi 400 -> 2400 x 2400 px)
+fig = plt.figure(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax = fig.add_subplot(111, projection="polar")
 ax.set_theta_zero_location("N")
 ax.set_theta_direction(-1)
-ax.set_facecolor("#FAFAF8")
+ax.set_facecolor(PAGE_BG)
 
-# Density contours using spherical Gaussian kernel on pole data
+# Density contours via a spherical Gaussian kernel on the pole data (Kamb-style)
 theta_grid = np.linspace(0, 2 * np.pi, 150)
 r_grid = np.linspace(0.02, 0.98, 75)
 THETA, R = np.meshgrid(theta_grid, r_grid)
@@ -70,45 +85,45 @@ for j in range(len(all_dips)):
     cos_dist = gx * pole_vx[j] + gy * pole_vy[j] + gz * pole_vz[j]
     Z += np.exp(-(np.arccos(np.clip(cos_dist, -1, 1)) ** 2) / (2 * sigma**2))
 
-contour_fill = ax.contourf(THETA, R, Z, levels=10, cmap="YlOrBr", alpha=0.35, zorder=1)
-ax.contour(THETA, R, Z, levels=10, colors="#B87333", alpha=0.35, linewidths=0.5, zorder=1)
+# Only fill where density is meaningful so the net stays clean
+levels = np.linspace(Z.max() * 0.15, Z.max(), 8)
+ax.contourf(THETA, R, Z, levels=levels, cmap=imprint_seq, alpha=0.3, zorder=1)
+ax.contour(THETA, R, Z, levels=levels, colors=INK_MUTED, alpha=0.25, linewidths=0.5, zorder=1)
 
-# Great circles - representative subset only (5 per group to reduce clutter)
+# Great circles — a representative subset plus the bold mean orientation per feature
 t_param = np.linspace(0, np.pi, 180)
-
-
-def draw_great_circle(strike_deg, dip_deg):
-    alpha = np.deg2rad(strike_deg)
-    delta = np.deg2rad(dip_deg)
-    px = np.cos(t_param) * np.sin(alpha) + np.sin(t_param) * np.cos(alpha) * np.cos(delta)
-    py = np.cos(t_param) * np.cos(alpha) - np.sin(t_param) * np.sin(alpha) * np.cos(delta)
-    pz = np.sin(t_param) * np.sin(delta)
-    trend = np.arctan2(px, py)
-    horiz = np.sqrt(px**2 + py**2)
-    plunge = np.arctan2(pz, horiz)
-    colat = np.pi / 2 - plunge
-    r = np.sqrt(2) * np.sin(colat / 2)
-    return trend, r
-
-
 for feat, (strikes, dips) in datasets.items():
-    # Mean great circle (bold)
     mean_strike = (
         np.degrees(np.arctan2(np.mean(np.sin(np.deg2rad(strikes))), np.mean(np.cos(np.deg2rad(strikes))))) % 360
     )
     mean_dip = np.mean(dips)
-    trend, r = draw_great_circle(mean_strike, mean_dip)
-    ax.plot(trend, r, color=colors[feat], alpha=gc_alpha[feat] + 0.2, linewidth=gc_lw[feat] + 0.8, zorder=2)
+    idx = np.linspace(0, len(strikes) - 1, 4, dtype=int)
+    gc_strikes = np.append(strikes[idx], mean_strike)
+    gc_dips = np.append(dips[idx], mean_dip)
 
-    # 4 representative great circles (evenly spaced indices)
-    indices = np.linspace(0, len(strikes) - 1, 4, dtype=int)
-    segments = []
-    for idx in indices:
-        trend, r = draw_great_circle(strikes[idx], dips[idx])
-        points = np.column_stack([trend, r])
-        segments.append(points)
+    # Project each plane to its great circle (broadcast over the curve parameter)
+    a = np.deg2rad(gc_strikes)[:, None]
+    d = np.deg2rad(gc_dips)[:, None]
+    tt = t_param[None, :]
+    px = np.cos(tt) * np.sin(a) + np.sin(tt) * np.cos(a) * np.cos(d)
+    py = np.cos(tt) * np.cos(a) - np.sin(tt) * np.sin(a) * np.cos(d)
+    pz = np.sin(tt) * np.sin(d)
+    trend = np.arctan2(px, py)
+    plunge = np.arctan2(pz, np.sqrt(px**2 + py**2))
+    r = np.sqrt(2) * np.sin((np.pi / 2 - plunge) / 2)
+
+    segments = [np.column_stack([trend[k], r[k]]) for k in range(len(gc_strikes) - 1)]
     lc = LineCollection(segments, colors=colors[feat], alpha=gc_alpha[feat], linewidths=gc_lw[feat], zorder=2)
     ax.add_collection(lc)
+    # Mean great circle, bold (last row of the broadcast)
+    ax.plot(
+        trend[-1],
+        r[-1],
+        color=colors[feat],
+        alpha=min(gc_alpha[feat] + 0.25, 0.9),
+        linewidth=gc_lw[feat] + 0.8,
+        zorder=2,
+    )
 
 # Poles as scatter points with distinct markers per feature type
 for feat in colors:
@@ -119,65 +134,67 @@ for feat in colors:
         c=colors[feat],
         s=pole_sizes[feat],
         marker=markers[feat],
-        edgecolors="white",
-        linewidth=1.2,
+        edgecolors=PAGE_BG,
+        linewidth=1.0,
         label=f"{feat} poles",
         zorder=5,
-        path_effects=[pe.withStroke(linewidth=2.5, foreground="white")],
+        path_effects=[pe.withStroke(linewidth=2.2, foreground=PAGE_BG)],
     )
 
 # Style
 ax.set_rlim(0, 1)
 ax.set_rticks([])
+ax.spines["polar"].set_visible(False)
 theta_ticks = np.arange(0, 360, 10)
 ax.set_xticks(np.deg2rad(theta_ticks))
 tick_labels = []
-for d in theta_ticks:
-    if d == 0:
+for deg in theta_ticks:
+    if deg == 0:
         tick_labels.append("N")
-    elif d == 90:
+    elif deg == 90:
         tick_labels.append("E")
-    elif d == 180:
+    elif deg == 180:
         tick_labels.append("S")
-    elif d == 270:
+    elif deg == 270:
         tick_labels.append("W")
-    elif d % 30 == 0:
-        tick_labels.append(f"{d}°")
+    elif deg % 30 == 0:
+        tick_labels.append(f"{deg}°")
     else:
         tick_labels.append("")
-ax.set_xticklabels(tick_labels, fontsize=16, fontweight="medium")
+ax.set_xticklabels(tick_labels, fontsize=8.5, fontweight="medium", color=INK_SOFT)
 
 # Bold cardinal direction labels
 for label in ax.get_xticklabels():
-    txt = label.get_text()
-    if txt in ("N", "E", "S", "W"):
-        label.set_fontsize(20)
+    if label.get_text() in ("N", "E", "S", "W"):
+        label.set_fontsize(12)
         label.set_fontweight("bold")
-        label.set_color("#222222")
-        label.set_path_effects([pe.withStroke(linewidth=2, foreground="white")])
-ax.grid(True, alpha=0.12, linewidth=0.4, color="#888888")
+        label.set_color(INK)
+        label.set_path_effects([pe.withStroke(linewidth=2, foreground=PAGE_BG)])
+ax.grid(True, alpha=0.15, linewidth=0.4, color=INK)
+ax.tick_params(colors=INK_SOFT)
 
-# Primitive circle emphasis
+# Primitive circle (horizontal plane) emphasis
 circle_theta = np.linspace(0, 2 * np.pi, 300)
-ax.plot(circle_theta, np.ones_like(circle_theta), color="#333333", linewidth=2.0, zorder=3)
+ax.plot(circle_theta, np.ones_like(circle_theta), color=INK, linewidth=1.8, zorder=3)
 
-# Legend positioned to avoid tick mark overlap
+# Legend positioned to avoid perimeter overlap
 legend = ax.legend(
     loc="lower left",
-    bbox_to_anchor=(-0.02, -0.08),
-    fontsize=16,
+    bbox_to_anchor=(-0.04, -0.06),
+    fontsize=8,
     framealpha=0.95,
-    edgecolor="#bbbbbb",
-    fancybox=True,
-    markerscale=1.3,
-    shadow=True,
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
+    markerscale=1.0,
     borderpad=0.8,
 )
 legend.get_frame().set_linewidth(0.8)
+for text in legend.get_texts():
+    text.set_color(INK_SOFT)
 
 ax.set_title(
-    "stereonet-equal-area · matplotlib · pyplots.ai", fontsize=24, fontweight="medium", pad=28, color="#333333"
+    "stereonet-equal-area · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", pad=22, color=INK
 )
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+fig.subplots_adjust(left=0.06, right=0.94, top=0.91, bottom=0.06)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
