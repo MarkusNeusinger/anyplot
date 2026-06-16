@@ -108,6 +108,87 @@ for (let alpha = 10; alpha <= 170; alpha += 10) {
   netCurves.push(pts);
 };
 
+// --- Kamb density field over the pole population ----------------------------
+// Count poles inside a small counting circle at each net node, expressed in
+// standard deviations above a uniform-fabric expectation (Kamb, 1959). The
+// equal-area projection preserves area, so this density is meaningful.
+const poleVecs = measurements.map((m) => {
+  const T = (m.poleTrend * Math.PI) / 180;
+  const P = (m.polePlunge * Math.PI) / 180;
+  return [Math.cos(P) * Math.sin(T), Math.cos(P) * Math.cos(T), Math.sin(P)];
+});
+const N = poleVecs.length;
+const KAMB_A = 3 / (N + 3); // counting-circle area fraction (k = 3 sigma)
+const COS_RC = 1 - KAMB_A; // cos of the counting-circle angular radius
+const EXP = N * KAMB_A; // expected count under a uniform fabric
+const SIG = Math.sqrt(N * KAMB_A * (1 - KAMB_A));
+const GN = 64; // density-grid resolution
+const gridPos = Array.from({ length: GN }, (_, k) => -1 + (2 * k) / (GN - 1));
+const density = new Float64Array(GN * GN);
+for (let j = 0; j < GN; j++) {
+  for (let i = 0; i < GN; i++) {
+    const px = gridPos[i];
+    const py = gridPos[j];
+    const r = Math.hypot(px, py);
+    if (r > 1) {
+      density[j * GN + i] = NaN;
+      continue;
+    }
+    const zeta = 2 * Math.asin(Math.min(1, r / Math.SQRT2)); // colatitude from nadir
+    const trend = Math.atan2(px, -py);
+    const sz = Math.sin(zeta);
+    const node = [sz * Math.sin(trend), sz * Math.cos(trend), Math.cos(zeta)];
+    let count = 0;
+    for (let p = 0; p < N; p++) {
+      const v = poleVecs[p];
+      if (node[0] * v[0] + node[1] * v[1] + node[2] * v[2] >= COS_RC) count++;
+    }
+    density[j * GN + i] = (count - EXP) / SIG;
+  }
+}
+
+// Marching squares: iso-density line segments (normalised net coords) per level.
+const MS_EDGES = {
+  1: [[3, 0]], 2: [[0, 1]], 3: [[3, 1]], 4: [[1, 2]],
+  5: [[3, 0], [1, 2]], 6: [[0, 2]], 7: [[3, 2]], 8: [[2, 3]],
+  9: [[2, 0]], 10: [[0, 1], [2, 3]], 11: [[2, 1]], 12: [[1, 3]],
+  13: [[1, 0]], 14: [[0, 3]],
+};
+const contourSegments = (level) => {
+  const segs = [];
+  const edgePt = (edge, i, j, a, b, c, d) => {
+    const x0 = gridPos[i];
+    const x1 = gridPos[i + 1];
+    const y0 = gridPos[j];
+    const y1 = gridPos[j + 1];
+    const lerp = (xa, ya, va, xb, yb, vb) => {
+      const tt = (level - va) / (vb - va);
+      return [xa + tt * (xb - xa), ya + tt * (yb - ya)];
+    };
+    if (edge === 0) return lerp(x0, y0, a, x1, y0, b); // top a-b
+    if (edge === 1) return lerp(x1, y0, b, x1, y1, c); // right b-c
+    if (edge === 2) return lerp(x1, y1, c, x0, y1, d); // bottom c-d
+    return lerp(x0, y1, d, x0, y0, a); // left d-a
+  };
+  for (let j = 0; j < GN - 1; j++) {
+    for (let i = 0; i < GN - 1; i++) {
+      const a = density[j * GN + i];
+      const b = density[j * GN + i + 1];
+      const c = density[(j + 1) * GN + i + 1];
+      const d = density[(j + 1) * GN + i];
+      if (Number.isNaN(a) || Number.isNaN(b) || Number.isNaN(c) || Number.isNaN(d)) continue;
+      const ci =
+        (a > level ? 1 : 0) | (b > level ? 2 : 0) | (c > level ? 4 : 0) | (d > level ? 8 : 0);
+      const pairs = MS_EDGES[ci];
+      if (!pairs) continue;
+      pairs.forEach(([e1, e2]) =>
+        segs.push([edgePt(e1, i, j, a, b, c, d), edgePt(e2, i, j, a, b, c, d)]),
+      );
+    }
+  }
+  return segs;
+};
+
 // --- Helpers ----------------------------------------------------------------
 const hexA = (hex, a) => {
   const n = parseInt(hex.slice(1), 16);
@@ -147,6 +228,25 @@ const stereonet = {
     ctx.lineWidth = 1;
     netCurves.forEach((c) => strokePath(ctx, c, cx, cy, R));
 
+    // Kamb density contours — highlight preferred orientations (every 2 sigma)
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, 2 * Math.PI);
+    ctx.clip();
+    [2, 4, 6, 8].forEach((lv, idx) => {
+      const segs = contourSegments(lv);
+      if (!segs.length) return;
+      ctx.strokeStyle = hexA(INK_SOFT, 0.28 + idx * 0.16);
+      ctx.lineWidth = 1 + idx * 0.25;
+      ctx.beginPath();
+      segs.forEach(([p0, p1]) => {
+        ctx.moveTo(cx + p0[0] * R, cy + p0[1] * R);
+        ctx.lineTo(cx + p1[0] * R, cy + p1[1] * R);
+      });
+      ctx.stroke();
+    });
+    ctx.restore();
+
     // Primitive circle (the horizontal plane)
     ctx.beginPath();
     ctx.arc(cx, cy, R, 0, 2 * Math.PI);
@@ -156,7 +256,7 @@ const stereonet = {
 
     // Perimeter degree ticks (every 10 deg, major every 30 deg)
     ctx.fillStyle = INK_SOFT;
-    ctx.font = '600 13px -apple-system, "Segoe UI", Roboto, sans-serif';
+    ctx.font = '600 15px -apple-system, "Segoe UI", Roboto, sans-serif';
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     for (let az = 0; az < 360; az += 10) {
@@ -176,10 +276,11 @@ const stereonet = {
       }
     }
 
-    // Great circles for the measured planes (light, coloured by feature type)
-    ctx.lineWidth = 1.2;
+    // Great circles for the measured planes (faint, coloured by feature type so
+    // the poles stay the focal point even where curves bunch up)
+    ctx.lineWidth = 1;
     measurements.forEach((m) => {
-      ctx.strokeStyle = hexA(m.color, 0.32);
+      ctx.strokeStyle = hexA(m.color, 0.22);
       strokePath(ctx, m.greatCircle, cx, cy, R);
     });
 
