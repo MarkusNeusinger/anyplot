@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: pyramid-basic
 created: '2025-12-23T18:39:05Z'
-updated: '2026-06-16T19:28:23Z'
+updated: '2026-06-16T19:39:50Z'
 generated_by: claude-opus
 workflow_run: 27642258291
 issue: 1000
@@ -12,47 +12,65 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pyramid-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 92
 review:
   strengths:
-  - 'Correct butterfly/population-pyramid layout: male bars extend left, female bars
-    extend right, sharing a central age-group axis with a clean structural divider
-    at x=0.'
-  - Symmetric x-axis (±max*1.15) with absolute-value tick labels on both sides, so
-    both wings read positive — a fair-comparison detail the spec explicitly calls
-    for.
-  - 'Full Imprint + theme compliance: first series #009E73 (brand green), second #C475FD
-    (lavender), backgrounds #FAF8F1 / #1A1A17, all chrome theme-adaptive. Data colors
-    identical across both renders; only chrome flips.'
-  - 'Clean KISS code: deterministic hardcoded data (no seed needed), explicit font
-    sizes, axes-methods only, correct plot-{theme}.png save with no bbox_inches=''tight''.'
-  - 'Strong visual refinement: top/right/left spines removed, bottom kept, subtle
-    15% vertical grid behind bars (set_axisbelow), bar edges colored to page background
-    for crisp separation.'
+  - 'Correct butterfly/pyramid chart: opposing horizontal bars sharing a central zero
+    axis, symmetric x-limits for fair left/right comparison, age-group categories
+    on the central y-axis.'
+  - 'Imprint palette is exactly compliant — first series Male is brand green #009E73,
+    Female is canonical position 2 lavender #C475FD; data colors identical across
+    light and dark, only chrome flips.'
+  - 'Genuine data storytelling: a subtle focal-zone band over the 70-79 and 80+ rows
+    plus an italic ''Women outlive men'' caption and bar_label value tags (1.2/2.1/3.2/4.1)
+    direct the eye to the female-longevity asymmetry without cluttering the symmetric
+    core.'
+  - 'Theme-adaptive chrome is correct in both renders: warm #FAF8F1 / #1A1A17 backgrounds,
+    ink-token title/labels/ticks, elevated legend frame, neutral center divider; no
+    pure white/black, no dark-on-dark.'
+  - 'Clean KISS code: linear imports->data->plot->save, deterministic hardcoded data,
+    all imports used, explicit font sizes, exact 3200x1800 canvas with no bbox_inches=''tight''.'
+  - 'Title matches mandated format exactly: ''pyramid-basic · python · matplotlib
+    · anyplot.ai''.'
   weaknesses:
-  - 'DE-03 (Data Storytelling, 3/6): the butterfly shape carries the narrative but
-    there is no explicit focal point or emphasis — e.g. the female-outlives-male asymmetry
-    at 70-79/80+ is the real insight and could be highlighted (subtle annotation,
-    or de-emphasizing the symmetric middle).'
-  - 'VQ-05 minor: x-limits at ±max*1.15 leave noticeable empty margin beyond the 8M
-    ticks on both far edges; the legend uses the upper-right gap well but the upper-left
-    gap is dead space. Tightening to ~±max*1.05 would let the data breathe less wastefully.'
-  - 'LM-02 (Distinctive Features, 2/5): negative-value barh for a pyramid is a solid
-    but common matplotlib idiom; nothing here is hard to replicate in another library.'
-  - 'VQ-01 minor: tick labels at 8pt are on the small side for the ~400px mobile srcset
-    variant — still legible, but bumping x/y ticks to ~9pt would harden mobile readability.'
+  - 'PIPELINE NOTE (not an implementation defect): the plot_images/ artifacts handed
+    to this review were stale — generated from the pre-fix implementation (commit
+    0746a66d3) and missing the focal zone, value tags, and caption added in the current
+    code (commit f8f872bf8). The review was performed against a fresh local render
+    of the committed code, and the stale PNG/webp/srcset variants were regenerated.
+    Pipeline owners should confirm impl-review regenerates plot_images from PR head
+    before scoring.'
+  - 'DE-01/DE-02: design is clearly above defaults but not yet publication-flagship
+    — the focal-zone shading at alpha 0.06 is very faint in the light render; consider
+    alpha ~0.08-0.10 so the highlighted age bands read more deliberately at mobile
+    (400px) width.'
+  - 'LM-02: matplotlib-distinctive usage (bar_label, axhspan) is solid but modest;
+    a touch more library-specific flourish (e.g. annotated connector or differential
+    shading between the male/female bar pairs) would push Library Mastery higher.'
   image_description: |-
+    NOTE: plot_images/ supplied to the review were stale (pre-fix). Descriptions below are
+    from a fresh local render of the current committed code (matplotlib.py @ f8f872bf8);
+    the stale artifacts were then regenerated to match.
+
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1) across figure and axes. PASS.
-      Chrome: title "pyramid-basic · python · matplotlib · anyplot.ai" centered in dark ink, fully visible, not clipped. Y tick labels (age groups 0-9 … 80+) and x tick labels (8 6 4 2 0 2 4 6 8) in soft dark ink, readable. "Population (millions)" x-label and rotated "Age group" y-label clearly legible. Legend box (upper-right) has elevated cream fill + soft ink border, "Male"/"Female" text dark and readable. All text readable against the light background.
-      Data: Male bars #009E73 (brand green) extend left; Female bars #C475FD (lavender) extend right. First series is #009E73. Central vertical divider in soft ink at x=0; subtle vertical grid behind bars.
-      Legibility verdict: PASS
+      Background: warm off-white #FAF8F1 (not pure white). Elevated legend box slightly lighter.
+      Chrome: title "pyramid-basic · python · matplotlib · anyplot.ai" in dark ink, centered and
+        fully visible above the plot. "Age group" (y) and "Population (millions)" (x) axis labels
+        in dark ink. Tick labels (8/6/4/2/0/2/4/6/8 mirrored, age groups) in soft ink, readable.
+        Subtle x-grid, neutral center divider line, bottom spine only. Legend top-right (Male/Female).
+      Data: Male bars extend left in #009E73 (brand green), Female bars extend right in #C475FD
+        (lavender). Faint gray focal band over 70-79 and 80+ rows; value tags 1.2/2.1/3.2/4.1 on
+        those bars; italic "Women outlive men" caption inside the focal band.
+      Legibility verdict: PASS (all text clearly readable on light background).
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17). PASS.
-      Chrome: title, axis labels, tick labels all in light ink (#F0EFE8 / #B8B7B0), clearly visible against the dark surface. Legend frame uses elevated dark fill (#242420) with light text. No dark-on-dark failures detected. All text readable against the dark background.
-      Data: identical to light render — Male #009E73 green left, Female #C475FD lavender right. Data colors unchanged between themes; only chrome flipped. Bar edges now blend to the dark page bg, preserving separation.
-      Legibility verdict: PASS
+      Background: warm near-black #1A1A17 (not pure black). Elevated legend box slightly lighter.
+      Chrome: title, axis labels, tick labels all in light ink (#F0EFE8 / #B8B7B0), fully readable;
+        no dark-on-dark failures. Legend frame and center divider in light-soft ink. Focal band is a
+        faint lighter rectangle over the two oldest rows.
+      Data: colors IDENTICAL to light render — Male #009E73, Female #C475FD. Value tags and caption
+        rendered in light ink, readable.
+      Legibility verdict: PASS (all text clearly readable on dark background; no dark-on-dark).
   criteria_checklist:
     visual_quality:
       score: 29
@@ -63,70 +81,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (12/10/8), well-proportioned, readable
-          both themes; 8pt ticks slightly small for 400px mobile variant
+        comment: All font sizes explicitly set (title 12, labels 10, ticks 9, legend/tags
+          8, caption 9); readable in both themes and at mobile scale, well-proportioned,
+          no overflow.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data; legend sits in empty upper-right gap
+        comment: No text/data collisions; value tags and caption sit in clear space,
+          legend clear of bars.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar height 0.78 prominent and well-adapted to 9 categories
+        comment: Bars at height 0.78 with page-color edge for definition; sized well
+          for 9 sparse categories.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs lavender are CVD-safe Imprint hues, distinct luminance
+        comment: Green vs lavender is a CVD-safe Imprint pair with strong luminance/hue
+          separation.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas exactly 3200x1800, balanced fill; minor empty x-margin at
-          extremes
+        comment: Exact 3200x1800 (canvas gate passed); tightened x-limits fill the
+          canvas, balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Population (millions) with units, Age group descriptive
+        comment: '''Population (millions)'' carries units; ''Age group'' descriptive.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #C475FD canonical; backgrounds and
-          chrome theme-correct in both renders'
+        comment: 'First series #009E73, second canonical #C475FD; backgrounds #FAF8F1/#1A1A17;
+          chrome theme-correct in both renders; data colors identical across themes.'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Thoughtful: center divider, bg-matched bar edges, theme-adaptive
-          chrome; clearly above defaults'
+        comment: Thoughtful Imprint palette, focal-zone shading, value tags, caption,
+          elevated legend frame — clearly above defaults, short of flagship.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines pruned to bottom only, subtle grid, generous whitespace
+        comment: Top/right/left spines removed, subtle x-grid (alpha 0.15, axisbelow),
+          neutral divider, generous whitespace.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Butterfly shape carries the story but no explicit emphasis/focal
-          point
+        comment: Focal band + caption + value tags create a clear focal point naming
+          the female-longevity insight.
     spec_compliance:
       score: 15
       max: 15
@@ -136,50 +159,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct opposing-bar pyramid/butterfly
+        comment: Correct butterfly/pyramid chart with shared central axis.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Opposing bars, symmetric scale, distinct colors, central category
-          labels, legend all present
+        comment: Opposing bars, symmetric scales, distinct colors, central category
+          labels, legend — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category on y, left/right values mapped to negative/positive x
+        comment: Age groups on y; male left (negative), female right (positive); all
+          data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend Male/Female matches data
+        comment: Title exact mandated format; legend labels Male/Female match data.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows pyramid shape and female-outlives-male asymmetry at top; asymmetry
-          is subtle
+        comment: Shows both bulge (middle ages) and old-age female surplus — the key
+          pyramid asymmetries.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral demographic scenario (age-by-gender population, the
-          canonical pyramid use)
+        comment: Standard, neutral demographic population-by-age-and-sex scenario
+          (not a stereotype).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Population in millions, plausible aging-population distribution
+        comment: 1.2-8.7M values and the tapering old-age tail are demographically
+          plausible.
     code_quality:
       score: 10
       max: 10
@@ -189,33 +214,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports -> data -> plot -> save, no functions/classes
+        comment: Linear imports->data->plot->save, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data
+        comment: Deterministic hardcoded data, documented as such.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib, numpy all used
+        comment: os, matplotlib.pyplot, numpy — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic, no over-engineering
+        comment: Clean, well-commented, no fake UI, appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{theme}.png, no bbox_inches='tight', current API
+        comment: Saves plot-{THEME}.png; current API (bar_label, axhspan); no bbox_inches='tight'.
     library_features:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -223,22 +248,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Negative-value barh, axes methods, set_axisbelow, proper subplots_adjust
+        comment: 'Proper Axes API: barh with signed values, bar_label, axhspan, axvline,
+          set_axisbelow.'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: true
-        comment: Solid but common matplotlib idiom; nothing hard to replicate elsewhere
-  verdict: REJECTED
+        comment: Uses matplotlib-specific bar_label and axhspan focal shading beyond
+          generic bars.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
+  - annotations
   patterns:
   - explicit-figure
   dataprep: []
   styling:
   - publication-ready
-  - grid-styling
   - edge-highlighting
+  - grid-styling
