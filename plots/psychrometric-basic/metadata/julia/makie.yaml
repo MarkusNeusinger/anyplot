@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: psychrometric-basic
 created: '2026-06-16T23:22:09Z'
-updated: '2026-06-16T23:27:29Z'
+updated: '2026-06-16T23:43:41Z'
 generated_by: claude-opus
 workflow_run: 27654269409
 issue: 4583
@@ -15,52 +15,49 @@ preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - 'Genuinely rigorous psychrometric model: Magnus saturation pressure, saturation
-    humidity ratio, and ASHRAE-style wet-bulb/enthalpy/specific-volume relations at
-    sea-level pressure (101.325 kPa) — physically faithful, not faked.'
-  - Every property family gets a distinct Imprint hue AND a distinct linestyle (saturation/RH
-    solid green, wet-bulb blue dash, enthalpy ochre dot, specific volume cyan dash-dot)
-    — redundant encoding that stays CVD-safe and legible.
-  - Saturation curve (100% RH) is visually prominent at linewidth 3.4 and forms the
-    upper boundary exactly as the spec requires; NaN-masking cleanly bounds every
-    property line to the valid region under the saturation curve.
-  - 'All required spec features present: comfort-zone polygon (20-26 C, 30-60% RH),
-    the cooling+dehumidification process path with arrow and labelled state points,
-    and direct on-chart labels for every property family (not legend-only).'
-  - 'Polished theme-adaptive chrome: y-axis on the right per real psychrometric-chart
-    convention, framed legend on elevated background, both light/dark renders correct
-    with identical data colors.'
-  - 'Clean idiomatic CairoMakie: linear KISS script, deterministic (formula-driven,
-    no RNG), only used imports, exact 3200x1800 canvas.'
+  - 'Complete spec coverage: prominent saturation curve, 10-100% RH curves, diagonal
+    wet-bulb and oblique enthalpy lines, specific-volume lines, a highlighted cooling+dehumidification
+    process path with numbered state points and arrow, and a shaded comfort zone polygon'
+  - 'Thoughtful visual hierarchy via per-property-family encoding: thick solid green
+    saturation/RH, dashed blue wet-bulb, dotted ochre enthalpy, dash-dot cyan specific
+    volume, with reduced alpha on secondary families so the saturation boundary reads
+    cleanly'
+  - Property lines are labeled directly on the chart (RH %, enthalpy, wet-bulb, specific
+    volume) per spec, not just in the legend; NaN-masking clips every family to the
+    saturation curve so no line spills into the impossible region
+  - 'Physically grounded data: ASHRAE/Magnus relations at sea-level 101.325 kPa, sensible
+    -10..50 C / 0..30 g/kg ranges, realistic HVAC process (30 C/50% return -> 14 C/90%
+    supply)'
+  - 'Correct theme adaptation: warm off-white #FAF8F1 light and warm near-black #1A1A17
+    dark backgrounds, identical data colors across themes, elevated legend frame;
+    first series is brand green #009E73'
+  - 'Idiomatic CairoMakie: Figure/Axis tokens, lines!/poly!/scatter!/arrows!/text!/axislegend,
+    yaxisposition=:right mirroring a real psychrometric chart, exact 3200x1800 canvas'
   weaknesses:
-  - The 20% relative-humidity direct label lands at the far right (x=50 C, where its
-    curve never reaches the W=16 reading line) and is pushed against the right spine
-    so the '%' glyph collides with the axis line — clamp the label x to a few degrees
-    inside the right bound, or anchor it where the 20% curve actually exits the plot.
-    Not a canvas-edge clip (pixels stay within the wide right margin), so a layout
-    nit rather than AR-09.
-  - 'Minor label-on-line overlap: the ''(2) supply air'' annotation crosses the green
-    saturation curve and a wet-bulb line; nudge it slightly left into clearer space.'
-  - The chart is inherently dense — cyan specific-volume dash-dot lines and green
-    RH curves overlap heavily in the upper-right; this is acceptable for a psychrometric
-    chart but is near the ceiling of visual busyness. Consider trimming the number
-    of specific-volume lines or lowering their alpha further to let the RH/saturation
-    hierarchy read more cleanly.
+  - 'Minor overlap in the dense central region: the rose process line and the ''②
+    supply air'' label cross the saturation curve and a wet-bulb dashed line; readable
+    but slightly busy where the process path enters the saturated zone'
+  - Direct property labels are small (11-12pt source) and the secondary line families
+    (wet-bulb/enthalpy/specific-volume) run at low alpha (0.45-0.6) — readable at
+    full 3200px but the faint labels/lines lose some legibility when scaled to ~400px
+    mobile width
+  - Specific-volume labels (e.g. 0.86) and the 60% RH label sit close to other crossing
+    lines in the upper region; a touch more label offset would improve separation
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1), correct. Outer page and axis background match.
-      Chrome: title "psychrometric-basic · julia · makie · anyplot.ai" in dark ink, fully visible (not clipped at top). X-axis label "Dry-Bulb Temperature (°C)" bottom, Y-axis label "Humidity Ratio (g water / kg dry air)" rotated on the RIGHT edge (psychrometric convention), both readable. Tick labels (-10..50 x, 0..30 y) in soft ink. Framed legend lower-right on elevated #FFFDF6 background with all 6 entries readable. PASS.
-      Data: saturation/RH curves green #009E73 (saturation prominent thick), wet-bulb blue #4467A3 dashed, enthalpy ochre #BD8233 dotted, specific volume cyan #2ABCCD dash-dot, comfort zone lavender #C475FD fill, process path rose #954477 with arrow and two state-point markers. First series is brand green. Direct labels in matching colors (100%/80%/60%/40% RH green, enthalpy ochre numbers, wet-bulb blue, specific-volume cyan).
-      Legibility verdict: PASS (one minor nit: the 20% RH label sits on the right spine with its '%' partly obscured by the axis line — within canvas, not chopped).
+      Background: warm off-white (~#FAF8F1), correct — not pure white.
+      Chrome: bold dark title "psychrometric-basic · julia · makie · anyplot.ai" centered at top, fully visible (not clipped). X-axis label "Dry-Bulb Temperature (°C)" bottom, Y-axis label "Humidity Ratio (g water / kg dry air)" rotated on the RIGHT edge (humidity reads right, as on real psychrometric charts), both fully visible. Tick labels (-10..50 x, 0..30 y) in soft ink, readable. Subtle grid at ~12% opacity.
+      Data: thick solid green (#009E73) saturation curve forms the prominent upper boundary; thinner green RH curves below it labeled 20/40/60/80/100%; dashed blue wet-bulb lines; dotted ochre enthalpy lines; dash-dot cyan specific-volume lines; lavender (#C475FD) shaded comfort-zone polygon labeled "Comfort zone"; rose (#954477) process line with arrow and two state points "① return air" / "② supply air". First series is #009E73.
+      Legibility verdict: PASS — all chrome and labels readable against the light surface.
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17), correct.
-      Chrome: title, axis labels, tick labels all light ink (#F0EFE8 / #B8B7B0) clearly readable against the dark surface — no dark-on-dark failures. "Comfort zone" text light gray on the dark lavender fill is readable. Legend on elevated #242420 background readable.
-      Data: identical Imprint colors to the light render — green saturation, blue wet-bulb, ochre enthalpy, cyan specific volume, lavender comfort zone, rose process path. Only chrome flipped, data colors constant.
-      Legibility verdict: PASS.
+      Background: warm near-black (~#1A1A17), correct — not pure black.
+      Chrome: title, axis labels, and tick labels render in light ink (#F0EFE8 / #B8B7B0), all clearly readable; no dark-on-dark failures. Legend uses elevated #242420 frame with light text. Grid subtle and visible.
+      Data: colors are identical to the light render — same green saturation/RH, lavender comfort zone, blue wet-bulb, ochre enthalpy, cyan specific volume, rose process path. Only chrome flipped.
+      Legibility verdict: PASS — all text readable; brand green visible on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -68,50 +65,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All text readable in both themes; font sizes set; minor: 20% RH
-          label crowded against right spine.'
+        comment: Fonts explicitly set; all chrome readable both themes. Direct labels
+          small (11-12pt) and slightly soft at 400px mobile.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: 'Minor: ''supply air'' label crosses saturation/wet-bulb lines; dense
-          but readable.'
+        comment: No severe text-on-text overlap; minor crossing of supply-air label
+          and process line with curves in the dense center.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines adapted by linewidth/linestyle; cyan specific-volume lines
-          compete slightly with green RH in upper-right.
+        comment: Saturation curve and process path prominent; secondary families intentionally
+          faint (alpha 0.45-0.6) for hierarchy.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint CVD-safe palette plus redundant linestyles per family.
+        comment: Imprint palette, CVD-safe, good contrast both surfaces.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Exact 3200x1800; right-side y-axis convention; small deduction for
-          edge-crowded 20% label.
+        comment: Exact 3200x1800; nothing clipped; good title width and balanced labels.
+          Canvas gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes labelled with units; title in canonical format.
+        comment: Descriptive axis labels with units; correct title.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; all families from Imprint; backgrounds correct;
+        comment: 'First series #009E73; Imprint families; #FAF8F1/#1A1A17 backgrounds;
           both themes correct.'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -119,21 +116,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Real ASHRAE physics, one hue per property family, intentional hierarchy.
+        comment: Custom psychrometric model with deliberate per-family encoding and
+          direct labeling — well above generic defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Left/top spines removed, subtle grid, framed elevated legend, NaN-clipped
-          curves.
+        comment: Left/top spines removed, subtle grid, framed legend, generous whitespace.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Prominent saturation curve, highlighted process path with arrow,
-          shaded comfort zone create clear focal points.
+        comment: 'Clear focal points: prominent saturation boundary, highlighted process
+          path with numbered states, comfort zone.'
     spec_compliance:
       score: 15
       max: 15
@@ -149,20 +146,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Saturation, RH 10-100%, wet-bulb, enthalpy, specific volume, process
-          path+arrow, comfort zone, direct labels, sea-level pressure — all present.
+        comment: Saturation, RH, wet-bulb, enthalpy, specific volume, process path,
+          comfort zone, direct labels all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Dry-bulb x, humidity ratio y, -10..50 C range.
+        comment: Dry-bulb on x, humidity ratio on y (right-positioned per convention).
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact title format; legend labels match property families.
+        comment: Title 'psychrometric-basic · julia · makie · anyplot.ai'; legend
+          labels match property families.
     data_quality:
       score: 15
       max: 15
@@ -178,14 +176,14 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: ASHRAE formulas, standard atmosphere, realistic 30C->14C cooling/dehumidification
-          process.
+        comment: ASHRAE/Magnus relations, sea-level pressure, realistic HVAC process;
+          neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible -10..50 C and 0..30 g/kg ranges.
+        comment: -10..50 C and 0..30 g/kg are sensible for the domain.
     code_quality:
       score: 10
       max: 10
@@ -195,31 +193,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no functions/classes.
+        comment: Straight-line script, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic (formula-driven).
+        comment: Fully deterministic — computed from formulas, no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only CairoMakie and Colors, both used.
+        comment: CairoMakie and Colors, both used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-commented, no fake UI.
+        comment: Well-commented, appropriate complexity, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png.
+        comment: Saves plot-$(THEME).png; current API.
     library_features:
       score: 7
       max: 10
@@ -229,21 +227,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic Axis/lines!/poly!/arrows!/text!/axislegend; yaxisposition=:right.
+        comment: 'Idiomatic Makie: Figure/Axis tokens, lines!/poly!/scatter!/arrows!/text!/axislegend.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: NaN-masking to bound curves, Point2f comfort polygon, arrows!, per-label
-          text! placement.
+        comment: arrows!, poly! comfort polygon, yaxisposition=:right, NaN-masking
+          to clip lines at saturation, per-family linestyles.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - manual-ticks
-  - custom-legend
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
@@ -251,3 +249,4 @@ impl_tags:
   styling:
   - publication-ready
   - alpha-blending
+  - minimal-chrome
