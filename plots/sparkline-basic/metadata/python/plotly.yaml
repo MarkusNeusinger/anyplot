@@ -1,160 +1,181 @@
 library: plotly
+language: python
 specification_id: sparkline-basic
 created: '2025-12-23T20:44:56Z'
-updated: '2025-12-23T20:49:17Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20471151961
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/plotly/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - html-export
-  patterns:
-    - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-06-16T19:45:20Z'
+generated_by: claude-opus
+workflow_run: 27642600563
+issue: 1011
+language_version: 3.13.13
+library_version: 6.8.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/plotly/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent implementation of sparkline minimalism - no axes, gridlines, or labels
-    as specified
-  - Clean use of Plotly graph_objects with multiple traces for different highlight
-    points
-  - 'Good color choices: Python blue for line, semantic colors for min (red) and max
-    (green)'
-  - Proper canvas utilization at 4800x2700 with scale=3
-  - Includes both static PNG and interactive HTML output
-  - Realistic data scenario (daily sales with upward trend and noise)
+  - 'True-to-spec minimalism: no axes, gridlines, ticks, or legend — pure data shape
+    compressed into a wide, short band via the yaxis `domain=[0.36,0.72]` trick, an
+    idiomatic plotly technique.'
+  - Brand-green (#009E73) line with a soft brand-tinted area fill, plus semantic anchor
+    markers — blue peak (#4467A3), red trough (#AE3030), and an emphasized green current
+    endpoint carrying a '$151' value label — give clear visual hierarchy and storytelling.
+  - Markers use a page-background outline ring (3px) so they read crisply against
+    both the line and the fill in both themes.
+  - 'Theme chrome is perfect: warm off-white #FAF8F1 / warm near-black #1A1A17 backgrounds,
+    title in INK token, data colors identical across light and dark renders.'
+  - 'Clean KISS code: seeded RNG, only-used imports, current write_image/write_html
+    API, correct canvas (3200x1800).'
   weaknesses:
-  - The first point yellow marker partially overlaps with the line start, making it
-    slightly less visible than the last point marker
-  image_description: 'The plot displays a minimalist sparkline visualization on a
-    white background. A single blue (#306998) line traces a trend with 30 data points,
-    showing an overall upward trajectory with natural fluctuations. The line is clean
-    with width appropriate for the canvas size. Four colored markers highlight key
-    points: two yellow dots mark the first and last data points (left edge and right
-    edge), a red dot marks the minimum value (in the lower middle portion), and a
-    green dot marks the maximum value (upper portion). The title "sparkline-basic
-    · plotly · pyplots.ai" appears centered at the top in a dark font. There are no
-    axes, gridlines, tick labels, or legends - exactly as a sparkline should be. The
-    chart uses the full width of the canvas with appropriate margins.'
+  - 'VQ-05: the sparkline band sits in the upper-middle of the 16:9 canvas, leaving
+    a large unused empty band across the bottom third — vertically centering the band
+    (e.g. domain ~[0.42,0.66]) would balance the whitespace better. This is the defining
+    wide-short sparkline tradeoff so it is only a minor deduction.'
+  - Line width=4 with spline smoothing reads as a clean moderate line rather than
+    the strictly 'thin' line the spec note suggests; acceptable at this canvas size
+    but slightly heavier than a classic sparkline.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1) — not pure white. Correct.
+      Chrome: title "sparkline-basic · python · plotly · anyplot.ai" in dark ink, centered top, fully readable. No axes/ticks/grid by design. "$151" endpoint label in brand green, readable.
+      Data: single brand-green (#009E73) spline line with soft green area fill; blue peak marker (#4467A3) upper-left, red trough marker (#AE3030) lower-right, emphasized green current endpoint. First series is #009E73. Correct.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17) — not pure black. Correct.
+      Chrome: title in light ink (#F0EFE8), fully readable against dark surface. "$151" label in brand green, readable. No dark-on-dark issues.
+      Data: identical to light render — green line + fill, blue peak, red trough, green current endpoint. Data colors unchanged across themes (only chrome flipped). Correct.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title is large (48pt font), clearly readable
+        comment: Title (20px) and $151 label (18px) explicitly sized, readable in
+          both themes; well-proportioned title (~45% width).
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements, clean minimal design
+        comment: No overlap; $151 label sits clear of markers and line.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width (4) and marker sizes (14-16) well adapted for canvas
+        comment: Line width 4 and 20-22px markers prominent for sparse 60-point series.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue line, red/green/yellow markers are distinct and colorblind-distinguishable
-          (not relying on red-green alone)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good canvas utilization, sparkline fills width appropriately with
-          balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for sparklines (no axes by design) - awarding 0 but not penalizing
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: No grid/legend as appropriate for sparklines
+        comment: Green/blue/red markers CVD-safe Imprint hues, distinct by position
+          + hue.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Sparkline band intentionally short, but skewed to upper-middle leaving
+          an empty bottom third.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes intentionally absent (sparkline spec); descriptive title + $
+          value label provide context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; markers from Imprint (blue pos3, semantic
+          red pos5); backgrounds #FAF8F1/#1A1A17; identical data colors across themes.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Spline line, soft area fill, outlined anchor markers, value label
+          — clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No spines/grid/ticks, generous whitespace, marker outline rings for
+          definition.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Peak/trough/current focal points + endpoint value guide the reader
+          to the insight.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct sparkline implementation
+        comment: Correct wide-short minimal sparkline.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Sequential values correctly plotted as line
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All optional features implemented: min/max highlights, first/last
-          highlights, no axes/labels/gridlines'
-      - id: SC-04
-        name: Data Range
+        comment: Line, min/max highlight, last-point highlight, area fill, compact
+          aspect — all optional features present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full data range visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Days->x, prices->y, full series shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A (no legend needed), no incorrect labels
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "sparkline-basic · plotly · pyplots.ai"
+        comment: Title format correct; legend appropriately omitted for single series.
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows trend with noise, highlights key points; could show a more
-          dramatic min/max for visual impact
+        comment: Trend with peak, trough, and current value — full sparkline feature
+          set.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Daily sales figures over 30 days is a realistic sparkline use case
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values around 100-120 are sensible for sales/metrics
+        comment: Daily stock closing prices — neutral business scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Prices ~180 declining to 151 via cumulative returns — plausible.
     code_quality:
       score: 10
       max: 10
@@ -164,40 +185,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
+        comment: Imports -> data -> plot -> save, no functions.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects, both used
+        comment: os, numpy, plotly.graph_objects all used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotly API
+        comment: Clean, well-commented, appropriate complexity.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
+        comment: write_image + write_html, plot-{THEME}.png naming, current API.
     library_features:
-      score: 5
-      max: 5
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses go.Scatter with multiple traces, proper layout configuration,
-          exports both PNG and interactive HTML
+        comment: go.Figure traces + update_layout; idiomatic high-level plotly.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: yaxis domain compression for the sparkline band, spline smoothing,
+          hovertemplate, fill=tozeroy, HTML export.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  - hover-tooltips
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  - time-series
+  styling:
+  - minimal-chrome
+  - alpha-blending
