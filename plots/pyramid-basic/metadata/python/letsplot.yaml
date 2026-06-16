@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: pyramid-basic
 created: '2025-12-23T18:15:42Z'
-updated: '2026-06-16T19:28:04Z'
+updated: '2026-06-16T19:34:59Z'
 generated_by: claude-opus
 workflow_run: 27642169620
 issue: 1000
@@ -12,44 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pyramid-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/python/letsplot/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - Correct population-pyramid (butterfly) form via coord_flip() + negative male values
-    sharing a central population axis — idiomatic lets-plot grammar.
-  - 'Imprint palette compliant: Male is brand green #009E73 (first series), Female
-    lavender #C475FD (second); identical data colors across light and dark, only chrome
-    flips.'
-  - Symmetric y-axis with manual breaks at ±20/40/60/80 and absolute-value labels
-    so both sides read as positive populations — exactly the fair-comparison the spec
-    asks for.
-  - 'Both renders fully legible: warm off-white #FAF8F1 / near-black #1A1A17 backgrounds,
-    dark/light ink correctly threaded to title, axis titles, ticks and legend; no
-    dark-on-dark or light-on-light.'
-  - Exact mandated title 'pyramid-basic · python · letsplot · anyplot.ai', Gender
-    legend, descriptive axis labels with units (Population (thousands)), and page-bg
-    bar borders giving clean separation.
-  - Canvas exactly 3200×1800; KISS structure, deterministic hardcoded data, clean
-    imports, saves plot-{THEME}.png plus interactive HTML.
+  - 'First categorical series is brand green #009E73 (Male) with Imprint lavender
+    #C475FD (Female) — palette-compliant, and the data colors are identical across
+    light and dark renders with only chrome flipping'
+  - 'Correct butterfly/pyramid construction: negative-signed male values place bars
+    left of a shared central axis, female bars right, with a symmetric -80..80 break/label
+    scheme for fair comparison'
+  - Strong data storytelling — a black/white emphasis outline spotlights the peak
+    working-age cohorts (20-29, 30-39) and a faint dashed central reference line anchors
+    the two opposing sides
+  - Direct read-off value labels nudged just outside each bar tip, no overlap with
+    bars or the central line
+  - 'Both renders fully theme-correct: warm off-white #FAF8F1 (light) and warm near-black
+    #1A1A17 (dark), all text legible, no dark-on-dark or light-on-light failures'
+  - Canvas exactly 3200x1800; clean KISS code, deterministic data, only used imports
   weaknesses:
-  - Design is clean but mostly relies on theme_minimal defaults — no extra storytelling
-    emphasis (e.g. annotating the largest 20-39 cohorts or a subtle reference line
-    at center) to create a stronger focal point (DE-03).
-  - Tick labels at size=10pt are readable but slightly modest for a 3200px-wide canvas;
-    nudging axis_text to ~11-12pt would improve mobile legibility when scaled to ~400px
-    (VQ-01).
+  - Spec note says category labels 'should be placed along the central axis'; here
+    they sit on the conventional left y-axis instead of straddling the center. This
+    is a standard population-pyramid convention and acceptable, but a centered-label
+    variant would match the spec wording more literally.
+  - geom_text value labels at size=4 (~11pt) are slightly small relative to the large
+    bars; bumping to ~5 would improve read-off prominence without crowding.
+  - Library-distinctive usage is moderate — interactive HTML export is leveraged,
+    but the chart could lean further into lets-plot-specific features (e.g. tooltips
+    configuration) to differentiate from a plain plotnine equivalent.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (~#FAF8F1), panel matches page — no pure white.
-      Chrome: title "pyramid-basic · python · letsplot · anyplot.ai" in dark ink top-left, "Age Group" y-axis title, "Population (thousands)" x-axis title, dark-grey tick labels (0/20/40/60/80 both directions), "Gender" legend with Male/Female swatches at right. All readable.
-      Data: opposing horizontal bars — Male green #009E73 extending left, Female lavender #C475FD extending right, across age groups 0-9 … 80+. First series is brand green. Pyramid/diamond silhouette clear.
-      Legibility verdict: PASS
+      Background: warm off-white (~#FAF8F1), no pure-white panel.
+      Chrome: title "pyramid-basic · python · letsplot · anyplot.ai" in dark ink, top-left, ~50% width. Y-axis title "Age Group" and X-axis title "Population (thousands)" dark and readable. Tick labels symmetric 80/60/40/20/0/20/40/60/80 in soft ink. Subtle y-only major gridlines. Legend "Gender" on right with Male (green) / Female (lavender) swatches on elevated cream panel.
+      Data: Male bars #009E73 (green) extend left, Female bars #C475FD (lavender) extend right from a dashed central reference line. Black emphasis outline on 20-29 and 30-39 rows. Value labels just outside each bar tip.
+      Legibility verdict: PASS — all title/labels/ticks clearly readable against light background.
 
     Dark render (plot-dark.png):
-      Background: warm near-black (~#1A1A17), panel matches page — no pure black.
-      Chrome: title, axis titles, tick labels and legend rendered in light ink (#F0EFE8 / #B8B7B0), all clearly visible against the dark surface. No dark-on-dark text.
-      Data: identical Male green #009E73 / Female lavender #C475FD bars, same positions and magnitudes as the light render — only chrome flipped.
-      Legibility verdict: PASS
+      Background: warm near-black (~#1A1A17), not pure black.
+      Chrome: title and axis titles in light ink (#F0EFE8), tick labels in soft light ink — all clearly readable. Gridlines subtle and visible. Legend on elevated dark panel with light text. Emphasis outline flips to near-white.
+      Data: colors identical to light render — Male #009E73 green, Female #C475FD lavender. Central dashed line present.
+      Legibility verdict: PASS — no dark-on-dark; all text clearly visible against the near-black background.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -60,32 +61,32 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Fonts explicitly set, readable both themes; tick labels slightly
-          modest for full-res canvas
+        comment: Fonts explicitly set, readable both themes; value labels slightly
+          small at size=4
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data
+        comment: No collisions between labels, bars, or central line
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars prominent with page-bg borders separating sides
+        comment: Sparse data with prominent bars
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender contrast, CVD-safe, not red-green dependent
+        comment: Green/lavender CVD-safe, good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exact 3200x1800, balanced, nothing clipped
+        comment: Exactly 3200x1800, nothing clipped, good proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -97,29 +98,30 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #C475FD, correct backgrounds both themes'
+        comment: 'First series #009E73, Imprint palette, correct backgrounds both
+          themes'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Intentional palette, bar borders, symmetric layout
+        comment: Emphasis outlines, central reference line, value labels
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal, x-grid removed, subtle vertical grid
+        comment: Subtle y-only grid, clean whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Pyramid shape carries the story but no added emphasis/annotation
+        passed: true
+        comment: Clear focal point on peak working-age cohorts
     spec_compliance:
       score: 15
       max: 15
@@ -129,25 +131,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct opposing-bar pyramid
+        comment: Correct pyramid/butterfly chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, symmetric scale, central categories, legend
+        comment: Opposing bars, symmetric scale, distinct colors, legend
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Age vs population, all 9 groups, both genders
+        comment: Age groups vs signed population correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact mandated title; Gender legend Male/Female
+        comment: Title format correct, Male/Female legend
     data_quality:
       score: 15
       max: 15
@@ -157,19 +159,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full bidirectional distribution, visible asymmetries
+        comment: Shows bidirectional asymmetry across all categories
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible demographic counts
+        comment: Population by age/gender, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible values in thousands
+        comment: Thousands, sensible domain values
     code_quality:
       score: 10
       max: 10
@@ -197,13 +199,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Concise, no fake UI
+        comment: Clean, appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png + HTML
+        comment: Saves plot-{THEME}.png + .html
     library_features:
       score: 7
       max: 10
@@ -213,24 +215,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ggplot grammar, coord_flip, scale_fill_manual, manual breaks
+        comment: Grammar of graphics, coord_flip, scale_fill_manual, layered geoms
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: coord_flip + negative-value pyramid trick, interactive HTML export
+        comment: Interactive HTML export, layered emphasis geom
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
-  - layer-composition
-  - html-export
+  - diverging-bars
+  - coord-flip
+  - text-annotation
+  - reference-line
+  - emphasis-highlight
   patterns:
   - data-generation
+  - layered-geoms
   dataprep:
-  - wide-to-long
+  - sign-transform
   styling:
-  - edge-highlighting
-  - minimal-chrome
+  - publication-ready
+  - theme-adaptive
