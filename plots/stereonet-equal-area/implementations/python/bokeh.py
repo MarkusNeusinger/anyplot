@@ -174,10 +174,10 @@ color_bar = ColorBar(
     location="bottom_left",
     orientation="vertical",
     title="Pole density",
-    title_text_font_size="22pt",
+    title_text_font_size="26pt",
     title_text_font_style="italic",
     title_text_color=INK_SOFT,
-    major_label_text_font_size="20pt",
+    major_label_text_font_size="24pt",
     major_label_text_color=INK_SOFT,
     label_standoff=14,
     width=42,
@@ -278,7 +278,7 @@ for ftype in ["Bedding", "Joints", "Faults"]:
     idxs = [j for j, t in enumerate(gc_types) if t == ftype]
     fxs = [gc_xs[j] for j in idxs]
     fys = [gc_ys[j] for j in idxs]
-    r = p.multi_line(fxs, fys, line_color=colors_map[ftype], line_width=2.0, line_alpha=0.38)
+    r = p.multi_line(fxs, fys, line_color=colors_map[ftype], line_width=1.6, line_alpha=0.22)
     renderers_gc[ftype] = r
 
 # Poles by feature type with HoverTool
@@ -344,7 +344,7 @@ p.add_layout(
         x=0,
         y=-1.31,
         text="Lower-hemisphere equal-area (Schmidt) projection · Click legend to toggle",
-        text_font_size="22pt",
+        text_font_size="27pt",
         text_align="center",
         text_color=INK_MUTED,
         text_font_style="italic",
