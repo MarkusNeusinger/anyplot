@@ -1,85 +1,118 @@
 library: matplotlib
+language: python
 specification_id: stereonet-equal-area
 created: '2026-03-15T23:01:12Z'
-updated: '2026-03-15T23:22:15Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23121188769
+updated: '2026-06-16T23:03:07Z'
+generated_by: claude-opus
+workflow_run: 27653322595
 issue: 4576
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/stereonet-equal-area/matplotlib/plot.png
-preview_html: null
-quality_score: 90
+language_version: 3.13.14
+library_version: 3.11.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stereonet-equal-area/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stereonet-equal-area/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Mathematically correct equal-area (Schmidt) projection with proper formula
-  - Sophisticated spherical Gaussian kernel density estimation for contours
-  - 'Strong visual hierarchy: bedding emphasized through larger markers and thicker
-    great circles'
-  - Excellent colorblind-safe palette with redundant shape encoding
-  - Professional-quality stereonet suitable for geology publication
+  - Correct equal-area (Schmidt) lower-hemisphere math — poles via r = sqrt(2)*sin(dip/2)
+    and equal-area density grid via colatitude back-transform; this is the right projection
+    for area-preserving density analysis
+  - 'Strong redundant encoding: each feature type gets a distinct Imprint color AND
+    a distinct marker shape (Bedding=green circle, Joint=lavender square, Fault=blue
+    triangle), making the plot CVD-safe beyond color alone'
+  - Clear visual hierarchy and storytelling — Bedding (primary) uses larger markers
+    and bolder great circles, and imprint_seq density contours highlight the three
+    preferred-orientation clusters
+  - 'Palette is fully compliant: first series is brand green #009E73, canonical Imprint
+    order, density uses the allowed imprint_seq colormap, and both backgrounds are
+    theme-correct (#FAF8F1 / #1A1A17)'
+  - 'Polished chrome: degree ticks every 10 deg with bold cardinal N/E/S/W labels,
+    path-effect strokes for marker/label definition, subtle grid (alpha 0.15), and
+    a primitive circle drawn cleanly'
+  - Both light and dark renders are fully legible with identical data colors and only
+    chrome flipping; canvas is exactly 2400x2400 (square, correct for a symmetric
+    stereonet)
+  - 'Clean KISS code: flat script, seeded RNG (np.random.seed(42)), only used imports,
+    vectorised great-circle math with no helper functions, correct save without bbox_inches=''tight'''
   weaknesses:
-  - Defines a helper function (draw_great_circle) instead of inline code, minor KISS
-    violation
-  image_description: 'The plot displays a Schmidt equal-area (lower-hemisphere) stereonet
-    projection on a polar axis with a light off-white background. Three structural
-    feature types are plotted: Bedding poles (blue circles, ~30 points clustered in
-    the SE quadrant around 120-140° azimuth), Joint poles (orange squares, ~25 points
-    clustered in the NE quadrant around 20-40°), and Fault poles (dark maroon triangles,
-    ~20 points clustered in the W-NW quadrant around 270-290°). Great circles are
-    drawn for each feature type in matching colors — bedding great circles (blue)
-    are thicker and more opaque, creating visual hierarchy. Density contours in a
-    YlOrBr colormap with low opacity highlight the three pole clusters. The primitive
-    circle is emphasized with a dark border. Cardinal directions (N, E, S, W) are
-    bold at 20pt, degree tick marks appear every 10° around the perimeter, and intermediate
-    labels at 30° intervals show degree values. A legend in the lower-left shows all
-    three feature types. Title reads "stereonet-equal-area · matplotlib · pyplots.ai"
-    at 24pt.'
+  - Great circles spill OUTSIDE the primitive circle in the lower-right (SE) quadrant
+    of both renders. The great-circle sweep uses t_param from 0 to pi (the full circle)
+    and r_gc = sqrt(2)*sin((pi/2 - plunge)/2); where plunge < 0 (the upper-hemisphere
+    arc) r_gc exceeds 1, so those segments render beyond the unit disk. For a lower-hemisphere
+    Schmidt net the great circles must stay within the primitive circle — mask/clip
+    points where r_gc > 1 (or plunge < 0) before plotting so each plane's arc is confined
+    to the lower hemisphere.
+  - The bold mean-plane great circles per feature are visually heavy and a few overlap
+    near the SE perimeter, slightly competing with the spilled arcs; once clipped,
+    consider thinning or reducing the representative-plane count so the great-circle
+    layer reads cleaner against the pole clusters.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1) — not pure white, correct.
+      Chrome: dark title "stereonet-equal-area · python · matplotlib · anyplot.ai" across the top, readable. Perimeter degree ticks every 10 deg with labels at 30 deg (30°, 60°, 120°, 150°, 240°, 300°, 330°) in soft ink; bold dark cardinal labels N (top), E (right), S (bottom), W (left). Subtle gray equal-area net grid. Black primitive circle. Legend bottom-left (Bedding poles / Joint poles / Fault poles) on elevated cream fill, readable.
+      Data: green filled circles (Bedding, #009E73) clustered bottom-center; lavender squares (Joint, #C475FD) clustered top-right; blue triangles (Fault, #4467A3) clustered left. Green imprint_seq density tints behind each cluster. Great-circle arcs in matching colors. First series is brand green — confirmed.
+      Note: several green/lavender great-circle arcs extend beyond the primitive circle in the lower-right (SE) area (upper-hemisphere portion not clipped).
+      Legibility verdict: PASS (all text readable on light background).
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17) — not pure black, correct.
+      Chrome: light title and light cardinal labels, soft light-gray degree labels and grid, white primitive circle, legend on dark elevated fill (#242420) with light text. All readable.
+      Data: identical data colors to the light render (green circles, lavender squares, blue triangles, green density tint) — only chrome flipped. No dark-on-dark text.
+      Note: same great-circle spill outside the primitive circle in the SE quadrant as the light render.
+      Legibility verdict: PASS (no dark-on-dark failures; all text clearly visible on dark background).
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24pt, cardinal=20pt bold, ticks=16pt,
-          legend=16pt'
+        comment: Title 15pt, degree ticks 9pt, bold 14pt cardinals, legend 11pt; readable
+          in both themes, slightly small ticks at mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Legend positioned outside data area
+        comment: Path-effect strokes separate dense cluster markers; legend and degree
+          labels clear of data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers well-sized (s=140-200) with white edges and path effects.
-          Distinct shapes per type
+        comment: Prominent markers sized for sparse data, visible density contours
+          and great circles
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/orange/dark-red palette is colorblind-safe with redundant shape
-          encoding
+        comment: CVD-safe Imprint hues plus distinct marker shapes per feature
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Square 12x12 figure fills canvas well with balanced margins
+        comment: Exact 2400x2400 square; great circles spill outside primitive circle
+          in SE quadrant
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Cardinal directions and degree marks serve as labels. Title in correct
-          format
+        comment: Degree ticks + cardinal labels serve as axes; title present and correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green first, canonical order, imprint_seq density, correct
+          theme backgrounds
     design_excellence:
       score: 14
       max: 20
@@ -89,22 +122,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, visual hierarchy, path effects, density contours.
-          Above defaults
+        comment: Sized hierarchy, path effects, density tinting, bold cardinals, custom
+          marker shapes
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid, radial ticks removed, primitive circle emphasized, path
-          effects
+        comment: Subtle grid, thin contour lines, clean primitive circle, edge strokes
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Visual hierarchy through marker size/alpha/lineweight. Three distinct
-          clusters tell geological story
+        comment: Bedding focal point via size/weight; density contours highlight preferred
+          orientations
     spec_compliance:
       score: 15
       max: 15
@@ -114,26 +146,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Schmidt equal-area lower-hemisphere stereonet
+        comment: Correct equal-area lower-hemisphere stereonet
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: great circles, poles, density contours,
-          tick marks, legend'
+        comment: Great circles, poles at 90deg, Kamb-like density contours, primitive
+          circle, 10deg ticks, N label, color-coded legend all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct strike/dip to pole conversion with equal-area projection
+        comment: strike/dip mapped correctly to poles and great circles
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels match data
+        comment: Title matches mandated format; legend labels match feature types
     data_quality:
       score: 15
       max: 15
@@ -143,36 +175,36 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three feature types with distinct orientations, great circles, poles,
-          and density
+        comment: Poles, great circles, density, three feature types clustering — full
+          stereonet coverage
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic structural geology field measurements
+        comment: Plausible, neutral structural-geology bedding/joint/fault measurements
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic strike/dip values and sample sizes
+        comment: Strike 0-360, dip clipped to 2-88 deg — sensible domain values
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Has draw_great_circle function, minor KISS violation
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -184,43 +216,44 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for stereonet with density estimation
+        comment: Vectorised great-circle math, clear comments, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, bbox_inches tight
-    library_mastery:
-      score: 7
+        comment: Saves plot-{THEME}.png, no bbox_inches='tight'
+    library_features:
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Polar projection, set_theta_zero_location, LineCollection, contourf/contour,
+          path effects
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good use of polar projection, LineCollection, contourf, path_effects
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: LineCollection, path_effects, polar projection are matplotlib-distinctive
+        comment: Polar projection + LineCollection + withStroke path effects + custom
+          LinearSegmentedColormap density fill
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
   - manual-ticks
-  - layer-composition
-  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - kde
   styling:
+  - publication-ready
   - alpha-blending
   - edge-highlighting
-  - grid-styling
+  - custom-colormap
