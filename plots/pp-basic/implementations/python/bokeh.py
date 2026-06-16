@@ -1,34 +1,53 @@
-""" pyplots.ai
+""" anyplot.ai
 pp-basic: Probability-Probability (P-P) Plot
-Library: bokeh 3.9.0 | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-15
+Library: bokeh 3.9.1 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-06-16
 """
 
+import io
+import os
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png
-from bokeh.models import Band, ColumnDataSource, HoverTool, Label, LinearColorMapper
-from bokeh.palettes import Cividis256
-from bokeh.plotting import figure, save
-from bokeh.resources import CDN
+from bokeh.io import output_file, save
+from bokeh.models import Band, ColorBar, ColumnDataSource, HoverTool, LinearColorMapper
+from bokeh.plotting import figure
 from bokeh.transform import transform
+from PIL import Image
 from scipy import stats
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Data — manufacturing quality control: bolt tensile strength measurements
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint diverging colormap — matte-red <-> theme midpoint <-> blue (signed deviation)
+mid_hex = "#FAF8F1" if THEME == "light" else "#1A1A17"
+red_rgb = np.array([0xAE, 0x30, 0x30])
+blue_rgb = np.array([0x44, 0x67, 0xA3])
+mid_rgb = np.array([int(mid_hex[i : i + 2], 16) for i in (1, 3, 5)])
+ramp_t = np.linspace(0, 1, 128)[:, None]
+div_rgb = np.vstack([red_rgb * (1 - ramp_t) + mid_rgb * ramp_t, mid_rgb * (1 - ramp_t) + blue_rgb * ramp_t])
+IMPRINT_DIV256 = ["#%02X%02X%02X" % tuple(c) for c in div_rgb.round().astype(int)]
+
+# Data — manufacturing QC: bolt tensile strength (right-skewed vs. normal reference)
 np.random.seed(42)
 bolt_strength = np.random.normal(loc=850, scale=45, size=200) + np.random.exponential(scale=15, size=200)
-
 observed_sorted = np.sort(bolt_strength)
 n = len(observed_sorted)
 
 mu, sigma = stats.norm.fit(observed_sorted)
 empirical_cdf = np.arange(1, n + 1) / (n + 1)
 theoretical_cdf = stats.norm.cdf(observed_sorted, loc=mu, scale=sigma)
-
-# Deviation from perfect fit — key diagnostic insight
 deviation = empirical_cdf - theoretical_cdf
 
-# Confidence band (Kolmogorov-Smirnov), clipped to [0, 1]
+# Kolmogorov-Smirnov 95% confidence band, clipped to [0, 1]
 ks_bound = 1.36 / np.sqrt(n)
 band_x = np.linspace(0, 1, 200)
 band_source = ColumnDataSource(
@@ -40,57 +59,61 @@ source = ColumnDataSource(
         "theoretical": theoretical_cdf,
         "empirical": empirical_cdf,
         "deviation": deviation,
-        "abs_deviation": np.abs(deviation),
         "strength": observed_sorted,
         "rank": np.arange(1, n + 1),
     }
 )
 
-# Color mapper — emphasize deviation magnitude
-max_dev = np.max(np.abs(deviation))
-color_mapper = LinearColorMapper(palette=Cividis256, low=-max_dev, high=max_dev)
+max_dev = float(np.max(np.abs(deviation)))
+color_mapper = LinearColorMapper(palette=IMPRINT_DIV256, low=-max_dev, high=max_dev)
 
-# Plot
+# Plot — square canvas preserves the diagonal's visual meaning
 p = figure(
-    width=3600,
-    height=3600,
-    title="pp-basic · bokeh · pyplots.ai",
+    width=2400,
+    height=2400,
+    title="pp-basic · python · bokeh · anyplot.ai",
     x_axis_label="Theoretical Cumulative Probability (Normal Fit)",
     y_axis_label="Empirical Cumulative Probability",
     x_range=(-0.02, 1.02),
     y_range=(-0.02, 1.02),
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=60,
 )
 
-# Confidence band
+# KS confidence band (muted structural layer, sits behind the data)
 band = Band(
     base="x",
     upper="upper",
     lower="lower",
     source=band_source,
-    fill_alpha=0.06,
-    fill_color="#93b7d1",
-    line_color="#93b7d1",
-    line_alpha=0.2,
-    line_width=1.5,
+    fill_alpha=0.10,
+    fill_color=MUTED,
+    line_color=MUTED,
+    line_alpha=0.3,
+    line_width=2,
 )
 p.add_layout(band)
 
-# Reference line
-p.line([0, 1], [0, 1], line_color="#666666", line_width=4, line_dash="dashed", line_alpha=0.6)
+# 45-degree reference line — perfect-fit baseline (neutral anchor)
+p.line([0, 1], [0, 1], line_color=INK, line_width=4, line_dash="dashed", line_alpha=0.55)
 
-# Data points colored by deviation
+# Data points colored by signed deviation from the diagonal
 scatter = p.scatter(
     x="theoretical",
     y="empirical",
     source=source,
-    size=20,
+    size=22,
     fill_color=transform("deviation", color_mapper),
-    alpha=0.85,
-    line_color="white",
+    fill_alpha=0.65,
+    line_color=MUTED,  # soft ink ring keeps near-zero-deviation points legible
+    line_alpha=0.7,
     line_width=1.5,
 )
 
-# HoverTool — Bokeh-distinctive interactive feature
+# HoverTool — Bokeh-distinctive interactive inspection
 hover = HoverTool(
     renderers=[scatter],
     tooltips=[
@@ -104,79 +127,73 @@ hover = HoverTool(
 )
 p.add_tools(hover)
 
-# Annotation — highlight the S-shaped deviation pattern
-label_upper = Label(
-    x=0.72,
-    y=0.60,
-    text="Heavy right tail →\npoints fall below diagonal",
-    text_font_size="22pt",
-    text_color="#a0522d",
-    text_alpha=0.85,
-    text_font_style="italic",
+# Colorbar legend for the continuous deviation encoding
+color_bar = ColorBar(
+    color_mapper=color_mapper,
+    title="Empirical − Theoretical",
+    title_text_font_size="30pt",
+    title_text_color=INK_SOFT,
+    title_text_font_style="normal",
+    major_label_text_font_size="26pt",
+    major_label_text_color=INK_SOFT,
+    background_fill_color=PAGE_BG,
+    width=36,
+    padding=20,
+    bar_line_color=None,
 )
-p.add_layout(label_upper)
+p.add_layout(color_bar, "right")
 
-label_lower = Label(
-    x=0.08,
-    y=0.28,
-    text="← Light left tail\nempirical > theoretical",
-    text_font_size="22pt",
-    text_color="#2c5f7c",
-    text_alpha=0.85,
-    text_font_style="italic",
-)
-p.add_layout(label_lower)
-
-# KS band label
-ks_label = Label(
-    x=0.55,
-    y=0.92,
-    text=f"95% KS confidence band (D = {ks_bound:.3f})",
-    text_font_size="20pt",
-    text_color="#306998",
-    text_alpha=0.6,
-)
-p.add_layout(ks_label)
-
-# Style
-p.title.text_font_size = "48pt"
+# Style — theme-adaptive chrome
+p.title.text_font_size = "50pt"
 p.title.text_font_style = "normal"
-p.title.text_color = "#2c3e50"
-p.xaxis.axis_label_text_font_size = "34pt"
-p.yaxis.axis_label_text_font_size = "34pt"
-p.xaxis.major_label_text_font_size = "26pt"
-p.yaxis.major_label_text_font_size = "26pt"
-p.xaxis.axis_label_text_color = "#444444"
-p.yaxis.axis_label_text_color = "#444444"
+p.title.text_color = INK
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
 
 p.xaxis.minor_tick_line_color = None
 p.yaxis.minor_tick_line_color = None
-p.xaxis.major_tick_line_color = None
-p.yaxis.major_tick_line_color = None
-
-p.xaxis.axis_line_color = "#888888"
-p.yaxis.axis_line_color = "#888888"
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
 p.xaxis[0].ticker.desired_num_ticks = 6
 p.yaxis[0].ticker.desired_num_ticks = 6
 
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.15
+p.ygrid.grid_line_alpha = 0.15
+
 p.outline_line_color = None
-p.xgrid.grid_line_color = "#e0e0e0"
-p.ygrid.grid_line_color = "#e0e0e0"
-p.xgrid.grid_line_alpha = 0.4
-p.ygrid.grid_line_alpha = 0.4
-p.xgrid.grid_line_width = 1
-p.ygrid.grid_line_width = 1
-p.xgrid.grid_line_dash = [4, 4]
-p.ygrid.grid_line_dash = [4, 4]
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
 
-p.toolbar_location = None
-p.background_fill_color = "#fafafa"
-p.border_fill_color = "#FFFFFF"
-p.min_border_left = 180
-p.min_border_bottom = 150
-p.min_border_top = 100
-p.min_border_right = 60
+# Save — interactive HTML, then screenshot it with headless Chrome
+output_file(f"plot-{THEME}.html", title="pp-basic · python · bokeh · anyplot.ai")
+save(p)
 
-# Save
-export_png(p, filename="plot.png")
-save(p, filename="plot.html", resources=CDN, title="pp-basic · bokeh · pyplots.ai")
+# Window is taller than the canvas so bokeh fills it; crop to the exact dims.
+W, H = 2400, 2400
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H + 200}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H + 200)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+raw = driver.get_screenshot_as_png()
+driver.quit()
+Image.open(io.BytesIO(raw)).crop((0, 0, W, H)).save(f"plot-{THEME}.png")

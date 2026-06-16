@@ -1,83 +1,112 @@
 library: altair
+language: python
 specification_id: pp-basic
 created: '2026-03-15T20:18:36Z'
-updated: '2026-03-15T20:37:59Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23118400194
+updated: '2026-06-16T19:17:03Z'
+generated_by: claude-opus
+workflow_run: 27641462692
 issue: 4587
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/pp-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/pp-basic/altair/plot.html
+language_version: 3.13.13
+library_version: 6.2.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pp-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pp-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pp-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pp-basic/python/altair/plot-dark.html
 quality_score: 93
 review:
   strengths:
-  - Full spec compliance with bonus features (KS confidence band, max deviation annotation)
-  - Strong visual storytelling through deviation-based color+size encoding and red
-    max-deviation focal point
-  - Clean monochromatic blue design with professional typography and subtle grid
-  - Effective use of Altair distinctive interactive features (hover selection, conditional
-    encoding)
-  - Perfect code quality with KISS structure
+  - 'Correct, well-executed P-P plot: empirical CDF (i/(n+1)) on Y vs theoretical
+    normal CDF on X, both axes locked to [0,1] with a square 2400x2400 canvas that
+    preserves the meaning of the 45-degree diagonal.'
+  - 'Strong design hierarchy: points colored along the imprint_seq (green->blue) continuous
+    colormap by absolute deviation, with the maximum-deviation point highlighted by
+    a matte-red ring + bold label as a clear focal point.'
+  - 'Thoughtful extra context without clutter: a subtle Kolmogorov-Smirnov confidence
+    band (+-1.36/sqrt(n)) around the diagonal frames where points should fall.'
+  - 'Theme adaptation is flawless: light render on warm #FAF8F1 and dark render on
+    warm #1A1A17, identical data colors across both, all chrome readable (no dark-on-dark),
+    legend frame uses the elevated surface token.'
+  - 'Idiomatic, distinctive Altair: layered composition (band + reference line + points
+    + ring + label), pointerover selection that grows/opacifies the nearest point,
+    gradient colorbar legend, and an interactive HTML export alongside the PNG.'
+  - 'Clean KISS script: seeded (np.random.seed(42)), linear top-to-bottom, no functions/classes,
+    only used imports.'
   weaknesses:
-  - Domain/tick spines still present (minor visual refinement gap)
-  - Single distribution comparison limits feature coverage slightly
-  image_description: 'The plot shows a square P-P (Probability-Probability) plot with
-    the title "pp-basic · altair · pyplots.ai" in bold at the top, and a subtitle
-    "Blood pressure normality check — points colored by deviation from perfect fit"
-    in gray. Both axes range from 0 to 1. The x-axis is labeled "Theoretical CDF (Normal)"
-    and the y-axis "Empirical CDF". A dashed gray 45-degree reference line runs from
-    (0,0) to (1,1). A light blue confidence band (KS bound) surrounds the diagonal.
-    Data points are rendered as circles with dark blue outlines, colored using a sequential
-    "blues" gradient encoding deviation from the diagonal — lighter circles near the
-    line, darker/larger circles further away. A red unfilled circle highlights the
-    point of maximum deviation near (0.48, 0.45), with a bold red annotation "Max
-    deviation: 0.045". The data shows characteristic S-shaped departure from the diagonal
-    consistent with heavier tails. A "Deviation" color legend sits in the bottom-right
-    corner. Grid lines are very subtle. The overall design is clean and professional
-    with a monochromatic blue theme and a single red accent.'
+  - Deviation is double-encoded by both color AND marker size (size range 55-200),
+    but the size channel has no legend (legend=None) — a reader sees markers of varying
+    size with no key explaining what size means. Either drop the size encoding (color
+    already conveys deviation) or expose a size legend.
+  - 'Heavy overplotting along the diagonal: ~200 points with sizes up to 200 px form
+    a thick overlapping ''caterpillar'' on the 45-degree line, so individual points
+    blur together in the dense central region. alpha=0.7 helps but consider slightly
+    smaller base markers or lower max size to reduce the pile-up.'
+  - The 45-degree reference line uses INK_SOFT rather than the dedicated `neutral`
+    anchor (INK) that the style guide reserves for reference/baseline rules; minor,
+    but the neutral token would tie it more clearly to the structural layer.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1), no pure white — correct.
+      Chrome: bold dark title "pp-basic · python · altair · anyplot.ai" with a soft-gray subtitle "Blood pressure normality check — points colored by deviation from perfect fit". Axis titles "Theoretical CDF (Normal)" (x) and "Empirical CDF" (y), tick labels 0.0–1.0 on both axes, all dark and clearly readable. Subtle 15%-opacity grid. Legend box ("Deviation" gradient 0.00→0.04) sits in the empty bottom-right triangle with an elevated #FFFDF6 fill. All text readable. PASS.
+      Data: points form a chain along the diagonal, colored on the imprint_seq green→blue continuous scale by deviation (low=green near #009E73, high=blue near #4467A3). Dashed gray 45° reference line, light-gray KS confidence band, matte-red ring + "Max deviation: 0.045" label near the center.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17), no pure black — correct.
+      Chrome: title now light/near-white, subtitle light gray, axis titles and 0.0–1.0 tick labels light and clearly readable, grid faint light at 15%. Legend frame uses elevated dark #242420 with light label text. No dark-on-dark failures. PASS.
+      Data: identical green→blue point coloring to the light render (only chrome flipped), same dashed 45° reference line (light gray), same darker-gray KS band, same matte-red max-deviation ring + label. Brand-adjacent green still clearly visible on the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=28, subtitle=18, axis titles=22,
-          tick labels=18, legend title=16, legend labels=14, annotation=15'
+        comment: All title/subtitle/axis/tick/legend text readable in both themes;
+          subtitle 11px and max-label 13px are on the small side but fine at scale
+          4.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text elements. Annotation offset avoids collision
+        comment: Max-deviation label sits clear; main deduction is heavy point overplotting
+          along the diagonal (caterpillar), partly inherent to P-P plots.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 200 points with sizes 55-200 and alpha 0.65, well within guidelines
+        comment: Density-aware markers (55-200) with alpha 0.7; all elements visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Sequential blues colorblind-safe, red accent provides contrast
+        comment: imprint_seq green->blue is CVD-safe with adequate contrast on both
+          surfaces.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 3600x3600 at scale 3, balanced margins
+        comment: Exact 2400x2400 square (gate passed), good proportions, nothing clipped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels, CDF is unitless
+        comment: Descriptive axis titles; CDF axes self-explanatory.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Continuous data uses imprint_seq (no forbidden cmap); backgrounds
+          #FAF8F1 / #1A1A17 correct in both themes.'
     design_excellence:
       score: 16
       max: 20
@@ -87,22 +116,21 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Monochromatic blue with red accent, deviation encoding, KS band,
-          approaching publication quality
+        comment: Confidence band, color-by-deviation, highlighted max point, subtitle,
+          styled legend — clear intentional polish.
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: View stroke removed, subtle grid, styled legend, custom colors. Spines
-          remain
-      - id: DE-03
-        name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Deviation encoding creates hierarchy, max deviation focal point,
-          contextual subtitle
+        comment: Domain spines off, ticks off, 15% grid, generous square whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Red ring + label create a clear focal point; color encodes the story,
+          though the unlabeled size double-encoding muddies it slightly.
     spec_compliance:
       score: 15
       max: 15
@@ -112,48 +140,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct P-P plot
+        comment: Genuine P-P plot (cumulative probabilities on both axes).
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All features present plus KS band and max deviation highlight
+        comment: 45-degree reference line, [0,1] axes, square aspect, empirical CDF
+          as i/(n+1).
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct CDF mapping on both axes
+        comment: Theoretical CDF on X, empirical CDF on Y, full domain shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches format, deviation legend appropriate
+        comment: Title exactly 'pp-basic · python · altair · anyplot.ai' with descriptive
+          subtitle; deviation colorbar labeled.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: S-shaped deviation from normal+exponential mixture demonstrates key
-          P-P diagnostic
+        comment: Normal+exponential mixture produces visible S-shaped deviation, demonstrating
+          the P-P plot's diagnostic value.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Blood pressure normality check visible in subtitle
+        comment: Blood pressure normality check — plausible and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 points within spec range, realistic values
+        comment: CDF values 0-1, deviations small and sensible.
     code_quality:
       score: 10
       max: 10
@@ -163,63 +193,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow
+        comment: Linear script, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: os, NormalDist, altair, numpy, pandas, PIL — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code, no fake functionality
+        comment: Clean layered composition; no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html, current API
-    library_mastery:
-      score: 8
+        comment: Saves plot-{THEME}.png + .html with pad-to-target block.
+    library_features:
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Good declarative grammar, layered composition, proper encoding channels
+        comment: Layered '+' composition, encodings, alt.condition, scale domains
+          — idiomatic Altair.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Interactive hover selection, conditional encoding, formatted tooltips,
-          HTML export
+        comment: pointerover selection, gradient colorbar legend, interactive HTML
+          export; static PNG can't show the hover behavior.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - annotations
   - layer-composition
+  - annotations
+  - colorbar
   - hover-tooltips
   - html-export
-  - custom-legend
   patterns:
   - data-generation
-  dataprep:
-  - cumulative-sum
+  dataprep: []
   styling:
   - custom-colormap
   - alpha-blending
-  - grid-styling
-  - edge-highlighting
+  - publication-ready
