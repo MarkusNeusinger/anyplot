@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: psychrometric-basic
 created: '2026-06-16T23:18:25Z'
-updated: '2026-06-16T23:22:56Z'
+updated: '2026-06-16T23:30:12Z'
 generated_by: claude-opus
 workflow_run: 27654182668
 issue: 4583
@@ -12,107 +12,98 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/psychrome
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/psychrometric-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 90
 review:
   strengths:
-  - 'Complete psychrometric chart: saturation curve (hero, prominent green linewidth
-    1.5), RH curves 10-100%, diagonal wet-bulb lines, oblique enthalpy lines, specific-volume
-    lines, comfort zone, and an example cooling/dehumidification process arrow — every
-    spec requirement is present.'
-  - 'Physically grounded data: ASHRAE-style saturation-pressure, humidity-ratio, wet-bulb,
-    enthalpy, and specific-volume relations computed at sea-level 101.325 kPa over
-    -10 to 50 C, all clipped to the valid sub-saturation region.'
-  - 'Idiomatic ggplot2 grammar: layered geom_line/geom_path/geom_polygon/geom_segment
-    with a right-positioned y-axis (true psychrometric convention), arrow-tipped process
-    path, and direct on-chart labeling instead of a legend — exactly as the spec asks.'
-  - 'Strong data storytelling and palette discipline: green saturation as the hero
-    series, red process path as the focal emphasis, shaded comfort zone, and a color-keyed
-    descriptor block top-left mapping each Imprint hue to its property family.'
-  - 'Theme adaptation is correct in both renders: backgrounds #FAF8F1 light / #1A1A17
-    dark, INK/INK_SOFT chrome tokens flip while the data hues stay identical.'
+  - 'Saturation curve (100% RH) rendered as the visual hero at linewidth 1.5 in brand
+    green #009E73 — exactly the prominence the spec asks for'
+  - Every property family (RH, wet-bulb, enthalpy, specific volume) is directly labeled
+    on the chart and colour-keyed with a matching upper-left descriptor block, fulfilling
+    the 'label lines directly, not just in a legend' requirement
+  - 'Physically grounded data: ASHRAE saturation-pressure and wet-bulb/enthalpy/specific-volume
+    formulas at sea-level 101.325 kPa, clipped to the physical sub-saturation region'
+  - Clear data storytelling — shaded comfort zone, plus a red emphasised cooling-&-dehumidification
+    process arrow between two labelled state points A and B
+  - Distinct linetypes per family (dotted volume, dashed enthalpy, longdash wet-bulb,
+    solid RH) keep the dense overlay readable and CVD-safe
+  - Data colours are identical across both themes; only chrome (background, ink, grid)
+    flips — palette compliance is clean
   weaknesses:
-  - Several numeric property-line labels are very small (enthalpy at geom_text size
-    2.3, specific-volume at size 2.2, wet-bulb at size 2.4 — roughly 6.3-6.8pt). They
-    are legible at full 3200px resolution but will be hard to read at the 400px mobile
-    srcset. Consider bumping these to ~2.6-2.8.
-  - The lavender enthalpy lines/labels (#C475FD, linewidth 0.4) and the blue dotted
-    specific-volume lines (#4467A3, linewidth 0.4) are quite faint against the cream
-    light background — they read but sit close to the visibility floor. A slightly
-    higher linewidth (~0.5) would help the secondary families register.
-  - The relative-humidity percentage labels (90% 80% 70% 60% 50%...) crowd together
-    near the top edge of the panel where the curves converge, producing minor label-on-label
-    tightness in both renders. Not severe, but staggering their placement would clean
-    it up.
-  - 'Minor: the implementation defines four helper functions (p_ws, W_of, W_sat, clip_region).
-    They are well-justified for reusing the psychrometric math, but slightly deviate
-    from the strict KISS ''no functions'' preference.'
+  - Top-left region is crowded in both renders where high-RH labels (80–95%), wet-bulb
+    numbers and the rotated 'Saturation (100% RH)' label converge near the saturation
+    curve — no hard collisions but the density costs a little legibility headroom
+  - 'On the dark render the blue dotted specific-volume lines and their right-edge
+    labels (0.92, 0.94) read slightly faint against #1A1A17 — could nudge linewidth
+    or brightness a touch for parity with the light render'
+  - Several small domain helper functions (p_ws, W_of, W_sat, clip_region) push against
+    the KISS 'no functions' preference; they are justified for psychrometric math
+    but keep CQ-01 short of full marks
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1) confirmed — not pure white, not dark.
-      Chrome: Title "psychrometric-basic · r · ggplot2 · anyplot.ai" in bold dark ink, fully visible and not clipped. Subtitle "Moist-air properties at sea level (101.325 kPa)" in soft ink. X-axis "Dry-bulb temperature (°C)" with ticks -10..50; Y-axis on the RIGHT (psychrometric convention) "Humidity ratio (g water / kg dry air)" with ticks 0..30. Subtle grid. All chrome readable (dark text on light).
-      Data: Green (#009E73) saturation curve is the prominent hero boundary, thinner green RH curves below it; cyan (#2ABCCD) wet-bulb diagonals; lavender (#C475FD) enthalpy lines; blue (#4467A3) dotted specific-volume lines; grey shaded comfort zone with dashed outline; red (#AE3030) arrowed process path A→B labelled "Cooling & dehumidification". First/hero series is #009E73 as required. Color-keyed descriptor legend top-left.
-      Legibility verdict: PASS (small enthalpy/spec-vol numeric labels are near the lower size bound but readable at full resolution).
+      Background: warm off-white (~#FAF8F1), correct light surface.
+      Chrome: bold dark title "psychrometric-basic · r · ggplot2 · anyplot.ai", grey subtitle, dark axis titles ("Dry-bulb temperature (°C)" bottom, "Humidity ratio (g water / kg dry air)" on the RIGHT y-axis), dark-grey tick labels. Subtle dark grid. All readable. PASS.
+      Data: green saturation curve (#009E73) is the prominent upper boundary; thinner green RH curves below it; cyan longdash wet-bulb lines; lavender dashed enthalpy lines; blue dotted specific-volume lines; grey shaded comfort zone with dashed outline and "Comfort zone" label; red arrow A->B with "Cooling & dehumidification" annotation. First/hero series is #009E73. Colour-keyed family descriptor block top-left.
+      Legibility verdict: PASS (top-left is dense but every label is legible, nothing clipped).
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17) confirmed — not pure black.
-      Chrome: Title and axis labels in light ink (#F0EFE8), tick labels in #B8B7B0 — all clearly visible, NO dark-on-dark failures. "Comfort zone" annotation flips to light ink and is readable on the dark surface.
-      Data: Data colors are IDENTICAL to the light render (green saturation/RH, cyan wet-bulb, lavender enthalpy, blue specific-volume, red process path). Only chrome flipped. Brand green #009E73 reads well on the dark surface. Red process path is visible.
-      Legibility verdict: PASS (same minor small-label caveat as light; top RH% labels are slightly crowded).
+      Background: warm near-black (~#1A1A17), correct dark surface.
+      Chrome: light title and subtitle, light axis titles and tick labels, faint light grid — all clearly readable, no dark-on-dark text. PASS.
+      Data: identical data colours to the light render (green saturation hero + RH curves, cyan wet-bulb, lavender enthalpy, blue specific-volume, red process arrow, grey comfort zone). Only chrome flipped. Blue dotted volume lines/labels read a touch faint but remain visible.
+      Legibility verdict: PASS.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title/axes/descriptors clearly readable in both themes; small enthalpy
-          (2.3) and specific-volume (2.2) numeric labels approach the legibility floor
-          at mobile scale.
+        comment: Font sizes set; readable in both themes; slight density penalty near
+          the top-left label cluster
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No severe overlap; RH percentage labels crowd near the top edge where
-          curves converge.
+        comment: Minor crowding where high-RH/wet-bulb labels converge near saturation
+          curve; no hard collisions
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Saturation curve prominent; lavender enthalpy and blue dotted specific-volume
-          lines (linewidth 0.4) are faint but visible.
+        comment: Saturation hero prominent; blue dotted volume lines slightly faint
+          on dark surface
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette, CVD-safe, adequate contrast; no red-green-as-sole-signal.
+        comment: Distinct CVD-safe Imprint hues + linetype differentiation
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 valid (gate passed). Right-side y-axis is correct psychrometric
-          convention; nothing clipped.
+        comment: Canvas gate passed; right-side y-axis is conventional for psychro
+          charts; nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; subtitle states pressure assumption.
+        comment: Descriptive axis titles with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First/hero series #009E73; Imprint hues; backgrounds #FAF8F1/#1A1A17;
-          both themes correct.'
+        comment: 'Hero series #009E73; Imprint hues; correct theme backgrounds both
+          renders'
     design_excellence:
-      score: 16
+      score: 17
       max: 20
       items:
       - id: DE-01
@@ -120,22 +111,20 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Highly sophisticated multi-family overlay with intentional hierarchy,
-          well above generic defaults.
+        comment: Semantic palette, direct labeling, hero saturation curve, colour-keyed
+          descriptors
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle grid, panel border, theme tokens; chart is inherently dense
-          so whitespace is limited (acceptable for the chart type).
+        comment: Subtle grid, panel border, considered linetypes and whitespace
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: 'Clear focal points: hero saturation curve, red process path, highlighted
-          comfort zone.'
+        comment: Comfort zone + red emphasised process path create a clear focal point
     spec_compliance:
       score: 15
       max: 15
@@ -145,28 +134,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct psychrometric chart.
+        comment: Correct psychrometric chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Saturation, RH 10-100%, wet-bulb, enthalpy, specific-volume, process
-          arrow, comfort zone, direct labels — all present.
+        comment: Saturation, RH curves, wet-bulb, enthalpy, specific volume, comfort
+          zone, process arrow, direct labels all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Dry-bulb on x, humidity ratio on y; full -10..50 C / 0..30 g/kg range
-          shown.
+        comment: Dry-bulb on x, humidity ratio on y
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches 'psychrometric-basic · r · ggplot2 · anyplot.ai'; direct
-          on-chart labels as spec requires.
+        comment: Title format correct; direct on-chart labels per spec
     data_quality:
       score: 15
       max: 15
@@ -176,20 +163,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All psychrometric property families represented.
+        comment: All property families covered
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: ASHRAE-style formulas at sea level; neutral, plausible engineering
-          content.
+        comment: ASHRAE formulas at sea level; neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible domain ranges and property-line spacing.
+        comment: -10..50°C, 0..30 g/kg — standard chart range
     code_quality:
       score: 9
       max: 10
@@ -199,34 +185,34 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Four small helper functions for the psychrometric math — justified
-          but slightly deviates from strict no-functions preference.
+        comment: Small domain helper functions present but justified for psychrometric
+          math
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic (closed-form computed data).
+        comment: Fully deterministic (computed, no RNG)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ggplot2, dplyr, ragg — all used.
+        comment: ggplot2, dplyr, ragg all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-commented; no fake UI.
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{theme}.png via ragg::agg_png.
+        comment: Saves plot-{THEME}.png via ragg
     library_features:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -234,29 +220,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Layered geoms, scales, theme composition — idiomatic grammar-of-graphics.
+        comment: Clean layered grammar-of-graphics, scales, theme tokens
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Right-positioned y-axis, arrow-tipped geom_segment, geom_polygon
-          comfort zone, direct labeling — distinctive ggplot2 layering.
+        comment: coord_cartesian clipping, right-axis position, expansion, geom_text
+          direct labeling
   verdict: APPROVED
 impl_tags:
   dependencies:
   - dplyr
-  - ragg
   techniques:
   - annotations
   - layer-composition
   - manual-ticks
-  - custom-legend
+  - direct-labeling
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
-  - interpolation
+  - psychrometric-equations
+  - region-clipping
   styling:
   - publication-ready
-  - alpha-blending
+  - theme-adaptive
+  - semantic-palette
