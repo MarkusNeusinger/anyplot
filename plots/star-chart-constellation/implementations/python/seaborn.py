@@ -1,17 +1,33 @@
-""" pyplots.ai
+"""anyplot.ai
 star-chart-constellation: Star Chart with Constellations
 Library: seaborn 0.13.2 | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-18
 """
+
+import os
 
 import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.cm import ScalarMappable
+from matplotlib.colors import LinearSegmentedColormap, Normalize
 
 
-# Data - Major stars with approximate RA (hours) and Dec (degrees)
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+ANYPLOT_AMBER = "#DDCC77"  # warning/caution anchor — reused here for the Sun's ecliptic path
+
+# Imprint sequential cmap (single-polarity continuous: brand green -> blue) for magnitude
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
+
+# Data - Major stars with RA (hours), Dec (degrees), apparent magnitude, IAU constellation
 np.random.seed(42)
 
 stars = {
@@ -108,30 +124,32 @@ stars = {
     "Almach": (2.06, 42.33, 2.17, "And"),
 }
 
-# Convert to DataFrame
 star_names = list(stars.keys())
-ra_hours = [stars[s][0] for s in star_names]
-dec_deg = [stars[s][1] for s in star_names]
-magnitudes = [stars[s][2] for s in star_names]
-constellations = [stars[s][3] for s in star_names]
-
 df = pd.DataFrame(
-    {"name": star_names, "ra": ra_hours, "dec": dec_deg, "mag": magnitudes, "constellation": constellations}
+    {
+        "name": star_names,
+        "ra": [stars[s][0] for s in star_names],
+        "dec": [stars[s][1] for s in star_names],
+        "mag": [stars[s][2] for s in star_names],
+        "constellation": [stars[s][3] for s in star_names],
+    }
 )
 
-# Add ~200 fainter background stars
+# Add ~200 fainter background stars (mag <= 5.5 keeps the chart uncluttered)
 n_bg = 200
-bg_ra = np.random.uniform(0, 24, n_bg)
-bg_dec = np.random.uniform(-45, 70, n_bg)
-bg_mag = np.random.uniform(3.5, 5.5, n_bg)
 bg_df = pd.DataFrame(
-    {"name": [f"BG{i}" for i in range(n_bg)], "ra": bg_ra, "dec": bg_dec, "mag": bg_mag, "constellation": "---"}
+    {
+        "name": [f"BG{i}" for i in range(n_bg)],
+        "ra": np.random.uniform(0, 24, n_bg),
+        "dec": np.random.uniform(-45, 70, n_bg),
+        "mag": np.random.uniform(3.5, 5.5, n_bg),
+        "constellation": "---",
+    }
 )
 df = pd.concat([df, bg_df], ignore_index=True)
 
-# Constellation edges (pairs of star names)
+# Constellation stick-figure edges (pairs of star names)
 edges = [
-    # Orion
     ("Betelgeuse", "Bellatrix"),
     ("Bellatrix", "Mintaka"),
     ("Mintaka", "Alnilam"),
@@ -140,7 +158,6 @@ edges = [
     ("Bellatrix", "Rigel"),
     ("Alnitak", "Saiph"),
     ("Saiph", "Rigel"),
-    # Ursa Major
     ("Dubhe", "Merak"),
     ("Merak", "Phecda"),
     ("Phecda", "Megrez"),
@@ -148,88 +165,70 @@ edges = [
     ("Alioth", "Mizar"),
     ("Mizar", "Alkaid"),
     ("Megrez", "Dubhe"),
-    # Cassiopeia
     ("Caph", "Schedar"),
     ("Schedar", "Gamma Cas"),
     ("Gamma Cas", "Ruchbah"),
     ("Ruchbah", "Segin"),
-    # Leo
     ("Regulus", "Eta Leo"),
     ("Eta Leo", "Algieba"),
     ("Algieba", "Zosma"),
     ("Zosma", "Denebola"),
     ("Regulus", "Chertan"),
     ("Chertan", "Denebola"),
-    # Cygnus
     ("Deneb", "Sadr"),
     ("Sadr", "Gienah Cyg"),
     ("Sadr", "Delta Cyg"),
     ("Sadr", "Albireo"),
-    # Gemini
     ("Castor", "Pollux"),
     ("Castor", "Mebsuta"),
     ("Mebsuta", "Tejat"),
     ("Pollux", "Wasat"),
     ("Wasat", "Alhena"),
     ("Tejat", "Alhena"),
-    # Taurus
     ("Aldebaran", "Lambda Tau"),
     ("Aldebaran", "Elnath"),
     ("Aldebaran", "Alcyone"),
     ("Elnath", "Tianguan"),
-    # Lyra
     ("Vega", "Sheliak"),
     ("Vega", "Sulafat"),
     ("Sheliak", "Sulafat"),
     ("Vega", "Delta2 Lyr"),
-    # Aquila
     ("Altair", "Tarazed"),
     ("Altair", "Alshain"),
-    # Scorpius
     ("Graffias", "Dschubba"),
     ("Dschubba", "Antares"),
     ("Antares", "Epsilon Sco"),
     ("Epsilon Sco", "Mu1 Sco"),
     ("Mu1 Sco", "Shaula"),
     ("Shaula", "Sargas"),
-    # Bootes
     ("Arcturus", "Izar"),
     ("Arcturus", "Muphrid"),
     ("Izar", "Nekkar"),
-    # Perseus
     ("Mirfak", "Delta Per"),
     ("Mirfak", "Epsilon Per"),
     ("Epsilon Per", "Zeta Per"),
     ("Mirfak", "Algol"),
-    # Auriga
     ("Capella", "Menkalinan"),
     ("Menkalinan", "Theta Aur"),
     ("Theta Aur", "Iota Aur"),
     ("Iota Aur", "Capella"),
-    # Canis Major
     ("Sirius", "Mirzam"),
     ("Sirius", "Adhara"),
     ("Adhara", "Wezen"),
     ("Wezen", "Aludra"),
-    # Andromeda
     ("Alpheratz", "Mirach"),
     ("Mirach", "Almach"),
 ]
 
-# Convert RA (hours) to degrees for plotting
-df["ra_deg"] = df["ra"] * 15.0
-
-# Invert magnitude for sizing: brighter stars (lower mag) get larger markers
+# Invert magnitude for sizing: brighter stars (lower mag) -> larger markers.
+# Named stars use the full size range; faint background stars stay small and subtle.
+named_mask = df["constellation"] != "---"
 mag_min, mag_max = df["mag"].min(), df["mag"].max()
-df["size"] = np.interp(df["mag"], [mag_min, mag_max], [500, 15])
+df["size"] = np.interp(df["mag"], [mag_min, mag_max], [430, 14])
+df.loc[~named_mask, "size"] = np.interp(df.loc[~named_mask, "mag"], [3.5, 5.5], [40, 8])
 
-# Bin magnitudes for legend-friendly seaborn hue mapping
-mag_bins = [-2, 1.0, 2.0, 3.0, 6.0]
-mag_labels = ["< 1.0 (brightest)", "1.0 – 2.0", "2.0 – 3.0", "> 3.0 (faintest)"]
-df["mag_class"] = pd.cut(df["mag"], bins=mag_bins, labels=mag_labels)
-
-# Build star lookup for edges
-star_lookup = df.set_index("name")[["ra_deg", "dec"]].to_dict("index")
+# Star lookup for edges, in RA-hour / Dec-degree space
+star_lookup = df[named_mask].set_index("name")[["ra", "dec"]].to_dict("index")
 
 # Constellation label positions (centroid of each constellation's stars)
 constellation_names = {
@@ -249,68 +248,58 @@ constellation_names = {
     "CMa": "Canis Major",
     "And": "Andromeda",
 }
-named_stars = df[df["constellation"] != "---"]
-centroids = named_stars.groupby("constellation")[["ra_deg", "dec"]].mean()
+centroids = df[named_mask].groupby("constellation")[["ra", "dec"]].mean()
 
-# Plot setup - use seaborn's context scaling for consistent sizing
+# Plot - seaborn handles the theming and the magnitude-mapped star field
 sns.set_theme(
-    style="dark",
-    context="talk",
-    font_scale=1.0,
+    style="ticks",
+    context="notebook",
     rc={
-        "axes.facecolor": "#070b22",
-        "figure.facecolor": "#070b22",
-        "grid.color": "#151e48",
-        "text.color": "#d0d8f0",
-        "axes.edgecolor": "#2a3570",
-        "axes.labelcolor": "#d0d8f0",
-        "xtick.color": "#8090c0",
-        "ytick.color": "#8090c0",
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
         "font.family": "sans-serif",
     },
 )
 
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 
-# Draw Milky Way band as a faint filled region (approximate galactic plane)
-# The Milky Way crosses the sky roughly through Cygnus, Cassiopeia, and Canis Major
-mw_ra = np.linspace(0, 360, 200)
-mw_center_dec = 25 * np.sin(np.radians(mw_ra * 1.0 - 80)) + 5
+# Milky Way band as a faint filled region (approximate galactic plane)
+mw_ra = np.linspace(0, 24, 200)
+mw_center_dec = 25 * np.sin(np.radians(mw_ra * 15 - 80)) + 5
 mw_width = 18
-ax.fill_between(
-    mw_ra, mw_center_dec - mw_width, mw_center_dec + mw_width, color="#1a2244", alpha=0.35, zorder=0, label="_nolegend_"
-)
+ax.fill_between(mw_ra, mw_center_dec - mw_width, mw_center_dec + mw_width, color=INK_MUTED, alpha=0.10, zorder=0)
 
-# Draw ecliptic line as dashed curve (approximate)
-ecl_ra = np.linspace(0, 360, 300)
-ecl_dec = 23.44 * np.sin(np.radians(ecl_ra - 90))
-ax.plot(ecl_ra, ecl_dec, color="#665533", linewidth=1.2, linestyle="--", alpha=0.5, zorder=1, label="_nolegend_")
+# Ecliptic (the Sun's apparent path) as a dashed amber curve
+ecl_ra = np.linspace(0, 24, 300)
+ecl_dec = 23.44 * np.sin(np.radians(ecl_ra * 15 - 90))
+ax.plot(ecl_ra, ecl_dec, color=ANYPLOT_AMBER, linewidth=1.1, linestyle="--", alpha=0.6, zorder=1)
 
-# Draw RA/Dec grid with subtle styling
-for ra_line in range(0, 360, 30):
-    ax.axvline(x=ra_line, color="#151e48", linewidth=0.4, alpha=0.7, zorder=0)
-for dec_line in range(-60, 90, 15):
-    ax.axhline(y=dec_line, color="#151e48", linewidth=0.4, alpha=0.7, zorder=0)
+# Subtle RA/Dec coordinate grid
+for ra_line in range(0, 25, 2):
+    ax.axvline(x=ra_line, color=INK, linewidth=0.4, alpha=0.10, zorder=0)
+for dec_line in range(-45, 76, 15):
+    ax.axhline(y=dec_line, color=INK, linewidth=0.4, alpha=0.10, zorder=0)
 
-# Constellation stick-figure lines with glow effect
+# Constellation stick-figure lines (thin, semi-transparent) with a soft glow
 for s1, s2 in edges:
     if s1 in star_lookup and s2 in star_lookup:
-        x1, y1 = star_lookup[s1]["ra_deg"], star_lookup[s1]["dec"]
-        x2, y2 = star_lookup[s2]["ra_deg"], star_lookup[s2]["dec"]
-        # Outer glow
-        ax.plot([x1, x2], [y1, y2], color="#3a5f9f", linewidth=2.5, alpha=0.15, zorder=1)
-        # Inner line
-        ax.plot([x1, x2], [y1, y2], color="#5580bb", linewidth=0.9, alpha=0.55, zorder=1)
+        x1, y1 = star_lookup[s1]["ra"], star_lookup[s1]["dec"]
+        x2, y2 = star_lookup[s2]["ra"], star_lookup[s2]["dec"]
+        ax.plot([x1, x2], [y1, y2], color=INK_SOFT, linewidth=2.6, alpha=0.14, zorder=1)
+        ax.plot([x1, x2], [y1, y2], color=INK_SOFT, linewidth=0.9, alpha=0.55, zorder=1)
 
-# Background stars using seaborn scatterplot
-bg_mask = df["constellation"] == "---"
+# Background field stars via seaborn
 sns.scatterplot(
-    data=df[bg_mask],
-    x="ra_deg",
+    data=df[~named_mask],
+    x="ra",
     y="dec",
-    size="size",
-    sizes=(4, 22),
-    color="#7788aa",
+    s=df.loc[~named_mask, "size"],
+    color=INK_MUTED,
     alpha=0.35,
     edgecolor="none",
     legend=False,
@@ -318,80 +307,57 @@ sns.scatterplot(
     zorder=2,
 )
 
-# Named constellation stars with seaborn hue-based categorical color mapping
-mag_palette = {
-    "< 1.0 (brightest)": "#fffce0",
-    "1.0 – 2.0": "#f0d060",
-    "2.0 – 3.0": "#c87830",
-    "> 3.0 (faintest)": "#804020",
-}
-named_df = df[~bg_mask].copy()
-
+# Named constellation stars via seaborn — colour encodes apparent magnitude (Imprint sequential)
 sns.scatterplot(
-    data=named_df,
-    x="ra_deg",
+    data=df[named_mask],
+    x="ra",
     y="dec",
-    hue="mag_class",
-    hue_order=mag_labels,
-    size="size",
-    sizes=(30, 500),
-    palette=mag_palette,
-    edgecolor="white",
-    linewidth=0.5,
+    hue="mag",
+    palette=imprint_seq,
+    hue_norm=(mag_min, mag_max),
+    s=df.loc[named_mask, "size"],
+    edgecolor=PAGE_BG,
+    linewidth=0.6,
     alpha=0.95,
+    legend=False,
     ax=ax,
     zorder=3,
 )
 
-# Style the legend - filter to only show magnitude class entries
-handles, labels = ax.get_legend_handles_labels()
-hue_handles = []
-hue_labels = []
-for handle, label_text in zip(handles, labels, strict=False):
-    if label_text in mag_palette:
-        hue_handles.append(handle)
-        hue_labels.append(label_text)
-legend = ax.legend(
-    hue_handles,
-    hue_labels,
-    title="Apparent Magnitude",
-    loc="lower left",
-    fontsize=12,
-    title_fontsize=14,
-    framealpha=0.4,
-    facecolor="#0a0e2a",
-    edgecolor="#2a3570",
-    labelcolor="#d0d8f0",
-    borderpad=1.0,
-    handletextpad=0.8,
-)
-legend.get_title().set_color("#d0d8f0")
+# Magnitude colourbar (brighter stars sit at the top)
+norm = Normalize(vmin=mag_min, vmax=mag_max)
+sm = ScalarMappable(cmap=imprint_seq, norm=norm)
+cbar = fig.colorbar(sm, ax=ax, fraction=0.024, pad=0.015)
+cbar.set_label("Apparent magnitude", fontsize=10, color=INK)
+cbar.ax.invert_yaxis()
+cbar.ax.tick_params(labelsize=8, color=INK_SOFT, labelcolor=INK_SOFT)
+cbar.outline.set_edgecolor(INK_SOFT)
+cbar.outline.set_linewidth(0.5)
 
-# Constellation labels with carefully tuned offsets to avoid all overlaps
-text_stroke = [pe.withStroke(linewidth=3, foreground="#070b22")]
+# Constellation name labels near each centroid
+text_stroke = [pe.withStroke(linewidth=2.5, foreground=PAGE_BG)]
 label_offsets = {
     "CMa": (0, -10),
-    "Lyr": (-15, 5),
+    "Lyr": (-1.1, 6),
     "Aql": (0, -8),
     "Sco": (0, -9),
-    "Aur": (-10, 7),
-    "Per": (0, 8),
-    "Ori": (0, -8),
-    "Tau": (-10, -6),
-    "Gem": (0, 6),
+    "Aur": (1.1, -11),
+    "Per": (0.5, 10),
+    "Ori": (-1.2, -12),
+    "Tau": (-0.9, -6),
+    "Gem": (0, 7),
     "And": (0, 6),
     "Boo": (0, 7),
 }
 for abbr, row in centroids.iterrows():
-    label = constellation_names.get(abbr, abbr)
     dx, dy = label_offsets.get(abbr, (0, 4))
     ax.text(
-        row["ra_deg"] + dx,
+        row["ra"] + dx,
         row["dec"] + dy,
-        label,
-        fontsize=13,
-        color="#7a9acc",
-        alpha=0.9,
+        constellation_names.get(abbr, abbr),
+        fontsize=9,
+        color=INK_SOFT,
+        alpha=0.95,
         ha="center",
         va="bottom",
         fontweight="bold",
@@ -400,27 +366,27 @@ for abbr, row in centroids.iterrows():
         zorder=4,
     )
 
-# Label brightest stars (mag < 1.0) with carefully adjusted offsets to avoid overlaps
-brightest = df[(df["mag"] < 1.0) & (df["constellation"] != "---")]
+# Label the brightest stars (mag < 1.0)
+brightest = df[(df["mag"] < 1.0) & named_mask]
 star_label_offsets = {
-    "Sirius": (7, 4),
-    "Vega": (6, 4),
-    "Capella": (6, 4),
-    "Arcturus": (6, -3),
-    "Altair": (6, 4),
-    "Aldebaran": (6, -5),
-    "Rigel": (6, 4),
-    "Betelgeuse": (-5, -5),
+    "Sirius": (-0.45, 4),
+    "Vega": (0.4, 4),
+    "Capella": (0.4, 4),
+    "Arcturus": (0.4, -3),
+    "Altair": (0.4, 4),
+    "Aldebaran": (0.4, -5),
+    "Rigel": (0.4, 4),
+    "Betelgeuse": (-0.35, -5),
 }
 for _, star in brightest.iterrows():
-    dx, dy = star_label_offsets.get(star["name"], (4, -3))
+    dx, dy = star_label_offsets.get(star["name"], (0.3, -3))
     ax.text(
-        star["ra_deg"] + dx,
+        star["ra"] + dx,
         star["dec"] + dy,
         star["name"],
-        fontsize=11,
-        color="#d0daf0",
-        alpha=0.85,
+        fontsize=8,
+        color=INK,
+        alpha=0.9,
         ha="left",
         va="top",
         fontweight="medium",
@@ -428,39 +394,32 @@ for _, star in brightest.iterrows():
         zorder=4,
     )
 
-# Axes styling
-ax.set_xlim(360, 0)
+# Style — RA shown in hours (matches the hour-labelled ticks), Dec in degrees
+ax.set_xlim(24, 0)
 ax.set_ylim(-50, 72)
-ax.set_xlabel("Right Ascension (°)", fontsize=20)
-ax.set_ylabel("Declination (°)", fontsize=20)
-ax.set_title("star-chart-constellation · seaborn · pyplots.ai", fontsize=24, fontweight="bold", color="#e0e8ff", pad=20)
+ax.set_xlabel("Right Ascension (h)", fontsize=11, color=INK)
+ax.set_ylabel("Declination (°)", fontsize=11, color=INK)
+ax.set_title(
+    "star-chart-constellation · python · seaborn · anyplot.ai", fontsize=13, fontweight="medium", color=INK, pad=18
+)
 ax.text(
     0.5,
     1.01,
-    "Azimuthal Equidistant Projection  ·  North Celestial Pole at Center  ·  Ecliptic (dashed) & Milky Way (shaded)",
+    "Equirectangular RA–Dec chart  ·  Ecliptic (dashed) & Milky Way (band)",
     transform=ax.transAxes,
-    fontsize=12,
-    color="#7080a0",
+    fontsize=9,
+    color=INK_MUTED,
     ha="center",
     va="bottom",
 )
-ax.tick_params(axis="both", labelsize=16)
 
-ra_ticks = np.arange(0, 361, 30)
-ra_labels_text = [f"{int(h)}h" for h in ra_ticks / 15]
-ax.set_xticks(ra_ticks)
-ax.set_xticklabels(ra_labels_text)
+ax.set_xticks(np.arange(0, 25, 2))
+ax.set_xticklabels([f"{h}h" for h in range(0, 25, 2)])
+ax.set_yticks(np.arange(-45, 76, 15))
+ax.set_yticklabels([f"{d:+d}°" for d in range(-45, 76, 15)])
+ax.tick_params(axis="both", labelsize=9)
 
-dec_ticks = np.arange(-45, 76, 15)
-dec_labels_text = [f"{d:+d}°" for d in dec_ticks]
-ax.set_yticks(dec_ticks)
-ax.set_yticklabels(dec_labels_text)
+sns.despine(ax=ax)
 
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.spines["bottom"].set_linewidth(0.5)
-ax.spines["left"].set_linewidth(0.5)
-
-# Save
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
