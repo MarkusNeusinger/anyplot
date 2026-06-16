@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sparkline-basic: Basic Sparkline
 Library: plotly 6.8.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-16
@@ -41,7 +41,7 @@ fig.add_trace(
         x=days,
         y=prices,
         mode="lines",
-        line={"color": BRAND, "width": 5, "shape": "spline", "smoothing": 0.6},
+        line={"color": BRAND, "width": 4, "shape": "spline", "smoothing": 0.6},
         fill="tozeroy",
         fillcolor=AREA_FILL,
         hovertemplate="Day %{x}<br>$%{y:.2f}<extra></extra>",
@@ -73,13 +73,16 @@ fig.add_trace(
     )
 )
 
-# Current (last) value — emphasized endpoint in brand green
+# Current (last) value — emphasized endpoint in brand green with a value label
 fig.add_trace(
     go.Scatter(
         x=[days[-1]],
         y=[prices[-1]],
-        mode="markers",
+        mode="markers+text",
         marker={"color": BRAND, "size": 22, "line": {"color": PAGE_BG, "width": 3}},
+        text=[f"${prices[-1]:.0f}"],
+        textposition="top center",
+        textfont={"color": BRAND, "size": 18},
         hovertemplate="Current $%{y:.2f}<extra></extra>",
         name="Current",
     )
@@ -103,7 +106,7 @@ fig.update_layout(
         "zeroline": False,
         "showticklabels": False,
         "range": [prices.min() - pad, prices.max() + pad],
-        "domain": [0.28, 0.66],  # compress the line into a wide, short sparkline band
+        "domain": [0.36, 0.72],  # compress the line into a wide, short sparkline band
     },
     showlegend=False,
     paper_bgcolor=PAGE_BG,
