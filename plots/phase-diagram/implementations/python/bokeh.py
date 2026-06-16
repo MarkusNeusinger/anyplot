@@ -96,7 +96,7 @@ p.ygrid.grid_line_alpha = 0.10
 p.outline_line_color = INK_SOFT
 
 # Okabe-Ito colors for trajectories (first series is BRAND, then alternates)
-traj_colors = [BRAND, "#D55E00", "#0072B2", "#CC79A7"]
+traj_colors = [BRAND, "#C475FD", "#4467A3", "#BD8233"]
 
 color_mapper = LinearColorMapper(palette=Viridis256, low=0, high=1)
 

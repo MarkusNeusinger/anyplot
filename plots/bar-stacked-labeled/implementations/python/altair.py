@@ -23,7 +23,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Quarterly revenue by product category
 data = pd.DataFrame(
@@ -49,7 +49,7 @@ bars = (
         color=alt.Color(
             "product:N",
             title="Product",
-            scale=alt.Scale(domain=["Software", "Hardware", "Services"], range=OKABE_ITO),
+            scale=alt.Scale(domain=["Software", "Hardware", "Services"], range=IMPRINT),
             legend=alt.Legend(titleFontSize=20, labelFontSize=18, symbolSize=300),
         ),
         order=alt.Order("product:N", sort="ascending"),

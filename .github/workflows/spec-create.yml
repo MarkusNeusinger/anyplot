@@ -52,7 +52,7 @@ jobs:
 
       - name: Checkout repository
         if: steps.check.outputs.should_run == 'true'
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
         with:
           fetch-depth: 0
 
@@ -69,7 +69,7 @@ jobs:
         id: process
         continue-on-error: true
         timeout-minutes: 30
-        uses: anthropics/claude-code-action@24492741e0ccfdef4c1d19da8e11e0f373d07494  # v1
+        uses: anthropics/claude-code-action@11ba60486e4aec9ddfeafcf4bb3f00b028ac2c16  # v1
         env:
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
@@ -178,7 +178,7 @@ jobs:
         if: steps.check.outputs.should_run == 'true' && steps.process.outcome == 'failure'
         id: process_retry
         timeout-minutes: 30
-        uses: anthropics/claude-code-action@24492741e0ccfdef4c1d19da8e11e0f373d07494  # v1
+        uses: anthropics/claude-code-action@11ba60486e4aec9ddfeafcf4bb3f00b028ac2c16  # v1
         env:
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
@@ -297,7 +297,7 @@ jobs:
           fi
 
           # Reserved spec slugs collide with top-level frontend routes.
-          # Keep this list in sync with `RESERVED_TOP_LEVEL` in app/src/utils/paths.ts.
+          # Keep this list in sync with `RESERVED_TOP_LEVEL` in app/src/routes/paths.ts.
           RESERVED_SLUGS=(plots specs libraries palette about legal mcp stats debug map api og sitemap.xml robots.txt)
           for reserved in "${RESERVED_SLUGS[@]}"; do
             if [[ "$SPEC_ID" == "$reserved" ]]; then
@@ -453,7 +453,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
 
       - name: Extract specification ID
         id: extract

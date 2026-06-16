@@ -4,11 +4,12 @@
  * Handles API calls, image shuffling, and pagination state.
  */
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
-import type { PlotImage, ActiveFilters, FilterCounts } from '../types';
-import { API_URL, BATCH_SIZE } from '../constants';
-import { shuffleArray } from '../utils/shuffle';
+import { BATCH_SIZE } from 'src/constants';
+import { apiGet, endpoints } from 'src/lib/api';
+import type { ActiveFilters, FilterCounts, PlotImage } from 'src/types';
+import { shuffleArray } from 'src/utils/shuffle';
 
 interface FilterFetchState {
   filterCounts: FilterCounts | null;
@@ -42,12 +43,20 @@ export function useFilterFetch({
   initialState = {},
   skipInitialFetch = false,
 }: UseFilterFetchOptions): UseFilterFetchReturn {
-  const [filterCounts, setFilterCounts] = useState<FilterCounts | null>(initialState.filterCounts ?? null);
-  const [globalCounts, setGlobalCounts] = useState<FilterCounts | null>(initialState.globalCounts ?? null);
+  const [filterCounts, setFilterCounts] = useState<FilterCounts | null>(
+    initialState.filterCounts ?? null
+  );
+  const [globalCounts, setGlobalCounts] = useState<FilterCounts | null>(
+    initialState.globalCounts ?? null
+  );
   const [orCounts, setOrCounts] = useState<Record<string, number>[]>(initialState.orCounts ?? []);
-  const [specTitles, setSpecTitles] = useState<Record<string, string>>(initialState.specTitles ?? {});
+  const [specTitles, setSpecTitles] = useState<Record<string, string>>(
+    initialState.specTitles ?? {}
+  );
   const [allImages, setAllImages] = useState<PlotImage[]>(initialState.allImages ?? []);
-  const [displayedImages, setDisplayedImages] = useState<PlotImage[]>(initialState.displayedImages ?? []);
+  const [displayedImages, setDisplayedImages] = useState<PlotImage[]>(
+    initialState.displayedImages ?? []
+  );
   const [hasMore, setHasMore] = useState(initialState.hasMore ?? false);
   const [loading, setLoading] = useState(!skipInitialFetch);
   const [error, setError] = useState<string>('');
@@ -88,13 +97,13 @@ export function useFilterFetch({
           }
         });
 
-        const queryString = params.toString();
-        const url = `${API_URL}/plots/filter${queryString ? `?${queryString}` : ''}`;
-
-        const response = await fetch(url, { signal: abortController.signal });
-        if (!response.ok) throw new Error('Failed to fetch filtered plots');
-
-        const data = await response.json();
+        const data = await apiGet<{
+          counts: FilterCounts;
+          globalCounts?: FilterCounts;
+          orCounts?: Record<string, number>[];
+          specTitles?: Record<string, string>;
+          images?: PlotImage[];
+        }>(endpoints.plotsFilter(params.toString()), { signal: abortController.signal });
 
         if (abortController.signal.aborted) return;
 

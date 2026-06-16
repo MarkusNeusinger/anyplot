@@ -1,56 +1,60 @@
 library: bokeh
+language: python
 specification_id: bar-basic
 created: '2025-12-23T00:23:36Z'
-updated: '2026-02-14T14:46:00Z'
-generated_by: claude-opus-4-6
-workflow_run: 20447578616
-issue: 0
-python_version: '3.14'
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-basic/bokeh/plot.html
+updated: '2026-05-28T09:45:15Z'
+generated_by: claude-sonnet
+workflow_run: 26566144953
+issue: 612
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-basic/python/bokeh/plot-dark.html
 quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - html-export
-  patterns:
-  - columndatasource
-  dataprep: []
-  styling:
-  - edge-highlighting
-  - grid-styling
 review:
   strengths:
-  - Excellent text sizing with all font sizes explicitly set well above minimums for
-    4800x2700 canvas
-  - 'Clean visual refinement: L-shaped frame, removed spines/ticks, subtle grid lines
-    at alpha=0.2'
-  - 'Strong Bokeh idioms: ColumnDataSource, LabelSet, NumeralTickFormatter, dual PNG+HTML
-    export'
-  - Well-formatted value labels ($38.2K) that aid quick reading
-  - Deterministic, realistic business data with good variation across categories
-  - Perfect spec compliance — all specification notes addressed
+  - All font sizes explicitly set (50pt title, 42pt axis labels, 34pt tick labels)
+    matching bokeh.md guidelines
+  - Alpha-based focal point (1.0 vs 0.55) creates intentional visual hierarchy highlighting
+    Sales as top performer
+  - Data sorted descending by value — transforms a plain bar chart into a clear ranking
+    visualization
+  - 'Full theme adaptation: both light (#FAF8F1) and dark (#1A1A17) renders are readable
+    with correct chrome tokens'
+  - 'Idiomatic Bokeh patterns: ColumnDataSource with named columns, categorical x_range,
+    LabelSet for value annotations, NumeralTickFormatter for currency, HoverTool for
+    native interactivity'
+  - 'Clean L-shaped frame: outline_line_color=None, tick marks removed, y-only subtle
+    grid (alpha=0.15)'
+  - HTML artifact output alongside PNG — HoverTool works in the interactive version
+  - Precise PIL crop approach to produce exactly 3200×1800 PNG (crop from oversized
+    window)
   weaknesses:
-  - No storytelling annotations (e.g., callout for highest/lowest department) — data
-    is displayed clearly but not interpreted
-  - Slight canvas imbalance with some wasted space on the right side
-  - Could benefit from a more distinctive color scheme or subtle gradient to elevate
-    beyond well-configured default
-  image_description: 'The plot shows a vertical bar chart titled "bar-basic · bokeh
-    · pyplots.ai" displaying quarterly revenue by department. Six blue bars (#306998
-    Python Blue) represent departments: Engineering ($38.2K), Marketing ($21.5K),
-    Sales ($45.8K), Support ($14.3K), Design ($27.6K), and Operations ($19.1K). Each
-    bar has a formatted dollar value label positioned above it in dark gray text.
-    The y-axis shows "Revenue ($)" with dollar-formatted ticks from $0 to $50,000.
-    The x-axis shows "Department" with category labels beneath each bar. The chart
-    uses a clean L-shaped frame with top and right spines removed, subtle horizontal
-    grid lines at low opacity, white bar edge lines for definition, and a white background.
-    The layout fills the 4800×2700 canvas well with balanced proportions.'
+  - Axis labels ('Department', 'Quarterly Revenue ($)') are rendered in Bokeh's default
+    italic style — overriding axis_label_text_font_style='normal' on both axes would
+    better match the design intent and improve typography hierarchy
+  - 'DE-01 not yet at publication quality: alpha differentiation is a good focal point
+    but the overall aesthetic could be strengthened with bolder weight differentiation
+    (e.g. thicker bar edges or explicit font-weight=''bold'' on the title)'
+  - DE-03 storytelling is good but could be enhanced — e.g. a subtle annotation on
+    the top bar ('Highest Revenue') would make the insight explicit for catalog users
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot surface, not pure white.
+      Chrome: Title "bar-basic · python · bokeh · anyplot.ai" centered in bold dark ink (~65% canvas width). Y-axis label "Quarterly Revenue ($)" and x-axis label "Department" in dark ink (italic, Bokeh default). Tick labels in INK_SOFT (#4A4A44) medium gray. All chrome elements clearly readable.
+      Data: 6 vertical bars sorted descending (Sales > Engineering > Design > Marketing > Operations > Support). First bar (Sales) in full #009E73 brand green at alpha=1.0, remaining 5 bars at alpha=0.55 (muted teal). Value labels "$45.8K", "$38.2K", "$27.6K", "$21.5K", "$19.1K", "$14.3K" rendered above each bar in INK_SOFT gray. Y-axis tick labels formatted as $0/$10,000/$20,000 etc. via NumeralTickFormatter. Subtle horizontal grid lines at y-axis tick positions. No right/top spines, no tick marks.
+      Legibility verdict: PASS — all text readable against the warm off-white background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface, not pure black.
+      Chrome: Title in light off-white (#F0EFE8 INK token) — clearly readable. Axis labels and tick labels in appropriate light colors (INK and INK_SOFT dark-mode tokens). No dark-on-dark text failures detected.
+      Data: Bars use identical colors to the light render — Sales bar in #009E73 at alpha=1.0, remaining bars at alpha=0.55. The alpha compositing on dark background produces a darker muted green for secondary bars (expected behavior). Value labels appear in #B8B7B0 (INK_SOFT dark token) — readable against the dark background. Grid lines faint but visible.
+      Legibility verdict: PASS — all text clearly readable against the dark background. No dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -58,38 +62,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 36pt, axis labels 28pt, tick
-          labels 24pt, value labels 28pt'
+        comment: 'All font sizes explicitly set per bokeh.md: 50pt title, 42pt axis
+          labels, 34pt tick labels + value labels. Well-proportioned in both renders.
+          No overflow. Readable at desktop and mobile scale.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; 6 categories with adequate spacing
+        comment: No overlapping elements. Value labels above bars have sufficient
+          clearance. Bar spacing is generous.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars well-sized with width=0.7, alpha=0.9, white edge lines for definition
+        comment: Bars are clearly visible in both themes. Alpha differential (1.0
+          vs 0.55) still leaves secondary bars clearly distinguishable from background.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single hue (#009E73) with alpha variation — no hue-only CVD risk.
+          Brand green has adequate contrast against both backgrounds.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Single Python Blue color, no accessibility concern
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good layout but slight wasted space on right side
+        comment: 3200x1800 canvas confirmed. min_border values match bokeh.md canonical
+          values. Balanced margins. No content cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Department and Revenue ($) — descriptive with units
+        comment: 'Y-axis: ''Quarterly Revenue ($)'' with units. X-axis: ''Department''.
+          Title: correct spec format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (and only) series uses #009E73 brand green. Light bg #FAF8F1,
+          dark bg #1A1A17. All chrome tokens correctly theme-adapted. No forbidden
+          palette or cmap.'
     design_excellence:
       score: 13
       max: 20
@@ -99,21 +117,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clean design with Python Blue, white edges, removed spines — above
-          defaults but not FiveThirtyEight-level
+        comment: 'Clear design intent: alpha focal point emphasizes top bar, data
+          sorted for ranking clarity, value labels add precise reading. Above defaults
+          but not yet FiveThirtyEight-level.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, tick marks removed, subtle grid at alpha=0.2
+        comment: 'Explicit refinements: outline removed, tick marks removed, y-only
+          grid at alpha=0.15, L-shaped frame, NumeralTickFormatter for currency, bar
+          edge color=PAGE_BG for subtle separation. Good refinement.'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Value labels formatted as $XX.XK aid reading but no annotations highlighting
-          insights
+        comment: Sorted descending + alpha differential (1.0 vs 0.55) clearly guides
+          viewer to Sales as the top performer. Visual hierarchy creates a focal point
+          without annotations.
     spec_compliance:
       score: 15
       max: 15
@@ -123,48 +145,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct vertical bar chart
+        comment: Correct vertical bar chart with categorical x-axis.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Consistent bar widths, value labels, single color, adequate spacing
+        comment: Consistent bar widths, value labels above bars, single color scheme,
+          adequate bar spacing — all spec requirements met.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on X, values on Y, correctly assigned
+        comment: Categories on x-axis, values on y-axis. All 6 departments shown.
+          Y-axis starts at 0.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, no legend needed for single series
+        comment: Title 'bar-basic · python · bokeh · anyplot.ai' matches required
+          format. No legend needed (single series).
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 6 categories with non-monotonic pattern, good variation $14.3K to
-          $45.8K
+        comment: 'Shows all bar chart aspects: varying heights, value labels, sorted
+          ranking. 6 categories gives good coverage of the chart type.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Quarterly revenue by department — plausible neutral business scenario
+        comment: Quarterly revenue by department — real-world business scenario, neutral
+          and comprehensible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Revenue values $14K-$46K realistic for department quarterly figures
+        comment: Values $14.3K–$45.8K are realistic quarterly revenue ranges for a
+          medium-sized company. Proportions between departments are plausible.
     code_quality:
       score: 10
       max: 10
@@ -174,46 +201,68 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Plot → Style → Save, no functions/classes
+        comment: 'Linear structure: imports → theme tokens → data → figure → styling
+          → output. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data, no randomness
+        comment: Fully deterministic — hardcoded dictionary data, no random generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports are used: io (BytesIO), os (getenv/path), sys (path
+          fix), time (sleep), Path, bokeh models, PIL Image, selenium.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: Appropriate complexity. sys.path manipulation is a necessary fix
+          for bokeh.py filename shadowing. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, no deprecated functions
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Bokeh 3.9.0
+          API used.
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: ColumnDataSource, categorical x_range, vbar, LabelSet, NumeralTickFormatter
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource data model, LabelSet, NumeralTickFormatter, dual
-          PNG+HTML output
+        comment: Uses ColumnDataSource with named columns for hover template, categorical
+          x_range, vbar, LabelSet, NumeralTickFormatter, HoverTool — all Bokeh-recommended
+          patterns. Well above defaults.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: HoverTool provides native Bokeh interactivity (not possible in static
+          libs). Per-bar alpha via ColumnDataSource 'alpha' column mapping is distinctively
+          Bokeh. NumeralTickFormatter is Bokeh-specific.
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  - pillow
+  techniques:
+  - hover-tooltips
+  - html-export
+  - annotations
+  patterns:
+  - columndatasource
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

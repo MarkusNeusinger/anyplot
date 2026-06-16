@@ -1,116 +1,143 @@
 library: matplotlib
+language: python
 specification_id: gantt-dependencies
 created: '2026-01-15T21:03:31Z'
-updated: '2026-02-25T15:19:43Z'
-generated_by: claude-opus-4-6
-workflow_run: 21046151669
+updated: '2026-06-02T14:19:23Z'
+generated_by: claude-sonnet
+workflow_run: 26822548317
 issue: 3830
-python_version: '3.14'
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/matplotlib/plot.png
-preview_html: null
-quality_score: 90
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 83
 review:
   strengths:
-  - Critical path computation and red highlighting creates excellent data storytelling
-  - Comprehensive feature set including curved dependency arrows, phase groupings,
-    aggregate bars, and milestone marker
-  - Professional visual design with phase-specific color palette, removed spines,
-    subtle grid, and off-white background
-  - Differentiated bar heights for phases vs tasks creates clear visual hierarchy
-  - Realistic software development project data covers all aspects of the Gantt chart
-    with dependencies
+  - 'Critical path detection via Kahn''s topological sort + longest-path DP creates
+    real algorithmic value and meaningful visual hierarchy — semantic red #AE3030
+    applied consistently across bar borders, arrows, and milestone marker'
+  - 'Full Imprint palette compliance: first 4 positions for phases, semantic red for
+    critical path (intentional exception), correct themed chrome in both light and
+    dark renders'
+  - FancyArrowPatch with arc3 curvature and alternating sign for multi-predecessor
+    tasks elegantly handles converging arrows
+  - 'Complete spec compliance: all required features present with logically consistent
+    data and correct finish-to-start dependency direction'
+  - Excellent code quality with deterministic data, clean imports, and appropriate
+    inline complexity for the critical path algorithm
   weaknesses:
-  - Gold and orange phase colors are somewhat similar, may challenge deuteranopia
-    users
-  - Function definition for critical path breaks flat KISS script pattern
-  - np.random.seed(42) set but no random data generated (unnecessary)
-  - Uses plt.xticks() instead of axes method for tick rotation
-  image_description: 'The plot displays a horizontal Gantt chart for a software development
-    project spanning January through May 2024. Eighteen tasks are organized into four
-    color-coded phases: Requirements Phase (steel blue), Design Phase (gold/yellow),
-    Development Phase (orange), and Testing Phase (purple). Phase headers appear as
-    bold labels with thinner aggregate bars, while child tasks are indented with full-height
-    bars. Curved dependency arrows connect predecessor task endpoints to successor
-    task start points, with critical path edges highlighted in red (#B22222) and non-critical
-    dependencies in gray. A red diamond milestone marker appears at the project completion
-    date (May 10). The title reads "gantt-dependencies · matplotlib · pyplots.ai"
-    in bold dark text. The x-axis shows biweekly date ticks labeled "Timeline (2024)",
-    and the y-axis is labeled "Project Tasks". Top and right spines are removed, remaining
-    spines are light gray, and a subtle dashed vertical grid assists timeline reading.
-    A comprehensive legend in the upper right identifies all four phases, critical
-    path arrows, dependency arrows, and the milestone marker. The background is a
-    soft off-white (#FAFAFA).'
+  - Y-axis labels at 6.5pt are borderline at mobile scale; with 18 tasks on a 4.5-inch
+    figure they are tight and will appear very small (~4.5px rendered height) when
+    the chart is scaled to 400px mobile width — consider trimming to 14–15 tasks or
+    increasing figsize height to (8, 5)
+  - Dense dependency arrow cluster in the Requirements/Design Phase region (top third
+    of chart) creates visual noise where multiple crossing arrows overlap bars — consider
+    routing more aggressively through inter-bar gaps or filtering to show only the
+    4–5 most structurally important dependencies
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "gantt-dependencies · python · matplotlib · anyplot.ai" in dark INK (#1A1A17), readable. X-axis label "Timeline (2024)" and Y-axis label "Project Tasks" in INK at 10pt, clearly visible. X-tick labels at 8pt rotated 45°, readable. Y-tick labels at 6.5pt in INK_SOFT (#4A4A44) — tight for 18 tasks but legible at full resolution; phase headers bold in INK.
+      Data: Phase bars use Imprint positions 1–4: Requirements Phase #009E73 (brand green), Design Phase #C475FD (lavender), Development Phase #4467A3 (blue), Testing Phase #BD8233 (ochre). Critical-path bars have red (#AE3030) edges and higher alpha; dependency arrows in matching colors. Diamond milestone marker in #AE3030 at project end.
+      Legibility verdict: PASS (some minor crowding in y-labels but all readable at full resolution)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title and axis labels in light INK (#F0EFE8), clearly visible against dark background. Y-tick labels in INK_SOFT (#B8B7B0) — light colored, readable. X-tick labels in INK_SOFT, readable. Legend text in INK_SOFT with elevated dark frame (#242420). Bottom spine in dark INK_SOFT.
+      Data: All Imprint palette colors identical to light render — #009E73, #C475FD, #4467A3, #BD8233, #AE3030 all confirmed the same. Chrome only has flipped.
+      Legibility verdict: PASS — no dark-on-dark failures detected; all text elements have sufficient contrast against #1A1A17.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 23
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 5
         max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt all explicitly set. Legend 14pt
-          still legible.
+        comment: All font sizes explicitly set (title 12pt, axis labels 10pt, x-ticks
+          8pt, y-ticks 6.5pt, legend 7pt). Y-axis labels at 6.5pt are tight for 18
+          tasks and borderline at mobile scale (~4.5px rendered height at 400px viewport).
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: No text overlap. Y-axis labels well-spaced, x-axis dates rotated,
-          legend clear of data.
+        comment: Minor crowding in y-axis labels for Requirements/Design phase section
+          where phase headers and 3-4 child tasks cluster. Main data content readable;
+          no catastrophic collision.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All bars visible with appropriate heights. Some dependency arrows
-          blend where multiple cross same region.
+        comment: Gantt bars clearly visible with phase colors and differentiated critical-path
+          edges. Dependency arrows visible with correct opacity layering. Milestone
+          diamond prominent.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe. Critical path uses semantic red with
+          thickness+alpha redundancy. Non-critical arrows use lower-opacity neutral.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good 4-color palette but gold and orange may be difficult to distinguish
-          for deuteranopia.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 4
-        max: 4
-        passed: true
-        comment: Chart fills canvas well at 16x10 figsize. Balanced margins with tight_layout.
+        comment: Correct 3200x1800 canvas. subplots_adjust(left=0.25, right=0.98,
+          top=0.93, bottom=0.15) gives appropriate margins. 25% left margin accommodates
+          longest task label without clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Timeline (2024) with year context, Project Tasks descriptive label.
+        comment: X-axis 'Timeline (2024)' and Y-axis 'Project Tasks' are descriptive
+          with contextual information.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First phase uses #009E73, next three use Imprint positions 2-4 in
+          canonical order. Semantic red #AE3030 used intentionally for critical path.
+          Backgrounds #FAF8F1/#1A1A17 correct. All chrome tokens correctly themed
+          in both renders.'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom 4-color palette, critical path in red, phase/task height differentiation.
-          Clearly above defaults.
+        comment: 'Intentional visual hierarchy with differentiated bar heights, critical
+          path semantic highlighting, alternating row bands, and fully themed chrome.
+          Clearly above configured defaults. Falls short of publication-ready: dense
+          upper-left arrow region reduces visual clarity.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed, light gray remaining spines, subtle dashed grid at
-          alpha=0.15, off-white background.
+        comment: Three spines removed, bottom spine styled with INK_SOFT. Subtle x-axis
+          grid at alpha=0.15. Alternating row bands at alpha=0.04. Y-axis tick marks
+          hidden. Custom legend frame with elevated background.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Critical path in red creates immediate visual narrative. Milestone
-          diamond draws eye to completion. Bold phase headers establish hierarchy.
+        comment: 'Critical path visually encoded through four redundant cues: red
+          bar borders, red arrows, higher bar alpha, milestone marker. Phase color
+          consistency guides eye through project structure. Bold phase headers create
+          hierarchy.'
     spec_compliance:
       score: 15
       max: 15
@@ -120,28 +147,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Gantt chart with horizontal bars representing task timelines.
+        comment: Gantt chart with horizontal bars, dependency arrows, phase groupings,
+          and aggregate phase-level header bars. All subtypes present.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: dependency arrows, groupings, aggregate
-          bars, indentation, color coding, legend, correct scheduling.'
+        comment: Dependency arrows from right edge to left edge (finish-to-start),
+          critical vs non-critical styling, group headers with aggregate timelines,
+          color coding, legend, logically consistent task scheduling.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis maps tasks, x-axis maps timeline. Bar widths represent duration.
-          Dependencies connect correct endpoints.
+        comment: X-axis is timeline, Y-axis shows task hierarchy, bar widths encode
+          durations, bars start at correct dates.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. Legend identifies all phases, critical
-          path, dependency arrows, and milestone.
+        comment: 'Title exactly ''gantt-dependencies · python · matplotlib · anyplot.ai''.
+          Legend labels: phase names, Critical Path, Dependency, Milestone — all correct.'
     data_quality:
       score: 15
       max: 15
@@ -151,61 +180,64 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows 4 phases, sequential/parallel tasks, single/multiple dependencies,
-          cross-phase dependencies, critical path, milestone.
+        comment: 'Shows all Gantt-with-dependencies aspects: intra/inter-phase dependencies,
+          critical path detection, group header aggregation, milestone marker, parallel
+          and sequential task relationships.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Software development lifecycle is an ideal neutral real-world scenario
-          with recognizable task names.
+        comment: Software development project with authentic phases (Requirements,
+          Design, Development, Testing) and plausible task names. Neutral professional
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 5-month project timeline is realistic. Task durations of 1-2 weeks
-          are plausible.
+        comment: 5-month project timeline (Jan-May 2024) realistic for a medium software
+          project. Task durations of 1-6 weeks proportionate. Dependencies logically
+          consistent.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Follows Import-Data-Plot-Save but defines longest_path() recursive
-          function for critical path.
+        comment: 'Flat structure: imports → theme tokens → data → processing → plot
+          → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set and all data is deterministic via hardcoded
-          timestamps.
+        comment: Fully deterministic with hardcoded pd.Timestamp dates, no random
+          values.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: matplotlib.dates, pyplot, numpy, pandas, Line2D,
-          FancyArrowPatch, Patch.'
+        comment: 'All imports used: os, matplotlib.dates, matplotlib.pyplot, pandas,
+          Line2D, FancyArrowPatch, Patch.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Complexity appropriate for visualization. Critical path serves storytelling.
-          No fake UI.
+        comment: Kahn's topological sort + DP for critical path is appropriate for
+          inline code. No functions required.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300 bbox_inches=tight. Current matplotlib
-          API.
+        comment: Saves as plot-{THEME}.png at dpi=400. Uses axes methods exclusively.
+          No bbox_inches='tight'.
     library_mastery:
       score: 7
       max: 10
@@ -215,15 +247,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good axes methods, mdates formatting, FancyArrowPatch. Minor: plt.xticks()
-          instead of axes method.'
+        comment: ax.barh(), ax.axhspan(), mdates.DateFormatter/WeekdayLocator, plt.setp(),
+          fig.subplots_adjust(). All axes methods, no plt.* plotting calls.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: FancyArrowPatch with arc3 connectionstyle, mdates formatters/locators,
-          custom legend with Patch/Line2D.
+        comment: FancyArrowPatch with connectionstyle='arc3,rad=...' and arrowstyle='-|>'
+          for curved directional dependency arrows is genuinely matplotlib-specific.
+          Alternating arc curvature to separate converging arrows is a creative use
+          of the patch system.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -232,7 +266,6 @@ impl_tags:
   - patches
   - manual-ticks
   patterns:
-  - data-generation
   - iteration-over-groups
   - explicit-figure
   dataprep:

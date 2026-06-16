@@ -35,7 +35,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data: Employee performance scores by department and experience level
 np.random.seed(42)
@@ -76,7 +76,7 @@ df["Department"] = pd.Categorical(df["Department"], categories=departments, orde
 plot = (
     ggplot(df, aes(x="Department", y="Performance Score", fill="Experience"))
     + geom_boxplot(alpha=0.85, outlier_size=3, outlier_alpha=0.7, width=0.7)
-    + scale_fill_manual(values=OKABE_ITO)
+    + scale_fill_manual(values=IMPRINT)
     + labs(title="box-grouped · letsplot · anyplot.ai", x="Department", y="Performance Score", fill="Experience Level")
     + theme_minimal()
     + theme(

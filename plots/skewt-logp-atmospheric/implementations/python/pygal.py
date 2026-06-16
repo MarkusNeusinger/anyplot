@@ -24,9 +24,9 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 NEUTRAL = "#1A1A1A" if THEME == "light" else "#E8E8E0"  # position-8 adaptive neutral
 
-# Position 7 (yellow #F0E442) is prohibited for thin lines on light surfaces;
+# Position 7 (yellow #954477) is prohibited for thin lines on light surfaces;
 # replace with NEUTRAL for the -20°C isotherm reference line
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", NEUTRAL)
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", NEUTRAL)
 
 # Data — realistic mid-latitude atmospheric sounding
 np.random.seed(42)
@@ -69,7 +69,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=66,
     label_font_size=56,
     major_label_font_size=44,
@@ -109,11 +109,11 @@ chart = pygal.XY(
 temp_points = [(float(temp_skewed[i]), float(log_p[i])) for i in range(len(pressure))]
 chart.add("Temperature", temp_points, stroke_style={"width": 7})
 
-# Dewpoint profile (vermillion #D55E00 — series 2)
+# Dewpoint profile (vermillion #C475FD — series 2)
 dewpoint_points = [(float(dewpoint_skewed[i]), float(log_p[i])) for i in range(len(pressure))]
 chart.add("Dewpoint", dewpoint_points, stroke_style={"width": 6, "dasharray": "15,8"})
 
-# Dry adiabat θ=300K (blue #0072B2 — series 3)
+# Dry adiabat θ=300K (blue #4467A3 — series 3)
 theta = 300
 dry_adiabat_points = []
 for p in np.linspace(1000, 100, 30):
@@ -124,7 +124,7 @@ for p in np.linspace(1000, 100, 30):
         dry_adiabat_points.append((float(t_skewed), float(lp)))
 chart.add("Dry Adiabat θ=300K", dry_adiabat_points, show_dots=False, stroke_style={"width": 3, "dasharray": "6,4"})
 
-# Moist adiabat (reddish purple #CC79A7 — series 4, proper MALR integration)
+# Moist adiabat (reddish purple #BD8233 — series 4, proper MALR integration)
 moist_pressures = np.linspace(1000, 150, 25)
 moist_temps = moist_adiabat(20.0, moist_pressures)
 moist_points = []
@@ -135,7 +135,7 @@ for T_c, p in zip(moist_temps, moist_pressures, strict=False):
         moist_points.append((float(t_skewed), float(lp)))
 chart.add("Moist Adiabat", moist_points, show_dots=False, stroke_style={"width": 3, "dasharray": "10,5"})
 
-# Mixing ratio r=10g/kg (orange #E69F00 — series 5)
+# Mixing ratio r=10g/kg (orange #AE3030 — series 5)
 mr_points = []
 mr = 10
 for p in np.linspace(1000, 300, 20):
@@ -148,7 +148,7 @@ for p in np.linspace(1000, 300, 20):
             mr_points.append((float(td_skewed), float(lp)))
 chart.add("Mixing Ratio r=10g/kg", mr_points, show_dots=False, stroke_style={"width": 2, "dasharray": "4,6"})
 
-# 0°C Isotherm (sky blue #56B4E9 — series 6)
+# 0°C Isotherm (sky blue #2ABCCD — series 6)
 iso_0_points = []
 for lp in np.linspace(0, 1.0, 20):
     t_skewed = 0 + skew_factor * lp

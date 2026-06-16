@@ -29,7 +29,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette for hierarchy levels
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data: File system hierarchy with sizes (MB)
 data = [
@@ -119,7 +119,7 @@ while layout_queue:
 rect_df = pd.DataFrame(rects)
 
 # Color palette by depth using Okabe-Ito
-colors = {0: OKABE_ITO[0], 1: OKABE_ITO[1], 2: OKABE_ITO[2], 3: OKABE_ITO[3], 4: OKABE_ITO[4], 5: OKABE_ITO[5]}
+colors = {0: IMPRINT[0], 1: IMPRINT[1], 2: IMPRINT[2], 3: IMPRINT[3], 4: IMPRINT[4], 5: IMPRINT[5]}
 rect_df["fill_color"] = rect_df["depth"].map(colors)
 
 # Calculate label positions and widths
@@ -163,12 +163,12 @@ plot = (
     )
     + scale_fill_manual(
         values={
-            "Level 0 (Root)": OKABE_ITO[0],
-            "Level 1 (Folders)": OKABE_ITO[1],
-            "Level 2 (Subfolders)": OKABE_ITO[2],
-            "Level 3 (Groups)": OKABE_ITO[3],
-            "Level 4 (Items)": OKABE_ITO[4],
-            "Level 5 (Leaf)": OKABE_ITO[5],
+            "Level 0 (Root)": IMPRINT[0],
+            "Level 1 (Folders)": IMPRINT[1],
+            "Level 2 (Subfolders)": IMPRINT[2],
+            "Level 3 (Groups)": IMPRINT[3],
+            "Level 4 (Items)": IMPRINT[4],
+            "Level 5 (Leaf)": IMPRINT[5],
         },
         name="Hierarchy Level",
     )

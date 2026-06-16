@@ -26,7 +26,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"  # Okabe-Ito position 1 — ICE lines
-PDP_COLOR = "#D55E00"  # Okabe-Ito position 2 — PDP overlay
+PDP_COLOR = "#C475FD"  # Okabe-Ito position 2 — PDP overlay
 
 sns.set_theme(
     style="ticks",

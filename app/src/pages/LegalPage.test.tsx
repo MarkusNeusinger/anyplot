@@ -1,14 +1,15 @@
-import { describe, it, expect, vi } from 'vitest';
 import { fireEvent } from '@testing-library/react';
-import { render, screen } from '../test-utils';
-import { LegalPage } from './LegalPage';
+import { describe, expect, it, vi } from 'vitest';
+
+import { LegalPage } from 'src/pages/LegalPage';
+import { render, screen } from 'src/test-utils';
 
 vi.mock('react-helmet-async', () => ({
   Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 const trackEvent = vi.fn();
-vi.mock('../hooks', () => ({
+vi.mock('src/hooks', () => ({
   useAnalytics: () => ({
     trackPageview: vi.fn(),
     trackEvent: (...args: unknown[]) => trackEvent(...args),
@@ -20,7 +21,7 @@ describe('LegalPage', () => {
     render(<LegalPage />);
 
     const headings = screen.getAllByRole('heading');
-    const headingTexts = headings.map((h) => h.textContent);
+    const headingTexts = headings.map(h => h.textContent);
 
     expect(headingTexts).toContain('legal notice');
     expect(headingTexts).toContain('privacy policy');
@@ -75,5 +76,4 @@ describe('LegalPage', () => {
     expect(trackEvent).toHaveBeenCalledWith('external_link', { destination: 'x' });
     expect(trackEvent).toHaveBeenCalledWith('external_link', { destination: 'github_personal' });
   });
-
 });

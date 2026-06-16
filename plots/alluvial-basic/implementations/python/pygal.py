@@ -19,7 +19,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
 
 np.random.seed(42)
 
@@ -29,10 +29,10 @@ parties = ["Democratic", "Republican", "Independent", "Other"]
 
 # Map parties to Okabe-Ito colors
 party_colors = {
-    "Democratic": OKABE_ITO[0],  # #009E73 (brand green)
-    "Republican": OKABE_ITO[1],  # #D55E00 (vermillion)
-    "Independent": OKABE_ITO[2],  # #0072B2 (blue)
-    "Other": OKABE_ITO[3],  # #CC79A7 (reddish purple)
+    "Democratic": IMPRINT[0],  # #009E73 (brand green)
+    "Republican": IMPRINT[1],  # #C475FD (vermillion)
+    "Independent": IMPRINT[2],  # #4467A3 (blue)
+    "Other": IMPRINT[3],  # #BD8233 (reddish purple)
 }
 
 # Voter counts (millions) at each time point

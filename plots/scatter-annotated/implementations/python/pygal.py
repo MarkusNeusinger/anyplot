@@ -35,19 +35,19 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette: first series = #009E73 (brand green)
-OKABE_ITO = (
+IMPRINT = (
     "#009E73",  # 1: bluish green (brand)
-    "#D55E00",  # 2: vermillion
-    "#0072B2",  # 3: blue
-    "#CC79A7",  # 4: reddish purple
-    "#E69F00",  # 5: orange
-    "#56B4E9",  # 6: sky blue
-    "#F0E442",  # 7: yellow
+    "#C475FD",  # 2: vermillion
+    "#4467A3",  # 3: blue
+    "#BD8233",  # 4: reddish purple
+    "#AE3030",  # 5: orange
+    "#2ABCCD",  # 6: sky blue
+    "#954477",  # 7: yellow
     "#009E73",  # 8: cycle back to brand for 8+ companies
-    "#D55E00",
-    "#0072B2",
-    "#CC79A7",
-    "#E69F00",
+    "#C475FD",
+    "#4467A3",
+    "#BD8233",
+    "#AE3030",
 )
 
 # Data - Tech company market performance
@@ -77,7 +77,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=28,
     label_font_size=22,
     major_label_font_size=18,

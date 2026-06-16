@@ -1,0 +1,264 @@
+library: highcharts
+language: javascript
+specification_id: line-cycle-seasonal
+created: '2026-06-15T03:51:57Z'
+updated: '2026-06-15T04:12:37Z'
+generated_by: claude-sonnet
+workflow_run: 27522618512
+issue: 8658
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Excellent cycle plot implementation: 12 seasonal groups with chronological subseries,
+    horizontal mean reference lines, and shared y-axis all match spec requirements
+    precisely.'
+  - Warming annotation ('+1.2 °C warming (Jul, 20 yrs)') creates a clear focal point
+    and data insight on the hottest month group.
+  - Alternating plotBands cleanly separate month groups without visual noise; BAND_COLOR
+    is correctly theme-adaptive (dark vs light rgba opacity).
+  - Deterministic fakeNoise() via sin-based hash is elegant and fully reproducible
+    without Math.random().
+  - 'Expert Highcharts API usage: chart.renderer.text with xAxis[0].toPixels() coordinate
+    conversion, plotBands, per-series showInLegend and enableMouseTracking controls,
+    zIndex layering.'
+  weaknesses:
+  - Annotation font size is 11px — marginally small at mobile scale (~400px viewport);
+    increase to 12-13px for better readability.
+  - Trend lines at lineWidth 1.5 are slightly thin for the grouped dot clusters; 2px
+    would strengthen visual presence without adding noise.
+  - 'Legend box uses Highcharts defaults; add legend.borderWidth: 0 to remove the
+    default box stroke for cleaner visual refinement.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), correctly theme-adaptive via transparent chart background over page surface.
+      Chrome: Title "line-cycle-seasonal · javascript · highcharts · anyplot.ai" at 22px dark ink, occupies ~65-70% of width. Subtitle at 14px in secondary ink. Y-axis label "Temperature (°C)" at 16px. Tick labels at 14px. All readable.
+      Data: Brand green (#009E73) dots at radius 4 connected by 1.5px trend lines per month group. Blue (#4467A3) horizontal reference lines at 3px mark each monthly mean. Alternating light grey bands separate the 12 month groups. Warming annotation "+1.2 °C warming (Jul, 20 yrs)" in green at 11px near top of July group. Legend shows both series.
+      Legibility verdict: PASS — all text readable against warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), correctly theme-adaptive.
+      Chrome: Title, subtitle, axis labels, tick labels, and legend text all render in lighter colors (t.ink/t.inkSoft), clearly visible. Alternating bands use rgba(255,255,255,0.05) white-tint — correct for dark mode. No dark-on-dark failures detected.
+      Data: Data colors are identical to light render — brand green (#009E73) trend dots and blue (#4467A3) mean lines unchanged between themes. Warming annotation in green (#009E73) readable on dark background.
+      Legibility verdict: PASS — all text readable against warm near-black background. No dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 22px, y-axis 16px, ticks/legend
+          14px). Minor: annotation at 11px may be small at mobile scale.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or data element overlaps in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Radius-4 markers and 1.5px trend lines suit medium density (20 pts/group).
+          Mean lines at 3px clearly visible. Trend lines could be 2px for stronger
+          presence.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green / blue pair is CVD-safe and distinguishable by luminance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Landscape 3200x1800 confirmed (canvas gate passed). Plot fills canvas
+          well with balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis labeled 'Temperature (°C)' with units. Month labels provide
+          clear x-axis semantics.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73. Mean lines use palette[2] (#4467A3 blue) —
+          defensible semantic choice for reference lines. Background transparent over
+          theme-correct surface. Both renders theme-correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Clearly above defaults: two-color contrast (green trend vs blue
+          means), alternating plotBands, warming annotation. Clean typography hierarchy.
+          Default legend styling prevents full marks.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X-axis gridlines disabled, tick marks transparent, y-axis uses subtle
+          t.grid, background transparent. Alternating plotBands add structure. Legend
+          uses default Highcharts box/border.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Warming annotation on July creates clear focal point. Mean lines
+          guide seasonal comparison. Color contrast creates visual hierarchy. Second
+          annotation (e.g. January) would reach excellent tier.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct cycle/seasonal subseries plot with 12 monthly groups and
+          chronological within-group subseries.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: seasonal grouping, chronological trend lines, horizontal
+          mean reference lines, shared y-axis, natural calendar order, single panel
+          with plotBand separators.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: season->months (x-axis groups), cycle->year 2004-2023 (within-group
+          ordering), value->temperature °C (y-axis). Full data range shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is 'line-cycle-seasonal · javascript · highcharts · anyplot.ai'.
+          Legend labels 'Year-to-year trend' and 'Monthly mean' accurately describe
+          both series.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Demonstrates seasonal pattern (varying means), within-season warming
+          trend (upward slope in summer groups), and mean comparison across seasons.
+          Minor: within-group slope direction could be made more explicit for one
+          cold month.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Monthly average temperature for a Northern European city (2004-2023)
+          with realistic warming rate (+0.065°C/yr). Neutral science domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature range -4 to 24°C is realistic for Northern Europe. Base
+          monthly means and noise amplitude (~±1.4°C) are factually plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean top-level flow: tokens -> data -> layout constants -> series
+          -> chart -> annotation. Only fakeNoise() helper (5 lines, justified by determinism
+          requirement).'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: fakeNoise() is a deterministic sin-based LCG. No Math.random(). Data
+          is fully reproducible.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses only window globals provided by harness.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Elegant use of .map() for trendSeries, meanSeries, tickPositions,
+          plotBands. Compact and readable with no duplication.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Highcharts.chart('container', ...) correct; animation:false set in
+          both chart and plotOptions; credits disabled; no explicit width/height.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert Highcharts usage: native series options, plotBands as xAxis
+          config, tickPositions with JS formatter, per-series showInLegend and enableMouseTracking,
+          zIndex layering.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: chart.renderer.text with xAxis[0].toPixels() coordinate conversion
+          is distinctively Highcharts (SVG renderer + coordinate API). plotBands for
+          alternating group separators is Highcharts-native. One point held back —
+          could leverage Highcharts responsive rules or chart.margin tuning.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling

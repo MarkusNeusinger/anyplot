@@ -57,7 +57,7 @@ df = pd.DataFrame(
 fig, ax = plt.subplots(figsize=(16, 9))
 
 # Okabe-Ito palette for stacked histogram
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Stacked histogram using histplot with multiple='stack'
 sns.histplot(
@@ -67,7 +67,7 @@ sns.histplot(
     hue_order=["US East", "Europe", "Asia Pacific"],
     multiple="stack",
     bins=20,
-    palette=OKABE_ITO,
+    palette=IMPRINT,
     edgecolor="white",
     linewidth=0.8,
     alpha=0.9,

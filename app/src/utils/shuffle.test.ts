@@ -5,8 +5,9 @@
  * biased `[...arr].sort(() => Math.random() - 0.5)` idiom.
  */
 
-import { describe, it, expect, vi } from 'vitest';
-import { shuffleArray } from './shuffle';
+import { describe, expect, it, vi } from 'vitest';
+
+import { shuffleArray } from 'src/utils/shuffle';
 
 describe('shuffleArray', () => {
   it('returns an array of the same length', () => {

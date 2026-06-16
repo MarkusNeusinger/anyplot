@@ -28,7 +28,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"
 
 # Okabe-Ito palette (canonical order) — define as seaborn-compatible list
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data generation with spatial context
 np.random.seed(42)
@@ -50,7 +50,7 @@ vor = Voronoi(all_points)
 
 # Configure seaborn with sophisticated theming
 sns.set_theme(style="ticks")
-sns.set_palette(OKABE_ITO)  # Set global palette to Okabe-Ito
+sns.set_palette(IMPRINT)  # Set global palette to Okabe-Ito
 sns.set_context("talk", font_scale=1.1)  # Enhanced font sizing via seaborn context
 
 # Apply theme-adaptive rendering context
@@ -75,7 +75,7 @@ fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 # Get seaborn's color palette for dynamic color cycling
-pal = sns.color_palette(OKABE_ITO)
+pal = sns.color_palette(IMPRINT)
 
 # Draw Voronoi regions with dynamic color cycling from seaborn palette
 for i in range(n_points):

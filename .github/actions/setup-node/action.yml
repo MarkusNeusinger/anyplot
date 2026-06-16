@@ -1,0 +1,109 @@
+name: "Setup Node + JS render harness"
+description: >-
+  Installs Node.js, the pinned JavaScript charting toolchain (Chart.js, D3,
+  ECharts, Highcharts, plus the React stack for MUI X — react, react-dom, @mui)
+  and the headless-browser render harness (Playwright + Chromium) used by
+  anyplot's JavaScript implementations. The toolchain is restored exactly from
+  the committed top-level package-lock.json (`npm ci`) for reproducibility — the
+  JS sibling of setup-r's Posit snapshot and setup-julia's Manifest.toml.
+inputs:
+  node-version:
+    description: "Node.js version to install"
+    required: false
+    default: "22"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        # Restore npm's download cache keyed on the committed lockfile so cold
+        # `npm ci` runs stay fast.
+        cache: "npm"
+        cache-dependency-path: package-lock.json
+
+    - name: Install JS toolchain (npm ci)
+      # `npm ci` installs the exact locked tree from package-lock.json and fails
+      # if package.json and the lockfile disagree — the strict, reproducible
+      # restore (vs. `npm install`, which may rewrite the lockfile).
+      shell: bash
+      run: npm ci
+
+    - name: Install Playwright Chromium
+      # Bundled, version-pinned Chromium (no webdriver-manager drift). `--with-deps`
+      # pulls the apt libraries headless Chromium needs on the runner image.
+      shell: bash
+      run: npx playwright install --with-deps chromium
+
+    - name: Smoke-test the render harness produces a PNG
+      shell: bash
+      run: |
+        set -euo pipefail
+        TMP="$(mktemp -d)"
+        cat > "$TMP/chartjs.js" <<'JS'
+        const t = window.ANYPLOT_TOKENS;
+        const canvas = document.createElement("canvas");
+        document.getElementById("container").appendChild(canvas);
+        new Chart(canvas, {
+          type: "bar",
+          data: { labels: ["a", "b", "c"], datasets: [{ data: [3, 1, 2], backgroundColor: t.palette[0] }] },
+          options: { responsive: true, maintainAspectRatio: false, animation: false },
+        });
+        JS
+        ( cd "$TMP" && ANYPLOT_THEME=light node "$GITHUB_WORKSPACE/automation/js-render/render.mjs" chartjs.js )
+        PNG="$TMP/plot-light.png"
+        test -f "$PNG"
+        test -s "$PNG"
+        # Confirm exact landscape pixels (3200×1800) straight from the PNG IHDR.
+        node -e '
+          const fs = require("fs");
+          const b = fs.readFileSync(process.argv[1]);
+          const w = b.readUInt32BE(16), h = b.readUInt32BE(20);
+          if (w !== 3200 || h !== 1800) { console.error(`smoke-test PNG is ${w}x${h}, expected 3200x1800`); process.exit(1); }
+          console.log(`ok: ${process.argv[1]} (${w}x${h}, ${b.length} bytes)`);
+        ' "$PNG"
+
+    - name: Smoke-test the React (MUI X) render path
+      # The framework=react branch is the only one that esbuild-bundles the
+      # snippet (react + react-dom + @mui/x-charts) and mounts it in a MUI
+      # ThemeProvider — a different code path from the UMD-global libs above.
+      # Render a minimal default-exported @mui/x-charts component to guard it end
+      # to end (esbuild bundle → Playwright → exact-pixel PNG + interactive HTML),
+      # the React sibling of the chartjs smoke test.
+      shell: bash
+      run: |
+        set -euo pipefail
+        TMP="$(mktemp -d)"
+        cat > "$TMP/muix.tsx" <<'TSX'
+        import { BarChart } from "@mui/x-charts/BarChart";
+        const t = window.ANYPLOT_TOKENS;
+        export default function Chart() {
+          return (
+            <BarChart
+              width={window.ANYPLOT_SIZE.width}
+              height={window.ANYPLOT_SIZE.height}
+              colors={t.palette}
+              skipAnimation
+              xAxis={[{ scaleType: "band", data: ["a", "b", "c"] }]}
+              series={[{ data: [3, 1, 2], label: "demo" }]}
+            />
+          );
+        }
+        TSX
+        ( cd "$TMP" && ANYPLOT_THEME=dark node "$GITHUB_WORKSPACE/automation/js-render/render.mjs" muix.tsx )
+        PNG="$TMP/plot-dark.png"
+        test -f "$PNG"
+        test -s "$PNG"
+        # The harness also writes the self-contained interactive page for the
+        # detail view — assert it landed (MUI X is in INTERACTIVE_LIBRARIES).
+        test -s "$TMP/plot-dark.html"
+        # Confirm exact landscape pixels (3200×1800) straight from the PNG IHDR.
+        node -e '
+          const fs = require("fs");
+          const b = fs.readFileSync(process.argv[1]);
+          const w = b.readUInt32BE(16), h = b.readUInt32BE(20);
+          if (w !== 3200 || h !== 1800) { console.error(`MUI X smoke-test PNG is ${w}x${h}, expected 3200x1800`); process.exit(1); }
+          console.log(`ok: react path ${process.argv[1]} (${w}x${h}, ${b.length} bytes)`);
+        ' "$PNG"

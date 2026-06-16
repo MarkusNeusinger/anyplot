@@ -25,7 +25,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 sns.set_theme(
     style="ticks",
@@ -92,9 +92,9 @@ fig, ax = plt.subplots(figsize=(16, 9))
 # Plot PR curves using seaborn's lineplot style with step interpolation
 # Good classifier
 ax.step(
-    recall_good, precision_good, where="post", linewidth=3, color=OKABE_ITO[0], label=f"Model A (AP = {ap_good:.2f})"
+    recall_good, precision_good, where="post", linewidth=3, color=IMPRINT[0], label=f"Model A (AP = {ap_good:.2f})"
 )
-ax.fill_between(recall_good, precision_good, step="post", alpha=0.2, color=OKABE_ITO[0])
+ax.fill_between(recall_good, precision_good, step="post", alpha=0.2, color=IMPRINT[0])
 
 # Moderate classifier
 ax.step(
@@ -102,16 +102,16 @@ ax.step(
     precision_moderate,
     where="post",
     linewidth=3,
-    color=OKABE_ITO[1],
+    color=IMPRINT[1],
     label=f"Model B (AP = {ap_moderate:.2f})",
 )
-ax.fill_between(recall_moderate, precision_moderate, step="post", alpha=0.2, color=OKABE_ITO[1])
+ax.fill_between(recall_moderate, precision_moderate, step="post", alpha=0.2, color=IMPRINT[1])
 
 # Poor classifier
 ax.step(
-    recall_poor, precision_poor, where="post", linewidth=3, color=OKABE_ITO[2], label=f"Model C (AP = {ap_poor:.2f})"
+    recall_poor, precision_poor, where="post", linewidth=3, color=IMPRINT[2], label=f"Model C (AP = {ap_poor:.2f})"
 )
-ax.fill_between(recall_poor, precision_poor, step="post", alpha=0.2, color=OKABE_ITO[2])
+ax.fill_between(recall_poor, precision_poor, step="post", alpha=0.2, color=IMPRINT[2])
 
 # Baseline reference line
 ax.axhline(y=baseline, linestyle="--", linewidth=2, color=INK_SOFT, label=f"Random Classifier (P = {baseline:.2f})")

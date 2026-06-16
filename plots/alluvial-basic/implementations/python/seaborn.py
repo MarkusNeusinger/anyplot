@@ -19,11 +19,11 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - first series always #009E73
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # 1. bluish green (brand)
-    "#D55E00",  # 2. vermillion
-    "#0072B2",  # 3. blue
-    "#CC79A7",  # 4. reddish purple
+    "#C475FD",  # 2. vermillion
+    "#4467A3",  # 3. blue
+    "#BD8233",  # 4. reddish purple
 ]
 
 # Data: Employment sector transitions across 4 years
@@ -104,7 +104,7 @@ flows = [
 ]
 
 # Create mapping from sector to color
-sector_colors = {sector: OKABE_ITO[i] for i, sector in enumerate(sectors)}
+sector_colors = {sector: IMPRINT[i] for i, sector in enumerate(sectors)}
 
 # Create figure
 fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)

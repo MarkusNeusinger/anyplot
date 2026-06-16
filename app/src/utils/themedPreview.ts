@@ -13,8 +13,7 @@
  * theme and fall back to the legacy field during the transition.
  */
 
-import { useTheme } from '../hooks/useLayoutContext';
-
+import { useTheme } from 'src/hooks/useLayoutContext';
 
 /** Shape accepted by {@link selectPreviewUrl} — covers Implementation + PlotImage + POTD */
 export interface ThemedPreviewSource {
@@ -46,15 +45,18 @@ export interface ThemedPreviewHtmlSource {
  *   3. legacy single-theme URL (preview_url or url)
  *   4. null if nothing is available
  */
-export function selectPreviewUrl(src: ThemedPreviewSource | null | undefined, isDark: boolean): string | null {
+export function selectPreviewUrl(
+  src: ThemedPreviewSource | null | undefined,
+  isDark: boolean
+): string | null {
   if (!src) return null;
   const preferred = isDark
-    ? src.preview_url_dark ?? src.url_dark
-    : src.preview_url_light ?? src.url_light;
+    ? (src.preview_url_dark ?? src.url_dark)
+    : (src.preview_url_light ?? src.url_light);
   if (preferred) return preferred;
   const fallbackTheme = isDark
-    ? src.preview_url_light ?? src.url_light
-    : src.preview_url_dark ?? src.url_dark;
+    ? (src.preview_url_light ?? src.url_light)
+    : (src.preview_url_dark ?? src.url_dark);
   if (fallbackTheme) return fallbackTheme;
   return src.preview_url ?? src.url ?? null;
 }
@@ -62,16 +64,16 @@ export function selectPreviewUrl(src: ThemedPreviewSource | null | undefined, is
 /** Pick the best preview-HTML URL for the current theme (same priority as {@link selectPreviewUrl}). */
 export function selectPreviewHtml(
   src: ThemedPreviewHtmlSource | null | undefined,
-  isDark: boolean,
+  isDark: boolean
 ): string | null {
   if (!src) return null;
   const preferred = isDark
-    ? src.preview_html_dark ?? src.html_dark
-    : src.preview_html_light ?? src.html_light;
+    ? (src.preview_html_dark ?? src.html_dark)
+    : (src.preview_html_light ?? src.html_light);
   if (preferred) return preferred;
   const fallbackTheme = isDark
-    ? src.preview_html_light ?? src.html_light
-    : src.preview_html_dark ?? src.html_dark;
+    ? (src.preview_html_light ?? src.html_light)
+    : (src.preview_html_dark ?? src.html_dark);
   if (fallbackTheme) return fallbackTheme;
   return src.preview_html ?? src.html ?? null;
 }
@@ -83,7 +85,9 @@ export function useThemedPreviewUrl(src: ThemedPreviewSource | null | undefined)
 }
 
 /** Hook: reads current theme and returns the matching preview-HTML URL. */
-export function useThemedPreviewHtml(src: ThemedPreviewHtmlSource | null | undefined): string | null {
+export function useThemedPreviewHtml(
+  src: ThemedPreviewHtmlSource | null | undefined
+): string | null {
   const { isDark } = useTheme();
   return selectPreviewHtml(src, isDark);
 }

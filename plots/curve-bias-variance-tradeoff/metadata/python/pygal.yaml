@@ -1,215 +1,286 @@
 library: pygal
+language: python
 specification_id: curve-bias-variance-tradeoff
 created: '2026-01-26T19:58:47Z'
-updated: '2026-01-26T20:20:52Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21371825972
+updated: '2026-05-28T03:58:09Z'
+generated_by: claude-sonnet
+workflow_run: 26552598144
 issue: 4134
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/pygal/plot.html
-quality_score: 88
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/pygal/plot-dark.html
+quality_score: 83
 review:
   strengths:
-  - Clean implementation showing all 4 required curves with distinct visual styles
-    (solid/dashed lines)
-  - Optimal point clearly marked with large dot and descriptive label
-  - Formula embedded in Y-axis label per spec requirement
-  - Zone indicators provide visual separation between underfitting/overfitting regions
-  - Good use of pygal XY chart type with custom styling
-  - Legend labels include helpful directional arrows (decreasing, increasing)
+  - All four required theoretical curves (Bias², Variance, Irreducible Error, Total
+    Error) rendered with distinct line styles and palette-correct colors
+  - Underfitting/Overfitting zone fills with theme-adaptive pastel (light) vs vivid
+    mid-tone (dark) colors — well-executed spec requirement
+  - Direct curve annotation labels injected via SVG post-processing — reduces legend
+    lookup and improves readability
+  - Formula annotation 'Total = Bias² + Variance + ε' satisfies spec requirement
+  - Optimal complexity point highlighted with both a vertical dashed line and a distinct
+    dot marker
+  - Full spec compliance — all required features (4 curves, zones, optimal marker,
+    annotations, formula) are present
+  - 'Theme tokens correctly applied: background flips #FAF8F1 ↔ #1A1A17, chrome adapts,
+    data colors are identical across both renders'
+  - Interactive HTML output saved alongside PNG (pygal's native capability leveraged)
   weaknesses:
-  - Shaded regions requested in spec are implemented as thin line indicators rather
-    than actual shaded areas
-  - Spec requests annotations to label each curve directly on the plot but implementation
-    uses legend instead
-  - Legend at bottom with 7 items is somewhat crowded and text is relatively small
-  image_description: 'The plot displays the bias-variance tradeoff visualization with
-    4 distinct curves on a white background. The title "curve-bias-variance-tradeoff
-    · pygal · pyplots.ai" is at the top. The X-axis is labeled "Model Complexity (Low
-    → High)" ranging from 0 to 11, and the Y-axis is labeled "Prediction Error | Total
-    = Bias² + Variance + Irreducible" ranging from 0 to 4. The curves shown are: (1)
-    Bias² in red dashed line - decreasing from ~3.4 to ~0.4 as complexity increases,
-    (2) Variance in green dashed line - increasing from near 0 to ~3.2, (3) Total
-    Error in purple solid line - showing characteristic U-shape with minimum around
-    x=3.1, (4) Irreducible Error in teal/cyan dashed line - constant at 0.5. A dark
-    red dot marks the optimal point at approximately (3.1, 2.2). Two zone indicators
-    appear at the bottom: blue line for "Underfitting Zone" on the left and orange
-    line for "Overfitting Zone" on the right. A legend at the bottom shows all 7 series
-    with clear labels.'
+  - Axis label font size (label_font_size=28) is significantly below the pygal style-guide
+    recommendation of 56 and creates an inverted hierarchy — tick labels (major_label_font_size=44)
+    appear larger than the axis titles 'Prediction Error' and 'Model Complexity'.
+    Raise label_font_size to at least 44–50; if y_title overflows, increase chart
+    margins or reduce the stroke_width workaround instead of shrinking axis labels.
+  - to_px helper function defined in top-level scope — for KISS structure, inline
+    the two arithmetic expressions directly at each call site (4 uses) to eliminate
+    the function.
+  - Direct annotations at x=9.0 ('Total Error', 'Variance', 'Bias²') are tightly clustered
+    near the right edge of the chart area; at narrow viewports or when scaled down,
+    the labels may crowd the axis boundary. Shift annotation x to ~8.0 and add a small
+    horizontal text offset away from the right edge.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface.
+      Chrome: Title "curve-bias-variance-tradeoff · python · pygal · anyplot.ai" in dark near-black ink, readable. Y-axis label "Prediction Error" and X-axis label "Model Complexity" are visible but noticeably smaller than the tick labels (inverted hierarchy: label_font_size=28 vs major_label_font_size=44). Tick labels (0–5 on Y, 0–11 on X) are clear. Legend at bottom is readable. Grid lines are subtle.
+      Data: Pastel cyan zone (underfitting, left of optimal) and pastel rose zone (overfitting, right) are subtle and don't obscure data. Bias² curve in brand green #009E73 (dashed, decreasing). Variance in lavender #C475FD (dashed, increasing). Total Error in blue #4467A3 (solid, U-shaped, heaviest stroke). Irreducible Error in ochre #BD8233 (dotted, flat). Red optimal point marker at x≈3.1. Vertical dashed red line at optimal. Direct curve labels ("Total Error", "Variance", "Bias²", "Irreducible ε") positioned on the right side of the chart. Formula annotation "Total = Bias² + Variance + ε" in muted gray near top center.
+      Legibility verdict: PASS — all elements readable. Minor note: axis labels are smaller than tick labels (inverted size hierarchy).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface.
+      Chrome: Title in light cream text on dark background, clearly readable. Axis labels and tick labels in light text — readable, no dark-on-dark issues. Legend at bottom readable. Grid lines subtle and appropriate for dark background.
+      Data: Zone fills switch to vivid mid-tones: teal #1E7D8A (underfitting) and deep purple #6B2A56 (overfitting) — more prominent than light mode but not overpowering. Data curve colors are identical to light render: Bias² in #009E73 green, Variance in #C475FD lavender, Total Error in #4467A3 blue, Irreducible Error in #BD8233 ochre. Direct curve annotation labels visible in their respective colors against the dark background. Red optimal marker visible and prominent.
+      Legibility verdict: PASS — all text legible against the dark background. No dark-on-dark failures observed. Data palette colors are identical across both renders; only chrome flips.
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 24
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 5
+        max: 8
         passed: true
-        comment: All text readable at full size. Title, axis labels, and legend are
-          clear. Slight deduction for Y-axis label being somewhat long.
+        comment: Title and tick labels readable in both themes. Axis labels (label_font_size=28)
+          are noticeably smaller than tick labels (major_label_font_size=44) — inverted
+          typography hierarchy. Recommended label_font_size is 56; using 28 is half
+          the spec.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text or visual elements. Clean separation between
-          curves and legend.
+        comment: Direct annotations mostly well-placed; 'Total Error', 'Variance',
+          'Bias²' at x=9 are tightly clustered near the right edge but no visible
+          overlap with data. 'Irreducible ε' correctly shifted to x=4.5 to avoid overlap.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Curves are well-sized with appropriate stroke widths. Optimal point
-          marker is clearly visible with good size.
+        comment: 100-point smooth curves are appropriate density. Line widths vary
+          (9px total, 7px bias/variance, 6px irreducible, 4px vertical line) creating
+          good hierarchy. Optimal dot (dots_size=20) is prominent. All curves clearly
+          visible in both themes.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Good color choices: red, green, purple, teal are distinguishable.
-          Different line styles aid differentiation.'
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Legend at bottom takes significant space. Zone indicators at y=0.2
-          are subtle.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with formula embedded in Y-axis title.
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 4 distinct palette colors plus redundant line styles (solid, dash,
+          dot) provide CVD-safe encoding. No red-green confusion for primary data
+          (Bias² is green, but red is only used for the optional optimal marker).
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: '3200x1800 canvas correct. No clipping. Legend at bottom is clean.
+          Minor: axis labels smaller than tick labels creates disproportionate element
+          sizing.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend text is quite small relative to image size and has visual
-          clutter with 7 items.
+        passed: true
+        comment: 'X: ''Model Complexity'', Y: ''Prediction Error'' — descriptive,
+          appropriate. Title follows required format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Light #FAF8F1, dark #1A1A17 backgrounds correct. First data curve
+          (Bias²) uses #009E73 brand green. Palette positions 2–5 used in order for
+          Variance, Total Error, Irreducible Error. Zone fills are semantic (non-data)
+          and use theme-adaptive colors appropriately. Data colors are identical across
+          both themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above default (4). Theme-adaptive zone fills with pastel↔vivid mid-tone
+          switch is intentional and well-executed. Multiple line style encodings plus
+          direct labels show design thought. Formula annotation adds polish. Not extraordinary
+          but clearly above baseline.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Above default (2). show_dots=False keeps curves clean. Variable stroke
+          widths create hierarchy. Zone fills add depth. No spine removal possible
+          in pygal but otherwise refined.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Strong storytelling: underfitting/overfitting zones establish narrative
+          context, optimal point is a clear focal element, direct curve labels minimize
+          cognitive distance, formula annotation grounds the mathematics. Viewer is
+          guided through the bias-variance tradeoff naturally.'
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct XY line chart showing theoretical curves.
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: X-axis correctly shows model complexity, Y-axis shows error values.
-      - id: SC-03
+        comment: 'Correct: multi-curve XY line chart showing theoretical bias-variance
+          decomposition curves.'
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Has all 4 curves, optimal point marker, zone indicators, formula.
-          Missing: shaded regions, direct curve annotations.'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec requirements present: 4 curves (bias², variance, irreducible,
+          total), vertical optimal line, direct curve annotations, formula annotation,
+          shaded underfitting/overfitting zones.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data appropriately.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Bias² correctly decreasing (4/(1+0.8x)), Variance increasing (0.1x^1.5),
+          Irreducible flat (0.5), Total is U-shaped sum. 100 smooth points. X range
+          0.5–10 shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correctly describe each series with helpful directional
-          arrows.
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Correct format but could use more descriptive title.
+        comment: 'Title ''curve-bias-variance-tradeoff · python · pygal · anyplot.ai''
+          matches required format. Legend labels are descriptive (includes directional
+          indicators: ↘, ↗).'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows all aspects: decreasing bias, increasing variance, U-shaped
-          total error, constant irreducible error, optimal point.'
+        comment: 'Covers all aspects: 4 curve types, zone fills, optimal marker, annotations,
+          formula. Complete visualization of the bias-variance tradeoff concept.'
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Theoretical ML education context is appropriate and neutral. Values
-          are reasonable but generic.
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: Values in sensible range (0-4 for error, complexity 0.5-10).
+        comment: Bias-variance tradeoff is a canonical ML concept with well-established
+          curve shapes. Values (error range 0–4, complexity 0.5–10) are plausible
+          for a theoretical ML plot. Neutral, educational content.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Y range (0, 5.0) contains all curve values with breathing room. 100
+          smooth points for continuous theoretical curves is appropriate. Optimal
+          point near x=3.1 falls at a reasonable complexity level.
     code_quality:
       score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Linear structure: imports, data, chart, save. No functions or classes.'
+        comment: to_px() helper function defined at module level. Small utility (4
+          lines), but KISS prefers no functions — inline the two arithmetic expressions
+          at each of the 5–6 call sites.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducibility.
+        comment: np.random.seed(42) set. Curves are deterministic mathematical functions,
+          no randomness needed beyond the seed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: numpy, pygal, Style.'
+        comment: All 5 imports (os, cairosvg, numpy, pygal, pygal.style.Style) are
+          used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: SVG post-processing via bytes decode/inject/re-encode is pragmatic
+          and clean. Zone fill construction is clear. Series setup is well-organized
+          with comments.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current pygal API.
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves to plot.png correctly but generates SVG internally.
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses current pygal
+          3.1.0 API.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: pygal.XY with fill=True for zone fills, stroke_style for per-series
+          line styling, show_dots=False, legend_at_bottom, truncate_legend=-1, range/xrange
+          axis bounds — good use of pygal's API. SVG render() + post-processing for
+          annotations is idiomatic for pygal's limitations.
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses XY chart, custom Style, stroke_style customization, legend_at_bottom,
-          tooltip configuration. Could leverage more pygal-specific features.
+        comment: SVG post-processing to inject annotation text elements is a clever
+          use of pygal's SVG-first architecture. Zone fills via flat-line series with
+          fill=True exploits pygal's fill feature creatively. Interactive HTML output
+          leverages pygal's core interactive capability.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - cairosvg
   techniques:
   - annotations
+  - html-export
   patterns:
   - data-generation
   dataprep: []
-  styling:
-  - grid-styling
-  - alpha-blending
+  styling: []

@@ -26,7 +26,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Response times (ms) for three user groups
 np.random.seed(42)
@@ -72,7 +72,7 @@ anyplot_theme = pn.theme(
 plot = (
     pn.ggplot(df, pn.aes(x="response_time", fill="user_group"))
     + pn.geom_histogram(alpha=0.6, bins=30, position="identity")
-    + pn.scale_fill_manual(values=OKABE_ITO)
+    + pn.scale_fill_manual(values=IMPRINT)
     + pn.labs(
         x="Response Time (ms)", y="Frequency", title="histogram-overlapping · plotnine · pyplots.ai", fill="User Group"
     )

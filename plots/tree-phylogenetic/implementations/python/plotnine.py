@@ -31,7 +31,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 np.random.seed(42)
 
@@ -252,16 +252,16 @@ df_leaves = pd.DataFrame({"x": [leaf_x[s] for s in species], "y": [leaf_y[s] for
 
 clade_colors = {
     "Root": "#999999",
-    "Strepsirrhini": OKABE_ITO[0],
-    "Haplorrhini": OKABE_ITO[1],
-    "Catarrhini": OKABE_ITO[2],
-    "Hylobatidae": OKABE_ITO[3],
-    "Hominoidea": OKABE_ITO[4],
-    "Cercopithecidae": OKABE_ITO[5],
-    "Homininae": OKABE_ITO[6],
-    "Ponginae": OKABE_ITO[0],
-    "Gorillini": OKABE_ITO[1],
-    "Hominini": OKABE_ITO[2],
+    "Strepsirrhini": IMPRINT[0],
+    "Haplorrhini": IMPRINT[1],
+    "Catarrhini": IMPRINT[2],
+    "Hylobatidae": IMPRINT[3],
+    "Hominoidea": IMPRINT[4],
+    "Cercopithecidae": IMPRINT[5],
+    "Homininae": IMPRINT[6],
+    "Ponginae": IMPRINT[0],
+    "Gorillini": IMPRINT[1],
+    "Hominini": IMPRINT[2],
 }
 
 df_segments["color"] = df_segments["clade"].map(clade_colors)
@@ -269,7 +269,7 @@ df_segments["color"] = df_segments["clade"].map(clade_colors)
 plot = (
     ggplot()
     + geom_segment(df_segments, aes(x="x", xend="xend", y="y", yend="yend", color="clade"), size=2.5)
-    + geom_point(df_leaves, aes(x="x", y="y"), size=5, color=OKABE_ITO[0])
+    + geom_point(df_leaves, aes(x="x", y="y"), size=5, color=IMPRINT[0])
     + geom_text(df_leaves, aes(x="x", y="y", label="species"), ha="left", nudge_x=0.02, size=14, color=INK)
     + scale_color_manual(values=clade_colors)
     + annotate("segment", x=0.0, xend=0.1, y=-0.8, yend=-0.8, size=2.5, color=INK_SOFT)

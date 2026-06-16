@@ -1,36 +1,55 @@
 library: plotly
+language: python
 specification_id: heatmap-stripes-climate
 created: '2026-03-06T02:36:28Z'
-updated: '2026-03-06T03:02:08Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22746425940
+updated: '2026-06-02T06:09:17Z'
+generated_by: claude-sonnet
+workflow_run: 26800929580
 issue: 4423
-python_version: 3.14.3
-library_version: 6.6.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/plotly/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/python/plotly/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Faithful recreation of Ed Hawkins warming stripes with custom 7-stop colorscale
-  - Excellent data storytelling through the inherently narrative visualization format
-  - Volcanic event dips add realistic scientific detail to the synthetic data
-  - Interactive hover with year/anomaly/classification labels leverages Plotly strengths
-  - Clean minimalist design with subtle decade markers and muted year annotations
-  - HTML export with proper interactive configuration
+  - Correct imprint_div colorscale with Imprint palette blues (#4467A3) and reds (#AE3030)
+    and theme-adaptive neutral midpoint — semantically correct cold=blue/warm=red
+    mapping
+  - 'Theme-adaptive chrome fully correct: backgrounds #FAF8F1 light / #1A1A17 dark,
+    title and year labels readable in both themes'
+  - 'Spec strictly followed: no axes, no labels, no tick marks, no gridlines — pure
+    color encoding as required'
+  - Decade markers (1900, 1950, 2000) as semi-transparent vertical lines add orientation
+    without cluttering the minimalist design
+  - Interactive HTML output with custom hovertemplate and categorized tooltip labels
+    (Strong warming / Warm / Cool / Strong cooling) showcases Plotly interactivity
+    effectively
+  - 'Realistic synthetic data: 175 years (1850–2024) with volcanic eruption dips (Krakatoa
+    1883, Novarupta 1912, Pinatubo 1991) and a realistic warming trend from -0.35
+    to +0.85 °C'
   weaknesses:
-  - Year annotations at 0.7 opacity could be slightly more visible
-  image_description: The plot displays climate warming stripes spanning 1850-2024
-    as a single row of vertical colored bars. The left portion (earlier years) is
-    dominated by shades of blue (dark navy through medium blue to light blue), while
-    the right portion (recent decades) transitions through oranges and reds to dark
-    crimson. A white center marks the zero-anomaly point. The title "heatmap-stripes-climate
-    · plotly · pyplots.ai" is centered at top in dark gray at 28pt. Subtle year labels
-    "1850" and "2024" appear at the bottom-left and bottom-right in muted gray with
-    0.7 opacity. Three thin semi-transparent white vertical lines mark the decades
-    1900, 1950, and 2000. The stripes fill the canvas edge-to-edge with minimal margins,
-    maintaining the specified ~3:1 wide aspect ratio (4800x1599px). No axes, gridlines,
-    or tick marks are present — faithful to Ed Hawkins' original warming stripes design.
+  - Decade markers in dark mode use rgba(0,0,0,0.40) — black on near-black (#1A1A17)
+    produces effectively invisible lines. Change dark-theme decade_color to rgba(255,255,255,0.20)
+    for visibility parity with light mode.
+  - 'VQ-03 minor: near-zero temperature anomaly bars in the mid-period (approx. 1900–1945)
+    blend strongly into both backgrounds — especially in dark mode where the colorscale
+    midpoint equals the page surface. This is a deliberate imprint_div design feature
+    but slightly reduces the visual distinctness of the transitional era stripes.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, no pure white.
+      Chrome: Title "heatmap-stripes-climate · python · plotly · anyplot.ai" centered at top in dark (#1A1A17) ink — clearly readable. Year labels "1850" (bottom-left) and "2024" (bottom-right) in muted dark ink — readable.
+      Data: Vertical stripes spanning full height. Left section (~1850–1890) shows clear Imprint blue (#4467A3) stripes for negative anomalies. Transitional section (~1900–1950) shows very light cream stripes that blend partially with the off-white background (intentional imprint_div midpoint behavior). Right section (~1950–2024) shows progressively stronger Imprint matte red (#AE3030) stripes, deepening in intensity toward 2024. Three subtle white semi-transparent decade markers at 1900, 1950, 2000 are faintly visible.
+      Legibility verdict: PASS — all text elements clear and readable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, no pure black.
+      Chrome: Title in light (#F0EFE8) ink — clearly readable. Year labels in muted light (#A8A79F-equivalent) ink — readable. No dark-on-dark text failures detected.
+      Data: The Imprint blue and matte red colors are identical hex values to the light render for the extreme cold/warm ends. Near-zero bars now blend into the #1A1A17 background (expected imprint_div midpoint behavior). The left section shows recognizable blue stripes against the dark background. The warm right section shows vivid red stripes clearly distinct from the background. Decade markers at 1900, 1950, 2000 use rgba(0,0,0,0.40) — effectively invisible against the dark background (minor issue).
+      Legibility verdict: PASS — title and year labels clearly readable; no dark-on-dark text failures. Decade markers invisible in dark mode is a minor element-visibility weakness.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -38,70 +57,82 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title at 28pt explicitly set and readable. Year annotations at 16pt
-          with 0.7 opacity intentionally subtle but readable.
+        comment: 'All font sizes explicitly set: title 16px, year annotations 16px.
+          Readable in both themes at full resolution.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements anywhere.
+        comment: No overlapping elements — only title and two year labels, well-separated.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Every stripe clearly visible with distinct colors. No gaps, smooth
-          transitions.
+        comment: 'Blue and red stripes clearly visible. Near-zero bars blend into
+          background by design (imprint_div midpoint). Decade markers invisible in
+          dark mode (rgba(0,0,0,0.40) on #1A1A17).'
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue-to-red diverging scale per spec. Distinguishable for most colorblind
-          types. Lightness variation aids perception.
+        comment: Blue-red temperature diverging palette is the domain standard; better
+          than red-green for CVD.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Stripes fill canvas edge-to-edge. 3:1 aspect ratio matches spec.
-          Minimal margins maximize data area.
+        comment: Correct 3200x1800 canvas. Stripes fill chart area edge-to-edge as
+          is conventional for warming stripes. Clean proportions.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title in correct format. Axes intentionally absent per spec. Subtle
-          year annotations provide context.
+        comment: Title follows required format. No axis labels per spec (pure data
+          visualization requirement).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Uses imprint_div colorscale with Imprint blue (#4467A3) and matte
+          red (#AE3030), theme-adaptive neutral midpoint (PAGE_BG). Backgrounds #FAF8F1
+          light / #1A1A17 dark — correct.'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom 7-stop colorscale, semi-transparent decade markers, muted
-          annotations. Clearly above defaults.
+        comment: Strong, intentional minimalist design. Custom Imprint diverging colorscale,
+          decade markers, hover category labels. Correct warming stripes execution.
+          Below 6 because it follows the well-established format without novel creative
+          additions.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: All axes/spines/gridlines removed. Subtle decade markers. Minimized
-          margins. Every detail supports minimalist aesthetic.
+        comment: All spines, grid, ticks, legend removed as required. Subtle semi-transparent
+          decade markers. Above default library styling.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Blue-to-red progression immediately communicates warming trend. Volcanic
-          dips add narrative depth. Decade markers anchor temporally.
+        comment: Color gradient from cold blue to warm red immediately communicates
+          the warming story. Decade markers aid temporal navigation. Year anchors
+          provide context. Above default but not exceptional.
     spec_compliance:
       score: 15
       max: 15
@@ -111,27 +142,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct warming stripes using go.Heatmap with single-row z-array.
+        comment: Correct warming stripes via go.Heatmap with equal-width bars.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec requirements met: no axes/labels/gridlines, diverging colormap,
-          no gaps, symmetric scale.'
+        comment: No axes/labels/gridlines; blue-red diverging colormap centered at
+          0; equal-width bars, no gaps; appropriate wide-and-short aspect ratio.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=years, Z=anomalies. Range correctly set for full bar coverage.
+        comment: Year on x-axis, temperature anomaly as color (z). Symmetric colorscale
+          around zero.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. No legend needed for minimalist warming
-          stripes.
+        comment: 'Title: ''heatmap-stripes-climate · python · plotly · anyplot.ai''
+          — correct format. No legend (showscale=False) — appropriate for warming
+          stripes.'
     data_quality:
       score: 15
       max: 15
@@ -141,22 +174,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows positive and negative anomalies, warming trend, volcanic dips,
-          natural variability.
+        comment: 175 years (1850-2024), covers cold anomalies, near-zero, and strong
+          warm anomalies. Volcanic dips included.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Global temperature anomalies - real scientific context. Neutral topic.
-          Values match known patterns.
+        comment: Climate temperature anomaly data, HadCRUT/NASA GISS reference. Non-controversial
+          scientific data.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Trend from -0.35 to +0.85C with realistic noise and volcanic dips
-          matching historical records.
+        comment: Anomaly range approximately -0.6 to +1.0°C — consistent with observed
+          global temperature records.
     code_quality:
       score: 10
       max: 10
@@ -166,34 +199,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, colorscale, plot, layout, save.'
+        comment: 'Clean procedural flow: imports → tokens → data → figure → layout
+          → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random operations.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects - both used.
+        comment: sys, os, numpy, plotly.graph_objects — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. Volcanic events dict and np.where classification
-          are concise.
+        comment: Appropriate complexity. sys.path manipulation is unusual but documented
+          with comment.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html. Current Plotly API.
+        comment: Saves plot-{THEME}.png (3200x1800) and plot-{THEME}.html — correct.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -201,25 +235,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Heatmap, add_shape, add_annotation, update_layout.
-          Solid graph_objects API.
+        comment: go.Heatmap with customdata/hovertemplate, add_shape, add_annotation,
+          update_layout — all idiomatic Plotly patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Interactive hover with customdata/hovertemplate, HTML export with
-          CDN config. Distinctly Plotly features.
+        comment: Interactive hover with customdata+hovertemplate and category labels,
+          HTML export with config dict — distinctly Plotly features not replicable
+          in static libraries.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - hover-tooltips
   - html-export
+  - annotations
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
   - custom-colormap
+  - minimal-chrome

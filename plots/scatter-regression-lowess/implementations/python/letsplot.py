@@ -36,7 +36,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # Position 1 - for scatter points
-ACCENT = "#D55E00"  # Position 2 - for LOWESS curve
+ACCENT = "#C475FD"  # Position 2 - for LOWESS curve
 
 # Data - Complex non-linear relationship (plant growth vs temperature)
 np.random.seed(42)

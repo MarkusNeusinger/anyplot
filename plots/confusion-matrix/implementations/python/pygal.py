@@ -152,7 +152,7 @@ class ConfusionMatrixChart(Graph):
                 x = x_offset + j * (cell_size + gap)
                 y = y_offset + i * (cell_size + gap)
 
-                stroke_color = "#0072B2" if i == j else INK_SOFT
+                stroke_color = "#4467A3" if i == j else INK_SOFT
                 stroke_width = "4" if i == j else "2"
 
                 rect = self.svg.node(cm_group, "rect", x=x, y=y, width=cell_size, height=cell_size, rx=6, ry=6)

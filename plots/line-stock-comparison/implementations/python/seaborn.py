@@ -19,7 +19,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3"]
+IMPRINT = ["#009E73", "#C475FD", "#AE3030", "#4467A3"]
 
 # Set seaborn theme BEFORE figure creation
 sns.set_theme(
@@ -70,7 +70,7 @@ df = pd.DataFrame(data)
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-palette_map = dict(zip(symbols, ANYPLOT_PALETTE, strict=True))
+palette_map = dict(zip(symbols, IMPRINT, strict=True))
 
 sns.lineplot(
     data=df, x="date", y="rebased_price", hue="symbol", hue_order=symbols, palette=palette_map, linewidth=2.5, ax=ax

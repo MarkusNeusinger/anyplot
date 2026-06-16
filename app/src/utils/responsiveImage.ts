@@ -8,7 +8,7 @@
  * Principle: always prefer slightly too large over too small (never pixelated).
  */
 
-import type { ImageSize } from '../constants';
+import type { ImageSize } from 'src/constants';
 
 const RESPONSIVE_SIZES = [400, 800, 1200] as const;
 
@@ -26,9 +26,7 @@ function getBasePath(url: string): string {
  */
 export function buildSrcSet(url: string, format: 'webp' | 'png'): string {
   const base = getBasePath(url);
-  return RESPONSIVE_SIZES
-    .map((w) => `${base}_${w}.${format} ${w}w`)
-    .join(', ');
+  return RESPONSIVE_SIZES.map(w => `${base}_${w}.${format} ${w}w`).join(', ');
 }
 
 /**
@@ -38,7 +36,7 @@ export function buildSrcSet(url: string, format: 'webp' | 'png'): string {
  */
 export function buildDetailSrcSet(url: string, format: 'webp' | 'png'): string {
   const base = getBasePath(url);
-  const entries = RESPONSIVE_SIZES.map((w) => `${base}_${w}.${format} ${w}w`);
+  const entries = RESPONSIVE_SIZES.map(w => `${base}_${w}.${format} ${w}w`);
   entries.push(`${base}.${format} 3840w`);
   return entries.join(', ');
 }

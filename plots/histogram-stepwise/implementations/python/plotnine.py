@@ -34,7 +34,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series is always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00"]
+IMPRINT = ["#009E73", "#C475FD"]
 
 # Data - Response times (ms) for two server configurations
 np.random.seed(42)
@@ -73,7 +73,7 @@ plot = (
     + labs(
         x="Response Time (ms)", y="Frequency", title="histogram-stepwise · plotnine · anyplot.ai", color="Configuration"
     )
-    + scale_color_manual(values=OKABE_ITO)
+    + scale_color_manual(values=IMPRINT)
     + theme(
         figure_size=(16, 9),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),

@@ -21,7 +21,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - first series is always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Test scores from three different classes
 np.random.seed(42)
@@ -46,7 +46,7 @@ df["score"] = df["score"].clip(0, 100)
 plot = (
     ggplot(df, aes(x="score", fill="class"))
     + geom_histogram(binwidth=5, position="stack", color=PAGE_BG, size=0.3)
-    + scale_fill_manual(values=OKABE_ITO)
+    + scale_fill_manual(values=IMPRINT)
     + labs(
         x="Test Score (points)", y="Number of Students", title="histogram-stacked · letsplot · anyplot.ai", fill="Class"
     )

@@ -1,0 +1,249 @@
+library: d3
+language: javascript
+specification_id: spectrum-nmr
+created: '2026-06-03T12:22:46Z'
+updated: '2026-06-03T12:30:53Z'
+generated_by: claude-sonnet
+workflow_run: 26883642297
+issue: 4676
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Scientifically accurate NMR conventions: reversed x-axis, realistic Lorentzian
+    line shapes, correct J-coupling splitting patterns (triplet 1:2:1, quartet 1:3:3:1),
+    and chemically correct peak positions for ethanol'
+  - Perfect Imprint palette compliance and full dual-theme support -- data colors
+    identical across light/dark, chrome adapts correctly with no dark-on-dark failures
+  - Informative peak labels (chemical formula + ppm value + connecting tick line)
+    actively guide the viewer through the molecular structure
+  - Dashed baseline reference is an authentic scientific convention detail
+  - Fully deterministic data generation using sine-based pseudo-noise -- reproducible
+    without a seeded RNG
+  weaknesses:
+  - Peak label rendering via forEach (lines 123-146) bypasses D3's data().join() pattern
+    -- minor style gap, not functional
+  - Axis domain lines (left/bottom L-frame strokes) could be lightened or removed
+    for a cleaner, more refined look
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 -- confirmed correct
+      Chrome: Title "Ethanol 1H NMR - spectrum-nmr - javascript - d3 - anyplot.ai" at ~22px in dark ink, clearly readable. Axis labels "Chemical Shift (ppm)" and "Intensity (a.u.)" at 18px, readable. Tick labels at 15px, readable. Peak annotation labels at 14/13px, readable.
+      Data: Spectrum line in Imprint brand green #009E73. Four peak groups visible: CH2 quartet at 3.70 ppm, OH singlet at 2.60 ppm, CH3 triplet at 1.20 ppm (dominant), TMS singlet at 0.00 ppm.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 -- confirmed correct
+      Chrome: Title, axis labels, tick labels, and peak annotations all in light cream/white tones -- clearly readable against dark background. No dark-on-dark failures observed.
+      Data: Spectrum line still in identical Imprint green #009E73 -- same color as light render, as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 22px, axis labels 18px, tick
+          labels 15px, peak labels 14/13px. Well-proportioned, no overflow, readable
+          in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Peak labels well-separated above peaks; no collision with tick labels
+          or axis elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Spectrum line at stroke-width 1.8 CSS px is crisp. Sharp Lorentzian
+          peaks are distinct and clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single Imprint green series on warm background; excellent contrast
+          in both themes; CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). Generous margins. Plot fills ~65-70%
+          of canvas. Balanced whitespace.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: Chemical Shift (ppm), Y: Intensity (a.u.) -- both descriptive
+          with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: t.palette[0] (#009E73) for single series. Correct bg tokens. Chrome
+          adapts correctly in both themes.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design above defaults: Lorentzian accuracy, NMR conventions,
+          peak label tick lines, dashed baseline. Not yet FiveThirtyEight-level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines absent; subtle horizontal gridlines; dashed baseline
+          reference; generous whitespace. Room to remove/lighten axis domain lines.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Labeled functional groups and dominant CH3 peak create visual hierarchy.
+          Title anchors the molecule. Goes beyond raw data display.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct NMR spectrum line plot with reversed x-axis.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Reversed x-axis, Lorentzian peaks, triplet/quartet splitting, peak
+          labels with ppm values, TMS reference, clean baseline -- all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: chemical shift (ppm) reversed, Y: intensity (a.u.). All peaks
+          in visible range.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows {Descriptive Title} - {spec-id} - javascript - d3 -
+          anyplot.ai format. No legend needed.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows singlets, triplet 1:2:1, quartet 1:3:3:1, TMS reference, multiple
+          chemical shift regions.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Ethanol 1H NMR is a canonical real-world scientific spectrum. Neutral,
+          scientifically correct.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: J-coupling 7 Hz at 300 MHz, HWHM 0.005 ppm, peak positions and ratios
+          match established NMR facts for ethanol.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow. lorentzian() helper appropriate for mathematical formula
+          used 9x in loop.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: fixed peakLines, sine-based micro-noise. No
+          RNG needed.'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No explicit imports; uses harness-provided d3 global and window.*
+          tokens.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, idiomatic, no fake interactivity, method chaining throughout.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'One svg appended to #container, sized from window.ANYPLOT_SIZE.
+          D3 7.9.0 API. Correct.'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Strong idiomatic D3: scaleLinear, axisBottom/Left, d3.line() path
+          generator, datum() for single path. Peak labels use forEach instead of data().join()
+          -- minor deviation.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses d3.line() path generator and SVG transform system -- D3-distinctive.
+          Does not showcase more advanced D3 capabilities like custom interpolation
+          or complex joins.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

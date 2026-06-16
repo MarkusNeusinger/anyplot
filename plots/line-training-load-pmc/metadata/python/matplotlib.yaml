@@ -1,0 +1,289 @@
+library: matplotlib
+language: python
+specification_id: line-training-load-pmc
+created: '2026-06-13T20:33:38Z'
+updated: '2026-06-13T20:52:31Z'
+generated_by: claude-sonnet
+workflow_run: 27478124148
+issue: 8646
+language_version: 3.13.13
+library_version: 3.11.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Excellent spec compliance — all four PMC components (CTL, ATL, TSB, daily TSS)
+    correctly rendered with appropriate visual treatments per specification
+  - Domain-appropriate semantic color assignments (blue=fitness, purple=fatigue, green=fresh
+    form, red=fatigued form) using only Imprint palette members, documented clearly
+    in code
+  - Sophisticated dual-axis layout with z-order management placing TSB fills behind
+    CTL/ATL lines, with ax1.patch.set_visible(False) trick executed correctly
+  - Realistic and well-structured periodized 180-day training data with two stage
+    races, recovery weeks, progressive overload, and taper — tells a compelling sports-science
+    story
+  - 'Strong use of matplotlib-specific features: fill_between with where+interpolate,
+    axvspan for taper zone, get_xaxis_transform for annotation placement, custom Patch
+    legend handles'
+  - Complete theme adaptation — all chrome tokens (INK, INK_SOFT, INK_MUTED, PAGE_BG,
+    ELEVATED_BG) applied correctly to both primary and secondary axes across light
+    and dark renders
+  weaknesses:
+  - 'Daily TSS bars at alpha=0.18 with INK_MUTED color become near-invisible in dark
+    mode (INK_MUTED=#A8A79F @ 18% alpha on #1A1A17 background renders as ~#2F2E2C
+    — only slightly lighter than background); consider raising alpha to 0.28-0.35
+    in dark mode or applying a lighter flat gray independent of theme'
+  - Event annotation labels (Race 1, Race 2, Taper) at fontsize=7 are marginally too
+    small for mobile readability (~5 source-pixels when canvas scaled to 400px viewport);
+    fontsize=8-9 would be safer without cluttering the chart
+  - 'Visual busyness during central build phase (Feb–May): overlapping red TSB fills,
+    muted TSS bars, and oscillating ATL line compete for attention; reducing bar alpha
+    further or using a line instead of a filled area for negative TSB could improve
+    clarity'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct surface color, not pure white.
+      Chrome: Title "line-training-load-pmc · python · matplotlib · anyplot.ai" in dark INK at fontsize=12, clearly readable at top. Left Y-axis label "Training Load (TSS / CTL / ATL)" and right Y-axis label "Form / TSB" both at fontsize=10 in dark INK, readable. Monthly date tick labels (Jan 2026 through Jul 2026) in INK_SOFT, clearly legible. Legend in upper-left with 2-column layout showing all 5 series; legend frame uses ELEVATED_BG with INK_SOFT edge, text readable. Small "Race 1", "Race 2", "Taper" annotation labels at fontsize=7 visible but small.
+      Data: CTL line in #4467A3 (Imprint blue) as solid line rising from ~10 to ~110 over 6 months — fitness growth visible. ATL line in #C475FD (Imprint lavender) as dashed line with higher variability, peaking during race weeks. TSB fills: green #009E73 (alpha=0.28) for positive form areas, muted red #AE3030 (alpha=0.28) for negative form — two-toned correctly. Daily TSS bars in INK_MUTED at alpha=0.18 — subtle but visible light gray bars in background. Taper zone (last 21 days) highlighted with light green axvspan. First colored data series is TSB positive fill (#009E73) — green is present as the primary positive indicator.
+      Legibility verdict: PASS — all primary text elements readable; annotation labels marginally small at fontsize=7.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface, not pure black.
+      Chrome: Title visible in light #F0EFE8 text, clearly readable against dark background. Both Y-axis labels in light INK, readable. Tick labels in INK_SOFT=#B8B7B0 (medium-light gray) — adequately contrasted against #1A1A17 background. Legend frame uses ELEVATED_BG=#242420, text in INK_SOFT, readable. No dark-on-dark failures detected for primary text elements.
+      Data: CTL line (blue #4467A3) and ATL line (lavender #C475FD) are identical in hue to light render — data palette consistent ✓. TSB fills (green #009E73, red #AE3030) identical to light render ✓. Daily TSS bars: in dark mode INK_MUTED=#A8A79F at alpha=0.18 on #1A1A17 background produces ~#2F2E2C — bars are nearly invisible, significantly less readable than in light mode. This is the main dark-render weakness.
+      Legibility verdict: PASS overall, but WARN on TSS bars — primary labeled series are all readable; TSS bars nearly invisible in dark mode but their legend entry remains legible.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, axis labels, tick labels, legend all clearly readable in both
+          themes. Event annotation labels (Race 1, Race 2, Taper) at fontsize=7 are
+          marginally small for mobile (~5px at 400px viewport).
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Legend in upper-left with framealpha=0.9 avoids meaningful overlap
+          as CTL/ATL start near 0 in Jan. Minor visual crowding from multiple overlapping
+          element layers but no unreadable text collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: 'CTL line (solid, 2.5pt) and ATL line (dashed, 2.0pt) clearly visible.
+          TSB fills visible at alpha=0.28. Daily TSS bars intentionally subordinate
+          (alpha=0.18) — correct per spec, but near-invisible in dark mode (#A8A79F@18%
+          on #1A1A17 ≈ #2F2E2C).'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All colors from CVD-safe Imprint palette. TSB positive/negative differentiated
+          by both color and spatial position (above/below zero line) — redundant encoding
+          for CVD safety.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (figsize=(8,4.5) dpi=400 = 3200x1800px, no bbox_inches='tight').
+          subplots_adjust(left=0.09, right=0.91, top=0.91, bottom=0.13) reserves space
+          for twin-axis labels on both sides. No clipping detected.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Title in exact required format. X: ''Date''. Left Y: ''Training
+          Load (TSS / CTL / ATL)''. Right Y: ''Form / TSB''. All descriptive and appropriately
+          labeled.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All colors from Imprint palette: #4467A3 (CTL), #C475FD (ATL), #009E73
+          (positive form), #AE3030 (negative form), INK_MUTED (TSS bars). Semantic
+          exception from canonical order is documented in code and matches endurance-training
+          domain conventions. Backgrounds #FAF8F1/#1A1A17 correct. Both renders theme-correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default (4): intentional semantic palette assignments, two-tone
+          TSB fills, event annotations, taper zone highlight demonstrate domain expertise.
+          Not exceptional: the chart becomes visually busy in central build phase
+          with multiple overlapping colored areas.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top spine removed; secondary axis right spine retained appropriately
+          for TSB ticks. Y-axis grid at alpha=0.12 — very subtle. Legend frame uses
+          ELEVATED_BG with INK_SOFT edge. Clean overall refinement above default (2).
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear narrative: fitness building (rising CTL), fatigue accumulation
+          (ATL spikes + red TSB), freshening for races (positive TSB during recovery
+          weeks and taper). Race events and taper onset annotated. Zero reference
+          line aids TSB interpretation. Strong storytelling above default (2).'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct PMC chart with dual Y-axis, smooth trend lines (CTL/ATL),
+          two-tone TSB fill, and daily TSS bar layer.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: CTL smooth line ✓, ATL smooth line ✓, TSB two-toned fill (positive
+          green/negative red) ✓, daily TSS bars ✓, TSB zero reference line ✓, secondary
+          axis for TSB ✓, legend distinguishing all series ✓.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Shared date X-axis ✓. CTL and ATL on primary Y-axis ✓. TSB on secondary
+          Y-axis ✓. Correct EWMA formulas (42-day CTL, 7-day ATL) ✓.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''line-training-load-pmc · python · matplotlib · anyplot.ai''
+          — exact required format. Legend: Fitness (CTL), Fatigue (ATL), Daily TSS,
+          Form > 0 (fresh), Form < 0 (fatigued) — all series labeled.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All four PMC components shown. Includes CTL trend, ATL variability,
+          TSB form oscillation, raw TSS bars. Bonus: stage race peaks and taper mechanics
+          visible in data.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 180-day cycling training block Jan–Jun 2026. Three mesocycles (3-build
+          + 1-recovery pattern). Two 3-day stage races with realistic high-TSS peaks
+          (135–165). Progressive overload. Taper for target event. Neutral sports-science
+          context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: CTL peaks ~110-115 (realistic for competitive cyclist). ATL reaches
+          ~130 around race peaks. TSB ranges ~-40 to +40. Daily TSS 60-200+ range.
+          All values within real-world bounds.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes. Linear script structure. sys.path manipulation
+          is a necessary guard for local execution.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before any random calls.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os (THEME env), sys (path guard), mdates (date
+          formatting), plt, np, pd, Patch (legend handles).'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Z-order trick for dual-axis layering is clean. fill_between with
+          where+interpolate is the correct matplotlib pattern. Custom Patch legend
+          is appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG) — correct
+          filename template, no bbox_inches='tight'.
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Axes methods used throughout (ax1.bar, ax1.plot, ax1.fill_between).
+          twinx() for secondary axis. get_xaxis_transform for annotation placement.
+          Legend via ax1.get_legend_handles_labels() + manual Patch list.
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: fill_between with where+interpolate=True for conditional fills. axvspan
+          for taper zone. axvline for event markers. twinx with zorder manipulation
+          (ax2.zorder=ax1.zorder-1, ax1.patch.set_visible(False)). mdates.DateFormatter
+          + MonthLocator.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - explicit-figure
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
+  - grid-styling

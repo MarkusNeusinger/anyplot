@@ -1,86 +1,152 @@
-""" pyplots.ai
+""" anyplot.ai
 line-impurity-comparison: Gini Impurity vs Entropy Comparison
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 92/100 | Created: 2026-02-17
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-29
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
-# Data
+# Theme tokens (Imprint palette — see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint categorical palette positions 1 and 2
+GINI_COLOR = "#009E73"  # position 1 — always first series
+ENTROPY_COLOR = "#C475FD"  # position 2
+
+# Data: probability range [0, 1], 200 points for smooth curves
 p = np.linspace(0, 1, 200)
 gini = 2 * p * (1 - p)
 
-# Entropy with safe log computation (0 at boundaries)
+# Entropy with safe log (0 at boundaries as required by spec)
 with np.errstate(divide="ignore", invalid="ignore"):
     entropy_raw = -p * np.log2(p) - (1 - p) * np.log2(1 - p)
 entropy_raw = np.nan_to_num(entropy_raw, nan=0.0)
 entropy = entropy_raw / np.max(entropy_raw)
 
+GINI_LABEL = "Gini: 2p(1−p)"
+ENTROPY_LABEL = "Entropy: −p·log₂(p) (scaled)"
+
 df = pd.DataFrame(
     {
         "p": np.tile(p, 2),
         "Impurity": np.concatenate([gini, entropy]),
-        "Measure": ["Gini: 2p(1−p)"] * len(p) + ["Entropy (scaled)"] * len(p),
+        "Measure": [GINI_LABEL] * len(p) + [ENTROPY_LABEL] * len(p),
     }
 )
 
-# Annotation at p = 0.5 where both measures peak
-annotation_df = pd.DataFrame({"p": [0.5, 0.5], "Impurity": [0.5, 1.0], "label": ["Gini max = 0.5", "Entropy max"]})
+# Wide-format for shaded band between the two curves
+df_area = pd.DataFrame({"p": p, "gini": gini, "entropy": entropy})
 
-# Plot
-color_scale = alt.Scale(domain=["Gini: 2p(1−p)", "Entropy (scaled)"], range=["#306998", "#E8833A"])
+annotation_df = pd.DataFrame(
+    {"p": [0.5, 0.5], "Impurity": [0.5, 1.0], "label": ["Gini max = 0.5", "Entropy max = 1.0"]}
+)
 
+# Title with scaled font size (67-char baseline)
+title_text = "line-impurity-comparison · python · altair · anyplot.ai"
+n = len(title_text)
+title_fontsize = max(11, round(16 * (67 / n if n > 67 else 1.0)))
+
+# Color + dash scales for distinguishable lines (solid Gini, dashed Entropy)
+color_scale = alt.Scale(domain=[GINI_LABEL, ENTROPY_LABEL], range=[GINI_COLOR, ENTROPY_COLOR])
+dash_scale = alt.Scale(domain=[GINI_LABEL, ENTROPY_LABEL], range=[[1, 0], [8, 4]])
+
+# Shaded band between Gini and Entropy — entropy > Gini across all of (0,1)
+# This is the key educational insight: entropy is uniformly higher than Gini impurity
+area_fill = alt.Chart(df_area).mark_area(opacity=0.12, color=ENTROPY_COLOR).encode(x="p:Q", y="gini:Q", y2="entropy:Q")
+
+# Lines with color and dash differentiation
 lines = (
     alt.Chart(df)
     .mark_line(strokeWidth=4)
     .encode(
         x=alt.X(
             "p:Q",
-            title="Probability (p)",
+            title="Probability p",
             scale=alt.Scale(domain=[0, 1]),
-            axis=alt.Axis(labelFontSize=18, titleFontSize=22),
+            axis=alt.Axis(
+                labelFontSize=10, titleFontSize=12, values=[0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+            ),
         ),
         y=alt.Y(
             "Impurity:Q",
             title="Impurity Measure (normalized)",
-            scale=alt.Scale(domain=[0, 1.05]),
-            axis=alt.Axis(labelFontSize=18, titleFontSize=22),
+            scale=alt.Scale(domain=[0, 1.1]),
+            axis=alt.Axis(labelFontSize=10, titleFontSize=12),
         ),
         color=alt.Color(
             "Measure:N",
             scale=color_scale,
             legend=alt.Legend(
-                title=None, labelFontSize=16, orient="top-right", offset=10, symbolStrokeWidth=4, symbolSize=300
+                title=None, labelFontSize=10, orient="bottom-right", offset=10, symbolStrokeWidth=4, symbolSize=300
             ),
         ),
+        strokeDash=alt.StrokeDash("Measure:N", scale=dash_scale, legend=None),
     )
 )
 
+# Dots at maxima (p=0.5 for both curves)
 annotation_point = (
-    alt.Chart(annotation_df).mark_point(size=200, filled=True, color="#333333").encode(x="p:Q", y="Impurity:Q")
+    alt.Chart(annotation_df).mark_point(size=150, filled=True, color=INK, opacity=0.75).encode(x="p:Q", y="Impurity:Q")
 )
 
+# Text labels at maxima — dx=40 keeps annotations clear of the legend
 annotation_text = (
     alt.Chart(annotation_df)
-    .mark_text(fontSize=15, dx=70, fontWeight="bold", color="#333333", align="left")
+    .mark_text(fontSize=10, dx=40, fontWeight="bold", align="left", color=INK)
     .encode(x="p:Q", y="Impurity:Q", text="label:N")
 )
 
-# Vertical rule at p = 0.5
+# Vertical rule at p=0.5 where both measures peak
 rule_df = pd.DataFrame({"p": [0.5]})
-vertical_rule = alt.Chart(rule_df).mark_rule(strokeDash=[6, 4], strokeWidth=1.5, color="#999999").encode(x="p:Q")
+vertical_rule = alt.Chart(rule_df).mark_rule(strokeDash=[6, 4], strokeWidth=1.5, color=INK_MUTED).encode(x="p:Q")
 
-# Combine layers
+# Compose — area_fill rendered first (behind lines)
 chart = (
-    (lines + vertical_rule + annotation_point + annotation_text)
-    .properties(width=1600, height=900, title=alt.Title("line-impurity-comparison · altair · pyplots.ai", fontSize=28))
-    .configure_axis(gridColor="#E0E0E0", gridOpacity=0.2)
-    .configure_view(strokeWidth=0)
+    (area_fill + lines + vertical_rule + annotation_point + annotation_text)
+    .properties(
+        width=620, height=320, background=PAGE_BG, title=alt.Title(title_text, fontSize=title_fontsize, color=INK)
+    )
+    .configure_view(fill=PAGE_BG, strokeWidth=0)
+    .configure_axis(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.13,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        domain=False,
+    )
+    .configure_legend(
+        fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK, labelFontSize=10
+    )
+    .configure_title(color=INK, fontSize=title_fontsize)
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save PNG + HTML
+TW, TH = 3200, 1800
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+chart.save(f"plot-{THEME}.html")
+
+# Pad PNG to exact target dimensions (PAD only — never crop)
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")

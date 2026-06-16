@@ -33,7 +33,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # Position 1
-SECONDARY = "#D55E00"  # Position 2
+SECONDARY = "#C475FD"  # Position 2
 NEUTRAL = INK_MUTED  # Diagonal reference line
 
 # Data - Generate synthetic classification scores and compute ROC curve

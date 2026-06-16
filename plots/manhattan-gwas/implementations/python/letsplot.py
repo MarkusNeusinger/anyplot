@@ -23,7 +23,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette for alternating chromosomes
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Set seed for reproducibility
 np.random.seed(42)
@@ -77,7 +77,7 @@ df = pd.DataFrame(data)
 
 # Assign alternating colors using Okabe-Ito palette
 df["chrom_idx"] = df["chromosome"].astype(int) % 2
-df["color_group"] = df["chrom_idx"].map({0: OKABE_ITO[0], 1: OKABE_ITO[1]})
+df["color_group"] = df["chrom_idx"].map({0: IMPRINT[0], 1: IMPRINT[1]})
 
 # Significance thresholds
 genome_wide_threshold = -np.log10(5e-8)  # ~7.3
@@ -98,12 +98,12 @@ plot = (
     + geom_point(
         data=df[df["significant"]],
         mapping=aes(x="cumulative_pos", y="neg_log10_p"),
-        color=OKABE_ITO[4],
+        color=IMPRINT[4],
         size=3.5,
         alpha=0.9,
     )
     # Genome-wide significance threshold line
-    + geom_hline(yintercept=genome_wide_threshold, linetype="dashed", color=OKABE_ITO[4], size=1)
+    + geom_hline(yintercept=genome_wide_threshold, linetype="dashed", color=IMPRINT[4], size=1)
     # Suggestive threshold line
     + geom_hline(yintercept=suggestive_threshold, linetype="dotted", color=INK_MUTED, size=0.7)
     + labs(title="manhattan-gwas · letsplot · anyplot.ai", x="Chromosome", y="-log₁₀(p-value)")

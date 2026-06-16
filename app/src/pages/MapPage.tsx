@@ -1,92 +1,39 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+
+import ForceGraph2D from 'react-force-graph-2d';
 import { Helmet } from 'react-helmet-async';
+import { Link, useNavigate } from 'react-router-dom';
+
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
-import useMediaQuery from '@mui/material/useMediaQuery';
 import Slider from '@mui/material/Slider';
 import Typography from '@mui/material/Typography';
-import ForceGraph2D from 'react-force-graph-2d';
-import { forceCollide } from 'd3-force-3d';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
-import { API_URL } from '../constants';
-import { useAnalytics } from '../hooks';
-import { useTheme } from '../hooks/useLayoutContext';
-import { specPath } from '../utils/paths';
-import { colors, fontSize, typography } from '../theme';
+import { useAnalytics } from 'src/hooks';
 import {
-  buildKNNLinks,
+  CLUSTER_COLORS,
+  colorFor,
+  MIN_SIM_BOUNDS,
+  NODE_SIZE,
+  useForceGraphSimulation,
+} from 'src/hooks/useForceGraphSimulation';
+import { useTheme } from 'src/hooks/useLayoutContext';
+import {
   buildVariantUrl,
-  categoryValueCounts,
-  computeIDF,
-  DEFAULT_CATEGORY_WEIGHT,
   ensureNodeTier,
   fitToBox,
-  flattenTags,
+  type MapLink,
+  type MapNode,
   nodeAspectRatio,
   pickBestLoadedTier,
   pickTier,
-  preloadImages,
-  primaryCategoryValue,
-  selectMapThumbUrl,
-  TAG_CATEGORIES,
-  topCategoryValues,
-  type MapLink,
-  type MapNode,
   type ResolutionTier,
   type SpecMapItem,
-  type TagCategory,
-} from './MapPage.helpers';
-
-
-const NODE_SIZE = 60;            // graph-space size of a node — large enough to read the thumbnail without hovering
-const COOLDOWN_TICKS = 300;       // simulation lifetime in ticks; the engine cap and alpha-decay below both derive from this so they stop together
-// Stop the engine while motion is still perceptible. With d3-force's default
-// alphaMin (0.001), alpha keeps decaying for ~150 more ticks after movement
-// drops below the visible threshold (alpha ≈ 0.01) — that tail is dead time
-// for the user. We bump alphaMin to 0.01 so engine-stop coincides with where
-// the layout already looks frozen.
-const COOLDOWN_ALPHA_MIN = 0.01;
-// Couple alpha decay to COOLDOWN_TICKS so the engine stops exactly when the
-// progress bar (denominated in COOLDOWN_TICKS) reaches 100%. Without this,
-// alpha hits alphaMin before the bar is full and the "map.simulate()"
-// overlay fades out with the bar still partway across.
-//   alpha(n) = (1 - decay)^n  →  solve (1 - decay)^COOLDOWN_TICKS = alphaMin.
-const COOLDOWN_ALPHA_DECAY = 1 - Math.pow(COOLDOWN_ALPHA_MIN, 1 / COOLDOWN_TICKS);
-const CLUSTER_SEED_RADIUS = 600;  // distance from origin where each colorBucket cluster's centroid is initially placed
-const CLUSTER_SEED_JITTER = 150;  // per-node random offset around the cluster centroid — small enough to keep clusters identifiable, large enough that collision can settle them
-const KNN_K = 8;                  // edges per node in the sparse KNN graph
-// Default threshold tuned for the plot_type-dominant default. Bumped up
-// from 0.05 because once secondary categories (features, techniques, …)
-// have non-zero weight, common tags like `features:basic` create weak
-// cross-cluster bridges in the 0.05–0.12 range that collapse the graph
-// into one blob. At 0.15 those bridges drop out and clusters stay distinct.
-// Exposed as a live slider in the weights panel for power users.
-const DEFAULT_MIN_SIM = 0.15;
-const MIN_SIM_BOUNDS = { min: 0.05, max: 0.4, step: 0.01 } as const;
-// Forces: tuned so KNN edges + collision shape the layout while many-body
-// repulsion stays GENTLE — collision already enforces minimum spacing, and
-// strong repulsion would just blow the graph wide enough that zoomToFit
-// zooms out too far for thumbnails to be readable. Goal: graph extent stays
-// small enough that zoomToFit displays nodes at a generous CSS-pixel size.
-const REPULSION = -50;            // forceManyBody strength
-const LINK_DISTANCE_MIN = NODE_SIZE * 1.1;   // shortest link (highest sim)
-const LINK_DISTANCE_MAX = NODE_SIZE * 3.5;   // longest link (lowest sim above threshold)
-const LINK_STRENGTH_CAP = 0.4;    // max pull from a single link
-const COLLIDE_PADDING = 6;        // px padding on top of the bounding-box radius — visible breathing room between thumbnails
-const CENTER_GRAVITY = 0.04;      // gentle pull toward the viewport center; ~25× weaker than d3-force-3d's default to corral outliers without flattening clusters
-// Outlier-squash: a custom radial force that activates only beyond a
-// distance percentile of the centroid. Inside the threshold, geometry
-// is untouched — the inner cluster keeps its exact shape. Outside, each
-// outlier's distance is compressed via a sigmoid-like map
-//     r' = R + (r - R) / (1 + (r - R) / k)
-// so far-flung points stay visibly *separate* (their order is preserved)
-// but bounded — the asymptote is R + k. This corrects the "everything
-// collapses to a dot because of one runaway outlier" zoomToFit problem
-// without needing stronger global gravity (which would crush clusters).
-const OUTLIER_THRESHOLD_PERCENTILE = 0.95;  // distance percentile beyond which compression starts
-const OUTLIER_SQUASH_K = 120;                // graph-units of extra room outliers can use beyond R; smaller = harder squash
-const OUTLIER_SQUASH_STRENGTH = 0.18;        // velocity-correction factor; tuned so outliers settle within COOLDOWN_TICKS
+  TAG_CATEGORIES,
+} from 'src/pages/MapPage.helpers';
+import { specPath } from 'src/routes/paths';
+import { colors, fontSize, typography } from 'src/theme';
 
 // visually-hidden style — keeps the spec list readable for screen readers
 // even though the canvas is the primary interface.
@@ -102,28 +49,6 @@ const visuallyHiddenSx = {
   border: 0,
 };
 
-// Top-N most frequent plot_types each get a distinct imprint border color
-// so the catalog's biggest categories (line, scatter, bar, …) stand out at
-// a glance. Specs that don't fall into the top-N keep a neutral border.
-// 8 categorical hues in imprint's hybrid-v3 sort order.
-const CLUSTER_COLORS = [
-  '#009E73', // slot 0 — brand green
-  '#C475FD', // slot 1 — lavender
-  '#4467A3', // slot 2 — blue
-  '#BD8233', // slot 3 — ochre
-  '#AE3030', // slot 4 — matte red
-  '#2ABCCD', // slot 5 — cyan
-  '#954477', // slot 6 — rose
-  '#99B314', // slot 7 — lime
-] as const;
-
-function colorFor(bucket: string | null, topTypes: string[]): string | null {
-  if (!bucket) return null;
-  const idx = topTypes.indexOf(bucket);
-  if (idx < 0) return null;
-  return CLUSTER_COLORS[idx % CLUSTER_COLORS.length];
-}
-
 // Read a link endpoint's spec id regardless of whether ForceGraph2D has
 // already mutated the field from a string into the resolved node object
 // (it does so after the first simulation tick). All link-side comparisons
@@ -131,76 +56,6 @@ function colorFor(bucket: string | null, topTypes: string[]): string | null {
 function linkEndId(end: MapLink['source']): string | undefined {
   if (typeof end === 'string') return end;
   return (end as { id?: string })?.id;
-}
-
-// Custom d3-force that compresses extreme outliers radially toward the
-// cluster centroid while leaving inner geometry untouched. See the block
-// comment on OUTLIER_THRESHOLD_PERCENTILE for the math; this is the
-// implementation. The simulation calls force(alpha) every tick, alpha
-// decays from 1 → 0, so the velocity correction tapers off as the layout
-// cools — the force is *active* during the same window the gate covers,
-// then becomes a no-op once outliers are at their compressed targets.
-// Exported for unit tests — the simulation only ever calls this through
-// d3-force's `force(alpha)` interface, so the public surface is internal.
-export type SimNode = { x?: number; y?: number; vx?: number; vy?: number };
-export function outlierSquashForce(
-  percentile: number,
-  k: number,
-  strength: number,
-) {
-  let nodes: SimNode[] = [];
-  function force(alpha: number) {
-    if (nodes.length === 0) return;
-    let cx = 0, cy = 0, n = 0;
-    for (const node of nodes) {
-      if (node.x == null || node.y == null) continue;
-      cx += node.x;
-      cy += node.y;
-      n++;
-    }
-    if (n === 0) return;
-    cx /= n;
-    cy /= n;
-    // One pass to compute distances; second pass to apply velocity
-    // adjustment to outliers. Allocating a fresh array per tick is fine
-    // at ~300 nodes (~3 µs); we'd only avoid it at 10k+.
-    const dists: number[] = new Array(nodes.length);
-    for (let i = 0; i < nodes.length; i++) {
-      const node = nodes[i];
-      if (node.x == null || node.y == null) {
-        dists[i] = 0;
-        continue;
-      }
-      dists[i] = Math.hypot(node.x - cx, node.y - cy);
-    }
-    const sorted = dists.slice().sort((a, b) => a - b);
-    // Use the (length - 1) * p index (numpy "linear" / "lower" interpolation
-    // for a discrete percentile). The naive `length * p` rounds up to
-    // `length - 1` for any n ≤ 1/(1-p) — i.e. with p = 0.95 and n ≤ 20 the
-    // cutoff would be the *max* distance and the squash force would silently
-    // disable itself. Filtered subsets of the catalog can easily land in
-    // that range, so we never want the cutoff to coincide with the maximum.
-    if (sorted.length < 2) return;
-    const idx = Math.floor((sorted.length - 1) * percentile);
-    const R = sorted[idx];
-    if (!(R > 0)) return;
-    for (let i = 0; i < nodes.length; i++) {
-      const r = dists[i];
-      if (r <= R) continue;
-      const node = nodes[i];
-      if (node.x == null || node.y == null) continue;
-      const excess = r - R;
-      const compressed = excess / (1 + excess / k);
-      const targetR = R + compressed;
-      const factor = (targetR - r) / r;  // negative — pulls toward the centroid
-      const dx = node.x - cx;
-      const dy = node.y - cy;
-      node.vx = (node.vx ?? 0) + dx * factor * strength * alpha;
-      node.vy = (node.vy ?? 0) + dy * factor * strength * alpha;
-    }
-  }
-  force.initialize = (n: SimNode[]) => { nodes = n; };
-  return force;
 }
 
 // Hairline border around a thumbnail node, theme-aware. Top-N plot types
@@ -214,7 +69,6 @@ function strokeFor(isDark: boolean, isHover: boolean, color: string | null): str
   return isDark ? 'rgba(240,239,232,0.18)' : 'rgba(26,26,23,0.18)';
 }
 
-
 export function MapPage() {
   const { trackPageview, trackEvent } = useAnalytics();
   const { isDark } = useTheme();
@@ -227,9 +81,32 @@ export function MapPage() {
   const fgRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // data state
-  const [specs, setSpecs] = useState<SpecMapItem[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // Simulation/data orchestration: spec loading, weights, the KNN graph
+  // derivation, settling gate, search matching, and force tuning all live
+  // in the hook. This component keeps the canvas, the paint callbacks, and
+  // every handler that needs the imperative graph ref.
+  const {
+    specs,
+    error,
+    weights,
+    setWeights,
+    minSim,
+    setMinSim,
+    resetWeights,
+    activeCategory,
+    graphData,
+    nodeById,
+    neighbors,
+    settled,
+    markSettled,
+    tickProgress,
+    handleEngineTick,
+    searchQuery,
+    setSearchQuery,
+    searchMatches,
+    forceConfig,
+  } = useForceGraphSimulation({ onRepaint: () => fgRef.current?.refresh?.() });
+
   const [size, setSize] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
   const [hoverId, setHoverId] = useState<string | null>(null);
   // panelNodeId trails hoverId on mouse-out so the corner preview can fade
@@ -248,60 +125,30 @@ export function MapPage() {
   // pin is active. Drives the DOM-overlay pulse marker — separate from the
   // canvas so a CSS @keyframes animation can drive the pulse independently
   // of FG2D's render loop (which pauses once the simulation cools down).
-  const [pinScreen, setPinScreen] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  const [pinScreen, setPinScreen] = useState<{ x: number; y: number; w: number; h: number } | null>(
+    null
+  );
   // ~100ms debounce so quick mouse-overs don't strobe the preview.
   const hoverTimerRef = useRef<number | null>(null);
   // hoverType = a plot_type the user is hovering in the legend; everything
   // not in that cluster dims so the cluster shape is obvious.
   const [hoverType, setHoverType] = useState<string | null>(null);
-  // Per-category weight overrides for the similarity calculation. Bound to
-  // the weights panel sliders. Live-updates KNN edges + simulation on change.
-  const [weights, setWeights] = useState<Record<TagCategory, number>>(DEFAULT_CATEGORY_WEIGHT);
-  const [minSim, setMinSim] = useState<number>(DEFAULT_MIN_SIM);
   const [weightsOpen, setWeightsOpen] = useState(false);
   // Mobile-only: legend collapses behind a `legend ▸` toggle to leave
   // canvas room. Tablet/desktop renders the legend list always-visible.
   const [legendOpen, setLegendOpen] = useState(false);
-  // settled = true once the force simulation has finished cooling. Until
-  // then, the canvas is overlaid by a subtle gate that swallows pointer
-  // input — a click on a still-moving node would otherwise pin the wrong
-  // spec by the time the simulation settles around it. Resets to false
-  // whenever graphData re-derives (filter / weight / category change), so
-  // the gate also covers subsequent re-layouts.
-  const [settled, setSettled] = useState(false);
-  // Throttled tick counter for the "computing" overlay's progress bar.
-  // We update React state at most every PROGRESS_TICK_BATCH simulation
-  // ticks to avoid re-rendering MapPage at ~60 Hz while the layout cools.
-  // tickCountRef holds the un-throttled count so we know when to flush.
-  const tickCountRef = useRef(0);
-  const [tickProgress, setTickProgress] = useState(0);
 
   // Search-pill state. searchOpen controls dropdown visibility (separate
   // from focus so we can keep showing matches briefly while a click is in
   // flight via the input's onBlur grace period).
-  const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchIdx, setSearchIdx] = useState(0);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
-  // 1. fetch + page view
+  // 1. page view
   useEffect(() => {
     trackPageview('/map');
   }, [trackPageview]);
-
-  useEffect(() => {
-    const ctrl = new AbortController();
-    fetch(`${API_URL}/specs/map`, { signal: ctrl.signal })
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json() as Promise<SpecMapItem[]>;
-      })
-      .then(setSpecs)
-      .catch(err => {
-        if (err.name !== 'AbortError') setError(err.message ?? 'Failed to load map data');
-      });
-    return () => ctrl.abort();
-  }, []);
 
   // 2. resize observer
   useEffect(() => {
@@ -339,172 +186,6 @@ export function MapPage() {
     };
   }, []);
 
-
-
-
-
-  // The category that drives the legend + node border colors: whichever
-  // currently has the highest weight (plot_type wins on ties because it's
-  // the first entry of TAG_CATEGORIES and we use strictly-greater compare).
-  // Falls back to plot_type when all weights are 0.
-  const activeCategory: TagCategory = useMemo(() => {
-    let maxWeight = -Infinity;
-    let active: TagCategory = 'plot_type';
-    for (const c of TAG_CATEGORIES) {
-      if (weights[c] > maxWeight) {
-        maxWeight = weights[c];
-        active = c;
-      }
-    }
-    return maxWeight > 0 ? active : 'plot_type';
-  }, [weights]);
-
-  // graphData rebuilds whenever weights/minSim/activeCategory change
-  // (because links + colorBucket depend on them). Without this cache, every
-  // slider-drag tick would recreate every MapNode with empty imgs/pendingTiers
-  // Maps, dropping the loaded HTMLImageElements — the canvas would then paint
-  // fallback rects until each <img> re-fires onload, producing a visible
-  // flicker across all 327 thumbnails on every onChange tick. We keep a
-  // stable id → MapNode cache here and reuse imgs/pendingTiers as long as
-  // thumbUrl is unchanged (theme toggle invalidates).
-  const nodeCacheRef = useRef<Map<string, MapNode>>(new Map());
-
-  // 3. derive graph data from specs/theme (pure — no setState in effect)
-  const graphData = useMemo<{
-    nodes: MapNode[];
-    links: MapLink[];
-    topTypes: string[];
-    typeCounts: Map<string, number>;
-    idf: Map<string, number>;
-  }>(() => {
-    if (!specs) {
-      return { nodes: [], links: [], topTypes: [], typeCounts: new Map(), idf: new Map() };
-    }
-    const idf = computeIDF(specs);
-    const topTypes = topCategoryValues(specs, activeCategory, CLUSTER_COLORS.length);
-    const typeCounts = categoryValueCounts(specs, activeCategory);
-    const cache = nodeCacheRef.current;
-    const nextCache = new Map<string, MapNode>();
-    // Pre-compute one centroid per colorBucket on a circle around the origin.
-    // Seeding each node near its cluster centroid (instead of the FG2D
-    // default of random positions everywhere) gives the simulation a warm
-    // start: clusters don't have to first separate from a uniform soup, and
-    // the same number of cooldown ticks now produces visibly cleaner
-    // separation. Null-bucket nodes sit at the origin and let the link force
-    // pull them toward whatever clusters they connect to.
-    const clusterCentroids = new Map<string, { x: number; y: number }>();
-    topTypes.forEach((t, i) => {
-      const angle = (i / topTypes.length) * Math.PI * 2;
-      clusterCentroids.set(t, {
-        x: Math.cos(angle) * CLUSTER_SEED_RADIUS,
-        y: Math.sin(angle) * CLUSTER_SEED_RADIUS,
-      });
-    });
-    // Hash-based jitter so seed positions are stable across re-renders for
-    // the same spec id — avoids reshuffling on filter changes.
-    const jitter = (id: string, salt: number) => {
-      let h = salt;
-      for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
-      return ((h & 0xffff) / 0xffff - 0.5) * 2 * CLUSTER_SEED_JITTER;
-    };
-    const nodes: (MapNode & { x?: number; y?: number; vx?: number; vy?: number })[] = specs.map(s => {
-      const v = primaryCategoryValue(s, activeCategory);
-      const colorBucket = topTypes.includes(v) ? v : null;
-      const thumbUrl = selectMapThumbUrl(s, isDark);
-      const cached = cache.get(s.id) as
-        | (MapNode & { x?: number; y?: number; vx?: number; vy?: number })
-        | undefined;
-      const reuse = cached && cached.thumbUrl === thumbUrl;
-      // Warm-start preference: keep the simulation's last x/y if we have it
-      // (filter / weight tweaks reuse positions and refine in place). Cold
-      // start: seed from the cluster centroid + stable per-id jitter.
-      const seedCenter = colorBucket ? clusterCentroids.get(colorBucket) : null;
-      const x = cached?.x ?? (seedCenter ? seedCenter.x + jitter(s.id, 1) : jitter(s.id, 3));
-      const y = cached?.y ?? (seedCenter ? seedCenter.y + jitter(s.id, 2) : jitter(s.id, 5));
-      const node: MapNode & { x: number; y: number; vx: number; vy: number } = {
-        id: s.id,
-        title: s.title,
-        tags: flattenTags(s),
-        colorBucket,
-        thumbUrl,
-        imgs: reuse ? cached!.imgs : new Map(),
-        pendingTiers: reuse ? cached!.pendingTiers : new Set(),
-        x,
-        y,
-        vx: cached?.vx ?? 0,
-        vy: cached?.vy ?? 0,
-      };
-      nextCache.set(s.id, node);
-      return node;
-    });
-    nodeCacheRef.current = nextCache;
-    const links = buildKNNLinks(specs, idf, KNN_K, minSim, weights);
-    return { nodes, links, topTypes, typeCounts, idf };
-  }, [specs, isDark, weights, minSim, activeCategory]);
-
-  // Re-arm the settling gate whenever graphData re-derives — FG2D reheats
-  // the simulation in response, and we want the gate to cover the new
-  // cooling phase the same way it covers the initial one. No-op on the
-  // very first render (settled is already false) and while specs are
-  // still loading.
-  //
-  // Implemented via the "store previous prop in state" pattern (see
-  // https://react.dev/reference/react/useState#storing-information-from-previous-renders)
-  // instead of useEffect: React supports calling setState during render of
-  // the *same* component, batches the updates, and re-renders once before
-  // commit — no infinite loop, and the rule that bans setState in effects
-  // doesn't apply to setState during render.
-  const [prevGraphData, setPrevGraphData] = useState(graphData);
-  if (graphData !== prevGraphData) {
-    setPrevGraphData(graphData);
-    if (graphData.nodes.length > 0) {
-      setSettled(false);
-      setTickProgress(0);
-      tickCountRef.current = 0;
-    }
-  }
-
-  // Eager-load the 400-tier thumbnails so something paints fast. Higher tiers
-  // are fetched lazily from nodeCanvasObject when the user zooms in.
-  useEffect(() => {
-    if (graphData.nodes.length === 0) return;
-    const nodeById = new Map(graphData.nodes.map(n => [n.id, n]));
-    let cancelled = false;
-    preloadImages(
-      graphData.nodes.map(n => ({ id: n.id, thumbUrl: n.thumbUrl })),
-      (id, tier, img) => {
-        if (cancelled) return;
-        const n = nodeById.get(id);
-        if (n) n.imgs.set(tier, img);
-        fgRef.current?.refresh?.();
-      }
-    );
-    return () => {
-      cancelled = true;
-    };
-  }, [graphData]);
-
-  // 4. neighbor lookup for hover highlight (built once per links change)
-  // Precomputed id → node lookup. linkColor/linkWidth fire once per link
-  // per frame (~1k links), and a graphData.nodes.find() inside each call
-  // would be O(N²) total per frame; the Map keeps it O(1).
-  const nodeById = useMemo(() => {
-    const map = new Map<string, MapNode>();
-    for (const n of graphData.nodes) map.set(n.id, n);
-    return map;
-  }, [graphData.nodes]);
-
-  const neighbors = useMemo(() => {
-    const map = new Map<string, Set<string>>();
-    for (const l of graphData.links) {
-      if (!map.has(l.source)) map.set(l.source, new Set());
-      if (!map.has(l.target)) map.set(l.target, new Set());
-      map.get(l.source)!.add(l.target);
-      map.get(l.target)!.add(l.source);
-    }
-    return map;
-  }, [graphData.links]);
-
   // Track the pinned node's on-screen rect so the DOM-overlay pulse marker
   // stays glued to it while the user pans/zooms. Cheap (one RAF tick = a
   // graph→screen coord transform + a setState that no-ops on sub-pixel
@@ -520,9 +201,7 @@ export function MapPage() {
     let raf = 0;
     const tick = () => {
       const fg = fgRef.current;
-      const node = nodeById.get(pinnedId) as
-        | (MapNode & { x?: number; y?: number })
-        | undefined;
+      const node = nodeById.get(pinnedId) as (MapNode & { x?: number; y?: number }) | undefined;
       if (fg && node && node.x != null && node.y != null) {
         const sc = fg.graph2ScreenCoords?.(node.x, node.y);
         const z = typeof fg.zoom === 'function' ? fg.zoom() : 1;
@@ -551,7 +230,7 @@ export function MapPage() {
     return () => cancelAnimationFrame(raf);
   }, [pinnedId, graphData, nodeById]);
 
-  // 5. derive everything the corner hover-panel needs from the (lagged)
+  // 3. derive everything the corner hover-panel needs from the (lagged)
   //    panelNodeId, so the panel can fade out without losing its content.
   const panelData = useMemo(() => {
     if (!panelNodeId) return null;
@@ -592,44 +271,6 @@ export function MapPage() {
     return colorFor(node.colorBucket, graphData.topTypes) ?? colors.primary;
   }, [pinnedId, nodeById, graphData.topTypes]);
 
-  // 6. Precompute lowercased searchable fields per spec so each keystroke
-  //    only does .includes() checks, not a fresh tag-flatten + lowercase.
-  const searchHaystacks = useMemo(() => {
-    if (!specs) return [];
-    return specs.map(s => ({
-      spec: s,
-      titleL: s.title.toLowerCase(),
-      idL: s.id.toLowerCase(),
-      tagsL: flattenTags(s).map(t => t.toLowerCase()),
-    }));
-  }, [specs]);
-
-  // 7. Match the search query: every whitespace-separated token must appear
-  //    somewhere (title / id / tag), score weighted by where it hit. Top 8.
-  const searchMatches = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return [];
-    const tokens = q.split(/\s+/).filter(Boolean);
-    const scored: { spec: SpecMapItem; score: number }[] = [];
-    for (const h of searchHaystacks) {
-      let score = 0;
-      let allMatch = true;
-      for (const tok of tokens) {
-        const inTitle = h.titleL.includes(tok);
-        const inId = h.idL.includes(tok);
-        const inTags = h.tagsL.some(t => t.includes(tok));
-        if (!(inTitle || inId || inTags)) {
-          allMatch = false;
-          break;
-        }
-        score += inTitle ? 3 : inId ? 2 : 1;
-      }
-      if (allMatch) scored.push({ spec: h.spec, score });
-    }
-    scored.sort((a, b) => b.score - a.score || a.spec.title.localeCompare(b.spec.title));
-    return scored.slice(0, 8).map(x => x.spec);
-  }, [searchQuery, searchHaystacks]);
-
   // (searchIdx is reset inline in the input's onChange handler — moved out
   // of useEffect to avoid set-state-in-effect: it's a one-line followup
   // to a user event, not external sync.)
@@ -648,8 +289,7 @@ export function MapPage() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-
-  // 5. ForceGraph2D callbacks. Types for ctx come from the wrapper's prop signature
+  // 4. ForceGraph2D callbacks. Types for ctx come from the wrapper's prop signature
   // when these are passed inline below — extracting them out would force us to spell
   // CanvasRenderingContext2D explicitly, which our eslint config doesn't recognize.
   type WithCoords = MapNode & { x?: number; y?: number };
@@ -684,9 +324,7 @@ export function MapPage() {
   const flyTo = (id: string) => {
     const fg = fgRef.current;
     if (!fg) return;
-    const node = nodeById.get(id) as
-      | (MapNode & { x?: number; y?: number })
-      | undefined;
+    const node = nodeById.get(id) as (MapNode & { x?: number; y?: number }) | undefined;
     if (!node || node.x == null || node.y == null) return;
     fg.centerAt?.(node.x, node.y, 800);
     fg.zoom?.(2.0, 800);
@@ -708,7 +346,10 @@ export function MapPage() {
     <>
       <Helmet>
         <title>map() — anyplot</title>
-        <meta name="description" content="Interactive map of all anyplot specifications, clustered by tag similarity." />
+        <meta
+          name="description"
+          content="Interactive map of all anyplot specifications, clustered by tag similarity."
+        />
       </Helmet>
       <Box
         ref={containerRef}
@@ -735,16 +376,18 @@ export function MapPage() {
             mirror RootLayout's container px in raw pixels (sx `left` is
             NOT spacing-aware, unlike `px`/`mx`) so the text aligns with
             the anyplot logo / nav links. */}
-        <Box sx={{
-          position: 'absolute',
-          top: { xs: 50, sm: 16 },
-          left: { xs: 16, sm: 32, md: 64, lg: 96 },
-          zIndex: 2,
-          fontFamily: typography.mono,
-          fontSize: fontSize.xs,
-          color: 'var(--ink-soft)',
-          pointerEvents: 'none',
-        }}>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: { xs: 50, sm: 16 },
+            left: { xs: 16, sm: 32, md: 64, lg: 96 },
+            zIndex: 2,
+            fontFamily: typography.mono,
+            fontSize: fontSize.xs,
+            color: 'var(--ink-soft)',
+            pointerEvents: 'none',
+          }}
+        >
           {specs ? `${specs.length} specs · ${graphData.links.length} edges` : ' '}
         </Box>
 
@@ -753,20 +396,22 @@ export function MapPage() {
             Escape clears. Selecting a match flies the camera to the node and
             opens the hover panel. Higher z-index than the other overlays so
             the dropdown sits above legend + weights + hover panel. */}
-        <Box sx={{
-          position: 'absolute',
-          top: { xs: 8, sm: 16 },
-          // Phone: full-width pill spanning the canvas with 16 px gutters.
-          // Tablet+: centered 280 px pill, capped against the meta line on
-          // the left and the legend column on the right.
-          left: { xs: 16, sm: '50%' },
-          right: { xs: 16, sm: 'auto' },
-          transform: { xs: 'none', sm: 'translateX(-50%)' },
-          zIndex: 4,
-          width: { xs: 'auto', sm: 280 },
-          maxWidth: { xs: 'none', sm: 'calc(100vw - 320px)' },
-          fontFamily: typography.mono,
-        }}>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: { xs: 8, sm: 16 },
+            // Phone: full-width pill spanning the canvas with 16 px gutters.
+            // Tablet+: centered 280 px pill, capped against the meta line on
+            // the left and the legend column on the right.
+            left: { xs: 16, sm: '50%' },
+            right: { xs: 16, sm: 'auto' },
+            transform: { xs: 'none', sm: 'translateX(-50%)' },
+            zIndex: 4,
+            width: { xs: 'auto', sm: 280 },
+            maxWidth: { xs: 'none', sm: 'calc(100vw - 320px)' },
+            fontFamily: typography.mono,
+          }}
+        >
           <Box
             component="input"
             ref={searchInputRef}
@@ -816,19 +461,22 @@ export function MapPage() {
             }}
           />
           {searchOpen && searchQuery.trim() && (
-            <Box sx={{
-              mt: 0.5,
-              bgcolor: 'var(--bg-surface)',
-              border: '1px solid var(--rule)',
-              borderRadius: '4px',
-              overflow: 'hidden',
-              boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
-            }}>
+            <Box
+              sx={{
+                mt: 0.5,
+                bgcolor: 'var(--bg-surface)',
+                border: '1px solid var(--rule)',
+                borderRadius: '4px',
+                overflow: 'hidden',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+              }}
+            >
               {searchMatches.length === 0 ? (
                 <Box
                   aria-label="No matches"
                   sx={{
-                    px: 1.25, py: 0.75,
+                    px: 1.25,
+                    py: 0.75,
                     fontSize: fontSize.xs,
                     color: 'var(--ink-soft)',
                     fontFamily: typography.mono,
@@ -847,7 +495,8 @@ export function MapPage() {
                     }}
                     onMouseEnter={() => setSearchIdx(i)}
                     sx={{
-                      px: 1.25, py: 0.75,
+                      px: 1.25,
+                      py: 0.75,
                       cursor: 'pointer',
                       fontSize: fontSize.xs,
                       color: 'var(--ink)',
@@ -858,12 +507,14 @@ export function MapPage() {
                       gap: 1,
                     }}
                   >
-                    <Box sx={{
-                      flex: 1,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}>
+                    <Box
+                      sx={{
+                        flex: 1,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
                       {s.title}
                     </Box>
                     <Box sx={{ color: 'var(--ink-soft)', opacity: 0.7, fontSize: '0.65rem' }}>
@@ -951,9 +602,21 @@ export function MapPage() {
                     userSelect: 'none',
                   }}
                 >
-                  <Box sx={{ width: 10, height: 10, bgcolor: color, borderRadius: '2px', flex: 'none' }} />
-                  <Box component="span" sx={{ minWidth: 60 }}>{t}</Box>
-                  <Box component="span" sx={{ opacity: 0.55, fontVariantNumeric: 'tabular-nums' }}>{count}</Box>
+                  <Box
+                    sx={{
+                      width: 10,
+                      height: 10,
+                      bgcolor: color,
+                      borderRadius: '2px',
+                      flex: 'none',
+                    }}
+                  />
+                  <Box component="span" sx={{ minWidth: 60 }}>
+                    {t}
+                  </Box>
+                  <Box component="span" sx={{ opacity: 0.55, fontVariantNumeric: 'tabular-nums' }}>
+                    {count}
+                  </Box>
                 </Box>
               );
             })}
@@ -965,19 +628,21 @@ export function MapPage() {
             column-reverse keeps the toggle pinned at the bottom while the
             panel grows upward — without it, opening the panel pushes the
             toggle up by ~300 px on mobile, where it can land off-screen. */}
-        <Box sx={{
-          position: 'absolute',
-          bottom: { xs: 8, sm: 16 },
-          left: { xs: 16, sm: 32, md: 64, lg: 96 },
-          zIndex: 2,
-          display: 'flex',
-          flexDirection: 'column-reverse',
-          alignItems: 'flex-start',
-          gap: 1,
-          fontFamily: typography.mono,
-          fontSize: fontSize.xs,
-          color: 'var(--ink-soft)',
-        }}>
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: { xs: 8, sm: 16 },
+            left: { xs: 16, sm: 32, md: 64, lg: 96 },
+            zIndex: 2,
+            display: 'flex',
+            flexDirection: 'column-reverse',
+            alignItems: 'flex-start',
+            gap: 1,
+            fontFamily: typography.mono,
+            fontSize: fontSize.xs,
+            color: 'var(--ink-soft)',
+          }}
+        >
           <Box
             component="button"
             onClick={() => setWeightsOpen(o => !o)}
@@ -998,27 +663,35 @@ export function MapPage() {
             {weightsOpen ? 'weights ▾' : 'weights ▸'}
           </Box>
           {weightsOpen && (
-            <Box sx={{
-              p: { xs: 1.25, sm: 2 },
-              minWidth: { xs: 220, sm: 280 },
-              border: '1px solid var(--rule)',
-              borderRadius: '4px',
-              bgcolor: 'var(--bg-surface)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: { xs: 0.6, sm: 1.25 },
-            }}>
+            <Box
+              sx={{
+                p: { xs: 1.25, sm: 2 },
+                minWidth: { xs: 220, sm: 280 },
+                border: '1px solid var(--rule)',
+                borderRadius: '4px',
+                bgcolor: 'var(--bg-surface)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: { xs: 0.6, sm: 1.25 },
+              }}
+            >
               {TAG_CATEGORIES.map(cat => (
-                <Box key={cat} sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: { xs: 1, sm: 1.5 },
-                }}>
-                  <Box component="span" sx={{
-                    minWidth: { xs: 78, sm: 100 },
-                    fontFamily: typography.mono,
-                    fontSize: fontSize.xs,
-                  }}>
+                <Box
+                  key={cat}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: { xs: 1, sm: 1.5 },
+                  }}
+                >
+                  <Box
+                    component="span"
+                    sx={{
+                      minWidth: { xs: 78, sm: 100 },
+                      fontFamily: typography.mono,
+                      fontSize: fontSize.xs,
+                    }}
+                  >
                     {cat}
                   </Box>
                   <Slider
@@ -1037,14 +710,17 @@ export function MapPage() {
                       '& .MuiSlider-rail': { opacity: 0.25 },
                     }}
                   />
-                  <Box component="span" sx={{
-                    minWidth: 28,
-                    textAlign: 'right',
-                    fontFamily: typography.mono,
-                    fontSize: fontSize.xs,
-                    fontVariantNumeric: 'tabular-nums',
-                    color: 'var(--ink)',
-                  }}>
+                  <Box
+                    component="span"
+                    sx={{
+                      minWidth: 28,
+                      textAlign: 'right',
+                      fontFamily: typography.mono,
+                      fontSize: fontSize.xs,
+                      fontVariantNumeric: 'tabular-nums',
+                      color: 'var(--ink)',
+                    }}
+                  >
                     {weights[cat].toFixed(1)}
                   </Box>
                 </Box>
@@ -1053,18 +729,23 @@ export function MapPage() {
                   below which a candidate KNN edge is dropped. Lower = denser
                   graph (more cross-cluster bridges); higher = sparser graph
                   (cleaner clusters but more isolated outliers). */}
-              <Box sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: { xs: 1, sm: 1.5 },
-                pt: { xs: 0.25, sm: 0.5 },
-                borderTop: '1px dashed var(--rule)',
-              }}>
-                <Box component="span" sx={{
-                  minWidth: { xs: 78, sm: 100 },
-                  fontFamily: typography.mono,
-                  fontSize: fontSize.xs,
-                }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: { xs: 1, sm: 1.5 },
+                  pt: { xs: 0.25, sm: 0.5 },
+                  borderTop: '1px dashed var(--rule)',
+                }}
+              >
+                <Box
+                  component="span"
+                  sx={{
+                    minWidth: { xs: 78, sm: 100 },
+                    fontFamily: typography.mono,
+                    fontSize: fontSize.xs,
+                  }}
+                >
                   threshold
                 </Box>
                 <Slider
@@ -1081,24 +762,24 @@ export function MapPage() {
                     '& .MuiSlider-rail': { opacity: 0.25 },
                   }}
                 />
-                <Box component="span" sx={{
-                  minWidth: 32,
-                  textAlign: 'right',
-                  fontFamily: typography.mono,
-                  fontSize: fontSize.xs,
-                  fontVariantNumeric: 'tabular-nums',
-                  color: 'var(--ink)',
-                }}>
+                <Box
+                  component="span"
+                  sx={{
+                    minWidth: 32,
+                    textAlign: 'right',
+                    fontFamily: typography.mono,
+                    fontSize: fontSize.xs,
+                    fontVariantNumeric: 'tabular-nums',
+                    color: 'var(--ink)',
+                  }}
+                >
                   {minSim.toFixed(2)}
                 </Box>
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: { xs: 0, sm: 0.5 } }}>
                 <Box
                   component="button"
-                  onClick={() => {
-                    setWeights(DEFAULT_CATEGORY_WEIGHT);
-                    setMinSim(DEFAULT_MIN_SIM);
-                  }}
+                  onClick={resetWeights}
                   sx={{
                     all: 'unset',
                     cursor: 'pointer',
@@ -1196,14 +877,18 @@ export function MapPage() {
                   }}
                 />
               ) : (
-                <Box sx={{ height: { xs: 90, md: 158 }, bgcolor: isDark ? '#0a0a08' : '#FFFDF6' }} />
+                <Box
+                  sx={{ height: { xs: 90, md: 158 }, bgcolor: isDark ? '#0a0a08' : '#FFFDF6' }}
+                />
               )}
-              <Box sx={{
-                p: { xs: 0.75, md: 1.25 },
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 0.5,
-              }}>
+              <Box
+                sx={{
+                  p: { xs: 0.75, md: 1.25 },
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 0.5,
+                }}
+              >
                 <Box
                   sx={{
                     fontSize: fontSize.sm,
@@ -1259,12 +944,30 @@ export function MapPage() {
 
         {/* Loading / error states */}
         {!specs && !error && (
-          <Box sx={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Box
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
             <CircularProgress size={28} />
           </Box>
         )}
         {error && (
-          <Box sx={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink-soft)', fontFamily: typography.mono }}>
+          <Box
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--ink-soft)',
+              fontFamily: typography.mono,
+            }}
+          >
             <Typography sx={{ fontFamily: typography.mono, fontSize: fontSize.sm }}>
               Failed to load map: {error}
             </Typography>
@@ -1280,10 +983,9 @@ export function MapPage() {
             height={size.h}
             backgroundColor={'transparent'}
             nodeLabel={(n: MapNode) => n.title}
-            // Boost global repulsion so nodes aren't crammed into a blob.
-            d3VelocityDecay={0.35}
-            d3AlphaDecay={COOLDOWN_ALPHA_DECAY}
-            d3AlphaMin={COOLDOWN_ALPHA_MIN}
+            d3VelocityDecay={forceConfig.velocityDecay}
+            d3AlphaDecay={forceConfig.alphaDecay}
+            d3AlphaMin={forceConfig.alphaMin}
             nodeCanvasObject={(node, ctx, globalScale) => {
               const n = node as WithCoords;
               if (n.x == null || n.y == null) return;
@@ -1293,8 +995,7 @@ export function MapPage() {
               // any node in that cluster, dim the rest.
               const matchesType = hoverType == null || n.colorBucket === hoverType;
               const dim =
-                (hoverId != null && !isHover && !isNeighbor) ||
-                (hoverType != null && !matchesType);
+                (hoverId != null && !isHover && !isNeighbor) || (hoverType != null && !matchesType);
               // Hovered node itself doesn't grow — the rich preview lives in a
               // DOM corner panel. Direct neighbors get a small bump so the
               // relationship is still legible on the canvas.
@@ -1328,7 +1029,11 @@ export function MapPage() {
                 ctx.fillRect(x, y, w, h);
               }
               ctx.lineWidth = isHover ? 2 : n.colorBucket ? 1.5 : 1;
-              ctx.strokeStyle = strokeFor(isDark, !!isHover, colorFor(n.colorBucket, graphData.topTypes));
+              ctx.strokeStyle = strokeFor(
+                isDark,
+                !!isHover,
+                colorFor(n.colorBucket, graphData.topTypes)
+              );
               ctx.strokeRect(x, y, w, h);
 
               ctx.restore();
@@ -1357,7 +1062,9 @@ export function MapPage() {
                 // Match the cluster color of the hovered node so the burst
                 // of highlighted edges feels coherent with the frame.
                 const hoverNode = nodeById.get(hoverId);
-                return colorFor(hoverNode?.colorBucket ?? null, graphData.topTypes) ?? colors.primary;
+                return (
+                  colorFor(hoverNode?.colorBucket ?? null, graphData.topTypes) ?? colors.primary
+                );
               }
               if (hoverType) {
                 const sBucket = sId ? nodeById.get(sId)?.colorBucket : undefined;
@@ -1403,7 +1110,7 @@ export function MapPage() {
                 setHoverId(null);
               }
             }}
-            cooldownTicks={COOLDOWN_TICKS}
+            cooldownTicks={forceConfig.cooldownTicks}
             // Frame the dense cluster to ~80% of the viewport — instantly
             // (0 ms), so the camera move happens behind the still-active
             // gate overlay and the user just sees the final framing when
@@ -1430,7 +1137,10 @@ export function MapPage() {
                   const trim = 0.05;
                   const lo = Math.floor(xs.length * trim);
                   const hi = Math.floor(xs.length * (1 - trim));
-                  const minX = xs[lo], maxX = xs[hi], minY = ys[lo], maxY = ys[hi];
+                  const minX = xs[lo],
+                    maxX = xs[hi],
+                    minY = ys[lo],
+                    maxY = ys[hi];
                   const cx = (minX + maxX) / 2;
                   const cy = (minY + maxY) / 2;
                   const bboxW = Math.max(1, maxX - minX);
@@ -1438,74 +1148,41 @@ export function MapPage() {
                   const padding = Math.round(Math.min(size.w, size.h) * 0.1);
                   const fitZoom = Math.min(
                     (size.w - 2 * padding) / bboxW,
-                    (size.h - 2 * padding) / bboxH,
+                    (size.h - 2 * padding) / bboxH
                   );
                   fg.centerAt?.(cx, cy, 0);
                   fg.zoom?.(fitZoom, 0);
                 }
               }
-              setSettled(true);
+              markSettled();
             }}
             // Wire up the custom forces once the imperative ref is available.
+            // The tuned values/factories come from the hook's forceConfig.
             // onRenderFramePre fires every frame; the __forcesWired guard makes
             // it idempotent and the cost on subsequent frames is one property read.
             onRenderFramePre={() => {
               const fg = fgRef.current;
               if (!fg || fg.__forcesWired) return;
-              // Stronger many-body repulsion than the default ~-30.
-              fg.d3Force('charge')?.strength(REPULSION);
-              // Link distance/strength scale with weighted-Jaccard similarity:
-              // tighter clusters for highly related specs, looser otherwise.
+              fg.d3Force('charge')?.strength(forceConfig.chargeStrength);
               // The d3-force-3d ambient types are minimal; cast for the chained calls.
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const linkForce = fg.d3Force('link') as any;
               if (linkForce) {
-                linkForce.distance((l: MapLink) => {
-                  const w = l.weight ?? 0.3;
-                  return LINK_DISTANCE_MIN + (1 - Math.min(1, w)) * (LINK_DISTANCE_MAX - LINK_DISTANCE_MIN);
-                });
-                linkForce.strength((l: MapLink) =>
-                  Math.max(0.02, Math.min(LINK_STRENGTH_CAP, (l.weight ?? 0.3) * 0.4))
-                );
+                linkForce.distance(forceConfig.linkDistance);
+                linkForce.strength(forceConfig.linkStrength);
               }
-              // Per-node collision: prevents thumbnail overlap. Radius = half
-              // the longer side of the bounding box plus a small padding.
-              fg.d3Force(
-                'collide',
-                forceCollide<MapNode>(() => NODE_SIZE / 2 + COLLIDE_PADDING).iterations(2)
-              );
-              // Mild centering force so disconnected outliers (no KNN edges
-              // because all sims < threshold) drift back toward the cluster
-              // mass instead of vanishing to the corners. Strength is well
-              // below the default 1.0 so cluster shapes stay intact.
-              fg.d3Force('center')?.strength?.(CENTER_GRAVITY);
+              fg.d3Force('collide', forceConfig.createCollideForce());
+              fg.d3Force('center')?.strength?.(forceConfig.centerGravity);
               // Outlier-squash: register the custom radial-compression force
               // AFTER the standard ones so its velocity correction is the
               // last word per tick. Inner geometry is untouched (force is a
               // no-op below the percentile threshold), so this stacks on the
               // existing layout instead of fighting it.
-              fg.d3Force(
-                'outlier-squash',
-                outlierSquashForce(
-                  OUTLIER_THRESHOLD_PERCENTILE,
-                  OUTLIER_SQUASH_K,
-                  OUTLIER_SQUASH_STRENGTH,
-                ),
-              );
+              fg.d3Force('outlier-squash', forceConfig.createOutlierSquashForce());
               fg.__forcesWired = true;
               fg.d3ReheatSimulation?.();
             }}
-            // Drive the loading-overlay progress bar. Each simulation tick
-            // bumps the un-throttled ref; we flush to React state every
-            // PROGRESS_TICK_BATCH ticks (~5×/s at 60 Hz) so the bar advances
-            // smoothly without re-rendering MapPage on every tick.
-            onEngineTick={() => {
-              tickCountRef.current += 1;
-              const PROGRESS_TICK_BATCH = 6;
-              if (tickCountRef.current % PROGRESS_TICK_BATCH === 0) {
-                setTickProgress(Math.min(1, tickCountRef.current / COOLDOWN_TICKS));
-              }
-            }}
+            onEngineTick={handleEngineTick}
           />
         )}
 

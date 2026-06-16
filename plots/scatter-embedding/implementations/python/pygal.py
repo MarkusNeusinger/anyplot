@@ -27,11 +27,11 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Okabe-Ito with 65 % opacity to handle overlapping points gracefully
 OKABE_ITO_ALPHA = (
     "rgba(0,158,115,0.65)",
-    "rgba(213,94,0,0.65)",
-    "rgba(0,114,178,0.65)",
-    "rgba(204,121,167,0.65)",
-    "rgba(230,159,0,0.65)",
-    "rgba(86,180,233,0.65)",
+    "rgba(196, 117, 253, 0.65)",
+    "rgba(68, 103, 163, 0.65)",
+    "rgba(189, 130, 51, 0.65)",
+    "rgba(174, 48, 48, 0.65)",
+    "rgba(42, 188, 205, 0.65)",
 )
 
 CLUSTER_LABELS = ["Cluster A", "Cluster B", "Cluster C", "Cluster D", "Cluster E", "Cluster F"]

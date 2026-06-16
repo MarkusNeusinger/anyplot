@@ -30,7 +30,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 np.random.seed(42)
 
@@ -157,12 +157,12 @@ custom_style = Style(
         INK_SOFT,
         INK_SOFT,
         INK_SOFT,
-        OKABE_ITO[0] + "44",
-        OKABE_ITO[1] + "44",
-        OKABE_ITO[2] + "44",
-        OKABE_ITO[0],
-        OKABE_ITO[1],
-        OKABE_ITO[2],
+        IMPRINT[0] + "44",
+        IMPRINT[1] + "44",
+        IMPRINT[2] + "44",
+        IMPRINT[0],
+        IMPRINT[1],
+        IMPRINT[2],
     ),
     title_font_size=28,
     label_font_size=18,
@@ -217,7 +217,7 @@ for axis_id in range(n_axes):
     angle = axis_angles[axis_id]
     label_x = center_x + label_radius * math.cos(angle)
     label_y = center_y + label_radius * math.sin(angle)
-    axis_label_positions.append((label_x, label_y, axis_names[axis_id], OKABE_ITO[axis_id]))
+    axis_label_positions.append((label_x, label_y, axis_names[axis_id], IMPRINT[axis_id]))
 
 # Draw edges as curved paths with bundling to reduce visual clutter
 edge_points_by_axis = {0: [], 1: [], 2: []}

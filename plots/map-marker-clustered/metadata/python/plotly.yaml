@@ -20,7 +20,7 @@ review:
   - 'Native Plotly clustering (`cluster={"enabled": True, ...}`) correctly displays
     count labels on cluster circles and enables interactive zoom-to-expand in the
     HTML output'
-  - Full anyplot palette in canonical order with all theme chrome tokens (INK, INK_SOFT,
+  - Full Imprint palette in canonical order with all theme chrome tokens (INK, INK_SOFT,
     ELEVATED_BG) wired up to title, legend, and annotation
   - Data context annotation (total stores, densest city, interaction hint) guides
     the viewer without cluttering the map
@@ -84,7 +84,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette is CVD-safe. Good contrast between cluster circles
+        comment: Imprint palette is CVD-safe. Good contrast between cluster circles
           and basemap.
       - id: VQ-05
         name: Layout & Canvas
@@ -105,7 +105,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'anyplot palette canonical order. Light bg #FAF8F1, dark bg #1A1A17.
+        comment: 'Imprint palette canonical order. Light bg #FAF8F1, dark bg #1A1A17.
           All theme chrome tokens correctly applied in both renders.'
     design_excellence:
       score: 13

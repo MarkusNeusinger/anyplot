@@ -22,7 +22,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette for alternating chromosomes
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data generation
 np.random.seed(42)
@@ -108,7 +108,7 @@ chrom_label_df = pd.DataFrame([{"chrom_label": chrom, "center": center} for chro
 chrom_list = list(chrom_lengths.keys())
 color_mapping = {}
 for i, chrom in enumerate(chrom_list):
-    color_mapping[chrom] = OKABE_ITO[i % len(OKABE_ITO)]
+    color_mapping[chrom] = IMPRINT[i % len(IMPRINT)]
 
 color_scale = alt.Scale(domain=chrom_list, range=[color_mapping[chrom] for chrom in chrom_list])
 

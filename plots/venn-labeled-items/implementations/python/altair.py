@@ -25,8 +25,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito categorical palette: brand green, vermillion, blue
 COLOR_A = "#009E73"
-COLOR_B = "#D55E00"
-COLOR_C = "#0072B2"
+COLOR_B = "#C475FD"
+COLOR_C = "#4467A3"
 
 # Symmetric three-circle Venn layout on a 1200x1200 square canvas
 CANVAS = 1200

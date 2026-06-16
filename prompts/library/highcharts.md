@@ -1,256 +1,225 @@
-# highcharts
+# Highcharts
 
-**Note**: Highcharts requires a license for commercial use.
+Highcharts is the industry-standard JavaScript charting library for finance,
+news, and BI dashboards (SVG-rendered, enormously flexible). As of Phase 2 of
+the JavaScript rollout, anyplot's canonical `highcharts` entry is the **native
+JavaScript** library — the file extension is **`.js`** and the runtime is the
+**browser render harness** (`node automation/js-render/render.mjs`), **not**
+Python (`highcharts-core`), Rscript, or julia.
 
-## Import
+> **Commercial license — keep it visible.** Highcharts is free for personal /
+> non-commercial use but requires a paid license for commercial use
+> (https://www.highcharts.com/license). Keep the `// License:` line in the
+> header block (below) so it ships in every generated snippet. Do not strip the
+> Highcharts credit for a license you don't hold.
 
-```python
-# IMPORTANT: Correct import path
-from highcharts_core.chart import Chart
-from highcharts_core.options import HighchartsOptions
-from highcharts_core.options.series.bar import BarSeries, ColumnSeries
-from highcharts_core.options.series.scatter import ScatterSeries
+Highcharts charts render in a browser DOM — there is no headless CLI that writes
+a PNG. You author an **idiomatic Highcharts snippet** that draws into the mount
+node `#container`; the harness wraps it in an HTML page, loads the pinned
+`highcharts` bundle, renders it under headless Chromium (Playwright), and
+screenshots the mount node at the exact canvas size. It emits **both**
+`plot-{theme}.png` and `plot-{theme}.html`. You never write to the filesystem,
+build HTML, or drive a screenshot — the harness owns all of that.
+
+## IMPORTANT: No Workarounds
+
+**If Highcharts cannot implement a plot type natively, DO NOT shell out to
+Chart.js, D3, ECharts, or any other library.** Highcharts has a large built-in
+catalog (line, spline, area, column/bar, scatter, bubble, pie, gauge, heatmap,
+treemap, sunburst, sankey, dependency-wheel, networkgraph, funnel, …). If the
+spec's core value is genuine interactivity (hover/zoom/drilldown) with no static
+form, return `NOT_FEASIBLE`. Do not simulate interaction.
+
+Only the **core `highcharts` bundle** is vendored — the `Highcharts` global is
+the single global available. Do **not** rely on `highcharts-more` (bubble,
+polar, gauge, boxplot, errorbar, columnrange), `modules/*` (treemap, sunburst,
+sankey, networkgraph, heatmap, …), or `highcharts-3d`: they are **not loaded**.
+If a spec needs a series type that lives in one of those add-on modules, return
+`NOT_FEASIBLE` rather than `import`ing it (there is no import — see Forbidden).
+
+## The mount-node contract (how your snippet connects to the harness)
+
+The harness gives you a pre-sized `<div id="container">` and these globals (the
+browser has no `process.env`, so this is the JS analogue of `ANYPLOT_THEME`):
+
+```js
+window.ANYPLOT_THEME      // "light" | "dark"
+window.ANYPLOT_TOKENS     // { pageBg, elevatedBg, ink, inkSoft, grid, palette[8], amber, seq[2], div[3] }
+window.ANYPLOT_SIZE       // { width, height } — the CSS mount size
+window.Highcharts         // the Highcharts global (already loaded)
 ```
 
-## Create Chart
+Your snippet must:
 
-**CRITICAL**: Always pass `container="container"` to the Chart constructor. This ensures the generated JavaScript targets the correct HTML element.
+1. Call `Highcharts.chart("container", option)` (string id of the mount node).
+2. Set `chart.animation: false` and `plotOptions.series.animation: false` so the
+   screenshot never catches a mid-animation frame.
 
-```python
-# CORRECT - always specify container
-chart = Chart(container="container")
-chart.options = HighchartsOptions()
-
-# Title
-chart.options.title = {'text': title}
-
-# Axes
-chart.options.x_axis = {'title': {'text': x_label}}
-chart.options.y_axis = {'title': {'text': y_label}}
-```
-
-## Add Series
-
-```python
-from highcharts_core.options.series.scatter import ScatterSeries
-
-series = ScatterSeries()
-series.data = list(zip(x_values, y_values))
-series.name = 'Data'
-
-chart.add_series(series)
-```
-
-## Series Types
-
-```python
-from highcharts_core.options.series.bar import BarSeries, ColumnSeries  # ColumnSeries for vertical bars
-from highcharts_core.options.series.line import LineSeries
-from highcharts_core.options.series.scatter import ScatterSeries
-from highcharts_core.options.series.area import AreaSeries
-from highcharts_core.options.series.pie import PieSeries
-from highcharts_core.options.series.boxplot import BoxPlotSeries
-```
-
-## PNG Export (via Selenium)
-
-**IMPORTANT**: Headless Chrome cannot load external CDN scripts from `file://` URLs. You MUST download Highcharts JS and embed it inline.
-
-```python
-import tempfile
-import time
-import urllib.request
-from pathlib import Path
-
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-
-# Download Highcharts JS (required for headless Chrome)
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
-
-# For boxplot/errorbar charts, also download highcharts-more.js:
-# highcharts_more_url = "https://code.highcharts.com/highcharts-more.js"
-# with urllib.request.urlopen(highcharts_more_url, timeout=30) as response:
-#     highcharts_more_js = response.read().decode("utf-8")
-
-# Generate HTML with INLINE scripts (not CDN links!)
-# Note: PAGE_BG comes from the Theme-adaptive Chrome section below — already tied to ANYPLOT_THEME
-THEME = os.getenv("ANYPLOT_THEME", "light")
-PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-
-html_str = chart.to_js_literal()
-html_content = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <script>{highcharts_js}</script>
-</head>
-<body style="margin:0; background:{PAGE_BG};">
-    <div id="container" style="width: 3200px; height: 1800px;"></div>
-    <script>{html_str}</script>
-</body>
-</html>"""
-
-# Save the HTML artifact for the site (both themes)
-with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
-
-# Write temp HTML and take screenshot for the PNG artifact
-with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
-    f.write(html_content)
-    temp_path = f.name
-
-chrome_options = Options()
-chrome_options.add_argument("--headless=new")          # MUST be the new headless mode
-chrome_options.add_argument("--no-sandbox")
-chrome_options.add_argument("--disable-dev-shm-usage")
-chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--hide-scrollbars")       # otherwise Chrome reserves ~16 px on the right
-chrome_options.add_argument("--window-size=3200,1800") # NOTE: not authoritative — see CDP override below
-
-driver = webdriver.Chrome(options=chrome_options)
-# Force the inner viewport to exactly W×H. `--window-size` alone gets eaten by
-# Chrome chrome (toolbar/scrollbar leftovers in headless mode), which is what
-# left every May 2026 highcharts screenshot at 3200×1661 instead of 3200×1800.
-# `setDeviceMetricsOverride` makes the viewport authoritative.
-driver.execute_cdp_cmd(
-    "Emulation.setDeviceMetricsOverride",
-    {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False},
-)
-driver.get(f"file://{temp_path}")
-time.sleep(5)  # Wait for chart to render
-driver.save_screenshot(f"plot-{THEME}.png")
-driver.quit()
-
-Path(temp_path).unlink()  # Clean up temp file
-
-# Belt-and-braces: even with the CDP override, an occasional ±1–2 px rounding
-# can occur. Pin the saved PNG to exact dims so the post-render gate is happy.
-from PIL import Image
-_img = Image.open(f"plot-{THEME}.png").convert("RGB")
-if _img.size != (3200, 1800):           # or (2400, 2400) for square charts
-    _norm = Image.new("RGB", (3200, 1800), PAGE_BG)
-    _norm.paste(_img, ((3200 - _img.size[0]) // 2, (1800 - _img.size[1]) // 2))
-    _norm.save(f"plot-{THEME}.png")
-```
-
-## Sizing for 3200×1800 px (starting values — review-loop tunes)
-
-Size + text sizes + marker sizes (the theme/color concerns are covered in the "Theme-adaptive Chrome" section below — do not duplicate):
-
-```python
-# Marker sizes (in plotOptions) — density-aware, see default-style-guide.md
-chart.options.plot_options = {
-    'scatter': {'marker': {'radius': 6}},  # ~2-3x default
-    'line': {'lineWidth': 2.5}
-}
-```
-
-See `prompts/default-style-guide.md` "Proportional Sizing" for review criteria.
+Do **not** pass an explicit `chart.width` / `chart.height` — Highcharts auto-sizes
+to `#container`, which the harness has already sized to the canonical canvas. The
+exact pixels come from Playwright `deviceScaleFactor: 2` over that fixed mount, so
+you only pick the orientation.
 
 ## Canvas — hard rule, no deviation
 
-The saved PNG must be **exactly** one of these two sizes (post-render gate in `impl-review.yml` rejects anything off by more than 16 px and re-triggers repair):
+The saved PNG must be **exactly** one of these two sizes (the `impl-review.yml`
+gate rejects anything off by more than 16 px and re-triggers repair):
 
-- **Landscape**: 3200 × 1800
-- **Square**: 2400 × 2400
+| Orientation | Pixels      | How                                             |
+|-------------|-------------|-------------------------------------------------|
+| Landscape   | 3200 × 1800 | default                                         |
+| Square      | 2400 × 2400 | add directive `//# anyplot-orientation: square` |
 
-**Four places encode the canvas size — keep all of them in sync** (in the May 2026 fan-out only Selenium and one HTML attribute were aligned, which is why every highcharts PNG saved at 3200×1661):
+The harness produces these exactly (1600×900 / 1200×1200 CSS × `deviceScaleFactor 2`);
+Highcharts fills the mount. For a square spec (pie / gauge / radial / heatmap),
+put this on its own line near the top:
 
-1. Selenium `--window-size=3200,1800` (or 2400,2400)
-2. CDP `Emulation.setDeviceMetricsOverride` — **this is the authoritative one**; `--window-size` alone is not (Chrome chrome eats ~139 px in headless mode)
-3. HTML `<div id="container" style="width: 3200px; height: 1800px;">`
-4. `chart.options.chart = {'width': 3200, 'height': 1800, ...}` (see below)
+```js
+//# anyplot-orientation: square
+```
 
-If you can't get the screenshot to land on exact dims, the PIL pad-or-crop snippet in the export code above is the final safety net. Do not remove it.
+## Sizing — CSS px in the mount's coordinate space (NOT native 3200 px)
+
+The mount is **1600×900** (landscape) / **1200×1200** (square) CSS px; the 2×
+device scale is what lands the PNG on 3200×1800 / 2400×2400. So size fonts and
+markers in that CSS space — small numbers, like the other JS libs — **not** the
+old Python native-pixel values (66 px / 56 px / 44 px were for headless-Chrome at
+dpr=1 and are wrong here). Good starting values: title `~22px`, axis titles
+`~16px`, tick/legend labels `~14px`, scatter `marker.radius ~5`, `line.lineWidth ~2.5`.
+
+## Reproducibility
+
+Generate data in-memory and deterministically. There is no seeded RNG in the
+browser; use a tiny fixed-seed LCG or hard-code the data. **Never `fetch()` or
+load from a CDN/network** — the runtime is offline and the HTML must be
+self-contained.
+
+## Colors — Imprint palette (from `window.ANYPLOT_TOKENS`)
+
+The first categorical series is **always** `#009E73` (`tokens.palette[0]`). Set
+Highcharts' top-level `colors` array to the Imprint palette. Data colors are
+**identical** between light and dark — only chrome flips.
+
+```js
+const t = window.ANYPLOT_TOKENS;
+option.colors = t.palette;                 // categorical cycle, first = brand green
+// continuous (heatmap / treemap colorAxis) — build from the Imprint stops:
+option.colorAxis = { stops: [[0, t.seq[0]], [1, t.seq[1]]] };          // sequential
+// diverging (meaningful midpoint):
+option.colorAxis = { stops: [[0, t.div[0]], [0.5, t.div[1]], [1, t.div[2]]] };
+```
+
+Never use Highcharts' default palette or named gradients (viridis / rainbow).
+
+## Theme-adaptive chrome (Highcharts mapping)
+
+Map tokens onto the chart chrome. The `#container` background is already
+`t.pageBg`, so set `chart.backgroundColor: "transparent"` (the page shows
+through) — **never white**. Always disable the credits watermark.
+
+```js
+const t = window.ANYPLOT_TOKENS;
+Highcharts.chart("container", {
+  chart: { type: "column", backgroundColor: "transparent", animation: false,
+           style: { fontFamily: "inherit" } },
+  credits: { enabled: false },
+  colors: t.palette,
+  title:    { text: "spec-id · javascript · highcharts · anyplot.ai",
+              style: { color: t.ink, fontSize: "22px", fontWeight: "600" } },
+  subtitle: { style: { color: t.inkSoft, fontSize: "14px" } },
+  xAxis: { lineColor: t.inkSoft, tickColor: t.inkSoft, gridLineColor: t.grid,
+           labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+           title:  { style: { color: t.inkSoft, fontSize: "16px" } } },
+  yAxis: { lineColor: t.inkSoft, tickColor: t.inkSoft, gridLineColor: t.grid,
+           labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+           title:  { style: { color: t.inkSoft, fontSize: "16px" } } },
+  legend: { itemStyle: { color: t.inkSoft, fontSize: "14px" },
+            itemHoverStyle: { color: t.ink } },
+  plotOptions: { series: { animation: false } },
+  series: [/* … */],
+});
+```
+
+Pie / gauge / sunburst have no `xAxis`/`yAxis` — drop those and style via
+`dataLabels` / `plotOptions.{type}` instead. Use `t.ink` for data labels on
+light or dark.
+
+## Script Skeleton
+
+```js
+//# anyplot-orientation: landscape
+const t = window.ANYPLOT_TOKENS;
+
+// --- Data (in-memory, deterministic) ---------------------------------------
+const categories = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+const values = [12, 19, 7, 15, 11];
+
+// --- Chart -----------------------------------------------------------------
+Highcharts.chart("container", {
+  chart: { type: "column", backgroundColor: "transparent", animation: false,
+           style: { fontFamily: "inherit" } },
+  credits: { enabled: false },
+  colors: t.palette,
+  title: { text: "bar-basic · javascript · highcharts · anyplot.ai",
+           style: { color: t.ink, fontSize: "22px", fontWeight: "600" } },
+  xAxis: { categories,
+           lineColor: t.inkSoft, tickColor: t.inkSoft,
+           labels: { style: { color: t.inkSoft, fontSize: "14px" } } },
+  yAxis: { title: { text: "Value", style: { color: t.inkSoft, fontSize: "16px" } },
+           gridLineColor: t.grid,
+           labels: { style: { color: t.inkSoft, fontSize: "14px" } } },
+  legend: { enabled: false },
+  plotOptions: { series: { animation: false },
+                 column: { borderWidth: 0 } },
+  series: [{ name: "Visits", data: values, colorByPoint: true }],
+});
+```
 
 ## Output Files
 
-- Implementation: `plots/{spec-id}/implementations/highcharts.py` — executed twice with different `ANYPLOT_THEME`.
-- Generated artifacts: `plot-light.png` + `plot-dark.png` + `plot-light.html` + `plot-dark.html`.
+- Implementation: `plots/{spec-id}/implementations/javascript/highcharts.js` —
+  rendered twice by the harness with different `ANYPLOT_THEME`.
+- Generated artifacts (written by the harness, not the snippet):
+  `plot-light.png` + `plot-dark.png` and `plot-light.html` + `plot-dark.html`
+  (Highcharts is in `INTERACTIVE_LIBRARIES`).
 
-## Common Pitfalls
+## Header Style
 
-1. **White/blank images**: Forgetting `container="container"` in Chart() constructor
-2. **CDN not loading**: Using `<script src="...">` instead of inline scripts in headless Chrome
-3. **Missing modules**: BoxPlot needs `highcharts-more.js` in addition to `highcharts.js`
-4. **Screenshot timing**: Use `time.sleep(5)` for reliable rendering
-5. **Encoding errors**: Always use `encoding="utf-8"` in NamedTemporaryFile (Highcharts JS contains special Unicode characters)
-6. **X-axis labels cut off in PNG**: Category labels may be clipped at the bottom. Fix by:
-   - Increase bottom margin: `chart.options.chart = {'marginBottom': 100, ...}`
-   - Or add spacingBottom: `chart.options.chart = {'spacingBottom': 60, ...}`
-   - Default `style: {'fontSize': '44px'}` per the new 3200×1800 sizing (highcharts uses CSS px directly — see default-style-guide.md "Why the Native-pixel numbers look so much bigger"). If still clipped after the margin fixes, bump to `'52px'` for that specific case — but keep all other label fontsizes at 44px for cross-axis balance.
-
-## Colors
-
-Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
-
-```python
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233",
-                   "#AE3030", "#2ABCCD", "#954477", "#99B314"]
-ANYPLOT_AMBER = "#DDCC77"  // warning / caution (outside the categorical pool)
-
-# Single-series via chart-level colors (first is used)
-chart.options.colors = ANYPLOT_PALETTE[:1]
-
-# Multi-series: assign the full palette; highcharts picks per-series in order
-chart.options.colors = ANYPLOT_PALETTE
-
-# Continuous — only the two anyplot palette-derived cmaps are allowed.
-# Sequential (single-polarity, heatmap/treemap):
-chart.options.color_axis = {
-    'minColor': '#009E73',
-    'maxColor': '#4467A3',
-    'stops':    [[0, '#009E73'], [1, '#4467A3']],
-}
-# Diverging (around a meaningful midpoint):
-chart.options.color_axis = {
-    'minColor': '#AE3030',
-    'maxColor': '#4467A3',
-    'stops':    [[0, '#AE3030'], [0.5, '#FAF8F1'], [1, '#4467A3']],
-}
-# Forbidden: any other gradient (viridis/cividis/BrBG stops, Reds/Blues/Greens).
+```js
+// anyplot.ai
+// bar-basic: Basic Bar Chart
+// Library: Highcharts 12.6.0 | Node 22
+// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
+// Quality: pending | Created: 2026-06-09
 ```
 
-## Theme-adaptive Chrome (highcharts mapping)
+The `impl-review.yml` header-rewrite replaces the leading `//` block and skips
+`//#` directive lines, so the `//# anyplot-orientation:` line survives — keep it
+on its own line.
 
-Every chart option that governs color must be tied to `ANYPLOT_THEME`:
+## Forbidden patterns
 
-```python
-import os
-THEME       = os.getenv("ANYPLOT_THEME", "light")
-PAGE_BG     = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
-INK         = "#1A1A17" if THEME == "light" else "#F0EFE8"
-INK_SOFT    = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID        = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+- **No `highcharts-core`** — that is the deprecated Python wrapper; this entry is
+  the native JS library.
+- **No `import` / `require` / `<script src=…>`** — `Highcharts` is already a global.
+- **No add-on modules** — no `highcharts-more`, `modules/*`, `highcharts-3d`,
+  `highcharts-gantt`, `highmaps`; only the core bundle is loaded.
+- **No CDN / `fetch` / network** — the runtime is offline and the HTML must be
+  self-contained.
+- **No inline HTML scaffold or screenshot code** (no Selenium, no `document`
+  plumbing) — the harness owns the HTML page and the Playwright screenshot.
+- **No white background** and **no Highcharts default palette / named gradients**.
 
-chart.options.chart = {
-    'type': 'column',
-    'width': 3200, 'height': 1800,
-    'backgroundColor': PAGE_BG,
-    'style': {'color': INK},
-}
-# Native-pixel sizing: highcharts fonts go through CSS px in the rendered
-# HTML; CSS px maps 1:1 to source pixels. To match matplotlib 12pt @ dpi=400
-# (= 67 source-px), the px values here are the same as the target source-px
-# (NOT multiplied by anything). See default-style-guide.md "Why the
-# Native-pixel numbers look so much bigger".
-chart.options.title = {'text': title, 'style': {'fontSize': '66px', 'color': INK}}
-chart.options.x_axis = {
-    'title': {'text': x_label, 'style': {'fontSize': '56px', 'color': INK}},
-    'labels': {'style': {'fontSize': '44px', 'color': INK_SOFT}},
-    'lineColor': INK_SOFT, 'tickColor': INK_SOFT, 'gridLineColor': GRID,
-}
-chart.options.y_axis = {
-    'title': {'text': y_label, 'style': {'fontSize': '56px', 'color': INK}},
-    'labels': {'style': {'fontSize': '44px', 'color': INK_SOFT}},
-    'lineColor': INK_SOFT, 'tickColor': INK_SOFT, 'gridLineColor': GRID,
-}
-chart.options.legend = {
-    'itemStyle': {'color': INK_SOFT, 'fontSize': '44px'},
-    'backgroundColor': ELEVATED_BG, 'borderColor': INK_SOFT, 'borderWidth': 1,
-}
-```
+## Highcharts-Specific Gotchas
+
+- **`animation: false` is mandatory** (both `chart.animation` and
+  `plotOptions.series.animation`) — otherwise the screenshot catches a
+  mid-animation frame.
+- Call `Highcharts.chart("container", …)` with **no** explicit `chart.width` /
+  `chart.height` — it auto-sizes to the pre-sized mount.
+- `credits: { enabled: false }` — drop the highcharts.com watermark.
+- Tooltip / drilldown / zoom are interactive-only and won't appear in the static
+  PNG; that's expected — don't try to force them open for the screenshot.
+- Highcharts renders SVG (the harness's draw check passes on `<svg>`); you may
+  set `window.__anyplotReady = true` after the chart call for precise timing, but
+  with `animation: false` the harness's fonts-ready + double-rAF settle is enough.

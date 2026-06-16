@@ -20,7 +20,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 RULE = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
 # Okabe-Ito palette — first series is always brand green
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233")
 
 # Temporarily remove current directory from path to avoid pygal.py name collision
 _cwd = sys.path[0] if sys.path[0] else "."
@@ -39,7 +39,7 @@ class MosaicPlot(Graph):
         self.contingency_data = kwargs.pop("contingency_data", {})
         self.row_labels = kwargs.pop("row_labels", [])
         self.col_labels = kwargs.pop("col_labels", [])
-        self.cell_colors = kwargs.pop("cell_colors", list(OKABE_ITO))
+        self.cell_colors = kwargs.pop("cell_colors", list(IMPRINT))
         self.gap_ratio = kwargs.pop("gap_ratio", 0.02)
         self.ink = kwargs.pop("ink", INK)
         self.ink_soft = kwargs.pop("ink_soft", INK_SOFT)
@@ -293,7 +293,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=68,
     legend_font_size=40,
     label_font_size=40,
@@ -309,7 +309,7 @@ chart = MosaicPlot(
     contingency_data=data,
     row_labels=row_labels,
     col_labels=col_labels,
-    cell_colors=list(OKABE_ITO),
+    cell_colors=list(IMPRINT),
     gap_ratio=0.015,
     show_legend=False,
     margin=100,

@@ -6,7 +6,7 @@ title: Likert Scale Diverging Bar Chart
 
 # Specification tracking
 created: 2026-02-25T21:32:32Z
-updated: null
+updated: 2026-05-30T14:32:23Z
 issue: 4429
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - bar
-    - diverging
   data_type:
     - categorical
     - ordinal

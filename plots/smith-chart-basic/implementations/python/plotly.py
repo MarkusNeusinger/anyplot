@@ -17,7 +17,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 BRAND = "#009E73"  # Okabe-Ito position 1 — impedance locus
-ACCENT = "#D55E00"  # Okabe-Ito position 2 — matched condition marker
+ACCENT = "#C475FD"  # Okabe-Ito position 2 — matched condition marker
 
 # Smith chart grid color (slightly stronger than RULE for chart structure)
 SMITH_GRID = "rgba(74,74,68,0.30)" if THEME == "light" else "rgba(184,183,176,0.30)"

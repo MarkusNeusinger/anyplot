@@ -1,57 +1,60 @@
 library: plotnine
+language: python
 specification_id: bullet-basic
 created: '2025-12-23T09:19:04Z'
-updated: '2026-02-22T22:16:13Z'
-generated_by: claude-opus-4-6
-workflow_run: 20456606052
-issue: 0
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/plotnine/plot.png
-preview_html: null
-quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - annotations
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep:
-  - normalization
-  styling:
-  - grid-styling
-  - edge-highlighting
+updated: '2026-05-29T15:41:00Z'
+generated_by: claude-sonnet
+workflow_run: 26645664332
+issue: 999
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent data choice with four realistic business KPIs showing mixed performance
-    levels (above/below target)
-  - Professional grayscale-to-blue color scheme following bullet chart conventions
-    (Stephen Few style)
-  - Clean grammar-of-graphics layering with proper geom choices for each visual element
-  - All font sizes explicitly set with good readability at full resolution
-  - 'Subtle visual refinement: removed unnecessary grid lines, custom panel background,
-    bar edge highlighting'
+  - 'Complete bullet chart with all spec-required components: actual bar (brand green),
+    target marker (INK-adaptive), qualitative background bands, zone labels, and value
+    annotations per spec notes'
+  - Theme-adaptive target markers using the INK token correctly flip between dark
+    (light theme) and light (dark theme) — no dark-on-dark or light-on-light failures
+    in either render
+  - Realistic, neutral business KPI data with intentional mixed above/below-target
+    performance (Revenue and Satisfaction above target; Profit and New Orders below)
+    that demonstrates the chart purpose clearly
+  - Clean grammar-of-graphics code composing a non-native chart type from plotnine
+    primitives (geom_tile for bands, geom_rect for actual bar, geom_segment for target
+    line) — idiomatic and readable
+  - All font sizes are explicitly set (title=12, axis title x=10, axis text 8–9pt,
+    geom_text 3.5mm, annotate 3.4mm) with correct theme-adaptive colors throughout
+    both renders
   weaknesses:
-  - Band labels (Poor/Satisfactory/Good) at size=8 are functional but could be slightly
-    larger for better readability
-  - Band label positions computed from Satisfaction metric ranges, which has slightly
-    different proportions than the other three metrics
-  image_description: 'The plot displays four horizontal bullet charts stacked vertically
-    for business KPIs: Revenue ($K), Profit (%), New Orders, and Satisfaction. Each
-    bullet has three grayscale background bands progressing from dark gray (Poor)
-    to medium gray (Satisfactory) to light gray (Good). A blue (#306998) horizontal
-    bar represents the actual value for each metric, with a thick black vertical line
-    marking the target. Actual numeric values (275, 22, 1050, 4.5) are displayed in
-    blue bold text above each bar. Band labels ("Poor", "Satisfactory", "Good") appear
-    below the bottom metric. The title "bullet-basic · plotnine · pyplots.ai" is centered
-    at the top in bold. The x-axis shows "Performance (%)" with ticks at 0, 25, 50,
-    75, 100. The background is white with a very light gray (#fafafa) panel and subtle
-    vertical grid lines.'
+  - Zone labels (Poor/Satisfactory/Good) at annotate size=3.4mm are slightly small
+    — at mobile scaling (~400px wide) they become very difficult to read; increase
+    to ~4.0–4.5mm
+  - Target marker at geom_segment size=2.0mm is thin; at thumbnail sizes the marker
+    can be hard to distinguish from band edges — increase to ~2.5–3.0mm for better
+    thumbnail visibility
+  - 'DE-03 storytelling gap: no visual cue distinguishing above-target vs below-target
+    metrics (e.g. a subtle annotation or title suffix like ''Mixed KPI Performance'')
+    — the viewer must read both bar and marker position carefully to extract the story'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct surface color, not pure white
+      Chrome: Title "bullet-basic · python · plotnine · anyplot.ai" in bold dark ink, centered, ~80% of width — expected for the mandated title length. Y-axis labels (Revenue ($K), Profit (%), New Orders, Satisfaction) in dark INK_SOFT, clearly readable. X-axis tick labels (0, 25, 50, 75, 100) in dark INK_SOFT. X-axis title "Performance (%)" in dark INK. All text reads cleanly against the off-white background.
+      Data: Four stacked bullet charts. Each row shows three background bands in grayscale — dark gray (Poor), medium gray (Satisfactory), light gray (Good). The actual value bar in brand green #009E73 overlays the bands. Target markers are thin black (INK) vertical lines. Value labels in green (275, 22, 1050, 4.5) appear above each bar. Zone labels "Poor", "Satisfactory", "Good" appear below the bottom metric row in small muted text.
+      Legibility verdict: PASS — all text elements are readable at full resolution. Zone labels and value labels are small but legible. No "light on light" issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface, not pure black
+      Chrome: Same title structure in light/cream (#F0EFE8) text — clearly readable against the dark background. Y-axis labels in light INK_SOFT (#B8B7B0). X-axis labels and title in appropriate light colors. No dark-on-dark failures — all text elements are light-colored on the dark surface.
+      Data: Identical data colors to the light render — green bars (#009E73) unchanged, confirming only chrome flips. Band colors shifted to darker grayscale variants (#383838 Poor, #555555 Satisfactory, #727272 Good) for appropriate dark-theme contrast. Target markers are now light/cream (INK in dark mode = #F0EFE8) — correctly adapted and clearly visible. Value labels still in brand green.
+      Legibility verdict: PASS — all text elements are readable. No dark-on-dark issues. Brand green #009E73 remains clearly visible against the dark background.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -59,69 +62,82 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=24, axis_title=20, ticks=16-18).
-          Band labels at size=8 and value labels at size=10 readable but slightly
-          small.
+        comment: All font sizes explicitly set (title=12pt, axis_title=10pt, axis_text=8-9pt,
+          geom_text=3.5mm, annotate=3.4mm). All text readable in both themes. Zone
+          labels slightly small for mobile-scale readability.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Value labels, metric labels, and band labels
-          all well-spaced.
+        comment: No text or element overlaps in either render. Value labels above
+          bars and zone labels below bottom metric have ample spacing.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Grayscale bands clearly differentiated. Blue bars prominent against
-          gray. Black target markers well-sized.
+        comment: Green bars and grayscale bands clearly visible. Target marker (size=2.0mm)
+          is thin but visible; at thumbnail scale it may be harder to distinguish.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Grayscale bands inherently colorblind-safe. Blue contrasts well with
-          all gray tones.
+        comment: 'Grayscale bands + brand green + INK target marker. CVD-safe: grayscale
+          bands distinguishable by luminance only, no red-green pairing.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 aspect ratio with four bullets filling vertical space well.
-          Balanced margins.
+        comment: 3200x1800 canvas (8x4.5in @400dpi). Plot fills ~85% of canvas width,
+          balanced margins, nothing cut off. Canvas gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis 'Performance (%)' descriptive with units. Y-axis shows meaningful
-          metric names.
+        comment: 'X-axis: ''Performance (%)'' with units. Y-axis blank (correct —
+          metric names serve as in-chart labels). Title matches required format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Actual value bar uses #009E73 brand green (Imprint first position).
+          Grayscale bands are appropriate (not categorical data). Backgrounds: #FAF8F1
+          light / #1A1A17 dark. All chrome theme-adaptive.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Intentional grayscale gradient with Python Blue accent. Subtle bar
-          edge color adds depth. Clearly above defaults.
+        comment: 'Above the default 4 — intentional design choices: grayscale band
+          hierarchy (dark=poor, light=good), brand green as sole accent color creating
+          strong focal point, theme-adaptive target markers. Not at publication-ready
+          (6+) level but clearly thoughtful.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal removes spines. Subtle x-only grid, custom panel background,
-          minor grid removed.
+        comment: 'Good refinement: y-axis grid removed, minor grid removed, x-axis
+          grid subtle at alpha=0.15, fill legend suppressed, theme_minimal() base.
+          Clean margins with expand parameters tuned.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Mixed-performance narrative: Revenue/Satisfaction exceed targets
-          while Profit/New Orders fall short. Value labels enable precise reading.'
+        comment: Mixed above/below-target performance across 4 KPIs creates a real
+          business narrative. The green bar vs. target line juxtaposition is the story
+          — but no explicit visual cue (annotation, color coding) distinguishing above
+          vs. below target metrics.
     spec_compliance:
       score: 15
       max: 15
@@ -131,29 +147,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bullet chart with actual bar, target marker, and qualitative
-          range bands.
+        comment: 'Correct bullet chart: actual bar + qualitative background bands
+          + target marker. All three required elements present.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: grayscale bands, target marker, horizontal
-          orientation, text labels, multiple aligned bullets.'
+        comment: 'All spec features: actual bar, target marker, qualitative bands
+          (Poor/Satisfactory/Good), metric labels, value annotations, grayscale shading,
+          horizontal orientation, multiple stacked bullets.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shows normalized performance (0-100%), y-axis shows metric
-          categories. All data correctly mapped.
+        comment: X-axis shows performance on normalized 0-100 scale. Y-axis shows
+          metric categories. All data correctly mapped and visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'bullet-basic · plotnine · pyplots.ai' in correct format. Legend
-          appropriately suppressed; band labels serve as zone indicators.
+        comment: Title is 'bullet-basic · python · plotnine · anyplot.ai' — exactly
+          the required format. Fill legend suppressed (correct — zone labels at bottom
+          serve as legend substitute).
     data_quality:
       score: 15
       max: 15
@@ -163,22 +181,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Four metrics with varied performance: above target (Revenue, Satisfaction),
-          below target (Profit, New Orders). Different scales shown.'
+        comment: 'Shows all bullet chart features: 4 metrics with different scales,
+          mixed above/below-target performance, different qualitative band distributions.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Business KPI dashboard with real-world metrics: Revenue, Profit,
-          New Orders, Satisfaction. Neutral business context.'
+        comment: 'Business KPI dashboard context: Revenue ($K), Profit (%), New Orders,
+          Satisfaction (1-5 scale). Realistic, neutral, comprehensible scenario.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'All values realistic: quarterly revenue ~$275K, profit margin ~22%,
-          ~1050 orders, 4.5/5.0 satisfaction.'
+        comment: Revenue 275K vs 250K target (realistic), Profit 22% vs 26% (realistic
+          margins), New Orders 1050 vs 1100 (realistic volume), Satisfaction 4.5/5
+          vs 4.2/5 target (realistic NPS-adjacent score). All factually plausible.
     code_quality:
       score: 10
       max: 10
@@ -188,32 +207,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports → Data → Plot → Save flow. No functions or classes.
+        comment: 'Flat structure: imports → tokens → data → dataframes → plot → save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded data values.
+        comment: Fully deterministic hardcoded data — no random elements needed for
+          bullet chart.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 18 plotnine imports are used. No unused imports.
+        comment: 'All imports used: os, pandas, and all listed plotnine symbols are
+          referenced in the code.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean normalization logic, logical layering order. Helpful comments
-          without excess.
+        comment: Clean, readable. Loop to build per-metric dataframes is appropriate.
+          No fake UI, no over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300. Uses current plotnine API.
+        comment: Saves as plot-{THEME}.png via plot.save() with correct dimensions.
+          Current plotnine API.
     library_mastery:
       score: 7
       max: 10
@@ -223,13 +246,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper grammar-of-graphics layering with multiple dataframes, appropriate
-          geom choices, good use of scales and theme system.
+        comment: 'Good plotnine idioms: per-geom data passing, scale_fill_manual with
+          limits ordering, guides(fill=False), theme() element composition. Above
+          default (3).'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses plotnine-specific aes expression evaluation, annotate system,
-          and multi-dataframe layering.
+        comment: Uses plotnine's grammar-of-graphics to compose a non-native chart
+          type from primitives (geom_tile + geom_rect + geom_segment). Demonstrates
+          the layered grammar paradigm that is distinctive to plotnine/ggplot2.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  - manual-ticks
+  patterns:
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - grid-styling

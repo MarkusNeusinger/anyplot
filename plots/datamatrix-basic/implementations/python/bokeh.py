@@ -175,8 +175,8 @@ p = figure(
     min_border_right=90,
 )
 
-OKABE_BLUE = "#0072B2"
-OKABE_ORANGE = "#D55E00"
+OKABE_BLUE = "#4467A3"
+OKABE_ORANGE = "#C475FD"
 OKABE_GREEN = "#009E73"
 
 # Structural zone overlays — drawn first so barcode modules render on top

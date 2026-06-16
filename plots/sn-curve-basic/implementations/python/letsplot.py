@@ -23,9 +23,9 @@ GRID = "#E4E2DB" if THEME == "light" else "#2F2F2C"
 
 # Okabe-Ito palette — positions 1-4
 BRAND = "#009E73"  # position 1 — data points and fit line
-OI_2 = "#D55E00"  # vermillion — Ultimate Strength
-OI_3 = "#0072B2"  # blue — Yield Strength
-OI_4 = "#CC79A7"  # reddish purple — Endurance Limit
+OI_2 = "#C475FD"  # vermillion — Ultimate Strength
+OI_3 = "#4467A3"  # blue — Yield Strength
+OI_4 = "#BD8233"  # reddish purple — Endurance Limit
 
 # Generate realistic S-N curve data for structural steel
 np.random.seed(42)

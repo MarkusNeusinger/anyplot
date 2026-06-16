@@ -18,7 +18,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
 # Okabe-Ito palette — first series always #009E73
-COLORS = ["#009E73", "#D55E00", "#0072B2"]
+COLORS = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data: Market share by region and product line (in millions USD)
 regions = ["North America", "Europe", "Asia Pacific", "Latin America"]

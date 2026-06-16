@@ -1,113 +1,184 @@
 library: bokeh
+language: python
 specification_id: flamegraph-basic
 created: '2026-03-14T20:27:08Z'
-updated: '2026-03-14T20:47:42Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23095681554
+updated: '2026-06-08T20:52:34Z'
+generated_by: claude-opus
+workflow_run: 27164840702
 issue: 4665
-python_version: 3.14.3
-library_version: 3.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/bokeh/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 3.9.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/python/bokeh/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Perceptually uniform Inferno palette with adaptive text colors creates a visually
-    sophisticated flame graph
-  - 'All spec requirements met precisely: 55 stack traces, proportional widths, warm
-    colors, function labels, adjacent bars'
-  - HoverTool with rich tooltips (function, samples, CPU%, call stack) is an excellent
-    use of Bokeh interactivity
-  - Realistic web server profiling data with believable function names and call hierarchies
-  - Clean iterative layout algorithm avoids recursion while maintaining readability
+  - 'Theme adaptation is solid in both renders: warm off-white #FAF8F1 chrome in light,
+    warm near-black #1A1A17 in dark, with identical data colors and only chrome flipping
+    as required.'
+  - 'Imprint palette positions used semantically by top-level branch (brand-green
+    #009E73 for the main root, ochre #BD8233 for handle_request, lavender #C475FD
+    for log_metrics, matte-red #AE3030 for gc_collect) — far more informative than
+    the conventional random flame-graph coloring while staying on canonical positions.'
+  - 'Hot-path emphasis: handle_request → process_query → execute → fetch_rows chain
+    gets an INK 4 px outline, drawing the reader''s eye to the bottleneck — genuine
+    data storytelling beyond a plain flame graph.'
+  - Bokeh's distinctive HoverTool surfaces full call-stack tooltips (function, samples,
+    CPU %, stack path), exercising a library-unique interactive feature.
+  - Canvas dimensions are exact 3200x1800 (gate passed). Selenium CDP setDeviceMetricsOverride
+    + a Pillow normalisation pin defends against the May 2026 bokeh shrink-to-1661
+    failure mode mentioned in prompts/library/bokeh.md.
+  - '55-row simulated CPU profile (web-server: parse_headers → authenticate → process_query
+    → send_response, plus gc_collect and log_metrics) is realistic, neutral, and exercises
+    6 stack depths.'
+  - In-bar labels include both function name AND percentage for wide bars (>12% width),
+    name-only for medium bars (>5%), HoverTool fallback for narrower bars — clean
+    width-aware rule that prevents collisions.
   weaknesses:
-  - Helper function heat_to_color breaks pure KISS structure (minor)
-  - Slight vertical whitespace at bottom margin could be tighter
-  image_description: The flame graph displays a hierarchical CPU profiling visualization
-    for a web server application. At the bottom, "main (100.0%)" spans the full width
-    in deep purple (Inferno colormap). Above it, "handle_request (85.0%)" dominates
-    in dark magenta, flanked by smaller "log_metrics" and "gc_collect" bars in pale
-    yellow. The next level shows "process_query (40.0%)" in warm orange, "authenticate
-    (20.0%)" in gold-yellow, alongside "parse_headers" and "send_response". Higher
-    levels include "execute (24.0%)", "fetch_rows (15.0%)", "verify_token (14.0%)"
-    with progressively lighter colors. The deepest level has "btree_search" and "decode_row"
-    in pale yellow. Colors transition from deep purple (high sample count) through
-    reds/oranges to pale yellow (low samples) using a perceptually uniform Inferno
-    palette. White borders cleanly separate bars. Function names with percentages
-    are displayed inside wider bars. Clean white background with no axes or grid.
-    Title "flamegraph-basic · bokeh · pyplots.ai" centered at top in bold 36pt font.
+  - 'Spec asks for a warm palette (yellows / oranges / reds) following Brendan Gregg''s
+    flame-graph aesthetic; the implementation deviates by using brand-green for the
+    main root and lavender for log_metrics. The Imprint mandate justifies keeping
+    canonical positions, but the result loses the ''warm wash'' the spec calls for.
+    Consider keeping #009E73 only for the root frame and remapping log_metrics to
+    ochre or amber so the canopy reads as warm yellows/oranges/reds with green as
+    a single anchor.'
+  - Adjacent sibling bars are separated by 1.5 px PAGE_BG-colored strokes. The spec
+    asks for 'minimal or no gaps between siblings at the same stack depth'; in both
+    renders the result is visible separator lines between every frame, which slightly
+    fights the dense-tile aesthetic of a flame graph. Either drop line_width to 0.5
+    (or use the same fill color for the stroke) so adjacent frames feel directly adjacent.
+  - 'In light render, the in-bar labels on the matte-red gc_collect frames (e.g. gc_collect,
+    mark_phase, sweep_phase, trace_refs) sit at a lower contrast than on the ochre
+    handle_request frames — INK on #AE3030 is readable but lacks the snap of INK on
+    #BD8233. A small fontweight bump or switching label_color to PAGE_BG specifically
+    on the red frames would even out legibility across branches.'
+  - Label fontsize ramp (14/18/22pt) keeps mid-width labels at 18pt, which on a 3200-px
+    canvas is visibly smaller than the 50pt title; the gap between title and the largest
+    in-bar label (22pt) feels wide. Bumping the upper bin to 26-28pt would give the
+    dominant frames (process_query, handle_request, execute) more visual weight to
+    match their data weight.
+  image_description: |-
+    Light render (plot-light.png, 3200x1800):
+      Background: Warm off-white (#FAF8F1) covers the full canvas including the
+        border/title area — correctly theme-tokenised, no pure white.
+      Chrome: Bold dark title "flamegraph-basic · python · bokeh · anyplot.ai"
+        centered at top, takes ~55% of canvas width, fully visible (no clipping at
+        top edge). Axes are hidden by design (flame-graph convention). No grid,
+        no spines, no outline — clean.
+      Data: Seven stack-depth rows from depth 0 (root) to depth 6. Root frame
+        (main, 100%) is brand-green #009E73 spanning the full width at the bottom.
+        Depth 1 splits into log_metrics (lavender #C475FD, far left), handle_request
+        (ochre #BD8233, dominant ~85% middle), and gc_collect (matte-red #AE3030,
+        right). Children inherit branch color. The handle_request → process_query →
+        execute → fetch_rows hot path carries a thicker INK outline. In-bar labels
+        (function name + percentage on wide bars, name-only on medium bars) are
+        rendered in INK (#1A1A17). On ochre frames the contrast is comfortable;
+        on the matte-red gc_collect frames it is acceptable but lower-contrast.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png, 3200x1800):
+      Background: Warm near-black (#1A1A17) covers the full canvas — correctly
+        theme-tokenised, no pure black.
+      Chrome: Bold light-cream title in #F0EFE8 reads crisply against the dark
+        background, fully visible at top. Axes hidden, no grid, no spines.
+      Data: All bar colors are IDENTICAL to the light render (brand-green root,
+        ochre handle_request, lavender log_metrics, matte-red gc_collect) — only
+        chrome flipped, as required. In-bar labels are now light cream (#F0EFE8)
+        and remain readable on every branch color. No dark-on-dark failure: title,
+        bar labels, and percentages are all light text on the saturated bar fills.
+        Hot-path INK outline is the same dark INK color, which on the dark page
+        background becomes slightly less prominent than in the light render, but
+        still distinguishes the hot frames against their ochre fill.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Title 36pt, labels 14-22pt explicitly set. All text readable; smallest
-          labels on narrow bars are small but legible.
+        comment: Title large and crisp in both themes. In-bar labels readable across
+          all branches but contrast on matte-red gc_collect frames is lower than on
+          ochre handle_request; mid-bin 18pt feels small next to 50pt title.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Labels only rendered when bars exceed 3% width.
+        comment: Width-aware label rule (skip <5%, name-only 5-12%, name+pct >12%)
+          prevents collisions. No overlap between labels, no overlap with title.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All bars clearly visible with 0.92 height and white line borders
-          providing clean separation.
+        comment: Narrow log_metrics children at left and gc_collect children at right
+          are visible but small; bar fills are saturated enough that even unlabeled
+          frames are distinguishable.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe. No red-green sole signal — branches
+          are distinguished by hue family and spatial position.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Inferno is perceptually uniform and colorblind-safe. Adaptive text
-          colors ensure contrast.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good horizontal fill. Slight vertical whitespace at bottom margin
-          but overall ~65% canvas utilization.
+        comment: Exact 3200x1800 (canvas gate passed). Title ~55% of width, no overflow,
+          nothing clipped. min_border reservations work.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title in correct format. Axes appropriately hidden for flame graphs.
+        comment: Title matches mandated format exactly. No axis labels needed (flame-graph
+          convention hides axes).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 brand green. All four branch colors are canonical
+          Imprint positions. Backgrounds correct (#FAF8F1 / #1A1A17). Both renders
+          theme-correct.'
     design_excellence:
-      score: 15
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Inferno palette with perceptually uniform heat-based mapping. Adaptive
-          text colors and white borders create professional polish.
+        comment: Semantic branch coloring, hot-path INK outline, parity-based alpha
+          banding for subtle rhythm. Solid intentional choices but not exceptionally
+          polished — separator strokes and label fontsize ramp leave room to improve.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: All axes hidden, grid removed, outline removed, clean white background.
-          White line borders and 0.92 bar height create polished separation.
+        comment: Axes hidden, no grid, no figure outline — clean. PAGE_BG-colored
+          separators between sibling bars are a refinement but produce visible gaps
+          that the spec asks to avoid.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Color intensity guides attention to hot paths. Percentage labels
-          on wider bars create clear focal points.
+        comment: Hot-path INK outline draws the eye to the bottleneck chain; percentages
+          inside dominant frames anchor the reading. Could go further with a focal-frame
+          emphasis or annotation.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -115,27 +186,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct flame graph with horizontal bars stacked bottom-to-top.
+        comment: Correct flame graph — stack-depth rows, width proportional to samples,
+          root at bottom, layered bottom-to-top.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All spec features present: proportional widths, warm colors, adjacent
-          bars, function labels.'
+        comment: Hierarchy, proportional widths, in-bar labels, alphabetical sibling
+          order all present. Warm-palette aesthetic from the spec only partially honored
+          — green and lavender break the yellows/oranges/reds wash, though the choice
+          is defensible against the Imprint mandate.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Width correctly maps to sample proportion. Depth represents call
-          stack level.
+        comment: Stack depth → y, sample share → bar width, function name → in-bar
+          label. All 55 stack frames represented.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No legend needed for flame graph.
+        comment: Title is exactly 'flamegraph-basic · python · bokeh · anyplot.ai'.
+          No legend needed (branch colors are intrinsic to flame graph).
     data_quality:
       score: 15
       max: 15
@@ -145,78 +220,86 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 55 unique stack traces within spec 50-500 range, 7 depth levels,
-          varying widths, multiple branches.
+        comment: '55 stack frames across 7 depth levels exercise every facet of a
+          flame graph: deep nesting (decode_jwt → base64_decode), broad branching
+          (handle_request fans into 4 children), narrow tails (log_metrics chain),
+          and a bottleneck path (process_query::execute::fetch_rows).'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Web server CPU profiling with realistic function names. Neutral,
-          comprehensible scenario.
+        comment: Simulated web-server CPU profile — handle_request, authenticate,
+          process_query, gc_collect, log_metrics. Plausible, neutral, no controversy.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 10000 total samples with realistic distribution across call paths.
+        comment: 10,000 total samples, sample counts decrease sensibly from root to
+          leaves, percentages add up to 100% at each depth.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Linear flow with iterative layout, but includes a helper function
-          heat_to_color.
+        comment: No functions, no classes. Iterative DFS with a work_stack.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data.
+        comment: Stack data is hardcoded — fully deterministic, no RNG needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used. PIL imported late for the size-pin step which is
+          appropriate.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean iterative layout algorithm. Appropriate complexity for flame
-          graph.
+        comment: Iterative DFS with x_start/x_end intervals is the natural flame-graph
+          layout. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html with current Bokeh API.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png. No bare plot.png.
     library_mastery:
       score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, rect glyphs, Label annotations, and
-          figure API.
+        comment: ColumnDataSource for vectorised glyph properties, p.rect for batch
+          rendering, HoverTool, Label models for in-bar text. Idiomatic high-level
+          bokeh.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: HoverTool with rich custom tooltips and HTML export are genuinely
-          distinctive Bokeh features.
+        comment: 'Bokeh-unique features used: HoverTool with point_policy=''follow_mouse'',
+          interactive HTML output, per-glyph data-driven line_color and fill_alpha.
+          Could push further with linked tap callbacks or zoom tools for true exploratory
+          interaction.'
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
+  - pillow
   techniques:
   - hover-tooltips
   - annotations
@@ -228,5 +311,5 @@ impl_tags:
   dataprep: []
   styling:
   - minimal-chrome
+  - alpha-blending
   - edge-highlighting
-  - custom-colormap

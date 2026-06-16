@@ -20,7 +20,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette for node groups
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 np.random.seed(42)
 
@@ -81,7 +81,7 @@ edges = [
 
 # Map groups to Okabe-Ito palette
 groups = ["core", "data", "services", "utils"]
-group_colors = {"core": OKABE_ITO[0], "data": OKABE_ITO[1], "services": OKABE_ITO[2], "utils": OKABE_ITO[3]}
+group_colors = {"core": IMPRINT[0], "data": IMPRINT[1], "services": IMPRINT[2], "utils": IMPRINT[3]}
 
 # Prepare node data
 node_data = []

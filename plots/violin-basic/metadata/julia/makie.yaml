@@ -1,0 +1,257 @@
+library: makie
+language: julia
+specification_id: violin-basic
+created: '2026-05-29T11:39:15Z'
+updated: '2026-05-29T12:09:17Z'
+generated_by: claude-sonnet
+workflow_run: 26634642953
+issue: 722
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - Correct Imprint palette (green/lavender/blue/ochre) in canonical order with alpha-blended
+    fills
+  - 'Full theme-adaptive chrome: all text/spine/grid colors flip correctly between
+    light and dark'
+  - Overlaid narrow boxplot shows quartiles and median cleanly inside each violin
+  - Deliberately varied distributions (normal, bimodal, right-skewed, narrow) tell
+    a clear data story
+  - 'Excellent code quality: KISS structure, seed, clean imports, idiomatic CairoMakie
+    layout'
+  weaknesses:
+  - Legend in fig[1,2] not clearly visible in either render — the column appears too
+    narrow to display legend entries legibly; legend panel may need width adjustment
+    or placement below the axis
+  - 'Annotation text uses IMPRINT_PALETTE[2] (lavender #C475FD) — same color as Group
+    B violin fill, creating low contrast especially in the light render where both
+    are light colors against off-white background; use INK or INK_SOFT for annotation
+    text color instead'
+  - Annotaion position at y=96.5 places it near the upper tail of the bimodal violin,
+    partially overlapping with the violin fill rather than clearly floating above
+    it
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "violin-basic · julia · makie · anyplot.ai" in dark #1A1A17, bold, centered — clearly readable. X-axis label "Class Group" and Y-axis label "Test Score" in dark INK, readable. Tick labels in INK_SOFT (#4A4A44), visible. Top/right spines removed. Subtle horizontal y-grid at alpha=0.15. No x-grid.
+      Data: 4 violins — Group A (#009E73 green), Group B (#C475FD lavender), Group C (#4467A3 blue), Group D (#BD8233 ochre) — all at 75% alpha with INK_SOFT stroke. Narrow black boxplots overlaid showing quartiles and median. Distinct distribution shapes clearly visible: normal (A), bimodal with pinched waist (B), right-skewed tall (C), narrow stingray (D). No visible legend panel on the right side of the canvas.
+      Legibility verdict: PASS — all major text readable. Concern: "bimodal" annotation (lavender text on off-white bg with lavender violin) has low contrast; legend not clearly visible.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title in light #F0EFE8, axis labels in light INK, tick labels in INK_SOFT (#B8B7B0) — all readable against dark bg. No dark-on-dark failures observed.
+      Data: Identical Imprint palette colors to light render — green, lavender, blue, ochre — data colors unchanged as required. Violins, boxplots all clearly distinguishable against dark background. Brand green #009E73 clearly visible.
+      Legibility verdict: PASS — all text readable in dark theme. No dark-on-dark failures. Same legend visibility concern as light render.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title=22, labels=14, ticks=12). Readable
+          in both themes. Minor: annotation text same color as violin fill gives low
+          contrast on light bg.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Violins and boxplots clearly visible. Minor: bimodal annotation
+          low contrast; legend not clearly visible in renders.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; 4-series uses green/lavender/blue/ochre
+          — distinct perceptual hue families.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Canvas correct (3200x1800, gate passed). Main plot well-proportioned.
+          However, legend in fig[1,2] not clearly visible in either render — column
+          appears too narrow.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Class Group and Test Score are descriptive. No units needed for scores.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green). Imprint order: green/lavender/blue/ochre.
+          Light bg #FAF8F1, dark bg #1A1A17. Both themes correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Clearly above defaults: Imprint palette with alpha, top/right spines
+          removed, theme tokens throughout, intentional typography hierarchy. Docked
+          for annotation same-color-as-fill design flaw.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, x-grid off, subtle y-grid (alpha=0.15), alpha-blended
+          violins, narrow boxplot overlay, legend frame hidden. Well-refined.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Four distinct distributions (normal/bimodal/right-skewed/narrow)
+          with descriptive legend labels create a strong educational story. Callout
+          annotation adds emphasis but is poorly executed (same color as fill — invisible
+          on light bg).
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct violin plot with mirrored KDE density.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Quartile markers (boxplot overlay), mirrored density (violin), median
+          line (boxplot mediancolor) — all spec features present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=category (4 groups, within 2-6 range), Y=test score (50-100, 200
+          pts/group within 30-1000 range).
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: false
+        comment: 'Title exactly correct: ''violin-basic · julia · makie · anyplot.ai''.
+          Legend exists in code (fig[1,2]) but not clearly visible in rendered output
+          — column appears too narrow.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All violin features: distinct distributions, quartiles, median,
+          mirrored density. Four deliberately different shapes.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Test scores (50-100) across 4 class groups — neutral, real-world
+          educational scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Score range 50-100 realistic; distribution parameters (means at 74,
+          63/87, right-skewed, 91) are credible class performance patterns.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear script: imports → tokens → data → plot → save. No functions
+          or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) present.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors (colorant), Random (seed!) — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, idiomatic Julia. No fake UI or over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2) — correct filename
+          and API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert CairoMakie usage: violin!, boxplot!, text!, Legend with PolyElement,
+          Figure grid layout, RGBAf for alpha-blended grid colors.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Makie-specific: fig[1,1]/fig[1,2] layout system, PolyElement for
+          legend swatches, RGBAf composition for grid alpha, INK.r/g/b token extraction.
+          Clearly above generic usage.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

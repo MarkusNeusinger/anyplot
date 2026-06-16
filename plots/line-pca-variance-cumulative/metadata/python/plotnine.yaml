@@ -1,120 +1,141 @@
 library: plotnine
+language: python
 specification_id: line-pca-variance-cumulative
 created: '2026-02-17T21:42:43Z'
-updated: '2026-02-17T22:16:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22116658604
+updated: '2026-05-29T05:52:18Z'
+generated_by: claude-sonnet
+workflow_run: 26620239027
 issue: 4131
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/plotnine/plot.png
-preview_html: null
-quality_score: 87
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent use of plotnine grammar of graphics with well-composed layers (shaded
-    bands, threshold lines, bars, line, points, annotations)
-  - Real Wine dataset provides authentic PCA results instead of synthetic data
-  - Shaded threshold bands between 90-95%, 95-99%, and 99-100% add visual context
-    beyond simple dashed lines
-  - Elbow detection with annotation and vertical drop-line creates a clear focal point
-    for data storytelling
-  - Individual variance bars as secondary overlay fulfill the spec optional enhancement
-  - 'Strong visual refinement: custom panel background, subtle gridlines, clean axis
-    styling'
+  - Uses real scikit-learn Wine dataset with actual PCA computation — fully deterministic,
+    no seed needed
+  - Multi-layer composition (translucent bar overlay + cumulative line + open-circle
+    markers + highlighted elbow point + drop-line) shows genuine design sophistication
+  - Automatic elbow detection with semantic IMPRINT_RED color highlight creates immediate
+    visual focal point for the key insight
+  - All spec-required features implemented including optional individual variance
+    bar overlay
+  - Perfect theme-adaptive chrome — both light (#FAF8F1) and dark (#1A1A17) renders
+    are correct, readable, and consistent
   weaknesses:
-  - Threshold labels (90%, 95%, 99%) are crowded together at the right edge — spacing
-    or vertical staggering would improve readability
-  - No formal legend to explain what the bars vs. line represent (individual vs. cumulative
-    variance)
-  - 'Minor code redundancy: threshold x-positions are all 12.3 despite comment about
-    staggered positions'
-  image_description: 'The plot displays a cumulative explained variance line chart
-    for PCA component selection using the Wine dataset (13 components). A blue (#306998)
-    cumulative line with white-filled circle markers rises from approximately 36%
-    at component 1 to nearly 100% at component 13. Light blue translucent bars underneath
-    show individual variance ratios, decreasing from about 36% (component 1) to near
-    zero for later components. Three horizontal dashed threshold lines at 90% (orange),
-    95% (green), and 99% (blue) are labeled on the right edge of the plot. Shaded
-    color bands between these thresholds (light orange 90-95%, light green 95-99%,
-    light blue 99-100%) add visual context. An orange-highlighted elbow point at component
-    2 (approximately 55.4% cumulative variance) is annotated with bold text reading
-    "Elbow: 2 components (55.4% variance)" and a dotted vertical drop-line extends
-    from it to the x-axis. The title reads "line-pca-variance-cumulative · plotnine
-    · pyplots.ai" in bold at the top. The y-axis shows "Cumulative Explained Variance
-    (%)" with percentage labels from 0% to 100%, and the x-axis shows "Number of Principal
-    Components" numbered 1 through 13. The background is white with a light gray (#FAFAFA)
-    panel and subtle horizontal gridlines.'
+  - 4-sided panel_border (panel_border=element_rect) used instead of the preferred
+    L-shaped spines (remove top and right spines via explicit axis_line elements only)
+    — minor visual refinement gap
+  - Threshold labels at geom_text size=2.5mm and elbow annotation at size=3.0mm are
+    small; at mobile scale (~400px display width) these would be barely readable —
+    consider increasing to 3.5mm and 4.0mm respectively
+  - 'LM-02 gap: layered grammar with multiple data frames and nudge parameters are
+    characteristic plotnine features but shared with ggplot2 — no truly plotnine-unique
+    technique used'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1 — correct light theme surface, not pure white.
+      Chrome: Title "line-pca-variance-cumulative · python · plotnine · anyplot.ai" in dark ink at left alignment, spans ~65% of plot width at 12pt — appropriate. Y-axis label "Cumulative Explained Variance (%)" and X-axis label "Number of Principal Components" in dark #1A1A17 at 10pt, clearly readable. Tick labels in #4A4A44 at 8pt, readable. Three dashed horizontal reference lines for 90%, 95%, 99% thresholds in INK_SOFT; small labels at right edge (size~7pt) are visible at full canvas but would be small at mobile. Subtle horizontal grid lines only (x grid removed). 4-sided panel border visible.
+      Data: Brand green #009E73 cumulative line with open circle markers (hollow with warm-off-white fill, teal stroke). Translucent teal bars (alpha=0.15) for individual variance — intentionally subtle background layer. Red (#AE3030) elbow marker at component 2 (55.4%) is prominently sized at 5x, with dotted red drop-line to x-axis. Elbow annotation "Elbow: 2 components\n(55.4%)" in IMPRINT_RED at size=3.0mm, positioned right and above the elbow point — close to the green line but readable due to color contrast.
+      Legibility verdict: PASS — all primary text elements readable; annotation labels are small but acceptable at full canvas resolution.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black consistent with #1A1A17 — correct dark theme surface, not pure black.
+      Chrome: Title, axis labels, tick labels all in light #F0EFE8 / #B8B7B0 tones — clearly readable against the dark background. No dark-on-dark text failures detected. Threshold dashed lines and grid in muted tones. Panel border visible in lighter INK_SOFT.
+      Data: Brand green #009E73 line and open-circle markers are identical to light render — correct per Imprint palette rules. Translucent teal bars look slightly darker against the dark background but still serve as subtle context layer. IMPRINT_RED (#AE3030) elbow highlight identical to light render. Drop-line and annotation in matching red.
+      Legibility verdict: PASS — both renders are fully theme-correct with no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt, axis
-          text 16pt, base 14pt'
+        comment: All font sizes explicitly set; title formula applied (n=61 < 67,
+          12pt); axis labels 10pt, ticks 8pt. Threshold labels (2.5mm) and elbow annotation
+          (3.0mm) are small at mobile scale.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Threshold labels slightly crowded at right edge but still readable
+        comment: No significant overlap; annotation near line but IMPRINT_RED vs brand
+          green color contrast keeps both readable.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers well-sized, line visible, bars appropriately translucent
+        comment: 13 data points (sparse); marker size=2.5 with open-circle effect
+          is appropriately prominent. Elbow marker at size=5 creates clear hierarchy.
+          Line at size=1.0 clearly visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Good blue/orange/green scheme; threshold colors may cause minor difficulty
-          for deuteranopia
+        comment: Brand green vs IMPRINT_RED provides good contrast. Size difference
+          between regular and elbow markers adds redundant encoding. CVD-safe.
       - id: VQ-05
-        name: Layout Balance
-        score: 3
+        name: Layout & Canvas
+        score: 4
         max: 4
         passed: true
-        comment: Good overall layout; some wasted space in lower-right area
+        comment: 3200x1800 landscape canvas. No content clipped. Balanced margins.
+          Canvas gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units on both axes
+        comment: 'X: ''Number of Principal Components'', Y: ''Cumulative Explained
+          Variance (%)'' — descriptive with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Primary series #009E73 (Imprint slot 1). Elbow in #AE3030 (Imprint
+          slot 5 — semantic anchor, appropriate for detection/emphasis). Light bg
+          #FAF8F1, dark bg #1A1A17. Theme-adaptive chrome correct in both renders.'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Strong design with custom Python Blue scheme, shaded threshold bands,
-          styled panel background
+        comment: 'Above defaults: semantic color use (IMPRINT_RED for elbow), open-circle
+          markers with PAGE_BG fill, multi-layer composition (translucent bars + line
+          + markers + elbow highlight + drop-line + annotations). Not quite FiveThirtyEight-level
+          but clearly above configured defaults.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: Removed minor x-gridlines, subtle y-gridlines, custom panel background,
-          axis line styling
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Elbow annotation with drop-line creates focal point; threshold bands
-          guide interpretation
+        comment: Grid well-refined (x removed, minor removed, y-only at alpha=0.12).
+          However 4-sided panel_border rather than preferred L-shaped spines (remove
+          top/right). Tight plot_margin=0.02.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Strong storytelling: red elbow highlight creates immediate focal
+          point, drop-line visually connects elbow to x-axis, threshold reference
+          lines give context for component selection. Viewer immediately sees the
+          key insight.'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -122,50 +143,57 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct cumulative line plot for PCA variance
+        comment: Correct line plot of cumulative explained variance with markers at
+          each component.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec features present including optional bar overlay
+        comment: 'All features: cumulative sum on y-axis, percentage scale, dashed
+          reference lines at 90%/95%/99%, elbow annotation, clear markers. Optional:
+          individual variance bars implemented.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, x-axis starts at 1
+        comment: 'X: n_components (1-13), Y: cumulative_var (0-100%). X starts at
+          1. All data visible.'
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format correct; no formal legend for bars vs line distinction
+        comment: 'Title: ''line-pca-variance-cumulative · python · plotnine · anyplot.ai''
+          — exact required format. No legend (single series — appropriate).'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Classic elbow curve shown well; elbow at component 2 makes upper
-          curve feel compressed
+        comment: 'Shows all aspects: full cumulative curve with elbow pattern, diminishing
+          returns visible, threshold crossings annotated, individual variance context.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real Wine dataset from sklearn, genuine scientific scenario
+        comment: Uses sklearn Wine dataset — real scientific data from Italian wine
+          cultivar chemistry (13 features). Neutral, comprehensible scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Real PCA results with realistic values
+        comment: Values derived from actual PCA computation on Wine dataset. Component
+          1 explains ~36%, total 13 components to 100%. Factually correct.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -173,50 +201,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports, data, plot, save structure
+        comment: No functions or classes. Clean imports → data → plot → save flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic real dataset, no randomness
+        comment: 'Deterministic: real dataset with fixed PCA computation. No random
+          sampling needed.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All 17 plotnine imports are used. numpy, pandas, os, sklearn modules
+          all utilized.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Slightly verbose: identical threshold x-positions, awkward list
-          in geom_text label'
+        passed: true
+        comment: Clean plotnine grammar. Appropriate complexity. No fake UI. Consistent
+          token usage.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, no deprecated functions
-    library_features:
-      score: 9
+        comment: Saves as plot-{THEME}.png with theme variable. Current plotnine 0.15.3
+          API.
+    library_mastery:
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert grammar of graphics with proper layer composition and theme
-          customization
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses plotnine-distinctive annotate rect, scale_*_identity, ggplot2-style
-          layering
+        comment: 'Expert layered ggplot grammar: multiple geoms with separate data
+          frames, proper aes() mappings, custom scales. Slightly inconsistent chrome
+          (axis_line_x + panel_border together).'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses plotnine's layered grammar with multiple data frames (elbow_df,
+          thresholds) — characteristic ggplot2/plotnine pattern. nudge_x/nudge_y in
+          geom_text. Features are plotnine-idiomatic but shared with ggplot2.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -224,13 +257,10 @@ impl_tags:
   techniques:
   - annotations
   - layer-composition
-  - manual-ticks
   patterns:
   - dataset-loading
   dataprep:
   - pca
   - cumulative-sum
-  - normalization
   styling:
   - alpha-blending
-  - grid-styling

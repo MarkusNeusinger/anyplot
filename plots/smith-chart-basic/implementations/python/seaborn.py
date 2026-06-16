@@ -20,8 +20,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito data colors (categorical series)
-REACT_COLOR = "#D55E00"  # Reactance arcs — second series
-VSWR_COLOR = "#0072B2"  # VSWR reference circle — third series
+REACT_COLOR = "#C475FD"  # Reactance arcs — second series
+VSWR_COLOR = "#4467A3"  # VSWR reference circle — third series
 
 # Apply seaborn theme for chrome elements
 sns.set_theme(

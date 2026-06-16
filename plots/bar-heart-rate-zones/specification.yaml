@@ -1,0 +1,28 @@
+# Specification-level metadata for bar-heart-rate-zones
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: bar-heart-rate-zones
+title: Time in Heart Rate Zones Bar Chart
+
+# Specification tracking
+created: "2026-06-10T22:50:58Z"
+updated: null
+issue: 8649
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - bar
+  data_type:
+    - categorical
+    - numeric
+  domain:
+    - healthcare
+    - general
+  features:
+    - basic
+    - color-mapped
+    - annotated
+    - ranking

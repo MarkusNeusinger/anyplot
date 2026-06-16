@@ -1,13 +1,29 @@
-""" pyplots.ai
+""" anyplot.ai
 campbell-basic: Campbell Diagram
-Library: pygal 3.1.0 | Python 3.14.3
-Quality: 92/100 | Created: 2026-02-15
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-28
 """
+
+import os
+import sys
+
+
+# Prevent self-import: this file is named pygal.py, which shadows the installed
+# pygal package when the script directory is first in sys.path.
+_here = os.path.dirname(os.path.abspath(__file__))
+if _here in sys.path:
+    sys.path.remove(_here)
 
 import numpy as np
 import pygal
 from pygal.style import Style
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Data — natural frequencies of a rotor system vs rotational speed
 np.random.seed(42)
@@ -41,57 +57,55 @@ for order in orders:
                 critical_speeds.append((float(rpm_interp), float(freq_interp)))
                 critical_info.append((order, mode_names[mi]))
 
-# Style — stroke_width controls .reactive CSS base width for all line elements
-# Setting it high ensures EO dashed lines are fully visible in CairoSVG PNG rendering
 font = "DejaVu Sans, Helvetica, Arial, sans-serif"
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#2a2a2a",
-    foreground_strong="#2a2a2a",
-    foreground_subtle="#d0d0d0",
-    guide_stroke_color="#e4e4e4",
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    guide_stroke_color=INK_MUTED,
     guide_stroke_dasharray="4, 6",
     major_guide_stroke_dasharray="2, 4",
     colors=(
-        "#306998",  # 1st Bending — Python Blue
-        "#1a9988",  # 2nd Bending — teal
-        "#7b5ea7",  # 1st Torsional — purple
-        "#d4812e",  # Axial — orange
-        "#5a8c3c",  # 2nd Torsional — green
-        "#b71c1c",  # 1x EO — dark red
-        "#0d47a1",  # 2x EO — bold blue
-        "#4a148c",  # 3x EO — bold purple
-        "#d50000",  # Critical Speeds — vivid red
+        "#009E73",  # 1st Bending — anyplot green
+        "#C475FD",  # 2nd Bending — lavender
+        "#4467A3",  # 1st Torsional — blue
+        "#BD8233",  # Axial — ochre
+        "#AE3030",  # 2nd Torsional — matte red
+        "#2ABCCD",  # 1× EO — cyan (clearly distinct from all mode colors)
+        "#954477",  # 2× EO — rose
+        "#99B314",  # 3× EO — lime
+        "#DDCC77",  # Critical Speeds — amber (semantic warning anchor)
     ),
     font_family=font,
     title_font_family=font,
-    title_font_size=56,
-    label_font_size=42,
-    major_label_font_size=38,
-    legend_font_size=32,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
     legend_font_family=font,
-    value_font_size=28,
+    value_font_size=36,
     tooltip_font_size=28,
     tooltip_font_family=font,
     opacity=1.0,
     opacity_hover=1.0,
     stroke_opacity=1.0,
     stroke_opacity_hover=1.0,
-    stroke_width=6,
+    stroke_width=2.5,
 )
 
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="campbell-basic · pygal · pyplots.ai",
+    title="campbell-basic · python · pygal · anyplot.ai",
     x_title="Rotational Speed (RPM)",
     y_title="Frequency (Hz)",
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=3,
-    legend_box_size=30,
+    legend_box_size=20,
     stroke=True,
     dots_size=0,
     show_x_guides=True,
@@ -113,7 +127,6 @@ chart = pygal.XY(
 )
 
 # Natural frequency mode curves — solid, thick lines with cubic interpolation
-# Add label point near right end of each curve for direct labeling
 for mode, label in zip(modes_data, mode_names, strict=True):
     points = []
     label_idx = int(len(speed_rpm) * 0.82)
@@ -122,19 +135,15 @@ for mode, label in zip(modes_data, mode_names, strict=True):
             points.append({"value": (float(r), float(f)), "label": label})
         else:
             points.append((float(r), float(f)))
-    chart.add(label, points, stroke_style={"width": 10, "linecap": "round"}, show_dots=False, interpolate="cubic")
+    chart.add(label, points, stroke_style={"width": 7, "linecap": "round"}, show_dots=False, interpolate="cubic")
 
-# Engine order lines — dashed, bold, many sample points for proper rendering
-# Using multiple points along each line ensures CairoSVG renders the full stroke
+# Engine order lines — dashed with prominent width and clear patterns
 eo_labels = ["1× EO", "2× EO", "3× EO"]
-eo_dash_patterns = ["28, 14", "20, 10, 8, 10", "14, 8"]
+eo_dash_patterns = ["30, 12", "20, 8, 6, 8", "12, 6"]
 for order, eo_label, dash in zip(orders, eo_labels, eo_dash_patterns, strict=True):
     eo_end_rpm = min(6000.0, 130.0 * 60.0 / order)
-    eo_end_hz = order * eo_end_rpm / 60.0
-    # Generate 40 evenly spaced points so pygal renders a proper visible path
     eo_rpms = np.linspace(0, eo_end_rpm, 40)
     eo_freqs = order * eo_rpms / 60.0
-    # Place label near 70% of line length
     label_idx = int(len(eo_rpms) * 0.70)
     eo_points = []
     for j, (r, f) in enumerate(zip(eo_rpms, eo_freqs, strict=True)):
@@ -142,15 +151,17 @@ for order, eo_label, dash in zip(orders, eo_labels, eo_dash_patterns, strict=Tru
             eo_points.append({"value": (float(r), float(f)), "label": eo_label})
         else:
             eo_points.append((float(r), float(f)))
-    chart.add(eo_label, eo_points, stroke_style={"width": 8, "dasharray": dash, "linecap": "round"}, show_dots=False)
+    chart.add(eo_label, eo_points, stroke_style={"width": 6, "dasharray": dash, "linecap": "round"}, show_dots=False)
 
-# Critical speed markers — vivid red with tooltip showing intersection details
+# Critical speed markers — amber warning dots with intersection details
 critical_points = []
 for pt, info in zip(critical_speeds, critical_info, strict=True):
     order, mname = info
     critical_points.append({"value": pt, "label": f"{mname} × {order}× EO\n{pt[0]:.0f} RPM / {pt[1]:.1f} Hz"})
-chart.add("Critical Speeds", critical_points, stroke=False, dots_size=22)
+chart.add("Critical Speeds", critical_points, stroke=False, dots_size=15)
 
-# Render both SVG/HTML (leveraging pygal's native SVG interactivity) and PNG
-chart.render_to_file("plot.html")
-chart.render_to_png("plot.png")
+# Save — write to the script's own directory regardless of working directory
+_out = os.path.join(_here, f"plot-{THEME}")
+with open(f"{_out}.html", "wb") as f:
+    f.write(chart.render())
+chart.render_to_png(f"{_out}.png")

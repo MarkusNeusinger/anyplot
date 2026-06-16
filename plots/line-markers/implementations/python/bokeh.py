@@ -60,8 +60,8 @@ p = figure(
 
 # Okabe-Ito color palette
 color_a = "#009E73"  # Okabe-Ito position 1 (bluish green)
-color_b = "#D55E00"  # Okabe-Ito position 2 (vermillion)
-color_c = "#0072B2"  # Okabe-Ito position 3 (blue)
+color_b = "#C475FD"  # Okabe-Ito position 2 (vermillion)
+color_c = "#4467A3"  # Okabe-Ito position 3 (blue)
 
 # Plot lines with markers - Station A (circles)
 line_a = p.line("x", "y", source=source_a, line_width=4, color=color_a, alpha=0.85)

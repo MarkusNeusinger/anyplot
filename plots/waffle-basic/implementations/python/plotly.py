@@ -19,12 +19,12 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette - first series ALWAYS #009E73
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # bluish green (brand)
-    "#D55E00",  # vermillion
-    "#0072B2",  # blue
-    "#CC79A7",  # reddish purple
-    "#E69F00",  # orange
+    "#C475FD",  # vermillion
+    "#4467A3",  # blue
+    "#BD8233",  # reddish purple
+    "#AE3030",  # orange
 ]
 
 # Data - Budget allocation across spending categories
@@ -62,7 +62,7 @@ for row in range(grid_size):
                 marker={
                     "size": 55,
                     "symbol": "square",
-                    "color": OKABE_ITO[cat_idx],
+                    "color": IMPRINT[cat_idx],
                     "line": {"color": PAGE_BG, "width": 2},
                 },
                 showlegend=False,
@@ -77,7 +77,7 @@ for cat_idx, (cat, val) in enumerate(zip(categories, values, strict=True)):
             x=[None],
             y=[None],
             mode="markers",
-            marker={"size": 22, "symbol": "square", "color": OKABE_ITO[cat_idx]},
+            marker={"size": 22, "symbol": "square", "color": IMPRINT[cat_idx]},
             name=f"{cat}: {val}%",
             showlegend=True,
         )

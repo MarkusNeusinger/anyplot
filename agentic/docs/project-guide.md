@@ -6,9 +6,9 @@ This document contains comprehensive project documentation for AI agents working
 
 **anyplot** is an AI-powered platform for Python data visualization that automatically discovers, generates, tests, and maintains plotting examples. The platform is specification-driven: every plot starts as a library-agnostic Markdown spec, then AI generates implementations for all supported libraries.
 
-**Supported Libraries** (10 total):
+**Supported Libraries** (15 total):
 
-*Python (9):*
+*Python (8):*
 - **matplotlib** - The classic standard, maximum flexibility
 - **seaborn** - Statistical visualizations, beautiful defaults
 - **plotly** - Interactive web plots, dashboards, 3D
@@ -16,7 +16,6 @@ This document contains comprehensive project documentation for AI agents working
 - **altair** - Declarative/Vega-Lite, elegant exploration
 - **plotnine** - ggplot2 syntax for R users
 - **pygal** - Minimalistic SVG charts
-- **highcharts** - Interactive web charts, stock charts (requires license for commercial use)
 - **lets-plot** - ggplot2 grammar of graphics by JetBrains, interactive
 
 *R (1):*
@@ -24,6 +23,13 @@ This document contains comprehensive project documentation for AI agents working
 
 *Julia (1):*
 - **Makie.jl** - High-performance Julia visualization. CairoMakie ships publication-quality static PNG via a pure-Cairo backend.
+
+*JavaScript (5):* — rendered through the Node 22 + Playwright browser harness (`automation/js-render/render.mjs`)
+- **Chart.js** - Simple, flexible HTML5-canvas charts; the popular JS default
+- **D3.js** - Data-driven SVG, low-level and maximally flexible
+- **Apache ECharts** - Powerful interactive charts, vast catalog
+- **highcharts** - Industry-standard SVG charts (commercial license, free for non-commercial use); migrated Python → JavaScript in Phase 2
+- **MUI X Charts** - Charts for the MUI / Material UI **React** ecosystem (`framework: react`, authored as `.tsx`). Community `@mui/x-charts` (MIT) only; Pro/Premium out of scope. The first React entry — bundled via the harness's esbuild React branch.
 
 **Core Principle**: Community proposes plot ideas via GitHub Issues -> AI generates code -> AI quality review -> Deployed.
 
@@ -102,20 +108,28 @@ uv run ruff check <files> && uv run ruff format <files>
 ```bash
 cd app
 yarn install
-yarn dev               # Development server
-yarn tsc --noEmit      # Type-check only (catches TS6133 unused vars etc.)
+yarn dev               # Development server (TS/ESLint errors show as browser overlay)
+yarn lint              # ESLint (0 errors required)
+yarn fm:check          # Prettier check (fm:fix to write, fix:all for both)
+yarn type-check        # tsc for app AND test files (tsconfig.test.json)
+yarn test              # Vitest
 yarn build             # Production build (runs tsc + vite build)
 ```
 
-**IMPORTANT: Run `yarn tsc --noEmit` (or `yarn build`) before committing frontend changes.**
-Vite's HMR dev server is permissive — it does NOT fail on unused variables, unused imports,
-or other TS strict errors. Cloud Build runs `tsc && vite build` and will fail on any TS6133
-("declared but never read") errors. Catching these locally before `git push` saves a Cloud
-Build round-trip. Common traps:
+**Run the full gate before committing frontend changes:**
+`yarn lint && yarn fm:check && yarn type-check && yarn test`. CI enforces the
+same gates in the `test-frontend` job, and `yarn dev` surfaces TS/ESLint
+errors live via vite-plugin-checker — but Vite HMR itself is permissive, so
+don't rely on the dev server alone. Cloud Build runs `tsc && vite build` and
+fails on any strict-TS error (e.g. TS6133 "declared but never read"). Common traps:
 
 - Removing a prop's usage from a component body but forgetting to remove it from `XxxProps`
 - Removing a feature (e.g. color accents) but leaving the import (`import { colors }`)
 - Changing a hook's shape and leaving a now-unused destructured name
+
+Structure, conventions (src/ alias imports, `paths.*` URLs, `lib/api` client,
+theme tokens), and how to add pages/sections/hooks: see
+[`app/ARCHITECTURE.md`](../../app/ARCHITECTURE.md).
 
 ## Architecture
 
@@ -125,22 +139,23 @@ Everything for one plot type lives in a single directory:
 
 ```
 plots/{specification-id}/
-├── specification.md     # Description, Applications, Data, Notes
-├── specification.yaml   # Spec-level metadata (tags, created, issue, suggested, updates)
-├── metadata/            # Per-library metadata (one file per library)
-│   ├── matplotlib.yaml
-│   ├── seaborn.yaml
-│   └── ...
-└── implementations/     # Library implementations
-    ├── matplotlib.py
-    ├── seaborn.py
-    ├── plotly.py
-    ├── bokeh.py
-    ├── altair.py
-    ├── plotnine.py
-    ├── pygal.py
-    ├── highcharts.py
-    └── letsplot.py
+├── specification.md       # Description, Applications, Data, Notes
+├── specification.yaml     # Spec-level metadata (tags, created, issue, suggested, updates)
+├── metadata/              # Per-library metadata, grouped by language
+│   ├── python/{matplotlib,seaborn,…}.yaml
+│   ├── r/ggplot2.yaml
+│   ├── julia/makie.yaml
+│   └── javascript/{chartjs,d3,echarts,highcharts,muix}.yaml
+└── implementations/       # Library implementations, grouped by language
+    ├── python/{matplotlib,seaborn,plotly,bokeh,altair,plotnine,pygal,letsplot}.py
+    ├── r/ggplot2.R
+    ├── julia/makie.jl
+    └── javascript/
+        ├── chartjs.js      # framework-agnostic JS libs are .js
+        ├── d3.js
+        ├── echarts.js
+        ├── highcharts.js
+        └── muix.tsx        # MUI X — React, authored as .tsx
 ```
 
 Example: `plots/scatter-basic/` contains everything for the basic scatter plot.
@@ -329,14 +344,16 @@ gs://anyplot-images/
 2. `impl-review.yml` reads from staging for AI evaluation
 3. `impl-merge.yml` promotes staging -> production when PR merges to main
 
-**Interactive libraries** (generate `.html`): plotly, bokeh, altair, highcharts, pygal, letsplot
+**Interactive libraries** (generate `.html`): plotly, bokeh, altair, highcharts, pygal, letsplot, chartjs, d3, echarts, muix
 **PNG only**: matplotlib, seaborn, plotnine, ggplot2, makie
 
 ## Tech Stack
 
 - **Backend**: FastAPI, SQLAlchemy (async), PostgreSQL, Python 3.13+
 - **Frontend**: React 19, Vite 8, TypeScript 6, MUI 9
-- **Plotting**: matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, lets-plot, ggplot2, Makie.jl
+- **Plotting (Python)**: matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, lets-plot
+- **Plotting (R)**: ggplot2 · **Plotting (Julia)**: Makie.jl
+- **Plotting (JavaScript)**: Chart.js, D3.js, ECharts, Highcharts, MUI X Charts (React)
 - **Package Manager**: uv (fast Python installer)
 - **Infrastructure**: Google Cloud Run, Cloud SQL, Cloud Storage
 - **Automation**: GitHub Actions

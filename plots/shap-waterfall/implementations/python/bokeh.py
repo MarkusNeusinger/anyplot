@@ -28,8 +28,8 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-POS_COLOR = "#D55E00"  # Okabe-Ito vermillion — positive SHAP (pushes prediction up)
-NEG_COLOR = "#0072B2"  # Okabe-Ito blue — negative SHAP (pushes prediction down)
+POS_COLOR = "#AE3030"  # imprint red — positive SHAP (pushes prediction up)
+NEG_COLOR = "#4467A3"  # Okabe-Ito blue — negative SHAP (pushes prediction down)
 LABEL_INK = "#F0EFE8"  # near-white for text on colored bar segments
 
 # Data — credit default risk model: explaining one loan applicant's prediction

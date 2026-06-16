@@ -39,7 +39,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Hierarchical data - File system storage breakdown (GB)
 np.random.seed(42)
@@ -205,18 +205,18 @@ label_df = pd.DataFrame(label_rows)
 # Color mapping: depth-based with Okabe-Ito
 color_map = {
     "root": INK_SOFT,
-    "Documents": OKABE_ITO[0],
-    "Media": OKABE_ITO[1],
-    "Code": OKABE_ITO[2],
-    "Work": OKABE_ITO[0],
-    "Personal": OKABE_ITO[0],
-    "Archive": OKABE_ITO[0],
-    "Photos": OKABE_ITO[1],
-    "Videos": OKABE_ITO[1],
-    "Music": OKABE_ITO[1],
-    "Projects": OKABE_ITO[2],
-    "Libraries": OKABE_ITO[2],
-    "Backups": OKABE_ITO[2],
+    "Documents": IMPRINT[0],
+    "Media": IMPRINT[1],
+    "Code": IMPRINT[2],
+    "Work": IMPRINT[0],
+    "Personal": IMPRINT[0],
+    "Archive": IMPRINT[0],
+    "Photos": IMPRINT[1],
+    "Videos": IMPRINT[1],
+    "Music": IMPRINT[1],
+    "Projects": IMPRINT[2],
+    "Libraries": IMPRINT[2],
+    "Backups": IMPRINT[2],
 }
 
 unique_colors = polygon_df["color"].unique()

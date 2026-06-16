@@ -27,7 +27,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
 
 # Data
 np.random.seed(42)
@@ -89,7 +89,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=66,
     label_font_size=56,
     major_label_font_size=44,
@@ -175,7 +175,7 @@ def add_pnf_text_markers(svg_bytes):
     parent_map = {child: parent for parent in root.iter() for child in parent}
 
     # serie-0 = X (Rising), serie-1 = O (Falling)
-    series_symbols = {0: ("X", OKABE_ITO[0]), 1: ("O", OKABE_ITO[1])}
+    series_symbols = {0: ("X", IMPRINT[0]), 1: ("O", IMPRINT[1])}
 
     for serie_idx, (symbol, color) in series_symbols.items():
         for g in root.iter(f"{{{SVG_NS}}}g"):

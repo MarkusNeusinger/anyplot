@@ -1,0 +1,263 @@
+library: ggplot2
+language: r
+specification_id: gantt-dependencies
+created: '2026-06-02T13:51:28Z'
+updated: '2026-06-02T14:09:32Z'
+generated_by: claude-sonnet
+workflow_run: 26823602692
+issue: 3830
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - 'Excellent critical-path highlighting: INK vs INK_SOFT color differentiation cleanly
+    separates critical from non-critical arrows in both themes without a separate
+    legend entry'
+  - Phase aggregate bars (alpha=0.3) layered beneath task bars (alpha=0.88) elegantly
+    communicate phase-level duration without cluttering task-level detail
+  - 'Full theme token coverage: all chrome elements correctly adapt between light
+    and dark themes; data colors are identical across both renders'
+  - 'Perfect spec compliance: all required features (finish-to-start arrows, group
+    headers with aggregate spans, dependency type differentiation, valid task scheduling)
+    implemented correctly'
+  - Clean, flat code structure with well-named variables and logical section ordering
+  weaknesses:
+  - Legend order is alphabetical (Design, Development, Requirements, Testing) rather
+    than project-chronological (Requirements, Design, Development, Testing) — reorder
+    PHASE_COLORS factor levels to match project sequence
+  - Moderate arrow crowding in the Requirements→Design transition zone where two arrows
+    share the same offset elbow — stagger horizontal elbow distances (e.g., offset_days=3
+    for one arrow, offset_days=7 for the other)
+  - scales used via namespace (scales::label_date_short()) without a corresponding
+    library(scales) call — add library(scales) for consistency with the ggplot2 library
+    guide import style
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface.
+      Chrome: Title "gantt-dependencies · r · ggplot2 · anyplot.ai" in bold near-black INK. Subtitle in muted INK_MUTED. Y-axis task/phase labels in INK_SOFT, right-justified. X-axis date ticks in INK_SOFT. All chrome elements fully readable.
+      Data: Task bars colored by phase in Imprint canonical order — Requirements=#009E73 (brand green), Design=#C475FD (lavender), Development=#4467A3 (blue), Testing=#BD8233 (ochre). Phase aggregate bars at alpha=0.3, task bars at alpha=0.88. L-shaped finish-to-start dependency arrows: critical path in near-black INK (heavier), non-critical in INK_SOFT (lighter). All 8 arrows clearly visible with closed arrowheads.
+      Legibility verdict: PASS — all text and data elements clearly readable against light background. No light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface.
+      Chrome: Title in near-white #F0EFE8 (INK dark token). Subtitle in muted light gray. Y-axis and X-axis labels in #B8B7B0 (INK_SOFT dark token). Legend background at #242420 (ELEVATED_BG dark token) with readable light text. All chrome elements fully readable.
+      Data: Bar colors identical to light render (same green, lavender, blue, ochre Imprint colors). Critical-path arrows render in near-white INK providing strong contrast on dark surface. Non-critical arrows in INK_SOFT (#B8B7B0 medium gray), preserving visual hierarchy. Phase aggregate bars faintly visible as transparent colored overlays.
+      Legibility verdict: PASS — no dark-on-dark failures. All axis labels, title, and data elements clearly readable against dark background. Chrome correctly adapted to dark theme.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Font sizes explicitly set (title=12pt bold, axis/subtitle=8pt).
+          All text readable in both themes. Minor: Y-axis right-justification slightly
+          tight but no clipping.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: L-shaped arrow routing is clean overall. Slight crowding where two
+          arrows from Requirements Doc share the same elbow X position in the Requirements→Design
+          transition zone.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Phase bars (alpha=0.3) and task bars (alpha=0.88) clearly distinguishable.
+          All 8 dependency arrows with arrowheads visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Four Imprint palette hues spanning distinct perceptual families.
+          CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas is 3200x1800 (8x4.5in @ 400dpi). Good proportions, title ~65%
+          width, legend fits at bottom, no overflow.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches required format exactly. Subtitle explains visual encoding.
+          x=NULL y=NULL appropriate for self-describing Gantt axes.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Requirements phase = #009E73 (brand green) first. Phases 2-4 in
+          canonical Imprint order. Backgrounds #FAF8F1 light / #1A1A17 dark. Chrome
+          flips correctly; data colors identical.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: INK vs INK_SOFT for critical/non-critical path differentiation,
+          transparent phase bars layered under opaque task bars, uppercase phase labels
+          vs indented task labels. Gap: legend alphabetical not chronological; arrow
+          routing could use staggered elbows.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Above default: Y-axis grid suppressed, dotted X-axis grid only,
+          Y ticks removed, no panel border. Clean INK token separation between chrome
+          and data.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Above default: critical path emphasis guides reader along project
+          bottleneck. Subtitle reinforces encoding. Phase aggregate bars provide project-level
+          context.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Gantt chart with task bars, phase grouping, and dependency
+          connectors.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: finish-to-start arrows, group headers with aggregate
+          spans, different styles for critical/non-critical dependencies, legend,
+          valid task scheduling.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time, Y=task hierarchy. All 9 tasks + 4 phases displayed. Bars
+          span correct dates. Arrows from predecessor end to successor start.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''gantt-dependencies · r · ggplot2 · anyplot.ai''. Legend
+          labels four phases with correct Imprint colors.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All key Gantt features shown: task timelines, phase grouping, aggregate
+          bars, finish-to-start arrows, critical path.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Software development project (Requirements→Design→Development→Testing)
+          with 9 named tasks, realistic 2024 calendar dates. Neutral professional
+          domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 13 rows (9 tasks + 4 phases) within spec's 10-50 range. Six-month
+          timeline realistic for mid-size software project.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions or classes. Clear linear flow.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Data fully deterministic, no random generation needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI elements. L-shaped arrow construction via for-loop is
+          clean.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-${THEME}.png via ragg::agg_png at canonical 8x4.5in/400dpi.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'geom_rect for bars, geom_segment with arrow() for connectors, scale_fill_manual,
+          scale_x_date with expansion(), scale_y_continuous with custom breaks/labels
+          — all idiomatic ggplot2. Minor: scales used via namespace without library(scales).'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses scales::label_date_short() for compact dates, arrow(length=unit(...),
+          type='closed') for arrowheads, expansion(mult/add=...) for scale padding,
+          margin() for spacing — genuine ggplot2/grid-graphics-specific features.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - ragg
+  techniques:
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

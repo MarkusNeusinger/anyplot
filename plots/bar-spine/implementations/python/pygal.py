@@ -24,7 +24,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
 
 # Data: Titanic passenger survival by passenger class
 class_names = ["1st Class", "2nd Class", "3rd Class"]
@@ -51,7 +51,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=28,
     label_font_size=22,
     major_label_font_size=18,
@@ -74,7 +74,7 @@ chart = pygal.Histogram(
 
 # Spine plot using overlapping Histogram bars:
 # Series 1 "Survived" (green #009E73): full-height background bar (value=1.0)
-# Series 2 "Not Survived" (orange #D55E00): overlay bar from y=0 to not_survive_prop
+# Series 2 "Not Survived" (orange #C475FD): overlay bar from y=0 to not_survive_prop
 # → orange covers the bottom portion; green is visible at top (survive_prop)
 survived_data = [
     {"value": (1.0, x_min, x_max), "label": f"{cls} — {sp:.1%} survived"}

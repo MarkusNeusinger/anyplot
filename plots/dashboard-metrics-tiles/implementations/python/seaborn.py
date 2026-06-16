@@ -40,9 +40,8 @@ sns.set_theme(
 # Data
 np.random.seed(42)
 
-# Status colors — Okabe-Ito positions 1 (green), 5 (orange), 4 (reddish-purple)
-# First categorical color must always be #009E73 (brand green)
-status_colors = {"good": "#009E73", "warning": "#E69F00", "critical": "#CC79A7"}
+# Status colors — imprint semantic anchors (green / amber / red)
+status_colors = {"good": "#009E73", "warning": "#DDCC77", "critical": "#AE3030"}
 
 metrics = [
     {
@@ -151,9 +150,9 @@ for ax, metric in zip(axes, metrics, strict=True):
     # Lower is better for operational metrics; higher is better for usage/throughput
     decrease_is_good = metric["name"] in ["CPU Usage", "Memory", "Response Time", "Error Rate"]
     if decrease_is_good:
-        change_color = "#009E73" if change < 0 else "#CC79A7"
+        change_color = "#009E73" if change < 0 else "#BD8233"
     else:
-        change_color = "#009E73" if change >= 0 else "#CC79A7"
+        change_color = "#009E73" if change >= 0 else "#BD8233"
 
     ax.text(
         5,

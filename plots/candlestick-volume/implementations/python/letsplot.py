@@ -67,7 +67,7 @@ df = pd.DataFrame(
 
 # Colorblind-safe colors (first series Okabe-Ito, second is orange)
 color_up = "#009E73"
-color_down = "#D55E00"
+color_down = "#AE3030"  # imprint red — down days
 
 # Create volume breaks and labels (inline formatting)
 vol_min, vol_max = df["volume"].min(), df["volume"].max()

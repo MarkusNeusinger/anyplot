@@ -1,0 +1,255 @@
+library: muix
+language: javascript
+specification_id: gauge-activity-rings
+created: '2026-06-14T20:57:38Z'
+updated: '2026-06-14T21:16:21Z'
+generated_by: claude-sonnet
+workflow_run: 27511535427
+issue: 8648
+language_version: 22.22.3
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/javascript/muix/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Correct Imprint palette applied in canonical order (green → lavender → blue) with
+    full palette compliance across both themes
+  - Amber '↓ focus area' tag on the lagging ring is a genuine data storytelling device
+    that elevates this above a generic gauge
+  - Spec example data used verbatim with correct units per ring; realistic fitness
+    tracker scenario
+  - trackOpacity increase in dark mode (0.28 vs 0.18) shows thoughtful theme-adaptive
+    refinement beyond the minimum
+  - Code is clean and deterministic; all MUI X Gauge primitives (GaugeContainer, GaugeValueArc,
+    GaugeReferenceArc) used correctly with skipAnimation
+  weaknesses:
+  - 'DE-01 not at publication level: center typography could benefit from slightly
+    more size variation or a subtle ring glow/shadow to reinforce the fitness-tracker
+    aesthetic'
+  - 'DQ-01 minor gap: no ring demonstrates >100% completion (overflow case); showing
+    one ring slightly over-goal would complete the feature coverage the spec describes
+    as supported'
+  - 'LM-01 slightly docked: multi-ring stacking relies on CSS absolute positioning
+    rather than any MUI X layout primitive — acceptable given library limits but not
+    fully idiomatic MUI'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "gauge-activity-rings · javascript · muix · anyplot.ai" at top in 22px weight-400 text, clearly readable dark text on cream. Center bold dark text "Daily Activity" (34px) + "Jun 14, 2026" (16px) both readable. Bottom legend: colored percentages (30px), metric names (18px), value/goal text (14px), amber tag (13px) — all readable.
+      Data: Outer ring (Move) #009E73 brand green at 70% fill; middle ring (Exercise) #C475FD lavender at 83% fill; inner ring (Stand) #4467A3 blue at 75% fill. Each ring has a faint matching background track at ~0.18 opacity. Rounded end caps visible. Arcs start at ~12 o'clock and sweep clockwise.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title renders in light text on dark background, clearly readable. Center "Daily Activity" appears in white/cream (t.ink token resolved to #F0EFE8). "Jun 14, 2026" in lighter secondary text. Bottom metric names and value labels in light secondary text. No dark-on-dark failures detected — t.ink and t.inkSoft tokens are theme-adaptive.
+      Data: Ring colors identical to light render — #009E73 green, #C475FD lavender, #4467A3 blue — data color identity confirmed. Background tracks at 0.28 opacity (higher than light mode) remain subtle but more visible against dark surface.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; 22px title, 34px center label, 30px
+          percentages, 18px metric names. Title fontWeight 400 is thin but readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements; 64px gap between legend columns.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All three rings clearly visible in both themes; background tracks
+          subtle; rounded end caps add definition.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette CVD-optimised; green/purple/blue from distinct perceptual
+          families.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas correctly chosen; rings fill canvas well; balanced
+          margins; title top / legend bottom.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes (radial chart); anyplot title correct; per-ring
+          legend includes name + value/goal + units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First ring #009E73, second #C475FD, third #4467A3. Backgrounds #FAF8F1/#1A1A17.
+          Data colors identical between themes. Chrome flips via t.ink/t.inkSoft.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design above defaults: Imprint palette, color-coded percentage
+          labels, amber lagging-ring indicator, center contextual label. Not publication-ready.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No axes/spines; subtle background tracks at low opacity; typography
+          hierarchy 34px→13px. Clean and polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Amber focus-area tag on lagging ring (Move 70%) creates focal point.
+          Color-coded legend guides eye. Viewer immediately identifies which metric
+          needs attention.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct activity rings: concentric partial arcs, rounded end caps,
+          12-o''clock start, clockwise sweep, background tracks.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Three rings, background tracks, rounded caps, center label, bottom
+          legend, square canvas, equal stroke widths — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Move 420/600=70%, Exercise 25/30=83%, Stand 9/12=75% — matches spec
+          example data exactly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'gauge-activity-rings · javascript · muix · anyplot.ai' correct.
+          Legend maps color → metric → value/goal/unit.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Three rings at distinct completion levels with different units.
+          Background tracks show remaining progress. Missing: no >100% ring demonstration
+          (optional per spec).'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Daily fitness (Move/Exercise/Stand) is canonical real-world scenario;
+          mirrors fitness tracker UX.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 420/600 kcal, 25/30 min, 9/12 hr — all factually plausible fitness
+          objectives.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean React component: imports → token setup → data constants →
+          component. No unnecessary layers.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hard-coded; fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: GaugeContainer/GaugeValueArc/GaugeReferenceArc, Box, Typography —
+          all used; no dead imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: rings.map() clean; laggingIndex via Math.min spread elegant; no fake
+          UI elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Square orientation directive at file top; harness handles output;
+          current MUI X API used.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of MUI X Gauge primitive family; cornerRadius, valueMin/valueMax,
+          skipAnimation all correct. Stacking via absolute positioning is idiomatic
+          React given no native multi-ring MUI X support.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: GaugeReferenceArc as background track, cornerRadius='50%' for rounded
+          caps, and the GaugeValueArc/GaugeReferenceArc split primitive composition
+          are MUI X-specific.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending

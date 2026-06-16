@@ -1,0 +1,286 @@
+library: seaborn
+language: python
+specification_id: heatmap-periodic-table
+created: '2026-06-15T04:57:44Z'
+updated: '2026-06-15T05:20:35Z'
+generated_by: claude-sonnet
+workflow_run: 27524438993
+issue: 8659
+language_version: 3.13.13
+library_version: 0.13.2
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Full spec compliance: canonical 18×7 periodic table layout with detached f-block
+    rows, grey tiles for missing values, colorbar with units, and WCAG luminance-based
+    text coloring for tile contrast'
+  - 'Sophisticated theme-adaptive implementation: correct Imprint imprint_seq colormap
+    (#009E73→#4467A3), theme-adaptive chrome tokens throughout, grey tile colors adapt
+    per theme'
+  - 'High data quality: real Pauling electronegativity values for all 118 elements,
+    scientifically accurate range (0.70–3.98), appropriate grey tiles for noble gases
+    and synthetic elements without defined EN'
+  - 'Clean KISS code structure: no functions/classes, deterministic hardcoded data,
+    all imports used, correct plot-{THEME}.png output'
+  - 'Idiomatic seaborn usage: sns.heatmap() with annot= custom object array, mask=
+    for NaN tiles, cbar_kws, fmt='''' — all seaborn-specific API features'
+  - 'Trend storytelling via min/max annotations (F: 3.98, Cs: 0.79, Fr: 0.70) and
+    color gradient that naturally shows electronegativity increasing toward top-right'
+  weaknesses:
+  - Atomic number fontsize (3.5pt = 19px at 3200×1800) is very small — borderline
+    readable at full canvas resolution, essentially invisible at mobile widths; increase
+    to 4pt
+  - EN value annotations for F/Cs/Fr at 2.5pt (14px) are barely visible even at full
+    resolution; increase to 3–3.5pt for the highlighted trend markers
+  - Lanthanides/Actinides italic labels at 2.8pt (16px) are at the edge of legibility;
+    increase to 3.5pt
+  - 'LM-02: complex post-processing (grey tile rectangles, atomic number annotations,
+    EN value text, custom text color assignment) falls through to raw matplotlib rather
+    than seaborn — this reduces library mastery score'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface.
+      Chrome: Title "Electronegativity Trends · heatmap-periodic-table · python · seaborn · anyplot.ai" in dark ink (#1A1A17), clearly readable at ~10pt. Colorbar label "Electronegativity (Pauling scale)" at 7pt and tick labels at 6pt are readable. All spines removed. No axis tick labels (appropriate for grid heatmap).
+      Data: Full 18-group × 7-period periodic table with f-block rows (Lanthanides/Actinides) detached below, separated by a gap row. Color gradient from #009E73 (green, low EN ~0.7) to #4467A3 (blue, high EN ~4.0) using imprint_seq — the trend of increasing electronegativity toward the top-right corner is immediately apparent. Noble gases (He, Ne, Ar, Kr, Xe, Rn, Og) and synthetic elements without defined EN rendered as grey tiles (#C8C7C0). Element symbols in 5pt bold are clearly visible on each tile. Atomic numbers at 3.5pt are small but readable at full resolution. EN value annotations for F (3.98), Cs (0.79), and Fr (0.70) at 2.5pt are very small but present. Lanthanides/Actinides labels at 2.8pt italic in the f-block gap area. WCAG luminance-based text coloring applied — dark text on lighter tiles, light text on darker tiles.
+      Legibility verdict: PASS — main symbols and numbers readable at full resolution; 2.5pt EN value annotations and 2.8pt category labels are marginal but visible. Mobile readability is limited (inherent to 118-element grid).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface.
+      Chrome: Title in light cream (#F0EFE8), clearly readable against dark background. Colorbar label and tick labels in light INK_SOFT (#B8B7B0) — readable. All chrome correctly flipped to light-on-dark.
+      Data: Identical color gradient to light render — imprint_seq green-to-blue unchanged. Grey tiles at #3A3A37 are slightly lighter than the background and distinguishable. Element symbols use WCAG luminance-based coloring — light text (#F0EFE8) on darker tiles, dark text (#1A1A17) on lighter tiles. Symbol contrast is maintained. No dark-on-dark text issues.
+      Legibility verdict: PASS — no dark-on-dark failures; text is correctly light on dark background; data colors are identical to light render as required.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set with dynamic title scaling. Main symbols
+          (5pt=28px) and atomic numbers (3.5pt=19px) readable at full canvas. EN value
+          annotations (2.5pt=14px) and Lanthanides/Actinides labels (2.8pt=16px) are
+          marginal — very small auxiliary text.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap — each element has its own tile, annotations stay within
+          bounds, colorbar separate from plot.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Heatmap tiles clearly distinguishable with color gradient. Grey tiles
+          clearly differentiated from colored tiles. Line separators define tile boundaries.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: WCAG luminance-based text coloring ensures sufficient contrast on
+          all tiles. imprint_seq is CVD-considerate. Imprint palette applied correctly.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Periodic table fills canvas well. Colorbar positioned appropriately
+          on the right. F-block rows properly separated below. Canvas gate passed
+          (3200×1800 confirmed).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Colorbar labeled 'Electronegativity (Pauling scale)' with units.
+          No x/y axis labels needed for grid heatmap — appropriate omission. Title
+          descriptive with spec-id.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq (green #009E73 → blue #4467A3) used for continuous electronegativity
+          data. Light bg #FAF8F1, dark bg #1A1A17. Theme-adaptive chrome tokens (INK,
+          INK_SOFT, GREY_TILE) all correct. Data colors identical across both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: custom Imprint sequential colormap, WCAG luminance-based
+          tile text coloring (sophisticated beyond defaults), multiple intentional
+          text size hierarchy levels, theme-adaptive grey tiles. Clearly above ''well-configured
+          library default'' level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: all spines removed, no grid (appropriate for heatmap),
+          0.5pt cell separators with theme-adaptive color, custom colorbar styling
+          (spine colors, tick colors, label color). Multiple details polished.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good storytelling: color gradient naturally shows electronegativity
+          trend (top-right=high, bottom-left=low). Min/max annotations (F: 3.98, Cs:
+          0.79, Fr: 0.70) create focal points. Visual hierarchy guides viewer to extremes.
+          Lanthanides/Actinides labels provide educational context.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: periodic table heatmap with canonical 18-group × 7-period
+          layout, detached f-block rows, using sns.heatmap() as primary API.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: canonical layout, detached lanthanides/actinides,
+          gap at group 3 in periods 6-7, equal-sized tiles with separators, sequential
+          colormap, element symbols, atomic numbers in top-left, optional EN values
+          for extremes, luminance-based text colors, grey tiles for missing values,
+          labeled colorbar.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Groups → columns (1-18 → indices 0-17), periods → rows (1-7 → 0-6,
+          f-block at 8-9 with gap at 7). Electronegativity → color via imprint_seq.
+          All correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'Electronegativity Trends · heatmap-periodic-table · python
+          · seaborn · anyplot.ai' follows correct format with descriptive prefix.
+          Colorbar (not legend) serves as continuous scale reference — appropriate
+          for this chart type.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Full periodic table coverage: all 118 elements, complete EN values
+          where defined, grey tiles for undefined EN, lanthanides and actinides properly
+          placed, f-block separation visual. Demonstrates full range from 0.70 to
+          3.98.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real Pauling electronegativity data for all elements. Classic, universally
+          recognized scientific topic. Neutral educational context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Pauling EN range 0.70 (Fr) to 3.98 (F) is factually accurate. Noble
+          gases and most synthetic elements correctly have no defined EN values. Lanthanide
+          EN values (1.10–1.27 range) are accurate.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clear linear flow: path fix → imports → theme → data → grid construction
+          → heatmap → annotations → styling → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded — completely deterministic. No random number generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os, sys (path fix), matplotlib.pyplot, numpy,
+          seaborn, LinearSegmentedColormap, Normalize.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code. sys.path manipulation is a necessary workaround
+          for the seaborn.py filename collision. WCAG luminance calculation is appropriately
+          explicit. No over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png. Uses seaborn 0.13.2 API correctly. No
+          bbox_inches='tight' (per library rules).
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert seaborn heatmap usage: annot= with custom numpy object array,
+          mask= for NaN tiles, fmt='''' for custom annotations, cbar_kws for colorbar
+          control, xticklabels/yticklabels=False — all idiomatic seaborn patterns
+          used correctly.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses seaborn-specific features: annot= with custom symbol array,
+          mask= parameter — distinctive seaborn capabilities. However, complex post-processing
+          (grey tile rectangles, atomic number annotations, EN value text, WCAG text
+          color assignment) falls through to raw matplotlib rather than seaborn, limiting
+          the library mastery score.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - patches
+  patterns:
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - minimal-chrome

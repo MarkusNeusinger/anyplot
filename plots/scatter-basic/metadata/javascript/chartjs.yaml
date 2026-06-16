@@ -1,0 +1,240 @@
+library: chartjs
+language: javascript
+specification_id: scatter-basic
+created: '2026-06-02T22:06:11Z'
+updated: '2026-06-02T22:42:59Z'
+generated_by: claude-sonnet
+workflow_run: 26851884748
+issue: 611
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/javascript/chartjs/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Correct Imprint palette with brand green #009E73 and amber trend line — both
+    theme-adaptive and CVD-safe'
+  - OLS regression computed in-code and rendered as a mixed scatter+line Chart.js
+    dataset, adding real analytical value
+  - Descriptive subtitle provides data context and guides the viewer to the correlation
+    story
+  - Custom canvas background plugin (bgPlugin) correctly handles dark theme rendering
+  - Fixed-seed LCG (seed=42) ensures fully deterministic data generation
+  - Y-axis-only grid reduces visual noise for a cleaner scatter layout
+  - Legend removed and replaced by subtitle — avoids redundant legend for single-series
+    chart
+  weaknesses:
+  - 'X-axis grid removed (grid: {display: false}) — the style guide recommends both
+    axes grid for scatter plots; consider enabling subtle x-axis grid as well'
+  - 'Axis border lines still visible (border: {color: t.inkSoft}) — consider border:
+    {display: false} on top/right equivalent axes to achieve an L-shaped spine-free
+    look for additional visual refinement'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light theme surface, not pure white.
+      Chrome: Title "scatter-basic · javascript · chartjs · anyplot.ai" at size 32 in dark ink — clearly readable, fills ~65% of canvas width. Italic subtitle in softer ink: "Annual Rainfall vs Wheat Yield across 150 agricultural regions — dashed line shows positive correlation (r ≈ 0.7)". Axis labels "Annual Rainfall (mm)" (x) and "Wheat Yield (t/ha)" (y) at size 22 — dark, readable. Tick labels in secondary ink at size 18 — balanced and readable. Y-axis horizontal grid lines subtle and visible; x-axis grid absent by design.
+      Data: 150 scatter points in Imprint brand green (#009E73) at 70% opacity (b3 suffix). Dashed amber trend line (#DDCC77) from bottom-left to top-right. All data elements clearly distinguishable from the warm background.
+      Legibility verdict: PASS — all text readable, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title and subtitle in light ink — clearly readable against dark background. Axis labels and tick labels in light secondary ink — readable. Grid lines subtle and visible. No dark-on-dark failures detected on any text element.
+      Data: Scatter points remain Imprint brand green (#009E73) — identical to light render. Amber dashed trend line unchanged. Data colors are theme-independent as required.
+      Legibility verdict: PASS — all text readable in dark theme, no dark-on-dark issues.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=32, subtitle=16, axis labels=22,
+          ticks=18). Readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: 150 points with 70% opacity handle density — no text overlaps.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: pointRadius=5 with 70% opacity appropriate for 150 medium-density
+          points.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green + amber are CVD-safe Imprint palette members.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Good proportions, balanced margins, no overflow.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Annual Rainfall (mm) and Wheat Yield (t/ha) — both descriptive with
+          units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: t.palette[0] for scatter (brand green), t.amber for trend line, t.pageBg
+          for background. Both themes correct.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured defaults: descriptive subtitle, OLS trend
+          line, legend replaced by subtitle, y-only grid. Not yet ''strong design''
+          territory.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid adjusted (y-axis only, x-axis off), border colors set to inkSoft,
+          padding configured. Spines not removed but softened.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle + OLS trend line create a clear narrative around the r≈0.7
+          correlation. Visual hierarchy guides the viewer.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter chart type.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Points with transparency, axis labels, grid, descriptive title —
+          all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=rainfall (independent), Y=yield (dependent), 150 points as specified.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''scatter-basic · javascript · chartjs · anyplot.ai'' — correct
+          format. Legend appropriately hidden for single-series.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full scatter distribution with trend line highlighting the correlation.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Agricultural rainfall vs wheat yield — real-world, comprehensible,
+          neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 250-1000mm rainfall, 0.2-7.3 t/ha yield — factually plausible agricultural
+          values.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat script: globals → LCG → data → OLS → canvas → chart.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42) — deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports — uses browser globals (Chart, window.ANYPLOT_TOKENS).
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: OLS in 5 lines, clean bgPlugin, no over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Harness handles output; animation: false, responsive: true, maintainAspectRatio:
+          false all set.'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Mixed chart (scatter + type:line dataset), plugin API for bgPlugin,
+          subtitle plugin, borderDash — idiomatic Chart.js 4.x.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Chart.js plugin API for canvas background and mixed chart type override
+          are Chart.js-distinctive patterns.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending

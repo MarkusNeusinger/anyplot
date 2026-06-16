@@ -41,7 +41,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID_COLOR = "#C8C8C0" if THEME == "light" else "#3A3A35"
 
-OKABE_ITO = ["#009E73", "#D55E00"]
+IMPRINT = ["#009E73", "#C475FD"]
 
 # Data — employee performance metrics
 categories = ["Technical", "Communication", "Leadership", "Creativity", "Teamwork", "Problem Solving"]
@@ -103,8 +103,8 @@ plot = (
     + geom_line(aes(x="x", y="y", color="series", group="series"), data=df, size=1.5)
     + geom_point(aes(x="x", y="y", color="series"), data=df[df["order"] < n], size=5)
     + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=16, color=INK)
-    + scale_fill_manual(values=OKABE_ITO)
-    + scale_color_manual(values=OKABE_ITO)
+    + scale_fill_manual(values=IMPRINT)
+    + scale_color_manual(values=IMPRINT)
     + scale_x_continuous(limits=(-150, 150))
     + scale_y_continuous(limits=(-150, 150))
     + labs(title="radar-basic · plotnine · anyplot.ai", fill="Employee", color="Employee")

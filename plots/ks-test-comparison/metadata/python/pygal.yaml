@@ -1,48 +1,60 @@
 library: pygal
+language: python
 specification_id: ks-test-comparison
 created: '2026-02-17T20:11:12Z'
-updated: '2026-02-17T20:34:41Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22113799347
+updated: '2026-05-29T03:42:08Z'
+generated_by: claude-sonnet
+workflow_run: 26615904184
 issue: 4130
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/pygal/plot.html
-quality_score: 93
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/pygal/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent visual quality — all font sizes explicitly configured for the 4800×2700
-    canvas, resulting in perfectly legible text
-  - Strong data storytelling — the dashed green divergence line with D-statistic and
-    p-value annotations immediately conveys the statistical insight
-  - Clean, colorblind-safe palette (blue/orange/green) with good contrast against
-    white background
-  - Vectorized numpy ECDF computation is efficient and elegant
-  - All spec requirements fully met including both ECDFs, KS statistic, max divergence
-    highlight, and p-value
+  - 'Perfect spec compliance — all required KS test features implemented: ECDF step
+    functions, KS statistic D=0.700 at annotation dot, dashed divergence line, and
+    p-value p=9.05e-24'
+  - Semantic Imprint color mapping (green=#009E73 for Good Customers, matte red=#AE3030
+    for Bad Customers) is exactly right for credit scoring context
+  - Elegant vectorized numpy step-function construction using np.repeat / np.searchsorted
+    — no per-point loops, clean and efficient
+  - 'Both themes render correctly with proper chrome adaptation: warm off-white (#FAF8F1)
+    on light, near-black (#1A1A17) on dark; all text adapts correctly to each theme
+    with no dark-on-dark or light-on-light failures'
+  - 'Distinctive pygal features used appropriately: tooltip labels on annotation dots
+    via dict-format data points, HTML export alongside PNG, custom x_value_formatter
+    and value_formatter'
   weaknesses:
-  - The ECDF lines render as smooth-looking curves rather than crisp step functions
-    due to the high density of 300 data points — at lower data density the step-function
-    nature would be more visible
-  - Pygal's inherent SVG-to-PNG rendering produces slightly softer edges compared
-    to matplotlib/cairo-native rendering
-  image_description: The plot displays two empirical cumulative distribution functions
-    (ECDFs) on a clean white background. A blue step-function line represents "Good
-    Customers" and an orange/burnt-orange step-function line represents "Bad Customers,"
-    both plotted against "Credit Score (points)" on the x-axis (ranging approximately
-    250–950) and "Cumulative Proportion" on the y-axis (0.00–1.00). A dashed green
-    vertical line at approximately credit score 565 marks the point of maximum divergence
-    between the two distributions. Two large green dots sit at the top and bottom
-    of this divergence line, annotated with "p = 1.93e-61" (top, at ~0.83 cumulative
-    proportion) and "D = 0.657" (bottom, at ~0.17 cumulative proportion). The title
-    "ks-test-comparison · pygal · pyplots.ai" appears centered at top. A bottom legend
-    with colored squares identifies both series. Horizontal gray guide lines are subtle
-    and dashed. The overall layout is well-proportioned with the chart filling the
-    canvas effectively.
+  - Red-green color pair (Good=#009E73, Bad=#AE3030) without redundant linestyle encoding
+    — when the two ECDF lines cross, CVD users (deuteranopia/protanopia) rely solely
+    on hue to distinguish them; adding a dashed stroke_style to Bad Customers would
+    resolve this
+  - 'DE-01/DE-03 gap: the KS annotation strategy is functional (vertical dashed line
+    + two labeled dots) but a semi-transparent shaded rectangle between the two curves
+    spanning the max-divergence interval would make the KS statistic spatially intuitive
+    and lift design excellence scores'
+  - Pygal's default plot frame/box is fully visible in both renders — while spine
+    removal is a library limitation, the annotation dots (dots_size=12) could be increased
+    to 16 for stronger emphasis at mobile viewport widths (~400 px)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface, not pure white
+      Chrome: Title "ks-test-comparison · python · pygal · anyplot.ai" in dark ink, centered, spans ~65% of plot width — readable. Y-axis label "Cumulative Proportion" and X-axis label "Credit Score (points)" in dark ink, readable. Tick labels on both axes (0.00–1.00 on Y, ~400–700 on X) clearly visible in dark ink. Horizontal grid lines subtle.
+      Data: Good Customers ECDF rendered in brand green #009E73 (thick stroke, step function from ~370 to 780). Bad Customers ECDF in matte red #AE3030 (thick stroke, step function from ~270 to 680). KS dashed vertical line at ~575 in theme-adaptive neutral grey. Two annotation dots: bottom dot at (~575, 0.18) labeled "D = 0.700"; upper dot at (~575, 0.87) labeled "p = 9.05e-24". Legend at bottom: green square "Good Customers", red square "Bad Customers".
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface, not pure black
+      Chrome: Title in light/white text — readable. Y-axis and X-axis labels in light text — readable. Tick labels in light text — readable. Grid lines appear as subtle white lines. No dark-on-dark failures detected anywhere.
+      Data: Good Customers ECDF color remains identical to light render (brand green #009E73). Bad Customers ECDF remains matte red #AE3030 — both data colors unchanged as required by Imprint spec. Annotation dots in light grey adapt correctly to dark background. Annotation labels "D = 0.700" and "p = 9.05e-24" readable in light text. Legend text readable.
+      Legibility verdict: PASS — all text readable against dark background, theme adaptation correct throughout
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -50,68 +62,81 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=76, labels=50, major_labels=44,
-          legend=46, values=52). All text perfectly readable.
+        comment: All font sizes explicitly set in Style object; title, axis labels,
+          tick labels, legend, and annotation labels all readable in both themes at
+          full and mobile resolution
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. D and p-value labels well-positioned
-          beside dots.
+        comment: No text overlaps with other text or data elements; annotation labels
+          cleanly positioned to the right of their dots
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bold line strokes (width=9), large annotation dots (size=20), dashed
-          KS line clearly visible.
+        comment: ECDF lines at stroke_width=5 are prominent and clearly visible; annotation
+          dots at size=12 clearly visible; KS dashed line visible
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
-        passed: true
-        comment: Blue vs burnt orange is colorblind-safe. Green KS line distinguishable
-          from both.
+        score: 1
+        max: 2
+        passed: false
+        comment: Red-green color pair (Good=#009E73, Bad=#AE3030) without redundant
+          linestyle encoding — semantic justification accepted but CVD users can't
+          distinguish the lines where they overlap
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good margins configured, plot fills canvas well, legend at bottom
-          with 2 columns.
+        comment: 3200x1800 canvas correct (gate passed); plot fills canvas well with
+          generous margins; nothing clipped at any edge
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Credit Score (points) and Cumulative Proportion — descriptive with
-          units.
+        comment: Title in correct format; X-axis 'Credit Score (points)' has units;
+          Y-axis 'Cumulative Proportion' is descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green); second series #AE3030 (Imprint
+          position 5, semantic red for Bad); backgrounds #FAF8F1/#1A1A17 correct;
+          data colors identical across themes; chrome adapts correctly'
     design_excellence:
-      score: 16
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom palette, consistent font family, custom grid styling. Above
-          defaults but pygal SVG rendering limits peak sophistication.
+        comment: Semantic color mapping adds sophistication; custom font family; careful
+          font size tuning; but overall still reads as a well-configured pygal default
+          with visible frame/box
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Subtle dashed gray grid, clean white background, generous whitespace,
-          legend box well-sized.
+        comment: Y-only grid (show_x_guides=False) is a clear refinement; custom margin
+          settings; KS dashed line uses custom dasharray; but pygal's default frame
+          is still visible and spine removal is not available
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Green dashed divergence line with D-statistic and p-value annotations
-          immediately conveys the statistical insight.
+        comment: KS statistic D and p-value prominently labeled at max divergence
+          point; semantic colors add narrative; dashed line creates visual focal point;
+          goes well beyond default data display
     spec_compliance:
       score: 15
       max: 15
@@ -121,27 +146,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: KS test comparison with two ECDFs as step-like functions.'
+        comment: 'Correct KS test plot: two ECDF step functions with divergence annotation'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: ECDFs, KS stat, divergence line, p-value,
-          legend, Y-axis 0-1.'
+        comment: Step functions, KS statistic value, maximum divergence annotation
+          with dashed line, p-value — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=credit scores, Y=cumulative proportion. Correct assignment.
+        comment: X=Credit Score, Y=Cumulative Proportion (0-1.05 range), both distributions
+          shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels Good/Bad Customers match data
-          context.
+        comment: Title 'ks-test-comparison · python · pygal · anyplot.ai' correct;
+          legend 'Good Customers' and 'Bad Customers' match data
     data_quality:
       score: 15
       max: 15
@@ -151,22 +177,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Clear separation, max divergence highlighted, both full CDF curves
-          visible 0-1.
+        comment: Both ECDFs, KS statistic, p-value, and max divergence point all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Credit scoring (Good vs Bad customers) — real, neutral business scenario
-          from spec applications.
+        comment: Credit scoring with Good/Bad customers — neutral professional business
+          context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Good μ=650 σ=80, Bad μ=500 σ=90 — realistic credit score distributions.
-          300 samples appropriate.
+        comment: Credit scores ~300-800 plausible; 100 samples per group appropriate
+          for visible step functions; D=0.700 realistic for discriminating model
     code_quality:
       score: 10
       max: 10
@@ -176,34 +201,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean flat structure: imports → data → ECDF → KS test → chart →
-          save.'
+        comment: 'Linear script: imports -> data -> ECDF computation -> chart config
+          -> save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, pygal, Style, scipy.stats.'
+        comment: All imports used including importlib.util/sys for pygal shadowing
+          workaround
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Vectorized numpy operations for ECDF and step-function construction.
-          Well-commented.
+        comment: Vectorized np.repeat/np.empty for step functions; np.searchsorted
+          for grid ECDF; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html.
-    library_features:
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
       score: 7
       max: 10
       items:
@@ -212,25 +238,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of pygal XY chart, Style class, stroke_style per series,
-          print_labels, value formatters.
+        comment: pygal.XY() correct type; Style object for all tokens; tuple-format
+          XY data; formatters; y_labels_major_count; truncate_legend — proficient
+          but not expert level
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal-specific label dict syntax, per-series stroke_style, dual
-          SVG+PNG output, js=[] to disable JS.
+        comment: Dict-format data points with 'label' key for tooltip annotations
+          on dots; HTML export alongside PNG; js=[] to disable external dependencies;
+          all distinctively pygal
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
-  - annotations
   - html-export
+  - annotations
   patterns:
   - data-generation
-  dataprep:
-  - ecdf
-  styling:
-  - grid-styling
+  dataprep: []
+  styling: []

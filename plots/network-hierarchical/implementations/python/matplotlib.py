@@ -25,7 +25,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: Software Module Hierarchy (24 nodes, 4 levels)
 np.random.seed(42)
@@ -106,10 +106,10 @@ for node_id in levels[0]:
 
 # Use Okabe-Ito palette for levels
 level_colors = {
-    0: OKABE_ITO[0],  # Brand green (#009E73)
-    1: OKABE_ITO[1],  # Vermillion (#D55E00)
-    2: OKABE_ITO[2],  # Blue (#0072B2)
-    3: OKABE_ITO[3],  # Reddish purple (#CC79A7)
+    0: IMPRINT[0],  # Brand green (#009E73)
+    1: IMPRINT[1],  # Vermillion (#C475FD)
+    2: IMPRINT[2],  # Blue (#4467A3)
+    3: IMPRINT[3],  # Reddish purple (#BD8233)
 }
 level_names = ["Root Module", "Core Modules", "Sub-modules", "Leaf Modules"]
 

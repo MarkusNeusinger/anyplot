@@ -42,14 +42,17 @@ export function useLatestRelease(): string | null {
       lastAttempt = now;
       inFlight = true;
       fetch(API_URL, { signal: controller.signal })
-        .then((r) => (r.ok ? r.json() : null))
-        .then((data) => {
+        .then(r => (r.ok ? r.json() : null))
+        .then(data => {
           if (cancelled) return;
           const name: string | undefined = data?.tag_name;
           if (!name) return;
           setTag(name);
           try {
-            localStorage.setItem(CACHE_KEY, JSON.stringify({ tag: name, ts: Date.now() } satisfies Cached));
+            localStorage.setItem(
+              CACHE_KEY,
+              JSON.stringify({ tag: name, ts: Date.now() } satisfies Cached)
+            );
           } catch {
             /* ignore */
           }

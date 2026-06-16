@@ -22,7 +22,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Generate ROC curve data for multiple classifiers
 np.random.seed(42)
@@ -87,7 +87,7 @@ df = pd.concat([df_model_a, df_model_b, df_random], ignore_index=True)
 
 # Theme-adaptive color for reference line
 ref_color = "#6B6A63" if THEME == "light" else "#A8A79F"
-colors = [OKABE_ITO[0], OKABE_ITO[1], ref_color]
+colors = [IMPRINT[0], IMPRINT[1], ref_color]
 
 # Plot
 plot = (

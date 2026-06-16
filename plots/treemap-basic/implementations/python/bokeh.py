@@ -23,7 +23,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data - budget allocation by department and project
 data = [
@@ -49,7 +49,7 @@ df = df.sort_values("value", ascending=False).reset_index(drop=True)
 
 # Map categories to colors using Okabe-Ito palette
 unique_categories = df["category"].unique()
-category_color_map = {cat: OKABE_ITO[i % len(OKABE_ITO)] for i, cat in enumerate(unique_categories)}
+category_color_map = {cat: IMPRINT[i % len(IMPRINT)] for i, cat in enumerate(unique_categories)}
 
 # Extract values and labels
 values = df["value"].values

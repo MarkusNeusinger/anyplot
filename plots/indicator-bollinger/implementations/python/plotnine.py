@@ -32,7 +32,7 @@ RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # Close price - first series
-BAND_COLOR = "#0072B2"  # Bollinger bands - second series
+BAND_COLOR = "#4467A3"  # Bollinger bands - second series
 
 # Data - Generate realistic stock price with Bollinger Bands
 np.random.seed(42)

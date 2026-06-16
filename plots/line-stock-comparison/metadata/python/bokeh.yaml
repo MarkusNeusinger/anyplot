@@ -16,7 +16,7 @@ quality_score: 92
 review:
   strengths:
   - 'Perfect spec compliance: all required features present — rebasing to 100, horizontal
-    reference line at 100, distinct anyplot palette colors, legend, and sensible y-axis
+    reference line at 100, distinct Imprint palette colors, legend, and sensible y-axis
     label'
   - 'Sophisticated visual hierarchy: performance-based line widths (7px for best/worst
     performers, 4px for middle) plus colored end-of-series labels with final values
@@ -82,7 +82,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is CVD-safe. Green/purple/red/cyan are distinguishable
+        comment: Imprint palette is CVD-safe. Green/purple/red/cyan are distinguishable
           without relying on hue alone — sufficient luminance and saturation differences.
       - id: VQ-05
         name: Layout & Canvas
@@ -119,7 +119,7 @@ review:
         passed: true
         comment: 'Strong design above library defaults: intentional visual hierarchy
           via performance-based line widths, colored end-of-series labels with final
-          values, subtle performance band. Clean anyplot palette. Clearly thoughtful,
+          values, subtle performance band. Clean Imprint palette. Clearly thoughtful,
           not generic.'
       - id: DE-02
         name: Visual Refinement

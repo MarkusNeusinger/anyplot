@@ -1,7 +1,9 @@
 /**
  * Helpers for the /map page: tag flattening, IDF weighting, weighted
  * Jaccard similarity, KNN edge construction, plus thumbnail-tier
- * selection and image preloading.
+ * selection and image preloading. Consumed by useForceGraphSimulation
+ * (graph derivation + preloading) and by MapPage's canvas paint callbacks
+ * (tier selection + geometry).
  *
  * Most helpers are pure (math + selection logic) so they can be unit
  * tested in MapPage.helpers.test.ts. The two exceptions — preloadImages
@@ -10,8 +12,7 @@
  * canvas refresh.
  */
 
-import { selectPreviewUrl } from '../utils/themedPreview';
-
+import { selectPreviewUrl } from 'src/utils/themedPreview';
 
 /** Backend response shape from GET /api/specs/map. Mirrors api/schemas.py::SpecMapItem. */
 export interface SpecMapItem {
@@ -37,9 +38,9 @@ export interface MapNode {
   id: string;
   title: string;
   tags: string[];
-  thumbUrl: string | null;                       // base theme-aware .png URL
-  imgs: Map<ResolutionTier, HTMLImageElement>;   // loaded variants
-  pendingTiers: Set<ResolutionTier>;             // tiers with an in-flight fetch
+  thumbUrl: string | null; // base theme-aware .png URL
+  imgs: Map<ResolutionTier, HTMLImageElement>; // loaded variants
+  pendingTiers: Set<ResolutionTier>; // tiers with an in-flight fetch
   // colorBucket = primary plot_type for nodes that fall into the top-N most
   // frequent plot types; null otherwise. Drives the per-cluster border color
   // without imposing any spatial bias on the layout.
@@ -154,11 +155,7 @@ function categoryOf(prefixedTag: string): string {
   return idx >= 0 ? prefixedTag.slice(0, idx) : '';
 }
 
-function tagWeight(
-  tag: string,
-  idf: Map<string, number>,
-  weights: Record<string, number>
-): number {
+function tagWeight(tag: string, idf: Map<string, number>, weights: Record<string, number>): number {
   return (idf.get(tag) ?? 0) * (weights[categoryOf(tag)] ?? 1);
 }
 
@@ -395,11 +392,7 @@ export function fitToBox(boxSize: number, aspectRatio: number): { w: number; h: 
  * force-graph only invokes that callback for visible nodes, so off-screen
  * specs never trigger a higher-tier fetch.
  */
-export function ensureNodeTier(
-  node: MapNode,
-  tier: ResolutionTier,
-  onLoad: () => void
-): void {
+export function ensureNodeTier(node: MapNode, tier: ResolutionTier, onLoad: () => void): void {
   if (!node.thumbUrl) return;
   if (node.imgs.has(tier) || node.pendingTiers.has(tier)) return;
   node.pendingTiers.add(tier);

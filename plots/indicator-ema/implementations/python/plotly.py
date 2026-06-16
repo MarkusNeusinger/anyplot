@@ -21,10 +21,10 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette — positions 1-5 in canonical order
 BRAND = "#009E73"  # price line (first series)
-EMA_SHORT = "#D55E00"  # EMA 12
-EMA_LONG = "#0072B2"  # EMA 26
-GOLDEN_CLR = "#CC79A7"  # golden cross marker
-DEATH_CLR = "#E69F00"  # death cross marker
+EMA_SHORT = "#C475FD"  # EMA 12
+EMA_LONG = "#4467A3"  # EMA 26
+GOLDEN_CLR = "#DDCC77"  # imprint amber — golden cross marker
+DEATH_CLR = "#AE3030"  # death cross marker
 
 # Data — realistic stock price with trend, consolidation, and recovery
 np.random.seed(42)

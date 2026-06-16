@@ -41,8 +41,8 @@ fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 # Shaded confidence band (contrasting color with semi-transparent alpha)
-# Use sky blue (#56B4E9) for the band to contrast with green line
-ax.fill_between(days, y_lower, y_upper, alpha=0.25, color="#56B4E9", label="95% Confidence Interval")
+# Use sky blue (#2ABCCD) for the band to contrast with green line
+ax.fill_between(days, y_lower, y_upper, alpha=0.25, color="#2ABCCD", label="95% Confidence Interval")
 
 # Central trend line (prominent, brand green)
 ax.plot(days, y, color="#009E73", linewidth=3, label="Forecast Mean")

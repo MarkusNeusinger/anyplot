@@ -23,7 +23,7 @@ GRID_LINE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.1
 
 # Okabe-Ito palette (first series always #009E73)
 COLOR_BEFORE = "#009E73"  # Okabe-Ito position 1
-COLOR_AFTER = "#D55E00"  # Okabe-Ito position 2
+COLOR_AFTER = "#C475FD"  # Okabe-Ito position 2
 
 # Data - Employee satisfaction scores before and after office redesign across departments
 np.random.seed(42)
@@ -96,7 +96,7 @@ plot = (
         size=0.6,
         show_legend=False,
     )
-    # Okabe-Ito colors (Before=#009E73, After=#D55E00)
+    # Okabe-Ito colors (Before=#009E73, After=#C475FD)
     + scale_fill_manual(values=[COLOR_AFTER, COLOR_BEFORE], name="Period")  # noqa: F405
     + scale_y_continuous(limits=[15, 105])  # noqa: F405
     # Labels

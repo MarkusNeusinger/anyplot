@@ -21,8 +21,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 BRAND = "#009E73"  # Okabe-Ito position 1 — scatter points
-C2 = "#D55E00"  # Okabe-Ito position 2 — LOWESS smoother lines
-C4 = "#CC79A7"  # Okabe-Ito position 4 — Cook's distance contours
+C2 = "#C475FD"  # Okabe-Ito position 2 — LOWESS smoother lines
+C4 = "#BD8233"  # Okabe-Ito position 4 — Cook's distance contours
 
 # Data — apartment rental price regression with synthetic data
 np.random.seed(42)

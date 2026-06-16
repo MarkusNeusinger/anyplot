@@ -16,7 +16,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
 
 # Data - Employee performance scores across departments and experience levels
 np.random.seed(42)
@@ -47,7 +47,7 @@ data[("Sales", "Senior")] = np.append(data[("Sales", "Senior")], [40, 105])
 data[("Marketing", "Lead")] = np.append(data[("Marketing", "Lead")], [60, 100])
 
 # Subcategory colors: use Okabe-Ito palette starting with brand green
-subcategory_colors = OKABE_ITO[:3]
+subcategory_colors = IMPRINT[:3]
 
 # Build full color tuple: repeat pattern for each department group
 all_colors = subcategory_colors * len(departments)

@@ -25,7 +25,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette — first source always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data - Energy flow from sources to sectors (TWh)
 flows = [
@@ -52,7 +52,7 @@ for f in flows:
         targets.append(f["target"])
 
 # Source colors: Okabe-Ito in canonical order
-source_colors = {s: OKABE_ITO[i] for i, s in enumerate(sources)}
+source_colors = {s: IMPRINT[i] for i, s in enumerate(sources)}
 
 # Target node colors: slightly muted variants of INK_SOFT family
 target_node_colors = {"Industrial": "#5A6A7A", "Commercial": "#7A6A8A", "Residential": "#6A7A5A"}

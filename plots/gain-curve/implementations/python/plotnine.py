@@ -76,7 +76,7 @@ df = pd.concat([df_model, df_random, df_perfect], ignore_index=True)
 plot = (
     ggplot(df, aes(x="percent_population", y="percent_positives", color="curve"))
     + geom_line(size=2.5)
-    + scale_color_manual(values={"Model": "#009E73", "Random": INK_MUTED, "Perfect": "#E69F00"})
+    + scale_color_manual(values={"Model": "#009E73", "Random": INK_MUTED, "Perfect": "#AE3030"})
     + scale_x_continuous(breaks=range(0, 101, 20), limits=(0, 100))
     + scale_y_continuous(breaks=range(0, 101, 20), limits=(0, 100))
     + labs(

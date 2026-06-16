@@ -1,12 +1,15 @@
 import { Component, ReactNode } from 'react';
-import Box from '@mui/material/Box';
-import Alert from '@mui/material/Alert';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
+
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import HomeIcon from '@mui/icons-material/Home';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import ReplayIcon from '@mui/icons-material/Replay';
-import HomeIcon from '@mui/icons-material/Home';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+
+import { CONFIG } from 'src/global-config';
 
 interface Props {
   children: ReactNode;
@@ -67,7 +70,7 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   handleToggleDetails = (): void => {
-    this.setState((s) => ({ showDetails: !s.showDetails }));
+    this.setState(s => ({ showDetails: !s.showDetails }));
   };
 
   buildDetails = (): string => {
@@ -209,7 +212,7 @@ export class ErrorBoundary extends Component<Props, State> {
               </Typography>
             )}
 
-            {componentStack && import.meta.env.DEV && !showDetails && (
+            {componentStack && CONFIG.isDev && !showDetails && (
               <Typography
                 variant="caption"
                 sx={{ mt: 1, display: 'block', color: 'var(--ink-muted)' }}

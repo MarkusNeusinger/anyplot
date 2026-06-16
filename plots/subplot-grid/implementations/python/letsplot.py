@@ -22,14 +22,14 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (colorblind-safe)
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # 1: brand green
-    "#D55E00",  # 2: vermillion
-    "#0072B2",  # 3: blue
-    "#CC79A7",  # 4: reddish purple
-    "#E69F00",  # 5: orange
-    "#56B4E9",  # 6: sky blue
-    "#F0E442",  # 7: yellow
+    "#C475FD",  # 2: vermillion
+    "#4467A3",  # 3: blue
+    "#BD8233",  # 4: reddish purple
+    "#AE3030",  # 5: orange
+    "#2ABCCD",  # 6: sky blue
+    "#954477",  # 7: yellow
 ]
 
 # Data - Financial dashboard theme
@@ -79,8 +79,8 @@ anyplot_theme = theme(
 # Top left: Price line chart (brand green for primary, orange for secondary)
 price_plot = (
     ggplot(price_df, aes(x="day", y="price"))
-    + geom_line(color=OKABE_ITO[0], size=1.5)
-    + geom_line(aes(y="rolling_avg"), color=OKABE_ITO[1], size=1.2, linetype="dashed")
+    + geom_line(color=IMPRINT[0], size=1.5)
+    + geom_line(aes(y="rolling_avg"), color=IMPRINT[1], size=1.2, linetype="dashed")
     + labs(x="Trading Day", y="Price ($)", title="Stock Price with 10-Day Moving Average")
     + theme_minimal()
     + anyplot_theme
@@ -89,7 +89,7 @@ price_plot = (
 # Top right: Volume bar chart (blue)
 volume_plot = (
     ggplot(volume_df, aes(x="day", y="volume"))
-    + geom_bar(stat="identity", fill=OKABE_ITO[2], alpha=0.8, width=0.8)
+    + geom_bar(stat="identity", fill=IMPRINT[2], alpha=0.8, width=0.8)
     + labs(x="Trading Day", y="Volume (Millions)", title="Daily Trading Volume")
     + theme_minimal()
     + anyplot_theme
@@ -98,8 +98,8 @@ volume_plot = (
 # Bottom left: Returns histogram (reddish purple bars, brand green reference line)
 returns_plot = (
     ggplot(returns_df, aes(x="return"))
-    + geom_histogram(fill=OKABE_ITO[3], color=INK_SOFT, bins=20, alpha=0.8)
-    + geom_vline(xintercept=0, color=OKABE_ITO[0], size=1.5, linetype="dashed")
+    + geom_histogram(fill=IMPRINT[3], color=INK_SOFT, bins=20, alpha=0.8)
+    + geom_vline(xintercept=0, color=IMPRINT[0], size=1.5, linetype="dashed")
     + labs(x="Daily Return (%)", y="Frequency", title="Distribution of Daily Returns")
     + theme_minimal()
     + anyplot_theme
@@ -109,8 +109,8 @@ returns_plot = (
 scatter_df = pd.DataFrame({"abs_return": np.abs(daily_returns), "volume": volume[1:] / 1_000_000})
 scatter_plot = (
     ggplot(scatter_df, aes(x="abs_return", y="volume"))
-    + geom_point(color=OKABE_ITO[4], size=4, alpha=0.7)
-    + geom_smooth(method="lm", color=OKABE_ITO[0], size=1.5, fill=None)
+    + geom_point(color=IMPRINT[4], size=4, alpha=0.7)
+    + geom_smooth(method="lm", color=IMPRINT[0], size=1.5, fill=None)
     + labs(x="Absolute Return (%)", y="Volume (Millions)", title="Volume vs Price Movement")
     + theme_minimal()
     + anyplot_theme

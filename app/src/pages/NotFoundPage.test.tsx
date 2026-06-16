@@ -1,6 +1,7 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '../test-utils';
-import { NotFoundPage } from './NotFoundPage';
+import { describe, expect, it, vi } from 'vitest';
+
+import { NotFoundPage } from 'src/pages/NotFoundPage';
+import { render, screen } from 'src/test-utils';
 
 // Mock react-helmet-async to avoid provider requirement
 vi.mock('react-helmet-async', () => ({

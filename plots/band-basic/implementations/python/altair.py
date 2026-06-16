@@ -1,18 +1,37 @@
-""" pyplots.ai
+""" anyplot.ai
 band-basic: Basic Band Plot
-Library: altair 6.0.0 | Python 3.14
-Quality: 94/100 | Updated: 2026-02-23
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-29
 """
 
-import altair as alt
-import numpy as np
-import pandas as pd
+import importlib
+import os
+import sys
 
 
-# Data - Oscilloscope voltage measurement with growing uncertainty
+# Drop script directory from sys.path so the `altair` package resolves, not this file
+sys.path[:] = [p for p in sys.path if os.path.abspath(p or ".") != os.path.dirname(os.path.abspath(__file__))]
+alt = importlib.import_module("altair")
+np = importlib.import_module("numpy")
+pd = importlib.import_module("pandas")
+Image = importlib.import_module("PIL.Image")
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette
+BRAND = "#009E73"  # Imprint palette position 1 — ALWAYS first series
+IMPRINT_BLUE = "#4467A3"  # Imprint palette position 3 — band fills
+IMPRINT_RED = "#AE3030"  # Imprint palette position 5 — semantic callout anchor
+
+# Data - oscilloscope voltage measurement with growing uncertainty
 np.random.seed(42)
 x = np.linspace(0, 10, 100)
-y_center = 2 * np.sin(x) + 0.5 * x  # Central trend (sinusoidal + linear growth)
+y_center = 2 * np.sin(x) + 0.5 * x  # Sinusoidal signal with linear drift
 
 # Confidence band widens over time (realistic sensor drift uncertainty)
 uncertainty = 0.5 + 0.15 * x
@@ -33,7 +52,7 @@ df = pd.DataFrame(
 )
 
 # Annotation data — callout at x≈9.0 s where uncertainty is wide and clearly visible
-ann_row = df.iloc[90]  # x ≈ 9.09
+ann_row = df.iloc[90]
 ann_df = pd.DataFrame(
     {
         "x": [ann_row["x"]],
@@ -47,42 +66,42 @@ ann_df = pd.DataFrame(
 # Nearest-point selection for interactive HTML export
 nearest = alt.selection_point(nearest=True, on="pointerover", fields=["x"], empty=False)
 
-# 95% confidence band (outer) — teal-shifted blue for visual depth against inner band
+# 95% confidence band (outer) — Imprint blue at low opacity for depth
 band_outer = (
     alt.Chart(df)
-    .mark_area(opacity=0.25, color="#4a8db7", interpolate="monotone")
+    .mark_area(opacity=0.15, color=IMPRINT_BLUE, interpolate="monotone")
     .encode(
         x=alt.X("x:Q", title="Time (s)"), y=alt.Y("y_lower:Q", title="Oscilloscope Signal (mV)"), y2=alt.Y2("y_upper:Q")
     )
 )
 
-# 50% confidence band (inner) — deeper saturated blue for layered contrast
+# 50% confidence band (inner) — Imprint blue at higher opacity for layered contrast
 band_inner = (
     alt.Chart(df)
-    .mark_area(opacity=0.3, color="#306998", interpolate="monotone")
+    .mark_area(opacity=0.30, color=IMPRINT_BLUE, interpolate="monotone")
     .encode(x="x:Q", y="y_inner_lower:Q", y2="y_inner_upper:Q")
 )
 
-# Central trend line (dark navy for strong focal contrast)
-line = alt.Chart(df).mark_line(strokeWidth=2.5, color="#1a3a5c", interpolate="monotone").encode(x="x:Q", y="y_center:Q")
+# Central trend line — Imprint brand green (first/primary series)
+line = alt.Chart(df).mark_line(strokeWidth=2.5, color=BRAND, interpolate="monotone").encode(x="x:Q", y="y_center:Q")
 
-# Annotation: vertical bracket showing uncertainty span
+# Annotation: dashed vertical bracket showing uncertainty span
 ann_rule = (
     alt.Chart(ann_df)
-    .mark_rule(color="#c0392b", strokeWidth=1.5, strokeDash=[6, 3])
+    .mark_rule(color=IMPRINT_RED, strokeWidth=1.5, strokeDash=[6, 3])
     .encode(x="x:Q", y="y_lower:Q", y2="y_upper:Q")
 )
 
 ann_text = (
     alt.Chart(ann_df)
-    .mark_text(align="left", dx=10, fontSize=16, fontWeight="bold", color="#c0392b")
+    .mark_text(align="left", dx=10, fontSize=12, fontWeight="bold", color=IMPRINT_RED)
     .encode(x="x:Q", y="y_mid:Q", text="label:N")
 )
 
-# Interactive tooltip points (visible only on hover in HTML)
+# Interactive tooltip points — visible on hover in HTML, hidden in static PNG
 tooltip_points = (
     alt.Chart(df)
-    .mark_point(color="#1a3a5c", size=80)
+    .mark_point(color=BRAND, size=80)
     .encode(
         x="x:Q",
         y="y_center:Q",
@@ -97,21 +116,52 @@ tooltip_points = (
     .add_params(nearest)
 )
 
-# Vertical guide rule (visible only on hover in HTML)
+# Vertical guide rule — visible on hover in HTML only
 guide_rule = (
     alt.Chart(df)
-    .mark_rule(color="#999999", strokeDash=[4, 4])
+    .mark_rule(color=INK_SOFT, strokeDash=[4, 4])
     .encode(x="x:Q", opacity=alt.condition(nearest, alt.value(0.5), alt.value(0)))
 )
 
-# Combine layers
+title = "band-basic · python · altair · anyplot.ai"
+n = len(title)
+ratio = 67 / n if n > 67 else 1.0
+title_fs = max(11, round(16 * ratio))
+
+# Combine layers with theme-adaptive chrome
 chart = (
     (band_outer + band_inner + line + ann_rule + ann_text + tooltip_points + guide_rule)
-    .properties(width=1600, height=900, title=alt.Title("band-basic · altair · pyplots.ai", fontSize=28))
-    .configure_axis(labelFontSize=18, titleFontSize=22, gridOpacity=0.15, gridColor="#cccccc")
-    .configure_view(strokeWidth=0)
+    .properties(width=620, height=320, background=PAGE_BG, title=alt.Title(title, fontSize=title_fs, color=INK))
+    .configure_view(fill=PAGE_BG, stroke=None)
+    .configure_axis(
+        labelFontSize=10,
+        titleFontSize=12,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.12,
+    )
+    .configure_axisX(grid=False)
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save PNG
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+# Pad PNG to exact 3200×1800 target (vl-convert may land slightly short)
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+# Save HTML
+chart.save(f"plot-{THEME}.html")

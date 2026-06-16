@@ -20,7 +20,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 TRAIN_COLOR = "#009E73"  # Position 1 - bluish green (brand)
-VAL_COLOR = "#D55E00"  # Position 2 - vermillion
+VAL_COLOR = "#C475FD"  # Position 2 - vermillion
 
 # Data - Simulated neural network training with different trajectory
 np.random.seed(42)

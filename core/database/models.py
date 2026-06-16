@@ -99,6 +99,10 @@ class Library(Base):
     version: Mapped[str | None] = mapped_column(String, nullable=True)  # Current version
     documentation_url: Mapped[str | None] = mapped_column(String, nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)  # Short description
+    # UI-framework runtime constraint: none | react | vue | svelte | angular.
+    # Lets one `javascript` language entry cover both framework-agnostic libs and
+    # React-only libs without a separate "language" (library-expansion.md §6).
+    framework: Mapped[str] = mapped_column(String(20), nullable=False, default="none", server_default="none")
 
     # Backward-compat: .language reads/writes language_id. Keeps all existing
     # `library.language` access working after the FK refactor.
@@ -247,6 +251,17 @@ class Feedback(Base):
     )
 
 
-# Seed data for libraries + languages (re-exported from core.constants)
-LIBRARIES_SEED = LIBRARIES_METADATA
-LANGUAGES_SEED = LANGUAGES_METADATA
+# Seed data for libraries + languages (re-exported from core.constants).
+#
+# The constants carry presentation/discovery keys that are not DB columns (e.g.
+# a library-level "file_extension" override used only for file discovery). Bulk
+# `insert(...).values(SEED)` would raise on any unknown key, so project each
+# metadata dict onto the model's actual columns. This keeps core/constants.py
+# free to grow metadata-only fields without touching the schema.
+def _project_seed(model: type[Base], rows: list[dict]) -> list[dict]:
+    columns = {c.name for c in model.__table__.columns}
+    return [{k: v for k, v in row.items() if k in columns} for row in rows]
+
+
+LIBRARIES_SEED = _project_seed(Library, LIBRARIES_METADATA)
+LANGUAGES_SEED = _project_seed(Language, LANGUAGES_METADATA)

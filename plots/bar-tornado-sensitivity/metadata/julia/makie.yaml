@@ -1,0 +1,280 @@
+library: makie
+language: julia
+specification_id: bar-tornado-sensitivity
+created: '2026-06-02T23:24:22Z'
+updated: '2026-06-02T23:55:00Z'
+generated_by: claude-sonnet
+workflow_run: 26853325364
+issue: 4566
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Correct tornado structure with bars sorted widest-at-top — widest bar (Discount
+    Rate, range 68M) dominates top row exactly as spec requires
+  - 'Semantic Imprint color assignment: green (#009E73) = high/upside, red (#AE3030)
+    = low/downside — domain-appropriate and clearly labeled in legend'
+  - Comprehensive bar-end value labels positioned accurately outside bar tips in matching
+    colors
+  - Both themes render flawlessly — all chrome tokens adapt correctly, data colors
+    identical across light and dark
+  - 'Perfect spec compliance: vertical base-case reference line, dual-color encoding,
+    parameter names on Y-axis, NPV output on X-axis'
+  - Title uses descriptive prefix formula with dynamic font size scaling based on
+    title length
+  - 'Idiomatic CairoMakie: barplot! with direction=:x and offset=BASE_NPV, RGBAf grid
+    color, PolyElement custom legend'
+  - Clean code structure with no functions/classes — proper KISS pattern throughout
+  weaknesses:
+  - 'DE-01 aesthetic sophistication: while semantic colors and clean spine removal
+    show deliberate design, the chart does not quite reach FiveThirtyEight-level polish
+    — consider a subtle horizontal baseline annotation or bolder emphasis on the top
+    parameter'
+  - 'DE-02 visual refinement: left spine is removed but bottom spine has no color
+    token assigned (uses default) in the code — leftspinevisible=false is set but
+    leftspinecolor is missing; minor inconsistency with the style guide template'
+  - 'LM-02: custom legend via PolyElement is good but could more distinctively leverage
+    Makie — e.g. Makie.jl interactive_colors, or Axis gridsteps for categorical X
+    ticks'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1) — correct, no pure white
+      Chrome: bold dark title "NPV Sensitivity Analysis · bar-tornado-sensitivity · julia · makie · anyplot.ai" fills ~65% of canvas width; X-axis label "Net Present Value (millions USD)" in dark ink; Y-axis parameter names (Discount Rate through Inflation Rate) as tick labels in INK_SOFT (#4A4A44); X-axis tick numbers (100, 125, 150) in INK_SOFT; subtle dashed vertical reference line at 120 with "Base: $120M" annotation
+      Data: green (#009E73) bars for High Input Scenario, red (#AE3030) bars for Low Input Scenario; 9 bars sorted widest (Discount Rate, range 68M) at top to narrowest (Inflation Rate, range 7M) at bottom; bar-end value labels in matching green/red; all elements clearly visible
+      Legibility verdict: PASS — all text readable against warm off-white background; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17) — correct, no pure black
+      Chrome: title visible in light cream text; X-axis label in light ink; parameter tick labels in INK_SOFT light variant (#B8B7B0); X-tick labels (100, 125, 150) in light color; reference line is white/dashed; "Base: $120M" annotation in light text; legend text in light color on elevated dark background (#242420)
+      Data: identical data colors to light render — green (#009E73) for High Input Scenario, red (#AE3030) for Low Input Scenario; all bars identical in shape and position; bar-end value labels in green and red clearly readable against dark background
+      Legibility verdict: PASS — all text readable against near-black background; no dark-on-dark issues; brand green remains clearly visible on dark surface
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; dynamic title scaling formula; bar-end
+          labels at fontsize=11; all readable in both themes; minor deduction for
+          y-tick mark visual artifact (Makie default tick positioning gives ' -' appearance
+          after labels)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap anywhere; bar-end labels carefully positioned outside
+          bar tips; legend does not overlap data area
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All bars clearly visible; bar height appropriate for 9 parameters;
+          green and red are highly distinguishable; bar-end value labels readable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Semantic green/red pairing covered by spatial redundant encoding
+          (bars extend in opposite directions) and legend text labels; Imprint palette
+          is CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800 correct); chart fills ~70% of canvas;
+          legend well-placed to the right; balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X-axis: ''Net Present Value (millions USD)'' — descriptive with
+          units; Y-axis: parameter names serve as implicit axis labels (standard for
+          tornado charts); title has descriptive prefix'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'COLOR_HIGH=#009E73 (Imprint position 1); COLOR_LOW=#AE3030 (Imprint
+          position 5, semantic exception: high/upside=green, low/downside=red explicitly
+          labeled); backgrounds #FAF8F1/#1A1A17; all chrome tokens theme-adaptive;
+          data colors identical across both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured defaults: semantic Imprint color assignment
+          with finance-domain rationale, descriptive title prefix, bar-end value labels,
+          clean spine removal. Not quite FiveThirtyEight publication level — lacks
+          e.g. subtle emphasis on top driver or annotation insight.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Top + right + left spines removed; X-grid at 12% alpha (very subtle);
+          legend framevisible=false; backgroundcolor set correctly. Minor: leftspinecolor
+          token missing from Axis constructor (only leftspinevisible=false set).'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Tornado structure creates natural visual hierarchy; widest bar (Discount
+          Rate) immediately reads as most impactful; semantic colors guide viewer
+          to interpret direction; ''Base: $120M'' annotation contextualizes the reference
+          line; bar-end values allow precise reading.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal bar chart tornado diagram; bars sorted by range
+          descending (widest top)
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: vertical reference line at base case, sorted
+          bars, dual-color encoding, parameter names on Y-axis, bar-end value labels,
+          NPV output on X-axis'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=NPV output (continuous), Y=parameters (categorical); bars extend
+          from base case value; correct directional encoding
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''NPV Sensitivity Analysis · bar-tornado-sensitivity · julia
+          · makie · anyplot.ai'' — correct {Descriptive} · {spec-id} · {lang} · {lib}
+          · anyplot.ai format; legend: ''High Input Scenario'' / ''Low Input Scenario'''
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 9 parameters showing full tornado spectrum; all bars extend in opposite
+          directions (correct economic relationships); bar widths vary from 7M to
+          68M range — good spread
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: NPV sensitivity analysis for capital investment — real, neutral business
+          scenario; parameters (Discount Rate, Revenue Growth, Operating Costs, etc.)
+          are standard financial modeling inputs
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Base NPV $120M plausible for capital project; sensitivity ranges
+          realistic (Discount Rate has largest impact — economically correct); all
+          directional relationships correct (higher discount rate → lower NPV, etc.)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports → constants → data → sort → plot → save;
+          no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set; data is actually deterministic (hardcoded)
+          — seed is good practice
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors (for colorant"), Random — all three used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic Julia; title font size formula is elegant; bar-end
+          label loop is clear; no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2) — correct output naming
+          and canvas size
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: barplot! with direction=:x and offset=BASE_NPV is the correct Makie
+          way for offset horizontal bars; vlines! for reference; text! with Point2f;
+          Figure/Axis API properly used; size=(1600,900) is current Makie 0.22 API
+          (size replaced resolution)
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: barplot! offset parameter is Makie-specific; RGBAf() for typed RGBA
+          color in grid; PolyElement for custom legend swatches — these are distinctively
+          Makie. Could go further with e.g. Makie.jl's layout system or custom recipe.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
+  - minimal-chrome

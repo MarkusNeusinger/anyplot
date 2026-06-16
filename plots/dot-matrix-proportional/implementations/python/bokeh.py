@@ -34,7 +34,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (position 1 = brand green, always first series)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: Exercise Frequency Survey, 200 respondents
 categories = ["Daily", "3–5 times/week", "1–2 times/week", "Rarely / Never"]
@@ -45,7 +45,7 @@ N_ROWS = 10  # 20 × 10 = 200 total dots
 # Build per-dot color list (filled left-to-right, top-to-bottom)
 dot_colors = []
 for i, cnt in enumerate(counts):
-    dot_colors.extend([OKABE_ITO[i]] * cnt)
+    dot_colors.extend([IMPRINT[i]] * cnt)
 
 # Compute grid coordinates (row 0 displayed at top → y = N_ROWS-1)
 xs, ys, colors = [], [], []
@@ -72,7 +72,7 @@ legend_items = []
 total = sum(counts)
 renderers = []
 for i, (cat, cnt) in enumerate(zip(categories, counts, strict=True)):
-    mask = [j for j, c in enumerate(colors) if c == OKABE_ITO[i]]
+    mask = [j for j, c in enumerate(colors) if c == IMPRINT[i]]
     pct = round(cnt / total * 100)
     src = ColumnDataSource(
         data={
@@ -83,7 +83,7 @@ for i, (cat, cnt) in enumerate(zip(categories, counts, strict=True)):
             "pct": [pct] * len(mask),
         }
     )
-    r = p.scatter("x", "y", source=src, color=OKABE_ITO[i], size=140, line_color=PAGE_BG, line_width=2)
+    r = p.scatter("x", "y", source=src, color=IMPRINT[i], size=140, line_color=PAGE_BG, line_width=2)
     renderers.append(r)
     legend_items.append(LegendItem(label=f"{cat}  ({cnt} · {pct}%)", renderers=[r]))
 

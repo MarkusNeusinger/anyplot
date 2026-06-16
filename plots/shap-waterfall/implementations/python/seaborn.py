@@ -28,8 +28,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-COLOR_POS = "#D55E00"  # Okabe-Ito vermillion — positive SHAP (raises prediction)
-COLOR_NEG = "#0072B2"  # Okabe-Ito blue — negative SHAP (lowers prediction)
+COLOR_POS = "#AE3030"  # imprint red — positive SHAP (raises prediction)
+COLOR_NEG = "#4467A3"  # imprint blue — negative SHAP (lowers prediction)
 
 sns.set_theme(
     style="ticks",

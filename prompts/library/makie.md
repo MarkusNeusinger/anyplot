@@ -124,11 +124,11 @@ canonical `resolution` values above, this is what produces 3200×1800 or
 
 ## Colors
 
-Use the anyplot palette (see `prompts/default-style-guide.md`
+Use the Imprint palette (see `prompts/default-style-guide.md`
 "Categorical Palette"). First series is **always** `#009E73`.
 
 ```julia
-const ANYPLOT_PALETTE = [
+const IMPRINT_PALETTE = [
     colorant"#009E73",  # 1 — first categorical series (anyplot brand green)
     colorant"#C475FD",  # 2 — lavender
     colorant"#4467A3",  # 3 — blue
@@ -141,12 +141,12 @@ const ANYPLOT_PALETTE = [
 const ANYPLOT_AMBER = colorant"#DDCC77"  # warning / caution (outside the categorical pool)
 
 # Single-series
-scatter!(ax, x, y; color = ANYPLOT_PALETTE[1])
+scatter!(ax, x, y; color = IMPRINT_PALETTE[1])
 
 # Multi-series — categorical
-scatter!(ax, x, y; color = group, colormap = ANYPLOT_PALETTE)
+scatter!(ax, x, y; color = group, colormap = IMPRINT_PALETTE)
 
-# Continuous — only the two anyplot palette-derived cmaps are allowed.
+# Continuous — only the two Imprint palette-derived cmaps are allowed.
 using ColorSchemes
 const ANYPLOT_SEQ = cgrad([colorant"#009E73", colorant"#4467A3"])                                    # sequential / single-polarity
 const _midpoint   = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"                         # theme-adaptive
@@ -234,7 +234,7 @@ const THEME    = get(ENV, "ANYPLOT_THEME", "light")
 const PAGE_BG  = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
 const INK      = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
-const ANYPLOT_PALETTE = [
+const IMPRINT_PALETTE = [
     colorant"#009E73", colorant"#C475FD", colorant"#4467A3", colorant"#BD8233",
     colorant"#AE3030", colorant"#2ABCCD", colorant"#954477", colorant"#99B314",
 ]
@@ -270,7 +270,7 @@ ax = Axis(
     ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
 )
 
-scatter!(ax, x, y; color = ANYPLOT_PALETTE[1], markersize = 12, strokewidth = 0)
+scatter!(ax, x, y; color = IMPRINT_PALETTE[1], markersize = 12, strokewidth = 0)
 
 # --- Save -------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
@@ -311,7 +311,7 @@ assigned. If the file has no leading `#` block, the rewrite prepends one.
   the runner; keep the script silent except for the `save` call.
 - `colorant"#RRGGBB"` (from `Colors`) is the canonical hex-to-color
   helper. Prefer it over manual `RGB(r/255, g/255, b/255)` constructors.
-- For multi-series categorical color, pass an `ANYPLOT_PALETTE[1:n]` slice to
+- For multi-series categorical color, pass an `IMPRINT_PALETTE[1:n]` slice to
   `colormap = ...` rather than letting Makie's default cycle pick the
   first color (which is **not** anyplot brand green).
 - The implementation file must end with a trailing newline — Julia

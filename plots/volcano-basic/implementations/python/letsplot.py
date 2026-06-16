@@ -21,8 +21,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (colorblind-safe)
-OKABE_ITO_DOWN = "#0072B2"  # Blue for down-regulated
-OKABE_ITO_UP = "#D55E00"  # Orange for up-regulated
+OKABE_ITO_DOWN = "#4467A3"  # imprint blue — down-regulated (cool)
+OKABE_ITO_UP = "#AE3030"  # imprint red — up-regulated (warm semantic)
 OKABE_ITO_NEUTRAL = "#888888"  # Gray for not significant
 
 # Data - Simulated differential expression results

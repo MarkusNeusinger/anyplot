@@ -1,52 +1,51 @@
 library: bokeh
+language: python
 specification_id: ks-test-comparison
 created: '2026-02-17T20:11:57Z'
-updated: '2026-02-17T20:25:08Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22113798948
+updated: '2026-05-29T03:30:02Z'
+generated_by: claude-sonnet
+workflow_run: 26615723215
 issue: 4130
-python_version: 3.14.3
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/bokeh/plot.html
-quality_score: 93
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/bokeh/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent use of Bokeh's Band model to create the shaded divergence region — a
-    distinctive library feature that adds visual storytelling
-  - Clean, publication-grade styling with carefully tuned grid, axis, and typography
-    settings
-  - 'All spec requirements fully met: both ECDFs, K-S statistic, max divergence highlight,
-    p-value, proper legend'
-  - Strong data storytelling through the red emphasis system (segment + band + diamonds
-    + annotation) that immediately draws the eye to the key statistical finding
-  - Credit scoring scenario is a compelling real-world application that makes the
-    K-S test result meaningful
+  - Imprint palette semantic exception (green=good, red=bad) with solid-vs-dashed
+    redundant encoding achieves both semantic clarity and CVD safety
+  - Band model creates a visually distinctive focal point at the maximum divergence
+    region — idiomatic Bokeh feature used to excellent effect
+  - 'Full spec compliance: step functions, KS statistic + p-value annotation, highlighted
+    max-distance point, legend, y-axis 0-1 range'
+  - Both themes render cleanly with full theme-adaptive chrome; no dark-on-dark failures;
+    data colors identical across renders
+  - Credit scoring context is realistic, neutral, and domain-appropriate for a KS-test
+    demonstration
   weaknesses:
-  - Axis labels are descriptive but could include units or clarification where applicable
-  - The annotation text could be slightly larger or positioned more prominently to
-    increase its visual impact
-  - The HTML export could leverage Bokeh's interactive features (HoverTool showing
-    exact ECDF values) to differentiate further from static libraries
-  image_description: The plot displays two empirical cumulative distribution functions
-    (ECDFs) on a clean white background. The blue solid line represents "Good Customers
-    (ECDF)" and the orange dashed line represents "Bad Customers (ECDF)." The x-axis
-    is labeled "Credit Score" ranging from 300 to 900, and the y-axis is labeled "Cumulative
-    Proportion" ranging from 0.0 to 1.0. The Bad Customers ECDF (orange) rises much
-    faster, reaching approximately 0.8 by score 600, while the Good Customers ECDF
-    (blue) only reaches approximately 0.05 at the same point, clearly showing that
-    bad customers cluster at lower credit scores. A bold red vertical line at approximately
-    x=590 marks the point of maximum divergence between the two distributions, with
-    red diamond markers at both endpoints of the segment. A light pink/red shaded
-    band surrounds the divergence area for visual emphasis. The annotation "D = 0.737,
-    p < 0.001" appears in bold red text next to the divergence line. A subtle dotted
-    red vertical reference line spans the full height at the same x-position. The
-    legend is positioned at the top-left with a light gray background. The title "ks-test-comparison
-    · bokeh · pyplots.ai" appears in the upper-left. The overall design is clean with
-    subtle gray gridlines, muted axis colors, and a publication-grade aesthetic.
+  - Box frame visible on all 4 sides (outline_line_color=INK_SOFT retains full border)
+    — removing the top/right equivalents would align with the L-shape spine preference
+    and improve visual refinement
+  - 'DE-01 not at publication level: no typographic hierarchy within the chart and
+    no visual layering beyond the annotation box to push toward 6+/8'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct surface color, not pure white
+      Chrome: Title "ks-test-comparison · python · bokeh · anyplot.ai" in bold dark INK (#1A1A17) at ~52% canvas width; axis labels "Credit Score" and "Cumulative Proportion" in dark INK at 42pt; tick labels in INK_SOFT (#4A4A44)
+      Data: Two ECDF step curves — solid green #009E73 (Good Customers) and dashed red #AE3030 (Bad Customers); blue #4467A3 KS vertical segment with diamond markers at endpoints; subtle light-blue Band fill (alpha=0.14) between ECDFs at max divergence; annotation "D = 0.737, p < 0.001" in blue with elevated background
+      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface, not pure black
+      Chrome: Title and axis labels in light cream (#F0EFE8); tick labels in INK_SOFT dark (#B8B7B0); legend text light; annotation box fills with elevated dark (#242420)
+      Data: Data colors IDENTICAL to light render — green #009E73 ECDF solid, red #AE3030 ECDF dashed, blue #4467A3 KS segment and diamond markers all unchanged; Band fill barely perceptible as subtle dark-blue area
+      Legibility verdict: PASS — all text clearly readable against dark background; no dark-on-dark failures observed; brand green #009E73 remains visible and distinguishable
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -54,69 +53,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, tick
-          labels 18pt, legend 22pt, annotation 24pt. All text clearly readable.'
+        comment: All sizes explicitly set (title 50pt, axis labels 42pt, tick/legend
+          34pt); well-proportioned in both themes; title at ~52% width appropriate
+          for 44-char string
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Legend placed in clean area with no
-          data underneath.
+        comment: Legend at top-left occupies y>0.85 data-space where neither ECDF
+          is present at that x; no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line widths 5-6px appropriate for canvas size. Diamond markers at
-          size 22 clearly visible. Dashed styling provides additional differentiation.
+        comment: Step lines line_width=5 suit 400/350-point density; KS segment line_width=7
+          and size=26 diamond markers are prominent
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
-        passed: true
-        comment: Blue vs Orange is colorblind-safe with strong contrast. Red for K-S
-          statistic is a distinct third color.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 4
-        passed: true
-        comment: Plot fills canvas well with balanced margins. Good use of the 4800x2700
-          landscape format.
-      - id: VQ-06
-        name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but lack units. Credit scores are unitless; Cumulative
-          Proportion could note 0-1 range.
+        comment: Green/red semantic pair uses solid vs dashed linestyle as redundant
+          encoding — CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Generous min_border reservations; canvas gate passed; nothing clipped;
+          good proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Credit Score and Cumulative Proportion are descriptive and contextually
+          appropriate
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; semantic exception correctly applied (bad=#AE3030,
+          KS=#4467A3); correct backgrounds; full theme-adaptive chrome'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom color palette with intentional hierarchy. Styled legend with
-          background fill and border. Clean typography with muted gray tones. Above
-          configured defaults, approaching publication quality.
+        comment: 'Above generic default: Band model, diamond markers, semantic colors,
+          annotation box show intentional design. Not yet FiveThirtyEight-level —
+          no typographic hierarchy beyond bold title'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Subtle grid (alpha 0.4), muted axis lines, minor ticks hidden, outline
-          removed. Well-polished.
+        comment: Subtle grid at alpha=0.15 and generous whitespace; box frame (all
+          4 spines via outline_line_color) retained rather than L-shape style
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Red shaded band + vertical segment + diamond markers + D/p annotation
-          create clear focal point. Credit scoring context is immediately meaningful.
+        comment: Band + KS segment + diamond markers + annotation create clear focal
+          point; viewer immediately reads D=0.737, p<0.001 story
     spec_compliance:
       score: 15
       max: 15
@@ -126,52 +133,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: K-S plot with two ECDFs as step functions.'
+        comment: Correct KS comparison with properly computed ECDF step functions
+          for both samples
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: both ECDFs, K-S statistic, max divergence
-          highlight, p-value, legend, Y-axis 0-1.'
+        comment: Both ECDFs as step functions, K-S stat annotated, max divergence
+          highlighted, p-value included, legend labels both distributions, y-axis
+          0-1
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Credit scores on X-axis, cumulative proportions on Y-axis, both distributions
-          fully visible.
+        comment: 'X: Credit Score; Y: Cumulative Proportion with Range1d(-0.03, 1.08);
+          both samples correctly mapped'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels descriptive and accurate.
+        comment: Title exactly 'ks-test-comparison · python · bokeh · anyplot.ai';
+          legend entries clearly named
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows clearly separated distributions with different shapes, large
-          K-S statistic (0.737), and statistically significant result.
+        comment: Two clearly distinct distributions, step-function ECDF, max divergence
+          highlighted, statistical inference shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Credit scoring (Good vs Bad customers) is a real, neutral, comprehensible
-          business scenario.
+        comment: Credit scoring (Good vs Bad customers) is a canonical real-world
+          KS-test application; neutral and immediately comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Credit scores 300-900 match realistic range. Sample sizes 400/350
-          appropriate for statistical inference.
+        comment: Beta-distributed scores in 300-900 range matches FICO conventions;
+          Good skewed right, Bad skewed left — factually correct
     code_quality:
       score: 10
       max: 10
@@ -181,36 +191,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports -> Data -> Plot -> Save structure with no functions
-          or classes.
+        comment: 'Linear flow: imports → constants → data generation → ECDF computation
+          → figure → glyphs → HTML save → Selenium screenshot → PIL canvas pin'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at the beginning.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports are used: Band, ColumnDataSource, Label, Legend, LegendItem,
-          NumeralTickFormatter, Range1d, Span.'
+        comment: All imported symbols used; sys.path manipulation is required Bokeh
+          self-collision guard
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. Step function construction and band mask
-          computation are necessary and cleanly written.
+        comment: Clean and purposeful; no fake UI; Selenium + CDP + PIL is the canonical
+          Bokeh export approach
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png and plot.html via save. No deprecated
-          functions.
-    library_features:
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API throughout
+    library_mastery:
       score: 9
       max: 10
       items:
@@ -219,28 +228,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of ColumnDataSource, Bokeh model API (Legend, LegendItem,
-          Label, Band, Span), NumeralTickFormatter, explicit layout management.
+        comment: ColumnDataSource throughout, explicit add_layout, Band/Span/Label/LegendItem
+          models used correctly, HoverTool for HTML interactivity — textbook idiomatic
+          Bokeh
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Band model for shaded region, Span for reference line, explicit Legend
-          construction, HTML export with CDN. Could leverage HoverTool for more interactivity.
+        comment: Band model is the standout distinctive Bokeh feature; NumeralTickFormatter,
+          Span, CDP viewport control also Bokeh-specific. 5/5 would require JS callbacks
+          or more complex model composition
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
+  - selenium
+  - pillow
   techniques:
+  - hover-tooltips
+  - html-export
   - annotations
   - custom-legend
-  - html-export
   patterns:
   - data-generation
   - columndatasource
-  dataprep:
-  - ecdf
+  dataprep: []
   styling:
-  - grid-styling
   - alpha-blending

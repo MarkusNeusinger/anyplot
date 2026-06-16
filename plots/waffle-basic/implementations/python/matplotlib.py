@@ -19,7 +19,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (canonical order)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Survey responses (sums to 100%)
 categories = ["Strongly Agree", "Agree", "Neutral", "Disagree"]
@@ -53,7 +53,7 @@ for row in range(grid_size):
             square_size,
             square_size,
             boxstyle="round,pad=0.02,rounding_size=0.1",
-            facecolor=OKABE_ITO[category_idx],
+            facecolor=IMPRINT[category_idx],
             edgecolor=PAGE_BG,
             linewidth=1.5,
         )
@@ -67,7 +67,7 @@ ax.axis("off")
 
 # Create legend with percentage labels
 legend_patches = [
-    mpatches.Patch(color=OKABE_ITO[i], label=f"{categories[i]} ({values[i]}%)") for i in range(len(categories))
+    mpatches.Patch(color=IMPRINT[i], label=f"{categories[i]} ({values[i]}%)") for i in range(len(categories))
 ]
 leg = ax.legend(
     handles=legend_patches, loc="center left", bbox_to_anchor=(1.02, 0.5), fontsize=18, frameon=True, fancybox=True

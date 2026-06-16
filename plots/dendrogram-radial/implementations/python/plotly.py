@@ -21,7 +21,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 SPECIES = ["Setosa", "Versicolor", "Virginica"]
 
 # Data: 12 samples per iris species (36 leaves total)
@@ -82,7 +82,7 @@ for i, row in enumerate(Z):
 def branch_color(node_id):
     sp = node_species[node_id]
     if len(sp) == 1:
-        return OKABE_ITO[next(iter(sp))]
+        return IMPRINT[next(iter(sp))]
     return INK_SOFT
 
 
@@ -142,7 +142,7 @@ traces.append(
         x=np.cos(leaf_rad),
         y=np.sin(leaf_rad),
         mode="markers",
-        marker={"color": [OKABE_ITO[y[i]] for i in range(n_leaves)], "size": 10, "line": {"color": PAGE_BG, "width": 1.5}},
+        marker={"color": [IMPRINT[y[i]] for i in range(n_leaves)], "size": 10, "line": {"color": PAGE_BG, "width": 1.5}},
         showlegend=False,
         hovertext=[f"{labels[i]} · {SPECIES[y[i]]}" for i in range(n_leaves)],
         hoverinfo="text",
@@ -156,8 +156,8 @@ for idx, species in enumerate(SPECIES):
             x=[None],
             y=[None],
             mode="markers+lines",
-            marker={"color": OKABE_ITO[idx], "size": 12},
-            line={"color": OKABE_ITO[idx], "width": 3},
+            marker={"color": IMPRINT[idx], "size": 12},
+            line={"color": IMPRINT[idx], "width": 3},
             name=species,
             showlegend=True,
         )
@@ -179,7 +179,7 @@ for leaf in range(n_leaves):
             "x": lx,
             "y": ly,
             "text": labels[leaf],
-            "font": {"size": 10, "color": OKABE_ITO[y[leaf]]},
+            "font": {"size": 10, "color": IMPRINT[y[leaf]]},
             "showarrow": False,
             "xanchor": xanchor,
             "yanchor": yanchor,

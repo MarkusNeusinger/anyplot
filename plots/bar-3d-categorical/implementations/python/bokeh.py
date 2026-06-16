@@ -32,7 +32,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: retail sales by product category and quarter (units in thousands)
 np.random.seed(42)
@@ -119,7 +119,7 @@ for j in range(n_qtr - 1, -1, -1):
     for i in range(n_prod):
         v = sales[i, j]
         h = v / v_max * H_SCALE
-        color = OKABE_ITO[j]
+        color = IMPRINT[j]
         x0, x1 = i + gap, i + gap + bar_w
         y0, y1 = j + gap, j + gap + bar_w
 
@@ -211,7 +211,7 @@ for j, qtr in enumerate(quarters):
         text=qtr,
         text_align="left",
         text_baseline="middle",
-        text_color=OKABE_ITO[j],
+        text_color=IMPRINT[j],
         text_font_size="22pt",
         text_font_style="bold",
     )

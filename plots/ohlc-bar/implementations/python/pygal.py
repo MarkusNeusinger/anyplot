@@ -31,7 +31,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # Bullish (up bars)
-ACCENT = "#D55E00"  # Bearish (down bars)
+ACCENT = "#AE3030"  # imprint red — bearish (down bars)
 
 # Data - Generate realistic stock price data with different seed/start than plotnine
 np.random.seed(77)

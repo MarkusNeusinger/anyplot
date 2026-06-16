@@ -30,7 +30,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"  # Okabe-Ito position 1
-ACCENT = "#E69F00"  # Okabe-Ito position 5
+ACCENT = "#AE3030"  # Okabe-Ito position 5
 
 # Data - Monthly temperature ranges (high/low) for a weather station
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]

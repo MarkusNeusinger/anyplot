@@ -16,7 +16,7 @@ quality_score: 83
 review:
   strengths:
   - Semantic color assignment matches financial conventions perfectly (red=drawdown/loss,
-    green=recovery, purple=max drawdown marker — all from anyplot palette via semantic
+    green=recovery, purple=max drawdown marker — all from Imprint palette via semantic
     exception)
   - 'Full spec compliance: filled drawdown area, max drawdown marker, recovery point
     indicators, and key statistics all present'
@@ -102,7 +102,7 @@ review:
         max: 2
         passed: true
         comment: 'Semantic exception correctly applied: red for drawdown/loss, green
-          for recovery/gain are finance conventions. All colors from anyplot palette.
+          for recovery/gain are finance conventions. All colors from Imprint palette.
           Backgrounds #FAF8F1 (light) / #1A1A17 (dark) correct.'
     design_excellence:
       score: 12

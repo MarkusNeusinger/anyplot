@@ -19,7 +19,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette for categories
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data - Budget allocation by department and project
 data = [
@@ -44,7 +44,7 @@ values = [d[2] for d in data]
 
 # Category to color mapping (using Okabe-Ito palette)
 unique_categories = ["Engineering", "Sales", "Marketing", "Operations", "HR"]
-category_colors = {cat: OKABE_ITO[i % len(OKABE_ITO)] for i, cat in enumerate(unique_categories)}
+category_colors = {cat: IMPRINT[i % len(IMPRINT)] for i, cat in enumerate(unique_categories)}
 
 # Normalize values to fill a 160x90 area (matching figsize aspect ratio)
 total = sum(values)

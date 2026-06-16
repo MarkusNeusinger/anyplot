@@ -37,7 +37,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID_COLOR = "#D0CEC7" if THEME == "light" else "#2E2E2B"
 
 BRAND = "#009E73"  # Okabe-Ito position 1 — Suburban houses
-COLOR2 = "#D55E00"  # Okabe-Ito position 2 — Urban houses
+COLOR2 = "#C475FD"  # Okabe-Ito position 2 — Urban houses
 
 # Data — house price predictions via GradientBoostingRegressor
 np.random.seed(42)

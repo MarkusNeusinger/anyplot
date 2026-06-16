@@ -1,55 +1,54 @@
 library: seaborn
+language: python
 specification_id: bar-basic
 created: '2025-12-23T00:22:51Z'
-updated: '2026-02-14T15:07:59Z'
-generated_by: claude-opus-4-6
-workflow_run: 20447576718
-issue: 0
-python_version: '3.14'
+updated: '2026-05-28T09:38:52Z'
+generated_by: claude-sonnet
+workflow_run: 26565954049
+issue: 612
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-basic/seaborn/plot.png
-preview_html: null
-quality_score: 89
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  patterns:
-  - explicit-figure
-  dataprep: []
-  styling:
-  - grid-styling
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Strong data storytelling with two meaningful annotations (top/bottom performers)
-    and arrow callouts that guide the viewer
-  - Thoughtful three-tier color hierarchy (dark Python Blue, lighter blue, muted grey)
-    that visually reinforces the ranking
-  - 'Clean visual refinement: removed spines, subtle grid, explicit font sizing, well-calibrated
-    margins'
-  - Correct seaborn 0.14+ API usage with hue parameter and legend=False
-  - Descriptive axis labels with units and correct title format
+  - 'Perfect visual quality across all 7 sub-criteria: explicit sizing, no overlap,
+    theme-adaptive chrome works correctly in both renders'
+  - Factually accurate, neutral, real-world data (US city sunshine hours with Phoenix
+    3872 to Seattle 2170) with meaningful range and correct relative proportions
+  - 'Correct seaborn 0.13+ idioms throughout: hue+dict palette for per-bar colors,
+    sns.set_theme rc dict, sns.despine, bbox_inches omitted from savefig'
+  - Clean KISS code structure with explicit margin control via subplots_adjust and
+    deterministic hardcoded data
   weaknesses:
-  - The color distinction between the lighter blue (#7BAFD4) middle bars and the muted
-    grey (#A3BFCF) bottom bar is subtle and may not be immediately perceptible
-  - The Lowest annotation arrow is quite long, spanning from upper-right area down
-    to the Books bar, creating visual tension
-  - Annotation positioning uses hardcoded pixel coordinates that are fragile if data
-    changes
-  image_description: 'The plot displays a vertical bar chart titled "bar-basic · seaborn
-    · pyplots.ai" showing product sales across 8 categories in descending order: Electronics
-    (218), Groceries (195), Clothing (164), Sports (142), Toys (112), Home & Garden
-    (89), Automotive (58), and Books (41). The top bar (Electronics) is dark Python
-    Blue (#306998), the middle 6 bars are lighter blue (#7BAFD4), and the bottom bar
-    (Books) is a muted grey-blue (#A3BFCF). Bold value labels appear above each bar.
-    Two arrow annotations provide storytelling: "Top seller 218 units" points to the
-    Electronics bar from the upper-right, and "Lowest 41 units" points down to the
-    Books bar from the upper-right area. The x-axis is labeled "Product Category",
-    the y-axis "Sales (units)". Top and right spines are removed, with a subtle y-axis
-    grid (alpha=0.2). Layout uses white background with clean spacing.'
+  - The amber (#DDCC77) highlight for Phoenix does not appear in either rendered image
+    — both renders show all 7 bars as uniform brand green (#009E73). The code is syntactically
+    correct (hue+dict palette), but the amber is not visible in the renders. This
+    removes the intended focal point and reduces storytelling effectiveness.
+  - 'LM-02 limited: after sns.barplot, all customization falls back to matplotlib
+    ax API (bar_label, tick_params, grid, spine colors). No seaborn-specific post-processing
+    features used beyond the initial plot call.'
+  - 'DE-03 lacks effective focal point: sorted ranking is the only storytelling element;
+    without the amber Phoenix outlier rendering, there is no visual emphasis or hierarchy
+    beyond bar height variation.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "Annual Sunshine Hours · bar-basic · python · seaborn · anyplot.ai" fully visible in dark ink, spans ~80% width (expected for long mandated title). Y-axis label "Sunshine Hours per Year" and X-axis label "City" both readable in dark ink. Tick labels (city names and numeric values 0-4000) in soft dark gray — all clear.
+      Data: All 7 bars in brand teal-green (#009E73). Bar value labels (3872, 3154, 3110, 2634, 2508, 2341, 2170) in soft gray above bars. Bars sorted highest-to-lowest. NOTE: Code intends Phoenix bar to be amber (#DDCC77) but renders as same teal as others.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title, axis labels, tick labels all switch to light-colored text — fully readable against dark background. No dark-on-dark failure. Grid lines subtle and visible.
+      Data: All 7 bars remain identical teal-green (#009E73) — data colors unchanged between themes, confirming correct theme handling. Bar value labels in light gray. Phoenix bar appears same teal as others (amber highlight not visible).
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -57,65 +56,78 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16, annotations=15/13,
-          bar labels=15'
+        comment: All font sizes explicitly set (title 12pt, axis labels 10pt, ticks
+          8pt, bar labels 10pt); proportions correct; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text elements well-positioned with no overlap
+        comment: No overlapping elements; bar labels sit cleanly above bars; city
+          tick labels do not overlap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars well-sized with width=0.7, appropriate spacing for 8 categories
+        comment: Bars clearly visible with width=0.65; value labels clearly readable;
+          appropriate sizing for 7 categories
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
-        passed: false
-        comment: Blue palette is colorblind-safe but distinction between lighter blue
-          and muted grey for last bar is subtle
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 has good contrast on both backgrounds; anyplot
+          palette is CVD-safe'
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Good layout with explicit margins, but Lowest annotation arrow is
-          long and creates visual tension
+        passed: true
+        comment: Canvas gate passed (3200x1800); subplots_adjust provides balanced
+          margins; plot fills canvas appropriately
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Sales (units) and Product Category are descriptive with units
+        comment: 'Y-axis: Sunshine Hours per Year (descriptive with implied units);
+          X-axis: City; title has correct format with descriptive prefix'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All bars #009E73; backgrounds #FAF8F1/#1A1A17; theme-adaptive chrome
+          correct; data colors identical between renders'
     design_excellence:
-      score: 16
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Thoughtful color hierarchy (dark to light to muted), clean typography,
-          clearly above defaults
+        passed: false
+        comment: Well-configured clean design with correct palette and L-shaped spines.
+          Intended amber Phoenix highlight does not render — all bars appear uniform
+          brand green, limiting design sophistication to well-configured default level
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: Spines removed, subtle grid, generous whitespace, set_axisbelow,
-          explicit margins
+        passed: false
+        comment: 'Good refinement: top/right spines removed, subtle horizontal grid
+          (alpha=0.15), axisbelow=True, explicit subplots_adjust margins, bar labels.
+          Solid above library defaults.'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Two annotations highlight top and bottom performers with arrows,
-          color encoding reinforces ranking narrative
+        passed: false
+        comment: Sorted highest-to-lowest shows ranking but no effective focal point.
+          Intended amber Phoenix outlier emphasis absent in renders. No annotations
+          or additional storytelling elements.
     spec_compliance:
       score: 15
       max: 15
@@ -131,45 +143,48 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Value labels on bars, highlighted specific bars, consistent widths,
-          adequate spacing
+        comment: Consistent bar widths, 7 categories (within 3-15 spec range), value
+          labels on bars as recommended
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x-axis, values on y-axis, all data visible
+        comment: Categories on x-axis, numeric values on y-axis, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct format bar-basic · seaborn · pyplots.ai, no legend needed
+        comment: Title Annual Sunshine Hours · bar-basic · python · seaborn · anyplot.ai
+          matches required format; no legend correctly omitted for single-series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 8 categories with good descending spread; could benefit from closer-valued
-          pairs
+        comment: 'Demonstrates core bar chart use case: comparing discrete categories,
+          showing rankings, value labels for precise reading'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Product sales by category is a realistic neutral business scenario
+        comment: Real US cities with genuine distinct sunshine profiles; neutral geography/climate
+          domain; not abstract
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sales values 41-218 units are plausible
+        comment: 'All values factually accurate: Phoenix ~3872 hrs verified, Seattle
+          ~2170 hrs verified; relative proportions match established climatology data'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -177,33 +192,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports, data, plot, save flow
+        comment: 'Linear: imports -> tokens -> data -> plot -> style -> save; no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data, no randomness
+        comment: Deterministic hardcoded DataFrame; no random elements
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: matplotlib, pandas, seaborn'
+        comment: All four imports (os, matplotlib.pyplot, pandas, seaborn) are used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Annotation positioning uses hardcoded coordinates that are fragile
+        passed: true
+        comment: Dict comprehension for palette, clean seaborn + matplotlib integration;
+          no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, no deprecated functions
-    library_features:
-      score: 8
+        comment: Saves to plot-{THEME}.png with correct dpi=400; no bbox_inches=tight
+          per seaborn guide
+    library_mastery:
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -211,13 +229,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of sns.barplot() with DataFrame, set_context(), set_style(),
-          hue parameter
+        comment: 'Correct seaborn 0.13+ pattern: sns.barplot with hue+dict palette,
+          sns.set_theme rc dict, sns.despine. Minor deduction: amber dict palette
+          does not appear to render.'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: sns.set_context(talk), sns.set_style(whitegrid, ...) override, hue+legend=False
-          are idiomatic seaborn
+        passed: false
+        comment: Uses seaborn hue+dict palette for per-bar colors (seaborn-specific),
+          but most post-plot customization uses matplotlib ax API directly. Could
+          largely be replicated in matplotlib.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - explicit-figure
+  dataprep: []
+  styling:
+  - grid-styling

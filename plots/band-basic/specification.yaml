@@ -6,7 +6,7 @@ title: Basic Band Plot
 
 # Specification tracking
 created: 2025-12-15T20:42:54Z
-updated: 2026-02-23T12:00:00Z
+updated: 2026-05-29T18:30:00Z
 issue: 979
 suggested: MarkusNeusinger
 
@@ -18,7 +18,7 @@ tags:
   data_type:
     - numeric
     - continuous
-    - timeseries
+    - time-series
   domain:
     - statistics
     - science

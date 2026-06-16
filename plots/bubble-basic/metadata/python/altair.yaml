@@ -1,17 +1,247 @@
 library: altair
+language: python
 specification_id: bubble-basic
 created: 2025-12-14 11:07:38+00:00
-updated: '2026-02-16T20:39:54Z'
-generated_by: claude-opus-4-6
-workflow_run: 20207009427
+updated: '2026-05-29T01:13:27Z'
+generated_by: claude-sonnet
+workflow_run: 26590864132
 issue: 755
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/altair/plot.html
-quality_score: 93
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/altair/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - 'Full spec compliance: all three bubble dimensions correctly encoded with area-scaled
+    sizes and proper transparency'
+  - 'Theme-adaptive chrome exactly correct in both renders — no dark-on-dark failures,
+    correct backgrounds #FAF8F1 / #1A1A17'
+  - 'Anyplot palette applied correctly: Seed = #009E73 brand green first, canonical
+    order through 4 stages'
+  - 'Excellent data storytelling: outlier deliberately included, top-3 annotated with
+    alt.condition opacity hierarchy'
+  - 'Canvas gate passes: PAD-only-to-3200x1800 correctly implemented per altair.md
+    spec'
+  weaknesses:
+  - Annotation fontSize=10 is small — at mobile scale (~400px wide) annotation text
+    renders near the legibility floor; consider 11-12px for key annotations
+  - configure_axis still shows domain lines (domainColor=INK_SOFT present but domain
+    not disabled) — removing via domain=False would achieve a cleaner L-frame consistent
+    with style guide minimalism
+  - 'DE-01 could reach 6-7/8 with one additional layer of polish: e.g., add shape
+    encoding for redundant categorical encoding alongside color'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light surface, not pure white
+      Chrome: Title "bubble-basic · python · altair · anyplot.ai" bold at top-center, readable. Subtitle "Tech Startup Metrics — Funding vs Revenue by Stage & Team Size" in softer ink, readable. X-axis "Funding ($M)" and Y-axis "Revenue ($M)" both clearly labeled. Tick labels at 10px readable against light bg.
+      Data: Four stage categories — Seed (#009E73 brand green, small bubbles lower-left), Series A (#C475FD lavender, medium lower-middle), Series B (#4467A3 blue, medium mid), Growth (#BD8233 ochre, large upper-right). Bubble sizes encode employee count (area-scaled). Three annotations label top revenue companies. Stage and Employees legends on the right in elevated-bg framed box.
+      Legibility verdict: PASS — all text readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface, not pure black
+      Chrome: Title, subtitle, axis labels, and tick labels all render in light ink (F0EFE8/B8B7B0) — clearly readable against dark background. No dark-on-dark failures detected. Legend text uses light label colors. Annotations visible in light ink color.
+      Data: Colors identical to light render — green (#009E73), lavender (#C475FD), blue (#4467A3), ochre (#BD8233). Palette data colors unchanged between themes as required. Legend frame uses elevated dark (#242420).
+      Legibility verdict: PASS — all text readable against warm near-black background, no dark-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All text readable in both themes. Font sizes explicitly set (title=16,
+          subtitle=12, axis=10-12, ticks=10). Minor: annotation fontSize=10 may be
+          borderline at mobile scale.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Annotations spaced with dy offsets, no pixel overlap. Minor crowding
+          near top-right annotation pair but not severe.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 50 data points at 0.6-0.9 opacity with area-scaled bubbles; all stages
+          and sizes clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Anyplot palette positions 1-4 in canonical order. CVD-safe. No red-green
+          sole encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). Good proportions, generous whitespace,
+          no overflow.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Funding ($M) and Revenue ($M) with units. Correct title format. Subtitle
+          adds context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series Seed = #009E73. Canonical palette order 1-4. Backgrounds
+          #FAF8F1/#1A1A17 correct.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: intentional subtitle, top-3 annotations, outlier,
+          stroke on bubbles, opacity differentiation. Not maximum: no shape variation,
+          functional rather than highly polished.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Dashed grid at 15% opacity, no view border stroke, elevated legend
+          background. Axis domain lines still visible (not fully removed).
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Deliberate outlier, top-3 revenue annotations, opacity contrast between
+          highlighted/background data. Clear visual hierarchy through size and color.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct bubble chart: scatter with size as third dimension.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: x/y/size all mapped; alpha 0.6 within 0.5-0.7 spec; size legend included;
+          color optionally distinguishes categories.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Funding on x, Revenue on y, Employees as bubble area. All 50 data
+          points within axis domain.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'bubble-basic · python · altair · anyplot.ai' matches required
+          format. Stage and Employees legends correct.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All three numeric dimensions encoded. Fourth dimension (color) and
+          fifth (annotations) added.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Tech startup metrics with realistic funding/revenue/employee ranges.
+          Standard VC stage vocabulary. Not controversial.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Funding $1-80M, Revenue $2-100M, Employees 15-900 all plausible.
+          Stage-correlated distributions add realism.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes. Annotation layers use a minimal list comprehension
+          loop.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All five imports (os, altair, numpy, pandas, PIL.Image) are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Altair declarative grammar used correctly. No fake interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair 6.x
+          API.
+    library_features:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: mark_circle, typed encodings (Q/N), layer composition, configure_*
+          for global styling, alt.condition, alt.Scale with domain/range. Title styling
+          inline via alt.Title() rather than configure_title is minor.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: alt.condition for conditional encoding, proper Size encoding with
+          area scaling, legend value customization, multi-layer composition. No faceting
+          or selection bindings.
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - annotations
   - layer-composition
@@ -23,206 +253,3 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling
-review:
-  strengths:
-  - Excellent data storytelling through conditional opacity highlighting top-revenue
-    companies and text annotations
-  - Warm color progression palette (Python Blue to amber to orange) that visually
-    maps to startup growth stages
-  - 'Strong visual refinement: subtle dashed grid, removed axis lines, white bubble
-    strokes, light background'
-  - Realistic tech startup scenario with stage-dependent data generation creating
-    natural clustering
-  - Highly idiomatic Altair code with declarative encoding, layer composition, and
-    proper use of Scale/Legend objects
-  weaknesses:
-  - Layout could be slightly tighter — right-side legends create minor asymmetry with
-    some unused space
-  - Feature coverage could include a few more edge cases (e.g., a high-funded low-revenue
-    outlier) to demonstrate all bubble chart dynamics
-  improvements: []
-  verdict: APPROVED
-  image_description: 'The plot displays a bubble chart titled "bubble-basic · altair
-    · pyplots.ai" with subtitle "Tech Startup Metrics — Funding vs Revenue by Stage
-    & Team Size". The x-axis shows "Funding ($M)" ranging from 0 to 84, and the y-axis
-    shows "Revenue ($M)" ranging from 0 to 110. There are 40 bubbles colored by four
-    startup stages: Seed (steel blue, #306998), Series A (light blue, #4B8BBE), Series
-    B (golden amber, #E8A838), and Growth (burnt orange, #D35F2D). Bubble sizes represent
-    employee count with a legend showing 50, 200, 500, and 900 employees. Three top-revenue
-    companies are annotated with labels (e.g., "Growth · $76.3M"). The background
-    is a light gray (#fafbfc), grid lines are dashed and subtle. Smaller seed-stage
-    bubbles cluster in the lower-left, with larger growth-stage bubbles in the upper-right,
-    showing a clear positive correlation between funding and revenue. The Stage and
-    Employees legends are positioned on the right side.'
-  criteria_checklist:
-    visual_quality:
-      score: 29
-      max: 30
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 8
-        max: 8
-        passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis titles 22pt, tick
-          labels 18pt, legend titles 18pt, legend labels 16pt'
-      - id: VQ-02
-        name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No overlapping text, annotations use dx/dy offsets
-      - id: VQ-03
-        name: Element Visibility
-        score: 6
-        max: 6
-        passed: true
-        comment: Bubble sizes 80-3000 well-adapted to 40 data points, alpha 0.55/0.85
-          for density handling
-      - id: VQ-04
-        name: Color Accessibility
-        score: 4
-        max: 4
-        passed: true
-        comment: Blue-amber-orange palette distinguishable for colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 4
-        passed: true
-        comment: Good canvas utilization, legends on right create minor asymmetry
-      - id: VQ-06
-        name: Axis Labels & Title
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Descriptive labels with units: Funding ($M), Revenue ($M)'
-    design_excellence:
-      score: 16
-      max: 20
-      items:
-      - id: DE-01
-        name: Aesthetic Sophistication
-        score: 6
-        max: 8
-        passed: true
-        comment: Custom warm-progression palette, white bubble strokes, intentional
-          typography hierarchy
-      - id: DE-02
-        name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: Dashed subtle grid, domain width 0, custom tick colors, light background
-      - id: DE-03
-        name: Data Storytelling
-        score: 5
-        max: 6
-        passed: true
-        comment: Annotations on top-3, conditional opacity for visual hierarchy, stage
-          color progression
-    spec_compliance:
-      score: 15
-      max: 15
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 5
-        max: 5
-        passed: true
-        comment: Correct bubble chart using mark_circle with size encoding
-      - id: SC-02
-        name: Required Features
-        score: 4
-        max: 4
-        passed: true
-        comment: 'All spec features present: x/y/size, transparency, size legend,
-          color as 4th dimension'
-      - id: SC-03
-        name: Data Mapping
-        score: 3
-        max: 3
-        passed: true
-        comment: X/Y correctly assigned, full data range shown
-      - id: SC-04
-        name: Title & Legend
-        score: 3
-        max: 3
-        passed: true
-        comment: Title format correct, legends labeled correctly
-    data_quality:
-      score: 14
-      max: 15
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 5
-        max: 6
-        passed: true
-        comment: Shows range of bubble sizes, diverse stages, positive correlation,
-          varying employees
-      - id: DQ-02
-        name: Realistic Context
-        score: 5
-        max: 5
-        passed: true
-        comment: Tech startup metrics is a real, neutral business scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 4
-        passed: true
-        comment: Funding 1-80M, Revenue 2-100M, Employees 15-900 are realistic
-    code_quality:
-      score: 10
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: Clean Imports → Data → Plot → Save flow
-      - id: CQ-02
-        name: Reproducibility
-        score: 2
-        max: 2
-        passed: true
-        comment: np.random.seed(42) set
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports used
-      - id: CQ-04
-        name: Code Elegance
-        score: 2
-        max: 2
-        passed: true
-        comment: Well-structured stage-dependent data generation, clean Altair chaining
-      - id: CQ-05
-        name: Output & API
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves plot.png with scale_factor=3.0 and plot.html
-    library_mastery:
-      score: 9
-      max: 10
-      items:
-      - id: LM-01
-        name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of declarative grammar, encoding channels, layered composition,
-          configure methods
-      - id: LM-02
-        name: Distinctive Features
-        score: 4
-        max: 5
-        passed: true
-        comment: alt.condition for conditional opacity, layer composition with + operator,
-          declarative encoding types, tooltip, HTML export

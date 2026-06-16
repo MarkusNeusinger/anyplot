@@ -24,7 +24,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 BRAND = "#009E73"  # Okabe-Ito position 1 — first series
-SECONDARY = "#D55E00"  # Okabe-Ito position 2 — reference line
+SECONDARY = "#C475FD"  # Okabe-Ito position 2 — reference line
 
 # Data - Generate realistic binary classification predictions
 np.random.seed(42)

@@ -1,12 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, userEvent } from '../test-utils';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { render, screen, userEvent } from 'src/test-utils';
 
 const trackEvent = vi.fn();
 const trackPageview = vi.fn();
 const navigate = vi.fn();
 
-vi.mock('../hooks', async () => {
-  const actual = await vi.importActual<typeof import('../hooks')>('../hooks');
+vi.mock('src/hooks', async () => {
+  const actual = await vi.importActual<typeof import('src/hooks')>('src/hooks');
   return {
     ...actual,
     useAnalytics: () => ({ trackEvent, trackPageview }),
@@ -18,7 +19,7 @@ vi.mock('../hooks', async () => {
   };
 });
 
-vi.mock('../hooks/useFeaturedSpecs', () => ({
+vi.mock('src/hooks/useFeaturedSpecs', () => ({
   useFeaturedSpecs: () => [
     {
       spec_id: 'scatter-basic',
@@ -32,12 +33,14 @@ vi.mock('../hooks/useFeaturedSpecs', () => ({
   ],
 }));
 
-vi.mock('../hooks/usePlotOfTheDay', () => ({
+vi.mock('src/hooks/usePlotOfTheDay', () => ({
   usePlotOfTheDay: () => null,
 }));
 
-vi.mock('../hooks/useLayoutContext', async () => {
-  const actual = await vi.importActual<typeof import('../hooks/useLayoutContext')>('../hooks/useLayoutContext');
+vi.mock('src/hooks/useLayoutContext', async () => {
+  const actual = await vi.importActual<typeof import('src/hooks/useLayoutContext')>(
+    'src/hooks/useLayoutContext'
+  );
   return { ...actual, useTheme: () => ({ isDark: false, toggle: vi.fn() }) };
 });
 
@@ -46,19 +49,21 @@ vi.mock('react-router-dom', async () => {
   return { ...actual, useNavigate: () => navigate };
 });
 
-vi.mock('../components/HeroSection', () => ({
+vi.mock('src/sections/landing/HeroSection', () => ({
   HeroSection: () => <div data-testid="hero" />,
 }));
 
-vi.mock('../components/NumbersStrip', () => ({
+vi.mock('src/sections/landing/NumbersStrip', () => ({
   NumbersStrip: () => <div data-testid="numbers" />,
 }));
 
 vi.mock('react-helmet-async', () => ({
-  Helmet: ({ children }: { children: React.ReactNode }) => <div data-testid="helmet">{children}</div>,
+  Helmet: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="helmet">{children}</div>
+  ),
 }));
 
-import { LandingPage } from './LandingPage';
+import { LandingPage } from 'src/pages/LandingPage';
 
 describe('LandingPage', () => {
   beforeEach(() => {
@@ -92,7 +97,14 @@ describe('LandingPage', () => {
     const thumb = container.querySelector('a[href="/scatter-basic"]');
     expect(thumb).toBeTruthy();
     await user.click(thumb!);
-    expect(trackEvent).toHaveBeenCalledWith('nav_click', expect.objectContaining({ source: 'featured_thumb', target: 'spec_hub', spec: 'scatter-basic' }));
+    expect(trackEvent).toHaveBeenCalledWith(
+      'nav_click',
+      expect.objectContaining({
+        source: 'featured_thumb',
+        target: 'spec_hub',
+        spec: 'scatter-basic',
+      })
+    );
   });
 
   it('tracks the "more in catalogue" link', async () => {
@@ -101,7 +113,10 @@ describe('LandingPage', () => {
 
     const more = screen.getByText(/more in the catalogue/);
     await user.click(more);
-    expect(trackEvent).toHaveBeenCalledWith('nav_click', { source: 'specs_more_link', target: '/specs' });
+    expect(trackEvent).toHaveBeenCalledWith('nav_click', {
+      source: 'specs_more_link',
+      target: '/specs',
+    });
   });
 
   it('tracks the suggest_spec link', async () => {
@@ -109,7 +124,10 @@ describe('LandingPage', () => {
     render(<LandingPage />);
 
     await user.click(screen.getByText(/suggest/));
-    expect(trackEvent).toHaveBeenCalledWith('nav_click', expect.objectContaining({ source: 'suggest_spec_link' }));
+    expect(trackEvent).toHaveBeenCalledWith(
+      'nav_click',
+      expect.objectContaining({ source: 'suggest_spec_link' })
+    );
   });
 
   it('tracks the map teaser visual click', async () => {
@@ -117,6 +135,9 @@ describe('LandingPage', () => {
     render(<LandingPage />);
 
     await user.click(screen.getByLabelText(/Open the interactive specifications map/));
-    expect(trackEvent).toHaveBeenCalledWith('nav_click', { source: 'map_teaser_preview', target: '/map' });
+    expect(trackEvent).toHaveBeenCalledWith('nav_click', {
+      source: 'map_teaser_preview',
+      target: '/map',
+    });
   });
 });

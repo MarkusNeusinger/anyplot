@@ -36,11 +36,11 @@ Look for groups of 2+ libraries where the descriptions reveal the same:
 - data formula / random seed / sample size
 - example domain (web traffic vs stock prices vs weather is a real, distinguishing choice)
 - visual variant when the spec listed multiple (e.g. plain line vs filled-area vs min/max-highlighted)
-- chrome / annotation choices beyond the mandated anyplot palette + theme palette
+- chrome / annotation choices beyond the mandated Imprint palette + theme palette
 
 ### What does NOT count as copying — these are project-mandated
 
-- **anyplot palette positions 1–7.** The data colors are fixed by the style guide; identical colors there are required, not copied.
+- **Imprint palette positions 1–7.** The data colors are fixed by the style guide; identical colors there are required, not copied.
 - **Plot size and aspect ratio.** Fixed by `prompts/default-style-guide.md` and the per-library prompts. Identical aspect ratios across all 9 libs are correct, expected behavior — never propose "different aspect ratios" as divergence advice.
 - **Theme chrome.** Page background `#FAF8F1` (light) / `#1A1A17` (dark), text inks, etc. flip identically across libs by design.
 

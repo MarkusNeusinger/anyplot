@@ -20,7 +20,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette: green for yang (bullish), vermillion for yin (bearish)
 YANG_COLOR = "#009E73"  # Okabe-Ito position 1 - green
-YIN_COLOR = "#D55E00"  # Okabe-Ito position 2 - vermillion
+YIN_COLOR = "#AE3030"  # imprint red — bearish
 
 # Generate sample price data designed to demonstrate multiple yang/yin transitions
 np.random.seed(42)

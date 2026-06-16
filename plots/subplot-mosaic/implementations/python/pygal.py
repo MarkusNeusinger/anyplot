@@ -30,14 +30,14 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = (
+IMPRINT = (
     "#009E73",  # brand green (first series)
-    "#D55E00",  # vermillion
-    "#0072B2",  # blue
-    "#CC79A7",  # reddish purple
-    "#E69F00",  # orange
-    "#56B4E9",  # sky blue
-    "#F0E442",  # yellow
+    "#C475FD",  # vermillion
+    "#4467A3",  # blue
+    "#BD8233",  # reddish purple
+    "#AE3030",  # orange
+    "#2ABCCD",  # sky blue
+    "#954477",  # yellow
 )
 
 # Data - Dashboard showing sales performance across different dimensions
@@ -71,7 +71,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     font_family="sans-serif",
     title_font_size=28,
     label_font_size=22,

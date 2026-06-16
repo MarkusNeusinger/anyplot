@@ -17,8 +17,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette for significance categories
-COLOR_DOWNREG = "#0072B2"  # Blue
-COLOR_UPREG = "#D55E00"  # Vermillion
+COLOR_DOWNREG = "#4467A3"  # Blue
+COLOR_UPREG = "#C475FD"  # Vermillion
 COLOR_NONSIG = "#888888"  # Neutral gray
 
 # Data - simulated differential expression results

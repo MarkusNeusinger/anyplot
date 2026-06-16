@@ -1,0 +1,271 @@
+library: ggplot2
+language: r
+specification_id: candlestick-basic
+created: '2026-05-30T05:43:14Z'
+updated: '2026-05-30T06:00:15Z'
+generated_by: claude-sonnet
+workflow_run: 26675891995
+issue: 812
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Correct candlestick construction using ggplot2 grammar — geom_segment for wicks
+    layered under geom_rect for bodies, with coordinated scale_color_manual/scale_fill_manual
+    controlling both geom styles simultaneously
+  - 'Semantically correct Imprint palette: #009E73 (brand green) for bullish, #AE3030
+    (matte red) for bearish — both palette positions chosen for their finance-domain
+    meaning, not ordinal position'
+  - Trend line overlay (dashed, semi-transparent) computed with lm() and plotted in
+    INK_SOFT provides meaningful data storytelling without cluttering the chart
+  - 'Full theme-adaptive chrome: PAGE_BG, ELEVATED_BG, INK, INK_SOFT all flip correctly
+    between light and dark — legend box, axis text, title, and grid all render correctly
+    in both themes'
+  - 'Perfect canvas spec compliance: 8x4.5 in @ 400 DPI = 3200x1800 px, correct device
+    (ragg::agg_png)'
+  - 'Idiomatic ggplot2: layered grammar of graphics, expansion() for axis padding,
+    label_dollar() for currency formatting, show.legend = FALSE on wicks to avoid
+    duplicate legend entries'
+  - Descriptive title prefix 'NovaTech Corp (NVTK)' followed by the mandatory spec-id
+    format — adds context without omitting required fields
+  weaknesses:
+  - 'VQ-04: Red-green is the sole in-chart visual signal distinguishing bullish and
+    bearish candles — each candle body has no shape or pattern redundancy beyond color.
+    Legend text labels (''Bullish''/''Bearish'') partially compensate but a color-blind
+    user scanning the chart body itself cannot distinguish candles without referring
+    to the legend. Consider adding a subtle fill pattern (e.g., hatching for bearish)
+    or upward/downward triangle markers on the wicks as redundant encoding.'
+  - 'DE-01: Aesthetic sophistication is solid but could be pushed further — for example,
+    adding a subtle annotation marking a notable event (e.g., highest closing price)
+    or shading the uptrend period would elevate storytelling beyond the trend line
+    alone.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "NovaTech Corp (NVTK) · candlestick-basic · r · ggplot2 · anyplot.ai" in dark #1A1A17, size 12pt, fills ~70% of width. Y-axis label "Price (USD)" in dark ink, 10pt. Tick labels in INK_SOFT (#4A4A44), 8pt, x-axis rotated 40°. Legend at top center with ELEVATED_BG (#FFFDF6) fill and INK_SOFT border, "Bullish" and "Bearish" labels readable. Y-grid lines subtle (0.2 linewidth INK_SOFT). All text clearly readable.
+      Data: Green (#009E73) bullish candles, red (#AE3030) bearish candles. Wicks thinner than bodies. Dashed gray trend line (INK_SOFT, alpha=0.55) visible rising left-to-right showing uptrend. 40 candles, Jan 02 – ~Feb 27 2024, prices $148–$165.
+      Legibility verdict: PASS — all elements clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title in light #F0EFE8 (INK for dark theme), clearly visible. Y-axis label in same light ink. Tick labels in INK_SOFT (#B8B7B0), clearly readable against dark background — no dark-on-dark failures. Legend with ELEVATED_BG (#242420) fill and INK_SOFT border, text light and readable. Y-grid lines visible as thin lighter lines against dark background.
+      Data: Same green (#009E73) bullish candles and red (#AE3030) bearish candles — identical data colors to light render. Dashed trend line still visible. No color drift between themes.
+      Legibility verdict: PASS — all text readable, no dark-on-dark issue, data colors correct and identical to light render.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Title 12pt, axis labels 10pt, tick labels 8pt, legend 8pt — all
+          readable in both themes. Rotated x-axis labels (40°) are legible. Minor
+          deduction: rotated angle slightly reduces scannability at small scale.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data overlap. Legend positioned above
+          data area. 40 candles with 0.76 unit width fit without crowding.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All candlestick elements (bodies, wicks) clearly visible. Wicks distinguishable
+          as thinner than bodies. Trend line visible through candle layers.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: false
+        comment: Red-green is the sole in-chart visual signal per candle. Legend text
+          labels partially compensate but each candle body itself has no shape/pattern
+          redundancy for CVD users.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). Title ~70% width — expected for prefixed
+          title. No overflow. Proportions balanced. 2% expansion on x-axis provides
+          adequate breathing room.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis 'Price (USD)' with dollar formatting. X-axis NULL (dates self-explanatory).
+          Title includes company name, spec-id, language, library, anyplot.ai.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'BULL_COLOR=#009E73 (Imprint pos 1), BEAR_COLOR=#AE3030 (Imprint
+          pos 5) — correct semantic exception for finance. Backgrounds: #FAF8F1 light
+          / #1A1A17 dark. Chrome tokens fully adaptive.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Semantic Imprint palette mapping, dashed trend overlay, elevated
+          legend box, descriptive title prefix — clear design thinking above defaults.
+          Could push further with event annotations.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-only grid (no x-grid, no minor grid), axis lines for structure,
+          legend with border and elevated bg, subtle grid at 0.2 linewidth. Above
+          default.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Linear trend overlay creates a clear visual narrative (uptrend from
+          ~$150 to ~$165 over 40 days). Bullish/bearish color coding immediately communicates
+          direction. Above default.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct candlestick implementation with OHLC data.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Bodies (open-close), wicks (high-low), color coding (bull/bear),
+          date formatting, grid for price reading — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date on x-axis, price on y-axis, OHLC correctly encoded. 40 trading
+          days within spec range of 20-100.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''NovaTech Corp (NVTK) · candlestick-basic · r · ggplot2
+          · anyplot.ai'' — correct format with descriptive prefix. Legend: Bullish/Bearish
+          with correct colors.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all candlestick aspects: bodies, wicks, color-coded direction,
+          trend overlay, labeled legend, formatted price axis.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: NovaTech Corp (NVTK) 2024, stock price $148-$165, realistic volatility
+          range $1.5-$4.5/day. Not controversial.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Stock price range $148-$165 over 40 trading days is realistic. Upward
+          drift of ~0.2/day plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) at top of script.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, scales, ragg — all actually used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured, readable. For-loop for sequential price simulation
+          is correct and appropriate. No fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: sprintf('plot-%s.png', THEME) pattern, ragg::agg_png device, correct
+          dimensions.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Excellent grammar-of-graphics approach. Proper geom layering, scale
+          coordination (color+fill), expansion(), label_dollar(), show.legend = FALSE
+          on wicks to avoid duplicate entries — all idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Multiple coordinated geom layers (segment+rect+line), scale_color_manual/scale_fill_manual
+          linked to same direction factor, theme_minimal extension with fine-grained
+          overrides. Strong but no faceting/coord transformation used.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scales
+  techniques:
+  - layer-composition
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  - regression
+  styling:
+  - alpha-blending

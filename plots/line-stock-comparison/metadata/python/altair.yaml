@@ -15,7 +15,7 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stoc
 quality_score: 89
 review:
   strengths:
-  - Full anyplot palette applied correctly — AAPL=#009E73 first, then purple, red,
+  - Full Imprint palette applied correctly — AAPL=#009E73 first, then purple, red,
     sky blue in canonical order
   - 'Complete theme-adaptive chrome: background, axis colors, grid, legend box all
     flip properly between light and dark'
@@ -90,7 +90,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette is CVD-safe. Green, purple, red, sky blue are well-distinguished
+        comment: Imprint palette is CVD-safe. Green, purple, red, sky blue are well-distinguished
           for all vision types.
       - id: VQ-05
         name: Layout & Canvas
@@ -122,7 +122,7 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom anyplot palette, theme-adaptive chrome throughout, SPY emphasized
+        comment: Custom Imprint palette, theme-adaptive chrome throughout, SPY emphasized
           with thicker stroke via alt.condition, dashed reference line with proper
           styling. Above defaults but not publication-ready.
       - id: DE-02

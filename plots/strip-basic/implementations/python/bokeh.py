@@ -23,7 +23,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Survey response scores by department
 np.random.seed(42)
@@ -42,7 +42,7 @@ data = {
 x_values = []
 y_values = []
 colors = []
-color_map = dict(zip(categories, OKABE_ITO, strict=True))
+color_map = dict(zip(categories, IMPRINT, strict=True))
 
 jitter_width = 0.25
 

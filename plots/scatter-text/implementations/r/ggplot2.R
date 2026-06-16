@@ -15,8 +15,8 @@ PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-OKABE_ITO   <- c("#009E73", "#D55E00", "#0072B2", "#CC79A7",
-                 "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT   <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+                 "#AE3030", "#2ABCCD", "#954477")
 
 # --- Data: Product positioning in competitive landscape ---------------------
 # Scenario: Tech products positioned by price (x) vs quality rating (y)
@@ -42,7 +42,7 @@ products$y <- products$quality
 # --- Plot -------------------------------------------------------------------
 p <- ggplot(products, aes(x = x, y = y, label = name)) +
   geom_text(
-    color = OKABE_ITO[1],
+    color = IMPRINT[1],
     size = 5.5,
     alpha = 0.85,
     fontface = "plain"

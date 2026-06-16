@@ -33,7 +33,7 @@ sectors_per_ring = base_sectors[:rings]
 wall_color = INK
 wall_width = 5
 entry_color = "#009E73"  # Okabe-Ito position 1 (brand green)
-goal_color = "#E69F00"  # Okabe-Ito position 5 (orange)
+goal_color = "#AE3030"  # Okabe-Ito position 5 (orange)
 
 # Build maze cells: (ring, sector) -> {visited, walls}
 cells = {}

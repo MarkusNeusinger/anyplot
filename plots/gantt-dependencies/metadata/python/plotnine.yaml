@@ -1,96 +1,119 @@
 library: plotnine
+language: python
 specification_id: gantt-dependencies
 created: '2026-01-15T21:04:49Z'
-updated: '2026-02-25T15:24:42Z'
-generated_by: claude-opus-4-6
-workflow_run: 21046151866
+updated: '2026-06-02T14:05:19Z'
+generated_by: claude-sonnet
+workflow_run: 26823130112
 issue: 3830
-python_version: '3.14'
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/plotnine/plot.png
-preview_html: null
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 91
 review:
   strengths:
-  - Excellent critical path storytelling through visual hierarchy (bold vs subdued
-    bars, dark vs gray arrows)
-  - Full spec compliance with all required features including dependency arrows, group
-    aggregates, and milestones
-  - Colorblind-safe custom palette with four perceptually distinct colors
-  - Well-refined theme with subtle grid, removed y-grid, and light panel background
-  - Realistic software development project data with good feature coverage (parallel
-    tasks, multi-dependencies)
+  - Correct Imprint palette in canonical order (Requirements=#009E73, Design=#C475FD,
+    Development=#4467A3, Testing=#BD8233)
+  - 'Critical path encoded with two redundant channels: full-opacity bars + bold/dark
+    connectors vs. alpha=0.5 + muted connectors'
+  - L-shaped dependency connectors with V-arrowheads drawn from scratch using geom_segment
+    layers
+  - Milestone diamonds at phase-handoff points add useful focal markers
+  - Theme-adaptive chrome correctly switches INK/INK_SOFT for both light and dark
+    renders
+  - Subtitle explains the critical-path encoding, giving the viewer context without
+    an annotation overload
+  - All font sizes explicitly set; dynamic title fontsize calculation prevents overflow
+    on long titles
+  - scale_y_continuous(trans=reverse) + CategoricalDtype-ordered fill scale = idiomatic
+    plotnine for Gantt layout
   weaknesses:
-  - V-shaped arrowheads (built from line segments) appear somewhat crude compared
-    to filled triangle arrows
-  - Minor visual crowding between thick group bars (size=15) and adjacent task bars
-    due to tight vertical spacing
-  image_description: 'The plot displays a Gantt chart for a software development project
-    with four phases color-coded: Requirements (deep blue #306998), Design (teal #2A9D8F),
-    Development (amber #E9A820), and Testing (purple #7B2D8E). The y-axis lists 16
-    rows: four group header bars (▸ Requirements, ▸ Design, ▸ Development, ▸ Testing)
-    each followed by their child tasks (Gather Requirements, Document Specs, Review
-    & Approve, System Architecture, Database Design, UI/UX Mockups, Backend API, Frontend
-    Components, Integration, Unit Testing, Integration Testing, User Acceptance).
-    The x-axis shows dates from Dec 25, 2023 to Mar 25, 2024 with weekly intervals.
-    Critical path tasks have bold/thicker bars (alpha=1.0, size=11) with dark (#1A1A1A)
-    L-shaped dependency arrows, while non-critical tasks have subdued bars (alpha=0.5,
-    size=9) with gray (#666666) arrows. Group aggregate bars span the full duration
-    of child tasks. Red diamond milestone markers appear at key handoff points (Design
-    Start, Dev Start, Testing Start, Launch). V-shaped arrowheads point from predecessor
-    end dates to successor start dates. A legend on the right shows "Project Phase"
-    with the four phase colors. The title reads "gantt-dependencies · plotnine · pyplots.ai"
-    with an explanatory subtitle.'
+  - Y-axis task labels are 8pt in a 4.5-inch-tall figure with 16 rows — readable at
+    full resolution but borderline on mobile scaling; consider 9pt or reducing to
+    fewer displayed rows
+  - panel_border is kept (full box frame) — removing top/right spines would yield
+    a cleaner, more minimal appearance consistent with the style guide
+  - 'DE-02: minor grid is removed but panel border remains and axis lines are visible
+    on all four sides; removing top+right axis_line and spine would improve visual
+    refinement'
+  - 'LM-02: the visualization relies on standard geom_rect / geom_segment combination;
+    no use of plotnine-specific advanced features like stat_* or annotate layers that
+    would distinguish it from a generic ggplot2 port'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — no pure white, clearly cream-tinted. Panel also fills the same warm surface with a subtle box border.
+      Chrome: Title "gantt-dependencies · python · plotnine · anyplot.ai" in bold dark #1A1A17, clearly readable. Subtitle in muted #4A4A44 explaining critical-path encoding. Y-axis task labels (▸ phase headers + indented task names) in #4A4A44 at 8pt — readable at full resolution, slightly dense. X-axis date tick labels rotated 45°, also 8pt, no overlap. X-axis title "Date (2024)" in 10pt dark ink. Legend "Project Phase" title in bold dark ink, entries in #4A4A44.
+      Data: Four phase colors in Imprint canonical order — Requirements #009E73 (brand green), Design #C475FD (lavender), Development #4467A3 (blue), Testing #BD8233 (ochre). Non-critical task bars at alpha=0.5 (subdued), critical-path bars at alpha=1.0 (prominent, slightly taller). Group aggregate bars span each phase at alpha=0.85. L-shaped dependency connectors in dark ink for critical path, muted #4A4A44 for non-critical. Milestone diamonds in #AE3030 (matte red) at key phase-handoff points. Vertical x-axis gridlines at very low alpha (0.15).
+      Legibility verdict: PASS — all text elements are clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — no pure black. Panel shares the same dark surface.
+      Chrome: Title in light #F0EFE8, clearly readable against the dark background. Subtitle in #B8B7B0 (muted light), readable. Y-axis and X-axis labels in #B8B7B0 — visible and legible, no dark-on-dark issues. Legend entries in light #B8B7B0. Legend box fill uses elevated dark #242420 — distinct from background.
+      Data: Data colors are IDENTICAL to the light render — Requirements #009E73, Design #C475FD, Development #4467A3, Testing #BD8233. Critical connectors now use #F0EFE8 (light ink) which reads well against the dark surface. Non-critical connectors use #B8B7B0. Milestone diamonds remain #AE3030 (visible on dark).
+      Legibility verdict: PASS — no dark-on-dark failures. All text is light-colored on the near-black surface. Data palette colors are identical to light render; only chrome (backgrounds, text, connector colors) adapted to dark theme.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 26pt, subtitle 16pt, axis_title_x
-          20pt, axis_text 16pt, legend_title 18pt, legend_text 16pt. All perfectly
-          readable.'
+        comment: All font sizes explicitly set (title 12pt dynamic, subtitle 8pt,
+          axis_title_x 10pt, axis_text 8pt, legend 8pt). Readable in both themes.
+          Y-axis labels slightly dense at 8pt for 16 rows in 4.5-inch height — borderline
+          at mobile scale.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Most elements well-separated. Minor visual crowding between thick
-          group bars and adjacent task bars in Testing section.
+        comment: X-axis labels rotated 45° prevent overlap. Y-axis task labels spaced
+          correctly. No collisions between text and data elements.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Task bars, arrows, and milestones all visible. V-shaped arrowheads
-          are visible but appear somewhat crude compared to filled triangles.
+        comment: Task bars clearly visible. Alpha=0.5 vs alpha=1.0 split is effective
+          for critical/non-critical. Milestone diamonds visible. Connectors clear
+          in both themes.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Four perceptually distinct colorblind-safe colors (blue, teal, amber,
-          purple). No red-green reliance.
+        comment: Imprint palette is CVD-safe. Additional redundant encoding via alpha
+          and size for critical path.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 layout with good canvas utilization. Legend positioned cleanly
-          on right, balanced margins.
+        comment: Canvas gate passed (3200x1800). Plot fills the canvas well. Legend
+          positioned right, no isolation. Balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title in correct format, x-axis 'Date (2024)' is descriptive, y-axis
-          empty appropriate for Gantt chart.
+        comment: 'X-axis: ''Date (2024)'' — descriptive with temporal context. Y-axis
+          empty which is appropriate (task names serve as labels). Title correct format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Requirements=#009E73 (first series, brand green). Canonical Imprint
+          order for 4 phases. Background #FAF8F1 light / #1A1A17 dark. Chrome correctly
+          adapts.'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -98,24 +121,26 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom colorblind-safe palette, intentional visual hierarchy, milestone
-          markers, group headers with symbol, explanatory subtitle. Clearly above
-          defaults.
+        comment: 'Strong design: custom critical-path encoding (dual-channel: opacity
+          + connector weight), milestone markers, phase aggregate bars, theme-adaptive
+          chrome. Clearly above a configured default. Not quite FiveThirtyEight-level
+          publication-ready.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 'theme_minimal() with significant customization: y-grid removed,
-          subtle x-grid, light panel background, legend border, generous whitespace.'
+        comment: Y-axis grid removed, minor grid removed, X-axis grid at alpha=0.15
+          (very subtle). Elevated legend box fill. Panel border kept — removing top/right
+          spines would improve refinement further.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Critical path stands out through thicker bars and darker arrows.
-          Non-critical de-emphasized. Milestones mark transitions. Subtitle explains
-          encoding.
+        comment: Critical path is visually dominant via full-opacity bars and bold
+          dark connectors. Milestones mark phase transitions. Subtitle explains encoding.
+          Viewer immediately identifies the project's critical path. Good visual hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -125,27 +150,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Gantt chart with dependency arrows and task groupings.
+        comment: Correct Gantt chart with horizontal task bars, group headers with
+          aggregate spans, and dependency connectors.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: task timelines, finish-to-start dependency
-          arrows, group aggregates, hierarchical display, critical path, milestones.'
+        comment: Dependency arrows from right edge of predecessor to left edge of
+          successor. Different styles for critical vs. non-critical. Group headers
+          with aggregate spans. Legend with subtitle explaining styles. All spec requirements
+          met.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis dates, y-axis hierarchical tasks. All 12 tasks and 4 groups
-          visible.
+        comment: X=time (dates), Y=tasks (reversed). Dependencies correctly link task
+          end to next task start. All tasks visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format. Legend 'Project Phase' with correct labels.
+        comment: 'Title: ''gantt-dependencies · python · plotnine · anyplot.ai'' —
+          correct format. Legend: ''Project Phase'' with 4 correctly labeled entries.'
     data_quality:
       score: 15
       max: 15
@@ -155,22 +184,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Sequential dependencies, parallel tasks, multi-dependencies, varying
-          durations, critical path, hierarchical groups.
+        comment: 'Shows all Gantt features: sequential deps, parallel tasks (Backend
+          API + Frontend Components), multi-predecessor deps (Integration), 4 phases,
+          critical path, milestones.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Software development project with authentic phases and realistic
-          task names. Neutral scenario.
+        comment: Software development project (Requirements, Design, Development,
+          Testing) — a universally understood neutral scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 80-day project span, 12 tasks, 3-21 day durations. Realistic for
-          software project.
+        comment: 3-month timeline (Jan-Mar 2024) is realistic for a software project.
+          Task durations (1-3 weeks) are plausible. Dependencies are logically consistent.
     code_quality:
       score: 10
       max: 10
@@ -180,65 +210,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: Imports, Data, Processing, Plot, Save. No functions
-          or classes.'
+        comment: 'Linear structure: imports → tokens → data → DataFrames → plot assembly
+          → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data deterministic with hardcoded dates and task names.
+        comment: Fully deterministic — hardcoded dates and task names, no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: datetime, timedelta, pandas, and all plotnine
-          components.'
+        comment: All imports used. Plotnine imports match geoms and scales actually
+          used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized code. Arrow construction complexity appropriate for
-          L-shaped connectors.
+        comment: Complexity is inherent to a Gantt chart with dependencies in a grammar-of-graphics
+          library. L-shaped connector logic is necessary and well-structured.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300. Current plotnine API.
+        comment: Saves as plot-{THEME}.png. Current plotnine API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Good grammar of graphics: 8-layer composition, CategoricalDtype
-          for ordering, scale_color_manual with limits, scale_y_continuous with custom
-          breaks.'
+        comment: 'Excellent idiomatic plotnine: ggplot() + geom layers, aes() mappings,
+          scale_y_continuous(trans=''reverse''), scale_x_datetime with date_breaks/date_labels,
+          CategoricalDtype for ordered legend, theme_minimal + theme overrides.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Grammar of graphics layer composition with separate data frames is
-          distinctly plotnine. CategoricalDtype, reversed y-scale, additive layers
-          characteristic of library.
+        comment: 'Uses plotnine-distinctive features: scale_y_continuous(trans=''reverse'')
+          for inverted Y, scale_x_datetime() with date formatting, CategoricalDtype
+          for ordered fill scale. Core visualization technique (geom_rect + geom_segment)
+          is generic but the scale/transform usage is distinctly plotnine/ggplot2.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - custom-legend
   - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - time-series
   styling:
   - alpha-blending
-  - grid-styling

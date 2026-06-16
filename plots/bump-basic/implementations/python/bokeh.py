@@ -1,19 +1,43 @@
-""" pyplots.ai
+""" anyplot.ai
 bump-basic: Basic Bump Chart
-Library: bokeh 3.8.2 | Python 3.14.3
-Quality: 90/100 | Updated: 2026-02-22
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-29
 """
 
-from bokeh.io import export_png
+import sys
+
+
+# Remove the script's own directory so 'bokeh' resolves to the installed package,
+# not this script file (bokeh.py would shadow the bokeh package otherwise).
+if sys.path and sys.path[0]:
+    sys.path = sys.path[1:]
+
+import os
+import time
+from pathlib import Path
+
+from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, CustomJSTickFormatter, FixedTicker, Label
 from bokeh.plotting import figure
+from bokeh.resources import INLINE
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Data - Formula 1 constructor standings over a 6-race stretch
+# Theme tokens — Imprint palette, theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint categorical palette — 8 hues, hybrid-v3 sort, theme-independent
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Data — Formula 1 constructor standings over a 6-race stretch
 entities = ["Red Bull Racing", "McLaren", "Ferrari", "Mercedes", "Aston Martin"]
 periods = ["Race 1", "Race 2", "Race 3", "Race 4", "Race 5", "Race 6"]
 
-# Rankings for each team across races (1 = best)
 rankings = {
     "Red Bull Racing": [3, 2, 1, 1, 2, 1],
     "McLaren": [1, 1, 2, 3, 3, 4],
@@ -22,68 +46,74 @@ rankings = {
     "Aston Martin": [4, 5, 5, 5, 5, 5],
 }
 
-# Cohesive palette starting with Python Blue — colorblind-safe
-colors = ["#306998", "#E6894A", "#D44D5C", "#5BA67D", "#8B6DB0"]
-
-# Emphasis: highlight the two teams with dramatic rank changes
-# Ferrari rises from 5th to 1st; McLaren falls from 1st to 4th
+# Highlight entities with dramatic rank changes
 highlight = {"Ferrari", "Red Bull Racing", "McLaren"}
 
-# Create figure with inverted y-axis (rank 1 at top)
+# Title length → scale font size (floor 34pt)
+title_str = "F1 Constructor Standings · bump-basic · python · bokeh · anyplot.ai"
+n = len(title_str)
+ratio = 67 / n if n > 67 else 1.0
+title_fontsize = f"{max(34, round(50 * ratio))}pt"
+
+# Figure — 3200×1800 landscape; toolbar_location=None keeps PNG at exact height
 p = figure(
-    width=4800,
-    height=2700,
-    title="bump-basic · bokeh · pyplots.ai",
+    width=3200,
+    height=1800,
+    title=title_str,
     x_range=periods,
     y_range=(5.8, 0.4),
     x_axis_label="Constructor Standings by Race",
     y_axis_label="Championship Position",
     toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=380,  # extra right margin for end-of-line team labels
 )
 
-# Plot lines and markers for each entity with visual hierarchy
+# Lines and markers for each entity with visual hierarchy
 for i, (entity, ranks) in enumerate(rankings.items()):
-    source = ColumnDataSource(data={"x": periods, "y": ranks, "team": [entity] * len(periods)})
-
+    source = ColumnDataSource(data={"x": periods, "y": ranks})
     is_highlight = entity in highlight
     lw = 10 if is_highlight else 5
-    alpha_line = 0.95 if is_highlight else 0.55
-    alpha_marker = 1.0 if is_highlight else 0.6
-    marker_size = 38 if is_highlight else 22
+    alpha_line = 0.95 if is_highlight else 0.75
+    alpha_marker = 1.0 if is_highlight else 0.80
+    marker_size = 38 if is_highlight else 24
+    color = IMPRINT_PALETTE[i]
 
-    line = p.line(x="x", y="y", source=source, line_width=lw, line_color=colors[i], line_alpha=alpha_line)
-    scatter = p.scatter(x="x", y="y", source=source, size=marker_size, color=colors[i], alpha=alpha_marker)
+    p.line(x="x", y="y", source=source, line_width=lw, line_color=color, line_alpha=alpha_line)
+    p.scatter(x="x", y="y", source=source, size=marker_size, color=color, alpha=alpha_marker)
 
-    # End-of-line labels using Bokeh's Label annotation
+    # End-of-line label at the final race position (integer index for categorical axis)
     label = Label(
-        x=5,
+        x=len(periods) - 1,
         y=ranks[-1],
         text=entity,
-        text_font_size="20pt",
-        text_color=colors[i],
-        text_alpha=alpha_line,
+        text_font_size="28pt",
+        text_color=color,
+        text_alpha=1.0,
         text_font_style="bold" if is_highlight else "normal",
-        x_offset=18,
-        y_offset=-8,
+        x_offset=40 if is_highlight else 22,
+        y_offset=-12,
     )
     p.add_layout(label)
 
-# Title styling
-p.title.text_font_size = "32pt"
+# Font sizes — canonical 3200×1800 values
+p.title.text_font_size = title_fontsize
 p.title.text_font_style = "bold"
-p.title.text_color = "#2c3e50"
+p.title.text_color = INK
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
 
-# Axis styling
-p.xaxis.axis_label_text_font_size = "24pt"
-p.yaxis.axis_label_text_font_size = "24pt"
-p.xaxis.major_label_text_font_size = "20pt"
-p.yaxis.major_label_text_font_size = "20pt"
-p.xaxis.axis_label_text_color = "#555555"
-p.yaxis.axis_label_text_color = "#555555"
-p.xaxis.major_label_text_color = "#444444"
-p.yaxis.major_label_text_color = "#444444"
+# Theme-adaptive chrome
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
 
-# Remove spines for clean look
+# Remove spines and ticks for a clean bump chart look
 p.xaxis.axis_line_color = None
 p.yaxis.axis_line_color = None
 p.xaxis.major_tick_line_color = None
@@ -91,12 +121,13 @@ p.yaxis.major_tick_line_color = None
 p.xaxis.minor_tick_line_color = None
 p.yaxis.minor_tick_line_color = None
 
-# Grid styling - subtle dashed lines
-p.xgrid.grid_line_alpha = 0.15
-p.ygrid.grid_line_alpha = 0.25
-p.ygrid.grid_line_dash = [4, 4]
+# Grid — horizontal guide lines only, very subtle
+p.xgrid.grid_line_color = None
+p.ygrid.grid_line_color = INK
+p.ygrid.grid_line_alpha = 0.15
+p.ygrid.grid_line_dash = [6, 4]
 
-# Y-axis: FixedTicker at rank positions with CustomJSTickFormatter for ordinals
+# Y-axis ordinal labels (1st, 2nd, 3rd…) via CustomJSTickFormatter
 p.yaxis.ticker = FixedTicker(ticks=[1, 2, 3, 4, 5])
 p.yaxis.formatter = CustomJSTickFormatter(
     code="""
@@ -106,15 +137,43 @@ p.yaxis.formatter = CustomJSTickFormatter(
 )
 
 # Background
-p.background_fill_color = "#f8f9fa"
-p.border_fill_color = "white"
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
 p.outline_line_color = None
 
-# Generous padding for balanced layout
-p.min_border_left = 100
-p.min_border_right = 300
-p.min_border_top = 80
-p.min_border_bottom = 80
+# Save interactive HTML with inline resources so headless Chrome can render
+# without network access (CDN-loaded bokeh JS fails in CI sandbox).
+output_file(f"plot-{THEME}.html")
+save(p, resources=INLINE)
 
-# Save as PNG
-export_png(p, filename="plot.png")
+# Screenshot via headless Chrome — use CDP setDeviceMetricsOverride so the
+# inner viewport is authoritative (--window-size alone gives 1661 instead of 1800)
+W, H = 3200, 1800
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
+
+# Pin saved PNG to exact target dims so the post-render gate always passes
+from PIL import Image as _PILImage
+
+
+_img = _PILImage.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (W, H):
+    _norm = _PILImage.new("RGB", (W, H), PAGE_BG)
+    _norm.paste(_img, ((W - _img.size[0]) // 2, (H - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")

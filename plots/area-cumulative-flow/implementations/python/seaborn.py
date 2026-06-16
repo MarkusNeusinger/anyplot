@@ -20,7 +20,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 sns.set_theme(
     style="ticks",
@@ -66,7 +66,7 @@ ax.set_facecolor(PAGE_BG)
 
 stage_labels = ["Done", "Testing", "Development", "Analysis", "Backlog"]
 ax.stackplot(
-    dates, done_wip, testing_wip, dev_wip, analysis_wip, backlog_wip, labels=stage_labels, colors=OKABE_ITO, alpha=0.85
+    dates, done_wip, testing_wip, dev_wip, analysis_wip, backlog_wip, labels=stage_labels, colors=IMPRINT, alpha=0.85
 )
 
 # Style

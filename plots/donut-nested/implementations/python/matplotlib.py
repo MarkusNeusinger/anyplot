@@ -18,7 +18,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (positions 1-4 for departments)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Budget allocation: departments (inner) and expense categories (outer)
 departments = ["Engineering", "Marketing", "Operations", "Sales"]
@@ -48,11 +48,11 @@ for dept in departments:
 # Color palette - use Okabe-Ito base with varying opacity per subcategory
 dept_colors = {}
 for i, dept in enumerate(departments):
-    base_color = OKABE_ITO[i]
+    base_color = IMPRINT[i]
     num_cats = len(categories[dept])
     dept_colors[dept] = [base_color] * num_cats
 
-inner_colors = [OKABE_ITO[i] for i in range(len(departments))]
+inner_colors = [IMPRINT[i] for i in range(len(departments))]
 outer_colors = []
 for dept in departments:
     outer_colors.extend(dept_colors[dept])
@@ -102,7 +102,7 @@ legend_elements = []
 for i, dept in enumerate(departments):
     for cat in categories[dept]:
         legend_elements.append(
-            plt.Rectangle((0, 0), 1, 1, facecolor=OKABE_ITO[i], edgecolor=INK_SOFT, label=f"{dept}: {cat}")
+            plt.Rectangle((0, 0), 1, 1, facecolor=IMPRINT[i], edgecolor=INK_SOFT, label=f"{dept}: {cat}")
         )
 
 ax.legend(

@@ -53,7 +53,7 @@ review:
       Background: Near-black (#1A1A17) fills the canvas — correct dark theme surface.
       Chrome: Title in light off-white (#F0EFE8) is clearly readable against the dark background. Subtitle in muted light gray (#B8B7B0) is visible below the title. No axis labels or ticks (suppressed correctly).
       Data: Entry cells are pure white (#FFFFFF) — high contrast against the dark background, very clear. Blocked cells (#1A1A1A) nearly blend with the dark page background (#1A1A17), but the panel border in INK_SOFT frames the full grid clearly. Clue numbers in dark gray (#333333) appear on white entry cells — dark text on white cell is fully readable. Data colors are structurally identical to light render (same monochrome black/white palette); only chrome flips. No dark-on-dark text issues detected.
-      Legibility verdict: PASS — title and numbers all readable. Minor note: pure white entry cells in dark mode (#FFFFFF) could use a warm near-white to match the anyplot palette philosophy, but legibility is unaffected.
+      Legibility verdict: PASS — title and numbers all readable. Minor note: pure white entry cells in dark mode (#FFFFFF) could use a warm near-white to match the Imprint palette philosophy, but legibility is unaffected.
   criteria_checklist:
     visual_quality:
       score: 29

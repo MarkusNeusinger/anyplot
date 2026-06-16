@@ -19,9 +19,9 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Semantic direction colors — Okabe-Ito positions 2 and 3
-COLOR_POS = "#D55E00"  # vermillion: positive SHAP (pushes prediction up)
-COLOR_NEG = "#0072B2"  # blue: negative SHAP (pushes prediction down)
+# Semantic direction colors — imprint diverging anchors
+COLOR_POS = "#AE3030"  # red: positive SHAP (pushes prediction up)
+COLOR_NEG = "#4467A3"  # blue: negative SHAP (pushes prediction down)
 
 # Data — credit loan approval model, individual applicant explanation
 # Features ordered by absolute SHAP magnitude, largest first (top of chart)

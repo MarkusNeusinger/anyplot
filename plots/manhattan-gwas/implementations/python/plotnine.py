@@ -156,7 +156,7 @@ plot = (
     + geom_point(size=1.5, alpha=0.7)
     + geom_hline(yintercept=genome_wide_threshold, linetype="dashed", color="#E31A1C", size=1)
     + geom_hline(yintercept=suggestive_threshold, linetype="dotted", color="#FF7F00", size=0.8)
-    + scale_color_manual(values={"odd": "#0072B2", "even": "#D55E00"})
+    + scale_color_manual(values={"odd": "#4467A3", "even": "#C475FD"})
     + scale_x_continuous(breaks=chr_ticks, labels=chr_labels)
     + scale_y_continuous(limits=(0, max(df["neg_log_p"]) * 1.05))
     + labs(x="Chromosome", y="-log₁₀(p-value)", title="manhattan-gwas · plotnine · anyplot.ai")

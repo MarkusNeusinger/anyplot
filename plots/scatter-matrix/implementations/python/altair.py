@@ -24,7 +24,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Iris-like dataset with 4 variables and 3 species
 np.random.seed(42)
@@ -74,7 +74,7 @@ df = pd.DataFrame(data)
 variables = ["Sepal Length (cm)", "Sepal Width (cm)", "Petal Length (cm)", "Petal Width (cm)"]
 
 # Color scale using Okabe-Ito palette
-color_scale = alt.Scale(domain=["Setosa", "Versicolor", "Virginica"], range=OKABE_ITO)
+color_scale = alt.Scale(domain=["Setosa", "Versicolor", "Virginica"], range=IMPRINT)
 
 # Build scatter matrix grid with histograms on diagonal
 charts = []

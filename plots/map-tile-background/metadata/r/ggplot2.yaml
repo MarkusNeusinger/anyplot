@@ -1,0 +1,258 @@
+library: ggplot2
+language: r
+specification_id: map-tile-background
+created: '2026-05-27T15:36:15Z'
+updated: '2026-05-27T15:57:44Z'
+generated_by: claude-sonnet
+workflow_run: 26520864419
+issue: 3756
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 84
+review:
+  strengths:
+  - Theme-adaptive ocean/land colors (OCEAN_BG, LAND_FILL, LAND_BORDER) create convincing
+    geographic context per theme without external map packages
+  - Dual size+color encoding for visitor count with scale_size_continuous hidden from
+    legend — elegant ggplot2 technique
+  - Dynamic title font scaling formula prevents overflow on the long mandated title
+    format
+  - Hand-tuned nudge offsets with per-city hjust achieve clean label placement for
+    the 6 labeled cities
+  - Subtitle anchors the data story explicitly ('New York leads at 66.6M visitors/yr')
+  - Full theme-adaptive chrome with correct tokens throughout both renders — no dark-on-dark
+    failures
+  weaknesses:
+  - Smaller city markers (Sydney, Mumbai, Sao Paulo, Toronto, Cairo, Mexico City)
+    use size ~3 in ggplot2 units — slightly small for a 12-point sparse dataset; increase
+    scale_size_continuous range minimum from 3 to 4-5
+  - NYC visitor count of 66.6M is slightly high versus typical reported figures (~50-60M);
+    adjusting to ~56M would improve factual accuracy
+  - City label text size (geom_text size=2.6 mm) is at the lower end of legibility;
+    bumping to 2.8-3.0 would improve mobile readability
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Ocean panel: Light blue #D3E8F5 (OCEAN_BG token)
+      Land polygons: Beige-tan #E5DFC8 (LAND_FILL token)
+      Chrome: Title in bold dark #1A1A17; subtitle in muted gray; axis labels and tick labels in dark gray #4A4A44 — all clearly readable
+      Data: 12 city points using imprint_seq gradient (#009E73 → #4467A3); size proportional to visitor count; New York visually dominant; 6 cities labeled in bold dark text
+      Legend: "Annual Visitors (millions)" colorbar with light elevated background and border
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Ocean panel: Dark navy #1A2835 (OCEAN_BG token dark)
+      Land polygons: Dark greenish-brown #2D2D25 (LAND_FILL token dark)
+      Chrome: Title and subtitle in light cream #F0EFE8; axis labels and tick labels in light gray #B8B7B0 — all clearly readable; no dark-on-dark failures
+      Data: Identical gradient colors to light render (#009E73 → #4467A3) — only chrome flips
+      Legend: Dark elevated background #242420 with light text and visible border
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicitly set; dynamic title scaling works; city label
+          2.6mm is small but readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Hand-tuned nudge offsets prevent collisions; London/Paris close but
+          readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 12 sparse points with size range 3-10; New York clearly dominant;
+          smaller cities slightly small
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe imprint_seq endpoints; PAGE_BG stroke on circles adds separation
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Map fills landscape canvas well; legend compactly placed; no clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Longitude/Latitude descriptive; title includes descriptive prefix
+          and anyplot format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'scale_fill_gradient #009E73→#4467A3 is exactly imprint_seq; correct
+          backgrounds; theme-adaptive chrome'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured default: custom ocean/land per theme, dual
+          encoding, selective labeling, informative subtitle. Not publication-ready
+          but clear design intent.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle dotted grid at 0.12 linewidth; panel border removed; legend
+          with ELEVATED_BG fill and border; generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle explicitly states NYC leads; size encoding makes dominance
+          visually immediate; selective labeling creates hierarchy
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: Geographic map with data points; tile background replaced by polygon
+          continents (best feasible for ggplot2 without ggmap)
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Lat/lon points, color+size encoding, labels all present; tile providers/attribution
+          infeasible in ggplot2
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Longitude→x, Latitude→y; all 12 cities plotted; full extent covered
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows {Descriptive Title}·{spec-id}·r·ggplot2·anyplot.ai
+          format; legend label appropriate
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Wide value range 3M-66.6M; multiple continents; dual encoding; selective
+          annotation
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real international tourism data; real city names and coordinates;
+          neutral topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: NYC 66.6M slightly high (typical ~50-60M); London 19.1M slightly
+          low; relative proportions broadly correct
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean flat structure: tokens → data → plot → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present; data essentially deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured; hand-tuned nudges appropriate for geographic label
+          placement
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: sprintf plot-%s.png correct; ragg::agg_png used; modern linewidth=
+          API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Multiple geom layers, coord_cartesian, dual scale encoding, theme_minimal
+          + custom theme overlay — idiomatic ggplot2
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Multi-geom layering (polygon+point+text) and hidden scale (guide=none)
+          leverage ggplot2's grammar distinctively
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - ragg
+  techniques:
+  - annotations
+  - colorbar
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - custom-colormap
+  - edge-highlighting
+  - grid-styling

@@ -1,20 +1,23 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Skeleton from '@mui/material/Skeleton';
-import Fab from '@mui/material/Fab';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { API_URL, GITHUB_URL } from '../constants';
-import { buildSrcSet, getFallbackSrc, SPECS_SIZES } from '../utils/responsiveImage';
-import { useAnalytics } from '../hooks';
-import { useAppData, useHomeState } from '../hooks';
-import { specPath } from '../utils/paths';
-import type { PlotImage } from '../types';
-import { SectionHeader } from '../components/SectionHeader';
-import { typography, colors, fontSize, semanticColors } from '../theme';
+import { Helmet } from 'react-helmet-async';
+import { Link } from 'react-router-dom';
+
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import Box from '@mui/material/Box';
+import Fab from '@mui/material/Fab';
+import Skeleton from '@mui/material/Skeleton';
+import Typography from '@mui/material/Typography';
+
+import { SectionHeader } from 'src/components/SectionHeader';
+import { GITHUB_URL } from 'src/constants';
+import { useAnalytics } from 'src/hooks';
+import { useAppData, useHomeState } from 'src/hooks';
+import { ApiError, apiGet, endpoints } from 'src/lib/api';
+import { paths, specPath } from 'src/routes/paths';
+import { colors, fontSize, semanticColors, typography } from 'src/theme';
+import type { PlotImage } from 'src/types';
+import { buildSrcSet, getFallbackSrc, SPECS_SIZES } from 'src/utils/responsiveImage';
 
 interface SpecListItem {
   id: string;
@@ -25,7 +28,7 @@ interface SpecListItem {
 
 function initRotationIndices(specs: SpecListItem[]): Record<string, number> {
   const init: Record<string, number> = {};
-  specs.forEach((spec) => {
+  specs.forEach(spec => {
     init[spec.id] = Math.floor(Math.random() * spec.images.length);
   });
   return init;
@@ -38,7 +41,7 @@ export function SpecsListPage() {
 
   // Track specs page view
   useEffect(() => {
-    trackPageview('/specs');
+    trackPageview(paths.specs);
   }, [trackPageview]);
 
   const [allImages, setAllImages] = useState<PlotImage[]>([]);
@@ -53,17 +56,18 @@ export function SpecsListPage() {
 
     const fetchImages = async () => {
       try {
-        const res = await fetch(`${API_URL}/plots/filter`, {
+        const data = await apiGet<{ images?: PlotImage[] }>(endpoints.plotsFilter(), {
           signal: abortController.signal,
         });
         if (abortController.signal.aborted) return;
-        if (res.ok) {
-          const data = await res.json();
-          setAllImages(data.images || []);
-        }
+        setAllImages(data.images || []);
       } catch (err) {
         if (abortController.signal.aborted) return;
-        console.error('Error fetching images:', err);
+        // Non-2xx responses were silently ignored before the apiGet migration;
+        // keep logging only for network-level failures.
+        if (!(err instanceof ApiError)) {
+          console.error('Error fetching images:', err);
+        }
       } finally {
         if (!abortController.signal.aborted) {
           setLoading(false);
@@ -89,8 +93,8 @@ export function SpecsListPage() {
 
     // Merge with spec metadata and sort images by library name
     const specs: SpecListItem[] = specsData
-      .filter((spec) => imagesBySpec[spec.id])
-      .map((spec) => ({
+      .filter(spec => imagesBySpec[spec.id])
+      .map(spec => ({
         id: spec.id,
         title: spec.title,
         description: spec.description,
@@ -122,7 +126,7 @@ export function SpecsListPage() {
   // Handle image click - rotate to next implementation
   const handleImageClick = useCallback(
     (specId: string, totalImages: number) => {
-      setRotationIndex((prev) => ({
+      setRotationIndex(prev => ({
         ...prev,
         [specId]: ((prev[specId] || 0) + 1) % totalImages,
       }));
@@ -135,9 +139,14 @@ export function SpecsListPage() {
     return (
       <Box sx={{ py: 4 }}>
         <Skeleton variant="text" width={200} height={40} sx={{ mb: 4 }} />
-        {[1, 2, 3, 4, 5].map((i) => (
+        {[1, 2, 3, 4, 5].map(i => (
           <Box key={i} sx={{ display: 'flex', gap: 3, mb: 3 }}>
-            <Skeleton variant="rectangular" width={280} height={158} sx={{ borderRadius: 1, flexShrink: 0 }} />
+            <Skeleton
+              variant="rectangular"
+              width={280}
+              height={158}
+              sx={{ borderRadius: 1, flexShrink: 0 }}
+            />
             <Box sx={{ flex: 1 }}>
               <Skeleton variant="text" width="60%" height={28} />
               <Skeleton variant="text" width="100%" height={20} />
@@ -153,17 +162,34 @@ export function SpecsListPage() {
     <>
       <Helmet>
         <title>specs | anyplot.ai</title>
-        <meta name="description" content="Browse all Python plotting specifications alphabetically" />
+        <meta
+          name="description"
+          content="Browse all Python plotting specifications alphabetically"
+        />
         <meta property="og:title" content="specs | anyplot.ai" />
-        <meta property="og:description" content="Browse all Python plotting specifications alphabetically" />
+        <meta
+          property="og:description"
+          content="Browse all Python plotting specifications alphabetically"
+        />
         <link rel="canonical" href="https://anyplot.ai/specs" />
       </Helmet>
 
       <Box sx={{ pt: { xs: 2, md: 3 }, pb: 4 }}>
         <SectionHeader prompt="❯" title={<em>specs</em>} />
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 4, flexWrap: 'wrap', gap: 2 }}>
-          <Typography sx={{ fontFamily: typography.mono, fontSize: fontSize.sm, color: 'var(--ink-muted)' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'baseline',
+            mb: 4,
+            flexWrap: 'wrap',
+            gap: 2,
+          }}
+        >
+          <Typography
+            sx={{ fontFamily: typography.mono, fontSize: fontSize.sm, color: 'var(--ink-muted)' }}
+          >
             {specList.length} specifications
           </Typography>
 
@@ -187,7 +213,7 @@ export function SpecsListPage() {
 
         {/* Spec List */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {specList.map((spec) => {
+          {specList.map(spec => {
             const currentIndex = rotationIndex[spec.id] || 0;
             const currentImage = spec.images[currentIndex];
 
@@ -231,10 +257,7 @@ export function SpecsListPage() {
                   }}
                 >
                   {currentImage && (
-                    <Box
-                      component="picture"
-                      sx={{ display: 'contents' }}
-                    >
+                    <Box component="picture" sx={{ display: 'contents' }}>
                       <source
                         type="image/webp"
                         srcSet={buildSrcSet(currentImage.url, 'webp')}
@@ -260,7 +283,10 @@ export function SpecsListPage() {
                           const target = e.target as HTMLImageElement;
                           if (!target.dataset.fallback) {
                             target.dataset.fallback = '1';
-                            target.closest('picture')?.querySelectorAll('source').forEach(s => s.remove());
+                            target
+                              .closest('picture')
+                              ?.querySelectorAll('source')
+                              .forEach(s => s.remove());
                             target.removeAttribute('srcset');
                             target.src = currentImage.url;
                           }
@@ -342,11 +368,11 @@ export function SpecsListPage() {
                   </Typography>
                   {spec.description && (
                     <Typography
-                      onClick={(e) => {
+                      onClick={e => {
                         if (!expandedDescs[spec.id]) {
                           e.preventDefault();
                           e.stopPropagation();
-                          setExpandedDescs((prev) => ({ ...prev, [spec.id]: true }));
+                          setExpandedDescs(prev => ({ ...prev, [spec.id]: true }));
                         }
                       }}
                       sx={{

@@ -16,7 +16,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID_COLOR = "#C8C6BC" if THEME == "light" else "#2E2E2A"
 
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
 
 # Temporarily remove current directory from path to avoid name collision with pygal module
 _cwd = sys.path[0] if sys.path[0] else "."
@@ -228,7 +228,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=60,
     legend_font_size=48,
     label_font_size=42,

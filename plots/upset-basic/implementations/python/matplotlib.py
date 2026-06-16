@@ -25,7 +25,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 BRAND = "#009E73"
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data: bug reports spanning software system modules
 np.random.seed(42)
@@ -71,7 +71,7 @@ ax_matrix = fig.add_subplot(gs[1, 1])
 ax_sets = fig.add_subplot(gs[1, 0])
 
 # ── Intersection bars (top right) ──────────────────────────────────────────────
-bar_colors = [OKABE_ITO[min(d - 1, len(OKABE_ITO) - 1)] for d in degrees]
+bar_colors = [IMPRINT[min(d - 1, len(IMPRINT) - 1)] for d in degrees]
 ax_bars.bar(range(n_ints), int_counts, color=bar_colors, width=0.65, zorder=2)
 for i, (cnt, _col) in enumerate(zip(int_counts, bar_colors, strict=False)):
     ax_bars.text(
@@ -99,7 +99,7 @@ ax_bars.spines["bottom"].set_visible(False)
 ax_bars.spines["left"].set_color(INK_SOFT)
 
 # Degree legend inside intersection bars area
-patches = [mpatches.Patch(color=OKABE_ITO[min(d - 1, 5)], label=f"Degree {d}") for d in sorted(set(degrees))]
+patches = [mpatches.Patch(color=IMPRINT[min(d - 1, 5)], label=f"Degree {d}") for d in sorted(set(degrees))]
 leg = ax_bars.legend(
     handles=patches,
     fontsize=13,
@@ -136,7 +136,7 @@ for col_j, sig in enumerate(int_sigs):
 
 # Active dots + connecting lines
 for col_j, (sig, deg) in enumerate(zip(int_sigs, degrees, strict=False)):
-    color = OKABE_ITO[min(deg - 1, len(OKABE_ITO) - 1)]
+    color = IMPRINT[min(deg - 1, len(IMPRINT) - 1)]
     active_rows = [i for i, v in enumerate(sig) if v]
     if len(active_rows) > 1:
         ax_matrix.plot(

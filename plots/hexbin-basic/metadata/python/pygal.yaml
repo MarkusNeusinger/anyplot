@@ -1,19 +1,266 @@
 library: pygal
+language: python
 specification_id: hexbin-basic
 created: 2025-12-14 19:48:53+00:00
-updated: '2026-02-21T21:45:40Z'
-generated_by: claude-opus-4-6
-workflow_run: 20213177474
+updated: '2026-05-29T09:53:28Z'
+generated_by: claude-sonnet
+workflow_run: 26629245368
 issue: 859
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/pygal/plot.html
-quality_score: 82
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/pygal/plot-dark.html
+quality_score: 85
+review:
+  strengths:
+  - Creative SVG post-processing converts pygal circles to genuine hexagonal polygons,
+    implementing hexbin where the library has no native support
+  - Custom clip-path injection prevents hexagon bleed beyond the data area — a technically
+    non-trivial SVG manipulation
+  - Log-spaced density thresholds with 6 named tiers (Sparse→Hotspot) accurately reveal
+    density variation and guide the viewer
+  - 'Imprint sequential colormap correctly applied: brand green #009E73 → Imprint
+    blue #4467A3 per the imprint_seq definition'
+  - 'Correct theme-adaptive chrome in both renders: #FAF8F1 light / #1A1A17 dark backgrounds
+    with proper INK/INK_MUTED text tokens'
+  - Realistic urban air quality sensor dataset with three distinct pollution hotspots
+    creates a compelling narrative context
+  - Legend organized in 3 columns with count ranges (e.g. 'Sparse (1–2)') functions
+    as an effective categorical colorbar substitute for pygal
+  weaknesses:
+  - 'SC-02: No continuous colorbar — spec explicitly requests one; pygal lacks native
+    colorbar support so the implementation substitutes a categorical legend with count
+    ranges, which is adequate but less precise than a true gradient scale'
+  - 'CQ-01: Complex import workaround using importlib.util at the top adds ~12 lines
+    of boilerplate to resolve the self-naming conflict (file is named pygal.py); the
+    workaround is necessary but increases apparent code complexity'
+  - 'DE-01: The three pollution hotspot clusters (urban core, industrial zone, highway)
+    are visible through density alone but no annotations or callouts name them, missing
+    an opportunity to strengthen data storytelling'
+  - X-axis tick labels render as plain integers ('-4', '-3', '1', '3', '5') while
+    Y-axis tick labels include units ('4.0 km', '2.0 km'); minor unit-formatting inconsistency
+    between axes
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — clearly not pure white, correct Imprint surface
+      Chrome: Title "hexbin-basic · python · pygal · anyplot.ai" in dark ink, readable. Y-axis label "Sensor Grid Y (km)" and X-axis label "Sensor Grid X (km)" in dark ink. Y-axis tick labels show "4.0 km", "2.0 km", "1.0 km", "0.0 km", "-1.0 km", "-2.0 km" in dark ink. X-axis tick labels show plain integers "-4", "-3", "-1", "1", "3", "5" (no km suffix — minor inconsistency vs Y-axis). Legend at bottom in 3 columns with 6 density tier labels.
+      Data: Hexagonal polygons fill the plot area with clear color gradient from brand green #009E73 (Sparse tier) through intermediate green-blue intermediates to Imprint blue #4467A3 (Dense/Hotspot tiers). Three visible density concentrations: upper-center cluster (urban core), lower-left cluster (industrial), and right-side sparse column (highway). Hexagons are well-sized and cleanly tessellated with slight gaps between them.
+      Legibility verdict: PASS — all text readable against the warm off-white background; no light-on-light issues detected.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — clearly not pure black, correct Imprint dark surface
+      Chrome: Title and axis labels rendered in light cream ink (#F0EFE8), clearly readable against the dark background. Tick labels in light muted tone, readable. Legend labels in light text, readable. No dark-on-dark failure detected.
+      Data: Hexagonal polygon colors are identical to the light render — brand green #009E73 through blue #4467A3 gradient — confirming only chrome (background, text) flipped while data colors remain constant across themes.
+      Legibility verdict: PASS — all text readable against the warm near-black background; brand green #009E73 remains clearly visible; no dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Font sizes explicitly set (title=66, label=56, major_label=44, legend=44).
+          All text readable in both themes. Minor: X-axis tick labels lack ''km''
+          unit while Y-axis has it — unit inconsistency, not a legibility failure.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data overlap detected in either render.
+          Hexagons tesselate cleanly.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Hexagonal bins clearly visible at all 6 density levels. Colors distinguishable
+          across the green-to-blue gradient. Hexagon size appropriate for data density.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint sequential green→blue is CVD-safe per the palette design.
+          Density communicated by both hue and darkness.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200×1800). Good margins. Legend at bottom does
+          not crowd the plot. Clip-path prevents hexagon overflow. No element clipping
+          at canvas edge.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Title is correct mandated format. X: ''Sensor Grid X (km)'', Y:
+          ''Sensor Grid Y (km)'' — both descriptive with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint sequential colormap (#009E73 → #4467A3) correctly applied
+          for continuous density data. Backgrounds #FAF8F1 light / #1A1A17 dark. Data
+          colors identical across both renders.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default (4): custom sequential Imprint colormap, SVG post-processing
+          for hex shapes, log-spaced density tiers with named labels, clip-path boundaries.
+          Missing: no callout annotations naming the hotspot clusters.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Above default (2): no grid lines (appropriate for hexbin density),
+          clip-path for clean data boundary, subtle frame overlay, 3-column legend.
+          Hexagon opacity 0.95 provides slight depth.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Above default (2): three distinct density hotspots visible, log-spaced
+          scale reveals density variation effectively, ''Sparse→Hotspot'' tier names
+          guide the reader. Percentile-trimmed axes remove outlier distortion.'
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Hexagonal binning plot correctly implemented via SVG post-processing
+          of pygal XY scatter.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Colorbar requested but replaced with categorical legend (pygal limitation
+          — no native colorbar). Log-scale density thresholds implemented. GRIDSIZE=20
+          controls bin resolution. Missing 1 pt for absent continuous colorbar.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y sensor coordinates correctly mapped. 4,450-point dataset shows
+          density variation across the plot area.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''hexbin-basic · python · pygal · anyplot.ai'' — correct.
+          Legend labels are descriptive with count ranges.'
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Shows density aggregation, log-spaced color tiers, hexagonal tessellation,
+          multiple cluster densities. Minor: true continuous colorbar not present.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Urban air quality sensor network with three pollution hotspots (urban
+          core, industrial zone, highway) — realistic and politically neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 4,450 points across three Gaussian clusters — appropriate scale for
+          hexbin demonstration. Grid coordinates in km are sensible for urban sensor
+          data.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Linear code structure overall, but 12-line importlib.util workaround
+          at top adds boilerplate complexity. _circle_to_hex helper function is justified
+          but counts against pure KISS.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: importlib.util, math, os, re, sys (all for pygal
+          workaround/SVG processing), cairosvg, numpy.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: SVG post-processing approach is creative and technically sound. No
+          fake interactivity. Clip-path injection is elegant.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct output filenames.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: pygal.XY() is appropriate for coordinate-based data. Style object
+          used correctly for theme tokens. Chart configuration uses pygal's native
+          API idiomatically.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: SVG post-processing for hexagonal shapes, custom clip-path injection,
+          HTML interactive output — all leverage pygal's SVG-native architecture distinctively.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
+  - html-export
   - custom-legend
   patterns:
   - data-generation
@@ -22,219 +269,3 @@ impl_tags:
   - binning
   styling:
   - alpha-blending
-review:
-  strengths:
-  - Hexagonal markers successfully rendered via SVG post-processing — creative solution
-    to pygal lack of native hexbin support
-  - Excellent data storytelling with three distinct density clusters and realistic
-    urban air quality scenario
-  - Viridis-derived palette with dual size+color encoding creates strong visual hierarchy
-  - Perfect data quality — compelling, neutral, realistic context with appropriate
-    scales
-  - Clean grid removal and subtle off-white plot background give polished appearance
-  weaknesses:
-  - SVG regex post-processing for hexagon conversion is fragile and adds code complexity
-  - Hexagons do not tessellate (they vary in size), making this more of a hexagon-shaped
-    bubble chart than a true tessellating hexbin grid
-  - No continuous colorbar — discrete legend is the pygal alternative
-  - Heavy reliance on manual numpy computation for hex binning rather than leveraging
-    library features
-  improvements: []
-  verdict: APPROVED
-  image_description: 'The plot displays a hexagonal binning density visualization
-    titled "hexbin-basic · pygal · pyplots.ai" on a white background with a light
-    beige (#f7f7f2) plot area. The X-axis is labeled "Sensor Grid X (km)" spanning
-    roughly -4.5 to 5.5, and the Y-axis is labeled "Sensor Grid Y (km)" spanning roughly
-    -2.5 to 4.5. Hexagonal polygon markers (converted from circles via SVG post-processing)
-    are distributed across the plot area, varying in both size and color following
-    a viridis-derived 6-color palette (dark purple → dark blue → blue → teal → green
-    → yellow). Three distinct density clusters are visible: a dense downtown core
-    with large yellow "Hotspot" hexagons around x=1, y=3; a moderate industrial zone
-    with green/teal markers around x=-3, y=-1; and a highway corridor with teal/green
-    markers around x=5. Tiny dark purple dots represent sparse background readings.
-    The legend at bottom shows 6 categories in a single row: Sparse (1–2), Low (2–7),
-    Medium (7–21), Moderate (21–59), Dense (59–163), Hotspot (163–454). Grid lines
-    are completely removed, giving a clean appearance. All text is clearly legible.'
-  criteria_checklist:
-    visual_quality:
-      score: 26
-      max: 30
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 7
-        max: 8
-        passed: true
-        comment: All font sizes explicitly set (title=54, label=40, major_label=34,
-          legend=30). All text readable. Legend text slightly small but legible.
-      - id: VQ-02
-        name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: No text overlap. Some large hexagonal markers touch at edges in dense
-          areas, expected for density visualization.
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
-        max: 6
-        passed: true
-        comment: Variable hexagon sizes (8-62) create clear density hierarchy. Smallest
-          sparse markers are tiny but visible.
-      - id: VQ-04
-        name: Color Accessibility
-        score: 4
-        max: 4
-        passed: true
-        comment: Viridis-derived palette is perceptually uniform and colorblind-safe.
-          Excellent contrast between density levels.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Plot fills ~55-60% of canvas with balanced margins. Some wasted space
-          in corners where data is sparse.
-      - id: VQ-06
-        name: Axis Labels & Title
-        score: 2
-        max: 2
-        passed: true
-        comment: Both axes labeled with units (km). Title follows correct format.
-    design_excellence:
-      score: 14
-      max: 20
-      items:
-      - id: DE-01
-        name: Aesthetic Sophistication
-        score: 6
-        max: 8
-        passed: true
-        comment: Custom viridis palette, hexagonal markers via SVG post-processing,
-          dual size+color encoding, off-white plot background, consistent sans-serif
-          typography.
-      - id: DE-02
-        name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: Grid completely removed, subtle off-white plot background, minor
-          labels hidden, clean appearance.
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
-        max: 6
-        passed: true
-        comment: Three distinct air quality clusters tell a clear story. Size+color
-          dual encoding creates immediate focal points.
-    spec_compliance:
-      score: 13
-      max: 15
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 4
-        max: 5
-        passed: true
-        comment: Hexagonal binning correctly implemented. Markers are hexagonal via
-          SVG post-processing. Hexagons vary in size rather than tessellating.
-      - id: SC-02
-        name: Required Features
-        score: 3
-        max: 4
-        passed: true
-        comment: Missing continuous colorbar (uses discrete 6-level legend instead).
-          Viridis palette, gridsize, and log-spaced thresholds present.
-      - id: SC-03
-        name: Data Mapping
-        score: 3
-        max: 3
-        passed: true
-        comment: X/Y correctly mapped. Hex binning correctly assigns points to cells.
-          Axis range via percentiles shows all data.
-      - id: SC-04
-        name: Title & Legend
-        score: 3
-        max: 3
-        passed: true
-        comment: Title format correct. Legend has 6 descriptive density categories
-          with count ranges.
-    data_quality:
-      score: 15
-      max: 15
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 6
-        max: 6
-        passed: true
-        comment: 'Full range: high-density hotspots, medium density industrial zone,
-          elongated highway corridor, sparse background. Multiple cluster shapes.'
-      - id: DQ-02
-        name: Realistic Context
-        score: 5
-        max: 5
-        passed: true
-        comment: Air quality sensor network with three pollution hotspots. Realistic,
-          neutral urban analytics scenario.
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 4
-        passed: true
-        comment: Coordinates in km, ~4450 sensor readings, plausible cluster densities
-          for metropolitan network.
-    code_quality:
-      score: 8
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Mostly linear flow. Contains one helper function (_circle_to_hex)
-          for SVG transformation, necessary for hexagonal markers.
-      - id: CQ-02
-        name: Reproducibility
-        score: 2
-        max: 2
-        passed: true
-        comment: np.random.seed(42) set at top.
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: math, re, cairosvg, numpy, pygal, Style — all used, no extras.
-      - id: CQ-04
-        name: Code Elegance
-        score: 1
-        max: 2
-        passed: true
-        comment: Hex binning algorithm is clean but SVG regex post-processing is fragile.
-          Functional but not elegant.
-      - id: CQ-05
-        name: Output & API
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves plot.svg and plot.png via current pygal API + cairosvg.
-    library_mastery:
-      score: 6
-      max: 10
-      items:
-      - id: LM-01
-        name: Idiomatic Usage
-        score: 3
-        max: 5
-        passed: true
-        comment: 'Good pygal usage: XY chart, custom Style, per-series dots_size,
-          legend configuration. Bulk of logic is manual numpy hex binning.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Creative exploitation of pygal SVG-native output for circle-to-hexagon
-          conversion. Per-series dots_size for visual hierarchy.

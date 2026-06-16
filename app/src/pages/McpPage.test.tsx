@@ -1,12 +1,13 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '../test-utils';
-import { McpPage } from './McpPage';
+import { describe, expect, it, vi } from 'vitest';
+
+import { McpPage } from 'src/pages/McpPage';
+import { render, screen } from 'src/test-utils';
 
 vi.mock('react-helmet-async', () => ({
   Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-vi.mock('../hooks', () => ({
+vi.mock('src/hooks', () => ({
   useAnalytics: () => ({
     trackPageview: vi.fn(),
     trackEvent: vi.fn(),
@@ -18,7 +19,7 @@ describe('McpPage', () => {
     render(<McpPage />);
 
     const headings = screen.getAllByRole('heading');
-    const headingTexts = headings.map((h) => h.textContent);
+    const headingTexts = headings.map(h => h.textContent);
 
     expect(headingTexts).toContain('what is mcp');
     expect(headingTexts).toContain('configuration');
@@ -37,15 +38,20 @@ describe('McpPage', () => {
   it('renders the Claude Code configuration command', () => {
     render(<McpPage />);
 
-    expect(
-      screen.getByText(/claude mcp add anyplot/)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/claude mcp add anyplot/)).toBeInTheDocument();
   });
 
   it('renders all MCP tool names in the tools table', () => {
     render(<McpPage />);
 
-    const toolNames = ['list_specs', 'search_specs_by_tags', 'get_spec_detail', 'get_implementation', 'list_libraries', 'get_tag_values'];
+    const toolNames = [
+      'list_specs',
+      'search_specs_by_tags',
+      'get_spec_detail',
+      'get_implementation',
+      'list_libraries',
+      'get_tag_values',
+    ];
     for (const tool of toolNames) {
       expect(screen.getByText(tool)).toBeInTheDocument();
     }
@@ -65,5 +71,4 @@ describe('McpPage', () => {
     const mcpLink = screen.getByRole('link', { name: /Model Context Protocol/ });
     expect(mcpLink).toHaveAttribute('href', 'https://modelcontextprotocol.io');
   });
-
 });

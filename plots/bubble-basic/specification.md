@@ -16,8 +16,9 @@ A bubble chart extending scatter plots by adding a third dimension through bubbl
 - `x` (numeric) - Horizontal position variable
 - `y` (numeric) - Vertical position variable
 - `size` (numeric) - Bubble size variable (third dimension)
-- Size: 10-100 points recommended for clear visualization
-- Example: Synthetic data representing three correlated variables
+- Size: 50-500 data points recommended for clear visualization
+- Size range: 10–100 recommended for the bubble size column values
+- Example: Company financial metrics (revenue vs. growth rate with market share as bubble size)
 
 ## Notes
 

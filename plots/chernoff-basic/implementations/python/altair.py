@@ -20,7 +20,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette for species
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Iris dataset features for 12 representative flowers
 np.random.seed(42)
@@ -50,7 +50,7 @@ data = pd.DataFrame(
 )
 
 # Map species to Okabe-Ito colors
-species_colors = {"setosa": OKABE_ITO[0], "versicolor": OKABE_ITO[1], "virginica": OKABE_ITO[2]}
+species_colors = {"setosa": IMPRINT[0], "versicolor": IMPRINT[1], "virginica": IMPRINT[2]}
 data["color"] = data["species"].map(species_colors)
 
 # Create descriptive labels including species name
@@ -251,7 +251,7 @@ for _, r in data.iterrows():
         }
     )
     # Mouth - using horizontal ellipse shape for better representation
-    mouth_color = OKABE_ITO[1] if THEME == "light" else OKABE_ITO[4]
+    mouth_color = IMPRINT[1] if THEME == "light" else IMPRINT[4]
     mouth_y = yc - fh * 0.30
     for dx in np.linspace(-mw * 0.4, mw * 0.4, 7):
         # Parabolic curve for mouth (smiling effect based on width)
@@ -307,7 +307,7 @@ legend_data = pd.DataFrame(
         "species": ["setosa", "versicolor", "virginica"],
         "x": [850, 850, 850],
         "y": [780, 730, 680],
-        "color": [OKABE_ITO[0], OKABE_ITO[1], OKABE_ITO[2]],
+        "color": [IMPRINT[0], IMPRINT[1], IMPRINT[2]],
     }
 )
 

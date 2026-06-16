@@ -1,0 +1,282 @@
+library: ggplot2
+language: r
+specification_id: flamegraph-basic
+created: '2026-06-08T20:46:27Z'
+updated: '2026-06-08T21:02:25Z'
+generated_by: claude-opus
+workflow_run: 27165507233
+issue: 4665
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - 'Full hierarchical flame-graph layout derived from leaf stacks: prefix expansion
+    + per-depth cumulative x-positioning with alphabetical sibling ordering — exactly
+    the standard flame-graph convention'
+  - Conditional in-bar labels with ellipsis truncation when bars are narrow and complete
+    suppression for very thin bars — prevents the most common flame-graph overlap
+    failure
+  - Per-bar luminance-aware label ink (WCAG relative-luminance threshold on the interpolated
+    gradient) — depth-1/2 dark-red rows get light text, ochre/amber tip rows keep
+    dark text, so every label keeps AA-level contrast on both themes
+  - Warm flame palette correctly sourced as the Imprint semantic exception (matte
+    red → ochre → amber) — convention preserved while staying inside the palette spec
+  - Realistic, neutral CPU-profile of a model-training script (parse_config → load_dataset
+    → train_model → evaluate → render_report) with plausible sample counts (4–152)
+    showing the canonical hot-path pattern
+  - Theme tokens flipped through every chrome element on both renders; data colors
+    are pixel-identical between light and dark
+  weaknesses:
+  - 'DE-02: a thin axis line is still drawn on the left and bottom of the panel; pure
+    flame graphs read cleaner with no panel border at all — consider element_blank()
+    for axis.line.x/y and rely on the panel background contrast'
+  - 'DE-03: the depth-based gradient is the only storytelling cue; consider highlighting
+    the dominant hot path (main → train_model → forward_pass/backward_pass → matmul
+    → simd_kernel) via a thin accent stroke or a slight saturation boost so the eye
+    lands on the bottleneck immediately'
+  - 'CQ-01: defines an `expand_stack()` helper function — KISS prefers fully inline
+    code. Could be folded into a single `do.call(rbind, Map(...))` using an anonymous
+    function or a tidyr::separate_rows pipeline, eliminating the named helper'
+  - 'LM-02: the layout math is hand-rolled in a `for` loop rather than expressed via
+    dplyr group_by + cumulative arithmetic — a more idiomatic tidyverse expression
+    (e.g. group_by(depth, parent) %>% mutate(xmin = lag(cumsum(value), default = 0)
+    + parent_offset)) would showcase ggplot2''s grammar-of-graphics ecosystem better'
+  - 'VQ-01 (minor): inside-bar labels at geom_text size = 3.0 mm (~8.5 pt) read fine
+    at full size but get tight in the 400 px mobile preview — labels on the narrowest
+    5-char bars approach unreadability when shrunk'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white at #FAF8F1 with a slightly elevated panel at #FFFDF6 — matches the Imprint light spec.
+      Chrome: title "flamegraph-basic · r · ggplot2 · anyplot.ai" sits top-left in dark ink and is fully visible; "Call stack depth" y-axis label and "Samples (CPU time)" x-axis label both clearly readable in dark ink; tick labels (0, 200, 400, 600 on x; 1–5 on y) render in soft gray (#4A4A44) and are crisp; a thin INK_SOFT axis line is visible at the panel edges.
+      Data: five-level flame graph with the conventional warm gradient — depth 1 ("main") in matte red #AE3030, depth 2 (evaluate / load_dataset / parse_config / train_model) in a red-orange interpolation, depth 3 in ochre #BD8233, depth 4 in pale ochre, depth 5 (leaves: simd_kernel, syscall_read, cast_types, etc.) in amber #DDCC77. Function names sit centered in each bar where there's room; narrow bars are truncated to e.g. "sysca…", "cas…", "for…", "ste…"; sliver bars are unlabeled. The luminance-aware ink picker correctly switches: depth-1/2 dark-red rows carry LIGHT labels (#F0EFE8), depth-3+ ochre/amber rows carry DARK labels (#1A1A17). All text passes "no light-on-light" check.
+      Legibility verdict: PASS — every chrome element and every in-bar label is readable; no clipping at canvas edges.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black at #1A1A17 with elevated panel at #242420 — matches the Imprint dark spec.
+      Chrome: title rendered in light ink #F0EFE8 and is fully visible against the near-black surface; both axis titles and tick labels render in light-gray INK_SOFT (#B8B7B0) and remain crisp; no "dark-on-dark" failure anywhere — every chrome element passes the explicit theme-readability check.
+      Data: data colors are pixel-identical to the light render (matte red → ochre → amber gradient driven by depth), confirming the implementation flips only chrome tokens. Per-bar inline labels still adapt via the luminance threshold: depth-1/2 carry LIGHT text on dark-red bars, depth-3+ carry DARK text on ochre/amber bars — contrast holds on both rows because the label-ink picker keys off the FILL luminance, not the page background.
+      Legibility verdict: PASS — chrome, labels, and ticks are all clearly readable; no clipping; brand-warm palette renders well on the warm near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title 12pt, axis titles 10pt, ticks 8pt, in-bar labels ~8.5pt with
+          ellipsis truncation. All readable at full size in both themes; tightest
+          5-char bars get tight in the 400px preview.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Conditional truncation + drop-when-too-narrow logic prevents any
+          label collisions or overlap with neighbouring bars.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All bars visible with ELEVATED_BG strokes separating siblings; gradient
+          ensures depth contrast; even sliver bars are visually distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: WCAG luminance-driven label inking; warm palette monotonic in lightness
+          so depth ordering is CVD-safe; no red-green encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Landscape 3200x1800 (canvas gate file absent, so dims passed). Title
+          spans ~45% of plot width — comfortable. No overflow, no clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X = 'Samples (CPU time)', Y = 'Call stack depth' — both descriptive
+          with units; title in mandated format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Warm flame palette sourced as Imprint semantic exception (FLAME_BASE=#AE3030
+          pos5, FLAME_MID=#BD8233 pos4, FLAME_TIP=#DDCC77 amber anchor) — convention
+          preserved while inside palette spec. Backgrounds correct on both themes.
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Luminance-aware label ink and warm gradient are tasteful touches
+          above the default — but overall chrome is fairly standard ggplot2 minimal.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Grid removed, generous whitespace, ELEVATED_BG bar strokes — but
+          a thin axis line is still drawn at panel edges; pure flame graphs read cleaner
+          with no panel border.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Depth-based gradient creates ordinal hierarchy; could go further
+          by accenting the dominant matmul/simd_kernel hot path so the bottleneck
+          pops.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct flame graph — hierarchical horizontal bars stacked by depth,
+          width = sample count.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Hierarchical bars, width-proportional, warm palette, alphabetical
+          x ordering, conditional in-bar labels with truncation, minimal gaps between
+          siblings — all spec items present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = aggregated samples (CPU time), Y = depth 1–5; all 26 leaf stacks
+          and their parent aggregates are rendered.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is exactly 'flamegraph-basic · r · ggplot2 · anyplot.ai'. Legend
+          correctly hidden — depth is already encoded on Y; a separate depth colorbar
+          would be redundant.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 27 leaf stacks across 5 depth levels covering the full call-tree
+          pattern (root → mid → leaves), including both wide and narrow bars.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: CPU profile of a model-training script (parse_config, load_dataset,
+          train_model with forward/backward pass, evaluate, render_report) — entirely
+          neutral and immediately recognisable to anyone who has flame-graphed an
+          ML pipeline.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sample counts 4–152 are plausible for a profiler sampling at ~100
+          Hz over a short trace; matmul hot path correctly dominates.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: One helper function `expand_stack()` — could be inlined as an anonymous
+          Map() callback or replaced with tidyr::separate_rows for a stricter no-function
+          structure.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42); data is hard-coded via tribble so output is fully deterministic
+          regardless.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, tidyr, ragg — all used. scales::label_comma is referenced
+          via namespace, no extra import needed.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the non-trivial flame-graph layout; the
+          luminance-based label picker is a tasteful inline expression. No fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as `plot-{THEME}.png` via ragg::agg_png at 8x4.5in @ 400dpi
+          → 3200x1800; no bare `plot.png`.
+    library_features:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses geom_rect with xmin/xmax/ymin/ymax aesthetics (correct ggplot2
+          way to draw arbitrary rectangles), scale_fill_gradientn for continuous depth
+          coloring, scale_color_identity for per-bar label inking, theme_minimal +
+          override pattern.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Good use of identity scale + per-row computed aesthetic (label_color),
+          but the x-position layout is a hand-rolled `for` loop rather than expressed
+          through dplyr group_by + cumsum — the latter would showcase the tidyverse
+          pipeline more.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - gradient-fill
+  - minimal-chrome
+  - edge-highlighting

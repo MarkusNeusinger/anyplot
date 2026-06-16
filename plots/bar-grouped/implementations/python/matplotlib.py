@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette (position 1 is always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data: Quarterly sales by product line (in thousands USD)
 categories = ["Q1", "Q2", "Q3", "Q4"]
@@ -45,7 +45,7 @@ ax.set_facecolor(PAGE_BG)
 max_values_per_category = {cat: max(sales_data[group][i] for group in groups) for i, cat in enumerate(categories)}
 
 bars = []
-for i, (group, color) in enumerate(zip(groups, OKABE_ITO, strict=True)):
+for i, (group, color) in enumerate(zip(groups, IMPRINT, strict=True)):
     bar = ax.bar(
         x + offsets[i], sales_data[group], bar_width, label=group, color=color, edgecolor=INK_SOFT, linewidth=1.5
     )

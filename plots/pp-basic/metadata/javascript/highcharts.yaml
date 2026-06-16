@@ -1,0 +1,272 @@
+library: highcharts
+language: javascript
+specification_id: pp-basic
+created: '2026-06-09T22:11:07Z'
+updated: '2026-06-09T22:33:40Z'
+generated_by: claude-sonnet
+workflow_run: 27238865544
+issue: 4587
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pp-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pp-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pp-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pp-basic/javascript/highcharts/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - Correct P-P plot type with empirical vs theoretical CDF on both 0-1 axes
+  - 45-degree reference line clearly rendered in theme-adaptive dashed style
+  - Deviation zone plotBand cross-hatching on both axes adds analytical context
+  - Subtitle explicitly states the insight (S-curve signals heavier tails)
+  - All font sizes explicitly set; title, axis labels, ticks readable in both themes
+  - Square canvas correctly chosen for the P-P plot square-aspect requirement
+  - Deterministic LCG + Box-Muller data generation ensures reproducibility
+  - Scatter marker edge lineColor uses pageBg for visual separation of overlapping
+    points
+  - Manufacturing cycle times is a realistic, neutral real-world scenario
+  - 'Full spec coverage: sorted empirical CDF (i/(n+1)), fitted normal CDF, reference
+    line'
+  weaknesses:
+  - 'Scatter markers lack alpha blending (opacity) for 200 data points — the central
+    diagonal region shows moderate overplotting; adding marker opacity: 0.65 would
+    improve visibility'
+  - Subtitle font (13px) is slightly below the recommended minimum for mobile readability
+    — 14px would match the tick-label size
+  - LM-02 could leverage more distinctive Highcharts features beyond plotBands — e.g.
+    boost module awareness or Highcharts-specific renderer touches are not used
+  - Deviation zone plotBand label is positioned at top vertically within the band,
+    but its y:14 offset places it close to the chart title area in the light render
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "pp-basic · javascript · highcharts · anyplot.ai" at 22px — dark ink (#1A1A17), clearly readable, occupying ~60% of the 1200-wide square canvas. Subtitle "Manufacturing process cycle times (n=200) vs Normal — S-curve signals heavier tails" in inkSoft, readable at full resolution. X-axis label "Theoretical Probability" and Y-axis label "Empirical Probability" both at 16px in inkSoft — balanced and legible. Tick labels (0.00–1.00 at 0.25 intervals) at 14px — readable. Legend top-right: "Manufacturing Cycle Times" (green circle) and "Perfect Fit" (dashed line) both visible.
+      Data: Scatter points in #009E73 (brand green) running along the 45° diagonal. Moderate overplotting in the central region (0.3–0.7 range) is inherent to the data structure. Dashed reference line in inkSoft (theme-adaptive neutral). Subtle green-tinted deviation zone band (rgba(0,158,115,0.08)) across x:0.35–0.65 and y:0.35–0.65 with italic "deviation zone" label.
+      Legibility verdict: PASS — all text readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title in light (#F0EFE8-range) ink — clearly readable against dark background. Axis labels, tick labels, legend text all in light inkSoft — readable, no dark-on-dark failures. Grid lines are subtle (low-opacity) and visible. The deviation zone band appears as a slightly darker teal-tinted region against the dark background — visible and not jarring.
+      Data: Scatter points remain #009E73 (identical to light render — data colors unchanged). Dashed reference line adapts to inkSoft (lighter on dark). The S-shaped deviation from the diagonal is clearly visible. No color changes in the data series between themes — only chrome flips.
+      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures detected.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis 16px, ticks 14px,
+          subtitle 13px). Readable in both themes. Subtitle at 13px is marginally
+          below recommended 14px for mobile readability.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps. Legend positioned top-right clear of data. Deviation
+          zone label does not clash with other elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Scatter markers at radius 5 with pageBg edge are visible. No alpha
+          blending set for 200 data points — moderate overplotting in the central
+          diagonal region. Edge color helps distinguish overlapping markers but alpha
+          0.65 would improve the dense center.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: '#009E73 brand green is CVD-safe on both backgrounds. Single data
+          series + neutral reference line — no red-green conflict.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas correctly used. Explicit margins [80,50,95,90] provide
+          balanced whitespace. Plot area occupies ~65% of canvas. Nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive axis labels: ''Theoretical Probability'' (x) and ''Empirical
+          Probability'' (y). Both axes range 0-1 with 0.25 intervals — appropriate
+          for probability plots.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series uses t.palette[0] = #009E73. colors: t.palette set
+          at chart level. Background transparent (shows through to pageBg). Chrome
+          uses t.ink, t.inkSoft, t.grid — all theme-adaptive. Both renders pass.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured default: deviation zone plotBand adds analytical
+          context, subtitle provides interpretation. Clean, professional look. Not
+          publication-ready (missing stronger typographic hierarchy, richer visual
+          composition) but clearly intentional design choices.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'plotBorderWidth: 0, explicit margins, tooltip disabled, subtle grid
+          via t.grid, credits disabled. Some refinement visible. Could push further
+          by removing axis lines or reducing grid opacity further.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Deviation zone creates clear focal point in the 0.35–0.65 range.
+          Subtitle explicitly names the insight (S-curve, heavier tails). Manufacturing
+          context is realistic. Visual hierarchy guides viewer to the deviation region.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct P-P plot: scatter of theoretical CDF (x) vs empirical CDF
+          (y). Square aspect ratio. 45-degree reference line included.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: sorted data, empirical CDF via (i+1)/(N+1)
+          formula, theoretical CDF via normalCDF, 45° reference line, square aspect
+          ratio, 200 samples in range 50-500, slightly skewed distribution vs normal.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = theoretical probability, Y = empirical probability. Both axes
+          0-1. Data sorted and plotted correctly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'pp-basic · javascript · highcharts · anyplot.ai' matches required
+          format. Legend labels 'Manufacturing Cycle Times' and 'Perfect Fit' are
+          descriptive and accurate.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all P-P plot aspects: diagonal reference, S-shaped deviation
+          pattern demonstrating non-normality (heavier upper tail), deviation zone
+          highlighting key diagnostic region.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Manufacturing process cycle times is a real-world neutral application.
+          Right-skewed distribution (occasional long runs) is realistic for manufacturing
+          data.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Both axes correctly bounded 0-1 for cumulative probability. 200 samples
+          appropriate for P-P plot diagnostics. Skewness magnitude is realistic.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Helper functions (lcgRand, stdNormal, normalCDF) are necessary for
+          JS reproducibility (no seeded RNG in browser). Chart config follows data
+          → chart structure.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic LCG with fixed seed 42. Box-Muller for normal samples.
+          Fully reproducible.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: JavaScript — no imports. All accessed globals (window.ANYPLOT_TOKENS,
+          Highcharts) are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a P-P plot. No over-engineering. No fake
+          interactive elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Harness handles output for Highcharts (plot-light.png/html, plot-dark.png/html).
+          Current Highcharts.chart() API. animation: false set in both locations.
+          credits disabled.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Highcharts.chart(''container'', ...) call. animation: false
+          in chart and plotOptions. Transparent background. Token-based theming. credits
+          disabled. scatter + line series combination. All idiomatic.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'plotBands applied on both xAxis and yAxis to create cross-axis deviation
+          zone — a distinctively Highcharts feature. dashStyle: ''Dash'' on reference
+          line. enableMouseTracking: false on reference series. These are Highcharts-specific
+          capabilities.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

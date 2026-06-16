@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 violin-basic: Basic Violin Plot
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 92/100 | Updated: 2026-02-21
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-29
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,44 +12,72 @@ import pandas as pd
 import seaborn as sns
 
 
-# Data - Salary distributions across departments
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — canonical order, first series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+
+# Data — daily temperature readings (°C) across four climate regions
 np.random.seed(42)
-departments = ["Engineering", "Marketing", "Sales", "Support"]
+regions = ["North", "South", "East", "West"]
 records = []
 
-for dept in departments:
-    if dept == "Engineering":
-        salaries = np.random.normal(85000, 15000, 150)
-    elif dept == "Marketing":
-        salaries = np.random.normal(70000, 12000, 150)
-    elif dept == "Sales":
-        # Bimodal distribution (junior vs senior) — showcases KDE strength
-        salaries = np.concatenate([np.random.normal(55000, 8000, 75), np.random.normal(90000, 10000, 75)])
+for region in regions:
+    if region == "North":
+        # Cold region: compact distribution
+        temps = np.random.normal(8, 4, 200)
+    elif region == "South":
+        # Warm region: broader spread
+        temps = np.random.normal(24, 6, 200)
+    elif region == "East":
+        # Continental: bimodal (cold winters + hot summers) — showcases KDE strength
+        temps = np.concatenate([np.random.normal(4, 3, 100), np.random.normal(28, 4, 100)])
     else:
-        salaries = np.random.normal(55000, 10000, 150)
-    for s in salaries:
-        records.append({"Department": dept, "Salary": s})
+        # Coastal: mild with occasional heat events
+        temps = np.concatenate([np.random.normal(16, 3, 160), np.random.normal(26, 2, 40)])
+    for t in temps:
+        records.append({"Region": region, "Temperature (°C)": t})
 
 df = pd.DataFrame(records)
 
-# Distinctive palette with good contrast between categories
-palette = ["#306998", "#E8825A", "#5BA38B", "#C46BAE"]
+# Canvas — 3200 × 1800 px (landscape 16:9)
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
 
-fig, ax = plt.subplots(figsize=(16, 9))
-fig.patch.set_facecolor("#FAFAFA")
-ax.set_facecolor("#FAFAFA")
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 # Violin plot
 sns.violinplot(
     data=df,
-    x="Department",
-    y="Salary",
-    hue="Department",
-    palette=palette,
+    x="Region",
+    y="Temperature (°C)",
+    hue="Region",
+    palette=IMPRINT_PALETTE,
     inner="box",
     cut=0,
     linewidth=1.2,
-    saturation=0.85,
+    saturation=1.0,
     legend=False,
     ax=ax,
 )
@@ -55,60 +85,44 @@ sns.violinplot(
 # Stripplot overlay — signature seaborn layering pattern
 sns.stripplot(
     data=df,
-    x="Department",
-    y="Salary",
-    hue="Department",
-    palette=palette,
+    x="Region",
+    y="Temperature (°C)",
+    hue="Region",
+    palette=IMPRINT_PALETTE,
     dodge=False,
-    jitter=0.25,
+    jitter=0.2,
     size=2.5,
     alpha=0.25,
     legend=False,
     ax=ax,
 )
 
-# Annotate the bimodal Sales distribution to guide the viewer
-sales_data = df[df["Department"] == "Sales"]["Salary"]
-lower_peak = sales_data[sales_data < 72000].median()
-upper_peak = sales_data[sales_data >= 72000].median()
-
-ax.annotate(
-    "Junior cohort",
-    xy=(1.85, lower_peak),
-    xytext=(1.35, lower_peak - 5000),
-    fontsize=12,
-    fontstyle="italic",
-    color="#555555",
-    ha="right",
-    va="center",
-    arrowprops={"arrowstyle": "->", "color": "#888888", "lw": 1.0},
-)
-ax.annotate(
-    "Senior cohort",
-    xy=(1.85, upper_peak),
-    xytext=(1.35, upper_peak + 5000),
-    fontsize=12,
-    fontstyle="italic",
-    color="#555555",
-    ha="right",
-    va="center",
-    arrowprops={"arrowstyle": "->", "color": "#888888", "lw": 1.0},
-)
-
 # Style
-ax.set_xlabel("Department", fontsize=20, labelpad=12)
-ax.set_ylabel("Salary ($)", fontsize=20, labelpad=12)
-ax.set_title("violin-basic · seaborn · pyplots.ai", fontsize=24, fontweight="medium", pad=20)
-ax.tick_params(axis="both", labelsize=16)
+title = "violin-basic · python · seaborn · anyplot.ai"
+ax.set_xlabel("Region", fontsize=10, color=INK)
+ax.set_ylabel("Temperature (°C)", fontsize=10, color=INK)
+ax.set_title(title, fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
-for spine in ax.spines.values():
-    spine.set_visible(False)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+for s in ("left", "bottom"):
+    ax.spines[s].set_color(INK_SOFT)
 
-ax.yaxis.grid(True, alpha=0.3, linewidth=0.6, color="#CCCCCC")
+ax.yaxis.grid(True, linewidth=0.8)
 ax.set_axisbelow(True)
 
-# Format y-axis as currency
-ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f"${x / 1000:.0f}k"))
+# Annotation: highlight the bimodal East distribution (the key storytelling insight)
+ax.annotate(
+    "Bimodal: cold winters\n& hot summers",
+    xy=(2, 27),
+    xytext=(2.55, 37),
+    fontsize=7.5,
+    color=INK_MUTED,
+    ha="left",
+    va="center",
+    arrowprops={"arrowstyle": "-|>", "color": INK_MUTED, "lw": 0.9},
+)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor=fig.get_facecolor())
+# Save — no bbox_inches='tight' (seaborn canvas contract: figsize×dpi sets exact target)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

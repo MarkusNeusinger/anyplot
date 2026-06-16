@@ -1,13 +1,18 @@
 import { useEffect } from 'react';
-import { Link as RouterLink, isRouteErrorResponse, useRouteError } from 'react-router-dom';
+
+import { isRouteErrorResponse, Link as RouterLink, useRouteError } from 'react-router-dom';
+
+import HomeIcon from '@mui/icons-material/Home';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Typography from '@mui/material/Typography';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import HomeIcon from '@mui/icons-material/Home';
-import { NotFoundPage } from '../pages/NotFoundPage';
+
+import { CONFIG } from 'src/global-config';
+import { NotFoundPage } from 'src/pages/NotFoundPage';
+import { paths } from 'src/routes/paths';
 
 const RELOAD_ATTEMPT_KEY = 'anyplot:chunk-reload-attempt';
 
@@ -139,7 +144,7 @@ export function RouteErrorBoundary() {
         <Typography variant="body2" sx={{ color: 'var(--ink-muted)' }}>
           {body}
         </Typography>
-        {import.meta.env.DEV && (
+        {CONFIG.isDev && (
           <Typography
             variant="caption"
             component="pre"
@@ -171,7 +176,7 @@ export function RouteErrorBoundary() {
         </Button>
         <Button
           component={RouterLink}
-          to="/"
+          to={paths.home}
           variant="outlined"
           startIcon={<HomeIcon />}
           sx={{ textTransform: 'none' }}

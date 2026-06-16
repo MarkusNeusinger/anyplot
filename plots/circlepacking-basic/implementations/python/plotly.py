@@ -17,7 +17,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 np.random.seed(42)
 
@@ -102,7 +102,7 @@ for idx, asset_info in enumerate(packed_assets):
     cx, cy = asset_info["x"], asset_info["y"]
     asset_radius = asset_info["r"]
     subcats = asset_info["subcats"]
-    asset_color = OKABE_ITO[idx % len(OKABE_ITO)]
+    asset_color = IMPRINT[idx % len(IMPRINT)]
 
     all_circles.append(
         {
@@ -313,7 +313,7 @@ for idx, (name, _, _) in enumerate(asset_data):
             x=[None],
             y=[None],
             mode="markers",
-            marker={"size": 16, "color": OKABE_ITO[idx % len(OKABE_ITO)], "line": {"color": INK_SOFT, "width": 2}},
+            marker={"size": 16, "color": IMPRINT[idx % len(IMPRINT)], "line": {"color": INK_SOFT, "width": 2}},
             name=name,
             showlegend=True,
         )

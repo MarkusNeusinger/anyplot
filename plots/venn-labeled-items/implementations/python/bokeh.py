@@ -20,8 +20,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette — first circle is brand green, then vermillion, then blue
 COLOR_A = "#009E73"  # Overhyped
-COLOR_B = "#D55E00"  # Actually Useful
-COLOR_C = "#0072B2"  # Secretly Loved
+COLOR_B = "#C475FD"  # Actually Useful
+COLOR_C = "#4467A3"  # Secretly Loved
 
 # Geometry — equilateral triangle of centers (apex pointing down)
 r = 1.0

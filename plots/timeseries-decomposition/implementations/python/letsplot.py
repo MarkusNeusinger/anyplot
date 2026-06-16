@@ -37,7 +37,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette for components
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: Monthly temperature readings over 5 years (60 months)
 np.random.seed(42)
@@ -64,7 +64,7 @@ df_seasonal = pd.DataFrame({"date": dates, "value": decomposition.seasonal, "com
 df_residual = pd.DataFrame({"date": dates, "value": decomposition.resid, "component": "Residual"})
 
 # Create individual plots for each component
-component_colors = {"Original": OKABE_ITO[0], "Trend": OKABE_ITO[1], "Seasonal": OKABE_ITO[2], "Residual": OKABE_ITO[3]}
+component_colors = {"Original": IMPRINT[0], "Trend": IMPRINT[1], "Seasonal": IMPRINT[2], "Residual": IMPRINT[3]}
 
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),

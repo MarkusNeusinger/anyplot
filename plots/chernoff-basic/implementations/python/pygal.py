@@ -33,7 +33,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette (first series is brand green #009E73)
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030")
 
 # Set seed for reproducibility
 np.random.seed(42)
@@ -55,7 +55,7 @@ car_data = np.array(
 )
 
 # Okabe-Ito palette for face colors
-face_colors = OKABE_ITO
+face_colors = IMPRINT
 
 # SVG namespace
 SVG_NS = "http://www.w3.org/2000/svg"
@@ -68,7 +68,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_SOFT,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=72,
     label_font_size=36,
     major_label_font_size=32,

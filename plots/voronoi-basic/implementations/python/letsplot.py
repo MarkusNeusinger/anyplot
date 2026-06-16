@@ -136,12 +136,12 @@ df_seeds = pd.DataFrame({"x": x, "y": y, "label": [f"P{i + 1}" for i in range(le
 # Color palette for regions - diverse and visually distinct
 colors = [
     "#009E73",
-    "#D55E00",
-    "#0072B2",
-    "#CC79A7",
-    "#E69F00",
-    "#56B4E9",
-    "#F0E442",
+    "#C475FD",
+    "#4467A3",
+    "#BD8233",
+    "#AE3030",
+    "#2ABCCD",
+    "#954477",
     "#1B9E77",
     "#D95F02",
     "#7570B3",

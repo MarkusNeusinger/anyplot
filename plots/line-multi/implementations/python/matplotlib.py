@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data: Monthly sales (in thousands) for 3 product lines over 12 months
 np.random.seed(42)
@@ -46,7 +46,7 @@ ax.set_facecolor(PAGE_BG)
 ax.plot(
     months,
     product_a,
-    color=OKABE_ITO[0],
+    color=IMPRINT[0],
     linewidth=3,
     marker="o",
     markersize=10,
@@ -56,7 +56,7 @@ ax.plot(
 ax.plot(
     months,
     product_b,
-    color=OKABE_ITO[1],
+    color=IMPRINT[1],
     linewidth=3,
     marker="s",
     markersize=10,
@@ -66,7 +66,7 @@ ax.plot(
 ax.plot(
     months,
     product_c,
-    color=OKABE_ITO[2],
+    color=IMPRINT[2],
     linewidth=3,
     marker="^",
     markersize=10,

@@ -31,7 +31,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series is always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data
 iris = load_iris()
@@ -85,7 +85,7 @@ plot = (
     ggplot(df, aes(x="t", y="value", color="species", group="observation"))
     + geom_line(alpha=0.4, size=0.8)
     + labs(title="andrews-curves · plotnine · anyplot.ai", x="t (radians)", y="Andrews Curve Value", color="Species")
-    + scale_color_manual(values=OKABE_ITO)
+    + scale_color_manual(values=IMPRINT)
     + theme_minimal()
     + anyplot_theme
     + theme(figure_size=(16, 9))

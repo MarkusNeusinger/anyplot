@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - synthetic wind measurements with prevailing directions
 np.random.seed(42)
@@ -54,7 +54,7 @@ time_labels = np.array(["Morning" if h <= 9 else "Afternoon" if h <= 15 else "Ev
 fig = go.Figure()
 
 # Color mapping for time of day using Okabe-Ito
-colors = {"Morning": OKABE_ITO[0], "Afternoon": OKABE_ITO[1], "Evening": OKABE_ITO[2]}
+colors = {"Morning": IMPRINT[0], "Afternoon": IMPRINT[1], "Evening": IMPRINT[2]}
 
 # Add traces for each time period
 for period in ["Morning", "Afternoon", "Evening"]:

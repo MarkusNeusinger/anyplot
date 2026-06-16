@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette positions 1 and 2
 COLOR_BEFORE = "#009E73"
-COLOR_AFTER = "#D55E00"
+COLOR_AFTER = "#C475FD"
 
 # Data — Employee satisfaction scores before and after policy changes
 data = pd.DataFrame(

@@ -44,7 +44,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Student exam scores across teaching methods and subjects
 np.random.seed(42)
@@ -77,7 +77,7 @@ plot = (
     ggplot(df, aes(x="hours", y="score", color="method"))
     + geom_point(size=4, alpha=0.75)
     + facet_grid("subject ~ method", labeller="label_both")
-    + scale_color_manual(values=OKABE_ITO[:3])
+    + scale_color_manual(values=IMPRINT[:3])
     + labs(title="facet-grid · plotnine · anyplot.ai", x="Study Hours", y="Exam Score", color="Method")
     + theme_minimal()
     + theme(

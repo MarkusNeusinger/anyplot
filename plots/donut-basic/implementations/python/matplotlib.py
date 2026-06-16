@@ -16,7 +16,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first segment is always the brand green)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data - Annual budget allocation by department (USD thousands)
 categories = ["Engineering", "Marketing", "Operations", "Sales", "Support"]
@@ -32,7 +32,7 @@ wedges, texts, autotexts = ax.pie(
     labels=categories,
     autopct="%1.1f%%",
     startangle=90,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     wedgeprops={"width": 0.42, "edgecolor": PAGE_BG, "linewidth": 3},
     pctdistance=0.78,
     labeldistance=1.08,

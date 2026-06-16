@@ -37,7 +37,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Programming languages positioned by paradigm (functional vs object-oriented)
 # and level of abstraction (low vs high)
@@ -163,13 +163,13 @@ category_order = [
 ]
 
 color_palette = {
-    "General": OKABE_ITO[0],  # #009E73 (brand green)
-    "Web": OKABE_ITO[1],  # #D55E00 (vermillion)
-    "Systems": OKABE_ITO[2],  # #0072B2 (blue)
-    "Mobile": OKABE_ITO[3],  # #CC79A7 (reddish purple)
-    "Functional": OKABE_ITO[4],  # #E69F00 (orange)
-    "Scripting": OKABE_ITO[5],  # #56B4E9 (sky blue)
-    "Data Science": OKABE_ITO[6],  # #F0E442 (yellow)
+    "General": IMPRINT[0],  # #009E73 (brand green)
+    "Web": IMPRINT[1],  # #C475FD (vermillion)
+    "Systems": IMPRINT[2],  # #4467A3 (blue)
+    "Mobile": IMPRINT[3],  # #BD8233 (reddish purple)
+    "Functional": IMPRINT[4],  # #AE3030 (orange)
+    "Scripting": IMPRINT[5],  # #2ABCCD (sky blue)
+    "Data Science": IMPRINT[6],  # #954477 (yellow)
     "Scientific": INK_SOFT,  # Neutral for scientific
     "Legacy": INK_SOFT,  # Neutral for legacy
 }

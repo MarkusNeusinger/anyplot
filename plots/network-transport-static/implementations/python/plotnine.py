@@ -135,9 +135,9 @@ routes["edge_label"] = routes["route_id"] + " | " + routes["dep"] + "→" + rout
 
 # Color palette for route types
 route_colors = {
-    "RE": "#0072B2",  # Blue - Express
-    "RB": "#E69F00",  # Orange - Regional
-    "AE": "#D55E00",  # Vermillion - Airport
+    "RE": "#4467A3",  # Blue - Express
+    "RB": "#AE3030",  # Orange - Regional
+    "AE": "#C475FD",  # Vermillion - Airport
     "S": "#009E73",  # Green - Local (first series brand color)
 }
 

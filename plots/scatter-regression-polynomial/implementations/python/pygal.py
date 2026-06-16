@@ -20,7 +20,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # First series
-ACCENT = "#D55E00"  # Second series
+ACCENT = "#C475FD"  # Second series
 
 # Data
 np.random.seed(42)

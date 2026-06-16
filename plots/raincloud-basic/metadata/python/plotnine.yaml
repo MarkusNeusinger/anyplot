@@ -27,7 +27,7 @@ review:
     carry stronger contrast inside the cloud's coverage area in both themes — directly
     addresses the prior 'box outline reads close to background' weakness
   - 'Palette compliance is exact: Control=#009E73 (brand green, reference group),
-    Treatment A=#C475FD, Treatment B=#4467A3 — anyplot palette positions 1/2/3 with
+    Treatment A=#C475FD, Treatment B=#4467A3 — Imprint palette positions 1/2/3 with
     semantic assignment, and the data colors are pixel-identical between light and
     dark renders (only chrome flips)'
   - Theme tokens (PAGE_BG/INK/INK_SOFT/INK_MUTED/ELEVATED_BG) threaded through plot_background,
@@ -116,7 +116,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is CVD-safe; green/purple/blue are easily distinguishable
+        comment: Imprint palette is CVD-safe; green/purple/blue are easily distinguishable
           in both themes.
       - id: VQ-05
         name: Layout & Canvas

@@ -26,7 +26,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Three overlapping research disciplines
 set_labels = ["Machine Learning", "Statistics", "Data Engineering"]
@@ -70,7 +70,7 @@ fill_centers = pd.DataFrame(
     {
         "x": [cx_a, cx_b, cx_c],
         "y": [cy_a, cy_b, cy_c],
-        "color": OKABE_ITO[0:3],
+        "color": IMPRINT[0:3],
         "set": set_labels,
         "size": [circle_size_a, circle_size_b, circle_size_c],
     }

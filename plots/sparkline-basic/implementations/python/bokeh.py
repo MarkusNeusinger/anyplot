@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito categorical palette — identical across themes; only chrome flips.
 LINE_COLOR = "#009E73"
-MIN_COLOR = "#D55E00"
+MIN_COLOR = "#C475FD"
 MAX_COLOR = "#009E73"
 
 # Data — daily web-traffic sessions over 60 days, with a launch bump,

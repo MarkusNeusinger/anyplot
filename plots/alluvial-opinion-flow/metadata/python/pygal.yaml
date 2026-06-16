@@ -1,51 +1,53 @@
 library: pygal
+language: python
 specification_id: alluvial-opinion-flow
 created: '2026-03-03T20:10:41Z'
-updated: '2026-03-03T21:13:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22640489645
+updated: '2026-05-30T13:05:26Z'
+generated_by: claude-sonnet
+workflow_run: 26684011085
 issue: 4430
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/pygal/plot.html
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/python/pygal/plot-dark.html
 quality_score: 85
 review:
   strengths:
-  - Excellent spec compliance — all required features implemented (opacity distinction,
-    proportional flows, node labels, chronological layout, highlighted transitions)
-  - Creative approach using pygal StackedBar as foundation with SVG post-processing
-    to achieve alluvial flows not natively supported by pygal
-  - Strong data storytelling with annotation subtitle calling out polarization trend
-    and flow label pills highlighting key cross-category transitions
-  - Clean, well-commented linear code structure despite SVG manipulation complexity
-  - Good custom palette with improved hue separation and extensive Style system usage
+  - 'Ingenious implementation: StackedBar + SVG post-processing creates genuine alluvial/Sankey
+    flows in a library that has no native alluvial chart type.'
+  - Full Imprint palette compliance with semantically appropriate color anchoring
+    (green=favorable, red=opposed).
+  - 'All spec-required features implemented: proportional flows, opacity-encoded stability,
+    wave column headers, pill labels on major transitions, subtitle annotation with
+    key insight.'
+  - Perfect spec compliance (15/15) and code quality (10/10).
+  - 'Theme-adaptive chrome is correctly wired: both renders have readable text with
+    appropriate INK/INK_MUTED tokens.'
   weaknesses:
-  - Two blue shades (Strongly Favor vs Favor) may be difficult to distinguish for
-    some colorblind viewers
-  - Very thin cross-category flows (5-10 respondents) are barely visible at 0.30 opacity
-  - Flow label pills are small (font-size 30) and some overlap with flow paths
-  - Heavy SVG post-processing indicates pygal may not be ideal library for alluvial
-    diagrams
-  image_description: 'The plot displays an alluvial/Sankey-style flow diagram with
-    4 vertical node columns representing quarterly waves (Q1–Q4 2024) of a Renewable
-    Energy Policy Survey tracking 1,000 respondents. Five opinion categories are shown
-    as stacked bar segments within each column: Strongly Favor (dark navy blue) at
-    the bottom, Favor (medium blue), Neutral (gold/yellow), Oppose (warm orange),
-    and Strongly Oppose (deep crimson) at the top. Respondent counts are printed as
-    white numbers within each bar segment (e.g., Neutral declines from 280 to 150
-    across waves). Cubic Bézier flow paths connect categories between consecutive
-    waves, with higher opacity (0.55) for stable flows and lower opacity (0.30–0.45)
-    for cross-category transitions. Small white pill-shaped labels with colored borders
-    highlight the largest cross-category shifts (values like 40, 45, 50). Alternating
-    light gray background panels sit behind each wave column. The title reads "alluvial-opinion-flow
-    · pygal · pyplots.ai" with an italic subtitle: "Solid = stable opinion · Faded
-    = changed · Polarization: Neutral 280→150". A bottom legend displays all 5 categories
-    in a single row. The x-axis title reads "Renewable Energy Policy Survey · 1,000
-    Respondents Tracked Quarterly".'
+  - Subtitle annotation placed at y=92 is too close to the title (title baseline ~y=70-80
+    at title_font_size=66) — creates crowding at the top margin. Move annotation to
+    ~y=1760 (near bottom of chart, above x-axis title) or increase to y=125 to give
+    the title more breathing room.
+  - The Neutral category (#4467A3 blue) can blend slightly with the dark background
+    on the flow bands — the bar nodes are fine but the flow bands for Neutral category
+    at opacity 0.35-0.45 are somewhat hard to follow in the dark render.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "alluvial-opinion-flow · python · pygal · anyplot.ai" in dark INK (#1A1A17), clearly visible. X-axis wave labels (Q1-Q4 2024) readable. X-axis title "Renewable Energy Policy Survey · 1,000 Respondents Tracked Quarterly" readable. Subtitle annotation "Solid = stable opinion · Faded = changed · Polarization: Neutral 280→150" at y=92 is tight against title baseline but visible. Legend at bottom with 5 categories readable.
+      Data: Imprint palette in semantic order — green (#009E73) Strongly Favor, lavender (#C475FD) Favor, blue (#4467A3) Neutral, ochre (#BD8233) Oppose, matte red (#AE3030) Strongly Oppose. Bezier flow bands connect columns. Node bars narrowed to 130px. Pill labels (40, 45, 40, 50) on major cross-category flows. Value labels inside bars.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and all labels render in light text (INK_MUTED / #F0EFE8 token). Wave labels (Q1-Q4), x-axis title, legend text, and pill label values are all clearly legible against dark background. No dark-on-dark failures detected. Subtitle annotation at y=92 shows in muted light tone. Legend text light-colored.
+      Data: Data colors are identical to light render — same #009E73 green, #C475FD lavender, #4467A3 blue, #BD8233 ochre, #AE3030 red. Wave column panel backgrounds use #242420/#2A2A26 (slightly above main bg). Neutral flow bands (#4467A3) are slightly harder to distinguish on dark background at lower opacities but still perceptible.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -53,43 +55,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=76, labels=40, legend=36, values=34).
-          Flow label font-size=30 slightly small but readable.
+        comment: 'All font sizes explicitly set (title=66, label=56, major_label=44,
+          legend=44, value=30). Minor deduction: subtitle annotation at y=92 is tight
+          against title baseline.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Main bar labels clear. Some flow label pills sit atop colored flow
-          paths with slightly reduced readability.
+        comment: 'Pill labels well-spaced. Minor overlap concern: annotation at y=92
+          very close to title, creating cramped top margin in both renders.'
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Major flows well-adapted. Some thin cross-category flows (5-10 respondents)
-          barely perceptible at 0.30 opacity.
+        comment: 'Flow bands visible with appropriate opacity. Node bars clear. Minor:
+          Neutral (#4467A3) flow bands blend slightly in dark render at lower opacities.'
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette with CVD-safe contrast. Opacity encoding adds redundant
+          signal beyond hue. No red-green sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Avoids red-green confusion. Good orange-crimson separation. Two blues
-          may challenge some colorblind viewers.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 4
-        max: 4
-        passed: true
-        comment: Chart fills 4800x2700 canvas well. Balanced margins. Legend compact
-          at bottom.
+        comment: 'Plot fills canvas well. Legend at bottom. Minor: cramped top area
+          due to annotation proximity to title.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive x-title with context. Wave labels clear. Y-axis appropriately
-          hidden.
+        comment: X-axis title descriptive with context. No Y-axis needed; respondent
+          counts shown as bar labels.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 correct. Imprint canonical order with semantic
+          alignment. Backgrounds #FAF8F1 light / #1A1A17 dark. Chrome theme-adaptive
+          in both renders.'
     design_excellence:
       score: 14
       max: 20
@@ -99,22 +110,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, background panels, rounded bars, pill-shaped flow
-          labels. Above defaults but not FiveThirtyEight-level.
+        comment: 'Impressively above defaults: semantic color assignment, opacity-encoded
+          stability, wave column panels, rounded bars, pill labels. Genuine alluvial
+          aesthetics via SVG post-processing.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Hidden y-axis, alternating background panels, white separators, custom
-          fonts. Good refinement.
+        comment: Grid disabled, rounded bars, wave column shading, opacity gradations.
+          Good refinement; tight top margin slightly reduces polish.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Opacity distinction, annotation subtitle highlights polarization,
-          flow labels on key transitions. Story present but could be stronger.
+        comment: 'Clear story via annotation (Polarization: Neutral 280->150), semantic
+          green-to-red spectrum, opacity differentiation for stable vs. changing flows,
+          pill labels on significant transitions.'
     spec_compliance:
       score: 15
       max: 15
@@ -124,29 +137,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct alluvial/Sankey diagram with node columns and proportional
-          flow paths.
+        comment: Genuine alluvial/Sankey diagram via StackedBar + SVG bezier flows.
+          Proportional flow widths. Node bars as wave columns.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: consistent colors, proportional flows,
-          node labels, opacity distinction, highlights, chronological order, transparency.'
+        comment: 'All features: consistent colors, proportional flows, respondent
+          count labels, opacity for stable/changers, highlighted net flows, chronological
+          arrangement, transparency.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Waves on x-axis, categories stacked, flows properly mapped between
-          consecutive waves.
+        comment: 4 waves in chronological order, flows between consecutive pairs,
+          all 1000 respondents accounted for, proportional node heights.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend at bottom with all 5 categories matching
-          data.
+        comment: Title exactly matches required format. Legend shows all 5 categories
+          with Imprint colors.
     data_quality:
       score: 14
       max: 15
@@ -156,22 +170,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows stable AND cross-category flows, growth/decline patterns, multiple
-          waves with temporal trends.
+        comment: 'All aspects: 5 sentiment categories, 4 waves, stable and cross-category
+          flows, varying magnitudes, clear polarization trend.'
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Renewable Energy Policy Survey is plausible real-world scenario.
-          Standard Likert scale categories. Slightly close to policy territory.
+        comment: 'Renewable Energy Policy survey is real and comprehensible. Minor
+          deduction: policy topics have political connotations; a neutral domain (brand
+          preference, health treatment) would score 5.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1,000 respondents realistic. Category sizes 100-280 plausible. Flow
-          counts sum correctly. Polarization pattern realistic.
+        comment: 1000 respondents, realistic category distribution (100-280), flow
+          counts proportionally consistent, coherent polarization trajectory.
     code_quality:
       score: 10
       max: 10
@@ -181,62 +196,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports, data, style, chart, SVG parsing, flow generation,
-          save. No functions or classes.'
+        comment: 'Linear: imports -> tokens -> data -> style -> chart -> SVG manipulation
+          -> save. No functions/classes. Complexity justified by alluvial SVG work.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. All data hardcoded and deterministic.
+        comment: np.random.seed(42) set. All data values hardcoded deterministic arrays.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: ET, cairosvg, numpy, pygal, Style.'
+        comment: 'All imports used: importlib.util, os, sys, xml.etree.ElementTree,
+          cairosvg, numpy, pygal, Style.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured with clear comments. SVG manipulation necessary for
-          alluvial flows. No fake UI.
+        comment: Well-organized sections, no over-engineering. SVG manipulation is
+          complex but necessary. No fake interactive elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png via cairosvg. Uses current pygal 3.x API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current API throughout.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct pygal StackedBar, Style system, chart.add() with value dicts,
-          render() API. Core alluvial via SVG post-processing outside pygal idiom.
+        comment: 'Strong pygal usage: StackedBar with proper data, Style object, chart.render()
+          for SVG access, print_values, cairosvg, HTML embedding. Minor deduction
+          for reliance on SVG post-processing outside standard workflow.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal-specific Style system, print_values, rounded_bars, legend_at_bottom_columns,
-          tooltip_fancy_mode, and SVG structure knowledge.
-  verdict: REJECTED
+        comment: 'Leverages pygal''s SVG-as-first-class-output: accessing DOM via
+          chart.render() then modifying XML tree (narrowed bars, bezier flows, panels,
+          labels) before rasterization. Distinctive to SVG-native libraries.'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
-  - annotations
   - bezier-curves
+  - annotations
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
+  - matrix-construction
   dataprep: []
   styling:
   - alpha-blending

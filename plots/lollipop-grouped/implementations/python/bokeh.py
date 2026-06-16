@@ -33,7 +33,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series is ALWAYS #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Quarterly revenue by product line across regions
 np.random.seed(42)
@@ -62,7 +62,7 @@ p = figure(
 # Plot lollipops for each series
 legend_items = []
 
-for series_idx, (series_name, color) in enumerate(zip(series_names, OKABE_ITO, strict=True)):
+for series_idx, (series_name, color) in enumerate(zip(series_names, IMPRINT, strict=True)):
     # Calculate x positions for this series
     x_pos = [i * (len(series_names) + 1) + series_idx for i in range(len(categories))]
     y_vals = data[series_name]

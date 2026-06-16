@@ -18,7 +18,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 np.random.seed(42)
 events = pd.DataFrame(
@@ -50,10 +50,10 @@ events = pd.DataFrame(
 )
 
 category_colors = {
-    "Planning": OKABE_ITO[0],
-    "Development": OKABE_ITO[1],
-    "Testing": OKABE_ITO[2],
-    "Release": OKABE_ITO[3],
+    "Planning": IMPRINT[0],
+    "Development": IMPRINT[1],
+    "Testing": IMPRINT[2],
+    "Release": IMPRINT[3],
 }
 colors = [category_colors[cat] for cat in events["category"]]
 

@@ -28,7 +28,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 np.random.seed(42)
 
@@ -102,7 +102,7 @@ for i, (start, end) in enumerate(segment_angles):
     ys = np.concatenate([outer_y, inner_y, [outer_y[0]]])
 
     source = ColumnDataSource(data={"xs": [xs], "ys": [ys]})
-    color = OKABE_ITO[i % len(OKABE_ITO)]
+    color = IMPRINT[i % len(IMPRINT)]
     p.patches(xs="xs", ys="ys", source=source, fill_color=color, line_color=INK_SOFT, line_width=1, alpha=0.85)
 
     mid_angle = (start + end) / 2
@@ -143,7 +143,7 @@ for i, (start, end) in enumerate(segment_angles):
     ys = np.concatenate([outer_y, inner_y, [outer_y[0]]])
 
     source = ColumnDataSource(data={"xs": [xs], "ys": [ys]})
-    color = OKABE_ITO[i % len(OKABE_ITO)]
+    color = IMPRINT[i % len(IMPRINT)]
     p.patches(xs="xs", ys="ys", source=source, fill_color=color, line_color=None, alpha=0.4)
 
 track_ref_theta = np.linspace(0, 2 * np.pi, 100)
@@ -210,7 +210,7 @@ for i in range(n_regions):
         ribbon_x = np.concatenate([curve1_x, arc_j_x, curve2_x, arc_i_x])
         ribbon_y = np.concatenate([curve1_y, arc_j_y, curve2_y, arc_i_y])
 
-        ribbon_color = OKABE_ITO[i % len(OKABE_ITO)]
+        ribbon_color = IMPRINT[i % len(IMPRINT)]
 
         source = ColumnDataSource(data={"xs": [ribbon_x], "ys": [ribbon_y]})
         p.patches(
@@ -229,7 +229,7 @@ legend_spacing = 0.15
 
 for i, region in enumerate(regions):
     y_pos = legend_y_start - i * legend_spacing
-    color = OKABE_ITO[i % len(OKABE_ITO)]
+    color = IMPRINT[i % len(IMPRINT)]
     p.rect(x=[legend_x], y=[y_pos], width=0.08, height=0.08, fill_color=color, line_color=None)
     p.text(
         x=[legend_x + 0.12],

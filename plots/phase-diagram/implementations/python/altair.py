@@ -22,7 +22,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series is #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: Damped pendulum simulation
 np.random.seed(42)
@@ -60,7 +60,7 @@ base = (
         color=alt.Color(
             "trajectory:N",
             title="Initial Condition",
-            scale=alt.Scale(range=OKABE_ITO),
+            scale=alt.Scale(range=IMPRINT),
             legend=alt.Legend(titleFontSize=18, labelFontSize=16, symbolStrokeWidth=3),
         ),
         order=alt.Order("order:Q"),
@@ -78,7 +78,7 @@ start_points = df[df["order"] == 0]
 points = (
     alt.Chart(start_points)
     .mark_point(size=400, filled=True, opacity=1.0)
-    .encode(x="x:Q", y="dx_dt:Q", color=alt.Color("trajectory:N", scale=alt.Scale(range=OKABE_ITO), legend=None))
+    .encode(x="x:Q", y="dx_dt:Q", color=alt.Color("trajectory:N", scale=alt.Scale(range=IMPRINT), legend=None))
 )
 
 # Add equilibrium point marker at origin

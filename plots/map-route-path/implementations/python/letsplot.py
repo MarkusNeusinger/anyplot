@@ -99,7 +99,7 @@ plot = (
         tooltips=layer_tooltips().line("@marker"),
     )
     + scale_color_viridis(name="Progress (%)")
-    + scale_fill_manual(values={"Start": "#009E73", "End": "#D55E00"}, name="Markers")
+    + scale_fill_manual(values={"Start": "#009E73", "End": "#C475FD"}, name="Markers")
     + labs(x="Longitude (°)", y="Latitude (°)", title="map-route-path · python · letsplot · anyplot.ai")
     + theme_minimal()
     + anyplot_theme

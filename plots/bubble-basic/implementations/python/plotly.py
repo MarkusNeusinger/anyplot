@@ -1,132 +1,140 @@
-""" pyplots.ai
+""" anyplot.ai
 bubble-basic: Basic Bubble Chart
-Library: plotly 6.5.2 | Python 3.14.3
-Quality: 94/100 | Updated: 2026-02-16
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-28
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
 
-# Data - Company performance metrics
+# Theme
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Continuous colorscale — imprint_seq (brand green → blue, single-polarity)
+imprint_seq = [[0.0, "#009E73"], [1.0, "#4467A3"]]
+
+# Data — Tech companies: R&D investment vs. product-market-fit score
 np.random.seed(42)
-n_companies = 40
+n = 38
+rd_pct = np.random.uniform(4, 42, n)  # R&D spend as % of revenue
+pmf = np.clip(rd_pct * 1.3 + np.random.normal(0, 14, n) + 18, 8, 98)
+revenue_m = np.clip(np.abs(np.random.normal(750, 380, n)), 40, 2200)
 
-# Revenue (millions) - x axis
-revenue = np.random.randn(n_companies) * 15 + 50
-revenue = np.clip(revenue, 10, 100)
-
-# Growth rate (%) - y axis, correlated with revenue
-growth = revenue * 0.3 + np.random.randn(n_companies) * 8 + 5
-growth = np.clip(growth, -5, 45)
-
-# Market share (%) - bubble size and color
-market_share = np.abs(np.random.randn(n_companies) * 8 + 12)
-market_share = np.clip(market_share, 2, 35)
-
-# Add a few distinct outliers/clusters for storytelling
-# High-revenue, high-growth market leaders
-revenue[0], growth[0], market_share[0] = 92, 40, 33
-revenue[1], growth[1], market_share[1] = 85, 38, 28
-revenue[2], growth[2], market_share[2] = 88, 42, 31
-
-# Low-revenue emerging players with moderate growth
-revenue[3], growth[3], market_share[3] = 15, 32, 5
-revenue[4], growth[4], market_share[4] = 18, 28, 4
+# Anchor key data points for visual storytelling
+rd_pct[0], pmf[0], revenue_m[0] = 39, 96, 2100  # R&D powerhouse
+rd_pct[1], pmf[1], revenue_m[1] = 36, 91, 1800
+rd_pct[2], pmf[2], revenue_m[2] = 33, 87, 1650
+rd_pct[5], pmf[5], revenue_m[5] = 7, 24, 180  # underinvestors
+rd_pct[6], pmf[6], revenue_m[6] = 5, 18, 120
+rd_pct[10], pmf[10], revenue_m[10] = 22, 92, 920  # efficient innovator
 
 # Bubble sizing via sizeref (Plotly's idiomatic area-based scaling)
-sizeref = 2.0 * max(market_share) / (55**2)
+sizeref = 2.0 * float(revenue_m.max()) / (46.0**2)
 
-# Custom colorscale: ensure minimum value has visible contrast against white bg
-colorscale = [[0, "#6a9ec0"], [0.25, "#4a82a8"], [0.5, "#306998"], [0.75, "#1f4f78"], [1, "#0d2e4d"]]
+title = "bubble-basic · python · plotly · anyplot.ai"
+title_size = round(16 * 67 / len(title)) if len(title) > 67 else 16
 
 # Plot
 fig = go.Figure()
 
 fig.add_trace(
     go.Scatter(
-        x=revenue,
-        y=growth,
+        x=rd_pct,
+        y=pmf,
         mode="markers",
+        customdata=revenue_m,
         marker={
-            "size": market_share,
+            "size": revenue_m,
             "sizemode": "area",
             "sizeref": sizeref,
-            "sizemin": 6,
-            "color": market_share,
-            "colorscale": colorscale,
+            "sizemin": 5,
+            "color": revenue_m,
+            "colorscale": imprint_seq,
             "colorbar": {
-                "title": {"text": "Market<br>Share (%)", "font": {"size": 18}},
-                "tickfont": {"size": 16},
-                "thickness": 18,
-                "len": 0.55,
+                "title": {"text": "Revenue<br>($ millions)", "font": {"size": 12, "color": INK}},
+                "tickfont": {"size": 10, "color": INK_SOFT},
+                "thickness": 16,
+                "len": 0.65,
                 "y": 0.5,
+                "bgcolor": ELEVATED_BG,
+                "bordercolor": INK_SOFT,
+                "borderwidth": 1,
             },
-            "opacity": 0.78,
-            "line": {"width": 1.5, "color": "white"},
+            "opacity": 0.75,
+            "line": {"width": 1.5, "color": PAGE_BG},
         },
-        text=[f"Market Share: {s:.1f}%" for s in market_share],
-        hovertemplate="<b>Revenue:</b> $%{x:.1f}M<br><b>Growth:</b> %{y:.1f}%<br>%{text}<extra></extra>",
+        hovertemplate=(
+            "<b>R&D Spend:</b> %{x:.1f}%<br>"
+            "<b>PMF Score:</b> %{y:.0f}<br>"
+            "<b>Revenue:</b> $%{customdata:.0f}M<extra></extra>"
+        ),
         showlegend=False,
     )
 )
 
-# Size legend - representative bubbles positioned below colorbar
-legend_sizes = [5, 15, 30]
-for label_size in legend_sizes:
+# Size legend — three reference bubbles
+for size_label in [100, 500, 1500]:
     fig.add_trace(
         go.Scatter(
             x=[None],
             y=[None],
             mode="markers",
             marker={
-                "size": label_size,
+                "size": size_label,
                 "sizemode": "area",
                 "sizeref": sizeref,
                 "sizemin": 4,
-                "color": "#306998",
-                "opacity": 0.78,
-                "line": {"width": 1.5, "color": "white"},
+                "color": "#009E73",
+                "opacity": 0.75,
+                "line": {"width": 1.5, "color": PAGE_BG},
             },
-            name=f"{label_size}%",
+            name=f"${size_label}M",
             showlegend=True,
         )
     )
 
-# Layout - balanced margins, legend below colorbar
 fig.update_layout(
-    title={"text": "bubble-basic · plotly · pyplots.ai", "font": {"size": 32}, "x": 0.5, "xanchor": "center"},
+    autosize=False,
+    title={"text": title, "font": {"size": title_size, "color": INK}, "x": 0.5, "xanchor": "center"},
     xaxis={
-        "title": {"text": "Revenue ($ millions)", "font": {"size": 24}},
-        "tickfont": {"size": 18},
-        "gridcolor": "rgba(0,0,0,0.08)",
-        "gridwidth": 1,
+        "title": {"text": "R&D Spend (% of Revenue)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
         "zeroline": False,
     },
     yaxis={
-        "title": {"text": "Growth Rate (%)", "font": {"size": 24}},
-        "tickfont": {"size": 18},
-        "gridcolor": "rgba(0,0,0,0.08)",
-        "gridwidth": 1,
+        "title": {"text": "Product-Market-Fit Score", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
         "zeroline": False,
     },
-    template="plotly_white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     legend={
-        "title": {"text": "Market Share", "font": {"size": 18}},
-        "font": {"size": 16},
-        "x": 1.12,
-        "y": 0.02,
-        "xanchor": "left",
-        "yanchor": "bottom",
-        "bgcolor": "rgba(255,255,255,0.85)",
-        "bordercolor": "rgba(0,0,0,0.12)",
+        "title": {"text": "Revenue", "font": {"size": 10, "color": INK}},
+        "font": {"size": 10, "color": INK_SOFT},
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
         "borderwidth": 1,
+        "x": 0.02,
+        "y": 0.98,
+        "xanchor": "left",
+        "yanchor": "top",
     },
-    margin={"l": 100, "r": 180, "t": 120, "b": 100},
-    plot_bgcolor="white",
-    paper_bgcolor="white",
+    margin={"l": 80, "r": 160, "t": 80, "b": 60},
 )
 
 # Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")

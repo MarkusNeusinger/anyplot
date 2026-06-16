@@ -34,7 +34,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data – Household Solar Panel Adoption Survey (100 homes, 10×10 grid)
 categories = ["Fully Solar-Powered", "Partially Solar-Powered", "No Solar Panels"]
@@ -61,7 +61,7 @@ legend_labels = [f"{cat}  ({cnt})" for cat, cnt in zip(categories, counts, stric
 plot = (
     ggplot(df, aes(x="x", y="y", color="category"))
     + geom_point(size=9)
-    + scale_color_manual(values=OKABE_ITO, labels=legend_labels)
+    + scale_color_manual(values=IMPRINT, labels=legend_labels)
     + coord_fixed()
     + labs(
         title="dot-matrix-proportional · plotnine · anyplot.ai",

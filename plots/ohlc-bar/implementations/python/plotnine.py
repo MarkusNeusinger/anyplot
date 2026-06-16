@@ -31,9 +31,9 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette for up/down distinction
-UP_COLOR = "#009E73"  # Position 1: bluish green
-DOWN_COLOR = "#D55E00"  # Position 2: vermillion
+# imprint semantic anchors for up/down distinction
+UP_COLOR = "#009E73"  # green - up bars
+DOWN_COLOR = "#AE3030"  # red - down bars
 
 # Data - Generate 50 days of realistic stock OHLC data
 np.random.seed(42)

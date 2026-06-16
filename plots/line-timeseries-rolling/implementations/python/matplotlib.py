@@ -40,7 +40,7 @@ fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 # Raw data - thin, semi-transparent line (secondary Okabe-Ito color)
-ax.plot(df["date"], df["temperature"], linewidth=1, alpha=0.4, color="#D55E00", label="Daily Temperature")
+ax.plot(df["date"], df["temperature"], linewidth=1, alpha=0.4, color="#C475FD", label="Daily Temperature")
 
 # Rolling average - prominent smooth line (brand green)
 ax.plot(df["date"], df["rolling_avg"], linewidth=3.5, color="#009E73", label="7-Day Rolling Average")

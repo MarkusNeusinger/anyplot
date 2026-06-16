@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { API_URL } from '../constants';
+
+import { apiGet, endpoints } from 'src/lib/api';
 
 export interface PlotOfTheDayData {
   spec_id: string;
@@ -25,12 +26,8 @@ export function usePlotOfTheDay(): PlotOfTheDayData | null {
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`${API_URL}/insights/plot-of-the-day`)
-      .then(r => {
-        if (!r.ok) throw new Error(`${r.status}`);
-        return r.json();
-      })
-      .then((data: PlotOfTheDayData) => {
+    apiGet<PlotOfTheDayData>(endpoints.plotOfTheDay)
+      .then(data => {
         if (!cancelled) setPotd(data);
       })
       .catch(() => {});

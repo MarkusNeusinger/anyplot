@@ -29,8 +29,8 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"  # Okabe-Ito position 1
-SECONDARY = "#D55E00"  # Okabe-Ito position 2
+BRAND = "#009E73"  # imprint green — bullish
+SECONDARY = "#AE3030"  # imprint red — bearish
 
 # Apply theme-aware seaborn styling
 sns.set_theme(
@@ -90,9 +90,9 @@ df = pd.DataFrame({"date": dates, "open": opens, "high": highs, "low": lows, "cl
 df["bullish"] = df["close"] >= df["open"]
 df["day_idx"] = range(len(df))
 
-# Color scheme: Okabe-Ito palette
-bullish_color = BRAND  # #009E73
-bearish_color = SECONDARY  # #D55E00
+# Color scheme: imprint semantic anchors
+bullish_color = BRAND  # #009E73 green
+bearish_color = SECONDARY  # #AE3030 red
 
 # Create figure with two subplots (75% price, 25% volume)
 fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 9), height_ratios=[3, 1], sharex=True, gridspec_kw={"hspace": 0.05})

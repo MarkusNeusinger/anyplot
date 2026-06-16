@@ -43,7 +43,7 @@ X_MARGIN = 5  # pre-filter margin to exclude vl-convert layout inflation from ou
 # Unified color/dash scheme (single legend covers all 6 element types)
 # Data series first so Temperature gets Okabe-Ito position 1 (#009E73 brand green)
 ALL_LABELS = ["Temperature", "Dewpoint", "Isotherm", "Dry Adiabat", "Moist Adiabat", "Mixing Ratio"]
-ALL_COLORS = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+ALL_COLORS = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 ALL_DASHES = [[1, 0], [8, 4], [4, 4], [1, 0], [6, 3], [2, 2]]
 
 full_color_scale = alt.Scale(domain=ALL_LABELS, range=ALL_COLORS)

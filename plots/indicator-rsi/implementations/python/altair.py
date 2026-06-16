@@ -100,7 +100,7 @@ threshold_lines = (
 
 rsi_line = (
     alt.Chart(df)
-    .mark_line(strokeWidth=3, color="#0072B2")
+    .mark_line(strokeWidth=3, color="#4467A3")
     .encode(
         x=alt.X("date:T", title="Date", axis=alt.Axis(format="%b %Y")),
         y=alt.Y("rsi:Q", title="RSI Value", scale=alt.Scale(domain=[0, 100])),

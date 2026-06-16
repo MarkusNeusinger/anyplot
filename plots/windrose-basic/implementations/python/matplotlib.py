@@ -22,7 +22,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette for wind speed bins (starting with brand green)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data - Simulated annual wind measurements (8760 hourly readings)
 np.random.seed(42)
@@ -91,7 +91,7 @@ for j in range(len(speed_bins) - 1):
         freq_matrix[:, j],
         width=bar_width,
         bottom=bottoms,
-        color=OKABE_ITO[j],
+        color=IMPRINT[j],
         edgecolor=PAGE_BG,
         linewidth=0.5,
         label=f"{speed_labels[j]} m/s",

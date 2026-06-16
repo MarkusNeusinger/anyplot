@@ -17,7 +17,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00"]
+IMPRINT = ["#009E73", "#C475FD"]
 
 sns.set_theme(
     style="ticks",
@@ -69,7 +69,7 @@ sns.scatterplot(
     x="angle_rad",
     y="speed",
     hue="time_of_day",
-    palette=OKABE_ITO,
+    palette=IMPRINT,
     hue_order=["Morning", "Afternoon"],
     s=150,
     alpha=0.7,

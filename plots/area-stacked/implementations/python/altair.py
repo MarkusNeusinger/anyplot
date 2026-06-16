@@ -50,7 +50,7 @@ stack_order = {"Software": 1, "Hardware": 2, "Services": 3, "Support": 4}
 df["StackOrder"] = df["Category"].map(stack_order)
 
 # Okabe-Ito palette: first series ALWAYS #009E73
-colors = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+colors = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Create stacked area chart
 chart = (

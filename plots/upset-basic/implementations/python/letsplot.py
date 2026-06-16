@@ -40,7 +40,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data: user acquisition channels (marketing segments)
 np.random.seed(42)
@@ -113,7 +113,7 @@ base_theme = theme(
 )
 
 # Intersection size bars (top panel)
-degree_palette = {str(d): OKABE_ITO[d - 1] for d in range(1, 6)}
+degree_palette = {str(d): IMPRINT[d - 1] for d in range(1, 6)}
 
 p_top = (
     ggplot(inter, aes(x="idx", y="count", fill="degree_str"))

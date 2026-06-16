@@ -1,152 +1,183 @@
 library: letsplot
+language: python
 specification_id: map-connection-lines
 created: '2026-01-21T16:31:03Z'
-updated: '2026-01-21T16:34:37Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21217352661
+updated: '2026-05-28T01:12:33Z'
+generated_by: claude-sonnet
+workflow_run: 26547687485
 issue: 3746
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/letsplot/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/python/letsplot/plot-dark.html
+quality_score: 84
 review:
   strengths:
-  - Excellent use of geom_curve for connection lines with proper curvature parameter
-  - Dual encoding (color + size) effectively represents passenger volume
-  - Clean implementation of simplified world map using polygon data
-  - Proper use of lets-plot grammar with well-structured layering
-  - Good color scheme with Python-branded colors for airport markers
+  - 'Perfect spec compliance: curved routes, dual size+color encoding, markers, base
+    map, annotation, transparency all present'
+  - 'Correct anyplot imprint_seq colormap (#009E73 to #4467A3) and brand green airport
+    markers'
+  - Full theme adaptation using INK/PAGE_BG/ELEVATED_BG tokens — both renders pass
+    readability check
+  - geom_text_repel prevents label collision on a crowded map
+  - Clean code structure with np.random.seed(42) for reproducibility
+  - 'Correct canvas: ggsize(800, 450) + scale=4 = 3200x1800 px'
   weaknesses:
-  - Airport city names not labeled on the map (spec mentions optional labels for tooltips)
-  - Line thickness difference between low and high values could be more pronounced
-    for visual clarity
-  image_description: 'The plot displays a world map with simplified continent polygons
-    rendered in light gray (#E8E8E8) with subtle borders. Ten major airports are marked
-    with circular markers (blue outline, yellow fill). Sixteen flight routes are shown
-    as curved connection lines between city pairs. The line color follows a yellow-to-red
-    gradient encoding passenger volume (1.5-4+ million), while line thickness also
-    encodes the same value. Routes with higher passenger counts (like JFK-LHR at 4.2M)
-    appear thicker and more red/coral colored, while lower-volume routes (like JNB-DXB
-    at 1.2M) are thinner and yellow. Two legends appear on the right: a color gradient
-    bar and a line thickness legend, both labeled "Passengers (millions)". The title
-    reads "Global Flight Routes · map-connection-lines · letsplot · pyplots.ai" centered
-    at the top.'
+  - Hand-drawn world polygon outlines are coarse approximations — Africa/Asia coastlines
+    are notably angular; using a proper geodata source (even built-in lets-plot world
+    map data if available) would improve map quality
+  - Flat lon/lat projection used instead of a global projection (Robinson or Natural
+    Earth) as recommended by the spec
+  - City labels at size=3 mm may be borderline small on mobile-width display (~400
+    px)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "Global Flight Routes · map-connection-lines · python · letsplot · anyplot.ai" in dark #1A1A17 at scaled-down fontsize (~15pt), readable. City labels in #1A1A17 using geom_text_repel, small but readable. Legend title and text in INK/#INK_SOFT — readable. Annotation "Busiest route / JFK-LHR · 4.2M pax" bold and clear.
+      Data: Connection lines colored from brand green #009E73 (low) to blue #4467A3 (high) via imprint_seq gradient, thickness varies by passenger count. Airport markers are #009E73-filled circles with page-bg ring border.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in INK=#F0EFE8 (light cream), readable against dark bg. City labels also #F0EFE8 — no dark-on-dark failure. Legend text in INK_SOFT=#B8B7B0 — clearly readable. Legend box has #242420 elevated background with soft border. Annotation uses #F0EFE8, readable.
+      Data: Connection line colors identical to light render (same green-to-blue gradient). Airport markers same #009E73 green. Data colors are theme-independent as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title at 24pt, legend text at adequate sizes, all text clearly readable
+        comment: Title auto-scales fontsize for long title. City labels at size=3mm
+          small but readable at full canvas; borderline on mobile.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text or legend-data conflicts
+        comment: geom_text_repel handles label placement well; minor crowding near
+          London/Dubai/Singapore route convergence.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Curved lines and airport markers visible; some thinner lines could
-          be slightly more prominent
+        comment: Route lines clearly visible with alpha=0.5. Lowest-volume routes
+          are thin but discernible. Airport markers prominent.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Yellow-to-red gradient is colorblind-safe (avoids pure red-green)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas, map centered with appropriate margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for map; uses theme_void() appropriately - no penalty
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well-positioned on right, no grid needed for map
+        comment: CVD-safe sequential gradient; no red-green sole-signal pairing.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). Title ~75% width expected. Legend
+          placement clean.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: theme_void() appropriate for maps. Title format correct with descriptive
+          prefix.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'scale_color_gradient low=#009E73 high=#4467A3 = imprint_seq. Airport
+          fill #009E73. Backgrounds correct both themes.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default (4): annotation, themed markers with page-bg ring
+          border, dual encoding. Rough hand-drawn polygons reduce polish.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Above default (2): theme_void clean, alpha=0.5 on curves, elevated
+          legend background.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Above default (2): busiest route annotation creates focal point,
+          dual encoding shows intensity clearly.'
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: 'Correct: connection lines map with curved arcs'
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Origin/dest coordinates mapped correctly; passengers to color/size
-      - id: SC-03
+        comment: Connection lines map with curved arcs via geom_curve.
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Curved lines, transparency (alpha=0.5), base map, location markers
-          present; missing city labels at endpoints
-      - id: SC-04
-        name: Data Range
+        comment: Curved lines, size+color encoding, markers, base map, transparency
+          — all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: World view with xlim/ylim covers all routes properly
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: lat/lon correctly mapped, passengers as size+color, city labels shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Dual legends correctly show passengers scale
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Follows exact format with spec-id, library, pyplots.ai
+        comment: Correct title format with descriptive prefix. Legend 'Passengers
+          (millions)' with combined guide.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows varied route lengths and volumes; could include more hub variation
+        comment: 'All spec aspects covered: curved arcs, encoding, markers, base map,
+          annotation, repulsion labels.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Real-world flight routes between major airports with plausible passenger
-          volumes
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Passenger volumes (1.2-4.2 million) are realistic for major international
-          routes
+        comment: Real IATA codes, accurate coordinates, plausible passenger volumes,
+          realistic major hub routes, neutral content.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 16 routes in spec range, passenger values in realistic millions range.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -154,54 +185,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports, data, plot, save'
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All 20 lets_plot imports used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean structure; title fontsize scaling formula is self-contained;
+          no fake UI.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves plot.png with path but also saves plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Grammar of graphics layering, proper aes() mappings, scale_*, guide_legend()
+          for combined legend.
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of geom_curve, ggplot grammar, theme_void; could leverage
-          lets_plot livemap or geographic projections
+        comment: geom_text_repel auto-repulsion, geom_curve with curvature, combined
+          size+color guide, HTML export.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - custom-legend
+  - annotations
+  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
   - alpha-blending
   - custom-colormap
-  - edge-highlighting

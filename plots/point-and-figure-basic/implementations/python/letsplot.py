@@ -124,7 +124,7 @@ plot = (
         fontface="bold",
         tooltips=layer_tooltips().line("Column: @column").line("Price: $@price").line("Signal: @symbol"),
     )
-    + scale_color_manual(values={"up": "#009E73", "down": "#D55E00"})
+    + scale_color_manual(values={"up": "#009E73", "down": "#AE3030"})  # imprint red for down
     + scale_x_continuous(name="Column (Reversal Number)")
     + scale_y_continuous(name="Price ($)")
     + labs(title="point-and-figure-basic · python · letsplot · anyplot.ai")

@@ -1,15 +1,248 @@
 library: plotly
+language: python
 specification_id: band-basic
 created: '2025-12-23T09:08:56Z'
-updated: '2026-02-23T13:54:39Z'
-generated_by: claude-opus-4-6
-workflow_run: 20456382936
-issue: 0
-python_version: '3.14'
-library_version: 6.5.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/band-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/band-basic/plotly/plot.html
-quality_score: 90
+updated: '2026-05-29T17:40:33Z'
+generated_by: claude-sonnet
+workflow_run: 26651504813
+issue: 979
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/band-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/band-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/band-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/band-basic/python/plotly/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Correct Plotly band pattern using fill=toself with concatenated reversed arrays
+  - Theme-adaptive chrome fully implemented with all required tokens
+  - Band opacity is theme-aware (0.25 light / 0.40 dark) — intentional design thought
+  - Rich hover template with customdata exposing CI bounds to the user
+  - Clean deterministic synthetic data with realistic sensor drift concept
+  - Correct canvas size (3200x1800, landscape)
+  - 'Proper Imprint palette usage — brand green #009E73 as first series'
+  - KISS code structure, no functions or classes
+  - Both .png and .html outputs produced correctly
+  weaknesses:
+  - 'Dark render band fill (rgba(0,158,115,0.4) on #1A1A17) reads as a very muted
+    dark teal — slightly harder to perceive the CI region; consider increasing to
+    0.5 or adding a subtle stroke on the band boundary lines for dark theme'
+  - Design excellence is solid but not exceptional — no annotation or callout highlights
+    the growing uncertainty (sensor drift) as a focal insight
+  - Legend border adds minor visual weight; could be borderwidth=0 for a cleaner minimal
+    look
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct Imprint surface, not pure white
+      Chrome: Title "band-basic · python · plotly · anyplot.ai" centered, dark ink, ~60% plot width. Y-axis label "Temperature (°C)" and X-axis label "Elapsed Time (hours)" both in dark INK, clearly readable. Tick labels in INK_SOFT (#4A4A44), readable. Subtle horizontal y-axis grid lines.
+      Data: Semi-transparent green band (rgba(0,158,115,0.25)) fills the 95% CI region. Solid #009E73 center line at width=3. First series correctly uses brand green. Legend in top-left with ELEVATED_BG fill, showing "95% Confidence Interval" and "Measured Temperature".
+      Legibility verdict: PASS — all text clearly readable against light background, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface, not pure black
+      Chrome: Title in light #F0EFE8 text, clearly readable. Axis labels and tick labels in INK_SOFT dark variant (#B8B7B0), readable against dark background. No dark-on-dark failures detected.
+      Data: Band fill increases to rgba(0,158,115,0.4) — resulting in a dark teal region visually distinct from the background but less luminous than light render. Center line remains bright #009E73 and stands out clearly. Data colors consistent with light render (only chrome flips). Legend uses ELEVATED_BG dark (#242420) fill.
+      Legibility verdict: PASS — all text readable; band is slightly muted but visible and distinguishable from background
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 16, axis 12, tick 10). Readable
+          in both themes. Minor: title slightly small but appropriate for the long
+          mandated string.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements. Legend in top-left does not collide with
+          data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Band clearly visible in light render. Dark render band is slightly
+          muted (dark teal at 0.4 opacity on near-black) but still distinguishable.
+          Center line prominent in both.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 is CVD-safe. Single hue with alpha variation
+          — no red-green sole signal issue.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. 3200x1800 landscape. Margins l=80, r=60, t=80,
+          b=60 generous. Title ~60% width, balanced axis labels, nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Elapsed Time (hours)'', Y: ''Temperature (°C)'' — descriptive
+          with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green). Band fill is alpha variant of
+          same green. Backgrounds #FAF8F1 light / #1A1A17 dark. Both renders theme-correct.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom Imprint palette, theme-adaptive chrome, theme-specific band
+          opacity (0.25/0.40) shows intentional design. Not generic defaults, but
+          no bold design statement.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: L-shaped frame (no top/right spines). Y-axis grid only, subtle. Generous
+          whitespace. Legend border adds minor visual weight.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Growing band width as time progresses effectively communicates sensor
+          drift concept. Oscillating center line adds realism. No annotation calling
+          out the key insight.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct band plot: filled region between y_lower/y_upper with central
+          trend line.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparent fill (0.25-0.40), central line in contrasting style,
+          smooth interpolation via continuous line, uncertainty source implicit in
+          data design.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=hours (0-48), y_lower/y_upper define band, y_center=temperature
+          as line. All data correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''band-basic · python · plotly · anyplot.ai'' exact match.
+          Legend: ''95% Confidence Interval'' and ''Measured Temperature'' — descriptive.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Demonstrates all band plot aspects: filled region, boundary lines,
+          central trend, widening band over time showing growing uncertainty.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Temperature sensor with measurement uncertainty that grows over time
+          (sensor drift) — realistic, neutral, plausible domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Hours 0-48 (2-day measurement window), temperature 19-32°C, uncertainty
+          ±0.78 to ±2.7°C — all sensible sensor values.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions or classes, sequential top-to-bottom execution.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic — np.linspace + mathematical functions, no random
+          seed needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, sys, numpy, plotly.graph_objects — all used. sys.path fix is
+          justified.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Idiomatic fill=toself with concatenated reversed array. Custom hovertemplate
+          with customdata. sys.path guard well-commented.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. write_image with correct
+          width=800, height=450, scale=4.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: fill=toself with reversed-array concatenation is the idiomatic Plotly
+          band pattern. go.Scatter with customdata for hover. Proper layout dict usage.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Plotly's hovertemplate with customdata for rich CI-aware tooltips
+          — distinctly interactive feature. HTML export for live interactivity. These
+          are features unique to Plotly.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -20,207 +253,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
-review:
-  strengths:
-  - Excellent data storytelling through widening confidence band showing sensor drift
-  - Rich hover template with customdata showing CI bounds at each point
-  - Clean idiomatic Plotly code using the concat/toself fill-between pattern
-  - Dual output (PNG + interactive HTML) leveraging Plotly strengths
-  - Realistic sensor monitoring scenario with physically plausible values
-  weaknesses:
-  - np.random.seed(42) is set but no random functions are called — unnecessary line
-  - Right margin (40) is asymmetric with left margin (80) creating slight visual imbalance
-  image_description: The plot displays a band chart on a clean white background with
-    a subtle gray grid. A dark blue line (#306998) represents the measured temperature,
-    oscillating sinusoidally with an upward trend from ~20°C at hour 0 to ~29°C at
-    hour 48. A light blue semi-transparent band (rgba(48,105,152,0.25)) surrounds
-    the central line, representing the 95% confidence interval. The band visibly widens
-    over time, narrowing at the left (~±0.8°C) and expanding at the right (~±1.9°C),
-    illustrating growing sensor drift uncertainty. The title "band-basic · plotly
-    · pyplots.ai" is centered at top. The legend in the upper-left lists "95% Confidence
-    Interval" (shaded area) and "Measured Temperature" (line). X-axis is labeled "Elapsed
-    Time (hours)" and Y-axis "Temperature (°C)".
-  criteria_checklist:
-    visual_quality:
-      score: 29
-      max: 30
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 8
-        max: 8
-        passed: true
-        comment: 'All font sizes explicitly set: title=28, axis labels=22, ticks=18,
-          legend=16. All text clearly readable.'
-      - id: VQ-02
-        name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No overlapping elements. Legend positioned in upper-left without
-          obscuring data.
-      - id: VQ-03
-        name: Element Visibility
-        score: 6
-        max: 6
-        passed: true
-        comment: Band clearly visible with alpha 0.25. Central line stands out at
-          width=3.
-      - id: VQ-04
-        name: Color Accessibility
-        score: 4
-        max: 4
-        passed: true
-        comment: Single-hue blue palette. No colorblind issues. Strong contrast between
-          line and band.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good proportions, plot fills ~70% of canvas. Minor asymmetric margins
-          (l=80, r=40).
-      - id: VQ-06
-        name: Axis Labels & Title
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Descriptive labels with units: Elapsed Time (hours), Temperature
-          (°C).'
-    design_excellence:
-      score: 13
-      max: 20
-      items:
-      - id: DE-01
-        name: Aesthetic Sophistication
-        score: 5
-        max: 8
-        passed: true
-        comment: plotly_white template with Python Blue consistently applied. Subtle
-          grid colors, centered title. Thoughtful configuration above defaults.
-      - id: DE-02
-        name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: Zeroline removed, grid opacity 0.2, legend borderwidth=0, explicit
-          margins. Good refinement.
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
-        max: 6
-        passed: true
-        comment: Widening confidence band immediately communicates growing sensor
-          drift uncertainty. Oscillating trend adds visual interest.
-    spec_compliance:
-      score: 15
-      max: 15
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 5
-        max: 5
-        passed: true
-        comment: Correct band/confidence interval plot with filled region and central
-          trend line.
-      - id: SC-02
-        name: Required Features
-        score: 4
-        max: 4
-        passed: true
-        comment: Semi-transparent fill (0.25), central line (width=3), smooth interpolation
-          (100 points), 95% CI context.
-      - id: SC-03
-        name: Data Mapping
-        score: 3
-        max: 3
-        passed: true
-        comment: X=elapsed time, Y=temperature with upper/lower bounds. All data visible.
-      - id: SC-04
-        name: Title & Legend
-        score: 3
-        max: 3
-        passed: true
-        comment: Title format correct. Legend labels descriptive and match data.
-    data_quality:
-      score: 15
-      max: 15
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 6
-        max: 6
-        passed: true
-        comment: Variable-width band, smooth center line, oscillating pattern with
-          trend, transparent overlap.
-      - id: DQ-02
-        name: Realistic Context
-        score: 5
-        max: 5
-        passed: true
-        comment: Sensor temperature monitoring with uncertainty from drift. Real-world
-          plausible, neutral science topic.
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 4
-        passed: true
-        comment: Temperature 20-29°C realistic. 48-hour window plausible. Uncertainty
-          growth realistic for sensor drift.
-    code_quality:
-      score: 10
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Clean linear flow: imports → data → plot → layout → save. No functions
-          or classes.'
-      - id: CQ-02
-        name: Reproducibility
-        score: 2
-        max: 2
-        passed: true
-        comment: np.random.seed(42) set. Data is fully deterministic via np.linspace
-          and np.sin.
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: Only numpy and plotly.graph_objects imported; both used.
-      - id: CQ-04
-        name: Code Elegance
-        score: 2
-        max: 2
-        passed: true
-        comment: Clean concat/toself pattern for fill-between. Well-structured hover
-          template. No over-engineering.
-      - id: CQ-05
-        name: Output & API
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html. Current Plotly API.
-    library_mastery:
-      score: 8
-      max: 10
-      items:
-      - id: LM-01
-        name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Standard Plotly concat/toself pattern for fill-between. go.Figure
-          with add_trace, update_layout.
-      - id: LM-02
-        name: Distinctive Features
-        score: 4
-        max: 5
-        passed: true
-        comment: customdata + hovertemplate for rich hover, hoverinfo skip on band,
-          hoverlabel styling, HTML export.
-  verdict: APPROVED

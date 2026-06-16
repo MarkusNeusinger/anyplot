@@ -23,7 +23,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette — first series always #009E73
-CELL_COLORS = {"Survived": "#009E73", "Did Not Survive": "#D55E00"}
+CELL_COLORS = {"Survived": "#009E73", "Did Not Survive": "#C475FD"}
 
 # Data: Titanic passenger survival by class (realistic proportions)
 counts = {

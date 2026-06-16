@@ -1,105 +1,118 @@
 library: matplotlib
+language: python
 specification_id: arc-basic
 created: '2025-12-23T08:48:38Z'
-updated: '2026-02-23T21:45:15Z'
-generated_by: claude-opus-4-6
-workflow_run: 20455960794
-issue: 0
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/arc-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - bezier-curves
-  - patches
-  - colorbar
-  - annotations
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - minimal-chrome
-  - custom-colormap
-  - alpha-blending
-  - edge-highlighting
+updated: '2026-05-30T00:50:13Z'
+generated_by: claude-sonnet
+workflow_run: 26669351747
+issue: 991
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/arc-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/arc-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
 review:
   strengths:
-  - Excellent use of Bézier curves via Path/PathPatch for smooth arcs (distinctive
-    matplotlib feature)
-  - 'Strong data storytelling: protagonist highlighting, node size encoding, dual-encoded
-    weights, narrative subtitle'
-  - Truncated colormap is a thoughtful detail ensuring all weight levels remain visible
-  - Fully deterministic data with realistic character interaction context
-  - Clean, well-structured code with perfect KISS adherence
+  - Excellent matplotlib-idiomatic arc rendering using mpath.Path with CURVE4 control
+    points and mpatches.PathPatch — the canonical matplotlib pattern for custom cubic
+    Bézier curves
+  - 'Perfect palette compliance: imprint_seq colormap for continuous edge weights,
+    brand green #009E73 for Alice (protagonist), theme-adaptive chrome throughout
+    both renders'
+  - 'Strong data storytelling: Alice highlighted with brand green and heavy font weight,
+    node size proportional to weighted degree, arc height encoding connection distance
+    — visual hierarchy is clear'
+  - Full spec compliance — arc height proportional to distance, weight-coded arc thickness
+    and color, readable node labels, semi-transparent arcs (alpha=0.8) for overlapping
+    connections
+  - Fully deterministic data (no random seed needed), clean KISS code structure with
+    correct use of Axes methods (not pyplot)
   weaknesses:
-  - Title format includes extra Character Interactions prefix beyond required spec-id
-    · library · pyplots.ai format
-  image_description: 'The plot displays a basic arc diagram with 10 character nodes
-    (Alice, Bob, Carol, David, Eve, Frank, Grace, Henry, Iris, Jack) arranged along
-    a horizontal baseline. Curved arcs above the baseline connect pairs of characters,
-    with arc height proportional to the distance between connected nodes. Arc color
-    uses a truncated Blues colormap — lighter blue for weight-1 connections, darker
-    blue for weight-3 (strongest). Arc thickness also increases with weight (dual
-    encoding). A colorbar on the right shows "Connection Strength" scaled from 1 to
-    3. Node sizes vary by weighted degree: Alice (orange, largest) is the hub character;
-    David is also relatively large. All other nodes are yellow with blue edge outlines.
-    A subtle semi-transparent gray baseline runs beneath the nodes. The title reads
-    "Character Interactions · arc-basic · matplotlib · pyplots.ai" in 24pt, with a
-    gray italic subtitle "Node size reflects connection activity · Alice (orange)
-    is the central character." All axes are turned off for a clean layout.'
+  - 'DE-01 (6/8): Design is strong but not yet FiveThirtyEight-level — non-protagonist
+    nodes are all in INK_MUTED gray with no categorical color variation, limiting
+    visual richness; adding even subtle Imprint palette color hints to key characters
+    (e.g., using palette positions 2–4 for Bob/Carol/David) would elevate the design'
+  - 'DE-02 (4/6): Beyond ax.axis(''off''), minimal visual refinement — no explicit
+    grid, spine, or whitespace fine-tuning; adding a light horizontal rule or more
+    intentional vertical spacing for the label area would complete the polished look'
+  - 'LM-01 (4/5): Minor idiomatic issue — plt.setp(cbar.ax.yaxis.get_ticklabels(),
+    color=INK_SOFT) is redundant with cbar.ax.tick_params(labelsize=8, colors=INK_SOFT)
+    already set on the same element'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, no pure white.
+      Chrome: Title "arc-basic · python · matplotlib · anyplot.ai" at 12pt is clearly readable in dark ink. Italic subtitle "Node size reflects connection activity · Alice (green) is the central character" at 8pt is readable in INK_MUTED. Colorbar label "Connection Strength" and tick labels (1/2/3) are clearly visible. All text dark on light background.
+      Data: 10 nodes aligned along a horizontal baseline. Alice's node is brand green (#009E73), all other nodes are in muted gray (INK_MUTED #6B6A63). Nodes are sized proportionally to weighted degree — Alice is noticeably larger. 15 arcs curve above the baseline using cubic Bézier curves colored with imprint_seq (green→blue) based on connection strength (1=teal/green, 2=teal, 3=blue). Long-range arcs (Alice–Henry, Alice–Jack) rise to full canvas height. Semi-transparent arcs (alpha=0.8) handle overlap gracefully.
+      Legibility verdict: PASS — all title, subtitle, node labels, colorbar text fully readable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface, not pure black.
+      Chrome: Title and subtitle render in light cream text (#F0EFE8 / #B8B7B0) — clearly visible against the dark background. Node labels below the baseline are light-colored and readable. Colorbar tick labels and "Connection Strength" label are light-colored. No dark-on-dark failures observed.
+      Data: Arc colors are identical to the light render — imprint_seq green→blue colormap is unchanged across themes. Alice's brand green node (#009E73) is identically rendered. Non-protagonist nodes appear in a slightly lighter gray tone against the dark background (INK_MUTED adapts to #A8A79F). Colorbar outline correctly adapts to INK_SOFT.
+      Legibility verdict: PASS — all text clearly readable in light color on dark background. No dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 16pt, colorbar
-          16pt). Subtitle at 13pt slightly small but readable.
+        comment: All font sizes explicitly set — title 12pt, axis/colorbar labels
+          8pt, node labels 8pt. Well-proportioned at 3200x1800px. Both themes fully
+          readable.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All node labels well-spaced, no text collisions. Arc overlaps handled
-          with alpha blending.
+        comment: Node labels well-spaced along horizontal axis, no text collision.
+          Arcs do not occlude labels. Colorbar positioned outside plot area.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Nodes clearly visible (300-650 size range). Arc thickness 3.3-6.9
-          all visible. Truncated colormap ensures weight-1 arcs visible.
+        comment: Arc linewidths (0.8–3.8) adapted to connection weight. Node sizes
+          (120–320) proportional to degree. alpha=0.8 for overlapping arcs — appropriate
+          density choice.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (green→blue) is CVD-safe. Alice's green node clearly
+          distinguished by color AND size. Adequate luminance contrast in both themes.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue sequential colormap is colorblind-safe. Orange accent distinguishable.
-          No red-green reliance.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good horizontal spread. Arcs fill vertical space. Minor space imbalance
-          between upper arc region and lower label area.
+        comment: Canvas gate passed (3200x1800). Arcs fill upper 75% of canvas, nodes
+          anchored at bottom, colorbar neatly at right. No elements cut off. Good
+          canvas utilization.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes appropriately off for arc diagram. Colorbar labeled Connection
-          Strength. Node labels meaningful.
+        comment: No traditional axes (arc diagram). Colorbar labeled 'Connection Strength'
+          — descriptive. Node labels are character names. Title is correct required
+          format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq used for continuous edge weight data. Alice (first/protagonist)
+          uses brand green #009E73. Backgrounds #FAF8F1 (light) / #1A1A17 (dark).
+          Chrome fully theme-adaptive.'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -107,24 +120,29 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom truncated Blues colormap, orange accent for protagonist, coordinated
-          scheme, typography hierarchy. Clearly above defaults.
+        comment: 'Strong design: imprint_seq colormap, protagonist highlight via brand
+          green + heavy font, degree-proportional node sizing, cubic Bézier arcs.
+          Clearly above defaults. Not yet at FiveThirtyEight level — non-protagonist
+          nodes lack color variation.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Axes hidden, subtle baseline (alpha=0.2), round capstyle, compact
-          colorbar, generous whitespace. Nearly every detail polished.
+        comment: 'Good: ax.axis(''off'') removes all chart chrome (appropriate for
+          arc diagram), subtle 15%-alpha baseline, arc transparency 0.8. Missing further
+          fine-tuning of whitespace and label zone spacing.'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Protagonist highlighting, node size encoding weighted degree, arcs
-          sorted by weight, narrative subtitle. Clear story emerges immediately.
+        comment: 'Good: visual hierarchy guides reader — Alice as clear focal point
+          (green, larger, heavy name), arc height encodes distance, colormap encodes
+          strength. Subtitle explicitly states the story. Stops short of ''excellent''
+          as the data pattern is relatively simple.'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -132,28 +150,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct arc diagram: nodes along horizontal line, curved arcs above.'
+        comment: 'Correct arc diagram: nodes on horizontal axis, arcs curving above,
+          arc height proportional to node distance.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: ordered nodes, curved arcs proportional
-          to distance, semi-transparent, readable labels, color-coded by weight.'
+        comment: 'All spec features present: ordered nodes, edges as arcs, weights
+          affecting arc thickness and color, semi-transparent arcs, readable node
+          labels, color coding by weight.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Nodes correctly positioned, edges connect correct pairs, arc heights
-          proportional to distance.
+        comment: Horizontal axis shows all 10 nodes in sequence. Arc height correctly
+          encodes inter-node distance. Weight-to-color and weight-to-linewidth mapping
+          correct.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title contains required elements but prepends Character Interactions.
-          Colorbar legend is clear.
+        comment: Title 'arc-basic · python · matplotlib · anyplot.ai' is exact required
+          format. Colorbar labeled 'Connection Strength' with correct tick values
+          1/2/3.
     data_quality:
       score: 15
       max: 15
@@ -163,22 +185,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Mix of short-range and long-range connections. Weight variation 1-3.
-          Varying node degrees from hub to peripheral.
+        comment: 'Shows all arc diagram features: short-range and long-range connections,
+          hub node (Alice, 5 connections), varying weights (1/2/3), degree-proportional
+          node sizes.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Character interactions in a story chapter. Plausible literary analysis.
-          Neutral topic.
+        comment: Character interactions in a story chapter — real, neutral, comprehensible
+          scenario. Named characters (Alice, Bob, Carol, etc.) with story-plausible
+          relationships.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 10 nodes within recommended range. Weights 1-3 appropriate. 15 edges
-          reasonable connectivity.
+        comment: 10 nodes (within spec's 10–50 recommended range), 15 edges (appropriate
+          density), weights 1–3 (sensible ordinal scale for dialogue exchanges).
     code_quality:
       score: 10
       max: 10
@@ -188,35 +212,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: Imports, Data, Plot, Save. No functions or classes.'
+        comment: Clean Imports → Data → Plot → Save structure. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hard-coded data, no random elements.
+        comment: Fully deterministic data — no randomness, no seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All 5 imports used: matplotlib.colors, patches, path, pyplot, numpy.'
+        comment: 'All imports used: os, mcolors, mpatches, mpath, plt, np.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. Good list comprehensions. Edge sorting for
-          layering. No over-engineering.
+        comment: Clean, Pythonic. Appropriate complexity for custom arc diagram. No
+          fake UI or over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, bbox_inches=tight. No deprecated
-          API.
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight' on savefig. Current
+          matplotlib API.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -224,13 +248,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper ax-methods, fig/ax subplots, ScalarMappable for colorbar,
-          tight_layout. Solid idiomatic matplotlib.
+        comment: 'Correct use of Axes methods (ax.scatter, ax.text, ax.plot, ax.add_patch).
+          Proper ScalarMappable + fig.colorbar pattern. Minor: plt.setp(cbar.ax.yaxis.get_ticklabels(),
+          ...) is redundant with tick_params colors already set.'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Path with CURVE4 cubic Bezier curves and PathPatch for custom arc
-          rendering. Custom LinearSegmentedColormap. Distinctive matplotlib capabilities.
+        comment: Uses mpath.Path with CURVE4 control points for cubic Bézier curves
+          rendered as mpatches.PathPatch — the distinctive matplotlib low-level path
+          API for custom curve drawing. Not easily replicated in most other libraries.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - patches
+  - colorbar
+  - annotations
+  patterns:
+  - iteration-over-groups
+  - explicit-figure
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
+  - custom-colormap
+  - alpha-blending
+  - edge-highlighting

@@ -36,7 +36,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Iris dataset with 4 dimensions
 # Using 30 samples (10 per species) for clarity
@@ -243,7 +243,7 @@ plot = (
     # Data lines connecting observations across dimensions
     + geom_line(aes(x="x", y="y", group="observation", color="species"), data=line_df, size=1.5, alpha=0.7)
     # Okabe-Ito palette — first series is brand green
-    + scale_color_manual(values=OKABE_ITO)
+    + scale_color_manual(values=IMPRINT)
     # Dimension labels at the bottom (theme-adaptive color, size >=20pt)
     + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=20, color=INK)
     # Tick value labels on the left side of axes (theme-adaptive color, size >=16pt)

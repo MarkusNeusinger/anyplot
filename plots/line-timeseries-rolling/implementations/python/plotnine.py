@@ -21,7 +21,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00"]  # brand green, vermillion
+IMPRINT = ["#009E73", "#C475FD"]  # brand green, vermillion
 
 # Data - Daily temperature readings with 7-day rolling average
 np.random.seed(42)
@@ -60,7 +60,7 @@ df_long["series"] = pd.Categorical(
 plot = (
     pn.ggplot(df_long, pn.aes(x="date", y="value", color="series", alpha="series", size="series"))
     + pn.geom_line()
-    + pn.scale_color_manual(values={"Daily Temperature": OKABE_ITO[0], "7-Day Rolling Average": OKABE_ITO[1]})
+    + pn.scale_color_manual(values={"Daily Temperature": IMPRINT[0], "7-Day Rolling Average": IMPRINT[1]})
     + pn.scale_alpha_manual(values={"Daily Temperature": 0.5, "7-Day Rolling Average": 1.0})
     + pn.scale_size_manual(values={"Daily Temperature": 0.8, "7-Day Rolling Average": 2.0})
     + pn.guides(alpha="none", size="none")

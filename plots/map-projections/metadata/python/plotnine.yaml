@@ -33,7 +33,7 @@ review:
     to understand what each projection does
   - 'Theme-adaptive ocean panel backgrounds (#D0E8F5 light / #0F1F2D dark) cleanly
     differentiate the ocean surface from land across both themes'
-  - 'Brand green #009E73 used for land masses, correct anyplot palette position 1,
+  - 'Brand green #009E73 used for land masses, correct Imprint palette position 1,
     identical across both light and dark renders'
   weaknesses:
   - Annotation text inside each panel (projection descriptions, size=7 at dpi=400
@@ -109,7 +109,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Land uses #009E73 (anyplot palette position 1). Plot backgrounds
+        comment: 'Land uses #009E73 (Imprint palette position 1). Plot backgrounds
           #FAF8F1 (light) / #1A1A17 (dark) correct. Chrome uses INK/INK_SOFT tokens.
           Ocean panel background is contextual, not a data-series color violation.'
     design_excellence:

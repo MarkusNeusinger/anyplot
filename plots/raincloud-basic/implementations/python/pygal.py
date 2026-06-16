@@ -25,7 +25,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # distinct from the surrounding plot background.
 BOX_FILL = "#FAF8F1" if THEME == "light" else "#2E2E29"
 
-ANYPLOT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
+IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
 # Data — reaction times (ms) for three treatment groups
 np.random.seed(42)
@@ -34,7 +34,7 @@ data = {
     "Treatment A": np.random.normal(380, 60, 90),
     "Treatment B": np.random.normal(320, 50, 90),
 }
-group_colors = ANYPLOT_PALETTE[: len(data)]
+group_colors = IMPRINT_PALETTE[: len(data)]
 
 # X-axis bounds with small padding
 all_vals = np.concatenate(list(data.values()))

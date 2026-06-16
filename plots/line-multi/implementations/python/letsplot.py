@@ -21,7 +21,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data: Monthly sales for 3 product lines over 12 months
 np.random.seed(42)
@@ -54,8 +54,8 @@ plot = (
     + geom_point(data=other_df, size=4.5, alpha=0.75)
     + geom_line(data=electronics_df, size=3, alpha=1.0)
     + geom_point(data=electronics_df, size=5.5, alpha=0.95)
-    + geom_smooth(data=electronics_df, method="loess", span=0.4, se=False, color=OKABE_ITO[0], size=1.2, alpha=0.4)
-    + scale_color_manual(values=OKABE_ITO)
+    + geom_smooth(data=electronics_df, method="loess", span=0.4, se=False, color=IMPRINT[0], size=1.2, alpha=0.4)
+    + scale_color_manual(values=IMPRINT)
     + scale_x_continuous(breaks=months.tolist(), labels=month_labels)
     + labs(title="line-multi · letsplot · anyplot.ai", x="Month", y="Sales (thousands USD)")
     + theme(

@@ -1,15 +1,235 @@
 library: plotly
+language: python
 specification_id: bump-basic
 created: '2025-12-23T09:18:15Z'
-updated: '2026-02-22T21:12:41Z'
-generated_by: claude-opus-4-6
-workflow_run: 20456607003
-issue: 0
-python_version: 3.14.3
-library_version: 6.5.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bump-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bump-basic/plotly/plot.html
+updated: '2026-05-29T13:22:11Z'
+generated_by: claude-sonnet
+workflow_run: 26639092515
+issue: 982
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/plotly/plot-dark.html
 quality_score: 91
+review:
+  strengths:
+  - Visual hierarchy (variable line width, marker size, opacity) by rank-change magnitude
+    highlights the most dynamic driver storylines at a glance
+  - 'Perfect Imprint palette compliance: canonical order, theme-adaptive chrome, correct
+    warm backgrounds in both renders'
+  - Interactive HTML with range slider provides genuine race-by-race exploration value
+  - End-of-line colour-coded annotations with bold text for notable movers eliminate
+    legend-lookup friction
+  - Correct inverted Y-axis with rank 1 at top; all six drivers clearly traceable
+    across all eight races
+  weaknesses:
+  - Sainz (#2ABCCD cyan) and Leclerc (#BD8233 ochre) annotation labels have lower
+    contrast on the warm cream light background — add a semi-transparent background
+    or thin dark stroke to annotation font for thumbnail legibility
+  - Top and right spines not explicitly removed in code (no showline=False on secondary
+    axis edges) — explicit removal would yield a cleaner chart frame
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 — correct theme surface
+      Chrome: title "bump-basic · python · plotly · anyplot.ai" in dark #1A1A17, left-aligned, readable; "Race" x-axis label and "Championship Position" y-axis label in dark ink at fontsize=12; tick labels in #4A4A44 at fontsize=10 — all clearly readable
+      Data: Verstappen=#009E73 (brand green, P1 anchor), Hamilton=#C475FD (lavender, dramatic rise), Norris=#4467A3 (blue, highest movement), Leclerc=#BD8233 (ochre, stable P2-4), Piastri=#AE3030 (red, stable P5), Sainz=#2ABCCD (cyan, stable P6). Variable line widths (2-5px) and marker sizes (10-16px) based on rank change. White marker edges for definition. End-of-line annotations in driver colors.
+      Legibility verdict: PASS — all chrome and data text readable. Minor note: Sainz cyan and Leclerc ochre annotation labels have lower contrast on cream bg but remain legible.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 — correct theme surface
+      Chrome: title in light #F0EFE8, axis labels in light ink, tick labels in #B8B7B0 — all clearly readable against dark background. No dark-on-dark failures observed.
+      Data: all six driver colors identical to light render (green, lavender, blue, ochre, red, cyan) — only chrome flips between themes, data colors are constant. Y-axis grid lines subtle and visible.
+      Legibility verdict: PASS — all text elements readable against dark background. No dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title=16, axis=12, ticks=10, annotations=12).
+          Readable in both themes. Minor: Sainz cyan and Leclerc ochre annotation
+          labels have lower contrast on cream bg.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Generous right margin (r=130) gives end-of-line labels room; no collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Variable line widths (2/3/5px) and marker sizes (10/12/16px) density-appropriate.
+          White marker edges add definition.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette 1-6 in canonical order; CVD-safe; no red-green sole-signal
+          pairing.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 via width=800, height=450, scale=4. autosize=False.
+          Explicit margins l=80, r=130, t=60, b=60. No clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Race and Championship Position are descriptive. Title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series Verstappen = #009E73. Imprint positions 1-6 canonical
+          order. Backgrounds #FAF8F1 light / #1A1A17 dark. Both renders theme-correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Visual hierarchy through variable line width/marker size/opacity
+          by rank-change magnitude. Bold annotations for high-movers. End-of-line
+          direct labels.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis grid only, x-axis grid off. White marker edges. Generous margins.
+          No explicit top/right spine removal code.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Thicker lines on Norris and Hamilton draw eye to key story arcs.
+          Direct labels support individual driver tracking. Verstappen dominance vs.
+          late challenge readable at a glance.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Bump chart: ranked ordinal positions connected by lines across time
+          periods.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Y-axis inverted (rank 1 at top), distinct colors, dot markers at
+          each race, lines connect same driver.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=races (categorical), Y=championship rank. 6 entities, 8 periods
+          — within spec range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: bump-basic · python · plotly · anyplot.ai. Direct end-of-line
+          annotations replace legend.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Covers rank stability, sustained dominance, dramatic rise, high movement,
+          and crossovers — all key bump-chart story types.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'F1 driver standings: canonical, neutral, real-world application.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Ranks 1-6 over 8 named races. Sensible domain values.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes; clean procedural flow.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully hardcoded data; deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only os and plotly.graph_objects — both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean loop over drivers; no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with correct filenames.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Proper Graph Objects API: go.Figure(), add_trace(), update_layout(),
+          add_annotation(). All props via update_layout dicts.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Range slider in HTML for race-by-race exploration. Custom hovertemplate
+          with driver name and position. Themed hoverlabel styling.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -20,209 +240,5 @@ impl_tags:
   - iteration-over-groups
   dataprep: []
   styling:
+  - alpha-blending
   - edge-highlighting
-  - grid-styling
-review:
-  strengths:
-  - Excellent visual hierarchy system based on rank dynamism (line width, marker size,
-    opacity, bold labels)
-  - Clean end-of-line labeling instead of traditional legend — optimal for bump charts
-  - Thoughtful colorblind-safe palette with explicit consideration for accessibility
-  - Perfect spec compliance with all required features present
-  - Data tells a clear story with realistic F1 context
-  - Dual output (PNG + interactive HTML) leverages Plotly strengths
-  weaknesses:
-  - Sainz line at 0.45 opacity is borderline too faded for comfortable viewing
-  - Axis labels lack units (though inherently N/A for categorical/ordinal data)
-  - Could leverage more advanced Plotly features (animation, range slider) for stronger
-    library mastery
-  image_description: The plot displays a bump chart of Formula 1 championship standings
-    across 8 races (Bahrain through Silverstone) for 6 drivers. Verstappen (dark blue)
-    holds rank 1 through Miami before dropping. Hamilton (red) starts at P4 and climbs
-    to P1 by Silverstone. Norris (teal/cyan) rises dramatically from P5 to P1 at Imola
-    before settling at P3. Leclerc (orange) starts at P2 and gradually falls to P4.
-    Piastri (purple) and Sainz (gray) remain in the lower positions and are visually
-    de-emphasized with thinner lines and lower opacity. The Y-axis is inverted with
-    rank 1 at top. End-of-line labels identify each driver on the right margin. Title
-    reads "bump-basic · plotly · pyplots.ai" top-left. Background is clean white with
-    very subtle horizontal gridlines on the y-axis only. White marker borders add
-    polish. Bold labels mark the most dynamic drivers (Hamilton, Norris).
-  criteria_checklist:
-    visual_quality:
-      score: 28
-      max: 30
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 8
-        max: 8
-        passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis titles 22pt, tick
-          fonts 18pt, annotations 16pt, hover labels 16pt'
-      - id: VQ-02
-        name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No text overlap. End-of-line labels well-separated at distinct rank
-          positions
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
-        max: 6
-        passed: true
-        comment: Visual hierarchy with varying widths (2-5) and marker sizes (10-16).
-          Sainz at 0.45 opacity is quite faded
-      - id: VQ-04
-        name: Color Accessibility
-        score: 4
-        max: 4
-        passed: true
-        comment: Colorblind-safe palette with teal replacing green to avoid red-green
-          issues
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 4
-        max: 4
-        passed: true
-        comment: Good margins with r=130 for labels. Plot fills canvas well with balanced
-          whitespace
-      - id: VQ-06
-        name: Axis Labels & Title
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive labels (Race, Championship Position) but no units — N/A
-          for categorical/ordinal data
-    design_excellence:
-      score: 16
-      max: 20
-      items:
-      - id: DE-01
-        name: Aesthetic Sophistication
-        score: 6
-        max: 8
-        passed: true
-        comment: Custom palette, visual hierarchy via line width/marker size/opacity,
-          end-of-line labels, white marker borders. Strong intentional design
-      - id: DE-02
-        name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: plotly_white template, x-grid hidden, y-grid at 0.06 opacity, transparent
-          background, generous margins, marker edge highlights
-      - id: DE-03
-        name: Data Storytelling
-        score: 5
-        max: 6
-        passed: true
-        comment: Visual hierarchy through opacity/width/size guides viewer to Hamilton/Norris
-          storylines. Static drivers appropriately muted
-    spec_compliance:
-      score: 15
-      max: 15
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 5
-        max: 5
-        passed: true
-        comment: Correct bump chart showing rankings over time with connected lines
-      - id: SC-02
-        name: Required Features
-        score: 4
-        max: 4
-        passed: true
-        comment: Inverted y-axis, distinct colors, dot markers, connecting lines,
-          entity labels all present
-      - id: SC-03
-        name: Data Mapping
-        score: 3
-        max: 3
-        passed: true
-        comment: X=races, Y=rank. All data visible on axes
-      - id: SC-04
-        name: Title & Legend
-        score: 3
-        max: 3
-        passed: true
-        comment: Title in correct format. End-of-line labels replace legend appropriately
-    data_quality:
-      score: 15
-      max: 15
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 6
-        max: 6
-        passed: true
-        comment: Shows rank changes, stability, stagnation, overtakes, convergence
-          and divergence
-      - id: DQ-02
-        name: Realistic Context
-        score: 5
-        max: 5
-        passed: true
-        comment: F1 driver standings with real driver/circuit names. Neutral sports
-          topic
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 4
-        passed: true
-        comment: 6 drivers, 8 races within spec recommendation. Rankings 1-6 correct
-    code_quality:
-      score: 10
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: Clean Imports → Data → Plot → Save flow. No functions or classes
-      - id: CQ-02
-        name: Reproducibility
-        score: 2
-        max: 2
-        passed: true
-        comment: Fully deterministic hardcoded data, no random elements
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: Single import plotly.graph_objects, fully used
-      - id: CQ-04
-        name: Code Elegance
-        score: 2
-        max: 2
-        passed: true
-        comment: Dictionary-based visual hierarchy is clean and purposeful. No fake
-          UI
-      - id: CQ-05
-        name: Output & API
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves plot.png (4800x2700 via scale=3) and plot.html. Current API
-    library_mastery:
-      score: 7
-      max: 10
-      items:
-      - id: LM-01
-        name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Proper go.Figure, go.Scatter, add_annotation, update_layout. Appropriate
-          Graph Objects approach
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Custom hovertemplate with P-format, interactive HTML export. Plotly-specific
-          interactive features
-  verdict: APPROVED

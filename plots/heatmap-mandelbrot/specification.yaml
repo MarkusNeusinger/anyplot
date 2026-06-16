@@ -6,7 +6,7 @@ title: Mandelbrot Set Fractal Visualization
 
 # Specification tracking
 created: 2026-02-25T21:32:24Z
-updated: null
+updated: 2026-05-30T10:35:28Z
 issue: 4431
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - heatmap
-    - contour
   data_type:
     - numeric
     - continuous

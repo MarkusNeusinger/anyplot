@@ -34,7 +34,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Wind direction frequencies (8 compass directions)
 directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
@@ -116,14 +116,14 @@ radius_label_df = pd.DataFrame(radius_labels)
 
 # Color palette - first direction uses brand green, rest alternate through Okabe-Ito
 colors = {
-    "N": OKABE_ITO[0],
-    "NE": OKABE_ITO[1],
-    "E": OKABE_ITO[2],
-    "SE": OKABE_ITO[3],
-    "S": OKABE_ITO[4],
-    "SW": OKABE_ITO[5],
-    "W": OKABE_ITO[6],
-    "NW": OKABE_ITO[0],
+    "N": IMPRINT[0],
+    "NE": IMPRINT[1],
+    "E": IMPRINT[2],
+    "SE": IMPRINT[3],
+    "S": IMPRINT[4],
+    "SW": IMPRINT[5],
+    "W": IMPRINT[6],
+    "NW": IMPRINT[0],
 }
 
 # Plot

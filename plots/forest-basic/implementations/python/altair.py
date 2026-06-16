@@ -110,7 +110,7 @@ pooled_ci = (
 # Diamond marker for pooled estimate
 pooled_diamond = (
     alt.Chart(df_pooled)
-    .mark_point(shape="diamond", filled=True, size=1500, color="#E69F00", stroke="#009E73", strokeWidth=3)
+    .mark_point(shape="diamond", filled=True, size=1500, color="#AE3030", stroke="#009E73", strokeWidth=3)
     .encode(
         x=alt.X("effect_size:Q", scale=alt.Scale(domain=[-1.15, 0.60])),
         y=alt.Y("study:N", sort=y_labels),

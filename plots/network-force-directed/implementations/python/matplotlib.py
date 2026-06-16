@@ -20,7 +20,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette — first series is always #009E73
-COMMUNITY_COLORS = ["#009E73", "#D55E00", "#0072B2"]
+COMMUNITY_COLORS = ["#009E73", "#C475FD", "#4467A3"]
 COMMUNITY_NAMES = ["Engineering", "Marketing", "Sales"]
 
 # Data: a 50-person company social network with 3 departments

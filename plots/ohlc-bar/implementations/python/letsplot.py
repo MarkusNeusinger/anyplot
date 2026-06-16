@@ -38,7 +38,7 @@ RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette for up/down
 UP_COLOR = "#009E73"  # Brand green (position 1)
-DOWN_COLOR = "#D55E00"  # Vermillion (position 2)
+DOWN_COLOR = "#AE3030"  # imprint red — down bars
 
 # Data: Generate 50 trading days of OHLC data
 np.random.seed(42)

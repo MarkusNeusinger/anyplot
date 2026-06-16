@@ -1,10 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
+
+import type { ActiveFilters, FilterCounts } from 'src/types';
 import {
   getAvailableValues,
   getAvailableValuesForGroup,
   getSearchResults,
-} from './filters';
-import type { FilterCounts, ActiveFilters } from '../types';
+} from 'src/utils/filters';
 
 const mockFilterCounts: FilterCounts = {
   lang: { python: 28, r: 0 },
@@ -34,9 +35,7 @@ describe('getAvailableValues', () => {
   });
 
   it('excludes values that are already selected', () => {
-    const activeFilters: ActiveFilters = [
-      { category: 'lib', values: ['matplotlib', 'plotly'] },
-    ];
+    const activeFilters: ActiveFilters = [{ category: 'lib', values: ['matplotlib', 'plotly'] }];
     const result = getAvailableValues(mockFilterCounts, activeFilters, 'lib');
 
     expect(result).toEqual([
@@ -69,9 +68,7 @@ describe('getAvailableValues', () => {
   });
 
   it('does not exclude values from other categories', () => {
-    const activeFilters: ActiveFilters = [
-      { category: 'plot', values: ['scatter'] },
-    ];
+    const activeFilters: ActiveFilters = [{ category: 'plot', values: ['scatter'] }];
     const result = getAvailableValues(mockFilterCounts, activeFilters, 'lib');
 
     // All lib values should still be available
@@ -90,9 +87,7 @@ describe('getAvailableValues', () => {
 
 describe('getAvailableValuesForGroup', () => {
   it('returns available values for a group with preview counts', () => {
-    const activeFilters: ActiveFilters = [
-      { category: 'lib', values: ['matplotlib'] },
-    ];
+    const activeFilters: ActiveFilters = [{ category: 'lib', values: ['matplotlib'] }];
     const orCounts = [{ seaborn: 5, plotly: 3 }];
     const currentTotal = 10;
 
@@ -106,17 +101,13 @@ describe('getAvailableValuesForGroup', () => {
   });
 
   it('returns empty array for invalid group index', () => {
-    const activeFilters: ActiveFilters = [
-      { category: 'lib', values: ['matplotlib'] },
-    ];
+    const activeFilters: ActiveFilters = [{ category: 'lib', values: ['matplotlib'] }];
     const result = getAvailableValuesForGroup(5, activeFilters, [], 10);
     expect(result).toEqual([]);
   });
 
   it('excludes values already in the group', () => {
-    const activeFilters: ActiveFilters = [
-      { category: 'lib', values: ['matplotlib', 'seaborn'] },
-    ];
+    const activeFilters: ActiveFilters = [{ category: 'lib', values: ['matplotlib', 'seaborn'] }];
     const orCounts = [{ matplotlib: 10, seaborn: 8, plotly: 3 }];
     const currentTotal = 10;
 
@@ -126,9 +117,7 @@ describe('getAvailableValuesForGroup', () => {
   });
 
   it('returns empty array when orCounts for the group is empty', () => {
-    const activeFilters: ActiveFilters = [
-      { category: 'lib', values: ['matplotlib'] },
-    ];
+    const activeFilters: ActiveFilters = [{ category: 'lib', values: ['matplotlib'] }];
     const orCounts = [{}];
     const currentTotal = 10;
 
@@ -150,9 +139,7 @@ describe('getAvailableValuesForGroup', () => {
   });
 
   it('adds currentTotal to each count for preview', () => {
-    const activeFilters: ActiveFilters = [
-      { category: 'lib', values: ['matplotlib'] },
-    ];
+    const activeFilters: ActiveFilters = [{ category: 'lib', values: ['matplotlib'] }];
     const orCounts = [{ plotly: 7 }];
     const currentTotal = 25;
 
@@ -169,22 +156,20 @@ describe('getSearchResults - additional coverage', () => {
 
   it('searches across all categories when selectedCategory is null', () => {
     const result = getSearchResults(mockFilterCounts, [], 'scatter', null);
-    const categories = new Set(result.map((r) => r.category));
+    const categories = new Set(result.map(r => r.category));
     // Should find results in both spec and plot categories
     expect(categories.size).toBeGreaterThanOrEqual(1);
   });
 
   it('limits results to selectedCategory when provided', () => {
     const result = getSearchResults(mockFilterCounts, [], 'scatter', 'plot');
-    result.forEach((r) => {
+    result.forEach(r => {
       expect(r.category).toBe('plot');
     });
   });
 
   it('skips categories with no items after excluding selected', () => {
-    const activeFilters: ActiveFilters = [
-      { category: 'dom', values: ['science'] },
-    ];
+    const activeFilters: ActiveFilters = [{ category: 'dom', values: ['science'] }];
     // 'dom' has only 'science' which is selected - should find no dom results
     const result = getSearchResults(mockFilterCounts, activeFilters, 'science', 'dom');
     expect(result).toEqual([]);

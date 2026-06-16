@@ -1,11 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '../test-utils';
+import { ReactNode } from 'react';
 
-// Must import after test-utils to get jest-dom matchers
-import { ErrorBoundary } from './ErrorBoundary';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { ErrorBoundary } from 'src/components/ErrorBoundary';
+import { render, screen } from 'src/test-utils';
 
 // Component that throws on render
-function ThrowingComponent({ message }: { message: string }) {
+function ThrowingComponent({ message }: { message: string }): ReactNode {
   throw new Error(message);
 }
 
@@ -56,7 +57,7 @@ describe('ErrorBoundary', () => {
   });
 
   it('toggles technical details disclosure', async () => {
-    const { userEvent } = await import('../test-utils');
+    const { userEvent } = await import('src/test-utils');
     const user = userEvent.setup();
 
     render(
@@ -80,7 +81,7 @@ describe('ErrorBoundary', () => {
   });
 
   it('copies details to the clipboard', async () => {
-    const { userEvent } = await import('../test-utils');
+    const { userEvent } = await import('src/test-utils');
     const user = userEvent.setup();
 
     const writeText = vi.fn().mockResolvedValue(undefined);
@@ -103,7 +104,7 @@ describe('ErrorBoundary', () => {
   });
 
   it('recovers when Try Again is clicked', async () => {
-    const { userEvent } = await import('../test-utils');
+    const { userEvent } = await import('src/test-utils');
     const user = userEvent.setup();
 
     // Use a flag to control whether the child throws

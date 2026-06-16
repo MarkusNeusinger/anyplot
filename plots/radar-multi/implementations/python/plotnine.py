@@ -51,7 +51,7 @@ products = {
 }
 
 # Okabe-Ito palette - first series is always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Create angles for each category (evenly spaced around circle)
 angles = [i * 2 * math.pi / n for i in range(n)]
@@ -121,8 +121,8 @@ plot = (
     # Category labels
     + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=5, color=INK)
     # Apply Okabe-Ito colors
-    + scale_fill_manual(values=OKABE_ITO)
-    + scale_color_manual(values=OKABE_ITO)
+    + scale_fill_manual(values=IMPRINT)
+    + scale_color_manual(values=IMPRINT)
     # Axis scaling
     + scale_x_continuous(limits=(-150, 150))
     + scale_y_continuous(limits=(-150, 150))

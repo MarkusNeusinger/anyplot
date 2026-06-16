@@ -17,7 +17,7 @@ const ELEVATED_BG = THEME == "light" ? colorant"#FFFDF6" : colorant"#242420"
 const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 
-const ANYPLOT_PALETTE = [
+const IMPRINT_PALETTE = [
     colorant"#009E73",  # 1 — brand green (Baseline)
     colorant"#C475FD",  # 2 — lavender    (Variant A)
     colorant"#4467A3",  # 3 — blue        (Variant B)
@@ -47,7 +47,7 @@ const RAW_DATA = [
 const _ORDER     = sortperm(median.(RAW_DATA))
 const CATEGORIES = RAW_CATEGORIES[_ORDER]
 const DATA_BY_CAT = RAW_DATA[_ORDER]
-const PALETTE_BY_CAT = [ANYPLOT_PALETTE[findfirst(==(c), RAW_CATEGORIES)] for c in CATEGORIES]
+const PALETTE_BY_CAT = [IMPRINT_PALETTE[findfirst(==(c), RAW_CATEGORIES)] for c in CATEGORIES]
 
 # --- Figure -----------------------------------------------------------------
 fig = Figure(

@@ -18,8 +18,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - canonical order
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
-BRAND = OKABE_ITO[0]  # #009E73
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+BRAND = IMPRINT[0]  # #009E73
 
 # Data
 np.random.seed(42)
@@ -97,13 +97,13 @@ ax1.plot([0, 1], [0, 1], "--", linewidth=2, color=INK_SOFT, label="Perfect Calib
 
 # Well-calibrated
 ax1.fill_between(
-    prob_pred_cal, prob_true_cal - prob_std_cal, prob_true_cal + prob_std_cal, alpha=0.2, color=OKABE_ITO[0]
+    prob_pred_cal, prob_true_cal - prob_std_cal, prob_true_cal + prob_std_cal, alpha=0.2, color=IMPRINT[0]
 )
 ax1.plot(
     prob_pred_cal,
     prob_true_cal,
     "o-",
-    color=OKABE_ITO[0],
+    color=IMPRINT[0],
     linewidth=3,
     markersize=10,
     label=f"Well-Calibrated (Brier: {brier_cal:.3f})",
@@ -111,13 +111,13 @@ ax1.plot(
 
 # Overconfident
 ax1.fill_between(
-    prob_pred_over, prob_true_over - prob_std_over, prob_true_over + prob_std_over, alpha=0.2, color=OKABE_ITO[1]
+    prob_pred_over, prob_true_over - prob_std_over, prob_true_over + prob_std_over, alpha=0.2, color=IMPRINT[1]
 )
 ax1.plot(
     prob_pred_over,
     prob_true_over,
     "s-",
-    color=OKABE_ITO[1],
+    color=IMPRINT[1],
     linewidth=3,
     markersize=10,
     label=f"Overconfident (Brier: {brier_over:.3f})",
@@ -125,13 +125,13 @@ ax1.plot(
 
 # Underconfident
 ax1.fill_between(
-    prob_pred_under, prob_true_under - prob_std_under, prob_true_under + prob_std_under, alpha=0.2, color=OKABE_ITO[2]
+    prob_pred_under, prob_true_under - prob_std_under, prob_true_under + prob_std_under, alpha=0.2, color=IMPRINT[2]
 )
 ax1.plot(
     prob_pred_under,
     prob_true_under,
     "^-",
-    color=OKABE_ITO[2],
+    color=IMPRINT[2],
     linewidth=3,
     markersize=10,
     label=f"Underconfident (Brier: {brier_under:.3f})",
@@ -159,13 +159,13 @@ for s in ("left", "bottom"):
 
 # Histogram
 ax2.hist(
-    y_prob_calibrated, bins=20, alpha=0.6, color=OKABE_ITO[0], label="Well-Calibrated", edgecolor=PAGE_BG, linewidth=0.5
+    y_prob_calibrated, bins=20, alpha=0.6, color=IMPRINT[0], label="Well-Calibrated", edgecolor=PAGE_BG, linewidth=0.5
 )
 ax2.hist(
     y_prob_overconfident,
     bins=20,
     alpha=0.6,
-    color=OKABE_ITO[1],
+    color=IMPRINT[1],
     label="Overconfident",
     edgecolor=PAGE_BG,
     linewidth=0.5,
@@ -174,7 +174,7 @@ ax2.hist(
     y_prob_underconfident,
     bins=20,
     alpha=0.6,
-    color=OKABE_ITO[2],
+    color=IMPRINT[2],
     label="Underconfident",
     edgecolor=PAGE_BG,
     linewidth=0.5,

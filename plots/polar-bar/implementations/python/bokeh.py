@@ -43,16 +43,16 @@ max_freq = frequencies.max()
 radii = frequencies / max_freq * 0.75  # Scale to 75% of plot radius
 
 # Colors - Use Okabe-Ito palette (first series is brand green)
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # Brand green
-    "#D55E00",  # Vermillion
-    "#0072B2",  # Blue
-    "#CC79A7",  # Reddish purple
-    "#E69F00",  # Orange
-    "#56B4E9",  # Sky blue
-    "#F0E442",  # Yellow
+    "#C475FD",  # Vermillion
+    "#4467A3",  # Blue
+    "#BD8233",  # Reddish purple
+    "#AE3030",  # Orange
+    "#2ABCCD",  # Sky blue
+    "#954477",  # Yellow
 ]
-colors = [OKABE_ITO[i % len(OKABE_ITO)] for i in range(n_dirs)]
+colors = [IMPRINT[i % len(IMPRINT)] for i in range(n_dirs)]
 
 # Create figure (square for polar plot)
 p = figure(width=3600, height=3600, x_range=(-1.05, 1.05), y_range=(-1.05, 1.05), tools="", toolbar_location=None)

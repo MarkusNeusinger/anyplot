@@ -25,7 +25,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 BRAND = "#009E73"  # Okabe-Ito position 1
-ACCENT_1 = "#D55E00"  # Vermillion for LoA
+ACCENT_1 = "#C475FD"  # Vermillion for LoA
 NEUTRAL = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Data - Simulated blood pressure measurements from two sphygmomanometers

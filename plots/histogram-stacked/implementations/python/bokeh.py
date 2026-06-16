@@ -22,7 +22,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Simulating test scores from three different study groups
 np.random.seed(42)
@@ -87,7 +87,7 @@ p.vbar(
     bottom="bottom",
     width="width",
     source=source_c,
-    fill_color=OKABE_ITO[2],
+    fill_color=IMPRINT[2],
     line_color="white",
     line_width=2,
     alpha=0.9,
@@ -100,7 +100,7 @@ p.vbar(
     bottom="bottom",
     width="width",
     source=source_a,
-    fill_color=OKABE_ITO[0],
+    fill_color=IMPRINT[0],
     line_color="white",
     line_width=2,
     alpha=0.9,
@@ -113,7 +113,7 @@ p.vbar(
     bottom="bottom",
     width="width",
     source=source_b,
-    fill_color=OKABE_ITO[1],
+    fill_color=IMPRINT[1],
     line_color="white",
     line_width=2,
     alpha=0.9,

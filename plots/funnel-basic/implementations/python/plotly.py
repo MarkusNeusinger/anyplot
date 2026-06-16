@@ -17,7 +17,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito categorical palette (first series is always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data - Sales funnel example
 stages = ["Awareness", "Interest", "Consideration", "Intent", "Purchase"]
@@ -31,7 +31,7 @@ fig = go.Figure(
         textposition="inside",
         textinfo="value+percent initial",
         textfont={"size": 22, "color": "#FAF8F1"},
-        marker={"color": OKABE_ITO, "line": {"width": 2, "color": PAGE_BG}},
+        marker={"color": IMPRINT, "line": {"width": 2, "color": PAGE_BG}},
         connector={"line": {"color": INK_SOFT, "width": 1, "dash": "dot"}},
     )
 )

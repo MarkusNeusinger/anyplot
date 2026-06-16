@@ -38,7 +38,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Smartphone comparison across 6 key attributes (4 products)
 categories = ["Battery", "Camera", "Display", "Performance", "Storage", "Price Value"]
@@ -126,8 +126,8 @@ plot = (
     # Points at each vertex (exclude the closing point to avoid double dot)
     + geom_point(aes(x="x", y="y", color="series"), data=df[df["order"] < n], size=7)
     # Custom color palette (Okabe-Ito)
-    + scale_fill_manual(values=OKABE_ITO)
-    + scale_color_manual(values=OKABE_ITO)
+    + scale_fill_manual(values=IMPRINT)
+    + scale_color_manual(values=IMPRINT)
     # Axis limits for square plot
     + scale_x_continuous(limits=(-160, 160))
     + scale_y_continuous(limits=(-160, 160))

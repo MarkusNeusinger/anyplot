@@ -40,7 +40,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data - Software project milestones (10 events for better readability)
 events = pd.DataFrame(
@@ -109,7 +109,7 @@ plot = (
     # Event labels (positioned at label_y)
     + geom_text(mapping=aes(x="date_num", y="label_y", label="event"), size=10, color=INK)
     # Color scale using Okabe-Ito palette
-    + scale_color_manual(values=OKABE_ITO, name="Phase")
+    + scale_color_manual(values=IMPRINT, name="Phase")
     # Axis configuration - use simple month labels with padding
     + scale_x_continuous(name="Month (2024)", breaks=month_breaks, labels=month_labels, limits=[-15, 365])
     + scale_y_continuous(limits=[-2.2, 2.2])

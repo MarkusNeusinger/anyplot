@@ -1,0 +1,244 @@
+library: makie
+language: julia
+specification_id: bar-diverging-likert
+created: '2026-06-01T23:20:30Z'
+updated: '2026-06-01T23:45:02Z'
+generated_by: claude-sonnet
+workflow_run: 26787568047
+issue: 4429
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Correct diverging-from-center layout with neutral half-split — spec requirement
+    met exactly
+  - Semantic Imprint palette mapping (red=strongly disagree, green=strongly agree)
+    is palette-compliant and semantically clear
+  - Sorting by net agreement transforms a table into a ranking for effortless comparison
+  - Excellent directional x-axis label guides interpretation without annotation overhead
+  - Theme adaptation is complete — no dark-on-dark failures in either render
+  - Idiomatic use of Makie stacked barplot with direction=:x and custom xtickformat
+    lambda
+  weaknesses:
+  - 'DE-03: No callout or emphasis distinguishing the top/bottom item — add annotation
+    on most/least favorable questions to push storytelling from 3/6 to 4+'
+  - 'DE-01: Title fontsize 17 is mathematically correct but slightly understated;
+    a bolder or slightly larger title would improve top-of-chart visual hierarchy'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct
+      Chrome: Title "Employee Engagement Survey · bar-diverging-likert · julia · makie · anyplot.ai" in dark INK text, readable. Question labels on y-axis in INK_SOFT dark gray, readable. X-axis label "← Disagree  Response Share (%)  Agree →" in dark INK. Tick labels show absolute percentages (50%, 0%, 50%) in INK_SOFT — readable.
+      Data: Five Likert segments — SD (#AE3030 red), D (#BD8233 ochre), N (INK_MUTED #6B6A63 dark gray), A (#4467A3 blue), SA (#009E73 brand green). Brand green is first/primary positive series. White percentage labels inside segments ≥ 8%. Vertical reference line at 0% in INK_SOFT. Bars sorted from most positive (Team Collaboration, top) to least (Compensation & Benefits, bottom).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct
+      Chrome: Title in light cream (INK #F0EFE8), readable. Question labels in INK_SOFT (#B8B7B0 medium gray-beige), readable. X-axis tick labels and axis label in INK_SOFT, readable. No dark-on-dark failures detected.
+      Data: Data bar colors IDENTICAL to light render — #009E73, #4467A3, #BD8233, #AE3030 all unchanged. Neutral segments appear as lighter gray-beige (#A8A79F dark INK_MUTED) — correct theme-adaptive muted anchor behavior. Center reference line visible in INK_SOFT. Legend swatches and text readable.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title scaled to 17 for 79-char string;
+          all text readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; bar labels, question labels, tick labels all
+          clear
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bar segments clearly visible with gap=0.26; smallest SD bars still
+          discernible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint CVD-optimized palette; red-green semantic pairing reinforced
+          by directional labels
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, legend well-positioned, adequate margins, no clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Excellent directional x-axis label with unit; title correctly formatted
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'SA=#009E73, A=#4467A3, D=#BD8233, SD=#AE3030, N=INK_MUTED; backgrounds
+          #FAF8F1/#1A1A17 correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above generic defaults: semantic color mapping, custom tick format,
+          sorted order shows design intent'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Three spines removed, frameless legend, subtle grid (alpha=0.12),
+          y-tick marks transparent, custom gap
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Sorted order and directional label guide reading; no callout or emphasis
+          marking top/bottom extremes
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct diverging stacked horizontal Likert bar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Neutral split at midpoint, diverging colors, sorted by net agreement,
+          percentage labels where space permits
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Questions on y-axis, response share on x-axis, all 5 categories and
+          10 questions shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format with descriptive prefix correct; legend labels match
+          5 Likert categories
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 5 response categories; good variation from highly positive to
+          mixed across questions
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Employee engagement survey is neutral, widely-used Likert use case
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Each row sums to 100%; percentages in realistic ranges (3-48%); plausible
+          variation
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat script: tokens → data → sort → figure → barplot → labels →
+          legend → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set; hardcoded data is fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Julia idioms; vcat for stacking is concise; offset calculations
+          clear
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save(plot-$(THEME).png, fig; px_per_unit=2) correct; uses current
+          size= API (Makie 0.22+)
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: barplot! with direction=:x + stack; vlines!; Legend with PolyElement;
+          rowsize!; xlims!; custom xtickformat
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom xtickformat lambda for absolute diverging display; rowsize!
+          Fixed() for precise layout; RGBAf() grid color; stack grouping
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - iteration-over-groups
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - grid-styling

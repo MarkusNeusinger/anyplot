@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (first series always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data - Employee salary distributions across departments
 np.random.seed(42)
@@ -48,9 +48,9 @@ for i, (dept, values) in enumerate(salary_data.items()):
             name=dept,
             boxpoints="outliers",
             notched=True,
-            marker={"color": OKABE_ITO[i], "size": 10, "opacity": 0.7},
+            marker={"color": IMPRINT[i], "size": 10, "opacity": 0.7},
             line={"width": 2},
-            fillcolor=OKABE_ITO[i],
+            fillcolor=IMPRINT[i],
             opacity=0.7,
         )
     )

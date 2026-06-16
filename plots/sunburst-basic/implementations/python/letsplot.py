@@ -69,8 +69,8 @@ def create_wedge(inner_r, outer_r, start_angle, end_angle, n_points=30):
 # Okabe-Ito branch colors for level 1; graduated lighter shades for levels 2-3
 branch_colors = {
     "Eng": "#009E73",  # Okabe-Ito position 1 — brand green
-    "Sales": "#D55E00",  # Okabe-Ito position 2 — vermillion
-    "Mktg": "#0072B2",  # Okabe-Ito position 3 — blue
+    "Sales": "#C475FD",  # Okabe-Ito position 2 — vermillion
+    "Mktg": "#4467A3",  # Okabe-Ito position 3 — blue
 }
 level2_colors = {
     "Backend": "#66C5AB",  # Eng, ~40% lighter

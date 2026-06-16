@@ -37,7 +37,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: Monthly revenue by product category over 2 years
 np.random.seed(42)
@@ -77,7 +77,7 @@ df["Category"] = pd.Categorical(df["Category"], categories=category_order, order
 plot = (
     ggplot(df, aes(x="MonthNum", y="Revenue", fill="Category"))
     + geom_area(alpha=0.85, position="stack", size=0.5, color=PAGE_BG)
-    + scale_fill_manual(values=OKABE_ITO)
+    + scale_fill_manual(values=IMPRINT)
     + scale_x_continuous(
         name="Month", breaks=[0, 6, 12, 18, 23], labels=["Jan 2023", "Jul 2023", "Jan 2024", "Jul 2024", "Dec 2024"]
     )

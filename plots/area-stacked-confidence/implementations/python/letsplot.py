@@ -21,7 +21,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Quarterly energy consumption forecast by source with uncertainty
 np.random.seed(42)
@@ -110,8 +110,8 @@ plot = (
     + geom_ribbon(aes(x="x", ymin="y_lower", ymax="y_upper", fill="source"), data=df_conf, alpha=0.25)
     + geom_ribbon(aes(x="x", ymin="y_min", ymax="y_max", fill="source"), data=df_areas, alpha=0.7)
     + geom_line(aes(x="x", y="y", color="source"), data=df_lines, size=1.5)
-    + scale_fill_manual(values=OKABE_ITO, name="Energy Source")
-    + scale_color_manual(values=OKABE_ITO, guide="none")
+    + scale_fill_manual(values=IMPRINT, name="Energy Source")
+    + scale_color_manual(values=IMPRINT, guide="none")
     + scale_x_continuous(breaks=list(range(0, n, 4)), labels=[x_labels[i] for i in range(0, n, 4)])
     + labs(
         title="area-stacked-confidence · Python · letsplot · anyplot.ai",

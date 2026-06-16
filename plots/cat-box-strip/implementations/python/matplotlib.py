@@ -54,7 +54,7 @@ ax.boxplot(
     widths=0.5,
     patch_artist=True,
     boxprops={"facecolor": BRAND, "alpha": 0.4, "linewidth": 2, "edgecolor": INK_SOFT},
-    medianprops={"color": "#E69F00", "linewidth": 3},
+    medianprops={"color": "#AE3030", "linewidth": 3},
     whiskerprops={"color": INK_SOFT, "linewidth": 2},
     capprops={"color": INK_SOFT, "linewidth": 2},
     flierprops={

@@ -1,30 +1,60 @@
-""" pyplots.ai
+""" anyplot.ai
 tree-decision: Decision Tree Visualization with Probabilities
-Library: pygal 3.1.0 | Python 3.14.3
-Quality: 86/100 | Created: 2026-03-06
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-06-02
 """
+
+import os
+import sys as _sys
+
+
+# Prevent this file (pygal.py) from shadowing the installed pygal package
+_sys.path = [p for p in _sys.path if p not in ("", os.path.dirname(os.path.abspath(__file__)))]
+del _sys
 
 import cairosvg
 import pygal
 from pygal.style import Style
 
 
-# Decision tree data: New Product Launch
-# EMV rollback:
-#   C1 (Launch):  0.6 * $500K + 0.4 * (-$100K) = $260K  [OPTIMAL]
-#   C2 (License): 0.7 * $250K + 0.3 * $50K     = $190K  [PRUNED]
-#   T5 (Nothing): $0K                                     [PRUNED]
-#   D1 (Root):    max($260K, $190K, $0K)         = $260K
+THEME = os.getenv("ANYPLOT_THEME", "light")
 
+# Theme-adaptive chrome tokens (Imprint palette)
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — semantic assignments for decision tree node roles
+DECISION_CLR = "#4467A3"  # blue (Imprint #3)
+CHANCE_CLR = "#BD8233"  # ochre (Imprint #4)
+GAIN_CLR = "#009E73"  # brand green (Imprint #1, semantic: gain/profit)
+LOSS_CLR = "#AE3030"  # matte red (Imprint #5, semantic: loss)
+AMBER = "#DDCC77"  # amber anchor — golden border for optimal outcome region
+
+FONT = "DejaVu Sans, sans-serif"
+W, H = 3200, 1800  # canvas: landscape 16:9, canonical Imprint size
+
+# Node shape sizes for 3200×1800 canvas
+DEC_HALF = 48  # decision square half-side
+CHC_R = 40  # chance circle radius
+TRI = 50  # terminal triangle half-side (larger for clear visibility)
+
+# SVG overlay font sizes at native 3200×1800 pixels
+FS = {"branch": 24, "prob": 23, "payoff": 28, "emv_hdr": 20, "emv_val": 23, "caption": 23}
+
+# Decision tree — New Product Launch
+# EMV rollback: C1: 0.6×500 + 0.4×(-100) = 260K [OPTIMAL]
+#               C2: 0.7×250 + 0.3×50      = 190K [PRUNED]
+#               D1: max(260, 190, 0)       = 260K
 nodes = {
-    "D1": {"type": "decision", "x": 600, "y": 1300, "emv": 260, "label": "Strategy\nChoice"},
-    "C1": {"type": "chance", "x": 2250, "y": 520, "emv": 260, "label": "Market\nOutcome"},
-    "C2": {"type": "chance", "x": 2250, "y": 1820, "emv": 190, "label": "License\nResult"},
-    "T1": {"type": "terminal", "x": 3850, "y": 310, "payoff": 500},
-    "T2": {"type": "terminal", "x": 3850, "y": 730, "payoff": -100},
-    "T3": {"type": "terminal", "x": 3850, "y": 1580, "payoff": 250},
-    "T4": {"type": "terminal", "x": 3850, "y": 2060, "payoff": 50},
-    "T5": {"type": "terminal", "x": 2250, "y": 2450, "payoff": 0},
+    "D1": {"type": "decision", "x": 400, "y": 870, "emv": 260, "label": "Strategy\nChoice"},
+    "C1": {"type": "chance", "x": 1500, "y": 420, "emv": 260, "label": "Market\nOutcome"},
+    "C2": {"type": "chance", "x": 1500, "y": 1310, "emv": 190, "label": "License\nResult"},
+    "T1": {"type": "terminal", "x": 2567, "y": 240, "payoff": 500},
+    "T2": {"type": "terminal", "x": 2567, "y": 600, "payoff": -100},
+    "T3": {"type": "terminal", "x": 2567, "y": 1120, "payoff": 250},
+    "T4": {"type": "terminal", "x": 2567, "y": 1500, "payoff": 50},
+    "T5": {"type": "terminal", "x": 1500, "y": 1700, "payoff": 0},
 }
 
 branches = [
@@ -37,66 +67,49 @@ branches = [
     ("C2", "T4", "Rejected", 0.3, True),
 ]
 
-# Colorblind-safe palette (Okabe-Ito inspired)
-DECISION_CLR = "#306998"
-CHANCE_CLR = "#E8833A"
-GAIN_CLR = "#0072B2"
-LOSS_CLR = "#D55E00"
-ZERO_CLR = "#7F8C8D"
-OPTIMAL_CLR = "#306998"
-PRUNED_CLR = "#BBBBBB"
-TXT = "#2C3E50"
-TXT_DIM = "#7F8C8D"
-FONT = "DejaVu Sans, sans-serif"
-FONT_SZ = {"title": 72, "node_emv": 32, "node_label": 36, "branch": 36, "prob": 34, "payoff": 40}
+# Imprint palette passed to pygal Style (first series = brand green)
+IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
-DEC_HALF = 72
-CHC_R = 58
-TRI = 62
-
-# pygal Style — typography, background, and series palette
 style = Style(
-    background="white",
-    plot_background="white",
-    foreground=TXT,
-    foreground_strong=TXT,
-    foreground_subtle=TXT_DIM,
-    colors=(DECISION_CLR, CHANCE_CLR, GAIN_CLR, LOSS_CLR, ZERO_CLR),
-    title_font_size=FONT_SZ["title"],
-    legend_font_size=34,
-    label_font_size=36,
-    value_font_size=30,
-    tooltip_font_size=28,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=(DECISION_CLR, CHANCE_CLR, GAIN_CLR, LOSS_CLR, INK_MUTED),
+    title_font_size=66,
+    legend_font_size=44,
+    label_font_size=56,
+    major_label_font_size=44,
+    value_font_size=36,
     font_family=FONT,
 )
 
 
-def fmt_currency(val):
-    """pygal value_formatter for currency display."""
-    return f"${val:,.0f}K" if val >= 0 else f"\u2212${abs(val):,.0f}K"
+def fmt_k(v):
+    return f"${v:,.0f}K" if v >= 0 else f"−${abs(v):,.0f}K"
 
 
 def elbow(x1, y1, x2, y2, ratio=0.55):
-    """Elbow connector path."""
     mx = x1 + (x2 - x1) * ratio
     return f"M {x1},{y1} L {mx},{y1} L {mx},{y2} L {x2},{y2}", mx
 
 
-def svg_text(x, y, text, size, fill=TXT, weight="normal", anchor="middle", style_attr=""):
-    """SVG text element."""
-    extra = f' font-style="{style_attr}"' if style_attr else ""
+def tx(x, y, s, size, fill=None, weight="normal", anchor="middle", italic=False):
+    fill = fill or INK
+    fs = ' font-style="italic"' if italic else ""
     return (
         f'<text x="{x}" y="{y}" text-anchor="{anchor}" font-size="{size}" '
-        f'fill="{fill}" font-weight="{weight}" font-family="{FONT}"{extra}>{text}</text>'
+        f'fill="{fill}" font-weight="{weight}" font-family="{FONT}"{fs}>{s}</text>'
     )
 
 
-# Build pygal XY chart with tooltips and native legend
+# Build pygal XY chart — provides native legend, tooltips, and themed background
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=W,
+    height=H,
     style=style,
-    title="tree-decision \u00b7 pygal \u00b7 pyplots.ai",
+    title="tree-decision · python · pygal · anyplot.ai",
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=5,
@@ -107,25 +120,23 @@ chart = pygal.XY(
     show_y_labels=False,
     dots_size=0,
     stroke=False,
-    range=(0, 2700),
-    xrange=(0, 4800),
+    range=(0, H),
+    xrange=(0, W),
     margin=10,
     margin_bottom=5,
     spacing=8,
     tooltip_border_radius=8,
     tooltip_fancy_mode=True,
-    value_formatter=fmt_currency,
-    css=["file://style.css", "inline:", ".tooltip .value { font-size: 28px; }", ".legend { font-size: 34px; }"],
+    value_formatter=fmt_k,
 )
 
-# Data series with pygal tooltips — each point gets an interactive tooltip
 chart.add(
     "Decision Node",
     [
         {
             "value": (n["x"], n["y"]),
             "label": n["label"].replace("\n", " "),
-            "xlink": {"title": f"EMV: ${n['emv']}K | Best: Launch Product"},
+            "xlink": {"title": f"EMV: ${n['emv']}K | Optimal: Launch Product"},
         }
         for n in nodes.values()
         if n["type"] == "decision"
@@ -142,7 +153,7 @@ chart.add(
 chart.add(
     "Terminal (Gain)",
     [
-        {"value": (n["x"], n["y"]), "label": fmt_currency(n["payoff"])}
+        {"value": (n["x"], n["y"]), "label": fmt_k(n["payoff"])}
         for n in nodes.values()
         if n["type"] == "terminal" and n["payoff"] > 0
     ],
@@ -150,7 +161,7 @@ chart.add(
 chart.add(
     "Terminal (Loss)",
     [
-        {"value": (n["x"], n["y"]), "label": fmt_currency(n["payoff"])}
+        {"value": (n["x"], n["y"]), "label": fmt_k(n["payoff"])}
         for n in nodes.values()
         if n["type"] == "terminal" and n["payoff"] < 0
     ],
@@ -158,126 +169,125 @@ chart.add(
 chart.add(
     "Terminal (Neutral)",
     [
-        {"value": (n["x"], n["y"]), "label": fmt_currency(n["payoff"])}
+        {"value": (n["x"], n["y"]), "label": fmt_k(n["payoff"])}
         for n in nodes.values()
         if n["type"] == "terminal" and n["payoff"] == 0
     ],
 )
 
-# Render pygal SVG (title, legend, tooltips, background, plot structure)
 base_svg = chart.render().decode("utf-8")
 
-# SVG defs: gradients for nodes + drop shadow filter
+# SVG defs: node gradients + drop-shadow filter
 defs = (
     "<defs>"
-    '<filter id="shadow" x="-15%" y="-15%" width="140%" height="140%">'
-    '<feGaussianBlur in="SourceAlpha" stdDeviation="5" result="blur"/>'
-    '<feOffset dx="3" dy="4" result="shifted"/>'
-    '<feFlood flood-color="#000" flood-opacity="0.12" result="color"/>'
-    '<feComposite in="color" in2="shifted" operator="in" result="shadow"/>'
+    '<filter id="sh" x="-20%" y="-20%" width="150%" height="150%">'
+    '<feGaussianBlur in="SourceAlpha" stdDeviation="4" result="b"/>'
+    '<feOffset dx="2" dy="3" result="s"/>'
+    '<feFlood flood-color="#000" flood-opacity="0.18" result="c"/>'
+    '<feComposite in="c" in2="s" operator="in" result="shadow"/>'
     '<feMerge><feMergeNode in="shadow"/><feMergeNode in="SourceGraphic"/></feMerge>'
     "</filter>"
-    f'<linearGradient id="grad_dec" x1="0%" y1="0%" x2="100%" y2="100%">'
-    f'<stop offset="0%" stop-color="#4A90D9"/><stop offset="100%" stop-color="{DECISION_CLR}"/>'
+    f'<linearGradient id="g_d" x1="0%" y1="0%" x2="100%" y2="100%">'
+    f'<stop offset="0%" stop-color="#6688C8"/><stop offset="100%" stop-color="{DECISION_CLR}"/>'
     "</linearGradient>"
-    f'<linearGradient id="grad_chance" x1="0%" y1="0%" x2="100%" y2="100%">'
-    f'<stop offset="0%" stop-color="#F0A060"/><stop offset="100%" stop-color="{CHANCE_CLR}"/>'
+    f'<linearGradient id="g_c" x1="0%" y1="0%" x2="100%" y2="100%">'
+    f'<stop offset="0%" stop-color="#D8A060"/><stop offset="100%" stop-color="{CHANCE_CLR}"/>'
     "</linearGradient>"
     "</defs>"
 )
 
-# Build tree overlay SVG
-svg = [f'<g id="decision-tree" font-family="{FONT}">']
-
-# Subtle highlight region behind optimal path (rounded)
-svg.append(
-    '<path d="M 530,1130 Q 530,350 700,350 L 3980,350 Q 4010,350 4010,380 '
-    'L 4010,800 Q 4010,830 3980,830 L 1420,830 L 1420,1130 Z" '
-    f'fill="{DECISION_CLR}" opacity="0.04" />'
+# Amber golden border highlights the optimal outcome region (C1 subtree: T1 + T2).
+# Previous version used a light-blue fill matching altair — change request: golden accent instead.
+amber_box = (
+    f'<rect x="1440" y="155" width="1360" height="510" '
+    f'fill="{AMBER}" fill-opacity="0.05" stroke="{AMBER}" stroke-width="3" rx="14" opacity="0.7"/>'
+    + tx(2785, 182, "Optimal", 22, fill=AMBER, weight="bold", anchor="end")
 )
 
-# Branches (elbow connectors)
+g = ['<g id="dt">']
+g.append(amber_box)
+
+# Branch connectors
 for src, dst, label, prob, pruned in branches:
     p, c = nodes[src], nodes[dst]
     path_d, mx = elbow(p["x"], p["y"], c["x"], c["y"])
-    clr, w = (PRUNED_CLR, 3) if pruned else (OPTIMAL_CLR, 5)
-    dash = ' stroke-dasharray="18,10"' if pruned else ""
-    alpha = "0.5" if pruned else "1.0"
-    svg.append(f'<path d="{path_d}" fill="none" stroke="{clr}" stroke-width="{w}" opacity="{alpha}"{dash}/>')
-    vy = p["y"] + (c["y"] - p["y"]) * 0.45
-    lc, fw = (TXT_DIM, "normal") if pruned else (TXT, "bold")
-    svg.append(svg_text(mx - 24, vy, label, FONT_SZ["branch"], fill=lc, weight=fw, anchor="end"))
-    if prob is not None:
-        pc = TXT_DIM if pruned else CHANCE_CLR
-        svg.append(svg_text(mx + 24, vy, f"p = {prob}", FONT_SZ["prob"], fill=pc, anchor="start", style_attr="italic"))
     if pruned:
-        sy = p["y"] + (c["y"] - p["y"]) * 0.15
-        svg.append(
-            f'<line x1="{mx - 16}" y1="{sy - 14}" x2="{mx + 16}" y2="{sy + 14}" '
-            f'stroke="{LOSS_CLR}" stroke-width="4" opacity="0.75"/>'
-            f'<line x1="{mx - 16}" y1="{sy + 14}" x2="{mx + 16}" y2="{sy - 14}" '
-            f'stroke="{LOSS_CLR}" stroke-width="4" opacity="0.75"/>'
+        g.append(
+            f'<path d="{path_d}" fill="none" stroke="{INK_MUTED}" '
+            f'stroke-width="2" opacity="0.45" stroke-dasharray="14,8"/>'
+        )
+    else:
+        g.append(f'<path d="{path_d}" fill="none" stroke="{GAIN_CLR}" stroke-width="4" opacity="0.9"/>')
+
+    vy = p["y"] + (c["y"] - p["y"]) * 0.45
+    lc, fw = (INK_MUTED, "normal") if pruned else (INK, "bold")
+    g.append(tx(mx - 16, vy, label, FS["branch"], fill=lc, weight=fw, anchor="end"))
+
+    if prob is not None:
+        pc = INK_MUTED if pruned else CHANCE_CLR
+        g.append(tx(mx + 16, vy, f"p = {prob}", FS["prob"], fill=pc, anchor="start", italic=True))
+
+    if pruned:
+        # X mark near top of vertical segment — avoids crowding with branch labels
+        sy = p["y"] + (c["y"] - p["y"]) * 0.10
+        g.append(
+            f'<line x1="{mx - 10}" y1="{sy - 9}" x2="{mx + 10}" y2="{sy + 9}" '
+            f'stroke="{LOSS_CLR}" stroke-width="3" opacity="0.7"/>'
+        )
+        g.append(
+            f'<line x1="{mx - 10}" y1="{sy + 9}" x2="{mx + 10}" y2="{sy - 9}" '
+            f'stroke="{LOSS_CLR}" stroke-width="3" opacity="0.7"/>'
         )
 
 # Nodes
-for _nid, nd in nodes.items():
+for nd in nodes.values():
     x, y, ntype = nd["x"], nd["y"], nd["type"]
     if ntype == "decision":
-        svg.append(
+        g.append(
             f'<rect x="{x - DEC_HALF}" y="{y - DEC_HALF}" width="{DEC_HALF * 2}" '
-            f'height="{DEC_HALF * 2}" fill="url(#grad_dec)" stroke="white" '
-            f'stroke-width="4" rx="12" filter="url(#shadow)"/>'
+            f'height="{DEC_HALF * 2}" fill="url(#g_d)" stroke="{PAGE_BG}" '
+            f'stroke-width="3" rx="8" filter="url(#sh)"/>'
         )
-        svg.append(svg_text(x, y - 8, "EMV", FONT_SZ["node_emv"], fill="white", weight="bold"))
-        svg.append(svg_text(x, y + 32, f"${nd['emv']}K", FONT_SZ["node_label"], fill="white", weight="bold"))
+        g.append(tx(x, y - 6, "EMV", FS["emv_hdr"], fill="white", weight="bold"))
+        g.append(tx(x, y + 18, f"${nd['emv']}K", FS["emv_val"], fill="white", weight="bold"))
         for i, line in enumerate(nd["label"].split("\n")):
-            svg.append(
-                svg_text(x, y + DEC_HALF + 44 + i * 44, line, FONT_SZ["node_label"], fill=DECISION_CLR, weight="bold")
-            )
+            g.append(tx(x, y + DEC_HALF + 30 + i * 28, line, FS["caption"], fill=DECISION_CLR, weight="bold"))
     elif ntype == "chance":
-        svg.append(
-            f'<circle cx="{x}" cy="{y}" r="{CHC_R}" fill="url(#grad_chance)" '
-            f'stroke="white" stroke-width="4" filter="url(#shadow)"/>'
+        g.append(
+            f'<circle cx="{x}" cy="{y}" r="{CHC_R}" fill="url(#g_c)" '
+            f'stroke="{PAGE_BG}" stroke-width="3" filter="url(#sh)"/>'
         )
-        svg.append(svg_text(x, y - 8, "EMV", FONT_SZ["node_emv"] - 2, fill="white", weight="bold"))
-        svg.append(svg_text(x, y + 28, f"${nd['emv']}K", FONT_SZ["node_emv"], fill="white", weight="bold"))
+        g.append(tx(x, y - 5, "EMV", FS["emv_hdr"] - 2, fill="white", weight="bold"))
+        g.append(tx(x, y + 16, f"${nd['emv']}K", FS["emv_val"] - 2, fill="white", weight="bold"))
         for i, line in enumerate(nd["label"].split("\n")):
-            svg.append(
-                svg_text(x, y + CHC_R + 42 + i * 40, line, FONT_SZ["node_label"], fill=CHANCE_CLR, weight="bold")
-            )
+            g.append(tx(x, y + CHC_R + 28 + i * 26, line, FS["caption"], fill=CHANCE_CLR, weight="bold"))
     elif ntype == "terminal":
         payoff = nd["payoff"]
-        fill = GAIN_CLR if payoff > 0 else (LOSS_CLR if payoff < 0 else ZERO_CLR)
-        pts = f"{x - TRI},{y - TRI} {x - TRI},{y + TRI} {x + TRI},{y}"
-        svg.append(f'<polygon points="{pts}" fill="{fill}" stroke="white" stroke-width="3" filter="url(#shadow)"/>')
-        svg.append(
-            svg_text(
-                x + TRI + 28, y + 12, fmt_currency(payoff), FONT_SZ["payoff"], fill=fill, weight="bold", anchor="start"
-            )
-        )
+        fill = GAIN_CLR if payoff > 0 else (LOSS_CLR if payoff < 0 else INK_MUTED)
+        pts_str = f"{x - TRI},{y - TRI} {x - TRI},{y + TRI} {x + TRI},{y}"
+        g.append(f'<polygon points="{pts_str}" fill="{fill}" stroke="{PAGE_BG}" stroke-width="2" filter="url(#sh)"/>')
+        g.append(tx(x + TRI + 18, y + 9, fmt_k(payoff), FS["payoff"], fill=fill, weight="bold", anchor="start"))
 
-svg.append("</g>")
+g.append("</g>")
 
-# Merge tree overlay + defs into pygal's SVG
-tree_svg = "\n".join(svg)
-svg_output = base_svg.replace("</svg>", f"{defs}\n{tree_svg}\n</svg>")
+svg_out = base_svg.replace("</svg>", f"{defs}\n{chr(10).join(g)}\n</svg>")
 
-# Save outputs using pygal's rendering pipeline
-with open("plot.svg", "w") as f:
-    f.write(svg_output)
+with open(f"plot-{THEME}.svg", "w") as f:
+    f.write(svg_out)
 
-cairosvg.svg2png(bytestring=svg_output.encode("utf-8"), write_to="plot.png")
+cairosvg.svg2png(bytestring=svg_out.encode("utf-8"), write_to=f"plot-{THEME}.png")
 
-with open("plot.html", "w") as f:
-    f.write(
-        "<!DOCTYPE html>\n<html>\n<head>\n"
-        "    <title>tree-decision &middot; pygal &middot; pyplots.ai</title>\n"
-        "    <style>\n"
-        "        body { margin: 0; padding: 20px; background: #f5f5f5; font-family: sans-serif; }\n"
-        "        .container { max-width: 100%; margin: 0 auto; text-align: center; }\n"
-        "        object { width: 100%; max-width: 4800px; height: auto; }\n"
-        "    </style>\n</head>\n<body>\n"
-        '    <div class="container">\n'
-        '        <object type="image/svg+xml" data="plot.svg">Decision tree not supported</object>\n'
-        "    </div>\n</body>\n</html>"
-    )
+html_content = (
+    "<!DOCTYPE html>\n<html>\n<head>\n"
+    f"    <title>tree-decision &middot; python &middot; pygal &middot; anyplot.ai</title>\n"
+    f"    <style>\n"
+    f"        body {{ margin: 0; padding: 20px; background: {PAGE_BG}; font-family: sans-serif; }}\n"
+    f"        .container {{ max-width: 100%; margin: 0 auto; text-align: center; }}\n"
+    f"        object {{ width: 100%; max-width: {W}px; height: auto; }}\n"
+    f"    </style>\n</head>\n<body>\n"
+    '    <div class="container">\n'
+    f'        <object type="image/svg+xml" data="plot-{THEME}.svg">Decision tree</object>\n'
+    "    </div>\n</body>\n</html>"
+)
+with open(f"plot-{THEME}.html", "w") as f:
+    f.write(html_content)

@@ -8,11 +8,30 @@ This is NOT optional. The workflow will FAIL if this file does not exist after y
 
 The `{EXT}` value depends on `{LANGUAGE}`:
 
-| LANGUAGE | EXT  | Runner                |
-|----------|------|-----------------------|
-| `python` | `.py` | `python` (in `.venv`) |
-| `r`      | `.R`  | `Rscript`             |
-| `julia`  | `.jl` | `julia --project=.`   |
+| LANGUAGE     | EXT   | Runner                                                       |
+|--------------|-------|--------------------------------------------------------------|
+| `python`     | `.py`  | `python` (in `.venv`)                                       |
+| `r`          | `.R`   | `Rscript`                                                   |
+| `julia`      | `.jl`  | `julia --project=.`                                         |
+| `javascript` | `.js`  | `node automation/js-render/render.mjs` (browser harness)    |
+| `javascript` | `.tsx` | `node automation/js-render/render.mjs` (MUI X — React, esbuild-bundled by the same harness) |
+
+> **JavaScript renders in a browser, not a CLI.** Unlike R/Julia (which write a
+> PNG directly), a JS charting snippet draws into a DOM node. You do **not** run
+> the `.js`/`.tsx` file directly — you run the shared render harness, which wraps
+> your idiomatic snippet (`new Chart(...)`, `d3.select(...)`, `echarts.init(...)`)
+> in an HTML page, loads the pinned library bundle, renders it under headless
+> Chromium (Playwright), and screenshots the mount node `#container` at the exact
+> canvas size. It emits both `plot-{THEME}.png` (gallery) **and**
+> `plot-{THEME}.html` (interactive detail view). See `prompts/library/{LIBRARY}.md`.
+>
+> **MUI X (`muix`) is the React exception.** Its snippet is a `.tsx` file that
+> **default-exports a React component** (e.g. `export default function Chart() { return <BarChart … /> }`)
+> — there is no imperative `new Chart(...)`. The same harness esbuild-bundles it
+> with react + `@mui/x-charts`, wraps it in a theme-aware MUI `ThemeProvider`, and
+> mounts it via `createRoot`. Run it exactly the same way (`render.mjs muix.tsx`).
+> **Community `@mui/x-charts` only — never `@mui/x-charts-pro` / Premium.** See
+> `prompts/library/muix.md`.
 
 ---
 
@@ -42,7 +61,7 @@ A post-render gate in `impl-review.yml` measures the saved PNG dimensions and re
 Read these files to understand the requirements:
 
 1. `prompts/plot-generator.md` - Base generation rules
-2. `prompts/default-style-guide.md` - **CRITICAL**: anyplot palette, continuous-data rules, theme-adaptive chrome tokens. Every new implementation must comply.
+2. `prompts/default-style-guide.md` - **CRITICAL**: Imprint palette, continuous-data rules, theme-adaptive chrome tokens. Every new implementation must comply. Always refer to the palette as **Imprint** in code comments and metadata — never "anyplot palette".
 3. `prompts/library/{LIBRARY}.md` - Library-specific rules + theme-adaptive chrome mapping for this library
 4. `plots/{SPEC_ID}/specification.md` - What to visualize
 
@@ -51,14 +70,14 @@ Read these files to understand the requirements:
 When regenerating an existing implementation, you MUST read these BEFORE writing any code:
 
 1. `/tmp/anyplot-prev-review.md` — structured review from the previous attempt (image description, strengths, weaknesses, failed criteria checklist). The workflow extracts this automatically from the previous `metadata/{LANGUAGE}/{LIBRARY}.yaml`.
-2. `plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}{EXT}` — the previous implementation (`.py` for python, `.R` for r, `.jl` for julia).
+2. `plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}{EXT}` — the previous implementation (`.py` for python, `.R` for r, `.jl` for julia, `.js` for javascript).
 
 **Default regen mindset: incremental improvement, not rewrite.**
 
 - Preserve the bits listed under "Strengths" unchanged.
 - Address every bullet under "Weaknesses" and each ❌ item in the criteria checklist.
 - **Canvas size: the Step 0 contract is non-negotiable on regen.** The previous file's `figsize` / `dpi` / `width` / `height` / `scale_factor` values are **historical**, never current — overwrite them to the canonical pair from `prompts/library/{LIBRARY}.md` as your *first* edit, before touching anything else. The post-render gate checks this and re-triggers repair on drift; do not let that fire.
-- **Base style wins on everything else.** If anything in `prompts/default-style-guide.md` or `prompts/library/{LIBRARY}.md` differs from the previous implementation, update the previous code to match. This includes **font sizes** (title, axis labels, tick labels, legend), **marker and line sizes**, **palette** (anyplot palette positions), **theme tokens** (background, INK, INK_SOFT, ELEVATED_BG, GRID), and **chrome** (spines, gridlines, legend frame). The previous review may not have flagged the old values because they were valid at the time — that does NOT make them current. Always re-read the library prompt's "Sizing" section and the style guide's "Visual Sizing Defaults" table on every regen and align.
+- **Base style wins on everything else.** If anything in `prompts/default-style-guide.md` or `prompts/library/{LIBRARY}.md` differs from the previous implementation, update the previous code to match. This includes **font sizes** (title, axis labels, tick labels, legend), **marker and line sizes**, **palette** (Imprint palette positions), **theme tokens** (background, INK, INK_SOFT, ELEVATED_BG, GRID), and **chrome** (spines, gridlines, legend frame). The previous review may not have flagged the old values because they were valid at the time — that does NOT make them current. Always re-read the library prompt's "Sizing" section and the style guide's "Visual Sizing Defaults" table on every regen and align. Also normalise any stale "anyplot palette" wording in the previous code's comments to "Imprint palette".
 - Do NOT discard working structure / data generation / layout choices that the previous review did not flag.
 - Your deliverable is a refined version of the previous file, not a fresh rewrite from the spec.
 
@@ -122,18 +141,19 @@ If LIBRARY is **matplotlib**, **seaborn**, **plotnine**, **ggplot2**, or **makie
 plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}{EXT}
 ```
 
-where `{EXT}` is `.py` for `python`, `.R` for `r`, and `.jl` for `julia`.
+where `{EXT}` is `.py` for `python`, `.R` for `r`, `.jl` for `julia`, and `.js` for `javascript`.
 
 The script MUST:
 - Follow the KISS structure: imports → data → plot → save
-- Read `ANYPLOT_THEME` from the environment (`"light"` or `"dark"`, default `"light"`) and render accordingly. The same single script file handles both themes.
+- Read `ANYPLOT_THEME` (`"light"` or `"dark"`, default `"light"`) and render accordingly. The same single script file handles both themes.
   - Python: `os.getenv("ANYPLOT_THEME", "light")`
   - R: `Sys.getenv("ANYPLOT_THEME", "light")`
   - Julia: `get(ENV, "ANYPLOT_THEME", "light")`
-- Save output as `plot-{THEME}.png` (theme-suffixed, based on the env var).
-- For interactive libraries (plotly, bokeh, altair, highcharts, pygal, letsplot): also save `plot-{THEME}.html`. ggplot2 and makie are PNG-only, no HTML variant.
-- Use `#009E73` (anyplot palette position 1) as the **first categorical series**, always. Multi-series follows the canonical order: `#C475FD`, `#4467A3`, `#BD8233`, `#AE3030`, `#2ABCCD`, `#954477`, `#99B314`. May reassign positions when categories carry strong semantic color cues (grass→green, wood→ochre, blood→red, sky→blue) — see `prompts/default-style-guide.md` "Semantic exception". Three semantic anchors outside the categorical pool: `#DDCC77` (amber, warning), theme-adaptive `palette.neutral` (totals/baseline), theme-adaptive `palette.muted` (other/rest).
-- For continuous data: build `imprint_seq` (single-polarity, `["#009E73", "#4467A3"]`) or `imprint_div` (diverging, `["#AE3030", midpoint, "#4467A3"]` where midpoint is `#FAF8F1` on light / `#1A1A17` on dark) from the anyplot palette. No other cmaps — never viridis/cividis/BrBG/Reds/Blues/Greens or jet/hsv/rainbow.
+  - JavaScript: the browser has no env — the harness exposes `window.ANYPLOT_THEME` (`"light"`/`"dark"`) and `window.ANYPLOT_TOKENS` (page bg, ink, grid, Imprint palette). Read those.
+- Save output as `plot-{THEME}.png` (theme-suffixed). Python/R/Julia save it themselves; **JavaScript snippets do NOT save** — the render harness screenshots `#container` and writes the PNG (and HTML) for you.
+- For interactive libraries (plotly, bokeh, altair, highcharts, pygal, letsplot): also save `plot-{THEME}.html`. ggplot2 and makie are PNG-only, no HTML variant. **JavaScript** (chartjs, d3, echarts, muix) is interactive, but the harness emits the HTML — the snippet must not.
+- Use `#009E73` (Imprint palette position 1) as the **first categorical series**, always. Multi-series follows the canonical order: `#C475FD`, `#4467A3`, `#BD8233`, `#AE3030`, `#2ABCCD`, `#954477`, `#99B314`. May reassign positions when categories carry strong semantic color cues (grass→green, wood→ochre, blood→red, sky→blue) — see `prompts/default-style-guide.md` "Semantic exception". Three semantic anchors outside the categorical pool: `#DDCC77` (amber, warning), theme-adaptive `palette.neutral` (totals/baseline), theme-adaptive `palette.muted` (other/rest).
+- For continuous data: build `imprint_seq` (single-polarity, `["#009E73", "#4467A3"]`) or `imprint_div` (diverging, `["#AE3030", midpoint, "#4467A3"]` where midpoint is `#FAF8F1` on light / `#1A1A17` on dark) from the Imprint palette. No other cmaps — never viridis/cividis/BrBG/Reds/Blues/Greens or jet/hsv/rainbow.
 - Plot backgrounds: `#FAF8F1` (light) / `#1A1A17` (dark). Never pure `#FFFFFF` or `#000000`.
 - Theme-adaptive chrome (title, axis labels, tick labels, grid, spines, legend frames, annotation boxes) — see `prompts/default-style-guide.md` "Theme-adaptive Chrome" and the library-specific mapping in `prompts/library/{LIBRARY}.md`.
 
@@ -165,7 +185,23 @@ ANYPLOT_THEME=light julia --project=. {LIBRARY}.jl
 ANYPLOT_THEME=dark  julia --project=. {LIBRARY}.jl
 ```
 
-Both runs must succeed and produce `plot-light.png` / `plot-dark.png` (plus `plot-light.html` / `plot-dark.html` for interactive libs — ggplot2 and makie are PNG-only). If either fails, fix and try again (max 3 attempts).
+**JavaScript (`LANGUAGE=javascript`)**: run the render harness, not the file. It
+wraps your snippet in HTML, renders under headless Chromium, screenshots
+`#container`, and writes both the PNG and the interactive HTML. For `muix` (`.tsx`)
+it additionally esbuild-bundles your default-exported React component with
+react + `@mui/x-charts` and mounts it — same command either way. Run from the repo
+root so `node_modules` resolves:
+```bash
+cd plots/{SPEC_ID}/implementations/{LANGUAGE}
+ANYPLOT_THEME=light node "$GITHUB_WORKSPACE/automation/js-render/render.mjs" {LIBRARY}{EXT}
+ANYPLOT_THEME=dark  node "$GITHUB_WORKSPACE/automation/js-render/render.mjs" {LIBRARY}{EXT}
+```
+The harness derives the library + bundle from the filename (`{LIBRARY}{EXT}`,
+i.e. `chartjs.js` … `muix.tsx`) and the orientation from a
+`//# anyplot-orientation: square` directive in the file (default landscape). It
+exits non-zero if your snippet throws or leaves `#container` empty.
+
+Both runs must succeed and produce `plot-light.png` / `plot-dark.png` (plus `plot-light.html` / `plot-dark.html` for interactive libs — ggplot2 and makie are PNG-only; the JS harness writes the HTML itself). If either fails, fix and try again (max 3 attempts).
 
 ### Step 3b: Canvas dimension self-check (Step 0 contract verification)
 
@@ -226,7 +262,7 @@ Before committing, verify the implementation file exists:
 ls -la plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}{EXT}
 ```
 
-`{EXT}` is `.py` for python, `.R` for r, `.jl` for julia.
+`{EXT}` is `.py` for python, `.R` for r, `.jl` for julia, `.js` for javascript.
 
 **If the file does NOT exist, you MUST go back to Step 2 and create it!**
 
@@ -255,7 +291,7 @@ Pass the multi-line message via `-F -` or a heredoc so git preserves the body.
 ## Final Check
 
 Before finishing, confirm:
-1. ✅ `plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}{EXT}` exists (`.py` for python, `.R` for r, `.jl` for julia)
+1. ✅ `plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}{EXT}` exists (`.py` for python, `.R` for r, `.jl` for julia, `.js` for javascript)
 2. ✅ `plot-light.png` AND `plot-dark.png` were generated successfully (plus `plot-light.html` / `plot-dark.html` for interactive libs — ggplot2 and makie are PNG-only)
 3. ✅ First categorical series renders in `#009E73` in both themes
 4. ✅ Changes were committed and pushed

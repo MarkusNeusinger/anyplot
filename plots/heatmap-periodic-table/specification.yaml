@@ -1,0 +1,29 @@
+# Specification-level metadata for heatmap-periodic-table
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: heatmap-periodic-table
+title: Periodic Table Property Heatmap
+
+# Specification tracking
+created: "2026-06-10T23:00:15Z"
+updated: null
+issue: 8659
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - heatmap
+    - matrix
+  data_type:
+    - categorical
+    - numeric
+  domain:
+    - chemistry
+    - education
+    - science
+  features:
+    - color-mapped
+    - annotated
+    - static

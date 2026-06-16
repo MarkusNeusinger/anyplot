@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, userEvent, waitFor } from '../test-utils';
-import { StatsPage } from './StatsPage';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { StatsPage } from 'src/pages/StatsPage';
+import { render, screen, userEvent, waitFor } from 'src/test-utils';
 
 vi.mock('react-helmet-async', () => ({
   Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -8,7 +9,7 @@ vi.mock('react-helmet-async', () => ({
 
 const mockTrackEvent = vi.fn();
 
-vi.mock('../hooks', () => ({
+vi.mock('src/hooks', () => ({
   useAnalytics: () => ({
     trackPageview: vi.fn(),
     trackEvent: mockTrackEvent,
@@ -33,6 +34,31 @@ const mockDashboard = {
       score_buckets: { '50-55': 1, '75-80': 10, '90-95': 5 },
       loc_buckets: { '0-20': 2, '40-60': 5 },
       avg_loc: 78,
+    },
+    // echarts/muix carry their canonical API names so the StatsPage short-label
+    // override (statsLibLabel) is exercised: 'Apache ECharts' -> 'ECharts',
+    // 'MUI X Charts' -> 'MUI X'. matplotlib above asserts the fallback to name.
+    {
+      id: 'echarts',
+      name: 'Apache ECharts',
+      impl_count: 30,
+      avg_score: 89,
+      min_score: 70,
+      max_score: 96,
+      score_buckets: { '85-90': 5, '90-95': 8 },
+      loc_buckets: { '60-80': 4 },
+      avg_loc: 95,
+    },
+    {
+      id: 'muix',
+      name: 'MUI X Charts',
+      impl_count: 8,
+      avg_score: 88,
+      min_score: 72,
+      max_score: 94,
+      score_buckets: { '85-90': 3, '90-95': 2 },
+      loc_buckets: { '80-100': 2 },
+      avg_loc: 110,
     },
   ],
   coverage_matrix: [
@@ -86,7 +112,9 @@ const mockVisitors = {
  * /insights/visitors. Route by URL so the visitors response isn't silently
  * replaced by the dashboard payload (and vice versa).
  */
-function mockFetchSuccess(visitorsPayload: { points: Array<{ date: string; visitors: number }> } | null = mockVisitors) {
+function mockFetchSuccess(
+  visitorsPayload: { points: Array<{ date: string; visitors: number }> } | null = mockVisitors
+) {
   vi.stubGlobal(
     'fetch',
     vi.fn().mockImplementation((url: string) => {
@@ -100,7 +128,7 @@ function mockFetchSuccess(visitorsPayload: { points: Array<{ date: string; visit
         ok: true,
         json: () => Promise.resolve(mockDashboard),
       });
-    }),
+    })
   );
 }
 
@@ -115,7 +143,7 @@ function mockFetchError() {
         return Promise.resolve({ ok: true, json: () => Promise.resolve({ points: [] }) });
       }
       return Promise.resolve({ ok: false, status: 500 });
-    }),
+    })
   );
 }
 
@@ -202,6 +230,26 @@ describe('StatsPage', () => {
     // "matplotlib" appears in library stats and in top implementation cards
     expect(screen.getAllByText('matplotlib').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('95')).toBeInTheDocument();
+  });
+
+  it('shortens echarts/muix library labels and falls back to name for others', async () => {
+    mockFetchSuccess();
+
+    render(<StatsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('libraries')).toBeInTheDocument();
+    });
+
+    // statsLibLabel maps the canonical API names to single-line labels. Each
+    // appears twice — once in the quality histogram, once in the LOC histogram.
+    expect(screen.getAllByText('ECharts')).toHaveLength(2);
+    expect(screen.getAllByText('MUI X')).toHaveLength(2);
+    // The canonical names must NOT leak through anywhere on the page.
+    expect(screen.queryByText('Apache ECharts')).not.toBeInTheDocument();
+    expect(screen.queryByText('MUI X Charts')).not.toBeInTheDocument();
+    // Libraries without an override still render their plain name (2 histograms).
+    expect(screen.getAllByText('matplotlib').length).toBeGreaterThanOrEqual(2);
   });
 
   it('renders tag distribution categories', async () => {

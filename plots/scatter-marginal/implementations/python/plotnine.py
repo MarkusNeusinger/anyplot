@@ -35,7 +35,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 SCATTER_COLOR = "#009E73"  # Brand green (position 1)
-MARGINAL_COLOR = "#D55E00"  # Vermillion (position 2)
+MARGINAL_COLOR = "#C475FD"  # Vermillion (position 2)
 
 # Data - Bivariate data with correlation
 np.random.seed(42)

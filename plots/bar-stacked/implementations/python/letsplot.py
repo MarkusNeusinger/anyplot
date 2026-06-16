@@ -21,7 +21,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 RULE = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: Quarterly sales by product category
 data = {
@@ -59,7 +59,7 @@ plot = (
         size=0.3,
         tooltips=layer_tooltips().title("@product").line("Sales: @sales K$").format("sales", ".0f"),
     )
-    + scale_fill_manual(values=OKABE_ITO)
+    + scale_fill_manual(values=IMPRINT)
     + labs(title="bar-stacked · letsplot · anyplot.ai", x="Quarter", y="Sales (Thousands $)", fill="Product")
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),

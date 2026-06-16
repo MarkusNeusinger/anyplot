@@ -1,135 +1,134 @@
 library: plotnine
+language: python
 specification_id: bubble-packed
 created: '2025-12-23T09:16:24Z'
-updated: '2026-02-23T16:26:11Z'
-generated_by: claude-opus-4-6
-workflow_run: 20456560252
-issue: 0
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/plotnine/plot.png
-preview_html: null
+updated: '2026-05-29T23:02:02Z'
+generated_by: claude-sonnet
+workflow_run: 26665999790
+issue: 992
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - layer-composition
-  - patches
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep:
-  - normalization
-  styling:
-  - minimal-chrome
-  - alpha-blending
-  - edge-highlighting
 review:
   strengths:
-  - Excellent Okabe-Ito colorblind-safe palette with intentional alpha variation per
-    group
-  - Robust circle packing via greedy placement + vectorized force simulation with
-    no overlaps
-  - Smart conditional label sizing (full name, first word, 4-char abbreviation) prevents
-    clutter
-  - Informative subtitle showing group budget totals provides immediate aggregate
-    context
-  - Clean void theme with white circle borders appropriate for this chart type
-  - Fully deterministic with area-based scaling for accurate visual perception
+  - Custom vectorized physics simulation (greedy placement + 2000-iteration force
+    relaxation) produces genuinely well-packed circles with no overlaps — impressive
+    technical sophistication for a static library
+  - Three-tier font system (large/medium/small bubbles) with calibrated nudge offsets
+    keeps labels readable at every bubble size without overlapping name and value
+    text
+  - 'Correct Imprint palette: brand green #009E73 as Software (first series), positions
+    2–4 for Hardware/Services/Consumer; both renders theme-correct with all chrome
+    adapting via INK/INK_SOFT tokens'
+  - Subtitle with group revenue totals ($159B / $136B / $90B / $135B) adds quantitative
+    context beyond the spec requirements — genuine storytelling bonus
+  - Area-based radius scaling (sqrt(value)) ensures accurate visual perception per
+    spec requirement; deterministic algorithm is fully reproducible
   weaknesses:
-  - Noticeable whitespace gap between bubble cluster and bottom legend reduces canvas
-    utilization
-  - Smallest bubble labels (Trai, Admi, Qual) are abbreviated somewhat cryptically
-  image_description: 'The plot displays a packed bubble chart with 15 circles representing
-    corporate department budgets (in millions). The largest circle is Engineering
-    ($45M) in blue, positioned centrally. Circles are colored by four groups using
-    the Okabe-Ito colorblind-safe palette: blue (#0072B2) for Tech (Engineering, R&D,
-    IT, Design), amber/gold (#E69F00) for Business (Marketing, Sales, Finance), green/teal
-    (#009E73) for Operations (Operations, Customer Svc, Logistics, Quality), and pink
-    (#CC79A7) for Support (HR, Legal, Training, Admin). Circles are tightly packed
-    with white borders separating them. Larger bubbles display both the department
-    name (bold white) and budget value (e.g., "$45M"). Smaller bubbles show abbreviated
-    names ("Trai", "Admi", "Qual"). The title reads "bubble-packed · plotnine · pyplots.ai"
-    in bold centered text. A subtitle shows group totals: "Tech: $109M · Business:
-    $78M · Operations: $66M · Support: $36M". A horizontal legend at the bottom labels
-    the four groups. The background is white with a void theme (no axes, grid, or
-    spines). Alpha variation subtly emphasizes Tech and Business groups over Operations
-    and Support.'
+  - Groups are scattered throughout the packed layout (determined by packing physics)
+    rather than spatially clustered — visual group membership relies entirely on color;
+    spatial clustering with inter-group gaps would significantly improve group-level
+    storytelling
+  - Some unused corner space in the square canvas (inherent to circle-pack geometry
+    but coord_fixed bounds could be tightened slightly to reduce dead space in corners)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1 range) — correct, not pure white
+      Chrome: Bold dark title "bubble-packed · python · plotnine · anyplot.ai" spans ~80% canvas width — readable. Subtitle with group totals in muted dark ink — readable. Legend "Tech Segment" with 4 swatches — readable. All text visible against light background.
+      Data: 20 packed circles, color-coded by group: green #009E73 (Software), lavender #C475FD (Hardware), blue #4467A3 (Services), ochre #BD8233 (Consumer). White bold text inside circles (name + value for medium/large, name only for small). First series (Software) = #009E73 brand green ✓.
+      Legibility verdict: PASS — all text readable in light theme
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17 range) — correct, not pure black
+      Chrome: Title in bold white (#F0EFE8 range) — clearly readable. Subtitle in muted INK_SOFT gray — readable. Legend text in INK_SOFT, title in INK — both readable. Elevated legend box (#242420) with INK_SOFT border. No dark-on-dark failures observed.
+      Data: All 20 bubble colors identical to light render — Imprint palette unchanged. White text labels inside circles unchanged. Data colors correctly theme-independent.
+      Legibility verdict: PASS — all text readable in dark theme, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 24pt, subtitle 16pt, legend
-          18/16pt, in-bubble 10-12pt). All readable. Minor: smallest in-bubble text
-          could be slightly larger.'
+        comment: 'All font sizes explicitly set: title auto-scales, subtitle=8pt,
+          legend title=9pt, legend text=8pt, bubble labels in 3 tiers (3.5/3.0/2.5
+          mm). Both renders fully readable.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements. Circle packing maintains gaps, conditional
-          label sizing prevents clutter.
+        comment: No overlapping elements. Force simulation ensures no circle overlaps.
+          Nudge offsets keep name/value labels separated within each bubble.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All circles clearly visible with good size differentiation. White
-          borders and alpha variation ensure distinction.
+        comment: All 20 bubbles clearly visible with strong size variation proportional
+          to revenue values.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Okabe-Ito colorblind-safe palette. All four colors distinguishable
-          under common color vision deficiencies.
+        comment: White text on colored bubbles. CVD-safe Imprint palette with 4 distinct
+          hue families.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Bubbles occupy ~55-60% of canvas with good centering. Minor whitespace
-          gap between bubble cluster and bottom legend.
+        comment: Good square canvas use. Some unused corner space inherent to circular
+          packing geometry. Legend well-positioned.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct title format. Subtitle provides group totals with dollar
-          units. Void theme appropriately has no axes.
+        comment: Correct title format. Subtitle with group totals. No axis labels
+          needed (theme_void appropriate).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Correct Imprint palette (green/lavender/blue/ochre). Correct backgrounds
+          (#FAF8F1 / #1A1A17). Data colors identical across both renders.'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom Okabe-Ito palette, intentional typography hierarchy, alpha
-          variation per group, white text on colored circles. Clearly above defaults.
+        comment: 'Above defaults: custom physics packing, dual-tier text labels, subtitle
+          with group totals, PAGE_BG circle borders. Not publication-ready due to
+          lack of spatial group clustering.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: theme_void() perfect for packed bubbles. White circle borders, clean
-          background, custom legend styling, plot_margin=0.02. Minor bottom whitespace
-          gap.
+        comment: theme_void removes all axes/spines/grid. Circle borders use PAGE_BG.
+          Legend has elevated background with INK_SOFT border. Adequate margins.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Visual hierarchy through size, color, and alpha. Subtitle with group
-          totals guides interpretation. Natural narrative about corporate budget allocation.
+        comment: 'Size variation communicates revenue hierarchy. Four Imprint hues
+          make group membership readable. Subtitle anchors with group totals. Minor:
+          no spatial group clustering.'
     spec_compliance:
       score: 15
       max: 15
@@ -139,28 +138,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct packed bubble chart with area-based sizing and physics simulation
-          packing.
+        comment: Correct packed bubble chart with physics simulation and area-based
+          radius scaling.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: size represents value, physics packing, labels
-          inside circles, color encodes group.'
+        comment: Area-based size encoding, labels inside circles, color encoding of
+          groups, optional grouping via color all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Values correctly mapped to circle area via sqrt scaling. Groups mapped
-          to colors. Labels correctly associated.
+        comment: 20 items within recommended range. label/value/group columns all
+          correctly used.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format. Legend with all four groups labeled correctly.
+        comment: 'Title: ''bubble-packed · python · plotnine · anyplot.ai'' correct.
+          Legend ''Tech Segment'' with 4 correct swatches.'
     data_quality:
       score: 15
       max: 15
@@ -170,22 +170,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 15 departments across 4 groups with wide value range ($5M-$45M).
-          Multiple sizes within each group.
+        comment: Strong size variation across 20 items, 4 distinct groups, dual labels
+          (name + value), group totals in subtitle.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Corporate department budgets in millions. Neutral business scenario
-          with realistic department names.
+        comment: Global tech industry revenue by segment (2024 est., $B) — real-world
+          scenario, comprehensible, neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Budget values $5M-$45M realistic for corporate departments. Proportions
-          sensible.
+        comment: Values $9B–$52B are plausible for major tech market segments. Proportions
+          consistent with publicly known market sizes.
     code_quality:
       score: 10
       max: 10
@@ -195,51 +195,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat sequential structure: imports, data, packing, polygon construction,
-          plot, save. No functions or classes.'
+        comment: 'Flat script: tokens → data → packing algorithm → plot → save. No
+          functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: hardcoded data, deterministic sorting and packing
-          algorithm.'
+        comment: 'Deterministic: greedy placement + vectorized force simulation has
+          no random elements.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. numpy, pandas, and all plotnine imports actively
-          utilized.
+        comment: 'All imports used: os, sys, numpy, pandas, and all named plotnine
+          components.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Vectorized numpy for collision detection and force simulation. Appropriate
-          complexity. No fake UI.
+        comment: Appropriate complexity. Vectorized NumPy operations. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at 300 dpi using current plotnine API.
+        comment: Saves as plot-{THEME}.png. Current plotnine API throughout.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Good grammar of graphics composition: ggplot() + multiple geom layers
-          + scales + coords + themes. Significant numpy work inherent to chart type.'
+        comment: 'Expert plotnine grammar: ggplot() + geom_polygon() + geom_text()
+          layers + scale_fill_manual() + coord_fixed() + theme_void() + theme(). geom_polygon
+          with group=''circle_id'' is the correct idiomatic approach.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses grammar of graphics layered composition, theme_void(), scale_alpha_manual,
-          guides(alpha=False), coord_fixed, element_rect/element_text theme components.
+        comment: geom_polygon for precise area-correct circles, coord_fixed() for
+          1:1 aspect ratio, conditional data filtering per geom layer for 3 bubble
+          size tiers. Above default but not fully distinctive.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - iteration-over-groups
+  - matrix-construction
+  - groupby-aggregation
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
+  - alpha-blending

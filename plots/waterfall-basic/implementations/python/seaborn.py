@@ -27,8 +27,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 BRAND_GREEN = "#009E73"
-ACCENT_RED = "#D55E00"
-ACCENT_BLUE = "#0072B2"
+ACCENT_RED = "#AE3030"
+ACCENT_BLUE = "#4467A3"
 
 # Data: Quarterly financial breakdown
 categories = ["Starting Balance", "Sales", "Returns", "COGS", "Operating Costs", "Taxes", "Net Profit"]

@@ -19,7 +19,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette: position 1 (brand green) and position 2 (vermillion)
 COLOR_1 = "#009E73"  # Before
-COLOR_2 = "#D55E00"  # After
+COLOR_2 = "#C475FD"  # After
 
 # Data - Patient recovery scores before/after treatment across clinics
 np.random.seed(42)

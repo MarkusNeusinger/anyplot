@@ -13,8 +13,8 @@ THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-OKABE_ITO   <- c("#009E73", "#D55E00", "#0072B2", "#CC79A7",
-                 "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT   <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+                 "#AE3030", "#2ABCCD", "#954477")
 
 # --- Data -------------------------------------------------------------------
 # Response times (in milliseconds) from a web application
@@ -29,8 +29,8 @@ df <- data.frame(value = response_times)
 p <- ggplot(df, aes(x = value)) +
   geom_density(
     stat = "density",
-    fill = OKABE_ITO[1],
-    color = OKABE_ITO[1],
+    fill = IMPRINT[1],
+    color = IMPRINT[1],
     alpha = 0.35,
     linewidth = 1.4,
     bw = 20
@@ -38,28 +38,28 @@ p <- ggplot(df, aes(x = value)) +
   geom_density(
     stat = "density",
     fill = NA,
-    color = OKABE_ITO[1],
+    color = IMPRINT[1],
     alpha = 1,
     linewidth = 2,
     bw = 20,
     key_glyph = "blank"
   ) +
   geom_rug(
-    color = OKABE_ITO[1],
+    color = IMPRINT[1],
     alpha = 0.7,
     linewidth = 0.9,
     length = unit(0.035, "npc")
   ) +
   geom_vline(
     xintercept = 150,
-    color = OKABE_ITO[1],
+    color = IMPRINT[1],
     linewidth = 0.6,
     alpha = 0.5,
     linetype = "dashed"
   ) +
   geom_vline(
     xintercept = 250,
-    color = OKABE_ITO[1],
+    color = IMPRINT[1],
     linewidth = 0.6,
     alpha = 0.5,
     linetype = "dashed"

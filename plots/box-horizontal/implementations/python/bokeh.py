@@ -40,7 +40,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 BRAND = "#009E73"
-ALT_COLOR = "#D55E00"
+ALT_COLOR = "#C475FD"
 
 # Data - Response times (ms) by service type
 np.random.seed(42)

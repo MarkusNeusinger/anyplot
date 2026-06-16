@@ -21,14 +21,14 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # brand — first series
-    "#D55E00",
-    "#0072B2",
-    "#CC79A7",
-    "#E69F00",
-    "#56B4E9",
-    "#F0E442",
+    "#C475FD",
+    "#4467A3",
+    "#BD8233",
+    "#AE3030",
+    "#2ABCCD",
+    "#954477",
 ]
 
 # Data
@@ -86,9 +86,9 @@ fig.add_trace(
         x=dates,
         y=revenue,
         mode="lines",
-        line={"color": OKABE_ITO[0], "width": 4},
+        line={"color": IMPRINT[0], "width": 4},
         fill="tozeroy",
-        fillcolor=f"rgba({int(OKABE_ITO[0][1:3], 16)}, {int(OKABE_ITO[0][3:5], 16)}, {int(OKABE_ITO[0][5:7], 16)}, 0.2)",
+        fillcolor=f"rgba({int(IMPRINT[0][1:3], 16)}, {int(IMPRINT[0][3:5], 16)}, {int(IMPRINT[0][5:7], 16)}, 0.2)",
         name="Revenue",
     ),
     row=1,
@@ -96,7 +96,7 @@ fig.add_trace(
 )
 
 # B: Monthly sales bar (top right)
-fig.add_trace(go.Bar(x=months, y=monthly_sales, marker_color=OKABE_ITO[1], name="Monthly"), row=1, col=3)
+fig.add_trace(go.Bar(x=months, y=monthly_sales, marker_color=IMPRINT[1], name="Monthly"), row=1, col=3)
 
 # C: Product scatter (middle spanning) — INCREASED marker size
 fig.add_trace(
@@ -104,7 +104,7 @@ fig.add_trace(
         x=product_x,
         y=product_y,
         mode="markers",
-        marker={"size": 16, "color": OKABE_ITO[0], "opacity": 0.8},
+        marker={"size": 16, "color": IMPRINT[0], "opacity": 0.8},
         name="Products",
     ),
     row=2,
@@ -117,7 +117,7 @@ fig.add_trace(
         y=categories,
         x=cat_values,
         orientation="h",
-        marker_color=[OKABE_ITO[0], OKABE_ITO[1], OKABE_ITO[2], OKABE_ITO[3], OKABE_ITO[4]],
+        marker_color=[IMPRINT[0], IMPRINT[1], IMPRINT[2], IMPRINT[3], IMPRINT[4]],
         name="Categories",
     ),
     row=2,
@@ -130,9 +130,9 @@ fig.add_trace(
         x=list(range(30)),
         y=metric_1_history,
         mode="lines",
-        line={"color": OKABE_ITO[0], "width": 3},
+        line={"color": IMPRINT[0], "width": 3},
         fill="tozeroy",
-        fillcolor=f"rgba({int(OKABE_ITO[0][1:3], 16)}, {int(OKABE_ITO[0][3:5], 16)}, {int(OKABE_ITO[0][5:7], 16)}, 0.25)",
+        fillcolor=f"rgba({int(IMPRINT[0][1:3], 16)}, {int(IMPRINT[0][3:5], 16)}, {int(IMPRINT[0][5:7], 16)}, 0.25)",
         name="Efficiency",
     ),
     row=3,
@@ -145,9 +145,9 @@ fig.add_trace(
         x=list(range(30)),
         y=metric_2_history,
         mode="lines",
-        line={"color": OKABE_ITO[1], "width": 3},
+        line={"color": IMPRINT[1], "width": 3},
         fill="tozeroy",
-        fillcolor=f"rgba({int(OKABE_ITO[1][1:3], 16)}, {int(OKABE_ITO[1][3:5], 16)}, {int(OKABE_ITO[1][5:7], 16)}, 0.25)",
+        fillcolor=f"rgba({int(IMPRINT[1][1:3], 16)}, {int(IMPRINT[1][3:5], 16)}, {int(IMPRINT[1][5:7], 16)}, 0.25)",
         name="Quality",
     ),
     row=3,
@@ -160,9 +160,9 @@ fig.add_trace(
         x=list(range(30)),
         y=metric_3_history,
         mode="lines",
-        line={"color": OKABE_ITO[2], "width": 3},
+        line={"color": IMPRINT[2], "width": 3},
         fill="tozeroy",
-        fillcolor=f"rgba({int(OKABE_ITO[2][1:3], 16)}, {int(OKABE_ITO[2][3:5], 16)}, {int(OKABE_ITO[2][5:7], 16)}, 0.25)",
+        fillcolor=f"rgba({int(IMPRINT[2][1:3], 16)}, {int(IMPRINT[2][3:5], 16)}, {int(IMPRINT[2][5:7], 16)}, 0.25)",
         name="Response",
     ),
     row=3,

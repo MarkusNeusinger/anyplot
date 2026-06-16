@@ -31,8 +31,8 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito data colors (theme-independent)
 LOCUS_COLOR = "#009E73"  # position 1 — brand green, impedance locus
-BOUNDARY_COLOR = "#0072B2"  # position 3 — blue, unit circle boundary
-MARKER_COLOR = "#D55E00"  # position 2 — vermillion, matched condition
+BOUNDARY_COLOR = "#4467A3"  # position 3 — blue, unit circle boundary
+MARKER_COLOR = "#C475FD"  # position 2 — vermillion, matched condition
 
 # Reference impedance
 Z0 = 50  # ohms

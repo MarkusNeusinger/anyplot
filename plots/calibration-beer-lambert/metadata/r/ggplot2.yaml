@@ -1,0 +1,252 @@
+library: ggplot2
+language: r
+specification_id: calibration-beer-lambert
+created: '2026-06-03T08:13:25Z'
+updated: '2026-06-03T08:27:40Z'
+generated_by: claude-sonnet
+workflow_run: 26871915322
+issue: 4410
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - 'All Beer-Lambert spec requirements fully met: 9 calibration standards (blank
+    through 4 mg/L), regression fit, 95% prediction interval, equation + R² annotation,
+    and dashed guide lines illustrating unknown concentration determination.'
+  - 'Semantically appropriate Imprint colour use: #009E73 for calibration series (first/brand),
+    #AE3030 (matte red) for unknown sample — mirrors the palette''s semantic role
+    documentation.'
+  - Realistic analytical chemistry context (iron/ferrozine at 562 nm) with scientifically
+    accurate Beer-Lambert data and correct ε·l value.
+  - 'Complete theme-adaptive implementation: all chrome tokens (INK, INK_SOFT, PAGE_BG,
+    ELEVATED_BG, GRID_COLOR) correctly flip between light and dark; data colours remain
+    invariant.'
+  - Correct canvas (3200×1800), reproducible seed, idiomatic ggplot2 grammar throughout.
+  weaknesses:
+  - 'Annotation text is slightly small: regression equation size=2.8 (≈8pt) and unknown
+    label size=2.5 (≈7pt) in ggplot2 geom units are legible at full resolution but
+    borderline at mobile widths. Increase to size=3.2–3.5 for the equation box and
+    size=3.0 for the unknown label.'
+  - Design excellence is functional rather than distinctive — could further refine
+    by removing tick marks (axis.ticks = element_blank()), adding a horizontal reference
+    line at y=0 in muted ink, or tightening the axis expansion around y=0.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface.
+      Chrome: Title "calibration-beer-lambert · r · ggplot2 · anyplot.ai" in dark ink (INK #1A1A17), axis labels "Concentration (mg/L)" and "Absorbance" in dark ink at 10pt, tick labels in INK_SOFT #4A4A44 at 8pt — all readable. Subtle grid lines with adjustcolor(INK, alpha=0.15). Annotation box with ELEVATED_BG #FFFDF6 fill and thin border.
+      Data: Calibration points and regression line in #009E73 (brand green). Unknown sample diamond and dashed guide lines in #AE3030 (matte red). Prediction interval ribbon in #009E73 at alpha=0.20. First series is #009E73. ✓
+      Legibility verdict: PASS — all text clearly readable against light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct theme surface.
+      Chrome: Title in INK #F0EFE8 (light off-white) — readable. Axis labels in INK #F0EFE8. Tick labels in INK_SOFT #B8B7B0 — readable. No dark-on-dark failures. Annotation box uses ELEVATED_BG #242420. Grid lines subtle.
+      Data: Colors identical to light render — #009E73 for calibration series, #AE3030 for unknown marker and dashed guide lines. Brand green #009E73 remains visible on dark background. ✓
+      Legibility verdict: PASS — all text clearly readable against dark background. No dark-on-dark issues detected.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Axis labels 10pt and tick labels 8pt well-sized. Annotation text
+          geom size=2.8 (≈8pt) and unknown label size=2.5 (≈7pt) readable at full
+          resolution but borderline at mobile widths.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps with data or other text in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Sparse data (9 points); size=3.5 calibration circles and size=4.5
+          unknown diamond are prominent and well-matched to density.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette; green/red complemented by different shapes (circle
+          vs diamond) for redundant encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 correct. Title ~50% width at size 12. No overflow,
+          no clipping, balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis Concentration (mg/L) with units, Y-axis Absorbance as specified.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73. Unknown sample uses semantic #AE3030 (appropriate).
+          Backgrounds #FAF8F1/#1A1A17 correct. Both renders theme-correct.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional semantic colour mapping, annotation box with elevated-background
+          fill, prediction interval ribbon. Above generic defaults but follows template
+          closely.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Top/right spines absent via theme_minimal, subtle grid via adjustcolor,
+          axis lines set from INK_SOFT. Clean but not deeply refined.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Dashed guide lines from unknown sample to both axes are the key storytelling
+          feature. Prediction band adds uncertainty context.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Calibration curve: scatter points + regression line. Correct.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Regression equation + R² annotation, prediction interval band, unknown
+          sample with dashed guide lines to both axes — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = concentration (mg/L), Y = absorbance. Full range visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title calibration-beer-lambert · r · ggplot2 · anyplot.ai matches
+          required format. No legend needed — elements directly annotated.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Blank + 8 concentration standards (9 points), linear regression,
+          prediction interval, unknown sample determination, regression statistics
+          — all spec aspects covered.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Iron (II) calibration by ferrozine colorimetric method at 562 nm
+          with ε·l=0.245 L/(mg·cm) — real, widely-used analytical chemistry procedure.
+          Neutral subject matter.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Concentration 0–4 mg/L, absorbance 0–~1.08. Scientifically plausible
+          Beer-Lambert values. 9 calibration standards within specified 5–10 range.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script, no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. No fake UI. Title font-size scaling formula
+          included.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: sprintf(plot-%s.png, THEME) and ragg::agg_png device.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Proper ggplot2 grammar: geom_ribbon for prediction interval, annotate(segment)
+          for guide lines, annotate(label) for annotation box, correct layer ordering.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses geom_ribbon (ggplot2-idiomatic for uncertainty bands), predict()
+          with interval=prediction for statistical correctness, multiple annotate()
+          calls with distinct types. Solid but not a showcase of advanced ggplot2
+          capabilities.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending

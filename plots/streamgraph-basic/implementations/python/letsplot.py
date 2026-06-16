@@ -23,7 +23,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette — first series always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data — monthly streaming hours by music genre over two years
 np.random.seed(42)
@@ -83,7 +83,7 @@ anyplot_theme = theme(  # noqa: F405
 plot = (
     ggplot(df, aes(x="month", fill="genre"))  # noqa: F405
     + geom_ribbon(aes(ymin="ymin", ymax="ymax"), alpha=0.9)  # noqa: F405
-    + scale_fill_manual(values=OKABE_ITO)  # noqa: F405
+    + scale_fill_manual(values=IMPRINT)  # noqa: F405
     + scale_x_continuous(  # noqa: F405
         breaks=[0, 6, 12, 18, 23], labels=["Jan '23", "Jul '23", "Jan '24", "Jul '24", "Dec '24"]
     )

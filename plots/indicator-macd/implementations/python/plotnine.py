@@ -37,8 +37,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 BRAND = "#009E73"
-ORANGE = "#D55E00"
-BLUE = "#0072B2"
+OCHRE = "#BD8233"  # imprint ochre - categorical contrast against BRAND green
+BLUE = "#4467A3"
 RED = "#D62728"
 GREEN = "#2CA02C"
 
@@ -79,7 +79,7 @@ anyplot_theme = theme(
     legend_title=element_text(color=INK, size=16),
 )
 
-color_map = {"MACD": BLUE, "Signal": ORANGE}
+color_map = {"MACD": BLUE, "Signal": OCHRE}
 fill_map = {"positive": GREEN, "negative": RED}
 
 plot = (

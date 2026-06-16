@@ -20,7 +20,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Set seaborn theme for consistent styling
 sns.set_theme(
@@ -70,7 +70,7 @@ connections = [
 ]
 
 # Use Okabe-Ito palette, cycling through colors for segments
-colors = [OKABE_ITO[i % len(OKABE_ITO)] for i in range(n_segments)]
+colors = [IMPRINT[i % len(IMPRINT)] for i in range(n_segments)]
 
 # Create square figure for circular symmetry
 fig, ax = plt.subplots(figsize=(12, 12), facecolor=PAGE_BG)
@@ -220,9 +220,9 @@ ax.set_title("circos-basic · seaborn · anyplot.ai", fontsize=26, fontweight="b
 
 # Add legend explaining the visualization
 legend_elements = [
-    mpatches.Patch(facecolor=OKABE_ITO[0], alpha=0.85, label="Outer ring: Module (arc size ∝ code volume)"),
-    mpatches.Patch(facecolor=OKABE_ITO[0], alpha=0.5, label="Inner track: Module size (bar height)"),
-    mpatches.Patch(facecolor=OKABE_ITO[0], alpha=0.35, label="Ribbons: Dependencies (width ∝ call count)"),
+    mpatches.Patch(facecolor=IMPRINT[0], alpha=0.85, label="Outer ring: Module (arc size ∝ code volume)"),
+    mpatches.Patch(facecolor=IMPRINT[0], alpha=0.5, label="Inner track: Module size (bar height)"),
+    mpatches.Patch(facecolor=IMPRINT[0], alpha=0.35, label="Ribbons: Dependencies (width ∝ call count)"),
 ]
 ax.legend(
     handles=legend_elements,

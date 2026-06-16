@@ -97,7 +97,7 @@ line_chart = (
         y=alt.Y("value:Q", title="Value"),
         color=alt.Color(
             "line_label:N",
-            scale=alt.Scale(domain=["MACD (12, 26)", "Signal (9)"], range=["#0072B2", "#E69F00"]),
+            scale=alt.Scale(domain=["MACD (12, 26)", "Signal (9)"], range=["#4467A3", "#AE3030"]),
             legend=alt.Legend(title="Lines", labelFontSize=14, titleFontSize=16),
         ),
         strokeDash=alt.StrokeDash(

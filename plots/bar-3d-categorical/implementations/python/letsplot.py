@@ -20,7 +20,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID_COLOR = "#C8C7C0" if THEME == "light" else "#3A3A35"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 
 def shade(col, f):
@@ -116,7 +116,7 @@ def face(pts, fill_col):
 
 
 for ei in range(NY - 1, -1, -1):  # draw back→front; ei=0 (High School) drawn last = in front
-    c0 = OKABE_ITO[ei]
+    c0 = IMPRINT[ei]
     c_front = c0
     c_right = shade(c0, 0.60)
     c_top = shade(c0, 1.32)
@@ -164,7 +164,7 @@ leg_rect = []
 leg_text = []
 for i, edu in enumerate(Y_CATS):
     lx, ly = LEG_X, LEG_Y0 - i * LEG_DY
-    leg_rect.append({"xmin": lx, "xmax": lx + 0.32, "ymin": ly - 0.20, "ymax": ly + 0.20, "fill": OKABE_ITO[i]})
+    leg_rect.append({"xmin": lx, "xmax": lx + 0.32, "ymin": ly - 0.20, "ymax": ly + 0.20, "fill": IMPRINT[i]})
     leg_text.append({"x": lx + 0.42, "y": ly, "label": edu})
 
 df_ltitle = pd.DataFrame(leg_title)

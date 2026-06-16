@@ -61,7 +61,7 @@ grid_rows = 3
 grid_cols = 4
 all_face_data = []
 label_data = []
-species_colors = {"setosa": "#009E73", "versicolor": "#D55E00", "virginica": "#0072B2"}
+species_colors = {"setosa": "#009E73", "versicolor": "#C475FD", "virginica": "#4467A3"}
 
 for idx, row in df_sample.iterrows():
     col = idx % grid_cols

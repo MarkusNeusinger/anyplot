@@ -35,7 +35,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Hierarchical data: File system example
 hierarchy = [
@@ -135,10 +135,10 @@ label_df["font_size"] = label_df["level"].map({0: 14, 1: 12, 2: 8, 3: 7})
 
 # Color palette by level using Okabe-Ito
 colors = {
-    "0": OKABE_ITO[0],  # Level 0: bluish green
-    "1": OKABE_ITO[1],  # Level 1: vermillion
-    "2": OKABE_ITO[2],  # Level 2: blue
-    "3": OKABE_ITO[3],  # Level 3: reddish purple
+    "0": IMPRINT[0],  # Level 0: bluish green
+    "1": IMPRINT[1],  # Level 1: vermillion
+    "2": IMPRINT[2],  # Level 2: blue
+    "3": IMPRINT[3],  # Level 3: reddish purple
 }
 
 anyplot_theme = theme(

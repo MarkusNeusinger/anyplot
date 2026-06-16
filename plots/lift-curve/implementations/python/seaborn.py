@@ -22,7 +22,7 @@ RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito colors
 BRAND = "#009E73"  # bluish green - first series
-SECONDARY = "#D55E00"  # vermillion
+SECONDARY = "#C475FD"  # vermillion
 
 # Set seaborn theme with theme-adaptive colors
 sns.set_theme(

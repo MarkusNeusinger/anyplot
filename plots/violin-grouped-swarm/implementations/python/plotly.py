@@ -48,7 +48,7 @@ for cat in categories:
 df = pd.DataFrame(data)
 
 # Okabe-Ito colors
-colors = {"Novice": "#009E73", "Expert": "#D55E00"}
+colors = {"Novice": "#009E73", "Expert": "#C475FD"}
 
 # Create figure
 fig = go.Figure()

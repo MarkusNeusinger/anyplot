@@ -23,14 +23,14 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette
-OKABE_ITO = (
+IMPRINT = (
     "#009E73",  # bluish green (brand)
-    "#D55E00",  # vermillion
-    "#0072B2",  # blue
-    "#CC79A7",  # reddish purple
-    "#E69F00",  # orange
-    "#56B4E9",  # sky blue
-    "#F0E442",  # yellow
+    "#C475FD",  # vermillion
+    "#4467A3",  # blue
+    "#BD8233",  # reddish purple
+    "#AE3030",  # orange
+    "#2ABCCD",  # sky blue
+    "#954477",  # yellow
 )
 
 # Data: Organizational hierarchy (Company -> Divisions -> Departments -> Teams)
@@ -125,7 +125,7 @@ PLOT_WIDTH = WIDTH - MARGIN_LEFT - MARGIN_RIGHT
 PLOT_HEIGHT = HEIGHT - MARGIN_TOP - MARGIN_BOTTOM
 
 # Color by depth using Okabe-Ito subset with brand as primary
-DEPTH_COLORS = [OKABE_ITO[i % len(OKABE_ITO)] for i in range(max_depth + 1)]
+DEPTH_COLORS = [IMPRINT[i % len(IMPRINT)] for i in range(max_depth + 1)]
 
 # Create pygal style for metadata extraction
 custom_style = Style(
@@ -134,7 +134,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=28,
     label_font_size=22,
     major_label_font_size=18,

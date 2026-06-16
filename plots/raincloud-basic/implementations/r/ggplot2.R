@@ -19,7 +19,7 @@ INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
 GRID        <- if (THEME == "light") "#6B6A63" else "#A8A79F"
 BOX_FILL    <- if (THEME == "light") "#FFFDF6" else "#242420"
 
-ANYPLOT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
                      "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
 # Data — psychology reaction-time experiment across three sleep conditions.
@@ -85,8 +85,8 @@ p <- ggplot() +
         aes(x = value, y = y_pos, color = category),
         size = 1.1, alpha = 0.55, stroke = 0
     ) +
-    scale_fill_manual(values = ANYPLOT_PALETTE[1:3]) +
-    scale_color_manual(values = ANYPLOT_PALETTE[1:3]) +
+    scale_fill_manual(values = IMPRINT_PALETTE[1:3]) +
+    scale_color_manual(values = IMPRINT_PALETTE[1:3]) +
     scale_y_continuous(
         breaks = seq_along(groups),
         labels = groups,

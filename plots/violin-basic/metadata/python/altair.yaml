@@ -1,105 +1,121 @@
 library: altair
+language: python
 specification_id: violin-basic
 created: '2025-12-23T00:38:09Z'
-updated: '2026-02-21T22:47:16Z'
-generated_by: claude-opus-4-6
-workflow_run: 20447779967
-issue: 0
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/violin-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/violin-basic/altair/plot.html
-quality_score: 94
-impl_tags:
-  dependencies: []
-  techniques:
-  - faceting
-  - layer-composition
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep:
-  - kde
-  styling:
-  - alpha-blending
-  - grid-styling
+updated: '2026-05-29T11:34:50Z'
+generated_by: claude-sonnet
+workflow_run: 26634132047
+issue: 722
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/altair/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Expert-level Altair usage with declarative transforms (transform_density, transform_aggregate)
-    instead of pre-computing statistics
-  - 'Thoughtful data design: bimodal Sales distribution showcases violin plots advantage
-    over box plots'
-  - Intentional department ordering creates salary progression narrative with bimodal
-    Sales as focal point
-  - Custom colorblind-safe palette with maximally distinct hues including Python Blue
-  - All font sizes explicitly set for reliable readability at target resolution
-  - Clean well-commented code with clear data generation rationale
+  - 'Excellent spec compliance: all three required features (mirrored KDE violin,
+    IQR quartile bar, median line) implemented correctly using Altair-idiomatic transforms'
+  - 'Outstanding data choice: bimodal Sales distribution (base salary + commission
+    earners) deliberately demonstrates the violin plot''s advantage over box plots'
+  - 'Idiomatic Altair layer-composition: transform_density + stack=''center'' for
+    mirrored violin is precisely how Vega-Lite''s grammar solves this problem'
+  - 'Correct Imprint palette in canonical order (green, lavender, blue, ochre) with
+    first series #009E73'
+  - 'Both themes fully readable: theme-adaptive INK/INK_SOFT tokens correctly threaded
+    through configure_axis, configure_title, facet headers'
+  - 'Perfect canvas handling: pad-only to 3200x1800 target, no cropping, correct error
+    gate'
+  - resolve_scale(x='independent') correctly allows each violin facet to have its
+    own density scale
+  - Realistic salary-by-department scenario with plausible values (Support ~$55K through
+    Engineering ~$92K)
   weaknesses:
-  - Median shown as a dot rather than a line (spec says Include median line) — functionally
-    clear but deviates from literal spec wording
-  - Design could push further toward publication-quality with more typographic refinement
-    or background color treatment
-  image_description: 'The plot displays four violin plots arranged as faceted panels
-    showing salary distributions across four departments: Support (brown/tan), Marketing
-    (purple), Engineering (Python Blue), and Sales (orange). Each violin shows a mirrored
-    KDE density shape with a thick dark IQR rule and a white median dot with dark
-    border inside. Support is centered around $55,000 with a compact unimodal shape;
-    Marketing around $72,000 with wider spread; Engineering around $91,000 with the
-    widest unimodal spread; and Sales shows a distinctive bimodal distribution with
-    two humps (base salary ~$50k and commission earners ~$92k). The title "violin-basic
-    · altair · pyplots.ai" appears at the top in large font. The y-axis is labeled
-    "Salary ($)" with comma-formatted values from ~10,000 to ~140,000. Department
-    labels appear below each violin. The grid is subtle with dashed lines at low opacity.
-    No view borders or density axis labels are shown — clean, professional appearance.'
+  - Median line color uses PAGE_BG (#1A1A17 in dark mode) — creates a near-black horizontal
+    stripe on the colored violin fills in dark mode, reducing median visibility compared
+    to light mode. A more robust choice would be ELEVATED_BG or a fixed contrast color
+    that maintains high contrast on both Imprint palette fills in both themes
+  - 'VQ-01 minor imbalance: facet labelFontSize=16 is noticeably larger than Y-axis
+    titleFontSize=12, creating slight label size imbalance in the faceted layout;
+    both are readable but the hierarchy could be tightened (facet label to 13-14 or
+    axis title to 13-14)'
+  - 'DE-02: horizontal grid lines span all four violin panels — for a violin plot
+    a no-grid or left-axis-only reference line approach would be cleaner and reduce
+    chart noise'
+  - 'LM-02: the layer-composition approach is correct but could further showcase Altair''s
+    declarative grammar by using shorthand transform chaining more concisely'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: title "violin-basic · python · altair · anyplot.ai" in bold dark text, centered at top — fully readable. Y-axis label "Salary ($)" in small dark text — readable. Y-axis tick labels ($20,000–$140,000) in dark secondary text — readable. Facet labels (Support, Marketing, Engineering, Sales) in secondary dark text below each violin — clearly readable.
+      Data: four faceted violin shapes using Imprint palette in canonical order: Support=#009E73 (brand green), Marketing=#C475FD (lavender), Engineering=#4467A3 (steel blue), Sales=#BD8233 (ochre). Each violin has a thick dark vertical IQR bar (INK=#1A1A17) and a thin white median horizontal line (PAGE_BG=#FAF8F1). Sales violin shows distinctive bimodal double-bump shape. Horizontal grid lines are subtle.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17) — correct, not pure black
+      Chrome: title in bold light text — fully readable. Y-axis label "Salary ($)" in light secondary text — readable. Y-axis tick labels in light secondary text — readable. Facet labels in light secondary text — readable. No dark-on-dark failures observed.
+      Data: violin fill colors identical to light render (green, lavender, blue, ochre — Imprint palette unchanged). IQR bars flipped correctly to light (INK=#F0EFE8 in dark mode) — white vertical bars clearly visible. Median line color flips to PAGE_BG (#1A1A17) — near-black horizontal stripe on colored fills; visible but reduced contrast compared to light mode. Bimodal Sales violin bimodal shape identical to light render. Grid lines are subtle light lines.
+      Legibility verdict: PASS — all chrome text readable. Minor note: median line near-black in dark mode has reduced contrast on colored violin fills vs light render.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis title 22pt, tick
-          labels 18pt, facet headers 20pt'
+        comment: 'All font sizes explicitly set; title 16px, axis title 12px, tick
+          labels 10px, facet labels 16px. Readable in both themes. Minor: facet labels
+          (16px) noticeably larger than Y-axis title (12px).'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text anywhere. Clean facet spacing and label positioning
+        comment: No text or element overlap in either render. Four violin panels well-spaced
+          in faceted layout.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Violins well-sized, IQR rules thick (strokeWidth=5), median dots
-          large (size=250) with high contrast
+        comment: Violin shapes prominent and clear. IQR bars and median lines visible
+          in both themes. Bimodal Sales distribution clearly shown.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: 'Custom colorblind-safe palette with maximally distinct hues: brown,
-          purple, Python Blue, orange'
+        comment: Imprint palette positions 1-4 used — CVD-safe selection. Four hues
+          span green/purple/blue/ochre families with adequate ΔE separation.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Tall violins fill canvas well with balanced spacing. Nothing cut
-          off
+        comment: Canvas gate passed (no gate file). Four-panel faceted layout fills
+          ~75% of 3200×1800 canvas well. Balanced margins. Facet spacing=15 is clean.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis labeled Salary ($) with units. Density axis correctly hidden
+        comment: Y-axis 'Salary ($)' with currency units. Title in correct 'violin-basic
+          · python · altair · anyplot.ai' format. Facet labels serve as X-axis categories
+          — no redundant X-axis title needed.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green). Imprint canonical order positions
+          1-4. PAGE_BG #FAF8F1 light / #1A1A17 dark. INK/INK_SOFT theme-adaptive tokens
+          correctly applied to all chrome elements.'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -107,24 +123,28 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, intentional ordering, professional appearance clearly
-          above defaults
+        comment: 'Strong design: correct Imprint palette, opacity=0.75 on fills, intentional
+          IQR+median contrast (dark bar/white line), deliberate bimodal Sales data.
+          Clearly above defaults but not FiveThirtyEight publication-ready.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Subtle dashed grid (opacity 0.2), view strokes removed, density axis
-          hidden, generous spacing
+        comment: Panel borders removed (stroke=None). Grid opacity=0.12 (very subtle).
+          Axis/tick/domain colors explicitly configured. Grid lines span all panels
+          — a no-grid or left-only approach would be more refined for violin plots.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Intentional ordering creates salary progression narrative with bimodal
-          Sales as focal point
+        comment: 'Clear story: salary progression Support < Marketing < Engineering
+          with bimodal Sales as deliberate focal point showing violin plot advantage
+          over box plots. Visual hierarchy from salary level + shape variation. No
+          annotations but story is read from the shapes.'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -132,28 +152,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct violin plot using KDE with mirrored density shapes
+        comment: Correct violin plot with KDE density shape using transform_density
+          + stack='center' for mirroring.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Quartile markers via IQR rule, mirrored density, median shown as
-          dot not line (minor deviation from spec)
+        comment: 'All three required features present: (1) mirrored density on both
+          sides via stack=''center'', (2) quartile markers via IQR rule (Q1-Q3 bar),
+          (3) median line.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category on X via facets, Salary on Y. All data visible with appropriate
-          extent padding
+        comment: 'Y-axis: Salary (continuous). X-axis: Department (categorical via
+          faceting). Distribution shape correctly represented.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. Legend correctly omitted since facet
-          headers provide category labels
+        comment: Title 'violin-basic · python · altair · anyplot.ai' — correct format.
+          No separate legend needed; facet labels + color encoding serve as category
+          identifiers.
     data_quality:
       score: 15
       max: 15
@@ -163,21 +186,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Excellent variety: unimodal distributions with different spreads
-          plus bimodal Sales demonstrating violin advantage'
+        comment: 'Shows all key violin features: different centers (Support vs Engineering),
+          different spreads, and bimodal shape (Sales) — maximum variation to demonstrate
+          the chart type''s full capabilities.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Salary by department: real-world business scenario with bimodal
-          Sales reflecting base plus commission'
+        comment: Salary distributions by department — real-world, comprehensible,
+          neutral business scenario. Bimodal Sales (base salary + commission earners)
+          is realistic and plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic salary values for each department role
+        comment: Support ~$55K, Marketing ~$70K, Engineering ~$92K, Sales bimodal
+          $50K/$92K — plausible contemporary US salaries. 150 samples per department
+          is appropriate for KDE estimation.
     code_quality:
       score: 10
       max: 10
@@ -187,35 +214,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports, Data, Plot, Save structure with no functions or classes
+        comment: 'Flat structure: imports → data → chart layers → facet → save. No
+          functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at the start
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All three imports used, no unused imports
+        comment: 'All imports used: numpy (data), pandas (DataFrame), PIL (canvas
+          padding), importlib/os/sys (altair loading + theme).'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean declarative Altair code with appropriate complexity and good
-          comments
+        comment: Clean, appropriate complexity. sys.path manipulation commented and
+          justified. No fake functionality. Layer composition is clean.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png with scale_factor=3.0 and plot.html using current
-          Altair API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair API
+          used.
     library_mastery:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -223,13 +252,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert declarative grammar: transform_density, transform_aggregate,
-          alt.layer, facet, resolve_scale'
+        comment: 'Exemplary Altair: transform_density for inline KDE, transform_aggregate
+          for quartile/median, alt.layer() for composition, .facet() for small multiples,
+          resolve_scale(x=''independent'') for per-panel density scales. High-level
+          declarative grammar used throughout.'
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Heavily uses Altair-specific: declarative density transform, stack
-          center, resolve_scale, configure system, tooltip encoding'
+        comment: transform_density + stack='center' mirrored violin is distinctly
+          Vega-Lite/Altair — this technique is not available as a single API call
+          in matplotlib/seaborn/plotnine. resolve_scale(x='independent') is also Altair-specific.
+          Strong library-specific usage.
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - pillow
+  techniques:
+  - faceting
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending

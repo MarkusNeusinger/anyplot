@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, userEvent, waitFor } from '../test-utils';
-import { FeedbackWidget } from './FeedbackWidget';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { FeedbackWidget } from 'src/components/FeedbackWidget';
+import { render, screen, userEvent, waitFor } from 'src/test-utils';
 
 describe('FeedbackWidget', () => {
   beforeEach(() => {
@@ -32,7 +33,10 @@ describe('FeedbackWidget', () => {
 
   it('submits a reaction-only entry when 👍 is clicked in the mini-stack', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ status: 'ok' }), { status: 200, headers: { 'Content-Type': 'application/json' } })
+      new Response(JSON.stringify({ status: 'ok' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
     );
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime.bind(vi) });
 
@@ -78,7 +82,10 @@ describe('FeedbackWidget', () => {
 
   it('POSTs full-form fields to /feedback and shows a thank-you on success', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ status: 'ok' }), { status: 200, headers: { 'Content-Type': 'application/json' } })
+      new Response(JSON.stringify({ status: 'ok' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
     );
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime.bind(vi) });
 
@@ -157,7 +164,10 @@ describe('FeedbackWidget', () => {
 
   it('full-dialog submit sends the chosen reaction in the payload', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ status: 'ok' }), { status: 200, headers: { 'Content-Type': 'application/json' } })
+      new Response(JSON.stringify({ status: 'ok' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
     );
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime.bind(vi) });
 

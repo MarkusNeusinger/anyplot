@@ -20,7 +20,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette — first series always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data — departmental budget allocation (ordered largest → smallest for readability)
 budget = pd.DataFrame(
@@ -33,11 +33,11 @@ total = budget["amount"].sum()
 budget["share"] = budget["amount"] / total * 100
 
 # Theme — register Okabe-Ito as the default seaborn palette so wedge colors come from sns.color_palette
-sns.set_palette(sns.color_palette(OKABE_ITO))
+sns.set_palette(sns.color_palette(IMPRINT))
 sns.set_theme(
     context="talk",
     style="white",
-    palette=sns.color_palette(OKABE_ITO),
+    palette=sns.color_palette(IMPRINT),
     rc={"figure.facecolor": PAGE_BG, "axes.facecolor": PAGE_BG, "text.color": INK},
 )
 wedge_colors = sns.color_palette(n_colors=len(budget)).as_hex()

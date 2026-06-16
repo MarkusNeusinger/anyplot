@@ -23,7 +23,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series is always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Quarterly revenue by product line (in thousands)
 categories = ["Q1", "Q2", "Q3", "Q4"]
@@ -34,7 +34,7 @@ data = {"Electronics": [245, 278, 312, 385], "Clothing": [180, 165, 210, 295], "
 # Create factors for grouped bars
 x = [(cat, group) for cat in categories for group in groups]
 values = [data[group][i] for i, cat in enumerate(categories) for group in groups]
-colors = [OKABE_ITO[groups.index(factor[1])] for factor in x]
+colors = [IMPRINT[groups.index(factor[1])] for factor in x]
 
 source = ColumnDataSource(data={"x": x, "values": values, "color": colors})
 

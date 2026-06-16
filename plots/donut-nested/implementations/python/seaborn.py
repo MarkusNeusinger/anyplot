@@ -24,7 +24,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - positions 1-4 for parent categories
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: Regional budget allocation with expense categories
 regions = ["North America", "Europe", "Asia Pacific", "Latin America"]
@@ -55,7 +55,7 @@ ax.set_facecolor(PAGE_BG)
 # Create outer colors - lighter shades of each parent category color
 outer_colors = []
 for i, _region in enumerate(regions):
-    parent_color = OKABE_ITO[i]
+    parent_color = IMPRINT[i]
     shades = sns.light_palette(parent_color, n_colors=5, reverse=True)[:-1]
     outer_colors.extend(shades)
 
@@ -72,7 +72,7 @@ outer_wedges, _ = ax.pie(
 inner_wedges, inner_texts = ax.pie(
     inner_values,
     radius=0.6,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     wedgeprops={"width": 0.3, "edgecolor": PAGE_BG, "linewidth": 2.5},
     startangle=90,
     labels=None,
@@ -93,13 +93,13 @@ for region, val in zip(regions, inner_values, strict=True):
 
 # Create legend for regions (inner ring)
 region_patches = [
-    Patch(facecolor=OKABE_ITO[i], label=f"{regions[i]}", edgecolor=INK_SOFT, linewidth=1) for i in range(len(regions))
+    Patch(facecolor=IMPRINT[i], label=f"{regions[i]}", edgecolor=INK_SOFT, linewidth=1) for i in range(len(regions))
 ]
 
 # Create legend for categories with sample colors
 category_patches = [
     Patch(
-        facecolor=sns.light_palette(OKABE_ITO[0], n_colors=5, reverse=True)[:-1][i],
+        facecolor=sns.light_palette(IMPRINT[0], n_colors=5, reverse=True)[:-1][i],
         label=categories[i],
         edgecolor=INK_SOFT,
         linewidth=1,

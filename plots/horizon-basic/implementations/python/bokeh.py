@@ -69,8 +69,8 @@ total_height = 2700
 individual_height = total_height // n_series  # ~450px per series
 
 # Okabe-Ito palette positions for color intensity (position 1 for primary, positions 2-3 for intensity)
-pos_colors = ["#56B4E9", "#0072B2", "#004494"]  # Light to dark blue (Okabe-Ito positions 6, 3, variant)
-neg_colors = ["#E69F00", "#D55E00", "#8B3A00"]  # Light to dark orange (Okabe-Ito positions 5, 2, variant)
+pos_colors = ["#2ABCCD", "#4467A3", "#004494"]  # Light to dark blue (Okabe-Ito positions 6, 3, variant)
+neg_colors = ["#E07070", "#AE3030", "#7A1F1F"]  # imprint red ramp (light → mid → dark)
 
 # Create individual horizon plots
 plots = []

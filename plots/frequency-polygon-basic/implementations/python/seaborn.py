@@ -19,7 +19,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - first series always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Test scores by class
 np.random.seed(42)
@@ -85,13 +85,13 @@ sns.lineplot(
     y=class_a_y,
     ax=ax,
     linewidth=3,
-    color=OKABE_ITO[0],
+    color=IMPRINT[0],
     label="Class A",
     marker="o",
     markersize=8,
     markevery=slice(1, -1),
 )
-ax.fill_between(class_a_x, class_a_y, alpha=0.15, color=OKABE_ITO[0])
+ax.fill_between(class_a_x, class_a_y, alpha=0.15, color=IMPRINT[0])
 
 # Class B - Okabe-Ito position 2 (vermillion)
 sns.lineplot(
@@ -99,13 +99,13 @@ sns.lineplot(
     y=class_b_y,
     ax=ax,
     linewidth=3,
-    color=OKABE_ITO[1],
+    color=IMPRINT[1],
     label="Class B",
     marker="s",
     markersize=8,
     markevery=slice(1, -1),
 )
-ax.fill_between(class_b_x, class_b_y, alpha=0.15, color=OKABE_ITO[1])
+ax.fill_between(class_b_x, class_b_y, alpha=0.15, color=IMPRINT[1])
 
 # Class C - Okabe-Ito position 3 (blue)
 sns.lineplot(
@@ -113,13 +113,13 @@ sns.lineplot(
     y=class_c_y,
     ax=ax,
     linewidth=3,
-    color=OKABE_ITO[2],
+    color=IMPRINT[2],
     label="Class C",
     marker="^",
     markersize=8,
     markevery=slice(1, -1),
 )
-ax.fill_between(class_c_x, class_c_y, alpha=0.15, color=OKABE_ITO[2])
+ax.fill_between(class_c_x, class_c_y, alpha=0.15, color=IMPRINT[2])
 
 # Styling
 ax.set_xlabel("Test Score", fontsize=20, color=INK)

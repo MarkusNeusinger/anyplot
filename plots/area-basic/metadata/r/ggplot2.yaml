@@ -1,0 +1,236 @@
+library: ggplot2
+language: r
+specification_id: area-basic
+created: '2026-05-28T05:51:26Z'
+updated: '2026-05-28T06:08:35Z'
+generated_by: claude-sonnet
+workflow_run: 26557160797
+issue: 711
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Both light and dark themes render flawlessly with full INK/INK_SOFT token threading
+    — no chrome failures in either render
+  - Analytical overlays (period-mean dashed reference + LOESS trend) add genuine storytelling
+    value without crowding the area
+  - Correct canvas dimensions (3200x1800) with all text explicitly sized per style
+    guide
+  - Realistic, cyclical daily-visitors dataset that naturally demonstrates the area
+    chart strength in showing magnitude over time
+  weaknesses:
+  - 'DE-01 headroom: composition is clean but lacks the visual punch of a strong-design
+    implementation — a subtle area fill gradient or soft drop-shadow on the trend
+    line could lift it further'
+  - 'DE-02: horizontal gridlines use full INK opacity rather than the recommended
+    rgba(26,26,23,0.15) rule color — a fractionally lighter treatment would give the
+    data more visual breathing room'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct surface color, not pure white
+      Chrome: Title "area-basic · r · ggplot2 · anyplot.ai" bold dark text ~45-50% width, clearly readable. Y-axis label "Daily Visitors" and X-axis label "Date (2023)" in dark INK color, size 10pt. Tick labels in INK_SOFT (#4A4A44), size 8pt, readable. Date ticks rotated 30°. Subtle horizontal Y-axis gridlines.
+      Data: Area fill in brand green #009E73 at alpha=0.40 (soft teal). Solid line in same green on top. Dashed horizontal mean reference line in INK_SOFT. LOESS trend in INK_SOFT (#4A4A44) as dark solid curve. Weekly cyclical dips and upward trend clearly visible.
+      Legibility verdict: PASS — all text elements readable; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black
+      Chrome: Title, axis labels, tick labels all render in near-white/light-gray (INK = #F0EFE8, INK_SOFT = #B8B7B0). All readable against dark background. No dark-on-dark failures. LOESS trend flips to light gray, dashed reference line also light — both visible.
+      Data: Area fill still #009E73 at alpha=0.50, compositing to deep forest green — identifiable as same brand green. Line on top in same green. Data colors are identical to light render.
+      Legibility verdict: PASS — all text elements readable; no dark-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All sizes explicitly set (base_size=8, axis.title=10, axis.text=8,
+          plot.title=12); well-proportioned in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; date labels at 30 degrees well-spaced
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 91 medium-density points; area fill + line + trend all clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single series brand green; high contrast against both backgrounds
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 correct; balanced margins; good canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Daily Visitors (Y, K-suffixed scale) and Date (2023) (X) descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; INK/INK_SOFT
+          tokens correct in both themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured-default (4): theme-adaptive chrome + analytical
+          overlays show intentional design. Not yet strong-design (6).'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: All spines removed; Y-only major gridlines; X-axis line; no Y ticks.
+          Clearly above defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Mean reference + LOESS trend guide the viewer to the growth story;
+          weekly pattern visible
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct area chart via geom_area()
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparent fill, gridlines, axis labels with units, continuous
+          datetime X
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=date, Y=daily visitors; Y from 0 via expansion
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title correct; no legend needed for single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows magnitude (area), trend (LOESS), cyclical pattern (weekend
+          dips), time extent
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Daily website visitors over 13 weeks; neutral business scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 4-12K daily visitors; plausible for growing mid-size site; weekly
+          seasonality coherent
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear script: theme tokens -> data -> plot -> save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, scales, ragg — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no over-engineering; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct grammar-of-graphics layering; scale_x_date with date_labels/date_breaks;
+          proper linewidth= not deprecated size=
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: geom_area + geom_smooth(loess) + scale_x_date combination; expansion()
+          in scale; scales::label_comma(suffix=K) integration
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scales
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
+  - grid-styling

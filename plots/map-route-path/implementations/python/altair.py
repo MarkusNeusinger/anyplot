@@ -134,7 +134,7 @@ start_marker = (
 
 end_marker = (
     alt.Chart(end_df)
-    .mark_point(shape="square", size=320, filled=True, color="#D55E00", stroke="white", strokeWidth=2.5)
+    .mark_point(shape="square", size=320, filled=True, color="#C475FD", stroke="white", strokeWidth=2.5)
     .encode(longitude="lon:Q", latitude="lat:Q", tooltip="label:N")
     .project(type="albersUsa")
 )

@@ -1,0 +1,272 @@
+library: d3
+language: javascript
+specification_id: waveform-audio
+created: '2026-06-03T01:29:19Z'
+updated: '2026-06-03T01:54:38Z'
+generated_by: claude-sonnet
+workflow_run: 26857934068
+issue: 4563
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/javascript/d3/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Sophisticated 4-harmonic vocal synthesis produces a scientifically realistic speech
+    signal — three syllables with distinct frequencies (130/155/145 Hz) and trapezoidal
+    amplitude envelopes
+  - Min/max envelope downsampling per pixel column correctly avoids waveform aliasing
+    on dense data, exactly as specified
+  - Envelope overlay curves (d3.curveCatmullRom.alpha(0.5)) add a visually informative
+    layer showing amplitude modulation — a creative addition beyond the baseline spec
+  - Syllable onset dashed vertical markers and mid-label annotations with frequency
+    values make the chart self-documenting for a speech-analysis audience
+  - 'Full palette and theme compliance: t.palette[0] (#009E73) for data, t.ink/t.inkSoft/t.grid
+    for chrome, warm backgrounds correct in both renders'
+  - Fully deterministic code — no RNG, fixed SYLS parameters — guarantees reproducible
+    output across runs
+  - 'Clean D3 idioms: d3.area() y0/y1 for filled waveform, .datum() binding, d3.axisBottom/Left,
+    all idiomatic'
+  weaknesses:
+  - Syllable annotation labels at 14px CSS (28 source px after 2× Playwright scale)
+    are noticeably smaller than the tick labels (16px) and axis labels (20px) — increase
+    to at least 16px to match tick-label sizing and improve readability at mobile
+    widths
+  - Design excellence is above default but not exceptional — single brand-green (#009E73)
+    dominates the entire visualization with no secondary visual layer; consider using
+    a slightly different opacity or stroke treatment for the envelope curves to create
+    visual hierarchy between the waveform fill and the envelope outline
+  - Top and right axis domain lines are present via the .domain stroke on xAxis/yAxis
+    — the L-shape is correct in D3 (only bottom + left axes created), but the domain
+    stroke on the bottom axis extends across the full width giving a box-like feel;
+    suppressing the bottom and left .domain paths would yield a cleaner floating-axis
+    look consistent with the style guide's spine-removal recommendation
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white matching #FAF8F1 — correctly set by the harness pageBg token.
+      Chrome: Title "waveform-audio · javascript · d3 · anyplot.ai" in dark ink at top, clearly readable. X-axis label "Time (s)" and Y-axis label "Amplitude" in dark ink at 20px CSS, readable. Tick labels at 16px CSS, readable. Syllable annotations "Syl. 1 · 130 Hz", "Syl. 2 · 155 Hz", "Syl. 3 · 145 Hz" at 14px — slightly small but legible.
+      Data: Three waveform segments rendered in brand green (#009E73) as a filled min/max envelope area with fill-opacity 0.72. Envelope outline curves (CatmullRom spline) overlay each segment in the same green at full opacity. Dashed vertical markers separate syllables. Horizontal gridlines at -1, -0.5, 0, 0.5, 1 are subtle. Zero reference line is a thin inkSoft horizontal rule. Y-axis spans -1.0 to 1.0; X-axis spans 0.0 to ~1.7s.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black matching #1A1A17 — correct dark surface.
+      Chrome: Title, axis labels, tick labels, and syllable annotations all render in light-colored text (inkSoft token), clearly readable against the dark background. No dark-on-dark failures observed.
+      Data: Same brand green (#009E73) filled waveform and envelope curves — data colors are identical to the light render as required. The green reads well on the dark surface.
+      Legibility verdict: PASS — all text readable against dark background, no issues detected.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set via .style('font-size', '...px'). Title
+          28px, axis labels 20px, tick labels 16px, syllable annotations 14px — all
+          readable in both themes. Syllable annotations at 14px CSS (28 source px)
+          slightly below style-guide target for this canvas size.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements visible in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Waveform fill, envelope curves, zero reference line, and gridlines
+          all clearly visible. Alpha-blending (0.72) appropriate for dense waveform
+          data.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series, no CVD risk. Brand green #009E73 provides adequate
+          contrast on both surfaces.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Margins (top=110, right=50, bottom=90, left=100)
+          are generous. Nothing cut off. Good use of canvas area.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (s) includes unit, Amplitude is descriptive. Title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses t.palette[0] (#009E73) for all data. Chrome tokens (t.ink, t.inkSoft,
+          t.grid) correctly applied. Backgrounds correct in both themes.
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Clearly above defaults: 4-harmonic vocal synthesis, envelope overlay
+          curves, syllable segmentation with frequency labels, semi-transparent fill.
+          However, single color throughout with no secondary visual layer or multi-dimensional
+          design choices.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Only bottom and left axes created (no top/right spines). Subtle gridlines
+          at stroke-width 0.5. Clean axis color styling via tokens. Above default
+          but not exceptional — axis domain lines still present, tick marks kept.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Three-syllable speech structure with frequency labels creates a clear
+          scientific narrative. Envelope curves guide the eye. Dashed separators aid
+          segmentation. Viewer immediately understands this is a 3-syllable utterance.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct waveform visualization with min/max envelope rendering as
+          specified.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Filled area, semi-transparent fill, zero reference line, time X-axis,
+          amplitude Y-axis (-1 to +1), min/max envelope rendering, synthetic audio
+          data — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time on X-axis (seconds), normalized amplitude on Y-axis. All data
+          visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''waveform-audio · javascript · d3 · anyplot.ai'' — correct
+          format. Single series, no legend required.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all waveform aspects: filled area, positive/negative amplitude,
+          envelope modulation, silence gaps, syllable dynamics.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 3-syllable speech signal is a real, neutral scientific scenario.
+          Frequency values (130-155 Hz) are in the human speech fundamental frequency
+          range.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Amplitude normalized to -1/+1, timing realistic (1.7s), frequencies
+          scientifically plausible for speech.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear procedural code: data → SVG mount → scales → gridlines →
+          waveform → envelope → axes → labels → title.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic — fixed SYLS parameters, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No explicit imports; d3 is a global as required. All tokens used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity for the visualization. No over-engineering
+          or fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness handles plot-{theme}.png and plot-{theme}.html output. Current
+          D3 v7 API used throughout.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: d3.area() with y0/y1 for waveform fill, d3.line() with CatmullRom
+          curve, .datum() binding for path data, d3.axisBottom/Left, .join() for elements
+          — all idiomatic D3 patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: d3.area() y0/y1 for filled waveform is distinctively D3. d3.curveCatmullRom.alpha(0.5)
+          is a D3-specific curve interpolation. Min/max envelope feeding into area()
+          is a D3-idiomatic pattern for dense signal visualization.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending

@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
-import { useLatestRelease } from './useLatestRelease';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { useLatestRelease } from 'src/hooks/useLatestRelease';
 
 const CACHE_KEY = 'anyplot:latest-release';
 const ONE_HOUR = 60 * 60 * 1000;
@@ -30,7 +31,10 @@ describe('useLatestRelease', () => {
   });
 
   it('renders the stale cached tag immediately and refreshes in the background', async () => {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ tag: 'v2.0', ts: Date.now() - ONE_HOUR - 1000 }));
+    localStorage.setItem(
+      CACHE_KEY,
+      JSON.stringify({ tag: 'v2.0', ts: Date.now() - ONE_HOUR - 1000 })
+    );
     mockFetchTag('v2.1');
 
     const { result } = renderHook(() => useLatestRelease());
@@ -70,7 +74,10 @@ describe('useLatestRelease', () => {
   it('refetches when the tab becomes visible after the cache goes stale', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify({ tag: 'v2.0', ts: Date.now() - ONE_HOUR - 1000 }));
+      localStorage.setItem(
+        CACHE_KEY,
+        JSON.stringify({ tag: 'v2.0', ts: Date.now() - ONE_HOUR - 1000 })
+      );
       mockFetchTag('v2.1');
 
       const { result } = renderHook(() => useLatestRelease());
@@ -78,7 +85,10 @@ describe('useLatestRelease', () => {
       await waitFor(() => expect(result.current).toBe('v2.1'));
 
       // Force the cache stale again, advance past the per-attempt throttle, then fire visibilitychange.
-      localStorage.setItem(CACHE_KEY, JSON.stringify({ tag: 'v2.1', ts: Date.now() - ONE_HOUR - 1000 }));
+      localStorage.setItem(
+        CACHE_KEY,
+        JSON.stringify({ tag: 'v2.1', ts: Date.now() - ONE_HOUR - 1000 })
+      );
       await vi.advanceTimersByTimeAsync(2 * 60 * 1000);
       mockFetchTag('v2.2');
       Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
@@ -91,7 +101,10 @@ describe('useLatestRelease', () => {
   });
 
   it('keeps the cached value when the API responds with non-ok', async () => {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ tag: 'v2.0', ts: Date.now() - ONE_HOUR - 1000 }));
+    localStorage.setItem(
+      CACHE_KEY,
+      JSON.stringify({ tag: 'v2.0', ts: Date.now() - ONE_HOUR - 1000 })
+    );
     mockFetchTag('ignored', false);
 
     const { result } = renderHook(() => useLatestRelease());
@@ -102,7 +115,10 @@ describe('useLatestRelease', () => {
   });
 
   it('keeps the cached value when fetch rejects', async () => {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ tag: 'v2.0', ts: Date.now() - ONE_HOUR - 1000 }));
+    localStorage.setItem(
+      CACHE_KEY,
+      JSON.stringify({ tag: 'v2.0', ts: Date.now() - ONE_HOUR - 1000 })
+    );
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('offline'));
 
     const { result } = renderHook(() => useLatestRelease());

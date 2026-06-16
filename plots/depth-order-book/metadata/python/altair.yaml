@@ -1,0 +1,279 @@
+library: altair
+language: python
+specification_id: depth-order-book
+created: '2026-06-15T02:40:54Z'
+updated: '2026-06-15T02:58:31Z'
+generated_by: claude-sonnet
+workflow_run: 27520469519
+issue: 8657
+language_version: 3.13.13
+library_version: 6.2.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/python/altair/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Correct semantic color usage: Bid=#009E73 (brand green) for buy pressure, Ask=#AE3030
+    (Imprint matte red / semantic sell anchor) for sell — appropriate Imprint semantic
+    exception for finance context'
+  - 'Perfect spec compliance: both cumulative step areas, bid-ask spread gap, dashed
+    mid-price rule, mid-price+spread annotation, y-axis from zero, balanced x-axis
+    centering'
+  - 'Altair canvas sizing exactly correct: width=620 height=320 scale_factor=4.0 then
+    PIL pad to 3200×1800 — canvas gate passed cleanly'
+  - Realistic BTC/USD order book snapshot with seeded random quantities, three explicit
+    liquidity walls (bid side) and two resistance walls (ask side) — visually demonstrable
+    depth features
+  - 'Full theme-adaptive chrome: all tokens (INK, INK_SOFT, INK_MUTED, PAGE_BG, ELEVATED_BG)
+    applied to every non-data element in both themes'
+  - Interactive tooltips (side, price, cumulative volume) leverage Altair distinctive
+    feature; HTML export provided alongside PNG
+  - 'Excellent code quality: KISS structure, reproducible seed(42), clean imports,
+    layer composition idiomatic to Altair grammar'
+  weaknesses:
+  - Mid-price annotation mark_text uses fontSize=9, which at scale_factor=4 gives
+    36 source-px — readable at full resolution but slightly undersized; raise to fontSize=11
+    for comfortable readability
+  - 'Dark-theme bid/ask fills with fillOpacity=0.35 over #1A1A17 produce very dark
+    tonal values (~#11483A for bid, ~#4F2220 for ask), reducing fill vibrancy in dark
+    mode; consider raising fillOpacity to 0.45-0.50 for dark theme'
+  - Design Excellence slightly limited by grid spanning both axes (X and Y) — consider
+    Y-axis grid only to reduce chartjunk (order book depth charts rarely need X-axis
+    gridlines)
+  - 'Minor: step-after interpolation makes ask side right-continuous and bid side
+    right-continuous rather than strictly left-continuous as spec specifies; functionally
+    negligible at this price-level density but step-before on bid side would be more
+    technically accurate'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "BTC/USD Order Book · depth-order-book · python · altair · anyplot.ai" in bold dark ink, fills ~75% of width (expected for this long title). X-axis label "Price (USD)" and Y-axis label "Cumulative Volume (BTC)" clearly visible in dark INK. Tick labels (59,930–60,070 on X; 0–90 on Y) in INK_SOFT — all readable. Legend "Order Side" with green circle (Bid (Buy)) and red circle (Ask (Sell)) in top-right corner. Mid-price annotation "Mid: $60,000 | Spread: $20" in INK_SOFT just below the top, slightly small but legible.
+      Data: Bid (left) = semi-transparent #009E73 step area with solid green outline, rising steeply from best bid (~59,990) to cumulative ~80 BTC at worst bid (~59,941). Ask (right) = semi-transparent #AE3030 step area with solid red outline, rising from best ask (~60,010) to cumulative ~84 BTC. Bid-ask spread gap clearly visible as empty center. Dashed vertical rule at mid price $60,000. Multiple liquidity walls visible as sharp steps on both sides.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct, not pure black
+      Chrome: Same title visible in light #F0EFE8 ink. Axis labels and tick labels in #B8B7B0 (INK_SOFT dark) — all readable against dark background. Legend in top-right with same layout. Mid-price annotation readable in gray (#A8A79F INK_MUTED dark). No dark-on-dark failures observed.
+      Data: Data colors identical palette-wise to light render: Bid = #009E73 fill (darker appearance due to 0.35 opacity over dark bg) with solid green #009E73 outline; Ask = #AE3030 fill (dark maroon appearance over dark bg) with solid red outline. The outlines clearly identify both series. Colors match light render palette — only chrome flipped. Grid subtle at gridOpacity=0.12 in both themes.
+      Legibility verdict: PASS — all chrome elements readable against dark background, no dark-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, axis labels, tick labels all clearly readable in both themes.
+          Mid-price annotation fontSize=9 is slightly small at 36 source-px but readable.
+          Deduct 1 for the undersized annotation.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps. Legend, annotation, axis labels all well-separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Both step areas clearly visible with semi-transparent fills and solid
+          outlines. Dashed mid-price rule visible. Spread gap prominent.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Green (#009E73) and red (#AE3030) are clearly distinguishable. Semantic
+          exception applies: bid/ask in finance strongly conventionally mapped to
+          green/red.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. 3200x1800 confirmed. Good proportions. Title
+          fills ~75% width (expected for long mandated title). Balanced bid/ask areas.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Title correctly formatted with optional descriptive prefix. X: Price
+          (USD), Y: Cumulative Volume (BTC) — both descriptive with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Bid=#009E73 (Imprint position 1, brand green). Ask=#AE3030 (Imprint
+          position 5, semantic sell/loss anchor). Correct semantic exception for financial
+          context. Backgrounds #FAF8F1/#1A1A17 correct. Data colors identical across
+          themes.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above default (4). Semantic color mapping is intentional and appropriate.
+          Mid-price rule and annotation add professional trading-chart feel. Step-area
+          with semi-transparent fills is characteristic polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Above default (2). fillOpacity=0.35 is thoughtful. gridOpacity=0.12
+          is very subtle. stroke=None on view removes frame. Grid on both axes is
+          slightly heavy for this chart type.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Above default (2). Spread gap is the focal point. Liquidity walls
+          (sharp steps) are clearly visible. Mid-price annotation directly labels
+          the key data point. Viewer immediately understands buy vs sell pressure
+          imbalance.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct depth order book chart: two cumulative step areas on opposite
+          sides of mid price.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required: green bid area, red ask area, left-continuous step
+          curves, bid-ask spread gap, dashed mid-price rule, mid-price+spread annotation,
+          y from zero, balanced x-axis.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Price on X, cumulative quantity on Y. 50 levels per side. Cumulative
+          computed from best bid/ask outward.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''BTC/USD Order Book · depth-order-book · python · altair
+          · anyplot.ai'' — correct with optional descriptive prefix. Legend: ''Order
+          Side'' with ''Bid (Buy)'' and ''Ask (Sell)''.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Complete feature coverage: both sides, cumulative step areas, spread
+          gap, walls, mid-price annotation, semi-transparent fills with outlines.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: BTC/USD at $60,000 with $20 spread is realistic. Exponential quantity
+          distribution with explicit walls is domain-appropriate. Neutral financial
+          context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: BTC/USD price range ~59,930–60,070, cumulative volume 0–85 BTC —
+          plausible for a real exchange order book snapshot.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes. Linear script, clear organization.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: importlib workaround for circular import, PIL used for padding. All
+          imports needed.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality. Altair layer composition natural. Appropriate
+          complexity for the chart type.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. No bare plot.png. Current
+          API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: alt.layer() for multi-layer composition, alt.Color with explicit
+          domain/range for semantic mapping, alt.Tooltip for interactive info, configure_*
+          for theme adaptation — all idiomatic Altair patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: step-after interpolation in mark_area leverages Vega-Lite grammar.
+          Interactive tooltips are a key Altair/Vega-Lite distinctive. HTML export
+          for interactive version. Layer composition is the Altair-specific way to
+          combine elements.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - pillow
+  techniques:
+  - layer-composition
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending

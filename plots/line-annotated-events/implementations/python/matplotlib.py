@@ -44,7 +44,7 @@ ax.set_facecolor(PAGE_BG)
 ax.plot(dates, prices, linewidth=3, color=BRAND, label="Stock Price", zorder=2)
 
 # Event markers with alternating heights
-event_color = "#D55E00" if THEME == "light" else "#56B4E9"
+event_color = "#C475FD" if THEME == "light" else "#2ABCCD"
 heights = [0.85, 0.70, 0.85, 0.70, 0.85]
 
 for i, (event_date, event_label) in enumerate(events):

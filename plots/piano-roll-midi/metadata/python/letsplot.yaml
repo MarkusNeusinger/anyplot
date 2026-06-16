@@ -1,44 +1,59 @@
 library: letsplot
+language: python
 specification_id: piano-roll-midi
 created: '2026-03-07T19:47:43Z'
-updated: '2026-03-07T20:16:30Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22805912229
+updated: '2026-06-03T03:48:42Z'
+generated_by: claude-sonnet
+workflow_run: 26862001395
 issue: 4565
-python_version: 3.14.3
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/letsplot/plot.html
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/python/letsplot/plot-dark.html
 quality_score: 90
 review:
   strengths:
-  - Excellent data storytelling with dynamic arc labels (pp to fff) and melody/accompaniment
-    visual hierarchy
-  - 'Comprehensive spec compliance: all required features including black key shading,
-    beat/measure grids, note names, velocity color mapping'
-  - Musically realistic data with a proper I-vi-IV-V chord progression and meaningful
-    dynamic contour
-  - Good use of lets-plot tooltips for interactive HTML version
-  - Clean, well-organized code with deterministic data
+  - Excellent piano-roll-midi implementation with authentic DAW-style alternating
+    black/white key row shading
+  - 'Imprint sequential colormap (#009E73 → #4467A3) correctly used for velocity (single-polarity
+    continuous data)'
+  - Full theme-adaptive chrome in both renders — all text readable in light and dark
+    themes
+  - Musical storytelling through section labels (pp—Building → fff—Climax) and velocity
+    gradient communicates the dynamic arc
+  - 'Correct visual hierarchy: melody notes have darker border and taller height vs.
+    accompaniment; custom beat/measure grid lines with distinct weights'
+  - 'All spec requirements met: note names on Y-axis (white keys only), alternating
+    row shading, beat/measure grid, auto-fit pitch range'
+  - Interactive HTML tooltips via layer_tooltips() leverage letsplot's distinctive
+    interactive capability
+  - Perfect code structure (KISS) with seed set, clean imports, correct canvas size
+    (ggsize(800,450) scale=4 → 3200×1800)
   weaknesses:
-  - Y-axis tick text slightly small at 14pt
-  - Some eighth-note melody rectangles are quite small at higher pitches
-  - Black key row shading contrast could be slightly stronger
-  image_description: The plot displays a MIDI piano roll with horizontal rectangles
-    on a pitch-by-time grid. The x-axis shows "Time (beats)" from 0 to 32, and the
-    y-axis shows "Pitch" with white-key note names from A2 to G5. Notes are colored
-    using a plasma colormap — dark purple/blue for low velocity (soft) through pink/orange
-    to bright yellow for high velocity (loud). A velocity colorbar legend appears
-    on the right side ranging from approximately 40 to 120+. Black key rows are indicated
-    by subtle light gray horizontal bands across the full width. Thin light-gray vertical
-    lines mark individual beats, with thicker gray lines at measure boundaries (every
-    4 beats). Melody notes (upper register, C5-G5 range) are taller with dark borders
-    and full opacity, while accompaniment notes (lower register, A2-C4) are slightly
-    thinner and more transparent. Section labels in italic at the top read "pp — Building",
-    "f — Response", "pp — Restart", and "fff — Climax". Bold role labels "Melody"
-    and "Accomp." appear on the right side. The title reads "piano-roll-midi · letsplot
-    · pyplots.ai" in bold at the top. The overall palette is clean and modern with
-    a white background and light gray panel.
+  - 'DE-02: Spines are all kept (panel border via panel_background element_rect with
+    color=INK_SOFT) — removing or softening the top and right spines would add further
+    visual refinement; for a piano-roll this is a minor issue since the frame helps
+    orient the pitch rows'
+  - 'LM-02: Interactive HTML tooltips are used but the layer_tooltips pattern is relatively
+    straightforward — a more distinctive letsplot feature (e.g., geom_livemap or animated
+    transitions) would score higher'
+  - 'VQ-01: Section labels at the top (geom_text size=4) and role labels (size=3.5)
+    are on the small side relative to the main axis text; readable but could be bumped
+    to size=5 for better legibility at mobile scales'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light surface. Alternating lighter (white keys, #FAF8F1) and slightly darker gray (#E4E3DC) horizontal rows correctly mirror a piano keyboard layout.
+      Chrome: Title "piano-roll-midi · python · letsplot · anyplot.ai" in bold dark text (~80% width — expected for the mandatory long title format). X-axis label "Time (beats)" and Y-axis label "Pitch" in dark ink, axis tick labels in INK_SOFT gray. Section labels (pp—Building, f—Response, pp—Restart, fff—Climax) in italic muted gray at top of plot. Role labels (Melody, Accomp.) in bold INK_SOFT on right margin. All text clearly readable against the light background.
+      Data: Note rectangles colored with imprint_seq gradient (green #009E73 for low velocity ~30-48, transitioning to blue #4467A3 for high velocity ~105-127). Accompaniment notes appear as semi-transparent long bars in lower register; melody notes are taller, fully opaque with dark INK border in upper register. Beat lines (subtle) and measure lines (stronger) provide DAW-style temporal grid. Velocity colorbar on right with ELEVATED_BG legend frame.
+      Legibility verdict: PASS — all text elements readable against warm off-white background. No light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface. Alternating near-black (white keys, #1A1A17) and slightly less-dark (#252522) rows correctly rendering the keyboard pattern.
+      Chrome: Title in light F0EFE8 text — clearly readable. Axis labels and tick labels in B8B7B0 light gray — readable. Section labels in A8A79F muted light gray — readable. Role labels "Melody" and "Accomp." in B8B7B0 — readable. Legend box fill is #242420 (elevated dark bg) with light text.
+      Data: Velocity gradient colors are identical to light render — #009E73 green for soft notes, #4467A3 blue for loud notes (climax at measures 7-8 clearly visible in deep blue). Data colors are theme-invariant as required.
+      Legibility verdict: PASS — no dark-on-dark failures. All title, axis labels, tick labels, and annotation text are light-colored and readable against the warm near-black background.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -49,42 +64,56 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=26, axes=20, ticks=16/14). Y-axis
-          tick text at 14pt slightly small but readable.
+        comment: All font sizes explicitly set (title 16pt, axis titles 12pt, tick
+          labels 10-11pt). Readable in both themes. Section labels (geom_text size=4
+          mm) and role labels (size=3.5 mm) are slightly small but readable. Minor
+          deduction for small annotation text at mobile scale.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Y-axis labels well-spaced showing only white
-          keys.
+        comment: No text or element overlap. Role labels placed in right margin beyond
+          beat 32, section labels above data area. No collisions.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Note rectangles clearly visible with good melody/accompaniment differentiation.
-          Some eighth-note melody rectangles quite small.
+        comment: Accompaniment notes (long bars) clearly visible. Short-duration melody
+          notes (eighth notes at some positions) appear as small rectangles — inherent
+          to short durations, but reduces overall visibility score slightly.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Plasma colormap is perceptually uniform and colorblind-safe.
+        comment: 'Imprint sequential palette (#009E73 to #4467A3) is CVD-safe. Luminance
+          range adequate across velocity. Melody vs. accompaniment distinguished by
+          opacity and border.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions at 1600x900. Plot fills canvas well with balanced
-          margins.
+        comment: Canvas gate passed (3200x1800 via ggsize(800,450) scale=4). Plot
+          fills canvas well with balanced margins. Colorbar on right, section labels
+          in top margin. No content cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis includes units (beats). Y-axis uses note names. Title correct
-          format.
+        comment: 'X-axis: ''Time (beats)'' with units. Y-axis: ''Pitch'' appropriate
+          for note-name axis. Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Continuous velocity uses imprint_seq (low=#009E73, high=#4467A3).
+          Light background #FAF8F1, dark #1A1A17. All chrome tokens theme-adaptive.
+          Data colors identical across themes. Full compliance.'
     design_excellence:
       score: 15
       max: 20
@@ -94,22 +123,27 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Plasma colormap, clear visual hierarchy between melody and accompaniment,
-          custom panel colors. Above defaults.
+        comment: 'Strong design: alternating black/white key rows, semantic beat/measure
+          grid, velocity colormap storytelling, melody/accompaniment visual hierarchy
+          with distinct borders and opacity, musical dynamic labels. Clearly above
+          defaults.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Custom beat/measure grid lines, panel background customized, black
-          key shading. Good but not every detail polished.
+        comment: Panel grid replaced with semantic beat/measure lines, row shading
+          added, legend styled with ELEVATED_BG. Panel border (all 4 spines) kept
+          — appropriate for piano roll but top/right removal would add further polish.
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Section labels show dynamic arc, velocity coloring shows dynamics,
-          melody/accompaniment separation creates hierarchy.
+        comment: 'Strong musical narrative: section labels explicitly narrate pp—Building
+          → f—Response → pp—Restart → fff—Climax dynamic arc. Velocity gradient visually
+          reinforces the journey from soft green notes to loud blue climax. Melody/accompaniment
+          separation creates clear visual layers.'
     spec_compliance:
       score: 15
       max: 15
@@ -119,26 +153,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct piano roll: horizontal rectangles on pitch-time grid.'
+        comment: Correct piano roll with horizontal note rectangles, velocity-colored,
+          beat/measure grid, alternating key row shading.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: note rectangles, note names, velocity
-          color, black key shading, beat/measure grids.'
+        comment: 'All spec features: note names on Y-axis (white keys only with correct
+          names), alternating black/white key shading, beat divisions with stronger
+          measure lines, sequential colormap for velocity, auto-fit pitch range with
+          margin.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time, Y=pitch with note names, color=velocity. All correct.
+        comment: X=time in beats (start/end), Y=pitch (MIDI→note name), bar width=duration,
+          color=velocity. All correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format. Velocity colorbar legend properly labeled.
+        comment: 'Title: ''piano-roll-midi · python · letsplot · anyplot.ai'' — correct
+          format. Velocity colorbar with descriptive label.'
     data_quality:
       score: 15
       max: 15
@@ -148,20 +187,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows chord progression, varied rhythms, wide velocity range, different
-          durations, multi-octave pitch spread.
+        comment: 'Shows all aspects: melody and accompaniment layers, varying note
+          durations (eighth to whole notes), full dynamic range pp to fff, chord voicings
+          with multiple simultaneous pitches, 8-measure progression.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real I-vi-IV-V chord progression with meaningful dynamic arc.
+        comment: Realistic Cmaj→Am→F→G chord progression — very common in popular
+          music. Middle C = MIDI 60 is correct. Dynamic markings (pp, f, fff) are
+          standard musical notation. Neutral, non-controversial music theory content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: MIDI pitches A2-G5, velocities 35-127, 8 measures. All realistic.
+        comment: MIDI velocity range 0-127 correctly applied (30-127 in data). MIDI
+          note numbers correct for piano range (A2=45 to G5=79). 8 measures at 4 beats
+          each = 32 beats total is factually correct for 4/4 time.
     code_quality:
       score: 10
       max: 10
@@ -171,31 +215,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports, data, plot, save. No functions or classes.'
+        comment: 'Flat script: imports → tokens → data → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Data is deterministic.
+        comment: np.random.seed(42) set. Data is mostly deterministic but seed ensures
+          reproducibility.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, numpy, pandas, lets_plot.'
+        comment: 'All imports used: os (env/path), shutil (cleanup), numpy, pandas,
+          lets_plot, export_ggsave.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, clear variable names, appropriate complexity.
+        comment: Clean, well-organized. Data generation is necessarily verbose for
+          a rich musical example. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via ggsave with scale=3. Current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current letsplot API.
+          Cleanup of lets-plot-images directory.
     library_mastery:
       score: 7
       max: 10
@@ -205,28 +254,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper ggplot grammar with aes, geom layers, scales, themes, coord_cartesian,
-          ggsize.
+        comment: 'Good idiomatic ggplot grammar: layer composition with multiple geom_rect/geom_vline/geom_text,
+          scale_fill_gradient, coord_cartesian, theme_minimal + custom theme. layer_tooltips()
+          is idiomatic letsplot pattern.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layer_tooltips() for interactive hover info and HTML dual export.
+        comment: layer_tooltips() with structured multi-line tooltip content is a
+          distinctive letsplot capability. HTML output with interactive tooltips sets
+          this apart. Multiple geom layers with different data sources is well-leveraged.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - colorbar
   - annotations
   - hover-tooltips
   - html-export
-  - custom-legend
+  - manual-ticks
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
   - alpha-blending
-  - grid-styling
   - edge-highlighting

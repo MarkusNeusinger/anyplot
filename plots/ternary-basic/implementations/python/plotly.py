@@ -18,11 +18,11 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (first series is always #009E73)
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # bluish green (brand — primary)
-    "#D55E00",  # vermillion (secondary)
-    "#0072B2",  # blue (tertiary)
-    "#CC79A7",  # reddish purple (quaternary)
+    "#C475FD",  # vermillion (secondary)
+    "#4467A3",  # blue (tertiary)
+    "#BD8233",  # reddish purple (quaternary)
 ]
 
 # Data: Soil composition samples with meaningful clustering by soil type
@@ -110,7 +110,7 @@ soil_type_indices = np.array(
 fig = go.Figure()
 
 # Add traces for each soil type
-for soil_idx, (name, color) in enumerate(zip(["Sandy", "Silty", "Clayey", "Loam"], OKABE_ITO, strict=True)):
+for soil_idx, (name, color) in enumerate(zip(["Sandy", "Silty", "Clayey", "Loam"], IMPRINT, strict=True)):
     mask = soil_type_indices == soil_idx
     fig.add_trace(
         go.Scatterternary(

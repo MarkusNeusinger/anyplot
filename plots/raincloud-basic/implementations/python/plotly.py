@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
 # anyplot categorical palette — first series is always brand green
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data — reaction times (ms) across experimental conditions
 np.random.seed(42)
@@ -52,7 +52,7 @@ rain_offset = -0.22
 rain_jitter_amp = 0.08
 
 for i, (condition, values) in enumerate(data.items()):
-    color = ANYPLOT_PALETTE[i]
+    color = IMPRINT_PALETTE[i]
     y_base = np.full(len(values), i)
 
     # Cloud — half-violin extending upward above the category baseline

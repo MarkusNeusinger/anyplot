@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (positions 1-4 for 4 series)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Monthly sales (units) for 4 product lines over 12 months
 np.random.seed(42)
@@ -41,7 +41,7 @@ fig.add_trace(
         y=electronics,
         name="Electronics",
         mode="lines+markers",
-        line=dict(color=OKABE_ITO[0], width=4),
+        line=dict(color=IMPRINT[0], width=4),
         marker=dict(size=12, symbol="circle"),
     )
 )
@@ -52,7 +52,7 @@ fig.add_trace(
         y=clothing,
         name="Clothing",
         mode="lines+markers",
-        line=dict(color=OKABE_ITO[1], width=4),
+        line=dict(color=IMPRINT[1], width=4),
         marker=dict(size=12, symbol="square"),
     )
 )
@@ -63,7 +63,7 @@ fig.add_trace(
         y=home_garden,
         name="Home & Garden",
         mode="lines+markers",
-        line=dict(color=OKABE_ITO[2], width=4, dash="dash"),
+        line=dict(color=IMPRINT[2], width=4, dash="dash"),
         marker=dict(size=12, symbol="diamond"),
     )
 )
@@ -74,7 +74,7 @@ fig.add_trace(
         y=sports,
         name="Sports",
         mode="lines+markers",
-        line=dict(color=OKABE_ITO[3], width=4, dash="dot"),
+        line=dict(color=IMPRINT[3], width=4, dash="dot"),
         marker=dict(size=12, symbol="triangle-up"),
     )
 )

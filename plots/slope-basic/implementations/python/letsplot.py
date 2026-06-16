@@ -42,7 +42,7 @@ GRID_COLOR = "#C8C7BF" if THEME == "light" else "#333330"
 
 # Okabe-Ito: green = increase, orange = decrease
 COLOR_INCREASE = "#009E73"
-COLOR_DECREASE = "#D55E00"
+COLOR_DECREASE = "#AE3030"  # imprint red — decrease
 
 # Consumer electronics quarterly sales ($K): Q1 vs Q4
 data = {

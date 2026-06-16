@@ -1,41 +1,47 @@
 library: letsplot
+language: python
 specification_id: line-load-duration
 created: '2026-03-15T21:41:07Z'
-updated: '2026-03-15T22:04:26Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23119898916
+updated: '2026-06-10T04:57:20Z'
+generated_by: claude-sonnet
+workflow_run: 27253720313
 issue: 4586
-python_version: 3.14.3
-library_version: 4.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/letsplot/plot.html
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/python/letsplot/plot-dark.html
 quality_score: 90
 review:
   strengths:
-  - Excellent spec compliance with all required features (shaded regions, dashed threshold
-    lines, region labels, energy annotation)
-  - Thoughtful data storytelling with load factor and peak demand context in subtitle
-  - Clean non-overlapping ribbon implementation with well-positioned region labels
-  - Uses lets-plot interactive tooltip system for hover information
+  - 'Semantic color exception elegantly maps domain knowledge: green=base/reliable,
+    ochre=intermediate, red=peak/costly'
+  - Direct region labels replace the legend, reducing chart clutter for engineering
+    audience
+  - 'All spec features implemented: monotonic curve, three shaded regions, dashed
+    capacity lines, region annotations, energy summary'
+  - layer_tooltips() with format specifiers demonstrates letsplot-specific idiomatic
+    usage
+  - Perfect spec compliance and data quality with realistic utility values
   weaknesses:
-  - Red/amber color pairing could be improved for colorblind accessibility
-  - Visual refinement could be pushed further with spine removal or additional whitespace
-    polish
-  image_description: 'The plot displays a load duration curve for a mid-sized utility.
-    A bold black line descends monotonically from approximately 1,247 MW at hour 0
-    to roughly 350 MW at hour 8,760. Three color-coded filled regions segment the
-    area under the curve: a red/coral Peak Load region above 900 MW (leftmost, narrow),
-    an amber/orange Intermediate Load region between 550 and 900 MW (middle), and
-    a steel blue Base Load region below 550 MW (rightmost, largest). Two horizontal
-    dashed lines mark capacity thresholds — a red dashed line at 900 MW labeled "Peak
-    Capacity: 900 MW" and an amber dashed line at 550 MW labeled "Intermediate Capacity:
-    550 MW". Region names are annotated directly within their respective areas in
-    bold dark text. An italic annotation in the upper right reads "Total Energy: 6,209
-    GWh/year" and "Load Factor: 57%". The title is "line-load-duration · letsplot
-    · pyplots.ai" with a gray subtitle showing peak demand and hours above peak threshold.
-    The background is a warm off-white (#fafafa), with only subtle horizontal y-axis
-    gridlines. Axes are labeled "Hours of Year (Ranked by Demand)" and "Power Demand
-    (MW)".'
+  - Capacity threshold labels at x=6200 sit only 38 MW above their dashed lines —
+    minor visual crowding in the right-half base-load region; increase y-offset to
+    60+ MW or move labels to x=7000+
+  - 'DE-01 design polish could be elevated: consider a cleaner L-frame (y-axis spine
+    only, remove bottom x-spine) for engineering-report style'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "line-load-duration · python · letsplot · anyplot.ai" bold, clearly readable in dark ink; subtitle in secondary ink; axis labels "Power Demand (MW)" and "Hours of Year (Ranked by Demand)" in dark ink; tick labels in INK_SOFT dark grey — all readable
+      Data: Three ribbon fills — brand green #009E73 (base load), ochre #BD8233 (intermediate), matte red #AE3030 (peak); black solid load curve; dashed horizontal capacity lines in matching region colors; region labels in bold dark ink directly on chart; muted italic energy annotation upper-right
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title, subtitle, axis labels, tick labels all in light-cream tones (#F0EFE8 / #B8B7B0); load curve adapts to white (INK=F0EFE8 in dark mode); no dark-on-dark failures detected — all text visible against dark background
+      Data: Data colors identical to light render — same teal, ochre, matte-red ribbons; dashed lines same colors; region labels now white/light on colored fills, readable
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -46,64 +52,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, subtitle 16pt, axis titles
-          20pt, axis text 16pt, region labels 14pt, annotations 12pt'
+        comment: All font sizes explicitly set; title scaling formula applied; readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All text elements well-positioned with no collisions
+        comment: Mostly clean; capacity labels 38 MW above dashed lines — minor proximity,
+          still readable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line width 1.8 appropriate, ribbon fills at alpha 0.75 clearly visible
+        comment: Ribbon fills alpha=0.72 appropriate; line size=1.0 correct for 8760-point
+          dense series
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Red and amber may be difficult for deuteranopia users, though spatial
-          separation helps
+        comment: Imprint palette with redundant encoding (labels + color + position);
+          CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins
+        comment: Plot fills ~85% of 3200x1800 canvas; balanced margins; canvas gate
+          passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units on both axes
+        comment: 'Y: Power Demand (MW), X: Hours of Year (Ranked by Demand) — descriptive
+          with context'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception correctly applied: base=#009E73, intermediate=#BD8233,
+          peak=#AE3030; backgrounds and chrome theme-adaptive'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom semantically meaningful palette, intentional typography hierarchy,
-          refined background
+        comment: 'Above configured-default: semantic color mapping shows design intelligence;
+          direct labels replace legend; not yet publication-ready'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: X-axis grid removed, subtle y-axis gridlines, warm off-white background,
-          customized margins
+        comment: X-grid removed, minor grid removed, legend suppressed for direct
+          labels; theme-adaptive chrome throughout
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Subtitle provides peak demand context, load factor annotation adds
-          engineering insight, color-coded regions guide viewer
+        comment: Semantic colors communicate cost hierarchy; capacity thresholds guide
+          interpretation; energy + load-factor annotation adds analytical depth
     spec_compliance:
       score: 15
       max: 15
@@ -113,26 +130,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct monotonically decreasing load duration curve
+        comment: Correct monotonically decreasing load duration curve with shaded
+          regions
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: shaded regions, dashed lines, region
-          labels, energy annotation'
+        comment: 'All features: monotonic decrease, three shaded regions, dashed capacity
+          lines, region annotations, energy summary'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = ranked hours, Y = power demand MW, both correct
+        comment: 'X: hours ranked by demand 0-8759; Y: Power Demand in MW; correct
+          descending sort'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format, regions labeled directly on plot
+        comment: Title matches required format; direct region labels replace legend
+          appropriately
     data_quality:
       score: 15
       max: 15
@@ -142,20 +162,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full 8760-hour profile with clear peak, intermediate, and base regions
+        comment: All three load regions with distinct widths; characteristic shape
+          with steep peak and flat base
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mid-sized utility with plausible seasonal and daily load patterns
+        comment: Mid-sized utility with realistic MW values; 8760 hours/year correct;
+          load factor 57% plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Peak 1247 MW, base 400 MW, thresholds at 900/550 MW — sensible for
-          mid-sized utility
+        comment: Peak-to-base ratio ~3.5:1, load factor 57%, regional hour counts
+          realistic
     code_quality:
       score: 10
       max: 10
@@ -165,8 +187,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data generation, region computation, plot,
-          save'
+        comment: 'Linear flow: imports → tokens → data → dataframes → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -178,48 +199,49 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no extras
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean non-overlapping ribbon approach, appropriate complexity
+        comment: Clean, appropriate complexity; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale=3 and plot.html
+        comment: Saves plot-{THEME}.png and .html; file-move logic correct
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Good use of ggplot grammar with geom_ribbon, geom_line, geom_hline,
-          geom_text, scale_fill_manual
+        comment: Expert ggplot grammar; geom_ribbon idiomatic; scale_fill_manual,
+          ggsize+scale=4 per library spec; layer_tooltips with format specifiers is
+          advanced
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layer_tooltips for interactive hover info and HTML export —
-          distinctive lets-plot features
+        comment: layer_tooltips() with per-field format specifiers is distinctive
+          to lets_plot; HTML export demonstrates interactive-first design
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - layer-composition
+  - annotations
   - hover-tooltips
   - html-export
+  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling

@@ -18,7 +18,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: Browser market share evolution 2015-2024
 # Shows how different browsers have gained/lost market share over time
@@ -27,7 +27,7 @@ categories = ["Chrome", "Firefox", "Safari", "Edge"]
 
 # Node labels and colors
 node_labels = categories * 4
-category_colors = {cat: OKABE_ITO[i] for i, cat in enumerate(categories)}
+category_colors = {cat: IMPRINT[i] for i, cat in enumerate(categories)}
 node_colors = [category_colors[cat] for cat in node_labels]
 
 # X positions: 4 time points evenly spaced
@@ -85,7 +85,7 @@ for src_time, src_cat, tgt_time, tgt_cat, value in flows_data:
     targets.append(tgt_idx)
     values.append(value)
     # Use source category color with transparency
-    base_color = OKABE_ITO[src_cat]
+    base_color = IMPRINT[src_cat]
     r = int(base_color[1:3], 16)
     g = int(base_color[3:5], 16)
     b = int(base_color[5:7], 16)

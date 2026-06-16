@@ -18,9 +18,9 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito colorblind-safe stand-ins for the red/amber/green convention
-ZONE_LOW = "#D55E00"  # vermillion (bad)
-ZONE_MID = "#E69F00"  # orange (caution)
-ZONE_HIGH = "#009E73"  # bluish green — Okabe-Ito brand (good)
+ZONE_LOW = "#AE3030"  # imprint red — bad
+ZONE_MID = "#DDCC77"  # imprint amber — caution
+ZONE_HIGH = "#009E73"  # imprint green — good
 
 # Data — Sales target achievement for the quarter
 value = 72

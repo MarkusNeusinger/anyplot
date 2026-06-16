@@ -1,0 +1,240 @@
+library: makie
+language: julia
+specification_id: bump-basic
+created: '2026-05-29T13:34:32Z'
+updated: '2026-05-29T13:50:03Z'
+generated_by: claude-sonnet
+workflow_run: 26639886904
+issue: 982
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bump-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Correct bump chart implementation with inverted Y-axis and markers at every data
+    point
+  - Differential line widths for PulseAI and CircleCloud provide intentional visual
+    hierarchy
+  - Endpoint rank callouts (#1-#6) add immediate storytelling value
+  - All theme-adaptive chrome tokens correctly applied — both renders pass readability
+    check with no dark-on-dark or light-on-light failures
+  - 'Clean code: linear structure, idiomatic Makie primitives, proper colsize! layout
+    control'
+  weaknesses:
+  - Endpoint callout labels at fontsize=11 are too small at mobile widths (~2.8 px
+    at 400-px display) — increase to fontsize=13 or 14 for better mobile legibility
+  - 'Design excellence could be pushed higher with a slightly larger base fontsize
+    or a brief subtitle/annotation to orient readers to the key story (PulseAI climb
+    to #1)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "bump-basic · julia · makie · anyplot.ai" at fontsize=20 — readable in dark INK (#1A1A17). Axis labels "Quarter" (x) and "Rank" (y) at fontsize=14 with INK color — readable. Tick labels at fontsize=12 with INK_SOFT (#4A4A44) — readable. Legend labels in INK — readable. Endpoint callout labels (#1-#6) at fontsize=11 — readable at full resolution but very small.
+      Data: Six company lines in Imprint palette order: NovaTech=#009E73 (brand green, first series correct), PulseAI=#C475FD (lavender), CircleCloud=#4467A3 (blue), ApexRobotics=#BD8233 (ochre), QuantumIO=#AE3030 (matte-red), ShieldSec=#2ABCCD (cyan). Markers size=16 with strokecolor=PAGE_BG for crisp definition. Differential line widths: 4.5 for PulseAI and CircleCloud, 3.0 for others.
+      Legibility verdict: PASS (all primary text readable; minor concern: fontsize=11 callouts small at mobile scale)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light INK (#F0EFE8) — clearly readable. Axis labels in INK — readable. Tick labels in INK_SOFT (#B8B7B0) — readable. Legend labels in INK — readable. No dark-on-dark failures detected. All chrome tokens correctly adapted to dark theme.
+      Data: All six series colors are identical to the light render — NovaTech green, PulseAI lavender, CircleCloud blue, ApexRobotics ochre, QuantumIO red, ShieldSec cyan. Marker strokecolor flips to dark PAGE_BG, maintaining definition. Brand green #009E73 clearly visible on dark background.
+      Legibility verdict: PASS (all text readable; same minor callout-size concern as light render)
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Title/axis/tick labels all correctly themed and readable. Deduction:
+          endpoint callout labels at fontsize=11 are too small at 400px mobile display
+          (~2.8px rendered).'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between lines, markers, callout labels, or legend entries.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers size=16 with strokecolor=PAGE_BG for crisp definition. Line
+          widths 3.0-4.5 appropriate for 6 sparse series.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Full Imprint palette, CVD-safe. Marker stroke adds definition.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). Legend column at Relative(0.18).
+          No clipping or overflow.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Quarter and Rank are descriptive; title format matches spec.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order, correct backgrounds
+          both themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: differential line widths and endpoint callouts show
+          intentional hierarchy. Falls short of top tier.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, Y-only grid at 0.12 opacity, ELEVATED_BG
+          on legend frame.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Differential line widths encode dramatic arcs; endpoint callouts
+          provide final standings; Y-axis inversion correct.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct bump chart with lines + dot markers per period.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Y-axis inverted, distinct colors per entity, dot markers at each
+          period, lines connect each entity.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time period, Y=rank; all 6x6 data points shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly bump-basic · julia · makie · anyplot.ai; legend labels
+          match company names.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All bump-chart features demonstrated: rising, falling, stable trajectories
+          across 6 entities and 6 periods.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Tech startup investor-ranking scenario is plausible and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 6 entities, complete permutation matrix, 6 quarters — appropriate
+          for this chart type.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script, no unnecessary abstractions.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) present; rankings are deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean iteration loop; no fake interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save(plot-$(THEME).png, fig; px_per_unit=2) correct.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of lines!, scatter!, text!, Legend with LineElement,
+          colsize!, RGBAf.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: text! for endpoint callouts, LineElement for legend, colsize! Relative
+          for column sizing, RGBAf semi-transparent grid.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - iteration-over-groups
+  - matrix-construction
+  dataprep: []
+  styling:
+  - edge-highlighting

@@ -1,19 +1,34 @@
-""" pyplots.ai
+""" anyplot.ai
 map-connection-lines: Connection Lines Map (Origin-Destination)
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-21
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-28
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.lines import Line2D
 
 
-# Data - Major international flight routes with passenger volume
-np.random.seed(42)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Major airports: (name, lat, lon, label_offset_x, label_offset_y)
-# Custom offsets to avoid label overlaps
+# Geographic background (map chrome, not data series)
+OCEAN_BG = "#C8DCE8" if THEME == "light" else "#1A2830"
+LAND_COLOR = "#DDD9CF" if THEME == "light" else "#28271F"
+
+# anyplot categorical palette — positions 1 and 3
+BRAND = "#009E73"  # connection lines — first series
+AIRPORT_COLOR = "#4467A3"  # airport markers — third series (blue fits sky/travel)
+
+
+# Data — Major international flight routes with passenger volume
 airports = [
     ("New York", 40.6413, -73.7781, 4, 4),
     ("London", 51.4700, -0.4543, 4, 6),
@@ -27,7 +42,6 @@ airports = [
     ("Hong Kong", 22.3080, 113.9185, -4, -8),
 ]
 
-# Define connections: (origin_idx, dest_idx, passenger_volume in millions)
 connections = [
     (0, 1, 4.2),  # NYC - London (busiest transatlantic)
     (0, 8, 2.1),  # NYC - Paris
@@ -38,7 +52,7 @@ connections = [
     (4, 9, 2.9),  # Singapore - Hong Kong
     (2, 9, 3.1),  # Tokyo - Hong Kong
     (2, 7, 2.2),  # Tokyo - LA
-    (0, 7, 2.5),  # NYC - LA (domestic but major)
+    (0, 7, 2.5),  # NYC - LA
     (6, 0, 1.8),  # São Paulo - NYC
     (6, 1, 1.5),  # São Paulo - London
     (5, 4, 1.9),  # Sydney - Singapore
@@ -46,79 +60,59 @@ connections = [
     (7, 2, 2.0),  # LA - Tokyo
 ]
 
-# Extract coordinates and values
 routes = []
 for orig_idx, dest_idx, volume in connections:
     orig = airports[orig_idx]
     dest = airports[dest_idx]
     routes.append(
-        {
-            "origin_name": orig[0],
-            "origin_lat": orig[1],
-            "origin_lon": orig[2],
-            "dest_name": dest[0],
-            "dest_lat": dest[1],
-            "dest_lon": dest[2],
-            "volume": volume,
-        }
+        {"origin_lat": orig[1], "origin_lon": orig[2], "dest_lat": dest[1], "dest_lon": dest[2], "volume": volume}
     )
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9))
 
-# Simple world map outline using pre-defined coastline coordinates
-# Create a simplified world map background
+# Plot
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(OCEAN_BG)
 ax.set_xlim(-180, 180)
 ax.set_ylim(-90, 90)
-ax.set_facecolor("#D4E5F7")  # Ocean color
 
-# Draw simple continent rectangles as background (approximation)
+# Base map — simplified continent polygons
 continents = [
-    # North America
     [(-170, 15), (-170, 75), (-50, 75), (-50, 15)],
-    # South America
     [(-85, -60), (-85, 15), (-35, 15), (-35, -60)],
-    # Europe
     [(-10, 35), (-10, 72), (40, 72), (40, 35)],
-    # Africa
     [(-20, -35), (-20, 38), (55, 38), (55, -35)],
-    # Asia
     [(40, 5), (40, 80), (180, 80), (180, 5)],
-    # Australia
     [(110, -45), (110, -10), (155, -10), (155, -45)],
 ]
-
 for cont in continents:
     xs = [p[0] for p in cont] + [cont[0][0]]
     ys = [p[1] for p in cont] + [cont[0][1]]
-    ax.fill(xs, ys, color="#E8E8E8", alpha=0.7)
+    ax.fill(xs, ys, color=LAND_COLOR, alpha=0.9, zorder=1)
 
-# Normalize volumes for line width scaling
+# Volume normalization
 volumes = [r["volume"] for r in routes]
-min_vol, max_vol = min(volumes), max(volumes)
+vol_min, vol_max = min(volumes), max(volumes)
 
-# Draw connection lines using geodesic paths (inlined great circle calculation)
+# Draw great circle connection lines using spherical interpolation
 n_points = 100
 for route in routes:
-    # Calculate normalized volume for styling
-    norm_vol = (route["volume"] - min_vol) / (max_vol - min_vol)
-    linewidth = 2 + norm_vol * 5  # Scale from 2 to 7
-    alpha = 0.4 + norm_vol * 0.35  # Scale from 0.4 to 0.75
+    norm = (route["volume"] - vol_min) / (vol_max - vol_min)
+    linewidth = 0.8 + norm * 3.2
+    alpha = 0.40 + norm * 0.40
 
-    # Calculate great circle path using spherical interpolation
     lon1, lat1 = route["origin_lon"], route["origin_lat"]
     lon2, lat2 = route["dest_lon"], route["dest_lat"]
     lon1_r, lat1_r = np.radians(lon1), np.radians(lat1)
     lon2_r, lat2_r = np.radians(lon2), np.radians(lat2)
 
-    # Angular distance
-    d = np.arccos(np.sin(lat1_r) * np.sin(lat2_r) + np.cos(lat1_r) * np.cos(lat2_r) * np.cos(lon2_r - lon1_r))
+    cos_d = np.clip(
+        np.sin(lat1_r) * np.sin(lat2_r) + np.cos(lat1_r) * np.cos(lat2_r) * np.cos(lon2_r - lon1_r), -1.0, 1.0
+    )
+    d = np.arccos(cos_d)
 
-    # Handle very short distances
     if d < 1e-10:
         lons, lats = np.array([lon1, lon2]), np.array([lat1, lat2])
     else:
-        # Interpolate along great circle
         t = np.linspace(0, 1, n_points)
         a = np.sin((1 - t) * d) / np.sin(d)
         b = np.sin(t * d) / np.sin(d)
@@ -129,14 +123,12 @@ for route in routes:
         lons = np.degrees(np.arctan2(y, x))
 
     # Handle date line crossing by splitting the line
-    lon_diff = np.abs(np.diff(lons))
-    if np.any(lon_diff > 180):
-        # Split the line at date line crossing
-        split_idx = np.where(lon_diff > 180)[0][0] + 1
+    if np.any(np.abs(np.diff(lons)) > 180):
+        split_idx = np.where(np.abs(np.diff(lons)) > 180)[0][0] + 1
         ax.plot(
             lons[:split_idx],
             lats[:split_idx],
-            color="#306998",
+            color=BRAND,
             linewidth=linewidth,
             alpha=alpha,
             solid_capstyle="round",
@@ -145,71 +137,76 @@ for route in routes:
         ax.plot(
             lons[split_idx:],
             lats[split_idx:],
-            color="#306998",
+            color=BRAND,
             linewidth=linewidth,
             alpha=alpha,
             solid_capstyle="round",
             zorder=2,
         )
     else:
-        ax.plot(lons, lats, color="#306998", linewidth=linewidth, alpha=alpha, solid_capstyle="round", zorder=2)
+        ax.plot(lons, lats, color=BRAND, linewidth=linewidth, alpha=alpha, solid_capstyle="round", zorder=2)
 
-# Draw airport markers
-for _name, lat, lon, _offset_x, _offset_y in airports:
+# Airport markers
+for _name, lat, lon, _ox, _oy in airports:
     ax.plot(
-        lon, lat, marker="o", markersize=14, color="#FFD43B", markeredgecolor="#306998", markeredgewidth=2.5, zorder=3
+        lon, lat, marker="o", markersize=5, color=AIRPORT_COLOR, markeredgecolor=PAGE_BG, markeredgewidth=0.8, zorder=3
     )
 
-# Draw airport labels with custom offsets to avoid overlap
+# Airport labels with custom offsets to prevent overlap
 for name, lat, lon, offset_x, offset_y in airports:
     ax.annotate(
         name,
         (lon, lat),
         xytext=(offset_x, offset_y),
         textcoords="offset points",
-        fontsize=14,
+        fontsize=8,
         fontweight="bold",
-        color="#333333",
+        color=INK,
         ha="left" if offset_x > 0 else "right",
         va="bottom" if offset_y > 0 else "top",
         zorder=4,
     )
 
-# Styling
-ax.set_xlabel("Longitude (°)", fontsize=20)
-ax.set_ylabel("Latitude (°)", fontsize=20)
-ax.tick_params(axis="both", labelsize=16)
+# Style
+ax.set_xlabel("Longitude (°)", fontsize=10, color=INK)
+ax.set_ylabel("Latitude (°)", fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
 ax.set_aspect("equal", adjustable="box")
+ax.grid(True, alpha=0.12, linewidth=0.5, color=INK)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+for spine in ("left", "bottom"):
+    ax.spines[spine].set_color(INK_SOFT)
 
-# Add grid
-ax.grid(True, alpha=0.3, linestyle="--", color="#666666")
+# Title — scale fontsize for long title to avoid overflow
+title = "Major International Flight Routes · map-connection-lines · python · matplotlib · anyplot.ai"
+title_fontsize = max(8, round(12 * 67 / len(title)))
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=8)
 
-# Title
-ax.set_title(
-    "Major International Flight Routes · map-connection-lines · matplotlib · pyplots.ai",
-    fontsize=24,
-    fontweight="bold",
-    pad=20,
-)
-
-# Legend for line thickness
+# Legend
 legend_elements = [
-    Line2D([0], [0], color="#306998", linewidth=2, alpha=0.4, label="1.5M passengers/year"),
-    Line2D([0], [0], color="#306998", linewidth=4.5, alpha=0.57, label="3M passengers/year"),
-    Line2D([0], [0], color="#306998", linewidth=7, alpha=0.75, label="4.2M passengers/year"),
+    Line2D([0], [0], color=BRAND, linewidth=0.9, alpha=0.50, label="1.5M pax/year"),
+    Line2D([0], [0], color=BRAND, linewidth=2.4, alpha=0.65, label="3M pax/year"),
+    Line2D([0], [0], color=BRAND, linewidth=4.0, alpha=0.80, label="4.2M pax/year"),
     Line2D(
         [0],
         [0],
         marker="o",
         color="w",
-        markerfacecolor="#FFD43B",
-        markeredgecolor="#306998",
-        markeredgewidth=2.5,
-        markersize=12,
+        markerfacecolor=AIRPORT_COLOR,
+        markeredgecolor=PAGE_BG,
+        markeredgewidth=0.8,
+        markersize=7,
         label="Major Airport",
     ),
 ]
-ax.legend(handles=legend_elements, loc="lower left", fontsize=16, framealpha=0.9)
+leg = ax.legend(handles=legend_elements, loc="lower left", fontsize=8)
+if leg:
+    leg.get_frame().set_facecolor(ELEVATED_BG)
+    leg.get_frame().set_edgecolor(INK_SOFT)
+    plt.setp(leg.get_texts(), color=INK_SOFT)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+fig.subplots_adjust(left=0.07, right=0.98, top=0.93, bottom=0.10)
+
+# Save
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

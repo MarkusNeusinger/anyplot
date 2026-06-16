@@ -20,7 +20,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID_COLOR = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 
 def parse_newick(newick_str):
@@ -154,14 +154,14 @@ df_labels = pd.DataFrame([{"x": n["x"] + 0.02, "y": n["y"], "label": n["name"]} 
 df_nodes = pd.DataFrame([{"x": n["x"], "y": n["y"]} for n in node_dict.values()])
 
 clade_colors = {
-    "Human": OKABE_ITO[0],
-    "Chimpanzee": OKABE_ITO[0],
-    "Gorilla": OKABE_ITO[0],
-    "Orangutan": OKABE_ITO[1],
-    "Gibbon": OKABE_ITO[1],
-    "Macaque": OKABE_ITO[2],
-    "Baboon": OKABE_ITO[2],
-    "Mandrill": OKABE_ITO[2],
+    "Human": IMPRINT[0],
+    "Chimpanzee": IMPRINT[0],
+    "Gorilla": IMPRINT[0],
+    "Orangutan": IMPRINT[1],
+    "Gibbon": IMPRINT[1],
+    "Macaque": IMPRINT[2],
+    "Baboon": IMPRINT[2],
+    "Mandrill": IMPRINT[2],
 }
 
 df_labels["color"] = df_labels["label"].map(clade_colors)
@@ -185,8 +185,8 @@ anyplot_theme = theme(
 
 plot = (
     ggplot()
-    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=df_segments, color=OKABE_ITO[0], size=1.5)
-    + geom_point(aes(x="x", y="y"), data=df_nodes, color=OKABE_ITO[0], size=4)
+    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=df_segments, color=IMPRINT[0], size=1.5)
+    + geom_point(aes(x="x", y="y"), data=df_nodes, color=IMPRINT[0], size=4)
     + geom_point(aes(x="x", y="y", color="color"), data=df_labels, size=6, show_legend=False)
     + geom_text(aes(x="x", y="y", label="label"), data=df_labels, hjust=0, size=14, color=INK_SOFT, family="sans-serif")
     + scale_color_identity()

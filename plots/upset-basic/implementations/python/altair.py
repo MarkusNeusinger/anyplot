@@ -25,10 +25,10 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 BRAND = "#009E73"
-C2 = "#D55E00"
-C3 = "#0072B2"
-C4 = "#CC79A7"
-C5 = "#E69F00"
+C2 = "#C475FD"
+C3 = "#4467A3"
+C4 = "#BD8233"
+C5 = "#AE3030"
 
 # Data — gene sets from 5 genomic experiments
 np.random.seed(42)

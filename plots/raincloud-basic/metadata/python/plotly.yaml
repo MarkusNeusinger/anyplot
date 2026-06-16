@@ -19,7 +19,7 @@ review:
     rises above each category baseline, box-plot centered on the baseline, jittered
     scatter falls below — cloud-above / rain-below metaphor required by the spec is
     unambiguously rendered.'
-  - anyplot palette in canonical order with brand green (#009E73) as the first series
+  - Imprint palette in canonical order with brand green (#009E73) as the first series
     (Control); colors are pixel-identical between light and dark renders and only
     chrome flips, exactly as the style guide requires.
   - Theme tokens (PAGE_BG, ELEVATED_BG, INK, INK_SOFT, GRID) thread cleanly through
@@ -101,7 +101,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette (green/purple/blue/tan) is CVD-safe with strong contrast
+        comment: Imprint palette (green/purple/blue/tan) is CVD-safe with strong contrast
           on both surfaces.
       - id: VQ-05
         name: Layout & Canvas

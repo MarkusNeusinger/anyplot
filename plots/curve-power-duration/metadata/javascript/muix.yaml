@@ -1,0 +1,260 @@
+library: muix
+language: javascript
+specification_id: curve-power-duration
+created: '2026-06-13T22:19:17Z'
+updated: '2026-06-13T22:41:17Z'
+generated_by: claude-sonnet
+workflow_run: 27480585833
+issue: 8647
+language_version: 22.22.3
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/javascript/muix/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - 'Full spec compliance: log x-axis, empirical MMP curve, CP model dashed overlay,
+    all four reference lines (5s/1min/5min/20min FTP), and horizontal CP asymptote
+    at 280 W'
+  - 'Excellent data quality: realistic well-trained cyclist profile (CP=280 W, W′=20
+    kJ), LCG seed-42 noise with monotone enforcement, 55 log-spaced durations from
+    1s to 5h'
+  - 'Correct Imprint palette: brand green (#009E73) for primary series, lavender (#C475FD)
+    for CP model, theme-adaptive chrome via ANYPLOT_TOKENS throughout'
+  - 'Idiomatic MUI X patterns: ChartsReferenceLine for vertical/horizontal reference
+    lines, sx-based CSS dash array for model line, connectNulls:false for null handling
+    below 30s, valueFormatter for human-readable tick labels'
+  weaknesses:
+  - Reference line labels (especially 1 min at ~41% log-x position) overlap with the
+    chart legend at the top of the plot area — increase top margin to ~60px and/or
+    move legend via slotProps.legend with a top offset so label and legend do not
+    compete for the same vertical band
+  - Right margin (40px CSS) is tight for the Critical Power = 280 W label at labelAlign=end;
+    increase to ~120px to guarantee it is never edge-clipped on narrower viewports
+  - 'Design stays at MUI X defaults: chart frame (spines) still showing all four sides;
+    no explicit grid styling to reduce opacity; legend has no elevated-surface background
+    to separate it from reference line labels'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white.
+      Chrome: Title "curve-power-duration · javascript · muix · anyplot.ai" at top center in dark ink, readable. Y-axis label "Mean-Maximal Power (W)" in dark text, readable. X-axis label "Effort Duration" in dark text, readable. Tick labels in dark text (13px CSS) at 1s, 5s, 30s, 1min, 5min, 20min, 1h, 2h, 5h — all readable. Reference line labels "5 s", "1 min", "5 min", "20 min (FTP)" at top of respective vertical lines; "1 min" label falls in close proximity to/overlapping with the legend items. "Critical Power = 280 W" label at right edge of horizontal asymptote, readable.
+      Data: Empirical MMP curve in brand green (#009E73), solid, strokeWidth 3.5. CP model in lavender (#C475FD), dashed (12 6 pattern), strokeWidth 2.5. Both lines start high (~1100 W at 1s) and decay toward ~280 W at long durations. CP model starts at 30s and converges with empirical after ~5min. Four vertical reference lines and one horizontal CP line use inkSoft token (soft gray dashes).
+      Legibility verdict: PASS — all labels readable; minor crowding between "1 min" reference label and legend.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title in light text, readable. Axis labels in light text, readable. Tick labels in light text, readable. Reference line labels in inkSoft dark-mode token (#B8B7B0) — visible. Same "1 min" label crowding with legend persists. "Critical Power = 280 W" label in inkSoft light, readable. No dark-on-dark failures detected.
+      Data: Data colors are identical to light render — green (#009E73) empirical, lavender (#C475FD) CP model. Same dashed/solid styling. The decay curve shape is identical and both lines remain clearly distinguishable against the dark background.
+      Legibility verdict: PASS — all text readable against dark background; same minor reference-label/legend crowding as light render.
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title, axis labels, tick labels all legible in both themes at 13px
+          CSS tick labels and 22px title; reference line labels at 13px are readable
+          but compete with legend
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: '''1 min'' reference line label at ~41% log-x position falls in the
+          same vertical band as the legend items, causing visual crowding'
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Empirical line (strokeWidth 3.5) and CP model dashed line (strokeWidth
+          2.5) both clearly visible in both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint palette: brand green and lavender are CVD-safe, no red/green
+          sole signal'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions overall; right margin 40px CSS is tight for 'Critical
+          Power = 280 W' labelAlign=end label
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis 'Mean-Maximal Power (W)' has units; X-axis 'Effort Duration'
+          with tick labels showing units (1s, 1min, 1h); title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series brand green #009E73, second lavender #C475FD; pageBg
+          token for background; inkSoft for reference chrome; data colors identical
+          in both themes'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: ChartsReferenceLine adds meaningful annotation, dashed
+          CP model line, descriptive legend label with CP/W'' params; constrained
+          by MUI X defaults otherwise'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Dashed reference lines use inkSoft token for subtlety; line thickness
+          differentiation; MUI X default spines still visible on all four sides; no
+          explicit grid opacity reduction
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: CP model overlay shows the theoretical fit; reference lines at key
+          training durations (sprint, 1min power, 5min, FTP proxy 20min); CP asymptote
+          provides context; decay curve shape tells the performance story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line chart with log x-axis; empirical MMP curve as primary,
+          CP model as dashed overlay
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Log x-axis, human-readable ticks, MMP primary curve, CP model dashed
+          overlay, reference lines at 5s/1min/5min/20min(FTP), horizontal CP asymptote
+          at 280W
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: duration in seconds (log scale 1-18000s); Y: power in watts (0-1200W);
+          full range covered'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'curve-power-duration · javascript · muix · anyplot.ai'; legend
+          labels 'Best MMP (empirical)' and 'CP Model · CP = 280 W, W′ = 20 kJ'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full duration range 1s-5h; both empirical and model curves; monotonically
+          non-increasing enforced; CP model starts at 30s; all reference durations
+          annotated
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Realistic well-trained amateur cyclist: CP=280W, W''=20kJ, peak
+          1100W at 1s; plausible and neutral domain'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Duration 1s-18000s; power 0-1200W; realistic decay shape from sprint
+          to ultra-endurance
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary functions or classes; clean top-level data computation,
+          single default-export component
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: LCG with fixed seed 42 for noise generation; fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: LineChart, ChartsReferenceLine, Box, Typography — all imported and
+          used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake UI or interactivity; clean sx-based
+          dash styling
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness handles output files; uses current @mui/x-charts API (LineChart,
+          ChartsReferenceLine)
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: skipAnimation, window.ANYPLOT_SIZE sizing, sx prop styling, curve='monotoneX',
+          connectNulls:false, valueFormatter — all idiomatic MUI X patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: ChartsReferenceLine for both vertical and horizontal reference lines
+          (MUI X-specific); sx CSS class targeting for dashed line; log scaleType
+          with tickInterval
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

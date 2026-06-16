@@ -19,7 +19,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (positions 1-4 for 4 categories)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: Market share evolution of renewable energy sources
 np.random.seed(42)
@@ -72,7 +72,7 @@ ax.set_facecolor(PAGE_BG)
 
 # Plot stacked areas in order: Solar (brand green), Wind, Hydro, Other
 categories = ["Solar", "Wind", "Hydro", "Other"]
-colors_map = dict(zip(categories, OKABE_ITO, strict=True))
+colors_map = dict(zip(categories, IMPRINT, strict=True))
 
 for cat in categories:
     ax.fill_between(

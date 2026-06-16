@@ -34,7 +34,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first three series)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Quarterly energy consumption forecast by source with prediction intervals
 np.random.seed(42)
@@ -118,7 +118,7 @@ df_areas = pd.concat(
 df_areas["series"] = pd.Categorical(df_areas["series"], categories=["Solar", "Wind", "Hydro"], ordered=True)
 
 # Color mapping using Okabe-Ito palette
-color_map = {"Solar": OKABE_ITO[0], "Wind": OKABE_ITO[1], "Hydro": OKABE_ITO[2]}
+color_map = {"Solar": IMPRINT[0], "Wind": IMPRINT[1], "Hydro": IMPRINT[2]}
 
 # Theme customization
 anyplot_theme = theme(

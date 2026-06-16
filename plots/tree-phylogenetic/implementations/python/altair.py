@@ -19,7 +19,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette for clade coloring
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Primate phylogenetic tree with clade assignments
 np.random.seed(42)
@@ -111,7 +111,7 @@ for parent, child, _length, clade in edges:
     child_x = x_positions[child]
     child_y = y_positions[child]
     clade_idx = ["Apes", "Old World Monkeys", "Lesser Apes"].index(clade)
-    color = OKABE_ITO[clade_idx]
+    color = IMPRINT[clade_idx]
 
     lines_data.append(
         {
@@ -148,7 +148,7 @@ for node in all_leaves:
         if clade in ["Apes", "Old World Monkeys", "Lesser Apes"]
         else 0
     )
-    color = OKABE_ITO[clade_idx]
+    color = IMPRINT[clade_idx]
     nodes_data.append(
         {
             "x": x_positions[node],
@@ -172,7 +172,7 @@ for n in internal_nodes:
         if clade in ["Apes", "Old World Monkeys", "Lesser Apes"]
         else 0
     )
-    color = OKABE_ITO[clade_idx]
+    color = IMPRINT[clade_idx]
     internal_data.append({"x": x_positions[n], "y": y_positions[n], "name": n, "clade": clade, "color": color})
 internal_df = pd.DataFrame(internal_data)
 
@@ -185,7 +185,7 @@ branches = (
         y="y:Q",
         x2="x2:Q",
         y2="y2:Q",
-        color=alt.Color("color:N", scale=alt.Scale(domain=OKABE_ITO, range=OKABE_ITO), legend=None),
+        color=alt.Color("color:N", scale=alt.Scale(domain=IMPRINT, range=IMPRINT), legend=None),
         tooltip=["clade:N"],
     )
 )
@@ -197,7 +197,7 @@ leaf_points = (
     .encode(
         x="x:Q",
         y="y:Q",
-        color=alt.Color("color:N", scale=alt.Scale(domain=OKABE_ITO, range=OKABE_ITO), legend=None),
+        color=alt.Color("color:N", scale=alt.Scale(domain=IMPRINT, range=IMPRINT), legend=None),
         tooltip=["species:N", "label:N", "clade:N"],
     )
 )
@@ -216,7 +216,7 @@ internal_points = (
     .encode(
         x="x:Q",
         y="y:Q",
-        color=alt.Color("color:N", scale=alt.Scale(domain=OKABE_ITO, range=OKABE_ITO), legend=None),
+        color=alt.Color("color:N", scale=alt.Scale(domain=IMPRINT, range=IMPRINT), legend=None),
         tooltip=["name:N", "clade:N"],
     )
 )

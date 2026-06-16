@@ -1,0 +1,276 @@
+library: echarts
+language: javascript
+specification_id: burndown-sprint
+created: '2026-06-14T23:02:35Z'
+updated: '2026-06-14T23:27:51Z'
+generated_by: claude-sonnet
+workflow_run: 27514576712
+issue: 8654
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Amber scope change badge with ECharts rich text styling ({badge|...}) is a distinctive,
+    semantically meaningful annotation using the semantic amber anchor correctly
+  - Weekend shading via markArea with 'Weekend' label elegantly explains flat step
+    segments without manual data points
+  - 'Semantic color choices throughout: brand green (#009E73) for actual, muted neutral
+    (inkSoft) for reference line, amber (#DDCC77) for scope change warning'
+  - Subtle 7% area fill adds depth without competing with data; all opacity choices
+    are well-calibrated
+  - 'Complete and realistic sprint data: scope creep on Day 4, acceleration in second
+    half, near-miss at 3 pts remaining'
+  - 'Perfect spec compliance: step chart, straight ideal line, weekend shading, scope
+    change marker, legend all present and correct'
+  - 'Expertly uses ECharts-distinctive features: markArea, markLine with rich text,
+    endLabel with border styling, type:''time'' axis, step:''end'''
+  weaknesses:
+  - Annotation text (end label '3 pts remaining' and scope change badge) at fontSize=12px
+    CSS is slightly small for sub-400px thumbnail readability; consider bumping to
+    13px
+  - Tooltip formatter (interactive-only) is non-trivial code that does not appear
+    in the static PNG artifact; the endLabel callout covers the static use-case well
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light theme surface, not pure white.
+      Chrome: Bold centered title "burndown-sprint · javascript · echarts · anyplot.ai" at 22px CSS — clearly readable dark ink. Y-axis label "Story Points Remaining" at 14px rotated, readable. X-axis date labels ("Jun 1", "Jun 3", etc.) at 13px, readable. Legend "Actual Remaining" (green) / "Ideal Burndown" (gray) at 14px, readable. All primary chrome is dark text on light background — no light-on-light failures.
+      Data: Actual burndown = brand green #009E73 step line (width 4) with subtle 7%-opacity area fill. Ideal burndown = gray dashed line (width 1.5, muted). Amber dashed vertical line at Jun 5 with styled badge "+8 pts  Scope Change". Light gray weekend band Jun 7–9 labeled "Weekend". Bordered end label "3 pts remaining" at terminus.
+      Legibility verdict: PASS — all text readable against light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black.
+      Chrome: Title, axis labels, tick labels, and legend all render in light ink (F0EFE8 / B8B7B0 tokens). All text is clearly readable against the dark background. No dark-on-dark failures observed.
+      Data: Actual line color #009E73 identical to light render — brand green reads clearly on near-black. Ideal dashed line adapts to lighter inkSoft color for dark theme, remaining distinct. Amber badge retains #DDCC77 with dark ink text — high contrast preserved on dark surface. Weekend band is a slightly lighter dark tone, visually distinct. End label box uses elevated dark background token (#242420).
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 22px, legend 14px, axis labels
+          13-14px). Primary text perfectly proportioned. Minor: annotation text at
+          12px CSS slightly small for mobile-scale readability.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element collisions in either render. Legend, axis labels,
+          ticks, amber badge, and end label all occupy distinct space.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Step line at width=4 with symbolSize=8 circles is prominent for 11
+          data points. Dashed ideal line at width=1.5 is intentionally subtle as reference.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Actual vs ideal distinguished by color AND linestyle (solid step
+          vs dashed) — redundant encoding for CVD users. Amber scope change marker
+          perceptually distinct.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Balanced margins (left 120, right 130, top 120,
+          bottom 80) accommodate all elements without crowding. Plot area fills ~70%
+          of canvas.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Story Points Remaining'' (descriptive with unit). X-axis:
+          date labels ''Jun 1'' etc. Title: correct mandatory format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Actual series = t.palette[0] = #009E73 brand green (correct first
+          position). Ideal = t.inkSoft neutral anchor (correct for reference line).
+          Scope change = amber #DDCC77 (semantic anchor for warning, correct). Background
+          transparent over pageBg. Both renders theme-correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clearly above library defaults. Intentional semantic colors, subtle
+          area fill, styled amber badge via ECharts rich text, bordered end-label
+          callout. Stops short of 6 (strong design) — reads as well-crafted rather
+          than editorial.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Both axis lines hidden (axisLine: show: false), horizontal-only
+          grid, generous whitespace, weekend shading at 10% opacity, area fill at
+          7% opacity. Good refinement. Missing: no explicit axisTick removal, standard
+          legend border.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: brand green step line most prominent, amber
+          badge captures attention for key event, dashed ideal recedes, weekend band
+          provides passive context. End label shows sprint outcome. Reader immediately
+          grasps scope creep and near-miss finish.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct sprint burndown chart with step:'end' actual series and straight
+          dashed ideal reference line.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: step actual line, ideal guideline, weekend
+          shading (markArea Jun 7-9), scope change marker (markLine with amber badge
+          on Jun 5), legend, Y-axis starts at 0.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis = sprint calendar dates, Y-axis = remaining story points.
+          All data visible across full sprint timeline.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'burndown-sprint · javascript · echarts · anyplot.ai'.
+          Legend labels 'Actual Remaining' and 'Ideal Burndown' are descriptive and
+          accurate.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all burndown aspects: step descent, flat weekend segment,
+          scope change jump (30→34 on Jun 5), visible gap between actual and ideal
+          showing behind-schedule status, sprint end at 3 pts remaining.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Realistic software development sprint scenario: 10 working days,
+          40 initial story points, +8 scope change on Day 4. Neutral, professional
+          topic.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 40 story points for 10-day sprint is very realistic. +8 scope change
+          (20%) is plausible. Daily burn rates 3-6 pts/day consistent with a small
+          team. Sprint at 3 pts remaining is believable near-completion.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear structure: data arrays → chart init → setOption. ms() helper
+          is a pragmatic one-liner reducing repetition. No classes or unnecessary
+          abstractions.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded from fixed date strings. No random number generators.
+          Fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports (echarts is global). Only window.ANYPLOT_TOKENS used.
+          No unused variables.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, idiomatic ECharts configuration. No over-engineering, no fake
+          UI elements. Array.from for ideal data is readable. Tooltip formatter is
+          appropriate.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'animation: false set. echarts.init(el) called with no explicit size
+          and no devicePixelRatio. Interactive library — harness handles both PNG
+          and HTML output.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expertly uses type:'time' axis, step:'end', markArea for shading,
+          markLine for annotation, endLabel, areaStyle, and ECharts rich text formatting.
+          All high-level ECharts patterns used correctly.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: markArea for weekend shading, markLine with ECharts rich text ({badge|...})
+          for amber scope change badge, and endLabel with border/padding are genuinely
+          ECharts-distinctive. Tooltip formatter (non-visible in PNG) is additional
+          ECharts-specific work.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending

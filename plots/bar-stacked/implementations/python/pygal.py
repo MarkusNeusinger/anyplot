@@ -24,12 +24,12 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette: first series always #009E73
-OKABE_ITO = (
+IMPRINT = (
     "#009E73",  # bluish green (brand)
-    "#D55E00",  # vermillion
-    "#0072B2",  # blue
-    "#CC79A7",  # reddish purple
-    "#E69F00",  # orange
+    "#C475FD",  # vermillion
+    "#4467A3",  # blue
+    "#BD8233",  # reddish purple
+    "#AE3030",  # orange
 )
 
 # Data: Energy consumption by source across quarters (in millions of kWh)
@@ -48,7 +48,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=28,
     label_font_size=22,
     major_label_font_size=18,

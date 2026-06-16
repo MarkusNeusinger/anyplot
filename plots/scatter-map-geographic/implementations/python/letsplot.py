@@ -22,7 +22,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - first series always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data: Major world cities with population and region
 np.random.seed(42)
@@ -352,12 +352,12 @@ df_continents = pd.DataFrame(continents)
 
 # Region color mapping using Okabe-Ito
 region_colors = {
-    "Asia": OKABE_ITO[0],  # #009E73
-    "Europe": OKABE_ITO[1],  # #D55E00
-    "N. America": OKABE_ITO[2],  # #0072B2
-    "S. America": OKABE_ITO[3],  # #CC79A7
-    "Africa": OKABE_ITO[4],  # #E69F00
-    "Oceania": OKABE_ITO[5],  # #56B4E9
+    "Asia": IMPRINT[0],  # #009E73
+    "Europe": IMPRINT[1],  # #C475FD
+    "N. America": IMPRINT[2],  # #4467A3
+    "S. America": IMPRINT[3],  # #BD8233
+    "Africa": IMPRINT[4],  # #AE3030
+    "Oceania": IMPRINT[5],  # #2ABCCD
 }
 
 # Basemap color

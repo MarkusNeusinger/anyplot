@@ -30,7 +30,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data - clinical trial outcomes across treatment groups
 np.random.seed(42)
@@ -58,7 +58,7 @@ df["group"] = pd.Categorical(df["group"], categories=groups, ordered=True)
 plot = (
     ggplot(df, aes(x="group", y="score", fill="group"))
     + geom_boxplot(notch=True, notchwidth=0.5, outlier_size=3, outlier_alpha=0.7, size=0.9)
-    + scale_fill_manual(values=OKABE_ITO)
+    + scale_fill_manual(values=IMPRINT)
     + labs(x="Treatment Group", y="Clinical Score", title="box-notched · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(

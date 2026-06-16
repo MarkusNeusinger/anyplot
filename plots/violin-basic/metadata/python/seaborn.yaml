@@ -1,123 +1,129 @@
 library: seaborn
+language: python
 specification_id: violin-basic
 created: '2025-12-23T00:36:01Z'
-updated: '2026-02-21T22:46:13Z'
-generated_by: claude-opus-4-6
-workflow_run: 20447774216
-issue: 0
-python_version: 3.14.3
+updated: '2026-05-29T11:28:44Z'
+generated_by: claude-sonnet
+workflow_run: 26633872689
+issue: 722
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/violin-basic/seaborn/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - layer-composition
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  - explicit-figure
-  dataprep: []
-  styling:
-  - alpha-blending
-  - grid-styling
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Bimodal Sales distribution showcases violin plot KDE advantage over box plots
-  - Strip plot overlay demonstrates seaborn layered composition pattern
-  - Annotations guide viewer to bimodal insight with genuine data storytelling
-  - Clean polished aesthetic with custom palette, off-white background, spines removed,
-    currency-formatted axis
-  - Correct modern seaborn API usage with hue parameter and legend=False
+  - 'Perfect implementation of all three spec requirements: mirrored KDE, inner box
+    (quartiles + median), 2–6 categories'
+  - Imprint palette applied in canonical order with saturation=1.0 override — full
+    brand fidelity
+  - Bimodal East distribution with annotation turns the chart into a story, not just
+    a display
+  - violinplot+stripplot combination is the idiomatic seaborn way to show density
+    + individual points simultaneously
+  - All theme chrome correctly token-driven; dark render passes readability check
+    without any dark-on-dark failure
+  - inner=box + cut=0 shows seaborn expertise beyond basic usage
   weaknesses:
-  - Strip plot dots extremely faint at alpha=0.25 and size=2.5 — barely perceptible
-  - 'Annotation text at fontsize=12 with #555555 color is small and low-contrast for
-    4800x2700 output'
-  - Split violins not explored though spec suggests considering them
-  image_description: 'The plot displays four violin plots arranged horizontally, showing
-    salary distributions across four departments: Engineering, Marketing, Sales, and
-    Support. Each violin is filled with a distinct color — dark blue (#306998) for
-    Engineering, salmon/orange (#E8825A) for Marketing, teal green (#5BA38B) for Sales,
-    and pink/purple (#C46BAE) for Support. Inner box plots with white median dots
-    are visible within each violin. Faint strip plot dots (very low alpha) are scattered
-    around each violin. The Sales violin is noticeably wider, with a bimodal shape
-    showing concentrations around $55k and $90k, annotated with "Junior cohort" and
-    "Senior cohort" labels with arrows. The y-axis shows "Salary ($)" formatted as
-    currency ($40k–$120k), x-axis shows "Department". The background is off-white
-    (#FAFAFA), all spines are removed, and a subtle horizontal grid is present. Title
-    reads "violin-basic · seaborn · pyplots.ai" in medium weight.'
+  - 'DE-01: The annotation callout could use a rounded bbox with ELEVATED_BG background
+    for a more polished look (e.g., bbox=dict(boxstyle=''round,pad=0.3'', fc=ELEVATED_BG,
+    ec=INK_SOFT, lw=0.8))'
+  - 'DE-02: The annotation arrowprops uses a plain ''-|>'' arrowstyle with no bbox;
+    adding a callout box to the annotation text would increase visual refinement'
+  - 'LM-02: The annotation is matplotlib-level; a more distinctive seaborn touch (e.g.,
+    sns.despine() call or using seaborn''s color system programmatically) would lift
+    LM-02 from 3 to 5'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Chrome: Title "violin-basic · python · seaborn · anyplot.ai" in dark ink, fully readable. Axis labels "Region" (x) and "Temperature (°C)" (y) in dark ink at 10pt. Tick labels at 8pt, dark secondary ink. All text clearly visible against light background.
+      Data: Four violins — North in brand green #009E73, South in lavender #C475FD, East in blue #4467A3, West in ochre #BD8233. Each violin has inner box plot with white median line. Semi-transparent strip plot overlay (alpha=0.25) shows individual data points. Bimodal annotation arrow pointing to East violin upper region.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title in light ink (#F0EFE8), axis labels and ticks in secondary light ink (#B8B7B0). All text clearly visible against dark background. No dark-on-dark failures observed. Annotation text readable. Grid lines subtle.
+      Data: Violin colors are identical to light render — North #009E73, South #C475FD, East #4467A3, West #BD8233. Only chrome has flipped to light tokens. Strip plot dots visible at reduced opacity.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All primary text sizes explicitly set. Annotations at fontsize=12
-          with #555555 are slightly small and low-contrast.'
+        comment: All font sizes explicitly set (title=12, axes=10, ticks=8, annotation=7.5).
+          Readable in both themes. Proportions balanced.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Annotations placed in clear space between violins.
+        comment: No collisions between annotation, labels, or strip dots
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Violins and box plots clearly visible. Strip plot overlay at alpha=0.25/size=2.5
-          is extremely faint.
+        comment: 200 pts/group — strip markers size=2.5/alpha=0.25 appropriate for
+          medium density
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Custom 4-color palette avoids red-green confusion with good contrast.
+        comment: Imprint palette is CVD-optimised; four distinct perceptual hue families
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 figsize with tight_layout, plot fills canvas well.
+        comment: Canvas gate passed. Violins fill ~65% of canvas. Balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis with currency units, descriptive x-axis, correct title format.
+        comment: Y-axis includes units (°C). Title is correct mandated format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, positions 2-4 correct. Light #FAF8F1, dark
+          #1A1A17. Chrome fully theme-adaptive.'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom palette, off-white background, currency formatting, strip
-          overlay, annotations show clear design intent.
+        comment: 'Above default (4): Imprint palette, layered strip+violin, focal
+          annotation. Not yet publication-ready.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: All spines removed, subtle grid, off-white background, good padding.
-          Strip dots could be slightly more visible.
+        comment: Top/right spines removed, subtle y-grid, semi-transparent strip dots.
+          Annotation callout lacks styled bbox.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Bimodal Sales distribution with annotations guides viewer to key
-          insight. Different distribution shapes create natural comparisons.
+        comment: Four climate archetypes tell a story; bimodal annotation creates
+          focal point. Not maximum storytelling depth.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -125,26 +131,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct violin plot using seaborn violinplot.
+        comment: Correct violin plot using sns.violinplot()
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Quartiles via inner=box, mirrored density, median marker present.
-          Split violins not explored.
+        comment: inner=box (quartiles), mirrored KDE, median white line, cut=0
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Department, Y=Salary correctly mapped with 150 points per category.
+        comment: X=Region, Y=Temperature (°C). All 4 groups visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format. No legend needed as categories on x-axis.
+        comment: Correct title format. Legend correctly suppressed (region on x-axis).
     data_quality:
       score: 15
       max: 15
@@ -154,22 +159,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Four categories with distinct distributions including bimodal Sales
-          showing KDE multimodality detection.
+        comment: 'Four distinct distribution shapes: compact, wide, bimodal, skewed'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Salary distributions across departments — neutral, real-world business
-          scenario.
+        comment: Daily temperature across climate regions — genuine neutral scientific
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'All salary ranges plausible: Engineering ~$85k, Marketing ~$70k,
-          Sales bimodal $55k/$90k, Support ~$55k.'
+        comment: North 8°C, South 24°C, East bimodal 4/28°C, West 16°C coastal — geographically
+          plausible
     code_quality:
       score: 10
       max: 10
@@ -179,34 +183,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports, data, plot, style, save. No functions or
-          classes.'
+        comment: 'Linear: imports → tokens → data → canvas → plot → style → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imports used.
+        comment: All 5 imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, appropriate complexity.
+        comment: Clean Pythonic code; saturation=1.0 shows seaborn knowledge
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at 300 DPI. Current seaborn API with hue parameter.
+        comment: Saves plot-{THEME}.png at dpi=400; uses current seaborn 0.14+ hue
+          API
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -214,13 +218,22 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Axes-level violinplot, correct hue+palette+legend=False for 0.14+
-          API, idiomatic parameter usage.
+        comment: Modern hue= API, axes-level violinplot+stripplot layering pattern
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Strip plot overlay is signature seaborn composability. inner=box
-          and cut=0 are library-specific features.
+        comment: Uses inner=box, cut=0, saturation=1.0, layer composition. Annotation
+          is matplotlib-level.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

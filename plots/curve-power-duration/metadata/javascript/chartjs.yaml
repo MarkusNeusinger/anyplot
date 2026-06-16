@@ -1,0 +1,269 @@
+library: chartjs
+language: javascript
+specification_id: curve-power-duration
+created: '2026-06-13T22:17:04Z'
+updated: '2026-06-13T22:39:03Z'
+generated_by: claude-sonnet
+workflow_run: 27480452151
+issue: 8647
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/javascript/chartjs/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Perfect spec compliance: logarithmic time axis, empirical MMP curve, CP model
+    overlay, all four reference markers (5s/1min/5min/20min), CP horizontal asymptote
+    — nothing missing'
+  - Realistic, domain-correct cycling physiology data (CP=280 W, W′=20 000 J, peak
+    sprint ~1100 W)
+  - Excellent Imprint palette and theme-chrome implementation — both light and dark
+    renders are polished and data colours are identical across themes
+  - Custom afterDraw annotation plugin elegantly draws reference lines and CP asymptote
+    without any external plugin dependency
+  - 'Clear visual hierarchy: solid line with markers (empirical) vs dashed no-markers
+    (model) makes the two series instantly distinguishable'
+  - All font sizes explicitly set, axes balanced, no overflow or overlap in either
+    render
+  weaknesses:
+  - Rotated annotation labels (5 s sprint, 1 min, 5 min, 20 min) are rendered at 13
+    px with alpha=0.75 — readable at full 3200x1800 resolution but may be marginal
+    when scaled to ~400 px mobile width; increase to 14-15 px and alpha=0.85 for better
+    mobile legibility
+  - Power values at reference marks are not annotated (e.g. 430 W at 1 min, 316 W
+    at 5 min) — the spec flags these as optional but adding them would strengthen
+    data storytelling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "curve-power-duration · javascript · chartjs · anyplot.ai" in dark ink at top, readable; Y-axis label "Power (W)" in dark ink, X-axis label "Duration" in dark ink; tick labels (220 W … 1180 W on Y, 1 s … 5 h on X) in ink-soft — all clearly readable against light background; legend at top readable; rotated reference-line labels ("5 s sprint", "1 min", "5 min", "20 min") in ink-soft with alpha — readable; "CP = 280 W" annotation at bottom-left readable
+      Data: First series (empirical MMP curve) in #009E73 brand green as solid line with 3.5 px circular markers; second series (CP model) in #C475FD lavender as dashed line with no markers; both clearly distinguishable; empirical curve monotonically decreasing from ~1100 W at 1 s to ~276 W at 5 h; model line arcs from high values near t=22 s and converges toward CP=280 W asymptote; four dashed vertical reference lines; one dashed horizontal CP asymptote at 280 W
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title, axis labels, tick labels, legend text, annotation labels all in light ink — clearly readable against dark background; no dark-on-dark failures observed; grid lines subtly visible as lighter lines on dark surface
+      Data: Empirical green line and lavender dashed model line colours are identical to light render — only chrome has flipped; both data series clearly visible on dark background; brand green #009E73 remains clearly visible
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, legend 14px, axis titles
+          15px, ticks 13px, annotations 13px); proportions balanced; minor deduction
+          for annotation labels at 13px alpha=0.75 potentially marginal at mobile
+          scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 45-point empirical line with 3.5px dots well-adapted to density;
+          model line has no dots (appropriate for fitted curve)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs lavender strong hue+luminance separation; solid vs dashed
+          adds redundant encoding; CVD-safe Imprint palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Landscape 3200x1800 correct; canvas gate passed; chart fills canvas
+          well with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis 'Power (W)' has units; X-axis 'Duration' with units encoded
+          in human-readable tick labels — standard for time axes
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series palette[0]=#009E73; second series palette[1]=#C475FD;
+          pageBg/ink/inkSoft/grid tokens used correctly; light #FAF8F1 and dark #1A1A17
+          backgrounds confirmed; data colours identical across themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: Imprint palette correctly applied, intentional typographic
+          hierarchy, dashed-vs-solid encoding, custom annotation plugin. Professionally
+          polished but not quite publication-ready (annotation text small, no zone
+          shading)'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Axis borders removed (border: {display: false}); x-axis grid off,
+          y-axis grid subtle with token colour; explicit layout padding; legend cleanly
+          configured. Excellent refinement for Chart.js'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: empirical (solid, with dots) as focal point;
+          model (dashed, no dots) secondary; reference vertical lines at key physiological
+          durations guide viewer; CP asymptote provides analytical context. Power
+          values at reference marks not annotated (optional per spec)'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Scatter + showLine on logarithmic x-axis = correct power duration
+          curve
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Log x-axis, human-readable ticks, empirical MMP curve, CP model dashed
+          overlay, 4 reference vertical markers, CP horizontal asymptote with label
+          — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=duration (s), y=power (W), log scale correct, monotonically decreasing
+          empirical, model converging to CP
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'curve-power-duration · javascript · chartjs · anyplot.ai';
+          legend distinguishes empirical vs model with matching colours
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full spectrum 1s to 5h; empirical and CP model both represented;
+          reference marks at key physiological durations; CP asymptote visible
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Well-trained cyclist, CP=280W, W-prime=20000J, peak sprint~1100W
+          — factually correct and neutral sports science context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All values align with established cycling physiology (CP 240-320W,
+          W-prime 15000-25000J, 1100W sprint realistic for trained rider)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clear flat structure: tokens → data → mount → chart; two small helpers
+          (empPower, logspace) are pragmatically necessary in JavaScript (no numpy
+          equivalent)'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: KEY_PD hardcoded, logspace and model are pure
+          math'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; all globals provided by harness; no dead code
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Custom annotation plugin is idiomatic Chart.js; no fake UI elements;
+          no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Output managed by harness; Chart.js 4.4.7 API used correctly
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Uses scatter+showLine, cubicInterpolationMode:monotone, afterBuildTicks
+          for custom log-axis ticks, borderDash, animation:false — all idiomatic.
+          Minor deduction: tooltip not customised for interactive HTML artifact'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom afterDraw plugin using Chart.js canvas context and getPixelForValue
+          scale API is distinctive; afterBuildTicks tick override is Chart.js-specific.
+          Not 5/5 because raw canvas drawing could be replicated in other canvas-based
+          libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - alpha-blending
+  - grid-styling

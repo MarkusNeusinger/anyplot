@@ -20,7 +20,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (first series is always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Salary distributions by gender across job categories
 np.random.seed(42)
@@ -91,8 +91,8 @@ for gender, okabe_idx in [("Male", 0), ("Female", 1)]:
             y=subset["Salary"],
             name=gender,
             side=side,
-            line_color=OKABE_ITO[okabe_idx],
-            fillcolor=OKABE_ITO[okabe_idx],
+            line_color=IMPRINT[okabe_idx],
+            fillcolor=IMPRINT[okabe_idx],
             opacity=0.75,
             meanline_visible=True,
             meanline_color=INK_SOFT,

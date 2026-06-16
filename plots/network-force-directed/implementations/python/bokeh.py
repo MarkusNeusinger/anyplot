@@ -25,7 +25,7 @@ np.random.seed(42)
 community_sizes = [18, 17, 15]
 community_names = ["Engineering", "Marketing", "Sales"]
 # Okabe-Ito positions 1, 2, 3
-community_colors = ["#009E73", "#D55E00", "#0072B2"]
+community_colors = ["#009E73", "#C475FD", "#4467A3"]
 
 nodes = []
 node_id = 0

@@ -1,158 +1,199 @@
 library: plotly
+language: python
 specification_id: map-connection-lines
 created: '2026-01-21T16:29:18Z'
-updated: '2026-01-21T16:32:23Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21217345083
+updated: '2026-05-28T00:52:41Z'
+generated_by: claude-sonnet
+workflow_run: 26547269865
 issue: 3746
-python_version: 3.13.11
-library_version: 6.5.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/plotly/plot.html
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/python/plotly/plot-dark.html
 quality_score: 91
 review:
   strengths:
-  - Excellent use of Plotly Scattergeo for creating great circle arcs automatically
-  - Clean, professional color scheme with good contrast (blue routes, yellow markers)
-  - Realistic flight route data with appropriate passenger volume scaling
-  - Proper use of transparency (alpha 0.4-0.8) to handle overlapping routes
-  - Well-formatted title following the spec-id convention
-  - Informative hover tooltips with route details
-  - Good geographic projection choice (Natural Earth)
+  - Excellent dual encoding of passenger volume via imprint_seq color gradient AND
+    line width — the most effective technique for this chart type
+  - 'Sophisticated theme-adaptive geographic color scheme: custom land, ocean, coastline,
+    and country border colors for both light and dark, resulting in a cohesive aesthetic
+    in both renders'
+  - Idiomatic plotly geo trace usage with go.Scattergeo producing proper great-circle
+    geodesic arcs as the spec requires
+  - Interactive hover tooltips with rich city-name and formatted passenger-volume
+    text
+  - Ochre airport markers (#BD8233) create clear visual contrast against the green-blue
+    route palette, reinforcing hub identification
   weaknesses:
-  - No visual legend showing the line thickness to passenger volume mapping (only
-    text annotation)
-  - European airport cluster (LHR/CDG/FRA) has minor label overlap
-  - Could use color intensity in addition to line width for value encoding
-  image_description: The plot displays a world map using the Natural Earth projection
-    with a light blue ocean background and light gray landmasses. Country borders
-    are shown in subtle gray. Ten major airports are marked with bright yellow circular
-    markers with blue outlines, labeled with their IATA codes (JFK, LAX, LHR, CDG,
-    NRT, SYD, DXB, SIN, HKG, FRA). Fifteen flight routes connect these airports with
-    blue curved lines (great circle arcs). Line thickness varies based on passenger
-    volume - thicker lines represent higher traffic routes (e.g., JFK-LHR appears
-    as the thickest line). Lines have varying opacity (0.4-0.8) to help distinguish
-    overlapping routes. The title "Global Flight Routes · map-connection-lines · plotly
-    · pyplots.ai" appears at the top in blue. An annotation at the bottom explains
-    that line thickness indicates passenger volume (1.6M - 4.2M passengers/year).
+  - 'European airport cluster (LHR/CDG/FRA routes) is visually congested: multiple
+    routes converge in a small screen area and airport labels are tightly packed;
+    consider adjusting label positions or reducing textfont size for European airports'
+  - Margins are narrower than recommended (l=20, r=20 vs l=80, r=40 from the style
+    guide); while no clipping is visible here, this reduces buffer for different datasets
+  - DE-03 storytelling could be strengthened with a callout annotation highlighting
+    the busiest route (e.g., JFK→LHR at 4.2M/yr) to create a clear focal point
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) paper background; ocean rendered as soft muted blue-grey, land as light warm grey-beige — both custom theme-adaptive geographic colors
+      Chrome: Title "Global Flight Routes · map-connection-lines · python · plotly · anyplot.ai" centered at top in dark ink, clearly readable. Airport code labels (JFK, LAX, LHR, CDG, FRA, DXB, SIN, HKG, NRT, SYD) in dark ink text positioned around markers. Legend in bottom-left with elevated warm-white background showing Low/Medium/High passenger volume line samples and Airports entry with ochre dot.
+      Data: 15 flight routes as geodesic arcs with imprint_seq gradient from brand green (#009E73, low volume) to blue (#4467A3, high volume); line widths scale 2–9px by passenger count; opacity 0.45–0.80. Airport markers are ochre (#BD8233) filled circles with dark ink borders, size 12.
+      Legibility verdict: PASS — all text readable against light background; European cluster (LHR/CDG/FRA) labels are densely packed but individually legible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) paper background; ocean rendered as deep navy, land as dark charcoal — theme-adaptive geographic colors distinct from light render
+      Chrome: Title in light cream text (#F0EFE8) against dark background, clearly readable. Airport code labels rendered in light cream ink. Legend background flips to elevated dark surface (#242420), legend text in secondary soft ink (#B8B7B0). No dark-on-dark failures observed.
+      Data: Route arc colors are identical to light render (imprint_seq green→blue) confirming palette consistency across themes. Ochre airport markers unchanged. Opacity and width encoding unchanged.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues; brand green routes remain visible and distinctive
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is large and clear (28pt), airport codes are readable, annotation
-          text is legible
-      - id: VQ-02
-        name: No Overlap
         score: 7
         max: 8
         passed: true
-        comment: Minor overlap in European cluster (LHR/CDG/FRA) but still readable
+        comment: Title clearly readable in both themes; airport labels legible at
+          full resolution; European cluster (LHR/CDG/FRA) causes slight crowding at
+          thumbnail sizes
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Route lines and labels well-positioned; European hub cluster shows
+          visual congestion with several routes converging and airport labels packed
+          together
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers sized appropriately (14px), line widths vary 2-8 based on
-          traffic, good visibility
+        comment: Routes clearly visible with varying widths and color gradients; ochre
+          airport markers stand out well against the green-blue route palette in both
+          themes
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue color scheme with yellow markers is colorblind-safe, good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Map fills canvas well, slight empty space in southern hemisphere
-          but appropriate for flight data
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: N/A for maps, but annotation explains the encoding well
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: imprint_seq colormap (green→blue) is CVD-safe; ochre markers provide
+          additional redundant encoding; no red-green sole-signal usage
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; Natural Earth map fills the frame nicely; title
+          centered with appropriate top margin; legend positioned bottom-left without
+          clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: No legend showing the line thickness scale; annotation explains concept
-          but visual legend would help
+        passed: true
+        comment: Title descriptive with correct format including optional prefix;
+          legend title 'Passenger volume' clear; no traditional axes needed for geographic
+          map
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq (green #009E73 → blue #4467A3) correctly used for continuous
+          encoding; ochre #BD8233 is palette slot 4; backgrounds #FAF8F1/#1A1A17 correct;
+          palette identical between renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom theme-adaptive geographic color scheme, dual encoding (width
+          + imprint_seq gradient), opacity variation (0.45–0.80), ochre airport markers
+          providing visual contrast anchor — well above generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No map frame (showframe=False), subtle border weights (coastlines
+          0.8, countries 0.4), clean layer separation. Margins tight (l=20, r=20 vs
+          recommended l=80, r=40) but no actual clipping
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dual encoding clearly communicates passenger volume hierarchy; hub
+          cities emerge as convergence points; Natural Earth projection provides intuitive
+          context. No focal annotation or callout to highest-volume routes
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct geographic connection lines map
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Origin/destination coordinates correctly mapped, value encoded in
-          line width
-      - id: SC-03
+        comment: go.Scattergeo renders geodesic great-circle arcs; Natural Earth projection;
+          route lines with base map including coastlines and country borders
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Has curved lines, location markers, transparency, base map. Missing:
-          explicit value-to-color mapping'
-      - id: SC-04
-        name: Data Range
+        comment: Curved geodesic arc lines, line thickness encoding, line color encoding
+          (imprint_seq), transparency (0.45–0.80), airport markers at endpoints, global
+          projection, country/coast base map all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All airports and routes visible within map bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
-        passed: false
-        comment: No visual legend, only text annotation
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
+        comment: Origin/destination coordinates correctly mapped; passenger volume
+          encoded in both width and color; all 10 airports and 15 routes shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Correct format with spec-id, library, and pyplots.ai
+        comment: 'Title format: Descriptive Title · spec-id · python · plotly · anyplot.ai;
+          legend shows Low/Medium/High volume samples with matching line styles and
+          Airports entry'
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation in route volumes, multiple regions, good geographic
-          spread
+        comment: 'All connection map aspects covered: origin-destination pairs, value-encoded
+          lines (dual: width+color), transparency for overlapping routes, endpoint
+          markers, global projection, real-world airport data'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Real airport codes with plausible flight routes and realistic passenger
-          volumes
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Passenger volumes (1.6M-4.2M/year) are realistic for major international
-          routes
+        comment: Real IATA codes with geographically correct coordinates, actual major
+          international routes, plausible passenger volumes (1.6M–4.2M/yr)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 15 routes within spec's 10–100 range; 10 airports gives good global
+          spread; passenger volume range is realistic for international trunk routes
     code_quality:
       score: 10
       max: 10
@@ -162,53 +203,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports, data, plot, save structure, no functions/classes
+        comment: Flat script, no unnecessary functions/classes, logical flow from
+          data → traces → layout → save
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set for reproducibility
+        comment: np.random.seed(42) present; data is fully deterministic regardless
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported
+        comment: os, numpy, plotly.graph_objects — all three actively used, nothing
+          superfluous
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Color interpolation loop is clear; lon=[None]/lat=[None] legend-trace
+          pattern is idiomatic; no fake UI elements
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: write_image with plot-{THEME}.png and write_html with plot-{THEME}.html
+          — correct filenames and current API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses Scattergeo for geographic plotting, Natural Earth projection,
-          hover tooltips. Could leverage more interactive features or color scales.
+        comment: Expert use of go.Scattergeo for geodesic paths; comprehensive geo
+          layout dict; lon=[None]/lat=[None] legend-only trace is canonical plotly
+          pattern; autosize=False with explicit dimensions
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Natural Earth projection; geographic feature layers (land/ocean/coast/country/lakes);
+          interactive hover with formatted hovertext; HTML export with CDN plotly.js;
+          geo bgcolor for theme adaptation. Could further leverage lataxis_range/lonaxis_range
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - hover-tooltips
   - html-export
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - alpha-blending
-  - edge-highlighting
+  - custom-colormap

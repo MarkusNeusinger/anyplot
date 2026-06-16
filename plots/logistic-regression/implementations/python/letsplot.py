@@ -24,7 +24,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first two colors for binary classification)
-OKABE_ITO = ["#009E73", "#D55E00"]
+IMPRINT = ["#009E73", "#C475FD"]
 
 # Data - Generate binary classification data with clear sigmoidal relationship
 np.random.seed(42)
@@ -90,15 +90,15 @@ anyplot_theme = theme(
 plot = (
     ggplot()
     # Confidence interval ribbon
-    + geom_ribbon(aes(x="Study Hours", ymin="ci_lower", ymax="ci_upper"), data=df_ci, fill=OKABE_ITO[0], alpha=0.15)
+    + geom_ribbon(aes(x="Study Hours", ymin="ci_lower", ymax="ci_upper"), data=df_ci, fill=IMPRINT[0], alpha=0.15)
     # Logistic curve
-    + geom_line(aes(x="Study Hours", y="Probability"), data=df_curve, color=OKABE_ITO[0], size=2.5)
+    + geom_line(aes(x="Study Hours", y="Probability"), data=df_curve, color=IMPRINT[0], size=2.5)
     # Decision threshold line
     + geom_hline(yintercept=0.5, linetype="dashed", color=INK_SOFT, size=1, alpha=0.6)
     # Data points with jitter
     + geom_point(aes(x="Study Hours", y="Probability", color="Class"), data=df_points, size=5, alpha=0.65)
     # Colors for classes using Okabe-Ito
-    + scale_color_manual(values=OKABE_ITO)
+    + scale_color_manual(values=IMPRINT)
     # Labels with model annotation
     + labs(
         x="Study Hours",

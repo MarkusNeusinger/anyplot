@@ -40,8 +40,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# anyplot palette — first series is always #009E73
-CATEGORY_COLORS = {"Retail": "#009E73", "Restaurant": "#9418DB", "Service": "#B71D27", "Entertainment": "#16B8F3"}
+# Imprint palette — first series is always #009E73
+CATEGORY_COLORS = {"Retail": "#009E73", "Restaurant": "#C475FD", "Service": "#AE3030", "Entertainment": "#4467A3"}
 
 # Data: US West Coast retail store locations
 np.random.seed(42)
@@ -58,9 +58,9 @@ city_centers = {
 category_types = ["Retail", "Restaurant", "Service", "Entertainment"]
 city_weights = {
     "Seattle": [0.70, 0.10, 0.10, 0.10],  # Retail  → #009E73
-    "Portland": [0.10, 0.70, 0.10, 0.10],  # Restaurant → #9418DB
-    "San Francisco": [0.10, 0.10, 0.70, 0.10],  # Service → #B71D27
-    "Los Angeles": [0.10, 0.10, 0.10, 0.70],  # Entertainment → #16B8F3
+    "Portland": [0.10, 0.70, 0.10, 0.10],  # Restaurant → #C475FD
+    "San Francisco": [0.10, 0.10, 0.70, 0.10],  # Service → #AE3030
+    "Los Angeles": [0.10, 0.10, 0.10, 0.70],  # Entertainment → #4467A3
     "San Diego": [0.70, 0.10, 0.10, 0.10],  # Retail → #009E73 (far from Seattle)
 }
 

@@ -32,7 +32,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Monthly sales for 4 product lines over 12 months
 np.random.seed(42)
@@ -62,10 +62,10 @@ df["Product"] = pd.Categorical(
 
 # Map Okabe-Ito colors to products
 color_map = {
-    "Electronics": OKABE_ITO[0],
-    "Clothing": OKABE_ITO[1],
-    "Furniture": OKABE_ITO[2],
-    "Accessories": OKABE_ITO[3],
+    "Electronics": IMPRINT[0],
+    "Clothing": IMPRINT[1],
+    "Furniture": IMPRINT[2],
+    "Accessories": IMPRINT[3],
 }
 
 # Create plot

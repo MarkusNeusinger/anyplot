@@ -23,14 +23,14 @@ const WATER_COLOR  = THEME == "light" ? RGBAf(0.63f0, 0.77f0, 0.87f0, 0.95f0) : 
 const STREET_COLOR = THEME == "light" ? RGBAf(1.0f0, 0.99f0, 0.97f0, 0.85f0) : RGBAf(0.10f0, 0.10f0, 0.08f0, 0.70f0)
 const WATER_LABEL  = THEME == "light" ? RGBAf(0.25f0, 0.45f0, 0.65f0, 0.65f0) : RGBAf(0.50f0, 0.70f0, 0.90f0, 0.65f0)
 
-const ANYPLOT_PALETTE = [
+const IMPRINT = [
     colorant"#009E73",
-    colorant"#9418DB",
-    colorant"#B71D27",
-    colorant"#16B8F3",
+    colorant"#C475FD",
+    colorant"#AE3030",
+    colorant"#4467A3",
     colorant"#99B314",
-    colorant"#D359A7",
-    colorant"#BA843E",
+    colorant"#954477",
+    colorant"#BD8233",
 ]
 
 # Data: specialty venues (coffee shops, bakeries, tea houses) across lower Manhattan, NYC
@@ -154,7 +154,7 @@ for (i, cat_name) in enumerate(CAT_NAMES)
     idx = filter(j -> cat_ids[j] == i, solo_idx)
     isempty(idx) && continue
     scatter!(ax, lons[idx], lats[idx];
-        color       = ANYPLOT_PALETTE[i],
+        color       = IMPRINT[i],
         markersize  = 15,
         strokewidth = 1.5,
         strokecolor = PAGE_BG,
@@ -166,10 +166,10 @@ end
 for (clat, clon, npts, dom_cat) in cluster_rows
     bubble_sz = clamp(npts * 2.8 + 18, 28, 72)
     scatter!(ax, [clon], [clat];
-        color       = (ANYPLOT_PALETTE[dom_cat], 0.80),
+        color       = (IMPRINT[dom_cat], 0.80),
         markersize  = bubble_sz,
         strokewidth = 2.5,
-        strokecolor = ANYPLOT_PALETTE[dom_cat],
+        strokecolor = IMPRINT[dom_cat],
     )
     text!(ax, clon, clat;
         text     = string(npts),

@@ -28,12 +28,12 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series always #009E73)
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # brand green
-    "#D55E00",  # vermillion
-    "#0072B2",  # blue
-    "#CC79A7",  # reddish purple
-    "#E69F00",  # orange
+    "#C475FD",  # vermillion
+    "#4467A3",  # blue
+    "#BD8233",  # reddish purple
+    "#AE3030",  # orange
 ]
 
 # Data - Software project milestones
@@ -58,7 +58,7 @@ df["y_pos"] = [0.6 if i % 2 == 0 else -0.6 for i in range(len(df))]
 
 # Map categories to Okabe-Ito colors
 categories = df["category"].unique().tolist()
-color_map = {cat: OKABE_ITO[i % len(OKABE_ITO)] for i, cat in enumerate(categories)}
+color_map = {cat: IMPRINT[i % len(IMPRINT)] for i, cat in enumerate(categories)}
 df["color"] = df["category"].map(color_map)
 
 # Create figure

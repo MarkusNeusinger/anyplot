@@ -19,7 +19,7 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-ACCENT = "#0072B2"  # Okabe-Ito blue — structural elements
+ACCENT = "#4467A3"  # Okabe-Ito blue — structural elements
 
 sns.set_theme(style="ticks", rc={"figure.facecolor": PAGE_BG, "axes.facecolor": PAGE_BG, "text.color": INK})
 

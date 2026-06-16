@@ -25,7 +25,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette — first series always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data - Monthly streaming hours by music genre over 2 years
 np.random.seed(42)
@@ -71,9 +71,9 @@ for i, genre in enumerate(genres):
             x=x_fill,
             y=y_fill,
             fill="toself",
-            fillcolor=OKABE_ITO[i],
+            fillcolor=IMPRINT[i],
             opacity=opacity,
-            line={"color": OKABE_ITO[i], "width": 0.5, "shape": "spline", "smoothing": 1.0},
+            line={"color": IMPRINT[i], "width": 0.5, "shape": "spline", "smoothing": 1.0},
             name=genre,
             mode="none",
             hoverinfo="name+x",

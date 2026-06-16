@@ -30,7 +30,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data: Employee satisfaction scores before and after workplace policy changes
 categories = ["Engineering", "Marketing", "Sales", "HR", "Finance", "Operations", "Customer Support", "Product"]
@@ -63,7 +63,7 @@ plot = (
         aes(x="start", xend="end", y="category", yend="category"), data=df_segments, color=INK_SOFT, size=1.5, alpha=0.6
     )
     + geom_point(aes(x="value", y="category", color="period"), data=df_points, size=7)
-    + scale_color_manual(values={"Before": OKABE_ITO[0], "After": OKABE_ITO[1]})
+    + scale_color_manual(values={"Before": IMPRINT[0], "After": IMPRINT[1]})
     + scale_x_continuous(limits=(30, 100), breaks=[30, 40, 50, 60, 70, 80, 90, 100])
     + labs(
         x="Satisfaction Score",

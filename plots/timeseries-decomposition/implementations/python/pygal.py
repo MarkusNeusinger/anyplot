@@ -29,7 +29,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette for components
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233")
 
 # Data - Monthly CO2 measurements with clear trend and seasonality
 np.random.seed(42)
@@ -56,10 +56,10 @@ x_labels = [d.strftime("%Y-%m") if i % 6 == 0 else "" for i, d in enumerate(date
 
 # Define components with their data, titles, colors, y-ranges, and y-axis labels
 components = [
-    ("Original Series (CO2 ppm)", observed, OKABE_ITO[0], (405, 437), "CO₂ (ppm)"),
-    ("Trend Component", trend_component, OKABE_ITO[1], (405, 435), "Trend (ppm)"),
-    ("Seasonal Component", seasonal_component, OKABE_ITO[2], (-5, 5), "Seasonal (ppm)"),
-    ("Residual Component", residual_component, OKABE_ITO[3], (-3, 3), "Residual (ppm)"),
+    ("Original Series (CO2 ppm)", observed, IMPRINT[0], (405, 437), "CO₂ (ppm)"),
+    ("Trend Component", trend_component, IMPRINT[1], (405, 435), "Trend (ppm)"),
+    ("Seasonal Component", seasonal_component, IMPRINT[2], (-5, 5), "Seasonal (ppm)"),
+    ("Residual Component", residual_component, IMPRINT[3], (-3, 3), "Residual (ppm)"),
 ]
 
 # Target: 4800 x 2700 px total (4 vertically stacked charts)

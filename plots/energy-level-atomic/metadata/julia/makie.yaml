@@ -1,0 +1,282 @@
+library: makie
+language: julia
+specification_id: energy-level-atomic
+created: '2026-05-30T07:34:57Z'
+updated: '2026-05-30T07:57:59Z'
+generated_by: claude-sonnet
+workflow_run: 26677950342
+issue: 4434
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
+review:
+  strengths:
+  - 'Correct Imprint palette: brand green (#009E73) for Lyman UV, lavender (#C475FD)
+    for Balmer visible, blue (#4467A3) for Paschen IR — all in canonical order'
+  - Nonlinear equal visual spacing (n_pos=[1,2,3,4]) prevents the compression of n=2/3/4
+    levels that linear eV scaling produces
+  - Theme-adaptive chrome fully implemented — all title, axis label, tick, spine,
+    and annotation colors flip correctly between light (#FAF8F1) and dark (#1A1A17)
+  - 'Physics-accurate data: energies from E_n=-13.6/n² eV, wavelengths from hc/ΔE
+    — values (122nm, 103nm, 97nm, 656nm, 486nm, 1876nm) match known hydrogen spectral
+    lines'
+  - 'Clean design: no grid, minimal spines (only left kept), hierarchical line weights
+    (level lines 2.2 vs arrows 2.4) with dashed ionization line for visual distinction'
+  - Native Makie arrows! primitive used for transition arrows — idiomatic and not
+    easily replicated in other libraries; custom yticks with nonlinear position→eV
+    mapping is a Makie-specific strength
+  weaknesses:
+  - Only 4 quantized energy levels (n=1–4) vs. spec minimum of 5; add n=5 (and ideally
+    n=6) to satisfy the spec and show more Lyman/Balmer/Paschen transitions
+  - Large empty area in the top ~20% of the axis between the n=4 level (display y=4.0)
+    and the ionization line (display y=5.5); reduce ion_pos from 5.5 to ~4.8 or tighten
+    ylims to compress the gap and improve canvas utilization
+  - 'Helper functions draw_arrow!, wavelength_nm, and fmt_λ break the strict KISS
+    structure (CQ-01: no functions); consider inlining the logic or accepting the
+    tradeoff'
+  - Wavelength annotations at fontsize=10 (20px effective after px_per_unit=2) are
+    on the small side for mobile legibility; bumping to fontsize=11–12 would improve
+    readability at 400px viewport
+  - The 103nm annotation (Lyman 3→1) is at display y=2.18, only 0.18 units above the
+    n=2 level line at y=2.0 — visually very tight; increasing the annotation offset
+    from 0.18 to 0.30 would give more clearance
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correctly not pure white
+      Chrome: Title "energy-level-atomic · julia · makie · anyplot.ai" in dark ink, clearly readable. Y-axis label "Energy (eV)" in dark ink. Tick labels (-13.6, -3.4, -1.51, -0.85, 0) in INK_SOFT. Level labels "n=1" through "n=4" and "n=∞ (ionized)" on right side in dark ink — all readable.
+      Data: Four horizontal energy level lines in INK_SOFT (gray), a dashed ionization reference line. Three spectral series as downward emission arrows: Lyman UV in #009E73 (brand green, 3 arrows), Balmer visible in #C475FD (lavender, 2 arrows), Paschen IR in #4467A3 (blue, 1 arrow). Wavelength annotations on each arrow in matching colors. Series legend text at bottom in matching colors.
+      Legibility verdict: PASS — all text readable. Wavelength annotations at fontsize=10 (20px effective) are small but legible.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correctly not pure black
+      Chrome: Title in INK (#F0EFE8) light cream, clearly visible against dark background. Y-axis label and tick labels in INK_SOFT (#B8B7B0) — all readable. Level labels on right in INK cream — no dark-on-dark failures observed. Energy level lines appear as bright white/light lines.
+      Data: All three spectral series use identical colors to light render — #009E73 Lyman, #C475FD Balmer, #4467A3 Paschen. Data colors are unchanged between themes; only chrome flips.
+      Legibility verdict: PASS — all text readable against the dark background. No dark-on-dark failures detected.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (titlesize=20, ylabelsize=14, yticklabelsize=12,
+          level labels=12, wavelength annotations=10). Proportions good in both themes.
+          Wavelength annotations at fontsize=10 (20px effective) are slightly small
+          for mobile but readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. The 103nm annotation at y=2.18 is close to the
+          n=2 line at y=2.0 but does not overlap.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All elements clearly visible. Energy level lines (linewidth=2.2),
+          transition arrows (linewidth=2.4, arrowsize=14), and annotations are all
+          well-sized.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Three-series Imprint palette (green/lavender/blue) is colorblind-safe.
+          Series distinguishable by color and spatial grouping.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Good layout overall. Minor issue: ~20% empty space at top between
+          n=4 level (display y=4.0) and ionization line (y=5.5), plus empty space
+          above ionization to ylim=6.2. Tightening ion_pos or ylims would improve
+          canvas utilization.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis labeled 'Energy (eV)' with units. X-axis suppressed (correct
+          for energy level diagrams). Title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green) for Lyman. Multi-series uses
+          Imprint positions 1-3 in canonical order. Backgrounds #FAF8F1 light / #1A1A17
+          dark. Data colors identical across themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured default. Intentional design choices: correct
+          palette, color-coded spectral series, hierarchical line weights, minimal
+          spines. Not quite publication-ready but clearly thoughtful.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: no grid, only left spine, dashed ionization line
+          vs solid level lines, different line weights. Some wasted space at top slightly
+          reduces score.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color coding of spectral series (UV/visible/IR) communicates spectral
+          physics clearly. Nonlinear spacing avoids compression. Wavelength labels
+          directly on arrows provide quantitative context. Guides reader through hydrogen
+          spectrum.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct energy level diagram: horizontal lines for levels, vertical
+          downward arrows for emission transitions, color coding by spectral series.'
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Most features present: partial-width lines, vertical arrows, color-coded
+          by series, wavelength labels, ionization reference, quantum number labels.
+          Minor miss: spec requires 5-15 levels but implementation shows 4 quantized
+          levels (n=1-4).'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Y-axis shows energy in eV with nonlinear display positions for readability.
+          All transitions correctly mapped between levels.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is exact format 'energy-level-atomic · julia · makie · anyplot.ai'.
+          Series legend at bottom in matching colors ('Lyman (UV)', 'Balmer (visible)',
+          'Paschen (IR)').
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows all three major hydrogen spectral series (Lyman UV, Balmer
+          visible, Paschen IR), ionization limit reference, quantum number labels,
+          wavelength annotations. Missing n=5/n=6 to show more transitions.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Hydrogen atom energy levels — real, well-understood physics. Neutral
+          scientific context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Energies from exact Rydberg formula (E_n=-13.6/n² eV). Wavelengths
+          from hc/ΔE with hc=1240 eV·nm. All values match known spectral lines: Ly-α
+          122nm, Ly-β 103nm, Ly-γ 97nm, Hα 656nm, Hβ 486nm, Paschen-α 1876nm.'
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Defines helper functions draw_arrow!, wavelength_nm, fmt_λ — these
+          break strict KISS (no functions) but are justified for the 6 repeated arrow
+          draws and formula encapsulation.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic — all data derived from physics formulas, no
+          randomness.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie (plotting), Colors (colorant syntax), Printf (@sprintf
+          for wavelength labels) — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized code with clear constants and naming. No fake
+          UI elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2. Uses size= (current
+          Makie 0.22 API, not deprecated resolution=).
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good idiomatic CairoMakie usage: Figure/Axis construction, arrows!,
+          lines!, text! primitives, custom yticks with position/label arrays, colorant
+          string syntax. Minor: could use Makie''s Label or Legend widgets for the
+          bottom legend.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses native arrows! primitive (not easily replicated in other libraries),
+          custom yticks mapping nonlinear display positions to actual eV values, and
+          the RGBAf type. These are Makie-specific strengths leveraged effectively.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - custom-legend
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome

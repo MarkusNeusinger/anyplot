@@ -42,7 +42,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (positions 1-4 for node groups)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Define software package dependency network
 nodes = [
@@ -103,7 +103,7 @@ node_df["y"] = node_df["id"].map(lambda n: node_positions[n][1])
 
 # Map groups to Okabe-Ito colors
 group_order = ["Application", "Core", "Infrastructure", "Utility"]
-group_colors = {group: OKABE_ITO[i] for i, group in enumerate(group_order)}
+group_colors = {group: IMPRINT[i] for i, group in enumerate(group_order)}
 node_df["color"] = node_df["group"].map(group_colors)
 
 # Build edge dataframe with arrow endpoints
@@ -146,7 +146,7 @@ plot = (
     # Add node labels
     + geom_text(aes(x="x", y="y", label="label"), data=node_df, size=12, color=INK, fontface="bold", nudge_y=-0.06)
     # Color scale
-    + scale_fill_manual(values=OKABE_ITO, name="Module Type")
+    + scale_fill_manual(values=IMPRINT, name="Module Type")
     # Theme and styling
     + theme_void()
     + theme(

@@ -29,7 +29,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 COLOR_A = "#009E73"  # Students - Okabe-Ito position 1
-COLOR_B = "#D55E00"  # Courses  - Okabe-Ito position 2
+COLOR_B = "#C475FD"  # Courses  - Okabe-Ito position 2
 
 # Data: student-course enrollment network
 np.random.seed(42)

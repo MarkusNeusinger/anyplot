@@ -20,7 +20,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # Primary series
-SECONDARY = "#D55E00"  # Secondary series
+SECONDARY = "#C475FD"  # Secondary series
 
 # Data: Monthly temperature ranges (°C) for a temperate climate city
 np.random.seed(42)

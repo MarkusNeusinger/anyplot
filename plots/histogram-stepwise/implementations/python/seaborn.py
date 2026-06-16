@@ -19,7 +19,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette — positions 1 and 2
-OKABE_ITO = ["#009E73", "#D55E00"]
+IMPRINT = ["#009E73", "#C475FD"]
 
 # Configure seaborn theme
 sns.set_theme(
@@ -49,8 +49,8 @@ fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 # Step histograms
-sns.histplot(service_a, bins=30, element="step", fill=False, color=OKABE_ITO[0], linewidth=3, label="Service A", ax=ax)
-sns.histplot(service_b, bins=30, element="step", fill=False, color=OKABE_ITO[1], linewidth=3, label="Service B", ax=ax)
+sns.histplot(service_a, bins=30, element="step", fill=False, color=IMPRINT[0], linewidth=3, label="Service A", ax=ax)
+sns.histplot(service_b, bins=30, element="step", fill=False, color=IMPRINT[1], linewidth=3, label="Service B", ax=ax)
 
 # Style
 ax.set_xlabel("Response Time (ms)", fontsize=20, color=INK)

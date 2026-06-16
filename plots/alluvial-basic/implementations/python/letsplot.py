@@ -37,7 +37,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (positions 1-4)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Voter migration data across three election cycles
 elections = ["2016", "2020", "2024"]
@@ -106,10 +106,10 @@ total_flow = sum(totals_2016.values())
 
 # Colors for parties - Okabe-Ito palette (positions 1-4)
 party_colors = {
-    "Democrats": OKABE_ITO[0],
-    "Republicans": OKABE_ITO[1],
-    "Independents": OKABE_ITO[2],
-    "Non-Voters": OKABE_ITO[3],
+    "Democrats": IMPRINT[0],
+    "Republicans": IMPRINT[1],
+    "Independents": IMPRINT[2],
+    "Non-Voters": IMPRINT[3],
 }
 
 

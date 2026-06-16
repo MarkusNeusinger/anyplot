@@ -12,3 +12,13 @@ declare module 'react-syntax-highlighter/dist/esm/languages/prism/julia' {
   const language: unknown;
   export default language;
 }
+
+declare module 'react-syntax-highlighter/dist/esm/languages/prism/javascript' {
+  const language: unknown;
+  export default language;
+}
+
+declare module 'react-syntax-highlighter/dist/esm/languages/prism/tsx' {
+  const language: unknown;
+  export default language;
+}

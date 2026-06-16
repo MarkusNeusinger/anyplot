@@ -1,0 +1,245 @@
+library: makie
+language: julia
+specification_id: swimmer-clinical-timeline
+created: '2026-06-08T06:19:41Z'
+updated: '2026-06-08T06:34:39Z'
+generated_by: claude-sonnet
+workflow_run: 27119362667
+issue: 4670
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - Perfectly correct Imprint palette usage with semantic-aware color assignment (green=experimental,
+    lavender=control, amber=adverse-event warning anchor)
+  - 'Clinical narrative is immediately legible: sorted bars, reference line at Week
+    24, and ongoing arrows communicate trial dynamics without annotations'
+  - Makie layout system used expertly — PolyElement/MarkerElement mixed legend, colsize!,
+    RGBAf alpha compositing
+  - Both themes render correctly with no chrome bleed-through
+  - Transparent bars with stroke give definition without heaviness; event marker white
+    strokes prevent merging with bar fill
+  weaknesses:
+  - Y-axis tick labels (yticklabelsize=10) are slightly small for 25 rows; could be
+    bumped to 11pt to improve mobile readability without causing overlap
+  - Event markers on colored bars could benefit from slightly larger markersize (14-16)
+    to improve visibility at small rendered sizes — the xcross at 12 is the smallest
+    and least distinguishable
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "swimmer-clinical-timeline · julia · makie · anyplot.ai" in dark ink, clearly readable. X-axis label "Time on Study (weeks)" in dark ink. Y-axis patient ID tick labels (PT-001 to PT-025) in INK_SOFT dark. Legend with dark text on elevated #FFFDF6 background with INK_SOFT frame. All chrome text readable.
+      Data: Arm A bars in brand green #009E73 at 78% alpha; Arm B bars in lavender #C475FD. Event markers: blue upward triangles (partial response), ochre stars (complete response), matte-red downward triangles (progressive disease), amber X-crosses (adverse events). All markers have white stroke edges. Ongoing patient arrows in arm color. Week 24 dashed reference line with annotation. First series is #009E73 ✓
+      Legibility verdict: PASS — all text readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title, axis labels, tick labels, and legend text all appear in light cream/off-white (INK=#F0EFE8 / INK_SOFT=#B8B7B0). Legend box uses #242420 elevated-dark background with soft INK_SOFT frame. No dark-on-dark failures observed. "Wk 24" annotation readable in INK_MUTED light tone.
+      Data: Colors identical to light render — brand green Arm A bars, lavender Arm B bars, all event marker colors unchanged (Imprint positions 3-5 + amber anchor). Data color identity preserved across themes ✓
+      Legibility verdict: PASS — all text readable against warm near-black background; no dark-on-dark issues
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicitly set; y-tick labels at 10pt slightly compact
+          for 25 rows but readable
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Well-separated bars and labels; some event markers close on multi-event
+          patients but no significant overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bars, arrows, and event markers well-sized; xcross at 12px is smallest
+          marker
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette; shape+color redundant encoding for event
+          types
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); colsize Relative(0.78) gives balanced
+          plot/legend split
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X-axis: Time on Study (weeks) with units; Y-axis patient IDs self-explanatory'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; positions 2-5 in canonical order; amber anchor
+          for adverse events; correct backgrounds both themes'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: custom Imprint palette, alpha transparency, bar strokes,
+          Week 24 landmark annotation, shape+color event encoding'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right spines removed, x-grid only, elevated legend box, theme-adaptive
+          chrome throughout
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Duration sorting reveals Arm A advantage immediately; Week 24 reference
+          line adds clinical context; ongoing arrows distinguish censoring
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal swimmer plot sorted by duration
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Arm color-coding, distinct event markers, ongoing arrows, clear legend,
+          time-unit x-axis, patient IDs on y-axis
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time, Y=patient, bar length=duration, markers=event timing
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct (swimmer-clinical-timeline · julia · makie ·
+          anyplot.ai); legend has correct labels for all 6 entries
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows two arms, four event types, ongoing vs completed, variable
+          durations with arm-level differences
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Phase II anti-PD-1 + chemo vs. chemo-alone oncology trial; 25 patients;
+          neutral clinical scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Duration 4-52 weeks realistic for Phase II; Arm A longer median plausible;
+          event timing proportions clinically reasonable
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: tokens → palette → data → plot → legend → save; no functions/classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) at top level
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all actively used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized, appropriate verbosity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2; uses current size=
+          parameter (not deprecated resolution=)
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: fig[1,1]/fig[1,2] layout grid, poly!, arrows!, RGBAf, colsize!, PolyElement/MarkerElement
+          — idiomatic Makie throughout
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: PolyElement/MarkerElement mixed legend (Makie-specific); arrows!
+          with arrowsize; CairoMakie colsize! layout control
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - minimal-chrome

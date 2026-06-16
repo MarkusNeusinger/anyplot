@@ -1,120 +1,132 @@
 library: letsplot
+language: python
 specification_id: line-pca-variance-cumulative
 created: '2026-02-17T21:42:24Z'
-updated: '2026-02-17T21:45:45Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22116658979
+updated: '2026-05-29T06:01:10Z'
+generated_by: claude-sonnet
+workflow_run: 26620445991
 issue: 4131
-python_version: 3.14.3
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/letsplot/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/letsplot/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - 'Excellent data storytelling: dual bar+line layers combined with threshold lines
-    and vertical markers create an immediately comprehensible narrative about PCA
-    component selection'
-  - Uses real Wine dataset from sklearn rather than synthetic data, producing authentic
-    variance distributions
-  - Clean, well-proportioned visual design with intentional color hierarchy (blue
-    for data, warm colors for thresholds)
-  - All text sizes explicitly configured for the 4800x2700 output resolution
-  - Code is clean and well-structured following KISS principles
+  - Uses real sklearn Wine dataset providing factually accurate PCA statistics
+  - Multi-layer composition fully satisfies all spec requirements including optional
+    individual variance bar overlay
+  - 'Semantic color mapping: amber for 90% caution threshold, matte red for 95% target
+    — immediately interpretable without a legend'
+  - Leverages lets_plot native layer_tooltips() API for rich interactive hover information
+    in HTML output
+  - Elbow detection using perpendicular distance from chord is mathematically correct
+  - Theme-adaptive chrome works correctly in both renders with no dark-on-dark or
+    light-on-light failures
   weaknesses:
-  - Library mastery could be improved by leveraging more distinctive lets-plot features
-    (e.g., geom_segment for threshold annotations, or tooltip interactivity in the
-    HTML output)
-  - The elbow point (where diminishing returns begin) could be annotated for better
-    spec compliance
-  - Threshold label positioning at x=13 with hjust=1 works but could be more elegantly
-    placed
-  image_description: 'The plot displays a cumulative explained variance line chart
-    for PCA on the Wine dataset with 13 principal components. A dark blue (#306998)
-    line with circular markers shows the cumulative variance rising from ~36% at component
-    1 to ~100% at component 13, following the classic elbow pattern. Light steel blue
-    (#B0C4DE) semi-transparent bars underneath show individual variance per component,
-    decreasing from ~36% (component 1) to near 0% (component 13). Two horizontal dashed
-    reference lines mark the 90% threshold (orange, #E07A3A) and 95% threshold (red,
-    #C0392B), with labeled text ("90%" and "95%") positioned at the right end. Vertical
-    dotted lines in matching colors indicate the component counts where these thresholds
-    are reached (component 8 for 90%, component 10 for 95%). Title reads "line-pca-variance-cumulative
-    · letsplot · pyplots.ai". X-axis: "Number of Principal Components" (1-13). Y-axis:
-    "Explained Variance (%)" (0-100). Clean minimal theme with light gray horizontal
-    gridlines, no vertical gridlines. Layout is well-balanced in 16:9 landscape format.'
+  - Individual variance bars are very low-contrast in dark render (muted fill at alpha=0.28
+    on near-black background produces near-invisible bars) — increase dark-mode bar
+    alpha to ~0.40 or use a slightly lighter fill to maintain visible-but-secondary
+    presence
+  - The PC 5 elbow annotation label (geom_text size=4) is slightly small at mobile
+    viewport scales — consider increasing to size=4.5 or bold for better readability
+    when scaled down
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — confirmed, not pure white
+      Chrome: Title "line-pca-variance-cumulative · python · letsplot · anyplot.ai" in dark ink, fully readable; axis labels "Number of Principal Components" (x) and "Explained Variance (%)" (y) in dark text, readable; tick labels 1-13 (x) and 0-100% (y) in secondary dark text, readable; horizontal grid lines subtle and visible
+      Data: Brand green #009E73 cumulative line with circular markers; muted gray semi-transparent bars (alpha=0.28) for individual variance; amber #DDCC77 dashed horizontal line at 90%; matte red #AE3030 dashed horizontal line at 95%; vertical dotted lines at PC 8 and PC 10; hollow ring elbow marker with "PC 5" label
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — confirmed, not pure black
+      Chrome: Title in light off-white text, clearly readable; axis labels in light text, readable; tick labels in light secondary text, readable; no dark-on-dark failures observed; grid lines subtle but visible as lighter lines on dark surface
+      Data: Brand green #009E73 cumulative line and markers — visually identical to light render (same green, same positions); amber and matte-red threshold lines clearly visible; individual variance bars appear as very dark gray shapes (nearly invisible — low contrast at alpha=0.28 on near-black); elbow annotation visible with light-bordered ring
+      Legibility verdict: PASS (minor concern: individual variance bars are very low-contrast in dark mode, but this is a secondary element concern, not a legibility failure)
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16.
-          All text clearly readable.'
+        comment: 'All sizes explicitly set (plot_title=16, axis_title=12, axis_text=10);
+          readable in both themes; minor: geom_text annotation size=4mm slightly small
+          at mobile widths'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Threshold labels well-positioned above
-          lines.
+        comment: No overlapping elements; elbow label, threshold labels, and markers
+          all clearly separated
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Line size=2.5, point size=6 well-adapted for 13 data points. Bars
-          visible at alpha=0.5.
+        comment: Cumulative line and markers prominent; individual variance bars intentionally
+          muted but nearly invisible in dark render at alpha=0.28 on near-black background
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette; amber and matte-red CVD-safe and perceptually distinct
+          from brand green
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue, orange, red distinguishable. No red-green ambiguity.
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 4
-        passed: true
-        comment: Good canvas utilization overall, slight space inefficiency on right
-          side where threshold labels extend.
+        comment: Canvas exactly 3200x1800 px; good proportion fill, balanced margins,
+          no content cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Explained Variance (%) and Number
-          of Principal Components.'
+        comment: Y-axis includes units (%), x-axis descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; amber and matte-red as semantic anchors; correct
+          backgrounds; theme-adaptive chrome passes in both renders'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom color palette with intentional hierarchy. Professional look
-          above defaults but not publication-showcase level.
+        comment: 'Above configured default: semantic color assignments, alpha-layered
+          secondary bars, interactive tooltip configuration, intentional visual hierarchy'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Minimal theme, x-grid removed, minor grid removed, subtle y-gridlines.
-          Well-polished.
+        comment: Y-axis-only horizontal grid at subtle weight; top and right spines
+          removed; generous whitespace; no redundant legend
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Threshold lines and vertical markers create clear narrative. Dual
-          bar+line layers show individual vs cumulative effectively.
+        comment: 'Clear visual hierarchy: dominant green cumulative line, muted bars
+          for context, threshold reference lines for decision boundaries, annotated
+          elbow guides component selection'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -122,26 +134,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: cumulative line plot with individual variance bar overlay.'
+        comment: 'Correct: cumulative variance line plot with optional individual
+          variance bar overlay per spec'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'All major features present. Minor: no elbow point annotation (spec
-          says if automatically detectable).'
+        comment: 'All features: cumulative sum, percentage scale, dashed 90%/95% reference
+          lines, elbow annotation, clear markers, x-axis starts at 1, individual variance
+          overlay'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = component number (1-13), Y = cumulative variance (%). Correct.
+        comment: X=number of components, Y=cumulative explained variance %; all 13
+          components visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No legend needed for single series.
+        comment: Title matches required format; no legend needed with fixed-color
+          direct annotation approach
     data_quality:
       score: 15
       max: 15
@@ -151,21 +167,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows classic elbow pattern, diminishing returns, threshold crossings,
-          individual vs cumulative.
+        comment: Full cumulative curve, individual contributions, threshold crossings,
+          elbow detection — all aspects covered
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Uses real Wine dataset from sklearn — a standard ML benchmark.
+        comment: sklearn Wine dataset (178 samples, 13 chemical features) — real scientific
+          data, neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Real PCA values from Wine dataset. 13 features, 13 components with
-          realistic proportions.
+        comment: PC 1 ~36%, 90% at PC 8, 95% at PC 10 — factually correct for Wine
+          dataset
     code_quality:
       score: 10
       max: 10
@@ -175,33 +192,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports, Data, Plot, Save. No functions or classes.
+        comment: Imports -> Data -> Plot -> Save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic real dataset, no random seed needed.
+        comment: 'Deterministic: Wine dataset is fixed; PCA on fixed data produces
+          same result'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, pandas, lets_plot, sklearn.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity.
+        comment: Clean, Pythonic; elbow calculation concise; semantic variable names
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale=3. Also saves HTML.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current lets_plot API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -209,27 +227,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expertly uses ggplot2-style grammar: aes(), geom_*, scale_*, theme(),
-          labs(), ggsize().'
+        comment: 'Expert ggplot grammar: proper layer composition, aes() mappings,
+          theme() overrides on theme_minimal(), ggsize() for canvas control'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Uses ggsize() and ggsave(scale=) which are letsplot-specific, but
-          grammar could be replicated in plotnine.
+        passed: true
+        comment: Uses layer_tooltips().line() — lets_plot native interactive tooltip
+          API; saves HTML for interactive version
   verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
   techniques:
-  - layer-composition
   - annotations
+  - hover-tooltips
+  - html-export
+  - layer-composition
   patterns:
   - dataset-loading
   dataprep:
   - pca
   - cumulative-sum
+  - normalization
   styling:
   - alpha-blending
-  - grid-styling

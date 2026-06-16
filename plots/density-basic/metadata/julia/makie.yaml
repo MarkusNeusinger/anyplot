@@ -1,0 +1,261 @@
+library: makie
+language: julia
+specification_id: density-basic
+created: '2026-05-30T03:40:33Z'
+updated: '2026-05-30T04:00:42Z'
+generated_by: claude-sonnet
+workflow_run: 26673240479
+issue: 912
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
+review:
+  strengths:
+  - Comprehensive density visualization that goes well beyond the spec — adds rug
+    plot and mean reference lines to enhance the narrative
+  - 'Excellent theme adaptation: all chrome tokens (INK, INK_SOFT, ELEVATED_BG) properly
+    wired to every axis element — no dark-on-dark or light-on-light failures'
+  - 'Clean Makie idioms throughout: density!, vlines!, scatter! with :vline marker
+    for rug plot, axislegend, and fig[0,1] subtitle pattern'
+  - Strong spec compliance with correct title format, descriptive axis labels with
+    units, and a compelling real-world commute dataset
+  - KISS code structure — flat script, no functions/classes, reproducible with Random.seed!(42),
+    and all imports are used
+  weaknesses:
+  - 'Palette position 3 (blue #4467A3) used for the second series (Bus) instead of
+    canonical position 2 (lavender #C475FD) — skips ordinal order without a documented
+    semantic justification; buses are not conventionally blue in the way sky=blue
+    or blood=red is universal'
+  - 'Bus density fill in dark mode is quite muted: (#4467A3, 0.48 alpha) on #1A1A17
+    produces a near-black dark-navy fill that is hard to distinguish from the background
+    — consider increasing dark-mode bus_alpha to 0.60-0.65 or boosting strokewidth
+    to 3.0 to compensate'
+  - Mean reference dashed lines (linewidth=1.5, alpha=0.65) are subtle and may be
+    overlooked — increase to linewidth=2.0 and alpha=0.80 to make them read as intentional
+    reference marks
+  - Subtitle label fontsize=11 is smaller than tick labels (12pt) and quite small
+    for the canvas — increase to fontsize=13 for better readability at small display
+    sizes
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "density-basic · julia · makie · anyplot.ai" in dark ink at titlesize=22 — clearly readable. X-axis label "Commute Duration (minutes)" and Y-axis label "Density" at 14pt — readable. Tick labels at 12pt in INK_SOFT — readable. Small subtitle label above axis in INK_SOFT at fontsize=11 — present but proportionally small. Legend in top-right with "Bicycle" and "Bus" labels at 12pt — readable.
+      Data: Bicycle series in brand green #009E73 with semi-transparent fill (alpha=0.30) and 2.5px stroke — clearly visible peaked distribution centered ~22 min. Bus series in blue #4467A3 with semi-transparent fill (alpha=0.30) and 2.5px stroke — clearly visible broader distribution centered ~38 min. Rug plot tick marks at y=0 for both groups visible but subtle. Dashed mean reference lines visible but faint.
+      Legibility verdict: PASS — all primary text readable against light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title and axis labels rendered in light INK (#F0EFE8) — clearly readable against dark background. Tick labels in INK_SOFT (#B8B7B0) — readable. Legend in top-right with ELEVATED_BG (#242420) frame — readable. No dark-on-dark failures detected.
+      Data: Bicycle series (green #009E73) fill more visible in dark mode at alpha=0.42 — teal/green area clearly distinguishable. Bus series (blue #4467A3) fill at alpha=0.48 on dark background produces a dark navy-blue fill — the shape is discernible but the fill is quite muted/dark and less vivid than in the light render. Data colors are consistent with light render (only chrome flipped). Stroke outlines (2.5px) help delineate both curves even where the fills are less vivid.
+      Legibility verdict: PASS — all text readable; the main concern is the bus fill visibility rather than text legibility.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title (22pt), axis labels (14pt), tick labels (12pt) all readable
+          in both themes. Subtitle at fontsize=11 is proportionally small for the
+          canvas — barely legible at small display sizes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Density curves overlap by design (readable). Legend does not overlap
+          data. No text collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bicycle curve clearly visible in both themes. Bus curve fill in dark
+          mode is muted (dark navy over near-black) — visible but less vivid. Mean
+          dashed lines and rug plot are subtle.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green (#009E73) and blue (#4467A3) are CVD-safe — distinguishable
+          under deuteranopia and protanopia.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). L-shaped spines, clean layout, no
+          overflow. Title proportion appropriate (~55% of plot width).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Title matches required format. X: ''Commute Duration (minutes)''
+          with units, Y: ''Density'' — both appropriate.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'First series is brand green #009E73 (correct). Second series uses
+          palette position 3 (blue #4467A3) instead of position 2 (lavender #C475FD)
+          — skips canonical order without documented semantic justification. Backgrounds
+          correct (#FAF8F1 light / #1A1A17 dark).'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default (4): Imprint palette used correctly for the most part,
+          fill transparency creates layered effect, subtitle annotation adds context.
+          Not exceptional but clearly considered design choices.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Above default (2): Top/right spines removed, x-grid hidden, y-grid
+          at subtle opacity (0.12), theme-adaptive fill alpha. Clean and polished.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Above default (2): Subtitle ''Bus commutes average ~X min longer
+          — bicycle wins'' tells a clear story. Mean reference lines highlight the
+          distributional gap. Rug plot adds distributional texture.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct KDE density plot using Makie's density! function.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Smooth curve, fill under curve with transparency, rug plot (optional
+          spec feature implemented), appropriate bandwidth.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=commute duration, Y=density, both groups mapped correctly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'density-basic · julia · makie · anyplot.ai' correct. Legend
+          shows 'Bicycle' and 'Bus' with matching colors.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows two-group comparison, fill, rug plot, mean reference lines.
+          Well-rounded coverage of density plot features.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Urban commute durations for bicycle vs bus — realistic, neutral,
+          real-world plausible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Bike 8-50 min, bus 10-85 min — appropriate for urban commuting. 280
+          + 320 observations suitable for KDE.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions/classes, sequential and readable.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) — deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random, Statistics — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized, appropriate complexity. Theme-adaptive alpha
+          for fills is elegant.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2. Correct CairoMakie
+          API.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: density!, vlines!, axislegend, fig[0,1] subtitle pattern, scatter!
+          with :vline marker for rug plot — all idiomatic Makie patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: density! recipe is Makie-specific for KDE. :vline marker type for
+          rug plot is idiomatic. RGBAf() for grid color. Theme-adaptive alpha is Makie-appropriate.
+          Could leverage more distinctive Makie capabilities.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending

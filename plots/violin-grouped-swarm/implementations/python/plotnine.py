@@ -32,7 +32,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00"]
+IMPRINT = ["#009E73", "#C475FD"]
 
 # Data - Response times (ms) across task types and expertise levels
 np.random.seed(42)
@@ -62,8 +62,8 @@ plot = (
     ggplot(df, aes(x="task_type", y="response_time", fill="expertise"))
     + geom_violin(position=position_dodge(width=0.8), alpha=0.5, size=0.8)
     + geom_jitter(aes(color="expertise"), position=position_dodge(width=0.8), size=2.5, alpha=0.8)
-    + scale_fill_manual(values=OKABE_ITO, name="Expertise")
-    + scale_color_manual(values=OKABE_ITO, name="Expertise")
+    + scale_fill_manual(values=IMPRINT, name="Expertise")
+    + scale_color_manual(values=IMPRINT, name="Expertise")
     + guides(color="none")
     + labs(title="violin-grouped-swarm · Python · plotnine · anyplot.ai", x="Task Type", y="Response Time (ms)")
     + theme(

@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest';
-import { isFiltersEmpty } from './useFilterState';
-import type { ActiveFilters } from '../types';
+import { describe, expect, it } from 'vitest';
+
+import { isFiltersEmpty } from 'src/hooks/useFilterState';
+import type { ActiveFilters } from 'src/types';
 
 describe('isFiltersEmpty - extended', () => {
   it('returns true for a single group with empty values', () => {
@@ -37,9 +38,7 @@ describe('isFiltersEmpty - extended', () => {
   });
 
   it('returns false with a single group containing one value', () => {
-    const filters: ActiveFilters = [
-      { category: 'dep', values: ['numpy'] },
-    ];
+    const filters: ActiveFilters = [{ category: 'dep', values: ['numpy'] }];
     expect(isFiltersEmpty(filters)).toBe(false);
   });
 

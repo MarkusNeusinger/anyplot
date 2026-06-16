@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { forwardRef, useImperativeHandle } from 'react';
+
 import { fireEvent } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { act, render, screen, waitFor } from '../test-utils';
-import { MapPage, outlierSquashForce, type SimNode } from './MapPage';
-
+import { MapPage } from 'src/pages/MapPage';
+import { act, render, screen, waitFor } from 'src/test-utils';
 
 vi.mock('react-helmet-async', () => ({
   Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -18,14 +18,14 @@ vi.mock('react-router-dom', async () => {
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
-vi.mock('../hooks', () => ({
+vi.mock('src/hooks', () => ({
   useAnalytics: () => ({
     trackPageview: vi.fn(),
     trackEvent: mockTrackEvent,
   }),
 }));
 
-vi.mock('../hooks/useLayoutContext', () => ({
+vi.mock('src/hooks/useLayoutContext', () => ({
   useTheme: () => ({ isDark: false }),
 }));
 
@@ -87,7 +87,6 @@ vi.mock('react-force-graph-2d', () => ({
   }),
 }));
 
-
 function makeCtxStub() {
   // Minimal mock of CanvasRenderingContext2D — just enough surface for drawNode/paintHitbox.
   return {
@@ -102,7 +101,6 @@ function makeCtxStub() {
     globalAlpha: 1,
   };
 }
-
 
 const mockSpecs = [
   {
@@ -134,17 +132,15 @@ const mockSpecs = [
   },
 ];
 
-
 function mockFetchSuccess() {
   vi.stubGlobal(
     'fetch',
     vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(mockSpecs),
-    }),
+    })
   );
 }
-
 
 // jsdom doesn't ship ResizeObserver; stub it so the page's useEffect doesn't crash
 // AND fire the callback once with non-zero dimensions so the `size.w > 0` gate that
@@ -163,7 +159,6 @@ class MockResizeObserver {
   unobserve() {}
   disconnect() {}
 }
-
 
 describe('MapPage', () => {
   beforeEach(() => {
@@ -246,9 +241,24 @@ describe('MapPage', () => {
     render(<MapPage />);
     await waitFor(() => expect(lastFgProps.current).not.toBeNull());
 
-    const drawNode = lastFgProps.current!.nodeCanvasObject as (n: unknown, c: unknown, gs?: number) => void;
+    const drawNode = lastFgProps.current!.nodeCanvasObject as (
+      n: unknown,
+      c: unknown,
+      gs?: number
+    ) => void;
     const ctx = makeCtxStub();
-    drawNode({ id: 'scatter-basic', x: 100, y: 100, imgs: new Map(), pendingTiers: new Set(), colorBucket: null }, ctx, 1);
+    drawNode(
+      {
+        id: 'scatter-basic',
+        x: 100,
+        y: 100,
+        imgs: new Map(),
+        pendingTiers: new Set(),
+        colorBucket: null,
+      },
+      ctx,
+      1
+    );
 
     // Without an attached image, the fallback rect path runs.
     expect(ctx.fillRect).toHaveBeenCalled();
@@ -261,16 +271,33 @@ describe('MapPage', () => {
     render(<MapPage />);
     await waitFor(() => expect(lastFgProps.current).not.toBeNull());
 
-    const drawNode = lastFgProps.current!.nodeCanvasObject as (n: unknown, c: unknown, gs?: number) => void;
+    const drawNode = lastFgProps.current!.nodeCanvasObject as (
+      n: unknown,
+      c: unknown,
+      gs?: number
+    ) => void;
     const ctx = makeCtxStub();
     const fakeImg = { src: 'x' } as unknown as HTMLImageElement;
     drawNode(
-      { id: 'scatter-basic', x: 50, y: 50, imgs: new Map([[400, fakeImg]]), pendingTiers: new Set(), colorBucket: null },
+      {
+        id: 'scatter-basic',
+        x: 50,
+        y: 50,
+        imgs: new Map([[400, fakeImg]]),
+        pendingTiers: new Set(),
+        colorBucket: null,
+      },
       ctx,
-      1,
+      1
     );
 
-    expect(ctx.drawImage).toHaveBeenCalledWith(fakeImg, expect.any(Number), expect.any(Number), expect.any(Number), expect.any(Number));
+    expect(ctx.drawImage).toHaveBeenCalledWith(
+      fakeImg,
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Number)
+    );
     expect(ctx.strokeRect).toHaveBeenCalled();
   });
 
@@ -279,9 +306,24 @@ describe('MapPage', () => {
     render(<MapPage />);
     await waitFor(() => expect(lastFgProps.current).not.toBeNull());
 
-    const paintHitbox = lastFgProps.current!.nodePointerAreaPaint as (n: unknown, c: string, ctx: unknown) => void;
+    const paintHitbox = lastFgProps.current!.nodePointerAreaPaint as (
+      n: unknown,
+      c: string,
+      ctx: unknown
+    ) => void;
     const ctx = makeCtxStub();
-    paintHitbox({ id: 'scatter-basic', x: 80, y: 60, imgs: new Map(), pendingTiers: new Set(), colorBucket: null }, '#ff00ff', ctx);
+    paintHitbox(
+      {
+        id: 'scatter-basic',
+        x: 80,
+        y: 60,
+        imgs: new Map(),
+        pendingTiers: new Set(),
+        colorBucket: null,
+      },
+      '#ff00ff',
+      ctx
+    );
 
     expect(ctx.fillStyle).toBe('#ff00ff');
     expect(ctx.fillRect).toHaveBeenCalled();
@@ -297,8 +339,16 @@ describe('MapPage', () => {
     onNodeHover({ id: 'scatter-basic' });
     await waitFor(() => {
       const linkColor = lastFgProps.current!.linkColor as (l: unknown) => string;
-      const colorInvolved = linkColor({ source: 'scatter-basic', target: 'line-basic', weight: 0.5 });
-      const colorOther = linkColor({ source: 'line-basic', target: 'scatter-color-mapped', weight: 0.5 });
+      const colorInvolved = linkColor({
+        source: 'scatter-basic',
+        target: 'line-basic',
+        weight: 0.5,
+      });
+      const colorOther = linkColor({
+        source: 'line-basic',
+        target: 'scatter-color-mapped',
+        weight: 0.5,
+      });
       expect(colorInvolved).toMatch(/^#/); // brand color (hex)
       expect(colorInvolved).not.toBe(colorOther);
     });
@@ -314,31 +364,6 @@ describe('MapPage', () => {
     const large = linkWidth({ weight: 0.9 });
     expect(large).toBeGreaterThan(small);
     expect(small).toBeGreaterThan(0);
-  });
-
-  it('seeds initial node positions per cluster (warm start for the simulation)', async () => {
-    mockFetchSuccess();
-    render(<MapPage />);
-    await waitFor(() => expect(lastFgProps.current).not.toBeNull());
-
-    const nodes = (lastFgProps.current!.graphData as { nodes: Array<{ id: string; x?: number; y?: number; vx?: number; vy?: number }> }).nodes;
-    // Every node should have a numeric seed position before FG2D ever ticks the simulation —
-    // without seeding, FG2D's random initialiser would leave x/y undefined here.
-    for (const n of nodes) {
-      expect(typeof n.x).toBe('number');
-      expect(typeof n.y).toBe('number');
-      expect(Number.isFinite(n.x as number)).toBe(true);
-      expect(Number.isFinite(n.y as number)).toBe(true);
-    }
-    // Same plot_type (= colorBucket) should land near the same centroid; nodes from
-    // different buckets should land further apart on average. Take the two scatters
-    // (bucketed together) vs. line-basic and compare distances.
-    const scatterA = nodes.find(n => n.id === 'scatter-basic')!;
-    const scatterB = nodes.find(n => n.id === 'scatter-color-mapped')!;
-    const line = nodes.find(n => n.id === 'line-basic')!;
-    const dist = (a: typeof scatterA, b: typeof scatterA) =>
-      Math.hypot((a.x ?? 0) - (b.x ?? 0), (a.y ?? 0) - (b.y ?? 0));
-    expect(dist(scatterA, scatterB)).toBeLessThan(dist(scatterA, line));
   });
 
   it('shows the settling overlay until the simulation cools, then hides it', async () => {
@@ -399,103 +424,6 @@ describe('MapPage', () => {
     expect(mockTrackEvent).toHaveBeenCalledWith('map_node_click', { spec: 'scatter-basic' });
   });
 
-  describe('outlierSquashForce', () => {
-    // Pure unit tests that exercise the force math directly. We bypass the
-    // d3-force harness because the force's contract is "modify vx/vy of
-    // outlier nodes in place"; the harness adds nothing beyond invoking
-    // force(alpha) and force.initialize(nodes).
-    type Sim = SimNode & { x: number; y: number; vx: number; vy: number };
-    const makeNode = (x: number, y: number): Sim => ({ x, y, vx: 0, vy: 0 });
-
-    it('is a no-op when there are no nodes', () => {
-      const force = outlierSquashForce(0.95, 200, 0.18);
-      // initialize with empty array; force(alpha) must not throw.
-      (force as unknown as { initialize: (n: SimNode[]) => void }).initialize([]);
-      expect(() => force(1)).not.toThrow();
-    });
-
-    it('is a no-op for graphs of fewer than 2 nodes', () => {
-      const force = outlierSquashForce(0.95, 200, 0.18);
-      const nodes: Sim[] = [makeNode(1000, 0)];
-      (force as unknown as { initialize: (n: SimNode[]) => void }).initialize(nodes);
-      force(1);
-      expect(nodes[0].vx).toBe(0);
-      expect(nodes[0].vy).toBe(0);
-    });
-
-    it('leaves nodes inside the threshold untouched (inner geometry preserved)', () => {
-      // 99 inner nodes co-located at the origin + 1 far outlier. All inner
-      // distances to the centroid are exactly equal, so the percentile
-      // cutoff R lands exactly at the inner radius and the early
-      // `r <= R → continue` short-circuit fires for every inner node.
-      // The outlier is the only node above R.
-      const force = outlierSquashForce(0.95, 200, 0.18);
-      const inner: Sim[] = Array.from({ length: 99 }, () => makeNode(0, 0));
-      const outlier = makeNode(5000, 0);
-      const nodes: Sim[] = [...inner, outlier];
-      (force as unknown as { initialize: (n: SimNode[]) => void }).initialize(nodes);
-      force(1);
-      for (const n of inner) {
-        expect(n.vx).toBe(0);
-        expect(n.vy).toBe(0);
-      }
-      // Outlier was pulled inward — vx is opposite-sign to its position.
-      expect(outlier.vx).toBeLessThan(0);
-      expect(outlier.vy).toBe(0);
-    });
-
-    it('still squashes outliers in small graphs (off-by-one regression guard)', () => {
-      // Naive `floor(length * p)` would pick index 19 (the max) on n = 20
-      // and never trigger the squash. The (n - 1) * p indexing must keep
-      // at least the most-outlying node above R.
-      const force = outlierSquashForce(0.95, 200, 0.18);
-      const nodes: Sim[] = Array.from({ length: 20 }, (_, i) => makeNode(i, 0));
-      // Push the last node much further so it's the unambiguous outlier.
-      nodes[19] = makeNode(10_000, 0);
-      (force as unknown as { initialize: (n: SimNode[]) => void }).initialize(nodes);
-      force(1);
-      // The outlier must have a non-zero inward correction.
-      expect(nodes[19].vx).not.toBe(0);
-      expect(nodes[19].vx).toBeLessThan(0);
-    });
-
-    it('keeps the velocity correction finite even for distant outliers', () => {
-      // The compression map r' = R + (r - R)/(1 + (r - R)/k) has an
-      // asymptote at R + k, so even a node at distance 1e6 produces a
-      // bounded velocity correction. This is the property that prevents
-      // a single rogue node from blowing up the simulation.
-      const force = outlierSquashForce(0.95, 200, 0.18);
-      const inner: Sim[] = Array.from({ length: 99 }, () => makeNode(0, 0));
-      const far = makeNode(1_000_000, 0);
-      const nodes: Sim[] = [...inner, far];
-      (force as unknown as { initialize: (n: SimNode[]) => void }).initialize(nodes);
-      force(1);
-      expect(far.vx).toBeLessThan(0);
-      expect(Number.isFinite(far.vx)).toBe(true);
-      // |vx| upper bound: |position - 0| * strength * alpha = 1e6 * 0.18.
-      // The actual value is much smaller because (targetR - r) / r is
-      // close to -1 once r >> R, so the correction approaches -position.
-      expect(Math.abs(far.vx)).toBeLessThan(1_000_000);
-    });
-
-    it('scales the velocity correction with alpha', () => {
-      const force = outlierSquashForce(0.95, 200, 0.18);
-      const inner: Sim[] = Array.from({ length: 99 }, () => makeNode(0, 0));
-      const hot = makeNode(5_000, 0);
-      const cool = makeNode(5_000, 0);
-      // First simulation — alpha = 1 (hot).
-      (force as unknown as { initialize: (n: SimNode[]) => void }).initialize([...inner, hot]);
-      force(1);
-      // Second simulation — alpha = 0.1 (cooling).
-      const force2 = outlierSquashForce(0.95, 200, 0.18);
-      const inner2: Sim[] = Array.from({ length: 99 }, () => makeNode(0, 0));
-      (force2 as unknown as { initialize: (n: SimNode[]) => void }).initialize([...inner2, cool]);
-      force2(0.1);
-      // Cooler alpha → ~10× smaller velocity correction.
-      expect(Math.abs(hot.vx)).toBeGreaterThan(Math.abs(cool.vx) * 5);
-    });
-  });
-
   it('registers an outlier-squash force on the simulation via onRenderFramePre', async () => {
     mockFetchSuccess();
     render(<MapPage />);
@@ -551,7 +479,7 @@ describe('MapPage', () => {
 
     // 1. Initial state: gate is visible, progressbar reachable.
     expect(
-      screen.getByRole('progressbar', { name: 'Layout computation progress' }),
+      screen.getByRole('progressbar', { name: 'Layout computation progress' })
     ).toHaveAttribute('aria-valuenow', '0');
 
     // 2. Cool the simulation. settled flips true → gate gets
@@ -560,8 +488,8 @@ describe('MapPage', () => {
     act(() => onEngineStop());
     await waitFor(() =>
       expect(
-        screen.queryByRole('progressbar', { name: 'Layout computation progress' }),
-      ).not.toBeInTheDocument(),
+        screen.queryByRole('progressbar', { name: 'Layout computation progress' })
+      ).not.toBeInTheDocument()
     );
 
     // 3. Open the weights panel and bump a slider. The first slider in

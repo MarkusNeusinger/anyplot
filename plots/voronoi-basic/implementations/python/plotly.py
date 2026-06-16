@@ -26,7 +26,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (position 1 is brand color #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Generate seed points (retail stores) within city bounds
 np.random.seed(42)
@@ -59,7 +59,7 @@ all_points = np.vstack([points, boundary_points])
 vor = Voronoi(all_points)
 
 # Extended color palette (cycle through Okabe-Ito + supplementary colors)
-extended_colors = OKABE_ITO + [
+extended_colors = IMPRINT + [
     "#FF9AA2",
     "#FFB7B2",
     "#E0BBE4",
@@ -149,7 +149,7 @@ fig.add_trace(
         x=x,
         y=y,
         mode="markers",
-        marker={"size": 18, "color": OKABE_ITO[0], "line": {"color": ELEVATED_BG, "width": 3}, "symbol": "circle"},
+        marker={"size": 18, "color": IMPRINT[0], "line": {"color": ELEVATED_BG, "width": 3}, "symbol": "circle"},
         name="Store Location",
         hovertemplate="Store %{pointNumber}<br>Latitude: %{y:.1f}<br>Longitude: %{x:.1f}<extra></extra>",
     )

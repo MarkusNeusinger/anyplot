@@ -1,0 +1,266 @@
+library: d3
+language: javascript
+specification_id: curve-power-duration
+created: '2026-06-13T22:31:43Z'
+updated: '2026-06-13T22:53:04Z'
+generated_by: claude-sonnet
+workflow_run: 27480499382
+issue: 8647
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-power-duration/javascript/d3/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Clean D3 idioms throughout: scaleLog, line with CatmullRom curve, SVG clipPath,
+    axisBottom with custom tickValues/tickFormat — all idiomatic'
+  - Deterministic LCG (seed=42) ensures reproducibility in the browser environment
+    where Math.random cannot be seeded
+  - Solid linestyle for empirical MMP vs dashed for CP model provides redundant encoding
+    beyond color alone
+  - 'All required spec features present: log X-axis, human-readable tick labels, empirical
+    MMP curve, CP model overlay (dashed), reference duration markers (5s/1min/5min/20min
+    FTP), CP horizontal asymptote with label'
+  - 'Perfect data quality: physiologically accurate CP=280W, W’=20000J cyclist, monotonically-enforced
+    empirical curve, neuromuscular-to-aerobic blend model'
+  - 'Correct Imprint palette: palette[0] (#009E73) for empirical curve, palette[1]
+    (#C475FD) for model fit; chrome tokens used throughout for theme-adaptive text
+    and grid'
+  - Clip path correctly prevents the CP model line (which diverges to infinity at
+    t→0) from overflowing the plot area
+  weaknesses:
+  - Reference marker labels and legend text at 13px CSS (26px source) are slightly
+    small; prefer 14–15px CSS so they remain readable when the PNG is scaled to ~400px
+    mobile width
+  - Empirical curve dots at r=4px CSS (8px source) are quite small for a 3200-px canvas
+    and barely distinguishable at mobile scale — increase to r=6px CSS
+  - 'Design Excellence could be elevated: consider adding explicit power-value annotations
+    at the 5s / 5min / 20min reference durations (watt callouts) to create a clearer
+    focal point and push storytelling beyond neutral display'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 — correct
+      Chrome: Title "curve-power-duration · javascript · d3 · anyplot.ai" in dark ink at 22px CSS — fully visible. Axis labels "Duration (log scale)" and "Mean-Maximal Power (W)" in dark ink at 16px CSS — clearly readable. X-axis tick labels (1s, 5s, 15s, 30s, 1min, 5min, 10min, 20min, 1h, 3h, 5h) and Y-axis tick labels (0W–1600W) at 14px CSS — clearly readable. Reference duration labels (5s, 1min, 5min, 20min / FTP) at 13px CSS — readable but slightly small.
+      Data: Empirical MMP curve in #009E73 (brand green), solid line with small dots (r=4px). CP model fit in #C475FD (lavender), dashed line that diverges steeply at short durations and converges toward CP at long durations. CP asymptote dashed line at 280W with "CP = 280 W" label at right margin. Subtle vertical reference markers with annotations. Legend in bottom-right with elevated-bg box.
+      Legibility verdict: PASS — all text readable; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 — correct
+      Chrome: Title and axis labels render in light ink (#F0EFE8 / #B8B7B0) — clearly visible against dark background. Tick labels light-colored — no dark-on-dark failures. Reference marker labels and legend text also appear in light tones. CP asymptote label "CP = 280 W" visible on right side.
+      Data: Empirical MMP curve remains identical #009E73 green; CP model fit remains #C475FD lavender — data colors are identical to light render, only chrome flipped. Legend box uses elevated dark background (#242420), looks clean.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures observed.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set; title 22px, axis labels 16px, ticks
+          14px — well-proportioned. Minor: reference/legend text at 13px CSS (26px
+          source) is slightly small at mobile scale.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Main curves clearly visible. Empirical dot radius 4px CSS (8px source)
+          is slightly small at 3200px canvas — barely distinguishable at mobile scale.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green (#009E73) vs lavender (#C475FD) are distinct hues; solid vs
+          dashed linestyle provides redundant encoding — CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Generous balanced margins (100/120/90/120). Plot fills canvas well.
+          No clipping. Canvas gate passed.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Duration (log scale)'', Y: ''Mean-Maximal Power (W)'' — descriptive
+          with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: palette[0]=#009E73 for empirical MMP; palette[1]=#C475FD for CP model.
+          Chrome tokens used throughout. Both themes correct.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean professional look above library defaults. Thoughtful series
+          distinction (solid+dots vs dashed), subtle reference lines, proper legend
+          box. Not quite FiveThirtyEight-level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis grid only with t.grid color, reference lines at 0.5 opacity,
+          asymptote at 0.65 opacity, no top/right spines. Good refinement above defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Reference markers at training-relevant durations guide the viewer.
+          CP asymptote shows aerobic ceiling. Model overlay tells the CP/W'' story.
+          Missing: explicit power callouts at key reference durations would elevate
+          storytelling.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct power-duration curve with log X-axis, empirical MMP + CP
+          model overlay.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required features: log scale, human-readable ticks, empirical
+          curve, dashed model line, 4 reference markers, CP asymptote with label.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Duration (log seconds) on X, watts on Y. Monotonic enforcement applied.
+          Model converges to CP at long durations.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''curve-power-duration · javascript · d3 · anyplot.ai'' —
+          correct format. Legend: ''Empirical MMP'' and ''CP model fit'' — appropriate.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows neuromuscular peak at short durations, characteristic decay,
+          model convergence, CP asymptote, reference training thresholds.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Synthetic well-trained cyclist matching spec parameters (CP=280W,
+          W'=20000J, sprint ~1100W). Cycling analytics is neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: CP=280W, W'=20000J, sprint peak ~1100W — all physiologically accurate
+          for a well-trained amateur/club cyclist.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Small helper functions (logspace, lcg, empiricalBase) are necessary
+          for this JavaScript implementation; overall flow is Data → SVG → Scales
+          → Annotations → Lines → Axes → Labels → Legend → Title.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic LCG with fixed seed 42 ensures reproducibility in the
+          browser environment.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed; uses only provided globals (d3, ANYPLOT_TOKENS,
+          ANYPLOT_SIZE).
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized D3 code. No fake functionality or over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: D3 is interactive; harness handles PNG/HTML output. Current D3 7.9.0
+          API used.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Excellent D3 idioms: scaleLog, line() with curveCatmullRom, axisBottom/Left
+          with tickValues/tickFormat, selectAll/data/join for dots and gridlines.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Uses D3-distinctive features: curveCatmullRom.alpha(0.5) for smooth
+          curves, SVG clipPath for model line overflow prevention, custom log-scale
+          tick formatter, d3.scaleLog domain/range setup.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - alpha-blending
+  - grid-styling

@@ -21,7 +21,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # First series - historical data
-FORECAST_COLOR = "#D55E00"  # Second series - forecast
+FORECAST_COLOR = "#C475FD"  # Second series - forecast
 
 # Theme-adjusted CI band opacity — orange appears more saturated on dark backgrounds
 # so we reduce opacity in dark mode to keep visual weight consistent across themes
@@ -148,7 +148,7 @@ legend_chart = (
             "type:N",
             scale=alt.Scale(
                 domain=["Historical Data", "Forecast", "80% CI", "95% CI"],
-                range=[BRAND, FORECAST_COLOR, "rgba(213,94,0,0.60)", "rgba(213,94,0,0.25)"],
+                range=[BRAND, FORECAST_COLOR, "rgba(196, 117, 253, 0.60)", "rgba(196, 117, 253, 0.25)"],
             ),
             legend=alt.Legend(title="Series", orient="right", titleFontSize=14, labelFontSize=12),
         )

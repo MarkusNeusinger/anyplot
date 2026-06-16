@@ -1,156 +1,188 @@
 library: matplotlib
+language: python
 specification_id: hexbin-map-geographic
 created: '2026-01-20T21:15:01Z'
-updated: '2026-01-20T21:18:00Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21187394637
+updated: '2026-05-27T13:25:44Z'
+generated_by: claude-sonnet
+workflow_run: 26513075595
 issue: 3767
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/matplotlib/plot.png
-preview_html: null
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 92
 review:
   strengths:
-  - Excellent use of matplotlib native hexbin() function with reduce_C_function for
-    aggregation
-  - Borough annotations with white background boxes provide clear geographic context
-  - Custom tick formatter displaying proper geographic coordinates (°W, °N)
-  - Appropriate sequential colormap (YlOrRd) with well-labeled colorbar
-  - Realistic NYC taxi data scenario demonstrates clear hexbin use case
+  - Exemplary theme adaptation — every chrome element (annotation boxes, colorbar,
+    spines, ticks, title) correctly flips between light and dark using INK/INK_SOFT/ELEVATED_BG
+    tokens
+  - 'Correct continuous colormap selection: imprint_seq (green→blue, single-polarity)
+    for density/value data — no forbidden cmaps used'
+  - mincnt=1 prevents empty hexbins from cluttering the geographic map
+  - Custom degree-formatted tick labels (°W / °N) add professional cartographic polish
+  - fig.subplots_adjust used instead of bbox_inches='tight' — preserves exact 3200×1800
+    canvas per library rules
+  - NYC taxi scenario is realistic, domain-appropriate, and politically neutral —
+    canonical hexbin use case
   weaknesses:
-  - Grid alpha at 0.4 is slightly prominent and competes visually with hexagon edges
-  - Base map context is minimal (simple rectangle) - real geographic features would
-    enhance the visualization
-  - Could demonstrate additional aggregation methods (count, sum) mentioned in spec
-  image_description: 'The plot displays a hexagonal binning map of NYC taxi pickup
-    locations. The visualization uses a YlOrRd (yellow-orange-red) sequential colormap
-    where hexagons range from pale yellow (~$10 mean fare) to dark red (~$65 mean
-    fare). Three borough labels (Manhattan, Brooklyn, Queens) are annotated with white
-    background boxes. The x-axis shows longitude (74.05°W to 73.70°W) and y-axis shows
-    latitude (40.60°N to 40.90°N). A vertical colorbar on the right displays "Mean
-    Trip Fare ($)" with values ranging from approximately 10 to 65. The background
-    has a light blue-gray color suggesting water, with a subtle land area rectangle.
-    A context box in the lower-left provides metadata: "NYC Taxi Pickup Density, 5,000
-    simulated points, Hexagonal binning with mean fare." The hexagons have thin gray
-    edges and 85% opacity, allowing the grid lines (dashed, 40% alpha) to show through
-    subtly.'
+  - Colorbar tick labels at 8pt may compress below legibility when scaled to ~400
+    px mobile width — consider 9–10pt for colorbar ticks
+  - Base map is a simplified single-color land rectangle covering the entire axes
+    extent; the water color is only marginally visible at the plot edges. The spec
+    requests coastlines/country boundaries — a simplified NYC borough polygon outline
+    (matplotlib Polygon patches) would improve geographic accuracy and DE-01 without
+    adding dependencies
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface
+      Chrome: Title "hexbin-map-geographic · python · matplotlib · anyplot.ai" in dark ink, clearly readable. Axis labels "Longitude" and "Latitude" at 10pt in INK color. Tick labels with degree-formatted coordinates (e.g. 74.05°W, 40.90°N) at 8pt in INK_SOFT. Colorbar label "Mean Trip Fare ($)" at 9pt, ticks at 8pt — readable but small. All chrome is dark on warm off-white.
+      Data: Hexagonal bins covering NYC area, colored via imprint_seq gradient (brand green #009E73 → blue #4467A3). Predominantly green-teal with some blue cells at higher fare values. Three borough annotation boxes (Manhattan, Brooklyn, Queens) with cream ELEVATED_BG boxes and dark INK text. Light-blue water background (#C8DFF0) visible at plot edges; tan land rectangle (#E8E5DB) beneath hexbins.
+      Legibility verdict: PASS — all text readable, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface
+      Chrome: Title in light cream #F0EFE8 (INK dark token), clearly readable against near-black. Axis labels and tick labels in #B8B7B0 (INK_SOFT dark token) — silver-gray, clearly legible. Colorbar label and ticks in INK_SOFT — readable. No dark-on-dark failures observed. Borough annotation boxes use dark elevated background #242420 with light #F0EFE8 text — clearly readable. Water background flips to dark blue-gray #1C2D3A; land rectangle to #282820.
+      Data: Hexbin colors are IDENTICAL to light render — same imprint_seq green-to-blue gradient, same distribution. Only chrome flipped.
+      Legibility verdict: PASS — all text readable, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 14pt, all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text, borough labels well-positioned with bbox backgrounds
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Hexagons sized well for data density, gridsize=35 appropriate for
-          5000 points
+        comment: 'All font sizes explicitly set; readable in both themes. Minor: colorbar
+          ticks at 8pt may compress at mobile width.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Borough annotations well-separated; no text collides with hexbin
+          data or each other.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Dense hexbins with appropriate alpha=0.85, mincnt=1, and edge colors.
+          Color variation clearly visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: YlOrRd colormap is colorblind-safe sequential palette
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, colorbar positioned correctly
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with proper coordinate notation
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: imprint_seq (green→blue) is CVD-safe. Borough labels provide redundant
+          encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. fig.subplots_adjust used. No clipping. Colorbar
+          proportions clean.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid at alpha=0.4 is slightly too prominent, competes with hexagons
+        passed: true
+        comment: Longitude/Latitude with degree-formatted ticks. Colorbar labeled.
+          Title matches mandated format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq for continuous data. Light #FAF8F1 / dark #1A1A17 backgrounds.
+          Both renders theme-correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom water/land base map, styled annotation boxes, coordinate formatters,
+          edgecolors on hexbins. Above defaults but land is a plain rectangle, no
+          actual coastlines.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle dashed grid (alpha=0.12), reduced spine linewidth (0.5), colorbar
+          outline styled, hexbin edge colors. Good polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Geographic layout tells NYC density story. Borough labels orient
+          viewer. Manhattan cluster prominent. Fare variation visible.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct hexagonal binning map
+        comment: ax.hexbin() with geographic coordinates — correct chart type.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Lon/Lat correctly assigned to x/y, values aggregated by mean
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has configurable hex size, aggregation method, sequential colormap,
-          base map context, transparency
-      - id: SC-04
-        name: Data Range
+        comment: Configurable gridsize, mean aggregation, imprint_seq colormap, base
+          map, colorbar, alpha transparency. Interactive tooltips correctly omitted
+          (static library).
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis limits
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Longitude on X, Latitude on Y, all 5000 points within bounds.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar accurately labeled Mean Trip Fare ($)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses spec-id · library · pyplots.ai format
+        comment: Title matches exact mandated format. Colorbar is the value legend.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows density variation across boroughs, uses aggregation, demonstrates
-          clustering
+        comment: Full hexbin map with density aggregation, value colormap, multi-cluster
+          geography, colorbar, borough context.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: NYC taxi pickups is a perfect real-world scenario for hexbin geographic
-          maps
+        comment: NYC taxi pickup is a canonical hexbin use case. Coordinates match
+          real boroughs. Fares $5-$65+ are realistic. Neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Fare values ($5-65) are realistic, coordinates accurate for NYC
+        comment: 5000 points (within spec range). Exponential fare distribution with
+          $5 floor is domain-appropriate.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -158,42 +190,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports, data, plot, save'
+        comment: No functions or classes; linear procedural script.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: np.random.seed(42) set
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Rectangle import used but land area is minimal
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, matplotlib.pyplot, numpy, LinearSegmentedColormap, Rectangle
+          — all used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: All APIs current
+        comment: Appropriate complexity, no fake UI, well-organized sections.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png, no bbox_inches='tight', facecolor=PAGE_BG
+          on savefig.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses matplotlib hexbin() native function and FuncFormatter for coordinate
-          display
+        comment: ax.hexbin(), ax.add_patch(Rectangle()), fig.colorbar(), ax.annotate(),
+          plt.FuncFormatter() — all idiomatic Axes-method patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: hexbin() with custom reduce_C_function, FuncFormatter for coordinates,
+          Rectangle patch for base map, colorbar with shrink/aspect/fraction tuning.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -201,12 +242,13 @@ impl_tags:
   - colorbar
   - annotations
   - patches
+  - manual-ticks
   patterns:
   - data-generation
-  - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - custom-colormap
   - alpha-blending
-  - grid-styling
   - edge-highlighting
+  - grid-styling

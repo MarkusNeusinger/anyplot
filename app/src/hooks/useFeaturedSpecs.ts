@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { API_URL } from '../constants';
-import type { PlotImage } from '../types';
-import { shuffleArray } from '../utils/shuffle';
-import { useAppData } from './useLayoutContext';
 
+import { useAppData } from 'src/hooks/useLayoutContext';
+import { apiGet, endpoints } from 'src/lib/api';
+import type { PlotImage } from 'src/types';
+import { shuffleArray } from 'src/utils/shuffle';
 
 function pickRandom<T>(items: T[]): T {
   return items[Math.floor(Math.random() * items.length)];
 }
-
 
 export interface FeaturedImpl {
   spec_id: string;
@@ -36,10 +35,9 @@ export function useFeaturedSpecs(count: number = 5): FeaturedImpl[] | null {
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`${API_URL}/plots/filter`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data: { images?: PlotImage[] } | null) => {
-        if (cancelled || !data?.images) return;
+    apiGet<{ images?: PlotImage[] }>(endpoints.plotsFilter())
+      .then(data => {
+        if (cancelled || !data.images) return;
         setImages(data.images);
       })
       .catch(() => {});
@@ -58,12 +56,12 @@ export function useFeaturedSpecs(count: number = 5): FeaturedImpl[] | null {
       imagesBySpec[img.spec_id].push(img);
     }
 
-    const candidates = specsData.filter((spec) => imagesBySpec[spec.id]?.length);
+    const candidates = specsData.filter(spec => imagesBySpec[spec.id]?.length);
     // Fisher-Yates (in shuffleArray) gives a uniform distribution; the prior
     // `.sort(() => Math.random() - 0.5)` is biased per V8's sort implementation.
     const shuffled = shuffleArray(candidates).slice(0, count);
 
-    return shuffled.map((spec) => {
+    return shuffled.map(spec => {
       const impls = imagesBySpec[spec.id];
       const pick = pickRandom(impls);
       return {

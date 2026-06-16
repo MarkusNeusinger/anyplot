@@ -27,7 +27,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - first series ALWAYS #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data - Board of Directors composition (neutral, non-political)
 parties = [
@@ -80,7 +80,7 @@ df["party_label"] = df["party"].apply(lambda p: f"{p} ({party_seat_counts[p]})")
 
 # Create color mapping (Okabe-Ito in order)
 color_map = {
-    f"{p} ({s})": OKABE_ITO[i]
+    f"{p} ({s})": IMPRINT[i]
     for i, (p, s) in enumerate(zip(parties, seats, strict=True))
 }
 color_values = [color_map[label] for label in df["party_label"].unique()]

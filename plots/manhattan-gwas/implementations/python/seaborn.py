@@ -21,7 +21,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette for alternating chromosomes
 OKABE_ITO_1 = "#009E73"  # bluish green (brand)
-OKABE_ITO_2 = "#D55E00"  # vermillion
+OKABE_ITO_2 = "#C475FD"  # vermillion
 
 # Data - Simulate GWAS data with realistic structure
 np.random.seed(42)

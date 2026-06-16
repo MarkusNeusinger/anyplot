@@ -39,8 +39,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# anyplot palette — first series ALWAYS #009E73
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+# Imprint palette — first series ALWAYS #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data — reaction times (ms) for three experimental conditions
 np.random.seed(42)
@@ -58,8 +58,8 @@ df = pd.DataFrame(
 )
 df["condition"] = pd.Categorical(df["condition"], categories=["Treatment B", "Treatment A", "Control"], ordered=True)
 
-# Category → anyplot palette positions 1, 2, 3 (brand green is Control, the reference group)
-colors = {"Control": ANYPLOT_PALETTE[0], "Treatment A": ANYPLOT_PALETTE[1], "Treatment B": ANYPLOT_PALETTE[2]}
+# Category → Imprint palette positions 1, 2, 3 (brand green is Control, the reference group)
+colors = {"Control": IMPRINT_PALETTE[0], "Treatment A": IMPRINT_PALETTE[1], "Treatment B": IMPRINT_PALETTE[2]}
 
 cloud_shift = 0.15
 

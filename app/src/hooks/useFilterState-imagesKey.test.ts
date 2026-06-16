@@ -6,9 +6,10 @@
  * without the cost of a full hook-render harness.
  */
 
-import { describe, it, expect } from 'vitest';
-import { imagesContentKey } from './useFilterState';
-import type { PlotImage } from '../types';
+import { describe, expect, it } from 'vitest';
+
+import { imagesContentKey } from 'src/hooks/useFilterState';
+import type { PlotImage } from 'src/types';
 
 function img(spec_id: string, library: string, extra: Partial<PlotImage> = {}): PlotImage {
   return {

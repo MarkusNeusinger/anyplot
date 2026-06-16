@@ -27,7 +27,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette for up/down
 COLOR_UP = "#009E73"  # Green (Okabe-Ito position 1)
-COLOR_DOWN = "#D55E00"  # Orange (Okabe-Ito position 2)
+COLOR_DOWN = "#AE3030"  # imprint red — down days
 
 # Data - Generate 60 trading days of OHLC with volume
 np.random.seed(42)

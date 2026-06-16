@@ -1,108 +1,146 @@
 library: bokeh
+language: python
 specification_id: scatter-complex-plane
 created: '2026-03-04T20:25:07Z'
-updated: '2026-03-04T20:53:28Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22687521719
+updated: '2026-06-02T01:32:06Z'
+generated_by: claude-sonnet
+workflow_run: 26791655055
 issue: 4427
-python_version: 3.14.3
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/bokeh/plot.html
-quality_score: 86
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/python/bokeh/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Full spec compliance with all required features (axes, unit circle, vectors, annotations,
-    equal aspect ratio)
-  - Custom color palette with intentional visual hierarchy via marker sizes and arrow
-    alpha
-  - 'Excellent use of Bokeh-specific features: hover tooltips with |z| and arg(z),
-    interactive tools, HTML export'
-  - Clean deterministic code with well-structured label placement logic
-  - Good data storytelling through category differentiation (roots of unity, conjugates,
-    products)
+  - 'Full spec compliance: unit circle, vectors from origin, equal aspect ratio, per-point
+    labels, multi-category scatter all implemented correctly'
+  - 'Excellent data design: 5th roots of unity, arbitrary complex numbers across all
+    four quadrants, conjugate pair with connecting dotted line, complex product (rotation),
+    and vector sum demonstrate the full geometry of the complex plane'
+  - 'Strong Bokeh idiomatics: Arrow/NormalHead for vectors, Span for real/imaginary
+    axes, ColumnDataSource per category for hover tooltips, Label with background
+    fill/border, HoverTool with custom format strings, match_aspect=True'
+  - 'Correct Imprint palette application: #009E73 first for 5th Root of Unity, canonical
+    order for subsequent categories, #FAF8F1 / #1A1A17 backgrounds, theme-adaptive
+    INK/INK_SOFT tokens throughout'
+  - 'Robustness: toolbar_location=None prevents height drift, CDP device-metrics override
+    pins exact viewport, PIL normalization catches any residual size discrepancy —
+    canvas gate passes cleanly'
   weaknesses:
-  - Label crowding near origin where roots of unity cluster on the unit circle
-  - Unit circle could be slightly more prominent (higher alpha or thicker dash)
-  - Missing sum/addition example mentioned in spec example data description
-  image_description: 'The plot shows a square Argand diagram (complex plane) at 3600x3600px
-    with the title "scatter-complex-plane · bokeh · pyplots.ai" at the top. A dashed
-    gray unit circle is centered at the origin. Dark gray axes pass through the origin,
-    labeled "Real Axis" (horizontal) and "Imaginary Axis" (vertical). Fourteen complex
-    numbers are plotted as colored scatter points with arrows from the origin: 5th
-    roots of unity in dark blue (#306998), arbitrary points in orange (#D4762C), a
-    conjugate pair in teal (#2AA198), and a product point in pink/magenta (#C4386B).
-    Each point has a text label showing its rectangular form (e.g., "1.5+2i", "-0.81+0.59i").
-    The legend in the top-left lists all five categories including the unit circle.
-    Grid lines are very subtle. The background is clean white with no outline border.
-    Markers have white edge lines and vary in size by category. Arrow alpha varies
-    by category for visual hierarchy.'
+  - 'Label crowding near the unit circle: the 5th roots of unity are clustered within
+    a narrow angular band and their 24pt labels (radially offset by only 55px screen
+    pixels) create tight spacing near the 0.31+0.95i / -0.81+0.59i / 0.31-0.95i /
+    -0.81-0.59i quadrant; reduce point label font size to ~18pt or increase base_dist
+    to 70px for roots of unity'
+  - 'The ''Conjugate pair: symmetric about Re-axis'' annotation box (21pt italic)
+    sits at y=0.2 near the real axis in a busy region with multiple arrows converging
+    — consider moving it to y=1.0 or y=0.5 offset left, or making it smaller (16pt)
+    to reduce interference with the data area'
+  - 'LM-02: Bokeh''s distinctive interactive capabilities (HTML artifact with hover)
+    are present but the Arrow/vector rendering relies on the add_layout loop rather
+    than using Bokeh''s vectorized glyph API (e.g., multi_line or segment for the
+    shaft + patches for heads), which would be more performant and more idiomatic
+    for many vectors'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 — correct, not pure white
+      Chrome: title "scatter-complex-plane · python · bokeh · anyplot.ai" in dark ink (#1A1A17) clearly readable; "Real Axis" and "Imaginary Axis" labels in dark ink, tick labels in INK_SOFT (#4A4A44) — all readable against the light background; no light-on-light failure
+      Data: 5th roots of unity in brand green (#009E73) with arrows and radial labels; Arbitrary points in lavender (#C475FD); Conjugate Pair in blue (#4467A3); Product in ochre (#BD8233); Sum in matte red (#AE3030); unit circle as dashed INK_MUTED line; arrows from origin for all 13 points; per-point labels (24pt) placed radially outward; "Conjugate pair: symmetric about Re-axis" annotation box in blue italic at right-center; legend top-left with all 6 entries
+      Legibility verdict: PASS — all text elements readable; minor crowding of labels near unit circle (roots of unity) but no severe overlap
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 — correct, not pure black
+      Chrome: title, axis labels, tick labels all render in light INK (#F0EFE8 / #B8B7B0) — clearly visible against dark background; no dark-on-dark failure detected; legend text renders in INK_SOFT light variant; axis lines and grid lines are light and subtle
+      Data: all five data-color series are identical to light render — green, lavender, blue, ochre, matte red — Imprint palette data positions unchanged; white marker edges still provide definition against the dark background; annotation box uses ELEVATED_BG (#242420) with #4467A3 blue text — readable
+      Legibility verdict: PASS — both themes pass readability checks
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 38pt, axis labels 28pt, tick
-          labels 20pt, point labels 20pt, legend 22pt'
+        comment: 'All font sizes explicitly set (50pt title, 42pt axis labels, 34pt
+          tick labels, 30pt legend, 24pt point labels, 21pt annotation). Both themes
+          readable. Minor: 24pt labels on 13 annotated points creates visual busyness.'
       - id: VQ-02
         name: No Overlap
-        score: 4
-        max: 6
-        passed: true
-        comment: Some label crowding near roots of unity clustered on unit circle
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers clearly visible, unit circle slightly faint
+        comment: Radial label placement algorithm reduces crowding. Minor crowding
+          near unit circle where 5th root labels cluster in tight angular bands, but
+          content remains readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 13 sparse points with size=26 markers, alpha=0.95 — excellent visibility.
+          Arrows clearly visible. Unit circle dashed line clearly distinct.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe. White marker edges provide contrast
+          definition.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue, orange, teal, magenta palette is colorblind-safe
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Square format appropriate, some empty corners inherent to domain
+        comment: 2400x2400 canvas gate passed. match_aspect=True gives correct equal-aspect
+          ratio for complex plane. min_border_* reservations prevent label clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Standard descriptive labels for complex plane domain
+        comment: 'Real Axis / Imaginary Axis descriptive. Title format correct: scatter-complex-plane
+          · python · bokeh · anyplot.ai'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (5th Root of Unity). Imprint palette canonical
+          order. Backgrounds #FAF8F1 / #1A1A17. Theme-adaptive INK/INK_SOFT tokens
+          throughout.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom palette, marker size hierarchy, alpha variation, white edge
-          highlighting
+        comment: 'Above defaults: conjugate pair annotation with styled border, alpha_map
+          creates layered visual hierarchy on arrows, Imprint palette correctly applied
+          across 5 categories. Annotation box placement slightly clutters right-center
+          area.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Outline removed, subtle grid, subdued axis lines, clean background
+        comment: outline_line_color=None removes frame, grid at alpha=0.12 (very subtle),
+          minor ticks removed. Standard Bokeh axis lines remain but this is library-appropriate.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Visual hierarchy through marker sizes, coherent mathematical story
-          via categories
+        comment: 'Clear focal point: conjugate pair annotation with dotted connecting
+          line. Alpha hierarchy creates visual layering. Five mathematical concepts
+          demonstrated (roots of unity, arbitrary, conjugates, product, sum).'
     spec_compliance:
       score: 15
       max: 15
@@ -112,49 +150,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Argand diagram / complex plane scatter
+        comment: Correct Argand diagram with scatter, vectors, unit circle, equal
+          aspect ratio.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required: axes, unit circle, vectors, annotations, equal aspect,
-          categories'
+        comment: Real/imaginary axes through origin (Span), unit circle dashed (line),
+          arrows from origin (Arrow/NormalHead), equal aspect (match_aspect=True),
+          rectangular form labels, distinct category colors.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real on x, imaginary on y, all data visible
+        comment: X=real, Y=imaginary. Range [-4.2, 4.2] covers all data with margin.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and legend labels
+        comment: 'Title: ''scatter-complex-plane · python · bokeh · anyplot.ai''.
+          Legend includes Unit Circle + all 5 categories with correct labels.'
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows roots of unity, arbitrary points, conjugates, products. Missing
-          sum/addition
+        comment: 5th roots of unity on unit circle, arbitrary quadrant-spanning complex
+          numbers, conjugate pair, complex multiplication by exp(iπ/4), complex addition
+          — comprehensive coverage of complex plane geometry.
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Mathematical/educational context with real concepts
+        comment: Standard mathematical concepts from complex analysis and signal processing.
+          Neutral, scientifically accurate data.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values range ±3.5, appropriate for unit circle and surrounding points
+        comment: Values range [-2.3, 2.5] real and [-2.5, 3.4] imaginary. All within
+          the [-4.2, 4.2] viewport. Unit circle at radius 1 is correctly scaled.
     code_quality:
       score: 10
       max: 10
@@ -164,33 +208,38 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow, no functions or classes
+        comment: fmt_z is a trivial 10-line formatting helper, not an abstraction.
+          Imports → Data → Plot → Save structure maintained.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data deterministic from mathematical formulas
+        comment: 'Fully deterministic: complex numbers from mathematical formulas,
+          no randomness.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imported symbols used: os, sys, time, pathlib, numpy, all bokeh
+          models, selenium, PIL.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-structured with justified label collision avoidance
+        comment: Clean Pythonic code. sys.path manipulation is necessary to prevent
+          file from shadowing installed bokeh package. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html, current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. No bare plot.png. Current
+          Bokeh 3.9.0 API.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -198,23 +247,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, figure, LegendItem, Arrow/NormalHead, Span
-          properly
+        comment: ColumnDataSource per category for hover data, Arrow/NormalHead for
+          vectors (idiomatic Bokeh), Span for axis lines, Label with background/border,
+          match_aspect=True, min_border_* for clipping prevention, LegendItem for
+          manual legend construction.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Hover tooltips with magnitude/angle, interactive tools, HTML export,
-          autohide toolbar
-  verdict: REJECTED
+        comment: HoverTool with custom format strings enables per-point metadata display;
+          HTML artifact delivers real interactivity; Arrow/NormalHead model is Bokeh-specific
+          for vector rendering. Could further leverage vectorized glyph API instead
+          of per-arrow add_layout loop.
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
+  - pillow
   techniques:
-  - annotations
-  - custom-legend
   - hover-tooltips
   - html-export
+  - annotations
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
@@ -223,4 +278,3 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling

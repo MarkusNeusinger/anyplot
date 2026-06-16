@@ -16,8 +16,8 @@ PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
-OKABE_ITO   <- c("#009E73", "#D55E00", "#0072B2", "#CC79A7",
-                 "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT   <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+                 "#AE3030", "#2ABCCD", "#954477")
 GRID        <- adjustcolor(INK_SOFT, alpha.f = 0.25)
 
 # AISI 1045 Steel material properties (MPa)
@@ -51,33 +51,33 @@ p <- ggplot() +
     annotate("rect",
         xmin = N_endurance, xmax = 10^8,
         ymin = 310, ymax = sigma_e,
-        fill = OKABE_ITO[5], alpha = 0.14
+        fill = IMPRINT[5], alpha = 0.14
     ) +
     # Reference lines for key material properties
     geom_hline(yintercept = sigma_u, linetype = "dashed",
-               color = OKABE_ITO[2], linewidth = 0.65, alpha = 0.85) +
+               color = IMPRINT[2], linewidth = 0.65, alpha = 0.85) +
     geom_hline(yintercept = sigma_y, linetype = "dashed",
-               color = OKABE_ITO[3], linewidth = 0.65, alpha = 0.85) +
+               color = IMPRINT[3], linewidth = 0.65, alpha = 0.85) +
     # Endurance limit thicker — the key design threshold for infinite life
     geom_hline(yintercept = sigma_e, linetype = "longdash",
-               color = OKABE_ITO[5], linewidth = 1.1, alpha = 0.95) +
+               color = IMPRINT[5], linewidth = 1.1, alpha = 0.95) +
     # Basquin fit curve
     geom_line(data = fit_df, aes(x = cycles, y = stress),
               color = INK_MUTED, linewidth = 1.0) +
     # Test data scatter (multiple replicates per stress level)
     geom_point(data = df, aes(x = cycles, y = stress),
                shape = 21, size = 3.0, stroke = 0.5,
-               color = OKABE_ITO[1], fill = OKABE_ITO[1], alpha = 0.85) +
+               color = IMPRINT[1], fill = IMPRINT[1], alpha = 0.85) +
     # Reference line labels — right-aligned at x = 10^7.5
     annotate("text", x = 10^7.5, y = sigma_u * 1.05,
              label = "Ultimate Strength (750 MPa)",
-             color = OKABE_ITO[2], hjust = 1, vjust = 0, size = 4.0) +
+             color = IMPRINT[2], hjust = 1, vjust = 0, size = 4.0) +
     annotate("text", x = 10^7.5, y = sigma_y * 1.05,
              label = "Yield Strength (530 MPa)",
-             color = OKABE_ITO[3], hjust = 1, vjust = 0, size = 4.0) +
+             color = IMPRINT[3], hjust = 1, vjust = 0, size = 4.0) +
     annotate("text", x = 10^7.5, y = sigma_e * 1.06,
              label = "Endurance Limit (375 MPa)",
-             color = OKABE_ITO[5], hjust = 1, vjust = 0, size = 4.0,
+             color = IMPRINT[5], hjust = 1, vjust = 0, size = 4.0,
              fontface = "bold") +
     # Infinite-life region label inside shaded zone
     annotate("text", x = 10^7.2, y = 340,

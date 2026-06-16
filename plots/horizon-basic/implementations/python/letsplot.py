@@ -21,7 +21,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series ALWAYS #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data - Server metrics over 7 days for multiple servers
 np.random.seed(42)
@@ -110,7 +110,7 @@ horizon_df = pd.DataFrame(horizon_records)
 # Negative bands: use dimmer version of the color
 colors = {}
 for band_idx in range(n_bands):
-    color = OKABE_ITO[0]  # Use first series color for all bands
+    color = IMPRINT[0]  # Use first series color for all bands
     # Positive: increase intensity across bands
     if band_idx == 0:
         colors[f"pos{band_idx}"] = "#B3E5B0"  # Light
@@ -120,13 +120,13 @@ for band_idx in range(n_bands):
         colors[f"pos{band_idx}"] = "#009E73"  # Full intensity
 
     # Negative: reddish palette for negative deviations
-    neg_color = OKABE_ITO[1]  # Use second series color for negatives
+    neg_color = IMPRINT[1]  # Use second series color for negatives
     if band_idx == 0:
         colors[f"neg{band_idx}"] = "#F5C4A0"  # Light
     elif band_idx == 1:
         colors[f"neg{band_idx}"] = "#E89354"  # Medium
     else:
-        colors[f"neg{band_idx}"] = "#D55E00"  # Full intensity
+        colors[f"neg{band_idx}"] = "#AE3030"  # imprint red — full intensity
 
 # Create the horizon chart
 plot = (

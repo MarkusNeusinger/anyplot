@@ -18,7 +18,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 sns.set_theme(
     style="ticks",
@@ -53,8 +53,8 @@ employee_b = employee_b_values + employee_b_values[:1]
 fig, ax = plt.subplots(figsize=(12, 12), subplot_kw={"projection": "polar"}, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-color_a = OKABE_ITO[0]  # #009E73 - Senior Developer (first series)
-color_b = OKABE_ITO[1]  # #D55E00 - Team Lead
+color_a = IMPRINT[0]  # #009E73 - Senior Developer (first series)
+color_b = IMPRINT[1]  # #C475FD - Team Lead
 
 ax.fill(angles, employee_a, alpha=0.25, color=color_a)
 ax.plot(angles, employee_a, color=color_a, linewidth=3.5, label="Senior Developer")

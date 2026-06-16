@@ -18,7 +18,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (positions 1-4)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: Quarterly revenue by product category (in millions USD)
 categories = ["Q1", "Q2", "Q3", "Q4"]
@@ -39,7 +39,7 @@ bar_width = 0.6
 # Create stacked bars
 bottom = np.zeros(len(categories))
 for i, (product, values) in enumerate(zip(products, [software, hardware, services, support], strict=True)):
-    ax.bar(x, values, bar_width, label=product, bottom=bottom, color=OKABE_ITO[i], edgecolor=PAGE_BG, linewidth=1.5)
+    ax.bar(x, values, bar_width, label=product, bottom=bottom, color=IMPRINT[i], edgecolor=PAGE_BG, linewidth=1.5)
     bottom += values
 
 # Add total labels above each stacked bar

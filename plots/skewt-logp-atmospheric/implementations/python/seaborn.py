@@ -22,7 +22,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 sns.set_theme(
     style="ticks",
@@ -91,7 +91,7 @@ sns.lineplot(
     y="pressure",
     units="theta",
     estimator=None,
-    color=OKABE_ITO[4],
+    color=IMPRINT[4],
     linewidth=0.5,
     alpha=0.50,
     ax=ax,
@@ -112,7 +112,7 @@ sns.lineplot(
     y="pressure",
     units="theta_e",
     estimator=None,
-    color=OKABE_ITO[2],
+    color=IMPRINT[2],
     linewidth=0.5,
     alpha=0.40,
     linestyle="--",
@@ -135,7 +135,7 @@ sns.lineplot(
     y="pressure",
     units="w",
     estimator=None,
-    color=OKABE_ITO[3],
+    color=IMPRINT[3],
     linewidth=0.5,
     alpha=0.40,
     linestyle=":",
@@ -149,7 +149,7 @@ x_temp = temperature + skew_slope * np.log(1000 / pressure)
 x_dew = dewpoint + skew_slope * np.log(1000 / pressure)
 
 # CAPE region: shade area between temperature and dewpoint profiles (T > Td = instability)
-ax.fill_betweenx(pressure, x_dew, x_temp, alpha=0.12, color=OKABE_ITO[4], zorder=2)
+ax.fill_betweenx(pressure, x_dew, x_temp, alpha=0.12, color=IMPRINT[4], zorder=2)
 
 df = pd.DataFrame(
     {
@@ -168,7 +168,7 @@ sns.lineplot(
     style="profile",
     markers={"Temperature": "o", "Dewpoint": "s"},
     dashes={"Temperature": "", "Dewpoint": (5, 2)},
-    palette={"Temperature": OKABE_ITO[0], "Dewpoint": OKABE_ITO[1]},
+    palette={"Temperature": IMPRINT[0], "Dewpoint": IMPRINT[1]},
     linewidth=3,
     markersize=6,
     ax=ax,
@@ -195,13 +195,13 @@ ax.yaxis.grid(True, alpha=0.10, linewidth=0.5, color=INK)
 
 # Legend — upper-left where 100-200 hPa data is sparse (reduces crowding with mixing ratio lines)
 legend_handles = [
-    Line2D([0], [0], color=OKABE_ITO[0], lw=2.5, marker="o", markersize=5, label="Temperature"),
-    Line2D([0], [0], color=OKABE_ITO[1], lw=2.5, linestyle=(0, (5, 2)), marker="s", markersize=5, label="Dewpoint"),
-    Patch(facecolor=OKABE_ITO[4], alpha=0.30, edgecolor="none", label="CAPE Region"),
+    Line2D([0], [0], color=IMPRINT[0], lw=2.5, marker="o", markersize=5, label="Temperature"),
+    Line2D([0], [0], color=IMPRINT[1], lw=2.5, linestyle=(0, (5, 2)), marker="s", markersize=5, label="Dewpoint"),
+    Patch(facecolor=IMPRINT[4], alpha=0.30, edgecolor="none", label="CAPE Region"),
     Line2D([0], [0], color=INK_SOFT, lw=0.8, alpha=0.6, label="Isotherms"),
-    Line2D([0], [0], color=OKABE_ITO[4], lw=0.8, alpha=0.7, label="Dry Adiabats"),
-    Line2D([0], [0], color=OKABE_ITO[2], lw=0.8, alpha=0.6, linestyle="--", label="Moist Adiabats"),
-    Line2D([0], [0], color=OKABE_ITO[3], lw=0.8, alpha=0.6, linestyle=":", label="Mixing Ratio"),
+    Line2D([0], [0], color=IMPRINT[4], lw=0.8, alpha=0.7, label="Dry Adiabats"),
+    Line2D([0], [0], color=IMPRINT[2], lw=0.8, alpha=0.6, linestyle="--", label="Moist Adiabats"),
+    Line2D([0], [0], color=IMPRINT[3], lw=0.8, alpha=0.6, linestyle=":", label="Mixing Ratio"),
 ]
 ax.legend(
     handles=legend_handles, loc="upper left", fontsize=8, framealpha=0.92, facecolor=ELEVATED_BG, edgecolor=INK_SOFT

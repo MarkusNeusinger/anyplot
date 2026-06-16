@@ -19,7 +19,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette for group colors (first 4 positions)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: Software package dependencies (arrows show import direction)
 np.random.seed(42)
@@ -68,7 +68,7 @@ edges = [
 ]
 
 # Group colors (Okabe-Ito)
-group_colors = {"core": OKABE_ITO[0], "api": OKABE_ITO[1], "utils": OKABE_ITO[2], "tests": OKABE_ITO[3]}
+group_colors = {"core": IMPRINT[0], "api": IMPRINT[1], "utils": IMPRINT[2], "tests": IMPRINT[3]}
 
 # Plot
 fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)

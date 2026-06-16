@@ -17,10 +17,10 @@ ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 
-OKABE_ITO <- c(
+IMPRINT <- c(
     "Price"    = "#009E73",
-    "EMA (12)" = "#D55E00",
-    "EMA (26)" = "#0072B2"
+    "EMA (12)" = "#C475FD",
+    "EMA (26)" = "#4467A3"
 )
 
 # Data
@@ -56,9 +56,9 @@ p <- ggplot(df_long, aes(x = date, y = price, color = series)) +
     geom_line(aes(linewidth = series, alpha = series)) +
     geom_point(data = crossovers, aes(x = date, y = ema12),
                shape = 21, size = 4, fill = PAGE_BG,
-               color = OKABE_ITO[["EMA (12)"]], stroke = 1.5,
+               color = IMPRINT[["EMA (12)"]], stroke = 1.5,
                inherit.aes = FALSE) +
-    scale_color_manual(name = NULL, values = OKABE_ITO,
+    scale_color_manual(name = NULL, values = IMPRINT,
                        breaks = c("Price", "EMA (12)", "EMA (26)")) +
     scale_linewidth_manual(
         values = c("Price" = 1.5, "EMA (12)" = 1.1, "EMA (26)" = 1.1),

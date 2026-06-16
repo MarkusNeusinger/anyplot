@@ -19,7 +19,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - first series always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Temperature trends across seasons
 np.random.seed(42)
@@ -58,7 +58,7 @@ line_styles = ["-", "--", ":", "-."]
 labels = ["Coastal", "Continental", "Mountain", "Mediterranean"]
 data_series = [coastal, continental, mountain, mediterranean]
 
-for data, label, ls, color in zip(data_series, labels, line_styles, OKABE_ITO, strict=True):
+for data, label, ls, color in zip(data_series, labels, line_styles, IMPRINT, strict=True):
     ax.plot(months, data, linestyle=ls, linewidth=3.5, color=color, label=label)
 
 # Styling

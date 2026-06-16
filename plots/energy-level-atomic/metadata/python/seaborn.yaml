@@ -1,90 +1,108 @@
 library: seaborn
+language: python
 specification_id: energy-level-atomic
 created: '2026-02-27T20:43:27Z'
-updated: '2026-02-27T21:09:40Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22502879493
+updated: '2026-05-30T07:31:40Z'
+generated_by: claude-sonnet
+workflow_run: 26677584485
 issue: 4434
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/seaborn/plot.png
-preview_html: null
-quality_score: 90
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
 review:
   strengths:
-  - Physically accurate hydrogen atom data with correct Rydberg formula values and
-    wavelengths
-  - Excellent spatial organization with three series in color-coded columns with subtle
-    background tints
-  - 'Strong design choices: custom palette, removed spines, clean typography, light
-    background tints via sns.light_palette'
-  - Spectral region labels (ultraviolet/visible/infrared) add meaningful scientific
-    context
-  - Nonlinear visual spacing keeps upper converging levels readable
-  - Clean, well-structured code with DataFrame-driven approach
+  - Scientifically accurate hydrogen atom data with correct eV energies and nm wavelengths
+    for all 9 transitions across Lyman, Balmer, and Paschen series
+  - Nonlinear visual Y-positioning prevents the upper converging levels from becoming
+    unreadably dense — a sophisticated design decision
+  - Background column tints using sns.light_palette/dark_palette adapt correctly to
+    both themes and clearly delineate the three series regions
+  - Spectral region labels (ultraviolet, visible, infrared) in italic add interpretive
+    context without clutter
+  - Right-margin energy labels via clip_on=False and subplots_adjust(right=0.60) keep
+    the axes clean while displaying full eV values
+  - Both themes render correctly with proper chrome adaptation throughout
   weaknesses:
-  - Minor crowding of rotated wavelength labels in the Paschen column area
-  - Purple and blue colors could be closer in perception for some CVD types
-  image_description: 'The plot displays a hydrogen atom energy level diagram with
-    six horizontal dark lines (n=1 through n=6) at visually-spaced vertical positions,
-    labeled on the right with quantum numbers and energy values in eV. A dashed ionization
-    limit line sits at the top labeled "Ionization (0.00 eV)". Three spectral series
-    are organized in color-coded columns: Lyman series (purple, ultraviolet) on the
-    left with transitions to n=1, Balmer series (dark blue, visible) in the center
-    with transitions to n=2, and Paschen series (red, infrared) on the right with
-    transitions to n=3. Each transition is a downward arrow with a rotated wavelength
-    label in nm. Subtle background tints distinguish each series column. A vertical
-    "Energy" arrow on the far left indicates the energy direction. The title reads
-    "energy-level-atomic · seaborn · pyplots.ai" at the top. The background is a light
-    off-white (#FAFBFC) with clean, professional typography throughout.'
+  - 'Upper Paschen section is crowded: three short transitions (n=4/5/6 to n=3) at
+    x-spacing 0.060 with rotated fontsize=8 wavelength labels partially overlap each
+    other — consider increasing col_spacing to 0.072 or shifting Paschen x_base to
+    0.74'
+  - Rotated wavelength labels (fontsize=8) are at the lower legibility threshold,
+    especially for the short Paschen transitions in the upper section — mobile scaling
+    may render these unreadable
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "energy-level-atomic · python · seaborn · anyplot.ai" at fontsize=12 is clearly readable in dark ink. Energy level labels (n=1 through n=6 with eV values) at fontsize=9 are readable in right margin. Series labels (Lyman/Balmer/Paschen) and spectral region subtitles at fontsize=7-8 are readable. Energy axis "Energy" label at fontsize=8.5 is readable. Rotated wavelength labels at fontsize=8 are readable at full resolution but tight in the upper Paschen region.
+      Data: Lyman arrows in #009E73 (green), Balmer in #C475FD (purple), Paschen in #4467A3 (blue). Correct Imprint canonical order. Background column tints are subtle light variants of each series color. All transition arrows clearly visible with appropriate arrowheads.
+      Legibility verdict: PASS (minor crowding in upper Paschen section but all text remains readable)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: All text adapts to light ink — title, level labels, series headers, wavelength annotations all visible in #F0EFE8/#B8B7B0. Energy level lines appear white/light. No dark-on-dark failure detected. Column tints shift to darker adaptive variants via sns.dark_palette.
+      Data: Colors are identical to light render — Lyman=#009E73, Balmer=#C475FD, Paschen=#4467A3. Data colors are theme-stable as required.
+      Legibility verdict: PASS (full theme adaptation successful, all elements readable on dark surface)
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 26pt, labels 20pt, wavelengths
-          16pt). Rotated wavelength labels slightly tight in dense areas.
+        comment: Title (12pt) and level labels (9pt) readable. Rotated wavelength
+          labels at 8pt approach lower limit; upper Paschen section marginal at small
+          display sizes.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: No severe overlap. Some visual crowding of wavelength labels in Paschen
-          column area.
+        comment: 'Upper Paschen section crowded: three short transitions at x-spacing
+          0.060 cause rotated wavelength labels (875/1282/1094 nm) to partially overlap.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines, arrows, endpoints, and ionization line all clearly visible
-          and well-sized.
+        comment: All energy level lines, transition arrows, endpoint dots, ionization
+          reference line, and series labels clearly visible and well-differentiated.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette positions 1-3 (green/purple/blue) in canonical order;
+          CVD-safe and perceptually distinct.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Purple/blue/red palette provides reasonable luminance contrast. Purple
-          and blue could be somewhat close for certain CVD types.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 4
-        max: 4
-        passed: true
-        comment: Good use of 16:9 canvas. Energy levels span full width, labels well-positioned.
+        comment: 60/40 axes-to-right-margin split is a thoughtful layout choice. Minor
+          deduction for Paschen crowding affecting spatial clarity.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Energy direction arrow with label, eV units on each level. Appropriate
-          for schematic diagram.
+        comment: Correct title format; energy axis annotated with arrow and Energy
+          label; level labels include quantum numbers and eV values.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint palette in canonical order; backgrounds #FAF8F1/#1A1A17;
+          chrome correctly adapts; data colors theme-stable.'
     design_excellence:
-      score: 16
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -92,22 +110,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: custom palette, subtle background tints, clean typography,
-          intentional color hierarchy.'
+        comment: Nonlinear visual Y-axis, background column tints via sns.light_palette/dark_palette,
+          italic spectral region subtitles, energy direction arrow — well above default.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: All spines removed, no grid (appropriate), subtle alpha=0.12 tints,
-          clean endpoint dots, generous whitespace.
+        comment: Full spine removal, no grid (appropriate), subtle tint alpha. Deduction
+          for upper Paschen crowding.
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Three series spatially grouped and color-coded, spectral region labels
-          add context, energy arrow orients viewer, clear visual hierarchy.
+        comment: 'Strong narrative: three series grouped with colored backgrounds,
+          ionization limit ceiling, wavelength annotations, UV/visible/IR region labels.'
     spec_compliance:
       score: 15
       max: 15
@@ -117,29 +135,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct energy level diagram with horizontal lines and transition
-          arrows.
+        comment: Correct atomic energy level diagram with horizontal level lines and
+          downward emission arrows.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: partial-width lines, labels, emission
-          arrows, color coding, ionization limit, nonlinear spacing.'
+        comment: Partial-width level lines, downward emission arrows, quantum number
+          labels, series-colored arrows, ionization reference line, nonlinear scale
+          all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Energy increases upward, correct relative positions, transitions
-          connect correct levels.
+        comment: Correct E_n = -13.6/n^2 eV for n=1-6; all 9 transitions with correct
+          wavelengths.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format. Series labels at top serve as legend with matching
-          colors.
+        comment: Title is exactly 'energy-level-atomic · python · seaborn · anyplot.ai';
+          series names and spectral regions serve as legend.
     data_quality:
       score: 15
       max: 15
@@ -149,21 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Six levels, three spectral series, nine transitions, ionization limit.
-          Comprehensive.
+        comment: Energy quantization, three major spectral series, transition wavelengths,
+          ionization limit, spectral region classification all shown.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real hydrogen atom physics with correct Rydberg formula values and
-          wavelengths.
+        comment: Scientifically accurate hydrogen atom physics; correct eV values
+          and nm wavelengths; neutral educational subject matter.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All energy and wavelength values match hydrogen Rydberg formula precisely.
+        comment: Energy in eV appropriate for atomic physics; wavelengths in nm appropriate
+          for spectroscopy; nonlinear visual scale well-chosen.
     code_quality:
       score: 10
       max: 10
@@ -173,34 +193,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, theme, data, figure, plot elements, save.
-          No functions or classes.'
+        comment: No functions or classes; linear procedural flow with clear section
+          comments.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data deterministic (hardcoded physical constants). No random
-          elements.
+        comment: Fully deterministic; all data from analytical formula, no random
+          components.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: matplotlib.pyplot, pandas, seaborn — all used. No unused imports.
+        comment: os, matplotlib.pyplot, pandas, seaborn — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean organization, DataFrame for transitions, well-commented. No
-          fake UI.
+        comment: DataFrame-driven transition data, series iteration patterns, no fake
+          UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at dpi=300. Uses current sns.set_theme() API.
+        comment: Saves as plot-{THEME}.png; no bbox_inches; correct default canvas.
     library_mastery:
       score: 7
       max: 10
@@ -210,28 +230,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses sns.set_theme, sns.lineplot, sns.scatterplot with DataFrames,
-          sns.despine, sns.color_palette. Some reliance on matplotlib annotate unavoidable
-          for diagram type.
+        comment: sns.set_theme for chrome, sns.lineplot with units/estimator=None
+          for multi-line, sns.despine, sns.scatterplot. Core rendering is matplotlib-level.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: sns.light_palette for background tints is distinctively seaborn.
-          sns.set_theme with context/font_scale. Core visualization relies on matplotlib
-          annotations.
+        comment: sns.light_palette/dark_palette for adaptive tints is genuinely seaborn-distinctive.
+          lineplot+units pattern characteristic. Custom diagram type limits further
+          seaborn usage.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
+  - manual-ticks
   patterns:
-  - data-generation
   - iteration-over-groups
   - explicit-figure
   dataprep: []
   styling:
-  - minimal-chrome
   - alpha-blending
+  - minimal-chrome

@@ -1,62 +1,54 @@
 library: pygal
+language: python
 specification_id: bullet-basic
 created: '2025-12-23T09:18:53Z'
-updated: '2026-02-22T22:43:34Z'
-generated_by: claude-opus-4-6
-workflow_run: 20456607578
-issue: 0
-python_version: 3.14.3
+updated: '2026-05-29T15:46:50Z'
+generated_by: claude-sonnet
+workflow_run: 26645766806
+issue: 999
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/pygal/plot.html
-quality_score: 85
-impl_tags:
-  dependencies:
-  - cairosvg
-  techniques:
-  - layer-composition
-  - custom-legend
-  patterns:
-  - iteration-over-groups
-  dataprep:
-  - normalization
-  styling:
-  - grid-styling
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/python/pygal/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Perfect spec compliance with all bullet chart elements correctly implemented (qualitative
-    ranges, actual bars, target markers, stacked layout, actual value labels)
-  - Performance-coded colors (teal/amber) create strong visual hierarchy and data
-    storytelling — viewer immediately sees above/below target performance
-  - Excellent data quality with 7 realistic sales KPIs spanning multiple domains (currency,
-    count, rating, percentage)
-  - Programmatic SVG coordinate extraction from serie-0 bars is robust and maintainable
-  - Clean proportional font and removed leader lines improve polish over earlier attempts
+  - Complete bullet chart implementation with all three required elements (actual
+    value bars, target markers, and qualitative background bands)
+  - 'Excellent semantic color mapping: brand green (#009E73) for above-target metrics
+    and Imprint matte red (#AE3030) for below-target — immediately communicates performance
+    status'
+  - 'Theme-adaptive warm-gray band colors (light: #E4E3DC/#C0BFB8/#8E8D87; dark: #3A3A30/#484843/#60605A)
+    that complement the Imprint palette without competing'
+  - Creative SVG injection technique to implement a chart type pygal lacks natively
+    — shows advanced understanding of pygal internals
+  - Realistic manufacturing KPI dataset (OEE, First Pass Yield, etc.) with plausible
+    values normalized to a common percentage scale
+  - All font sizes explicitly set via Style object matching style-guide pygal defaults
   weaknesses:
-  - Library mastery constrained by pygal lack of native bullet chart support — ~40%
-    of code is SVG manipulation
-  - Some inter-row vertical spacing could be tighter for a more compact bullet chart
-    appearance
-  - Target markers, while functional, could be slightly more prominent
-  - Overall design is solid but falls short of publication-quality polish
-  image_description: 'The plot displays a horizontal bullet chart with 7 sales KPI
-    metrics stacked vertically (bottom to top): Revenue ($275K), Profit ($85K), New
-    Orders (320), Customers (1450), Satisfaction (4.2/5), Avg Deal Size ($42K), and
-    Retention (92%). Each metric row has three grayscale background bands representing
-    qualitative ranges: lightest gray for Poor (0-50%), medium gray for Satisfactory
-    (50-75%), and darker gray for Good (75-100%). Actual value bars are overlaid using
-    performance-coded colors — teal (#2A9D8F) for above-target metrics (Revenue, Customers,
-    Retention) and amber (#D4770B) for below-target metrics (Profit, New Orders, Satisfaction,
-    Avg Deal Size). The actual bars are narrower than the background bands (~42% of
-    band height) following the classic bullet chart layered design. Thick black vertical
-    rectangle markers indicate target positions for each metric. The x-axis runs from
-    0 to 100 labeled "Performance (% of Maximum)" with dotted vertical guide lines
-    at intervals of 10. Y-axis labels include metric names with actual values in parentheses
-    (e.g., "Revenue ($275K)"). Dashed leader lines have been removed for a cleaner
-    appearance. The title "bullet-basic · pygal · pyplots.ai" appears centered at
-    top in a proportional font (DejaVu Sans). A legend at bottom identifies six element
-    types: Poor (0-50%), Satisfactory (50-75%), Good (75-100%), Above Target, Below
-    Target, and Target.'
+  - Green/red is the primary color signal for above/below target status — CVD users
+    may struggle to distinguish the two bar colors; adding a thin INK-color stroke
+    on the bars or using bar hatching would provide redundant encoding
+  - Background band differentiation is lower contrast in the dark render (BAND_POOR=#3A3A30,
+    BAND_SAT=#484843, BAND_GOOD=#60605A are three very similar dark grays — consider
+    increasing the contrast step between bands in dark mode)
+  - 'Design could be more polished: the chart reads as a functional implementation
+    but lacks signature refinements that would elevate it to publication quality (e.g.
+    more intentional spacing, subtle gridline tuning)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct for light theme
+      Chrome: Title "bullet-basic · python · pygal · anyplot.ai" in dark ink, clearly readable at top. Y-axis labels (e.g., "Quality Score (94/100)", "On-Time Delivery (91%)") in dark text, readable. X-axis title "Performance (% of Maximum)" visible. X-axis tick labels (0, 10, 20, ..., 100) readable. Legend at bottom with 6 items clearly readable.
+      Data: Three warm-gray background band zones (Poor/Satisfactory/Good) fill each row. Green (#009E73) actual bars on 2 metrics above target (Quality Score, Capacity Utilization); matte red (#AE3030) bars on 5 metrics below target. Dark INK target marker rectangles visible at each metric's target percentage.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct for dark theme
+      Chrome: Title in light cream text, clearly visible. Y-axis labels in light text, readable. X-axis title and tick labels in light text, readable. Legend at bottom readable in light text.
+      Data: Data colors identical to light render — green bars on 2 above-target metrics, red bars on 5 below-target metrics. Band zones are dark gray variants (#3A3A30/#484843/#60605A) — distinguishable but with lower contrast than light render. Target markers appear as light-colored (#F0EFE8) vertical rectangles, visible against dark bands.
+      Legibility verdict: PASS — no dark-on-dark failures; all text appears in theme-correct light color; band zone distinction is reduced but acceptable
   criteria_checklist:
     visual_quality:
       score: 27
@@ -67,46 +59,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=64, label=40, major_label=36,
-          legend=34, value=30) with proportional font_family (DejaVu Sans). All text
-          clearly readable at full resolution.
+        comment: All font sizes explicitly set via Style object. Readable in both
+          themes. Slight deduction for legend text being on the smaller side at full
+          canvas resolution.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements. All labels, legend items, and chart
-          elements clearly separated.
+        comment: No overlapping text or data elements in either render.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Actual bars clearly visible with strong teal/amber color contrast.
-          Target markers distinguishable but could be slightly thicker.
+        comment: Actual bars and target markers clearly visible in light render. Dark
+          render band differentiation is reduced but bars remain clearly visible.
       - id: VQ-04
         name: Color Accessibility
+        score: 1
+        max: 2
+        passed: true
+        comment: Green/red pair is the primary signal for above/below target. Redundant
+          encoding via bar length vs. target marker helps, but CVD users may still
+          struggle with the color distinction alone.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Teal and amber are colorblind-safe. Grayscale bands provide excellent
-          value differentiation. No red-green dependency.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good horizontal fill. Some generous inter-row spacing and legend/x-axis
-          area slightly crowded.
+        comment: 3200x1800 canvas confirmed. Good proportions, no overflow, balanced
+          legend at bottom.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis labeled with units. Y-axis labels include metric names with
-          actual values and units.
+        comment: X-axis titled 'Performance (% of Maximum)' with units. Title follows
+          spec format exactly.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First categorical series uses #009E73. Red (#AE3030) is Imprint
+          matte red used as semantic exception for below-target. Backgrounds correct
+          (#FAF8F1 light / #1A1A17 dark). Chrome is theme-adaptive.'
     design_excellence:
-      score: 14
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -114,22 +114,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom teal/amber palette for performance coding, grayscale range
-          bands, proportional font. Above defaults but not publication-ready.
+        comment: 'Above-default: semantic color mapping, theme-adaptive warm-gray
+          bands, SVG injection craftsmanship. Not quite publication-quality polish
+          but clearly above a generic default.'
       - id: DE-02
         name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: X-guides only (not y-guides), rounded_bars=2, print_values=False
+          keeps uncluttered. Above default but not exceptional.
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Removed leader lines, show_y_guides=False, subtle dotted x-guides,
-          spacing=0, rounded_bars=2. Good refinement.
-      - id: DE-03
-        name: Data Storytelling
-        score: 5
-        max: 6
-        passed: true
-        comment: Performance-coded colors (teal for above-target, amber for below-target)
-          create immediate visual hierarchy and narrative of mixed sales performance.
+        comment: Semantic green/red immediately communicates performance status. Target
+          markers create visual focal points. Multiple metrics on common scale enables
+          comparison. Good visual hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -139,28 +141,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bullet chart with actual bars, target markers, qualitative
-          range bands, horizontal orientation.
+        comment: Correct horizontal bullet chart with background bands, actual value
+          bar, and target marker for each metric.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: actual bar, target marker, grayscale
-          ranges, value labels, multiple aligned bullets.'
+        comment: Actual bar, target marker, qualitative range bands (Poor/Satisfactory/Good),
+          multiple stacked metrics — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Data correctly normalized to percentages. X-axis 0-100. All 7 metrics
-          correctly positioned.
+        comment: X-axis shows performance percentage, y-axis shows metric categories.
+          All data correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format. Legend correctly identifies all six elements.
+        comment: Title is exactly 'bullet-basic · python · pygal · anyplot.ai'. Legend
+          labels match data series.
     data_quality:
       score: 15
       max: 15
@@ -170,75 +173,87 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 7 metrics spanning currency, count, rating, percentage domains. Mix
-          of above/below target.
+        comment: Shows both above-target and below-target metrics, varies across multiple
+          KPI domains, demonstrates the full bullet chart visual vocabulary.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Sales KPI dashboard is a textbook bullet chart use case. Neutral
-          business context.
+        comment: Manufacturing and supply chain KPIs (OEE, First Pass Yield, Inventory
+          Turnover) are a realistic, neutral, industry-standard context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All values realistic for a business context.
+        comment: Values are plausible for the domain (OEE ~72%, On-Time Delivery ~91%).
+          Normalization to percentage of maximum enables common-scale comparison.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Linear structure. No functions/classes. SVG manipulation adds necessary
-          complexity.
+        comment: 'No functions or classes. Top-level code flows: config → data → chart
+          → SVG injection → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data deterministic hardcoded values.
+        comment: All data is hardcoded — fully deterministic, no random seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: xml.etree.ElementTree, cairosvg, pygal, pygal.style.Style.'
+        comment: All imports are used. Self-import guard via importlib is necessary
+          and correctly implemented.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured SVG manipulation with programmatic position extraction.
-          Appropriate complexity.
+        comment: Clean code, appropriate complexity given pygal's limitations. SVG
+          injection is the correct approach for this chart type in pygal.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via cairosvg at 4800x2700. Current pygal 3.1.0
-          API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: HorizontalStackedBar with Style object, add() series, x_labels —
+          all idiomatic. None-value series for legend-only placeholders is a clever
+          idiomatic pattern.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses HorizontalStackedBar, Style system, per-value config dicts,
-          configuration options. Core bullet elements require SVG injection — library
-          limitation.
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Per-value config dicts, None-series legend trick are pygal-specific.
-          SVG injection portion is generic XML work.
-  verdict: REJECTED
+        comment: Interactive HTML output (pygal's signature feature). SVG introspection
+          and injection to extend pygal's chart capabilities is distinctive and requires
+          library-specific knowledge.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - cairosvg
+  techniques:
+  - html-export
+  patterns:
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling: []

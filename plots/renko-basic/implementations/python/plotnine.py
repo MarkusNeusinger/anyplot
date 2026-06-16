@@ -35,9 +35,9 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito colors for direction
-BULLISH = "#009E73"  # Position 1 - brand green
-BEARISH = "#D55E00"  # Position 2 - vermillion
+# imprint semantic anchors for direction
+BULLISH = "#009E73"  # green - up bricks
+BEARISH = "#AE3030"  # red - down bricks
 
 # Data - Generate stock price data
 np.random.seed(42)

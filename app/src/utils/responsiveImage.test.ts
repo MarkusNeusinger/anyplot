@@ -1,13 +1,14 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
+
 import {
-  buildSrcSet,
   buildDetailSrcSet,
-  getResponsiveSizes,
-  getFallbackSrc,
+  buildSrcSet,
   DETAIL_SIZES,
+  getFallbackSrc,
+  getResponsiveSizes,
   OVERVIEW_SIZES,
   SPECS_SIZES,
-} from './responsiveImage';
+} from 'src/utils/responsiveImage';
 
 describe('responsiveImage utilities', () => {
   const baseUrl = 'https://cdn.example.com/plots/scatter-basic/matplotlib/plot.png';
@@ -17,8 +18,8 @@ describe('responsiveImage utilities', () => {
       const result = buildSrcSet(baseUrl, 'webp');
       expect(result).toBe(
         'https://cdn.example.com/plots/scatter-basic/matplotlib/plot_400.webp 400w, ' +
-        'https://cdn.example.com/plots/scatter-basic/matplotlib/plot_800.webp 800w, ' +
-        'https://cdn.example.com/plots/scatter-basic/matplotlib/plot_1200.webp 1200w'
+          'https://cdn.example.com/plots/scatter-basic/matplotlib/plot_800.webp 800w, ' +
+          'https://cdn.example.com/plots/scatter-basic/matplotlib/plot_1200.webp 1200w'
       );
     });
 
@@ -26,8 +27,8 @@ describe('responsiveImage utilities', () => {
       const result = buildSrcSet(baseUrl, 'png');
       expect(result).toBe(
         'https://cdn.example.com/plots/scatter-basic/matplotlib/plot_400.png 400w, ' +
-        'https://cdn.example.com/plots/scatter-basic/matplotlib/plot_800.png 800w, ' +
-        'https://cdn.example.com/plots/scatter-basic/matplotlib/plot_1200.png 1200w'
+          'https://cdn.example.com/plots/scatter-basic/matplotlib/plot_800.png 800w, ' +
+          'https://cdn.example.com/plots/scatter-basic/matplotlib/plot_1200.png 1200w'
       );
     });
 

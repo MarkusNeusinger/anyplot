@@ -18,7 +18,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first three series)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data: Product comparison across key attributes
 categories = ["Performance", "Battery Life", "Camera", "Display", "Build Quality", "Value"]
@@ -42,8 +42,8 @@ ax.set_facecolor(PAGE_BG)
 # Plot each product
 for idx, (product, values) in enumerate(products.items()):
     values_closed = values + values[:1]  # Close the polygon
-    ax.plot(angles, values_closed, "o-", linewidth=3, label=product, color=OKABE_ITO[idx], markersize=10)
-    ax.fill(angles, values_closed, alpha=0.25, color=OKABE_ITO[idx])
+    ax.plot(angles, values_closed, "o-", linewidth=3, label=product, color=IMPRINT[idx], markersize=10)
+    ax.fill(angles, values_closed, alpha=0.25, color=IMPRINT[idx])
 
 # Set category labels at each axis
 ax.set_xticks(angles[:-1])

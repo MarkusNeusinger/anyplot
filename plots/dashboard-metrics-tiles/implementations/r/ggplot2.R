@@ -18,8 +18,8 @@ INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 
 COL_GOOD     <- "#009E73"  # Okabe-Ito 1 — good / brand
-COL_WARNING  <- "#E69F00"  # Okabe-Ito 5 — warning
-COL_CRITICAL <- "#D55E00"  # Okabe-Ito 2 — critical / bad
+COL_WARNING  <- "#DDCC77"  # imprint amber — warning
+COL_CRITICAL <- "#AE3030"  # imprint red — critical / bad
 
 # --- Data -------------------------------------------------------------------
 # Server health metrics snapshot (6 tiles in 3x2 grid)

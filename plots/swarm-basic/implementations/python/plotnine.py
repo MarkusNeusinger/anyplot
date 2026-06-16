@@ -33,7 +33,7 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Patient biomarker levels across treatment groups
 np.random.seed(42)
@@ -61,7 +61,7 @@ plot = (
     ggplot(df, aes(x="treatment", y="biomarker", color="treatment"))
     + geom_point(position=position_jitter(width=0.3, height=0, random_state=42), size=3.5, alpha=0.75)
     + stat_summary(fun_y=np.median, geom="point", size=8, shape="D", color=INK)
-    + scale_color_manual(values=OKABE_ITO)
+    + scale_color_manual(values=IMPRINT)
     + labs(x="Treatment Group", y="Biomarker Level (ng/mL)", title="swarm-basic · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(

@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '../test-utils';
-import { SpecPage } from './SpecPage';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { SpecPage } from 'src/pages/SpecPage';
+import { render, screen, waitFor } from 'src/test-utils';
 
 const mockNavigate = vi.fn();
 let mockParams: Record<string, string | undefined> = { specId: 'scatter-basic' };
@@ -21,7 +22,7 @@ vi.mock('react-helmet-async', () => ({
   Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-vi.mock('../hooks', () => ({
+vi.mock('src/hooks', () => ({
   useAnalytics: () => ({
     trackPageview: vi.fn(),
     trackEvent: vi.fn(),
@@ -40,15 +41,15 @@ vi.mock('../hooks', () => ({
 }));
 
 // Mock lazy-loaded components as simple divs
-vi.mock('../components/SpecTabs', () => ({
+vi.mock('src/sections/spec-detail/SpecTabs', () => ({
   SpecTabs: () => <div data-testid="spec-tabs">SpecTabs</div>,
 }));
 
-vi.mock('../components/SpecOverview', () => ({
+vi.mock('src/sections/spec-detail/SpecOverview', () => ({
   SpecOverview: () => <div data-testid="spec-overview">SpecOverview</div>,
 }));
 
-vi.mock('../components/SpecDetailView', () => ({
+vi.mock('src/sections/spec-detail/SpecDetailView', () => ({
   SpecDetailView: () => <div data-testid="spec-detail-view">SpecDetailView</div>,
 }));
 
@@ -83,14 +84,14 @@ beforeEach(() => {
 });
 
 function mockFetchSuccess(data = mockSpecData) {
-  global.fetch = vi.fn().mockResolvedValue({
+  globalThis.fetch = vi.fn().mockResolvedValue({
     ok: true,
     json: () => Promise.resolve(data),
   });
 }
 
 function mockFetch404() {
-  global.fetch = vi.fn().mockResolvedValue({
+  globalThis.fetch = vi.fn().mockResolvedValue({
     ok: false,
     status: 404,
     json: () => Promise.resolve({}),
@@ -98,13 +99,13 @@ function mockFetch404() {
 }
 
 function mockFetchError() {
-  global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
+  globalThis.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
 }
 
 describe('SpecPage', () => {
   it('shows loading state initially', () => {
     // Never-resolving fetch keeps loading=true
-    global.fetch = vi.fn().mockReturnValue(new Promise(() => {}));
+    globalThis.fetch = vi.fn().mockReturnValue(new Promise(() => {}));
     render(<SpecPage />);
 
     // Loading state does NOT show the spec title
@@ -125,7 +126,9 @@ describe('SpecPage', () => {
     render(<SpecPage />);
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { level: 1, name: /page not found/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { level: 1, name: /page not found/i })
+      ).toBeInTheDocument();
     });
     expect(screen.getByText(/404 — no route matched/i)).toBeInTheDocument();
   });
@@ -177,9 +180,9 @@ describe('SpecPage', () => {
     render(<SpecPage />);
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalled();
+      expect(globalThis.fetch).toHaveBeenCalled();
     });
-    const fetchUrl = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
+    const fetchUrl = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
     expect(fetchUrl).toContain('/specs/scatter-basic');
   });
 
@@ -248,7 +251,8 @@ describe('SpecPage', () => {
         expect(mockSetSearchParams).toHaveBeenCalled();
       });
       // The drop call passes a URLSearchParams with no `language` key.
-      const lastCall = mockSetSearchParams.mock.calls.at(-1);
+      const calls = mockSetSearchParams.mock.calls;
+      const lastCall = calls[calls.length - 1];
       const params = lastCall?.[0] as URLSearchParams;
       expect(params.get('language')).toBeNull();
       mockSearchParams.delete('language');

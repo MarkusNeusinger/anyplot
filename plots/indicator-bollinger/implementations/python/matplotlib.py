@@ -20,8 +20,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - first color is always brand green
 BRAND = "#009E73"
-SECONDARY = "#D55E00"
-TERTIARY = "#0072B2"
+SECONDARY = "#C475FD"
+TERTIARY = "#4467A3"
 
 # Data - Generate realistic stock price data with Bollinger Bands
 np.random.seed(42)

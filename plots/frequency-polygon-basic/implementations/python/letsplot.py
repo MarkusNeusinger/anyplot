@@ -35,7 +35,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (first series is brand green #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Response times (ms) across three experimental conditions
 np.random.seed(42)
@@ -77,7 +77,7 @@ anyplot_theme = theme(
 plot = (
     ggplot(df, aes(x="response_time", color="condition"))
     + geom_freqpoly(bins=25, size=2.5, alpha=0.9)
-    + scale_color_manual(values=OKABE_ITO)
+    + scale_color_manual(values=IMPRINT)
     + labs(
         x="Response Time (ms)",
         y="Frequency",

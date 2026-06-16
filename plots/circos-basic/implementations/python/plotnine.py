@@ -33,13 +33,13 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series is always #009E73)
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # bluish green (brand)
-    "#D55E00",  # vermillion
-    "#0072B2",  # blue
-    "#CC79A7",  # reddish purple
-    "#E69F00",  # orange
-    "#56B4E9",  # sky blue
+    "#C475FD",  # vermillion
+    "#4467A3",  # blue
+    "#BD8233",  # reddish purple
+    "#AE3030",  # orange
+    "#2ABCCD",  # sky blue
 ]
 
 # Data - Trade flows between world regions
@@ -68,7 +68,7 @@ flows = [
 segments = list(dict.fromkeys([f[0] for f in flows] + [f[1] for f in flows]))
 
 # Map segments to Okabe-Ito colors
-colors = {seg: OKABE_ITO[i % len(OKABE_ITO)] for i, seg in enumerate(segments)}
+colors = {seg: IMPRINT[i % len(IMPRINT)] for i, seg in enumerate(segments)}
 
 # Calculate total flow for each segment
 segment_totals = dict.fromkeys(segments, 0)

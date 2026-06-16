@@ -17,7 +17,7 @@ INK         = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT    = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID        = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 BRAND       = "#009E73"  # Okabe-Ito position 1
-ACCENT      = "#D55E00"  # Okabe-Ito position 2
+ACCENT      = "#C475FD"  # Okabe-Ito position 2
 
 # Data - Enzyme kinetics: realistic biological dose-response relationship
 # Different structure than seaborn: exponential saturation curve with noise

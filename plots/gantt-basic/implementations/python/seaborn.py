@@ -19,7 +19,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data - Construction Project Timeline starting mid-February
 tasks_data = {
@@ -110,12 +110,12 @@ sns.set_theme(
 # Category palette using Okabe-Ito
 category_order = ["Foundation", "Structure", "Exterior", "Interior", "Systems", "Finishing", "Finalization"]
 category_palette = {
-    "Foundation": OKABE_ITO[0],
-    "Structure": OKABE_ITO[1],
-    "Exterior": OKABE_ITO[2],
-    "Interior": OKABE_ITO[3],
-    "Systems": OKABE_ITO[4],
-    "Finishing": OKABE_ITO[5],
+    "Foundation": IMPRINT[0],
+    "Structure": IMPRINT[1],
+    "Exterior": IMPRINT[2],
+    "Interior": IMPRINT[3],
+    "Systems": IMPRINT[4],
+    "Finishing": IMPRINT[5],
     "Finalization": INK_SOFT,
 }
 

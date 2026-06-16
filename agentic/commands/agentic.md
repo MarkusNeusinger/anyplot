@@ -86,7 +86,7 @@ When routing to a single leverage point, include the point number in the task de
 ### Phase 2: Parallel Analysis
 
 Each specialist receives a focused prompt (see below). They:
-- Use **Serena tools** (`mcp__serena__get_symbols_overview`, `mcp__serena__find_symbol`, `search_for_pattern`, `list_dir`, `find_file`, `mcp__serena__find_referencing_symbols`) and **Glob/Grep/Read** for code analysis
+- Use **Glob/Grep/Read** for code analysis
 - Do **NOT** use Bash for file discovery or code searching — only for `uv run ruff`, `uv run pytest`, or similar shell-native commands
 - Send findings to `agentic-lead` via `SendMessage` when done
 - Mark their task completed via `TaskUpdate`
@@ -278,13 +278,13 @@ You are the **core-auditor** on the agentic-audit team. Analyze leverage points 
 - Are tools documented (parameters, return values)?
 
 **How to work:**
-1. Use `list_dir` to explore directories listed above
-2. Use `mcp__serena__get_symbols_overview` on key files
-3. Use `search_for_pattern` for patterns like `CLAUDE.md`, model references, `mcp`, `prompt`
+1. Use Glob to explore directories listed above
+2. Read key files (or Grep them for `class |def ` declarations for a structural overview)
+3. Use Grep for patterns like `CLAUDE.md`, model references, `mcp`, `prompt`
 4. Use Read to examine prompt files and configuration
-5. Use `mcp__serena__find_symbol` with `depth=1` to inspect MCP tools and CLI commands
+5. Grep for the definitions of MCP tools and CLI commands to inspect them
 6. Use Grep to count lines in large files: check for >1000-line files as context bloat risk
-7. **Do NOT use Bash** for `find`, `ls`, `grep`, `cat` — use Serena/Glob/Grep/Read tools instead
+7. **Do NOT use Bash** for `find`, `ls`, `grep`, `cat` — use Glob/Grep/Read tools instead
 8. You MAY use Bash for: `uv run python -c "..."` to inspect tool registrations
 
 **Report format:** Send findings to `agentic-lead` via `SendMessage`. Structure each finding as:
@@ -423,13 +423,13 @@ You are the **environment-auditor** on the agentic-audit team. Analyze leverage 
 - Are naming conventions consistent (snake_case Python, camelCase TS, kebab-case files)?
 
 **How to work:**
-1. Use `list_dir` with `recursive=false` to map top-level and sub-directory structure
-2. Use `mcp__serena__get_symbols_overview` on key files to check type annotations
-3. Use `search_for_pattern` for anti-patterns (e.g., `Any`, `# type: ignore`, `print(`, `: any`, `console.log`)
+1. Use Glob to map top-level and sub-directory structure
+2. Read key files to check type annotations
+3. Use Grep for anti-patterns (e.g., `Any`, `# type: ignore`, `print(`, `: any`, `console.log`)
 4. Use Read to examine config files (`tsconfig.json`, `pyproject.toml` type sections)
 5. Use Grep to find logging, error handling, and type annotation patterns
 6. Compare `tests/` structure with `api/`, `core/`, `automation/` structure
-7. **Do NOT use Bash** for `find`, `ls`, `grep`, `cat` — use Serena/Glob/Grep/Read tools instead
+7. **Do NOT use Bash** for `find`, `ls`, `grep`, `cat` — use Glob/Grep/Read tools instead
 8. You MAY use Bash for: `uv run ruff check api/ core/ --select ANN 2>&1 | tail -20`
 
 **Report format:** Same as core-auditor — send findings to `agentic-lead` via `SendMessage` using the `LEVERAGE_POINT` / `POSITIVE` format.
@@ -551,13 +551,13 @@ You are the **workflow-auditor** on the agentic-audit team. Analyze leverage poi
 - Do workflows run successfully AFK (without human checking in)?
 
 **How to work:**
-1. Use `list_dir` to explore `tests/`, `agentic/specs/`, `agentic/workflows/`, `agentic/commands/`, `prompts/`
-2. Use `mcp__serena__get_symbols_overview` on workflow scripts and test files
-3. Use `mcp__serena__find_symbol` to inspect workflow classes, fixtures, orchestrators
+1. Use Glob to explore `tests/`, `agentic/specs/`, `agentic/workflows/`, `agentic/commands/`, `prompts/`
+2. Read workflow scripts and test files (or Grep them for `class |def ` declarations for an overview)
+3. Grep for the definitions of workflow classes, fixtures, orchestrators
 4. Use Read to examine spec files, templates, and workflow configurations
-5. Use `search_for_pattern` for patterns like `prompt_claude_code`, `WorkflowState`, `@pytest.fixture`, `$ARGUMENTS`
+5. Use Grep for patterns like `prompt_claude_code`, `WorkflowState`, `@pytest.fixture`, `$ARGUMENTS`
 6. Use Glob to find all test files (`**/*test*.py`, `**/*.test.ts`) and template files
-7. **Do NOT use Bash** for `find`, `ls`, `grep`, `cat` — use Serena/Glob/Grep/Read tools instead
+7. **Do NOT use Bash** for `find`, `ls`, `grep`, `cat` — use Glob/Grep/Read tools instead
 8. You MAY use Bash for: `uv run pytest tests/ --co -q 2>&1 | tail -20` or `uv run ruff check . 2>&1 | tail -5`
 
 **Report format:** Same as core-auditor — send findings to `agentic-lead` via `SendMessage` using the `LEVERAGE_POINT` / `POSITIVE` format.

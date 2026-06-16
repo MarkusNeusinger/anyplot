@@ -23,7 +23,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 np.random.seed(42)
 
@@ -64,7 +64,7 @@ pr_curves = (
             "Model:N",
             scale=alt.Scale(
                 domain=[f"Logistic Regression (AP = {lr_ap:.3f})", f"Random Forest (AP = {rf_ap:.3f})"],
-                range=[OKABE_ITO[0], OKABE_ITO[1]],
+                range=[IMPRINT[0], IMPRINT[1]],
             ),
             legend=alt.Legend(
                 title="Model",
@@ -96,7 +96,7 @@ pr_curves = (
 baseline_line = (
     alt.Chart(baseline_df)
     .mark_line(strokeWidth=3, strokeDash=[8, 4])
-    .encode(x=alt.X("Recall:Q"), y=alt.Y("Precision:Q"), color=alt.ColorValue(OKABE_ITO[2]))
+    .encode(x=alt.X("Recall:Q"), y=alt.Y("Precision:Q"), color=alt.ColorValue(IMPRINT[2]))
 )
 
 chart = (

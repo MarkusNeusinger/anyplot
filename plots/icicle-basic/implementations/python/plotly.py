@@ -18,7 +18,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 BRAND = "#009E73"
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - File system hierarchy
 data = {
@@ -77,11 +77,11 @@ for _, row in df.iterrows():
     if level == 0:
         colors.append(BRAND)
     elif level == 1:
-        colors.append(OKABE_ITO[1])
+        colors.append(IMPRINT[1])
     elif level == 2:
-        colors.append(OKABE_ITO[2])
+        colors.append(IMPRINT[2])
     else:
-        colors.append(OKABE_ITO[3])
+        colors.append(IMPRINT[3])
 
 # Create icicle chart
 fig = go.Figure(

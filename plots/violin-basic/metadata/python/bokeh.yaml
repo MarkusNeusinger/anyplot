@@ -1,136 +1,138 @@
 library: bokeh
+language: python
 specification_id: violin-basic
 created: '2025-12-23T00:36:10Z'
-updated: '2026-02-21T23:02:34Z'
-generated_by: claude-opus-4-6
-workflow_run: 20447780513
-issue: 0
-python_version: 3.14.3
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/violin-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/violin-basic/bokeh/plot.html
-quality_score: 92
-impl_tags:
-  dependencies:
-  - scipy
-  techniques:
-  - hover-tooltips
-  - annotations
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  - columndatasource
-  dataprep:
-  - kde
-  styling:
-  - alpha-blending
-  - grid-styling
+updated: '2026-05-29T11:28:02Z'
+generated_by: claude-sonnet
+workflow_run: 26634045553
+issue: 722
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/bokeh/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent data storytelling through alpha hierarchy (0.55/0.85) and distribution
-    type annotations guiding viewers to interesting patterns
-  - 'Thorough visual refinement: removed spines, subtle dashed grid, no ticks, warm
-    background, custom axis colors'
-  - Outstanding feature coverage with 4 intentionally different distribution shapes
-    (normal, right-skewed, bimodal)
-  - Realistic well-motivated salary data with plausible reasoning for each distribution
-    shape
-  - 'Good use of Bokeh-specific features: HoverTool for interactivity, categorical
-    offset tuples, dual PNG/HTML output'
+  - 'Complete spec compliance: all required violin-plot features present — mirrored
+    KDE violin, IQR box (Q1-Q3), median line, whiskers with caps, and per-category
+    distribution-type annotations'
+  - 'Thoughtful data design: four distinct distribution shapes (normal, normal, right-skewed,
+    bimodal) that showcase the violin plot''s diagnostic power over a plain boxplot'
+  - 'Full theme adaptation: Imprint palette in canonical order, correct backgrounds
+    (#FAF8F1 light / #1A1A17 dark), all chrome tokens (INK, INK_SOFT, ELEVATED_BG)
+    wired through every element in both renders'
+  - 'Idiomatic Bokeh usage: ColumnDataSource throughout, categorical x_range with
+    offset tuples for mirrored violin positioning, HoverTool with rich salary statistics
+    per box, NumeralTickFormatter for currency, CDP setDeviceMetricsOverride for exact
+    3200×1800 output'
+  - Alpha differentiation (0.55 normal vs 0.85 non-normal) plus distribution-type
+    annotation labels create a clear visual hierarchy that guides the viewer to the
+    interesting distributions
   weaknesses:
-  - Distribution type annotations could be slightly more prominent (currently 18pt
-    light gray)
-  - Some unused vertical space at the extremes of the y-axis range
-  image_description: 'The plot displays four violin plots showing annual salary distributions
-    across four departments (Engineering, Marketing, Sales, Support). Each violin
-    uses a distinct color from a colorblind-safe palette: steel blue (#306998) for
-    Engineering, warm orange (#E8943A) for Marketing, teal (#2A9D8F) for Sales, and
-    coral (#E76F6F) for Support. The y-axis shows "Annual Salary (USD)" with currency
-    formatting ($20,000-$160,000), and the x-axis shows "Department". Each violin
-    has a white inner box plot (Q1-Q3) with a black median line, whiskers with caps,
-    and mirrored KDE density on both sides. Engineering and Marketing show symmetric
-    normal distributions, Sales shows a pronounced right-skewed distribution (tall,
-    extending to ~$150K), and Support shows a bimodal shape with two visible peaks.
-    The non-normal distributions (Sales, Support) are rendered at higher alpha (0.85)
-    versus the normal distributions (0.55), creating visual hierarchy. Below each
-    violin, italic gray annotations label the distribution type ("normal", "normal",
-    "right-skewed", "bimodal"). The background is warm off-white (#FAFAF8) with no
-    x-grid, subtle dashed y-grid lines, no ticks, no outline, and the title "violin-basic
-    · bokeh · pyplots.ai" appears in bold at the top left.'
+  - Y-axis grid uses `grid_line_dash = 'dashed'` — the style guide specifies solid
+    thin lines at 10–25% opacity; change to solid (`p.ygrid.grid_line_dash = 'solid'`)
+    while keeping alpha=0.15
+  - 'Minor visual refinement opportunity: axis tick marks could be suppressed (`p.axis.minor_tick_line_color
+    = None` is already set, but major tick marks remain visible) — removing major
+    tick lines would further clean up the chrome without losing information'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white.
+      Chrome: Title "violin-basic · python · bokeh · anyplot.ai" in bold dark ink, clearly readable at top-left. Y-axis label "Annual Salary (USD)" in dark italic, X-axis label "Department" in dark italic — both readable. Y-axis tick labels ($20,000–$140,000) and X-axis tick labels (Engineering, Marketing, Sales, Support) in dark/soft ink, all clearly legible. Subtle dashed horizontal grid lines at low opacity.
+      Data: Four violin shapes — Engineering in brand green (#009E73), Marketing in lavender (#C475FD), Sales in blue (#4467A3), Support in ochre (#BD8233) — canonical Imprint order. Each violin has a white/near-white IQR box, bold median line, and whiskers with caps in dark ink. Distribution-type annotations ("normal", "normal", "right-skewed", "bimodal") in soft italic below each violin. Normal distributions at 55% alpha, non-normal at 85% alpha for visual hierarchy.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title in light cream ink, clearly readable. Y-axis and X-axis labels in light color, readable. Tick labels in soft light color against dark background — no dark-on-dark issues detected. Subtle grid lines barely visible at 15% opacity.
+      Data: Violin colors are identical to the light render (brand green, lavender/purple, blue, ochre) — data palette unchanged, only chrome flipped. IQR boxes now filled with dark elevated background (#242420) which contrasts appropriately with the violin fills. Median lines and whiskers in light ink. Distribution annotations readable in soft light italic.
+      Legibility verdict: PASS — all text clearly readable against near-black background, no dark-on-dark failures, data colors identical to light render as required.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 36pt, axis labels 28pt, ticks
-          22pt, annotations 18pt). Distribution annotations intentionally subtle but
-          readable.
+        comment: All text readable in both themes. Title bold and prominent, axis
+          labels at 42pt, tick labels at 34pt, annotations at 26pt — all visible and
+          appropriately sized.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements. Violins well-separated, annotations
-          clear of axis labels.
+        comment: No overlapping elements. Distribution annotations positioned below
+          violin area without collision. Violins separated by categorical positions.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Violin shapes, box plots, median lines, whiskers, and caps all clearly
-          visible. Alpha hierarchy adds visual depth.
+        comment: Violin shapes prominent and well-sized. IQR boxes visible with contrasting
+          fill (ELEVATED_BG). Median lines and whiskers clearly visible in both themes.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette in canonical order, CVD-safe. No red-green as sole
+          differentiator.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Four distinct hues (blue, orange, teal, coral) with good luminance
-          separation. Colorblind-safe.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good canvas utilization with balanced margins. Slight excess vertical
-          space above data range.
+        comment: 3200x1800 landscape, toolbar_location=None, min_border values set
+          appropriately. No clipping detected. Canvas gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Annual Salary (USD)' with units and currency formatting.
-          Title follows required format.
+        comment: 'Y-axis: ''Annual Salary (USD)'' with $currency NumeralTickFormatter.
+          X-axis: ''Department''. Title follows required format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series Engineering uses #009E73 (brand green). Canonical order
+          through 4 categories. Backgrounds #FAF8F1 light / #1A1A17 dark. Data colors
+          identical between themes.'
     design_excellence:
-      score: 16
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom palette, warm background, alpha hierarchy, custom axis colors,
-          currency formatting. Clearly above defaults.
+        comment: 'Above default. Deliberate design intent: alpha variation to emphasize
+          non-normal distributions, currency formatting, dataset with four distinct
+          shapes. Professional appearance.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: X-grid removed, y-grid dashed at 0.15 alpha, outline removed, all
-          ticks removed, subtle axis lines, matched background fills.
+        comment: Above default. Outline removed, x-grid removed, y-grid subtle at
+          15% alpha. Docked for dashed grid lines — style guide specifies solid thin
+          lines.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Alpha hierarchy (0.55/0.85) guides viewer to notable distributions.
-          Annotations label distribution types. Intentional data shapes create narrative.
+        comment: Above default. Alpha variation (0.55 normal / 0.85 non-normal) +
+          annotation labels guide viewer to interesting distributions. Clear focal
+          points on Sales (right-skewed) and Support (bimodal).
     spec_compliance:
       score: 15
       max: 15
@@ -140,28 +142,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct violin plot with mirrored KDE and inner box plot elements.
+        comment: Correct violin plot with manually computed KDE (scipy gaussian_kde)
+          drawn as mirrored patch glyphs.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Quartile markers, mirrored density, median line, whiskers with caps.
-          All spec requirements met.
+        comment: 'All required: mirrored density, quartile markers (IQR box), median
+          line. Whiskers and distribution annotations add beyond spec.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x-axis, numerical values on y-axis. 4 categories with
-          150 points each.
+        comment: Categories on x-axis, Annual Salary on y-axis. All 4 categories shown
+          with appropriate data ranges.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. X-axis labels identify each violin
-          directly.
+        comment: Title 'violin-basic · python · bokeh · anyplot.ai' exactly matches
+          required format. No legend needed — categories labeled on x-axis.
     data_quality:
       score: 15
       max: 15
@@ -171,22 +174,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: normal, right-skewed, bimodal distributions with
-          different spreads and centers.'
+        comment: Shows KDE shape, quartiles, median, whiskers, and 4 distinct distribution
+          types.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Salary by department is neutral business scenario. Each distribution
-          shape has plausible motivation.
+        comment: Salary distributions by department — realistic US salary ranges,
+          neutral topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Realistic US salary ranges: Engineering ~$85K, Marketing ~$65K,
-          Sales ~$45K base, Support ~$42K/$62K tiers.'
+        comment: Salary values $30,000-$150,000 are realistic for the departments
+          shown.
     code_quality:
       score: 10
       max: 10
@@ -196,35 +199,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports-Data-Plot-Save flow. Loop for 4 categories. No functions
-          or classes.
+        comment: Linear script, for loop is necessary for multi-violin iteration.
+          No unnecessary functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at beginning.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, bokeh.io, bokeh.models, bokeh.plotting,
-          scipy.stats.'
+        comment: 'All imports used: os, sys, time, Path, numpy, bokeh (io/models/plotting),
+          scipy.stats, selenium, PIL.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized with helpful comments. Appropriate ColumnDataSource
-          usage. No over-engineering.
+        comment: No fake UI. Appropriate complexity. HoverTool is native Bokeh interactivity,
+          not simulated.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png via export_png and plot.html via save. Current Bokeh
-          API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Bokeh API.
     library_mastery:
       score: 8
       max: 10
@@ -234,13 +236,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource for all data, categorical axis via x_range, tuple-based
-          offsets, patch/quad/segment glyphs. Idiomatic Bokeh style.
+        comment: ColumnDataSource throughout, categorical x_range with offset tuples,
+          HoverTool, NumeralTickFormatter, CDP setDeviceMetricsOverride for precise
+          PNG dimensions.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: HoverTool for interactive tooltips, dual PNG+HTML output, NumeralTickFormatter,
-          categorical offset tuples.
+        comment: HoverTool with salary statistics (interactive feature), HTML artifact
+          output, NumeralTickFormatter for currency, categorical offset tuples for
+          violin positioning.
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  - selenium
+  - pillow
+  techniques:
+  - hover-tooltips
+  - html-export
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - columndatasource
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending

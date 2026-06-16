@@ -32,7 +32,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data: Coefficients from a housing price regression model
 np.random.seed(42)
@@ -69,7 +69,7 @@ df["variable"] = pd.Categorical(
 
 # Theme-adaptive colors for significance
 sig_colors = {
-    "Significant": OKABE_ITO[0],  # Brand green
+    "Significant": IMPRINT[0],  # Brand green
     "Not Significant": INK_SOFT,  # Theme-adaptive soft ink
 }
 

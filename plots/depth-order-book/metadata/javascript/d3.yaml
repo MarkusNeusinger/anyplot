@@ -1,0 +1,281 @@
+library: d3
+language: javascript
+specification_id: depth-order-book
+created: '2026-06-15T03:03:06Z'
+updated: '2026-06-15T03:24:19Z'
+generated_by: claude-sonnet
+workflow_run: 27520941001
+issue: 8657
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Perfect spec compliance — all required features implemented (cumulative step areas,
+    bid-ask spread gap, mid-price dashed line, spread annotation, wall annotations
+    at support/resistance levels)
+  - Expertly idiomatic D3 usage — curveStepAfter curve interpolator for staircase
+    areas, d3.area() + d3.line() combo, data joins with .call() pattern for grouped
+    wall annotations, d3.format for currency formatting
+  - Deterministic Park-Miller LCG with seed 42 — correctly avoids Math.random() as
+    required for D3 browser context
+  - Justified semantic color exception — bid=palette[0] (#009E73 green) for buy orders,
+    ask=palette[4] (#AE3030 matte red) for sell orders, with code comment explaining
+    the semantic reasoning
+  - 'Thoughtful dark-mode fix — ASK_FILL_OPACITY raised from 0.18 to 0.28 in dark
+    mode, with code comment noting that #AE3030 at 18% on #1A1A17 is nearly invisible'
+  - Strong data storytelling — wall annotations (3 bid walls, 3 ask walls) with tick
+    lines and price labels call out support/resistance levels; spread gap shaded background
+    highlights the center gap; mid-price and spread prominently annotated near the
+    dashed line
+  weaknesses:
+  - Wall annotation font size at 11px CSS (22px native at 2x DPR) is at the lower
+    bound — increasing to 13px would improve readability when the chart is displayed
+    in smaller contexts
+  - Bid area fill-opacity is 18% in both light and dark themes — in dark mode this
+    creates a very subtle near-black greenish tint; raising bid fill-opacity to 25%
+    in dark mode (matching the pattern used for ask) would improve visual parity between
+    light and dark renders
+  - Ask area fill at 28% opacity in dark mode still produces a very dark near-black/maroon
+    fill — a further increase to 35-40% would make the red fill more perceptible without
+    losing the semi-transparent character
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "depth-order-book · javascript · d3 · anyplot.ai" at 22px bold, centered, clearly readable in dark ink. X-axis label "Price (USD)" and Y-axis label "Cumulative Volume (BTC)" at 16px, both clearly visible. Dollar-formatted tick labels ($59,750–$60,250 on x; 0–80 on y) at 14px, readable. Legend "Bids (Buy Orders)" and "Asks (Sell Orders)" at 14px top-right, clear. Mid/spread annotations at 13-14px near center, visible.
+      Data: Bid step area in #009E73 (brand green) with 18% fill opacity (soft mint fill) and solid 2px green outline — forms a descending staircase from left toward the center. Ask step area in #AE3030 (matte red) with 18% fill opacity (soft rose fill) and solid 2px red outline — ascending staircase from center to right. Three bid wall jumps annotated at $59,800, $59,885, $59,945 in green. Three ask wall jumps annotated at $60,045, $60,100, $60,180 in red. Spread gap shaded with a subtle gray rectangle. Dashed vertical mid-price line at $60,000. Y-axis grid lines subtle (t.grid token). L-shaped axis frame (bottom + left only).
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title and axis labels render in light cream/off-white (t.ink token = #F0EFE8), clearly readable against dark background. Tick labels in lighter secondary ink (t.inkSoft). Mid-price and spread annotations in t.inkSoft, readable. Legend text in t.ink, visible. No dark-on-dark failures observed — all chrome elements flip correctly from dark to light.
+      Data: Bid area in #009E73 with 18% fill opacity produces a dark greenish-tinted fill (subtle but present) with a clearly visible solid green outline stroke. Ask area in #AE3030 with 28% fill opacity (dark-mode raise) produces a dark maroon-ish fill with a clearly visible solid red outline stroke. Wall annotations in their respective bid/ask colors remain readable against the dark background. Data colors (green bid, red ask) are identical to the light render — only chrome flips.
+      Legibility verdict: PASS — all text is readable, no dark-on-dark failures. The semi-transparent fills are more subtle in dark mode but the solid outline strokes maintain clear visual boundaries. Fill opacity is slightly low (especially for bids at 18%) but outline strokes compensate.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set — title 22px, axis labels 16px, tick
+          labels 14px, legend 14px, wall annotations 11px. Readable in both themes.
+          Minor ding: wall annotations at 11px CSS are at the lower bound.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements. Wall annotations are well-spaced
+          from each other and from the staircase curves.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bid and ask areas clearly visible via solid outline strokes and semi-transparent
+          fills. Staircase steps clearly defined. Wall jumps prominent.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/red are semantic expectations for bid/ask in financial charts.
+          Redundant encoding via position (left=bids, right=asks) and legend labels
+          ensures CVD safety.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Canvas gate passed (no /tmp/anyplot-canvas-gate.txt). Layout well-balanced:
+          symmetric bid/ask areas, generous margins (top:80 right:60 bottom:90 left:90),
+          nothing cut off, title well-positioned.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X-axis: ''Price (USD)'' with $-formatted ticks. Y-axis: ''Cumulative
+          Volume (BTC)''. Both descriptive with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Bid=palette[0] (#009E73 brand green), Ask=palette[4] (#AE3030 matte
+          red) — justified semantic exception for buy/sell. Chrome uses t.ink, t.inkSoft,
+          t.grid tokens. Light bg #FAF8F1, dark bg #1A1A17. Data colors identical
+          between themes.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design clearly above defaults: semantic color choices for
+          bid/ask, wall annotations with tick lines, spread gap highlighted, mid-price
+          and spread prominently annotated. Professional, publication-ready appearance.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Semi-transparent fills, Y-axis-only grid lines (subtle), spread gap
+          shading, natural L-frame from D3 axis defaults. Grid domain removed from
+          grid group. Some refinement above library defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Wall annotations at 3 bid and 3 ask levels guide viewer to key support/resistance.
+          Mid-price and spread annotated near the visual center. Chart clearly communicates
+          order book depth and the bid-ask spread story.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct market depth chart with cumulative bid/ask step areas. Staircase
+          curves using curveStepAfter.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: cumulative bid area (green, step), cumulative
+          ask area (red, step), bid-ask spread visible gap, dashed mid-price line,
+          spread annotation, wall support/resistance levels.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Price on x-axis, cumulative quantity on y-axis. Bids to the left
+          (lower prices), asks to the right (higher prices). Symmetric around mid
+          price.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''depth-order-book · javascript · d3 · anyplot.ai'' — correct
+          format. Legend: ''Bids (Buy Orders)'' and ''Asks (Sell Orders)'' — clear
+          and accurate labels.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: both bid and ask sides, cumulative quantity,
+          staircase steps, wall jumps (support/resistance), spread gap, mid-price.
+          50 levels per side.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: BTC/USD pair at $60,000 mid price — realistic, neutral, comprehensible
+          scenario. $20 spread, $5 tick size, wall orders at plausible levels.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: ~80 BTC cumulative volume per side, $500 price range at $60k — plausible
+          for a liquid BTC/USD order book. Wall multiplier (7x) creates realistic-looking
+          support/resistance walls.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat procedural script — no functions or classes. Linear flow: tokens
+          → data generation → scales → SVG mount → grid → areas → annotations → axes
+          → labels → legend → title.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic Park-Miller LCG with seed 42 — correctly avoids Date.now()
+          and Math.random() as required for D3 browser context reproducibility.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports — d3 is a global. All variables used. No dead code.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, idiomatic D3 code. Data joins with .call() pattern for wall
+          annotations is elegant. No over-engineering, no fake UI elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Uses window.ANYPLOT_TOKENS, window.ANYPLOT_SIZE, window.ANYPLOT_THEME
+          correctly. Sizes SVG from window.ANYPLOT_SIZE. Harness handles file output.
+          Current D3 7.9.0 API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert D3 usage: d3.area() + d3.line() with curveStepAfter, d3.scaleLinear()
+          with .nice(), d3.axisBottom/axisLeft with tick formatting, d3.format() for
+          currency, data join pattern with .join(''g'').call() for grouped elements.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Uses D3-distinctive curveStepAfter interpolator for staircase curves,
+          the area+line combination (two paths from same data) which is a D3 pattern,
+          and the data join .call() chaining for grouped SVG elements. Minor deduction:
+          these techniques could be adapted to other SVG-based libraries.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - step-area
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending

@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 waveform-audio: Audio Waveform Plot
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-07
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-06-03
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,6 +12,33 @@ import pandas as pd
 import seaborn as sns
 from matplotlib.patches import Patch
 
+
+# Theme tokens — Imprint palette + theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+BRAND = "#009E73"  # Imprint palette position 1 — ALWAYS first series
+
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "grid.linewidth": 0.8,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
 
 # Data
 np.random.seed(42)
@@ -44,106 +73,91 @@ signal *= amplitude_envelope
 signal += np.random.normal(0, 0.01, num_samples)
 signal = np.clip(signal, -1.0, 1.0)
 
-# Downsample for smooth envelope rendering
+# Bin samples for seaborn's percentile-band rendering
+# Each chunk covers ~3.6 ms; seaborn computes min-to-max range at each bin natively
 chunk_size = 80
 num_chunks = num_samples // chunk_size
-time_chunks = time[: num_chunks * chunk_size].reshape(num_chunks, chunk_size)
-signal_chunks = signal[: num_chunks * chunk_size].reshape(num_chunks, chunk_size)
+time_chunked = time[: num_chunks * chunk_size].reshape(num_chunks, chunk_size)
+signal_chunked = signal[: num_chunks * chunk_size].reshape(num_chunks, chunk_size)
 
-env_time = time_chunks.mean(axis=1)
-env_max = signal_chunks.max(axis=1)
-env_min = signal_chunks.min(axis=1)
+env_time = time_chunked.mean(axis=1)
+env_max = signal_chunked.max(axis=1)
+env_min = signal_chunked.min(axis=1)
 
-# Smooth the envelope to remove oscillation jaggedness
+# Classify bins as Loud vs Quiet via smoothed RMS
 kernel = np.ones(5) / 5
-env_max = np.convolve(env_max, kernel, mode="same")
-env_min = np.convolve(env_min, kernel, mode="same")
-
-# Classify segments for storytelling: loud vs quiet regions
+env_max_smooth = np.convolve(env_max, kernel, mode="same")
+env_min_smooth = np.convolve(env_min, kernel, mode="same")
 smooth_kernel = np.ones(15) / 15
-rms = np.sqrt(np.convolve((env_max - env_min) ** 2, smooth_kernel, mode="same"))
+rms = np.sqrt(np.convolve((env_max_smooth - env_min_smooth) ** 2, smooth_kernel, mode="same"))
 rms_threshold = np.median(rms) * 1.1
 segment_label = np.where(rms > rms_threshold, "Loud", "Quiet")
 
-# Build a long-form DataFrame for seaborn envelope edges
-df_env = pd.DataFrame(
-    {
-        "Time (seconds)": np.concatenate([env_time, env_time]),
-        "Amplitude": np.concatenate([env_max, env_min]),
-        "edge": ["upper"] * len(env_time) + ["lower"] * len(env_time),
-    }
-)
-
-# Color palette for dynamics emphasis
-dynamics_palette = {"Loud": "#306998", "Quiet": "#89ABD0"}
+# Long-form DataFrame: every sample labeled with its time-bin center
+# seaborn lineplot errorbar=('pi', 100) => 0th–100th percentile = envelope min/max
+df_long = pd.DataFrame({"Time (s)": np.repeat(env_time, chunk_size), "Amplitude": signal_chunked.flatten()})
 
 # Plot
-sns.set_theme(
-    style="whitegrid",
-    context="talk",
-    font_scale=1.2,
-    rc={
-        "grid.alpha": 0.15,
-        "grid.linewidth": 0.8,
-        "axes.spines.top": False,
-        "axes.spines.right": False,
-        "axes.edgecolor": "#444444",
-    },
-)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 
-fig, ax = plt.subplots(figsize=(16, 9))
-
-# Fill quiet regions first (background layer), then loud on top
-for label, color, alpha in [("Quiet", "#89ABD0", 0.3), ("Loud", "#306998", 0.55)]:
-    mask = segment_label == label
-    sections = np.ma.clump_unmasked(np.ma.masked_where(~mask, mask))
-    for sl in sections:
-        start = max(0, sl.start - 1)
-        stop = min(len(env_time), sl.stop + 1)
-        expanded = slice(start, stop)
-        ax.fill_between(env_time[expanded], env_max[expanded], env_min[expanded], color=color, alpha=alpha, linewidth=0)
-
-# Draw continuous envelope edges with seaborn lineplot
+# Primary waveform: seaborn-native percentile band renders the full amplitude range at each
+# time bin — mean line sits near zero (oscillating signal) with the envelope as fill width
 sns.lineplot(
-    data=df_env,
-    x="Time (seconds)",
+    data=df_long,
+    x="Time (s)",
     y="Amplitude",
-    hue="edge",
-    palette={"upper": "#306998", "lower": "#306998"},
-    linewidth=1.5,
-    alpha=0.85,
-    legend=False,
+    color=BRAND,
+    errorbar=("pi", 100),
+    linewidth=0.8,
+    err_kws={"alpha": 0.4},
     ax=ax,
 )
 
-# Zero-line
-ax.axhline(y=0, color="#888888", linewidth=1.0, alpha=0.4, zorder=1)
+# Quiet regions: secondary matplotlib overlay with muted tone to distinguish dynamics
+quiet_mask = segment_label == "Quiet"
+quiet_sections = np.ma.clump_unmasked(np.ma.masked_where(~quiet_mask, quiet_mask))
+for sl in quiet_sections:
+    start = max(0, sl.start - 1)
+    stop = min(len(env_time), sl.stop + 1)
+    ax.fill_between(
+        env_time[start:stop],
+        env_max[start:stop],
+        env_min[start:stop],
+        color=INK_MUTED,
+        alpha=0.35,
+        linewidth=0,
+        zorder=3,
+    )
 
-# Storytelling annotations for dynamic sections
-ax.annotate(
-    "Attack + Sustain", xy=(0.10, 0.76), fontsize=13, color="#1E4264", fontstyle="italic", ha="center", va="bottom"
-)
-ax.annotate("Decay", xy=(0.38, 0.22), fontsize=13, color="#5A84A8", fontstyle="italic", ha="center", va="bottom")
-ax.annotate(
-    "Second Phrase", xy=(0.72, 0.65), fontsize=13, color="#1E4264", fontstyle="italic", ha="center", va="bottom"
-)
+# Zero-line reference
+ax.axhline(y=0, color=INK_SOFT, linewidth=0.8, alpha=0.5, zorder=2)
 
-# Legend for dynamics
+# Annotations for musical dynamics — kept as storytelling (reviewed strength)
+ax.annotate(
+    "Attack + Sustain", xy=(0.10, 0.78), fontsize=8, color=INK_SOFT, fontstyle="italic", ha="center", va="bottom"
+)
+ax.annotate("Decay", xy=(0.38, 0.22), fontsize=8, color=INK_MUTED, fontstyle="italic", ha="center", va="bottom")
+ax.annotate("Second Phrase", xy=(0.72, 0.67), fontsize=8, color=INK_SOFT, fontstyle="italic", ha="center", va="bottom")
+
+# Legend
 legend_elements = [
-    Patch(facecolor="#306998", alpha=0.55, label="Loud"),
-    Patch(facecolor="#89ABD0", alpha=0.3, label="Quiet"),
+    Patch(facecolor=BRAND, alpha=0.5, label="Loud"),
+    Patch(facecolor=INK_MUTED, alpha=0.35, label="Quiet"),
 ]
-ax.legend(handles=legend_elements, loc="upper right", fontsize=14, framealpha=0.8)
+ax.legend(
+    handles=legend_elements, loc="upper right", fontsize=8, framealpha=0.85, facecolor=ELEVATED_BG, edgecolor=INK_SOFT
+)
 
 # Style
-ax.set_xlabel("Time (seconds)", fontsize=20)
-ax.set_ylabel("Amplitude", fontsize=20)
-ax.set_title("waveform-audio · seaborn · pyplots.ai", fontsize=24, fontweight="medium")
-ax.tick_params(axis="both", labelsize=16)
+title = "waveform-audio · python · seaborn · anyplot.ai"
+ax.set_xlabel("Time (s)", fontsize=10, color=INK)
+ax.set_ylabel("Amplitude", fontsize=10, color=INK)
+ax.set_title(title, fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 ax.set_ylim(-1.05, 1.05)
 ax.set_xlim(0, duration)
 sns.despine(ax=ax)
 
-# Save
+# Save — no bbox_inches='tight': figsize×dpi yields exact 3200×1800 px canvas
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

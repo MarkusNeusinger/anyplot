@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 /**
  * Hook for syncing state with localStorage.
@@ -43,12 +43,11 @@ export function useLocalStorage<T>(
   }, [key, value]);
 
   // Wrapper to support functional updates
-  const setValueWrapped = useCallback(
-    (newValue: T | ((prev: T) => T)) => {
-      setValue((prev) => (typeof newValue === 'function' ? (newValue as (prev: T) => T)(prev) : newValue));
-    },
-    []
-  );
+  const setValueWrapped = useCallback((newValue: T | ((prev: T) => T)) => {
+    setValue(prev =>
+      typeof newValue === 'function' ? (newValue as (prev: T) => T)(prev) : newValue
+    );
+  }, []);
 
   return [value, setValueWrapped];
 }

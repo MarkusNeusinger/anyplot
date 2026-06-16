@@ -80,9 +80,9 @@ for tgt in targets:
 # Okabe-Ito palette for source colors — distinct, colorblind-safe
 source_colors = {
     "Coal": "#009E73",  # Okabe-Ito #1 (brand green)
-    "Gas": "#D55E00",  # Okabe-Ito #2 (vermillion)
-    "Nuclear": "#0072B2",  # Okabe-Ito #3 (blue)
-    "Renewable": "#CC79A7",  # Okabe-Ito #4 (reddish purple)
+    "Gas": "#C475FD",  # Okabe-Ito #2 (vermillion)
+    "Nuclear": "#4467A3",  # Okabe-Ito #3 (blue)
+    "Renewable": "#BD8233",  # Okabe-Ito #4 (reddish purple)
 }
 
 # Target node colors — muted, distinct from source palette

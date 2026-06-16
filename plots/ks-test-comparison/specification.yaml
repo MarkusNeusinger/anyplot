@@ -6,7 +6,7 @@ title: Kolmogorov-Smirnov Plot for Distribution Comparison
 
 # Specification tracking
 created: 2026-01-25T22:32:37Z
-updated: null
+updated: 2026-05-29T03:05:32Z
 issue: 4130
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - ecdf
-    - statistical
   data_type:
     - numeric
     - continuous

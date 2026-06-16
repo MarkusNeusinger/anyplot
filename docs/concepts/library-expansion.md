@@ -14,10 +14,12 @@ priority order.
 
 ## 1. Current state
 
-anyplot currently ships **9 Python libraries**, **1 R library** (ggplot2 —
-the first non-Python entry; landed as Phase 3 of the rollout below), and
-**1 Julia library** (Makie.jl via CairoMakie; landed as Phase 5 ahead of the
-original roadmap order — see §8).
+anyplot currently ships **8 Python libraries**, **1 R library** (ggplot2 —
+the first non-Python entry; landed as Phase 3), **1 Julia library** (Makie.jl
+via CairoMakie; landed as Phase 5 ahead of the original roadmap order — see §8),
+and **5 JavaScript libraries** (Chart.js / D3 / ECharts from Phase 1, Highcharts
+migrated in Phase 2, and MUI X — a React entry — pulled forward in Phase 4).
+That is **15 libraries** across four languages.
 
 | #  | Library    | Native     | In anyplot as | Most-used variant | Notes                                       |
 |----|------------|------------|---------------|-------------------|---------------------------------------------|
@@ -32,10 +34,17 @@ original roadmap order — see §8).
 | 9  | lets-plot  | Kotlin     | Python        | Python            | Python frontend has the most users today.   |
 | 10 | ggplot2    | R          | R             | R                 | First non-Python entry; landed in Phase 3.  |
 | 11 | Makie.jl   | Julia      | Julia         | Julia             | CairoMakie backend (static PNG). Phase 5.   |
+| 12 | MUI X Charts | JavaScript | JavaScript  | JavaScript        | React framework (`framework: react`), `.tsx`. Community `@mui/x-charts` (MIT) only; Pro/Premium out of scope. First React entry — Phase 4, pulled forward (§8). |
 
-**Implication:** under the most-used rule (see §6), only **Highcharts** is
-filed under the wrong language and should move to JavaScript. Plotly and
-lets-plot are correctly filed as Python despite not being native.
+(Chart.js, D3, ECharts also ship as native JavaScript entries from Phase 1 —
+they are framework-agnostic and omitted from this cross-language table since
+there is no "most-used variant" question for them.)
+
+**Implication:** under the most-used rule (see §6), only **Highcharts** was
+filed under the wrong language and moved to JavaScript (Phase 2). Plotly and
+lets-plot are correctly filed as Python despite not being native. **MUI X** is
+native JavaScript and the React variant is the only one, so it files as
+JavaScript with a `framework: react` flag.
 
 ---
 
@@ -77,7 +86,11 @@ Estimated share *within* JS charting demand. (npm downloads + GitHub stars +
 | **ApexCharts**       |  ~4 %  | MIT         | SVG             | yes     | Popular in admin templates / dashboards.                             |
 | **Observable Plot**  |  ~3 %  | ISC         | SVG, declarative| yes     | Mike Bostock's modern successor concept to D3 for everyday charts.   |
 | **Vega / Vega-Lite** |  ~3 %  | BSD         | JSON spec       | yes     | Altair already covers Vega-Lite from Python.                         |
+| **MUI X Charts**     |  ~2 %  | MIT †       | React (SVG)     | yes     | Charts in the MUI ecosystem. Community pkg `@mui/x-charts` is MIT; Pro features (zoom/pan, …) are commercial → out of scope. |
 | Nivo, Visx, amCharts |  ~4 %  | mixed       | various         | yes     | React/enterprise niches.                                             |
+
+† MIT applies to the community package `@mui/x-charts`. `@mui/x-charts-pro` (advanced
+zoom & pan, etc.) is commercially licensed and out of scope — see §9.
 
 ---
 
@@ -206,9 +219,9 @@ Benefits:
   relevant — no schema change needed.
 
 Framework-agnostic libraries set `framework: "none"` (the default).
-Framework-only libraries get tagged accordingly. **Recharts** is the only
-Tier 3 entry currently affected; everything in Tier 1 / Tier 2 is
-framework-agnostic.
+Framework-only libraries get tagged accordingly. **Recharts** and **MUI X
+Charts** are the Tier 3 entries currently affected; everything in Tier 1 /
+Tier 2 is framework-agnostic.
 
 ### Licensing policy
 
@@ -287,6 +300,9 @@ Ranked by `reach × ease-of-integration ÷ duplication-risk`.
    is mature.
 9. **ApexCharts (JavaScript)** — fills the "admin-template / dashboard" SEO
    long tail.
+10. **MUI X Charts (TypeScript / React)** — community `@mui/x-charts` (MIT) serves the
+    MUI/React dashboard audience; **Pro features stay out** (see §9). Framework-locked
+    like Recharts, so it sits in the same niche tier.
 
 ### Defer / skip
 
@@ -304,10 +320,10 @@ Ranked by `reach × ease-of-integration ÷ duplication-risk`.
 | Phase | Adds                                | New languages | Cumulative library count | Status   |
 |-------|-------------------------------------|---------------|--------------------------|----------|
 | 0     | —                                   | Python        |  9                       | shipped  |
-| 1     | Chart.js, D3.js, ECharts            | + JavaScript  | 12                       | planned  |
-| 2     | Highcharts (replaces Python entry)  | —             | 12                       | planned  |
+| 1     | Chart.js, D3.js, ECharts            | + JavaScript  | 14                       | **in progress** — JS runtime (Node 22 + Playwright render harness), registry, workflows, prompts, and frontend landed; plot implementations generated next via `bulk-generate`. Cumulative count is 14 (the Phase-3/5 R+Julia entries already shipped). |
+| 2     | Highcharts (replaces Python entry)  | —             | 14                       | **shipped** (#8242) — Highcharts migrated Python → JavaScript. Executed as a **clean break** (the §6 deprecation-window *fallback*, chosen by the owner for simplicity): the 322 Python `highcharts.py` impls were removed and the canonical entry flipped to the native `highcharts.js` (v12.6.0) on the Node + Playwright harness; JS implementations are recreated gradually via `bulk-generate` / `daily-regen`. Cumulative count stays 14 — a move, not an addition. |
 | 3     | **ggplot2**                         | **+ R**       | **10**                   | **shipped** (Phase 3 was implemented before Phases 1+2; net total was 10 until Phase 5 landed Julia) |
-| 4     | Recharts, Observable Plot           | —             | TBD                      | planned  |
+| 4     | **MUI X Charts** (Recharts, Observable Plot deferred) | — | 15 | **MUI X shipped** — its Tier-3 React entry (§7 #10) was **pulled forward** as the JavaScript rollout's third issue (after Phase 1 runtime + Phase 2 Highcharts) to validate the **React/TSX harness path** end to end. Community `@mui/x-charts` (MIT) only; rendered through the harness's esbuild `framework: react` branch. Cumulative count 15 (a genuine addition). Recharts / Observable Plot remain planned. |
 | 5     | **Makie.jl** (ApexCharts deferred)  | **+ Julia**   | **11**                   | **shipped** (Phase 5 was implemented before Phases 1+2+4 to validate the multi-language pipeline on a second non-Python runtime; ApexCharts split to a later phase) |
 
 > **Why Phase 2 ≠ Tier 2 #4 from §7.** §7 ranks ggplot2 (Tier 2 #4) above
@@ -317,8 +333,9 @@ Ranked by `reach × ease-of-integration ÷ duplication-risk`.
 > Highcharts is cheaper to ship next even though it ranks lower on raw
 > reach.
 
-After Phase 3 anyplot covers ~95 % of global charting-library demand with 13
-entries.
+With Phases 1–5 landed (plus MUI X pulled forward from Phase 4), anyplot covers
+~95 % of global charting-library demand with **15 entries** across Python, R,
+Julia, and JavaScript.
 
 ---
 
@@ -330,8 +347,12 @@ entries.
   metadata flag, not separate languages.
 - **Cross-language libraries** appear once, under the variant with ≥ 3× more
   weekly downloads (else native).
-- **Highcharts** moves from Python to JavaScript. Keep both entries for one
-  release as a deprecation window, then drop the Python entry.
+- **Highcharts** moved from Python to JavaScript (Phase 2, #8242). The §6
+  deprecation window was one option; in practice it shipped as a **clean break**
+  (the documented fallback) — the Python `highcharts-core` impls were dropped and
+  the canonical entry flipped straight to the native `highcharts.js`, with JS
+  implementations recreated gradually rather than dual-serving Python + JS for one
+  release. Old `/{spec}/python/highcharts` deep links fall back to the spec hub.
 - **Licensing**: FOSS-first; libraries with a free-for-private-use tier
   (Highcharts, amCharts) are allowed but tagged and never crowd out FOSS
   alternatives at the same tier.
@@ -352,6 +373,22 @@ entries.
   commercial-with-free-tier model) at ~18× lower download volume, and a
   second commercial entry would weaken the FOSS-first stance. Revisit only
   if Plausible data shows unmet demand for amCharts-specific examples.
+- **MUI X Charts: community tier only.** `@mui/x-charts` (MIT) is in scope as a
+  React/JavaScript entry (Tier 3, §7). `@mui/x-charts-pro` / Premium features (advanced
+  zoom & pan, etc.) are commercially licensed and out of scope — same FOSS-first reasoning
+  as the Highcharts/amCharts policy in §6. Snippets must use only the MIT community surface;
+  only the community package is installed, so a Pro import fails the build outright.
+- **MUI X renders through the harness's React (esbuild) branch.** MUI X is the
+  catalog's first `framework: react` and first `.tsx` entry, so it does **not**
+  use the UMD-global path of the other JS libs. Its snippet is a `.tsx` module
+  that **default-exports a React component**; the Node + Playwright render harness
+  esbuild-bundles it with `react` / `react-dom` / `@mui/x-charts`, wraps it in a
+  theme-aware MUI `ThemeProvider` (mapped onto `ANYPLOT_TOKENS`), mounts it with
+  `createRoot`, and screenshots `#container` at the canonical canvas size — the
+  same exact-pixel contract as the framework-agnostic libs. The browser (not jsdom
+  SSR) is required because MUI X measures real SVG text (getBBox) for axis/legend
+  layout. `language_id` stays `javascript`; React is a runtime constraint, not a
+  language (§6).
 - **Phase 5 (Julia / Makie.jl) shipped before Phases 1+2 (JavaScript).**
   The original roadmap order was Phase 1 (Chart.js / D3 / ECharts) →
   Phase 2 (Highcharts JS) → Phase 3 (ggplot2) → Phase 4 (Recharts /

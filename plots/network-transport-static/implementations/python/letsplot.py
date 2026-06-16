@@ -42,7 +42,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette for route types
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data: Regional rail network with stations and routes
 np.random.seed(42)
@@ -150,7 +150,7 @@ edges_df = pd.DataFrame(edges_data)
 
 # Map route types to Okabe-Ito colors
 route_type_order = ["Express", "Regional", "Local"]
-route_colors = {route_type_order[i]: OKABE_ITO[i] for i in range(len(route_type_order))}
+route_colors = {route_type_order[i]: IMPRINT[i] for i in range(len(route_type_order))}
 
 # Create tooltip specs for interactive hover
 edge_tooltips = (
@@ -185,7 +185,7 @@ plot = (
         size=12,
         color="white",
         shape=21,
-        fill=OKABE_ITO[0],
+        fill=IMPRINT[0],
         stroke=2.5,
         tooltips=station_tooltips,
     )

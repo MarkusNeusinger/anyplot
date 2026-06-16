@@ -19,7 +19,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 
 GOAL_COLOR = "#009E73"  # Okabe-Ito position 1
-ENTRY_COLOR = "#D55E00"  # Okabe-Ito position 2
+ENTRY_COLOR = "#C475FD"  # Okabe-Ito position 2
 
 # Data — Fibonacci sector progression for naturally varied corridor widths
 np.random.seed(13)

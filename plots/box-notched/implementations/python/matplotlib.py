@@ -18,7 +18,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - first series is always brand green
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data - Test success rates across different test suites
 np.random.seed(42)
@@ -68,7 +68,7 @@ bp = ax.boxplot(
 )
 
 # Apply colors to boxes
-for patch, color in zip(bp["boxes"], OKABE_ITO, strict=True):
+for patch, color in zip(bp["boxes"], IMPRINT, strict=True):
     patch.set_facecolor(color)
     patch.set_alpha(0.75)
     patch.set_edgecolor(INK_SOFT)

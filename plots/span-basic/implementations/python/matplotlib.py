@@ -19,8 +19,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 BRAND = "#009E73"  # Okabe-Ito position 1 — first series
-C2 = "#D55E00"  # Okabe-Ito position 2
-C3 = "#0072B2"  # Okabe-Ito position 3
+C2 = "#C475FD"  # Okabe-Ito position 2
+C3 = "#4467A3"  # Okabe-Ito position 3
 
 # Data — stock prices with a simulated recession dip
 np.random.seed(42)

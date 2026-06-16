@@ -28,9 +28,9 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 BRAND = "#009E73"  # Okabe-Ito position 1 — data series
-ULT_COLOR = "#D55E00"  # Okabe-Ito position 2 — Ultimate Strength line
-ENDU_COLOR = "#0072B2"  # Okabe-Ito position 3 — Endurance Limit line
-YIELD_COLOR = "#CC79A7"  # Okabe-Ito position 4 — Yield Strength line
+ULT_COLOR = "#C475FD"  # Okabe-Ito position 2 — Ultimate Strength line
+ENDU_COLOR = "#4467A3"  # Okabe-Ito position 3 — Endurance Limit line
+YIELD_COLOR = "#BD8233"  # Okabe-Ito position 4 — Yield Strength line
 
 # Data — S-N fatigue test results for steel specimens (Basquin equation)
 np.random.seed(42)

@@ -1,0 +1,254 @@
+library: makie
+language: julia
+specification_id: map-tile-background
+created: '2026-05-27T15:35:03Z'
+updated: '2026-05-27T16:05:26Z'
+generated_by: claude-sonnet
+workflow_run: 26520980477
+issue: 3756
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Theme-adaptive tile providers (OSM for light, CARTO dark for dark) is a best-in-class
+    design decision
+  - Correct Web Mercator projection implemented from scratch with mathematically accurate
+    lat/lon to Mercator transforms
+  - Tile stitching with proper pixel layout using permutedims handles Julia array
+    orientation correctly
+  - Top-8 city labeling strategy balances information density with readability
+  - 'All spec requirements met: attribution, multiple tile providers, auto-fit bounds,
+    markers on tiles'
+  - Clean error handling for tile download failures with @warn
+  weaknesses:
+  - Colorbar width=16 is quite thin — increase to width=20 or width=24 for better
+    readability
+  - City label fontsize=10 is small; bumping to fontsize=11 would improve mobile readability
+    without causing crowding
+  - Attribution text at fontsize=9 may be hard to read on mobile scale — 10 is the
+    practical floor
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white page margins (#FAF8F1); OpenStreetMap tiles as the plot area background (warm beige/tan world map with street-level detail)
+      Chrome: Title "map-tile-background · julia · makie · anyplot.ai" in dark ink (#1A1A17); axis labels "Longitude" and "Latitude" in dark ink; tick labels in #4A4A44 (INK_SOFT) with cardinal directions (60°N, 0°, 120°E etc.); attribution text bottom-right in INK_SOFT
+      Data: 20 city markers sized proportionally to visitor count (10–38px); colormap from brand green (#009E73) to blue (#4467A3); 8 city labels in dark text offset from markers; colorbar on right labeled "Annual Visitors (millions)"
+      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black page margins (#1A1A17); CARTO dark tiles as the plot area background (dark-themed world map with light gray/white text labels)
+      Chrome: Title in near-white (#F0EFE8); axis labels in near-white; tick labels in #B8B7B0 (INK_SOFT dark); colorbar label and ticks in light chrome tokens; attribution text in INK_SOFT
+      Data: Identical marker colors to light render (green→blue gradient with same size encoding); city labels in near-white (#F0EFE8) readable against dark tile background
+      Legibility verdict: PASS — all text clearly readable against dark background; no dark-on-dark failures; data colors identical to light render; only chrome and tile style flipped
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title/axis/tick labels all readable in both themes. City labels at
+          fontsize=10 and attribution at fontsize=9 are small but conventional for
+          map annotations.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Eight city labels well-chosen and globally distributed. London/Paris
+          slightly crowded but not critically overlapping.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Marker sizes 10-38px with PAGE_BG stroke provide clear visual hierarchy.
+          20 data points at good density.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential green-to-blue colormap is CVD-safe. Marker strokes add
+          contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas confirmed. Map + colorbar layout clean. Colorbar
+          width=16 renders thin but functional.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Longitude/Latitude labels with N/S/E/W degree notation. Title format
+          correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'ANYPLOT_SEQ uses #009E73 to #4467A3 (correct sequential). PAGE_BG
+          correct in both themes. All chrome tokens properly applied.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Theme-adaptive tile providers (OSM light / CARTO dark); manual Web
+          Mercator projection; size+color dual encoding; cardinal-direction tick labels.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed; grid disabled for map context; marker strokes
+          for definition; minimal chrome.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear focal point (Paris/Bangkok as largest markers); top-8 labeling
+          avoids clutter; size+color redundancy reinforces visitor count message.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct map with real tile background fetched from OSM/CARTO.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Multiple tile providers; auto-fit bounds with 12% padding; markers
+          on tiles with stroke contrast; attribution included.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Lat/lon with Web Mercator projection; visitor count in size and color;
+          all 20 points visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: map-tile-background · julia · makie · anyplot.ai. Colorbar
+          labeled Annual Visitors (millions). Top-8 city annotations.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All data dimensions present: lat/lon, value in color, value in size,
+          city labels.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real city names with accurate coordinates and realistic annual visitor
+          counts. Neutral topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Visitor counts 2.7M-34M accurate to real-world magnitudes. Coordinates
+          match actual city locations.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes; clean imperative top-level script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) present.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All five imports (CairoMakie, Colors, Random, Downloads, PNGFiles)
+          are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clear section comments, no fake UI, proper error handling via try/catch
+          for tile downloads.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png; uses current Makie 0.22 API (size keyword,
+          not deprecated resolution).
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct Figure/Axis grid layout, image! for raster background, scatter!
+          with colormap, text! for annotations, Colorbar as figure-level element.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: image! for stitched raster tile background; cgrad for sequential
+          colormap; permutedims for pixel array orientation; Web Mercator tile math
+          showcasing Julia numerical capabilities.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - pngfiles
+  techniques:
+  - manual-ticks
+  - annotations
+  - colorbar
+  patterns:
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
+  - edge-highlighting

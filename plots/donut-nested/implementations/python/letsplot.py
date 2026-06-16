@@ -38,7 +38,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Budget allocation by department (inner) and expense categories (outer)
 data = [
@@ -76,7 +76,7 @@ level2_agg = df.groupby(["level_1", "level_2"])["value"].sum().reset_index()
 level2_agg["pct"] = level2_agg["value"] / total_value
 
 # Map categories to colors
-color_map_l1 = {cat: OKABE_ITO[i] for i, cat in enumerate(level1_order)}
+color_map_l1 = {cat: IMPRINT[i] for i, cat in enumerate(level1_order)}
 color_map_l2 = {}
 for l1_cat in level1_order:
     children = level2_agg[level2_agg["level_1"] == l1_cat]["level_2"].unique()

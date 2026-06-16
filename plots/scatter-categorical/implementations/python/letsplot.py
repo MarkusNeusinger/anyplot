@@ -22,7 +22,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: Plant growth by treatment type
 np.random.seed(42)
@@ -50,7 +50,7 @@ df = pd.DataFrame(
 plot = (
     ggplot(df, aes(x="Temperature (°C)", y="Growth Rate (%)", color="Treatment", shape="Treatment"))
     + geom_point(size=3.5, alpha=0.8, stroke=0.8)
-    + scale_color_manual(values=OKABE_ITO[:4])
+    + scale_color_manual(values=IMPRINT[:4])
     + scale_shape_manual(values=[21, 22, 23, 24])  # Circle, square, diamond, triangle
     + labs(
         x="Temperature (°C)",

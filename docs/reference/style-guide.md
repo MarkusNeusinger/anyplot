@@ -333,7 +333,7 @@ Slugs are the canonical identifier. They're used in URLs, filenames, and `ap.loa
 
 ### 4.1 The imprint Palette
 
-anyplot's **imprint** palette is a bespoke, colourblind-safe categorical palette tuned for warm-paper rendering. 8 hues in a hybrid sort order plus 3 semantic anchors (amber for warning, theme-adaptive neutral, theme-adaptive muted). It sits in the academic-publishing family — same neighbourhood as Okabe-Ito, Paul Tol "muted", and ColorBrewer Set2 — and was validated against deuteranopia, protanopia, and tritanopia at full simulation severity. Full design rationale: [`palette-variants-v3/decision-rationale.md`](palette-variants-v3/decision-rationale.md).
+anyplot's **imprint** palette is a bespoke, colourblind-safe categorical palette tuned for warm-paper rendering. 8 hues in a hybrid sort order plus 3 semantic anchors (amber for warning, theme-adaptive neutral, theme-adaptive muted). It sits in the academic-publishing family — same neighbourhood as Okabe-Ito, Paul Tol "muted", and ColorBrewer Set2 — and was validated against deuteranopia, protanopia, and tritanopia at full simulation severity. Full design rationale: [`palette-variants/v3/decision-rationale.md`](palette-variants/v3/decision-rationale.md).
 
 Why this palette over a one-shot import of Okabe-Ito:
 
@@ -446,7 +446,7 @@ It does **not** appear in:
 - Static (non-cursor, non-status) decorative dots or glyphs
 - **Default colour on in-prose links** (see below)
 
-**In-prose link treatment.** Links inside body text default to `--ink-soft` with a 1px `--rule` underline (via `text-decoration`). On hover the colour flips to `--imprint-green` and the underline thickens to `currentColor`. Do **not** set `color: colors.primary` as the default on inline links — brand green stays a signal colour that only appears on interaction. The reusable sx object is exported from `app/src/theme/index.ts` as `proseLinkStyle`; import it everywhere a contextual link lives in prose (About, Legal, MCP, Palette, Stats).
+**In-prose link treatment.** Links inside body text default to `--ink-soft` with a 1px `--rule` underline (via `text-decoration`). On hover the colour flips to `--imprint-green` and the underline thickens to `currentColor`. Do **not** set `color: colors.primary` as the default on inline links — brand green stays a signal colour that only appears on interaction. The reusable sx object is exported from `app/src/theme/tokens.ts` (re-exported via `src/theme`) as `proseLinkStyle`; import it everywhere a contextual link lives in prose (About, Legal, MCP, Palette, Stats).
 
 ```ts
 import { proseLinkStyle } from '../theme';
@@ -1070,7 +1070,7 @@ The palette strip at the bottom responds to hover: normal state is even distribu
 
 - **First series = brand color (`#009E73`)**. Always. This is the single most important consistency rule.
 - **Neutral (semantic anchor)** is reserved for aggregates, totals, reference lines. Don't use it for a normal category — it sits outside the categorical pool by design.
-- **Light-bg WCAG caveat:** lavender, ochre, cyan, lime, and amber all fall below WCAG 2.1 SC 1.4.11's 3:1 minimum against cream `#FAF8F1`. Add a 1px ink-color stroke on affected series when the chart is small or accessibility-strict — see the outline pattern in [palette-variants-v3/decision-rationale.md](palette-variants-v3/decision-rationale.md#contrast-caveats--the-outline-pattern).
+- **Light-bg WCAG caveat:** lavender, ochre, cyan, lime, and amber all fall below WCAG 2.1 SC 1.4.11's 3:1 minimum against cream `#FAF8F1`. Add a 1px ink-color stroke on affected series when the chart is small or accessibility-strict — see the outline pattern in [palette-variants/v3/decision-rationale.md](palette-variants/v3/decision-rationale.md#contrast-caveats--the-outline-pattern).
 
 ### 9.2 Non-categorical Data
 
@@ -1193,7 +1193,7 @@ For CSS:
 The design system is implemented across:
 
 - **HTML reference (full mockup)**: `mockups/landing.html` — single-file reference with all sections, SVG plots, and animations
-- **Theme tokens (frontend)**: `app/src/theme/index.ts` and `app/src/main.tsx` — MUI theme exports for colors, typography, spacing, headingStyle, subheadingStyle, textStyle, tableStyle, codeBlockStyle
+- **Theme tokens (frontend)**: `app/src/theme/tokens.ts` (design tokens: colors, typography, spacing, headingStyle, subheadingStyle, textStyle, tableStyle, codeBlockStyle) and `app/src/theme/create-theme.ts` (MUI theme composition); both re-exported via `src/theme`
 - **Palette (Python library)**: `anyplot.palette` — see §9.5
 
 **Reference CSS skeleton:**

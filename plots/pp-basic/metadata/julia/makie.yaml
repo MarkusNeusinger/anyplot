@@ -1,0 +1,280 @@
+library: makie
+language: julia
+specification_id: pp-basic
+created: '2026-06-09T22:31:16Z'
+updated: '2026-06-09T23:01:09Z'
+generated_by: claude-sonnet
+workflow_run: 27239414769
+issue: 4587
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pp-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pp-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - 'Statistically rigorous: implements custom Abramowitz & Stegun normal CDF approximation
+    — no external distribution packages needed, clean and portable'
+  - Deviation-coloring via imprint_seq directly encodes the S-curve diagnostic narrative
+    — continuous color encoding reinforces where and how the distribution departs
+    from normality
+  - KS 95% confidence band adds professional statistical context, clearly scoping
+    the acceptance region around the reference diagonal
+  - 'Perfect theme adaptation: all chrome tokens (INK, INK_SOFT, PAGE_BG) correctly
+    flipped between light and dark; data colors stay constant'
+  - Square aspect ratio enforced via AxisAspect(1) — spec-correct and visually accurate
+    for equal 0-1 probability axes
+  - Realistic manufacturing quality-control data context (coating thickness) with
+    right-skewed distribution that produces a clear, instructive S-curve departure
+  weaknesses:
+  - KS confidence band at alpha=0.07 is nearly invisible in both renders — the acceptance
+    region adds statistical value but the fill blends into the background; increasing
+    to alpha=0.12-0.15 would make it meaningfully visible without competing with data
+  - Axis label sizes (xlabelsize=20, ylabelsize=20) are notably larger than the makie.md
+    recommended 14pt; while readable, they are disproportionately large relative to
+    the rest of the typography hierarchy — consider aligning closer to 14-16pt
+  - Scatter markers use no explicit alpha; for 200 points along a narrow S-curve path,
+    some clustering occurs in the lower-left region — adding alpha=0.75 would reduce
+    overlap without losing the pattern
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — matches the light theme surface exactly, never pure white
+      Chrome: Title "pp-basic · julia · makie · anyplot.ai" at top — dark near-black text clearly readable against off-white background. Y-axis label "Empirical Cumulative Probability" rotated, clearly readable in dark ink. X-axis label "Theoretical Cumulative Probability" at bottom, clearly readable. Tick labels (0.0, 0.5, 1.0) in INK_SOFT (#4A4A44) — readable. Top and right spines absent (L-shape frame). Grid lines subtle at alpha=0.12.
+      Data: Scatter points in teal/green-to-blue gradient (imprint_seq: #009E73 → #4467A3) colored by deviation magnitude. Most points near the diagonal are rendered in #009E73 (brand green). Dashed gray reference diagonal clearly visible. KS confidence band present as a very faint fill region around the diagonal (alpha=0.07 — barely visible). S-curve deviation visible: points bow above the diagonal in the lower half and below in the upper half, consistent with right-skewed data. No colorbar visible at full rendered scale — it appears to be a narrow strip at the right canvas edge.
+      Legibility verdict: PASS — all title, axis, and tick labels clearly readable against the light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — matches the dark theme surface, not pure black; has a subtle warm brownish tint
+      Chrome: Title "pp-basic · julia · makie · anyplot.ai" rendered in near-white (#F0EFE8 = INK in dark mode) — clearly readable against the dark background. Y-axis label "Empirical Cumulative Probability" and X-axis label "Theoretical Cumulative Probability" in light text, clearly readable. Tick labels in INK_SOFT (#B8B7B0) — light gray, readable against near-black. Reference diagonal visible as a light dashed line. Grid lines subtle.
+      Data: Identical teal/green-to-blue scatter points — data colors are indistinguishable between light and dark renders (only chrome flipped). S-curve pattern identical to light render.
+      Legibility verdict: PASS — no dark-on-dark issues detected; all text is appropriately light-colored against the dark background; brand green #009E73 remains clearly visible on the dark surface
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (titlesize=28, xlabelsize=20, ylabelsize=20,
+          tick=16). Readable in both themes. Sizes are somewhat larger than makie.md
+          recommended defaults (title 28 vs 20, labels 20 vs 14) but not disproportionate
+          for the long descriptive axis labels. No overflow.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal overlap in the lower-left cluster region where the S-curve
+          concentrates — 200 fully-opaque markersize=11 points along the narrow deviation
+          path cause some stacking. Not severe.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Scatter markers (markersize=11) are well-sized for 200 points. Reference
+          diagonal clearly visible. Confidence band at alpha=0.07 is nearly invisible
+          — statistically appropriate placement but too transparent to contribute
+          meaningful visual signal.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (green→blue) is colorblind-safe. Single continuous series
+          with colorbar. No red-green sole-signal issue.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400×2400 canvas with AxisAspect(1) enforcing equal axes.
+          Canvas gate passed. Colorbar placed in fig[1,2]. Good use of canvas area.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Title follows spec format exactly. X: Theoretical Cumulative Probability,
+          Y: Empirical Cumulative Probability — fully descriptive, no units needed
+          for probability axes. Colorbar: Deviation from Reference.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Uses imprint_seq (cgrad([#009E73, #4467A3])) for single-polarity
+          continuous deviation data — correct choice. Light background #FAF8F1, dark
+          background #1A1A17. All chrome tokens flip correctly between themes. No
+          forbidden colormaps.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above the 4-point baseline. The deviation-colored continuous encoding
+          adds an analytical dimension beyond a plain scatter. KS confidence band
+          demonstrates statistical thoughtfulness. Clean L-spine composition. Not
+          at 6+ (publication-level) but clearly above a simple configured default.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed (L-shape). Grid at subtle alpha=0.12. Marker
+          strokewidth=0.5 with PAGE_BG stroke color for edge definition. Dashed reference
+          diagonal well-styled. Meaningful refinement above the library default.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Deviation coloring directly encodes the S-curve structure, guiding
+          the viewer to where the distribution departs from normality. The KS band
+          contextualizes significance. The S-curve is visible and the green-to-blue
+          gradient reinforces the 'most deviant points are blue' narrative. Above
+          the default display-only approach.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct P-P plot: empirical CDF vs theoretical CDF on both axes,
+          both ranging 0-1.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 45-degree reference diagonal present. Square aspect ratio via AxisAspect(1).
+          Empirical CDF using Hazen plotting positions (i-0.5)/n. Theoretical CDF
+          with fitted parameters. S-curve deviation clearly visible.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: theoretical CDF, Y: empirical CDF — correct mapping. Both axes
+          span [0,1]. 200 data points within 50-500 range. Right-skewed distribution
+          demonstrates S-curve departure as specified.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''pp-basic · julia · makie · anyplot.ai'' — exact format.
+          Colorbar serves as legend with appropriate label ''Deviation from Reference''.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all P-P plot diagnostic features: near-diagonal fit in middle,
+          S-curve departure in tails, clear reference diagonal, KS confidence band,
+          color-encoded deviation magnitude.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Coating thickness measurements in micrometers — manufacturing quality
+          control context. Real, neutral, scientifically plausible. The right skew
+          from 15% boost events represents realistic process contamination/outliers.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Mean ~50µm, std ~8µm for coating thickness — realistic microelectronics/manufacturing
+          scale. Boost amounts 20±5µm produce meaningful but not extreme skew. KS
+          delta = 1.36/√200 ≈ 0.096 — statistically correct formula.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat script: theme tokens → data generation → CDF computation →
+          figure → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) at top of script.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All 5 imports used: CairoMakie (plot), ColorSchemes (cgrad), Colors
+          (colorant, RGBAf), Random (seed), Statistics (mean, std).'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI elements. Abramowitz & Stegun polynomial for normal CDF
+          is a clever, portable alternative to Distributions.jl. Appropriate complexity
+          for the statistical task.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save('plot-$(THEME).png', fig; px_per_unit=2). Uses size= (current
+          Makie 0.22 API, not deprecated resolution=).
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses band!() for confidence envelope, Colorbar() linked directly
+          to scatter plot, AxisAspect(1) for square axis, RGBAf() for alpha-composite
+          colors, limits= for axis bounds, clamp.() for band boundary clamping. Above-default
+          idiomatic Makie usage.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: band!() is a distinctive Makie primitive for area fills between two
+          y-vectors. Colorbar(fig[1,2], scat) linked colorbar is a Makie layout feature.
+          AxisAspect(1) is Makie's axis aspect control. Uses several Makie-specific
+          features effectively.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - edge-highlighting

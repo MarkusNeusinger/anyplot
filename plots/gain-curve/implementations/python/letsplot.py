@@ -70,7 +70,7 @@ df_long = pd.concat([df_model, df_random, df_perfect], ignore_index=True)
 colors = {
     "Model": "#009E73",  # Okabe-Ito position 1 (brand green)
     "Random": "#888888",  # Neutral gray for reference line
-    "Perfect": "#0072B2",  # Okabe-Ito position 3 (blue)
+    "Perfect": "#4467A3",  # Okabe-Ito position 3 (blue)
 }
 
 # Plot

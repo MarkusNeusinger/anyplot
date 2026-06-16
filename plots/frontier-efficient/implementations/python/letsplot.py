@@ -38,7 +38,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Generate simulated asset data
 np.random.seed(42)
@@ -141,9 +141,9 @@ anyplot_theme = theme(
 plot = (
     ggplot()
     + geom_point(data=df_portfolios, mapping=aes(x="risk", y="return", color="sharpe"), size=4, alpha=0.6)
-    + geom_line(data=df_frontier, mapping=aes(x="risk", y="return"), color=OKABE_ITO[2], size=3)
+    + geom_line(data=df_frontier, mapping=aes(x="risk", y="return"), color=IMPRINT[2], size=3)
     + geom_line(data=df_cml, mapping=aes(x="risk", y="return"), color=INK_SOFT, size=1.5, linetype="dashed")
-    + geom_point(data=df_special, mapping=aes(x="risk", y="return"), color=OKABE_ITO[1], size=10, shape=18)
+    + geom_point(data=df_special, mapping=aes(x="risk", y="return"), color=IMPRINT[1], size=10, shape=18)
     + labs(
         x="Risk (Standard Deviation)",
         y="Expected Return",

@@ -23,7 +23,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 BOX_COLOR = "#009E73"  # Brand green - first series
-POINT_COLOR = "#D55E00"  # Vermillion - second series
+POINT_COLOR = "#C475FD"  # Vermillion - second series
 
 # Data - Uptime scores across service tiers
 np.random.seed(42)

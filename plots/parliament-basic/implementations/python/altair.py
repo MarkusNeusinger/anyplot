@@ -36,11 +36,11 @@ np.random.seed(42)
 # Using Okabe-Ito palette, starting with #009E73
 parties = [
     {"party": "Progressive", "seats": 95, "color": "#009E73"},
-    {"party": "Conservative", "seats": 82, "color": "#D55E00"},
-    {"party": "Green", "seats": 45, "color": "#0072B2"},
-    {"party": "Liberal", "seats": 38, "color": "#CC79A7"},
-    {"party": "Social Dem.", "seats": 28, "color": "#E69F00"},
-    {"party": "Independent", "seats": 12, "color": "#56B4E9"},
+    {"party": "Conservative", "seats": 82, "color": "#C475FD"},
+    {"party": "Green", "seats": 45, "color": "#4467A3"},
+    {"party": "Liberal", "seats": 38, "color": "#BD8233"},
+    {"party": "Social Dem.", "seats": 28, "color": "#AE3030"},
+    {"party": "Independent", "seats": 12, "color": "#2ABCCD"},
 ]
 
 total_seats = sum(p["seats"] for p in parties)

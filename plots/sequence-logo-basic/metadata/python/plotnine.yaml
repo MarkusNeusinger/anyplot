@@ -1,165 +1,192 @@
 library: plotnine
+language: python
 specification_id: sequence-logo-basic
 created: '2026-03-06T20:27:13Z'
-updated: '2026-03-06T21:05:07Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22780525163
+updated: '2026-06-02T12:27:13Z'
+generated_by: claude-sonnet
+workflow_run: 26817518198
 issue: 4421
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/plotnine/plot.png
-preview_html: null
-quality_score: 83
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
 review:
   strengths:
-  - Colorblind-safe palette with good contrast between all four nucleotide colors
-  - Data storytelling through yellow highlight on most conserved position with annotation
-  - Realistic bioinformatics data with good variation across positions
-  - Clean grammar of graphics composition with well-customized theme
-  - Explicit font sizing throughout ensures readability at target resolution
+  - 'Semantic Imprint palette exception correctly applied: A=green, C=blue, G=ochre,
+    T=red maps every nucleotide to its domain-standard color AND to the nearest Imprint
+    palette member'
+  - IC-based dynamic font scaling (scale_size_identity) creates genuine height-proportional
+    letter glyphs without external libraries
+  - Data storytelling via conservation threshold line, triangle markers, and subtitle
+    creates a clear biological narrative
+  - Full theme-adaptive chrome (all text, background, grid, legend) flips correctly
+    between light and dark
+  - Perfect spec compliance and data quality — biologically realistic motif with full
+    IC range from 0 to 1.38 bits
   weaknesses:
-  - Letters are white text overlaid on colored bars rather than stretched glyphs filling
-    their allocated height as spec requires
-  - Small letter labels at bottom of stacks overlap in cramped low-frequency segments
-  - Font size scaling approach (proportional to height with clip) is somewhat hacky
-  image_description: 'The plot shows a sequence logo for a 10-position DNA transcription
-    factor binding site motif. Each position has stacked colored rectangles representing
-    nucleotides: A (green, #009E73), C (blue, #0072B2), G (orange/yellow, #E69F00),
-    and T (pink, #CC79A7). Stack heights represent information content in bits (y-axis
-    ranges 0 to ~1.6). White bold letter labels are overlaid on the rectangles. Position
-    8 is highlighted with a pale yellow background rectangle and an italic "most conserved"
-    annotation above it — this position shows a dominant green A bar reaching ~1.35
-    bits. Position 5 has no visible bars (uniform distribution = 0 bits). The title
-    reads "sequence-logo-basic · plotnine · pyplots.ai" in bold at the top. The background
-    is light gray (#FAFAFA), with subtle horizontal grid lines and solid axis lines.
-    A "Nucleotide" legend appears on the right side.'
+  - 'The conservation triangle markers (annotate size=3mm) and ''>= 1 bit: conserved''
+    label (size=2.5mm) are visually underweighted — they tell the most important story
+    but are easy to miss; increase triangle markers to size=4-5 and annotation to
+    size=3.5, use INK instead of INK_MUTED/INK_SOFT for both to ensure visibility
+    in both themes'
+  - The stacked colored segments at the bottom of tall IC columns (minority nucleotides)
+    can look like undifferentiated color bands at small viewing sizes; the PAGE_BG
+    edge stroke separation helps but bar_half_width could be reduced further to add
+    more breathing room between columns
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "sequence-logo-basic · python · plotnine · anyplot.ai" bold dark text — readable. Subtitle in muted dark — readable. Axis labels "Position" (x) and "Information content (bits)" (y) in dark INK — readable. Tick labels (0, 0.5, 1.0, 1.5 on y; 1-10 on x) in INK_SOFT — readable.
+      Data: Green A (#009E73) dominates position 8 (IC 1.38 bits); blue C (#4467A3) dominates position 1; ochre G (#BD8233) dominates position 3 (IC 1.15 bits); matte red T (#AE3030) dominates position 7 (IC 1.15 bits). Position 5 is flat (0 bits). White (#F0EFE8) bold letter glyphs scaled by IC×frequency. Dashed threshold line at 1.0 bit. Triangle markers above conserved positions 3, 7, 8. Legend shows Nucleotide A/C/G/T correctly.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and subtitle render in warm light (#F0EFE8 / #B8B7B0) — clearly readable. Axis labels in INK (#F0EFE8 in dark mode) — readable. Tick labels in INK_SOFT (#B8B7B0) — readable. No dark-on-dark failures observed. Legend text light-colored and readable.
+      Data: Bar colors are identical to light render — green A, blue C, ochre G, red T all unchanged. White glyph letters on colored bars remain readable. Dashed threshold line visible. Triangle markers and conservation annotation visible (small but legible).
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt, tick
-          labels 16pt, legend 14-16pt'
+        comment: 'All font sizes explicitly set; dynamic IC-based glyph scaling; both
+          themes readable. Minor: white on ochre at mobile scale is borderline for
+          dominant segments.'
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Small letter labels at bottom of stacks overlap in low-frequency
-          segments
+        passed: true
+        comment: 'No collisions. Minor: conservation annotation (size=2.5mm) and triangle
+          markers (size=3) are undersized for their importance but not overlapping.'
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Main rectangles clearly visible, very thin segments at stack bottoms
-          harder to distinguish
+        comment: 'Dominant glyphs prominent. Minor: triangle conservation markers
+          small and easy to miss.'
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: DNA semantic color exception applied; white glyph text passes WCAG
+          large-text on all four bar colors; CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Colorblind-safe palette: green, blue, orange, pink with good contrast'
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good 16:9 proportions, slight wasted vertical space above tallest
-          bar
+        comment: Canvas gate passed (3200x1800). Good fill, balanced margins, legend
+          well-placed, nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Information content (bits) with units, Position descriptive for ordinal
-          axis
+        comment: 'Y: ''Information content (bits)'' with units; X: ''Position'' descriptive.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception: A=#009E73 (Imprint 1), C=#4467A3 (Imprint 3),
+          G=#BD8233 (Imprint 4), T=#AE3030 (Imprint 5). Backgrounds #FAF8F1/#1A1A17.
+          Both renders theme-correct.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Custom colorblind-safe palette, white letter overlays, yellow highlight,
-          #FAFAFA background'
+        comment: Thoughtful domain-semantic color mapping, white glyphs, PAGE_BG bar
+          edges for column separation, conservation story. Above defaults but not
+          publication-ready.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: X-grid removed, subtle y-grid, custom background, axis lines present
+        comment: X-grid removed, minor grid removed, panel border removed, Y-grid
+          at alpha=0.15, L-shaped axes, elevated legend bg. Good refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Yellow highlight on position 8 with most conserved annotation creates
-          focal point
+        comment: Dashed 1-bit threshold, triangle markers above conserved positions,
+          subtitle contextualizing the motif — clear biological narrative above default
+          data display.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: Colored stacked rectangles approximate sequence logo but letters
-          not rendered as stretched glyphs
+        passed: true
+        comment: Correct sequence logo; geom_rect + scaled geom_text is appropriate
+          approximation in plotnine.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Has stacked letters, info content scaling, DNA colors, correct axes.
-          Missing true stretched glyphs
+        comment: Stacked letters, frequency ordering, IC-scaled heights, DNA color
+          scheme, position x-axis, bits y-axis — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=position, Y=information content in bits, correct and complete
+        comment: 'X: position 1-10; Y: IC in bits; all data visible.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and Nucleotide legend with A, C, G, T
+        comment: Title 'sequence-logo-basic · python · plotnine · anyplot.ai' correct;
+          legend 'Nucleotide' A/C/G/T correct.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Varying conservation levels from 0 bits (pos 5) to ~1.35 bits (pos
-          8)
+        comment: Full IC range 0-1.38 bits; position 5 max-entropy (0 bits); positions
+          3,7,8 conserved; varied nucleotide distributions.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Transcription factor binding site motif with biologically plausible
-          frequencies
+        comment: TF binding site motif — real, neutral, scientifically grounded scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequencies sum to 1, info content correctly computed, max 2 bits
-          for DNA
+        comment: IC range 0-1.38 bits (max 2 for DNA); all frequencies sum to 1.0;
+          biologically realistic conservation patterns.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -167,31 +194,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, computation, plot, save'
+        comment: Imports -> tokens -> data -> IC computation -> DataFrame -> plot
+          -> save. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded frequency data
+        comment: Fully deterministic hardcoded frequency dictionary; no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no dead imports.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Font size scaling with clip is hacky, highlight dataframe adds verbosity
+        passed: true
+        comment: Clean, appropriate complexity; IC-based font scaling is non-trivial
+          but necessary; no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, current plotnine API
+        comment: Saves as plot-{THEME}.png; current plotnine API.
     library_mastery:
       score: 7
       max: 10
@@ -201,25 +230,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good grammar of graphics: layered geoms, scale_fill_manual, coord_cartesian,
-          theme_minimal'
+        comment: Proper grammar layering (geom_rect + geom_text + geom_hline + annotate);
+          scale_fill_manual, scale_size_identity, coord_cartesian; full theme customization.
+          Solid idiomatic usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: scale_size_identity, annotate, fine-grained element theme control
-  verdict: REJECTED
+        comment: scale_size_identity for IC-driven variable glyph sizing; looping
+          annotate() calls for per-position markers leveraging plotnine's layer addition
+          grammar. Could push further.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
   patterns:
-  - data-generation
   - iteration-over-groups
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
   - edge-highlighting
-  - grid-styling

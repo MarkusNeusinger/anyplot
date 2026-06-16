@@ -26,8 +26,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette for data colors
 CHROM_COLOR_1 = "#009E73"  # Okabe-Ito position 1 (first series)
-CHROM_COLOR_2 = "#D55E00"  # Okabe-Ito position 2 (alternating)
-SIG_COLOR = "#F0E442"  # Okabe-Ito position 7 (significant SNPs highlight)
+CHROM_COLOR_2 = "#C475FD"  # Okabe-Ito position 2 (alternating)
+SIG_COLOR = "#954477"  # Okabe-Ito position 7 (significant SNPs highlight)
 
 # Data - Simulated GWAS data with significant peaks
 np.random.seed(42)

@@ -20,7 +20,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 family_names = ["Asteraceae", "Rosaceae", "Fabaceae", "Poaceae", "Lamiaceae"]
 # Abbreviated species labels: As01-As10, Ro01-Ro10, Fa01-Fa10, Po01-Po10, La01-La10
@@ -53,7 +53,7 @@ for i in range(len(Z)):
 
 def link_color_func(node_id):
     c = node_cluster.get(node_id, -1)
-    return OKABE_ITO[c - 1] if c != -1 else INK_SOFT
+    return IMPRINT[c - 1] if c != -1 else INK_SOFT
 
 
 # Compute dendrogram layout with colored links
@@ -63,7 +63,7 @@ dcoord = np.array(dendro["dcoord"])
 link_colors = dendro["color_list"]
 leaves = dendro["leaves"]
 
-leaf_colors = [OKABE_ITO[cluster_labels[leaf] - 1] for leaf in leaves]
+leaf_colors = [IMPRINT[cluster_labels[leaf] - 1] for leaf in leaves]
 
 # Radial coordinate helpers — inner_r pads the root away from center
 x_max = n_species * 10.0
@@ -141,7 +141,7 @@ ax.set_title("dendrogram-radial · matplotlib · anyplot.ai", fontsize=24, fontw
 
 # Legend
 legend_elements = [
-    Line2D([0], [0], marker="o", linestyle="None", markerfacecolor=OKABE_ITO[i], markersize=14, label=family_names[i])
+    Line2D([0], [0], marker="o", linestyle="None", markerfacecolor=IMPRINT[i], markersize=14, label=family_names[i])
     for i in range(k_families)
 ]
 leg = ax.legend(

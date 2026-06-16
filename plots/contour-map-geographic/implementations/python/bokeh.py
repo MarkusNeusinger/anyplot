@@ -170,16 +170,16 @@ labels = LabelSet(
 )
 p.add_layout(labels)
 
-# --- Approximate Pacific coastline (Okabe-Ito #0072B2: blue = water, semantically justified) ---
+# --- Approximate Pacific coastline (Okabe-Ito #4467A3: blue = water, semantically justified) ---
 coast_lons = [-125.0, -124.8, -124.5, -124.2, -124.0, -123.8, -124.0, -124.3, -124.5]
 coast_lats = [42.0, 43.5, 45.0, 46.0, 46.5, 47.5, 48.0, 48.5, 49.0]
-p.line(x=coast_lons, y=coast_lats, line_color="#0072B2", line_width=5, legend_label="Coastline (approx.)")
+p.line(x=coast_lons, y=coast_lats, line_color="#4467A3", line_width=5, legend_label="Coastline (approx.)")
 
 # --- Oregon / Washington state border (lat ≈ 46.2) for geographic context ---
 p.line(
     x=[lon_min, -124.0],
     y=[46.2, 46.2],
-    line_color="#D55E00",  # Okabe-Ito orange
+    line_color="#C475FD",  # Okabe-Ito orange
     line_width=3.5,
     line_dash="dashed",
     legend_label="OR / WA Border",

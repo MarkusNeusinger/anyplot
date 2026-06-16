@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (first series is always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Quarterly revenue by product line across regions (in millions $)
 np.random.seed(42)
@@ -44,7 +44,7 @@ bar_width = group_width / n_series
 x_base = np.arange(n_categories)
 
 # Add stems and markers for each series
-for i, (series, color) in enumerate(zip(series_names, OKABE_ITO, strict=False)):
+for i, (series, color) in enumerate(zip(series_names, IMPRINT, strict=False)):
     # Calculate x positions with offset for grouping
     offset = (i - (n_series - 1) / 2) * bar_width
     x_positions = x_base + offset

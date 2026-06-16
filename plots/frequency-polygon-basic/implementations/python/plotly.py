@@ -16,12 +16,12 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.2)" if THEME == "light" else "rgba(240,239,232,0.2)"
+GRID = "rgba(26, 26, 23, 0.2)" if THEME == "light" else "rgba(240, 239, 232, 0.2)"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # Okabe-Ito position 1 — ALWAYS first series
-OKABE_VERMILLION = "#D55E00"  # Okabe-Ito position 2
-OKABE_BLUE = "#0072B2"  # Okabe-Ito position 3
+OKABE_VERMILLION = "#C475FD"  # Okabe-Ito position 2
+OKABE_BLUE = "#4467A3"  # Okabe-Ito position 3
 
 # Data - Reaction times (ms) for three experimental conditions
 np.random.seed(42)
@@ -76,7 +76,7 @@ fig.add_trace(
         line={"color": OKABE_VERMILLION, "width": 4},
         marker={"size": 10, "color": OKABE_VERMILLION},
         fill="tozeroy",
-        fillcolor="rgba(213, 94, 0, 0.2)",
+        fillcolor="rgba(196, 117, 253, 0.2)",
     )
 )
 
@@ -89,7 +89,7 @@ fig.add_trace(
         line={"color": OKABE_BLUE, "width": 4, "dash": "dash"},
         marker={"size": 10, "color": OKABE_BLUE},
         fill="tozeroy",
-        fillcolor="rgba(0, 114, 178, 0.2)",
+        fillcolor="rgba(68, 103, 163, 0.2)",
     )
 )
 

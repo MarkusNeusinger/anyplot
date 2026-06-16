@@ -29,7 +29,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette - yang (bullish) uses brand green, yin (bearish) uses vermillion
 YANG_COLOR = "#009E73"  # Okabe-Ito position 1 - brand green
-YIN_COLOR = "#D55E00"  # Okabe-Ito position 2 - vermillion
+YIN_COLOR = "#AE3030"  # imprint red — bearish
 YANG_WIDTH = 18  # Thick for yang
 YIN_WIDTH = 4  # Thin for yin
 

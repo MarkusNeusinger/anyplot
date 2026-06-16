@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { useCodeFetch } from './useCodeFetch';
+import { act, renderHook } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { useCodeFetch } from 'src/hooks/useCodeFetch';
 
 describe('useCodeFetch', () => {
   beforeEach(() => {
@@ -51,7 +52,8 @@ describe('useCodeFetch', () => {
 
       expect(code).toBe(mplCode);
       expect(globalThis.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/specs/scatter-basic/matplotlib/code')
+        expect.stringContaining('/specs/scatter-basic/matplotlib/code'),
+        undefined
       );
     });
 
@@ -112,7 +114,9 @@ describe('useCodeFetch', () => {
     });
 
     it('returns null and caches on network error', async () => {
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('Network error'));
+      (globalThis.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+        new Error('Network error')
+      );
       const { result } = renderHook(() => useCodeFetch());
 
       let code: string | null = 'initial';
@@ -175,7 +179,8 @@ describe('useCodeFetch', () => {
 
       expect(code).toBe(ggCode);
       expect(globalThis.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/specs/scatter-basic/ggplot2/code?language=r')
+        expect.stringContaining('/specs/scatter-basic/ggplot2/code?language=r'),
+        undefined
       );
     });
 
@@ -194,7 +199,28 @@ describe('useCodeFetch', () => {
 
       expect(code).toBe(jlCode);
       expect(globalThis.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/specs/scatter-basic/makie/code?language=julia')
+        expect.stringContaining('/specs/scatter-basic/makie/code?language=julia'),
+        undefined
+      );
+    });
+
+    it('appends ?language=javascript for muix (.tsx React) impls', async () => {
+      const tsxCode = 'export default function Chart() { return <BarChart /> }';
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ code: tsxCode }),
+      });
+
+      const { result } = renderHook(() => useCodeFetch());
+      let code: string | null = null;
+      await act(async () => {
+        code = await result.current.fetchCode('scatter-basic', 'muix', 'javascript');
+      });
+
+      expect(code).toBe(tsxCode);
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/specs/scatter-basic/muix/code?language=javascript'),
+        undefined
       );
     });
 
@@ -202,7 +228,8 @@ describe('useCodeFetch', () => {
       const pyCode = 'import matplotlib';
       const rCode = 'library(matplotlib)';
       const jlCode = 'using Matplotlib';
-      globalThis.fetch = vi.fn()
+      globalThis.fetch = vi
+        .fn()
         .mockResolvedValueOnce({ ok: true, json: async () => ({ code: pyCode }) })
         .mockResolvedValueOnce({ ok: true, json: async () => ({ code: rCode }) })
         .mockResolvedValueOnce({ ok: true, json: async () => ({ code: jlCode }) });

@@ -27,7 +27,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito colors (positions 1 and 2 for bullish/bearish)
 BULLISH = "#009E73"  # Okabe-Ito position 1
-BEARISH = "#D55E00"  # Okabe-Ito position 2
+BEARISH = "#AE3030"  # imprint red — bearish
 
 # Data - Generate realistic stock price data
 np.random.seed(42)

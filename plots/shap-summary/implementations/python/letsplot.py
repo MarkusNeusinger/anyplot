@@ -162,7 +162,7 @@ plot = (
     ggplot(df, aes(x="SHAP Value", y="y_position", color="Feature Value"))
     + geom_point(size=3, alpha=0.7)
     + geom_vline(xintercept=0, color=INK_MUTED, size=0.8, linetype="dashed")
-    + scale_color_gradient(low="#0072B2", high="#D55E00", name="Feature\nValue")
+    + scale_color_gradient(low="#4467A3", high="#C475FD", name="Feature\nValue")
     + scale_y_continuous(breaks=list(range(top_k)), labels=ordered_features[::-1])
     + labs(x="SHAP Value (impact on model output)", y="", title="shap-summary · letsplot · anyplot.ai")
     + ggsize(1600, 900)

@@ -1,0 +1,246 @@
+library: chartjs
+language: javascript
+specification_id: spectrum-nmr
+created: '2026-06-03T12:20:32Z'
+updated: '2026-06-03T12:41:16Z'
+generated_by: claude-sonnet
+workflow_run: 26883542626
+issue: 4676
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/javascript/chartjs/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Scientifically accurate Lorentzian lineshape with correct J-coupling multiplets
+    (triplet, quartet, singlet) for 1H NMR of ethanol
+  - 'X-axis correctly reversed using Chart.js reverse: true, matching NMR convention'
+  - Custom plugin architecture (bgPlugin, spinePlugin, labelPlugin) is idiomatic Chart.js
+    and cleanly structured
+  - 'Transparent fill under the spectrum curve (backgroundColor: t.palette[0] + ''1a'')
+    adds professional laboratory-report aesthetic'
+  - Perfect theme adaptation — all chrome uses t.pageBg, t.ink, t.inkSoft, t.grid
+    tokens; data color unchanged between themes
+  - Dynamic title font size formula prevents overflow on the longer descriptive-prefix
+    title
+  weaknesses:
+  - NMR integration lines (horizontal bars under peak groups indicating proton count
+    ratio 2:1:3 for CH2:OH:CH3) are missing — a standard 1H NMR spectrum element that
+    would improve DQ-01 feature completeness
+  - TMS label at 0.00 ppm is center-aligned at the rightmost peak with limited right-side
+    clearance; consider right-aligning or nudging this label left by ~0.05 ppm to
+    give more breathing room
+  - Visual polish is functional but not fully refined — subtle peak-to-label leader
+    lines and a slightly higher y-axis max (1.15) would give the tall CH3 peak label
+    more vertical headroom
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "1H NMR Spectrum of Ethanol · spectrum-nmr · javascript · chartjs · anyplot.ai" in dark ink, spans ~70% width. Axis labels "Chemical Shift (ppm)" and "Intensity (a.u.)" in dark ink, readable. Tick labels in secondary ink, readable. Peak annotations (CH2 3.69 ppm, OH 2.61 ppm, CH3 1.25 ppm, TMS 0.00 ppm) in dark ink.
+      Data: Single spectrum line in brand green #009E73 with low-opacity fill below curve. Reversed x-axis (4.5 left, -0.3 right). Four peak groups: quartet at 3.69, singlet at 2.61, triplet at 1.25, reference singlet at 0.00 ppm.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Same title and labels now in light-colored text, all readable against dark surface. No dark-on-dark failures observed. Tick labels, axis titles, peak annotations all clearly visible.
+      Data: Spectrum line color #009E73 identical to light render — only chrome flips. Fill area retains same low-opacity green.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title dynamically scaled; readable
+          in both themes. TMS label slightly tight to right edge.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No label/data collisions. TMS annotation tight to right edge but
+          readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Crisp spectrum line; transparent fill adds depth; peak heights well
+          differentiated.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 has excellent contrast on both surfaces.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Good proportions; TMS label right-edge clearance
+          slightly tight.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Chemical Shift (ppm) and Intensity (a.u.) both descriptive with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: palette[0] (#009E73) for single series; t.pageBg for backgrounds;
+          all chrome theme-adaptive.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom plugins show design effort; scientific NMR styling intentional;
+          fill-under-curve adds polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped spines; legend suppressed; subtle grid appropriate for scientific
+          context.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Labeled peaks guide viewer; CH3 height dominance provides focal point;
+          TMS contextualizes scale.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: NMR spectrum as line chart with Lorentzian peaks — correct.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: X-axis reversed; Lorentzian peaks; correct multiplets; peak labels;
+          TMS reference; clean baseline.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Chemical shift x (reversed), intensity y; 4000 points; full 0-4.5
+          ppm range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Descriptive Title + spec-id + javascript + chartjs + anyplot.ai format;
+          no legend (single series).
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 'All four multiplet types; J-coupling accurate; labeled groups. Missing:
+          integration lines showing proton count ratios.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 1H NMR of ethanol is canonical textbook example; peak positions chemically
+          correct; neutral educational context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-4.5 ppm correct for ethanol; intensity normalized 0-1.05; 400 MHz
+          implied.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes; lorentz helper is concise arrow function; linear flow.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic; all peak parameters hardcoded; no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses window globals per harness contract.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Three focused custom plugins; each does one thing; no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: No file I/O in snippet; current Chart.js 4.4.7 API used.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Scatter+showLine+fill:origin is idiomatic for spectrum; animation:false;
+          maintainAspectRatio:false; plugin API correct.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom plugins for background, spines, labels demonstrate plugin
+          architecture knowledge. Dynamic title scaling shows library awareness.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

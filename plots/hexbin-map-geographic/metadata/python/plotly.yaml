@@ -1,156 +1,186 @@
 library: plotly
+language: python
 specification_id: hexbin-map-geographic
 created: '2026-01-20T21:16:12Z'
-updated: '2026-01-20T21:36:42Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21187394771
+updated: '2026-05-27T13:28:27Z'
+generated_by: claude-sonnet
+workflow_run: 26513295545
 issue: 3767
-python_version: 3.13.11
-library_version: 6.5.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/plotly/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/plotly/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent use of H3 library for true hexagonal binning (not approximated)
-  - Well-implemented hover tooltips showing count, mean fare, and total fare with
-    proper formatting
-  - Clean sequential colormap (YlOrRd) with appropriate transparency for base map
-    visibility
-  - Realistic NYC taxi scenario demonstrating practical application
-  - Dark hexagon outlines make cell boundaries clearly visible
-  - Proper GeoJSON construction for Plotly choropleth
+  - Custom GeoJSON hexagonal binning without external geo libraries — vectorized numpy
+    construction is elegant
+  - Theme-adaptive CARTO basemap (carto-positron light / carto-darkmatter dark) looks
+    polished in both renders
+  - 'Full spec compliance: count + sum + mean aggregation, configurable hex size,
+    transparency, hover tooltips, colorbar with units'
+  - Uses imprint_seq correctly for continuous fare data; all chrome (colorbar bgcolor,
+    border, text) is fully theme-adaptive
+  - Interactive HTML output with properly formatted hover tooltips ($-prefixed fares,
+    comma-separated counts)
   weaknesses:
-  - Title uses "NYC Taxi Fares" instead of more standardized format placing spec-id
-    first
-  - Fixed H3 resolution (9) without demonstrating configurability mentioned in spec
-  - Minor code inefficiency calling cell_to_boundary multiple times per row in GeoJSON
-    construction
-  image_description: The plot displays a hexagonal binning map of NYC taxi pickup
-    locations overlaid on a CARTO Positron base map. The hexagonal cells are colored
-    using a YlOrRd (yellow-orange-red) sequential colormap representing average fare
-    values ranging from approximately $20 to over $100. The title "NYC Taxi Pickups
-    · hexbin-map-geographic · plotly · pyplots.ai" is centered at the top. The colorbar
-    on the right side is labeled "Avg Fare ($)" with tick values from 20 to 100. The
-    geographic area covers the NYC metropolitan region including Manhattan, parts
-    of New Jersey (Jersey City, Newark), Brooklyn, and surrounding areas. Hexagons
-    have dark boundary lines making individual cells clearly distinguishable. Multiple
-    clusters of high-density areas are visible, with some cells showing higher average
-    fares (darker red/orange) scattered throughout. The map background shows street
-    networks, city labels, and geographic features in light gray tones.
+  - 'DE-03 moderate: data storytelling is passive — no annotation or color emphasis
+    highlights the high-fare zones (e.g. Manhattan CBD vs outer areas); adding a brief
+    annotation to the hottest hexbin cluster would immediately guide the viewer to
+    the main insight'
+  - 'DE-02 refinement gap: margins are somewhat tight (l=20 is narrow) and the colorbar
+    placement is close to the canvas edge; increasing l to 40 and checking colorbar
+    xpad would improve breathing room'
+  - 'LM-02 gap: the custom GeoJSON hex construction is impressive but the hover_data
+    format strings could leverage Plotly''s customdata + hovertemplate for richer,
+    more distinctly Plotly-style tooltip formatting'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) paper_bgcolor wraps the carto-positron base map showing NYC streets and borough labels in muted grays.
+      Chrome: Title "NYC Taxi Fares · hexbin-map-geographic · python · plotly · anyplot.ai" at top center in dark ink — clearly readable. Colorbar on the right labeled "Avg Fare ($)" with tick labels $20/$40/$60 in dark ink on an elevated warm-white box with a subtle border.
+      Data: Hexagonal cells cover the NYC metropolitan area in the imprint_seq palette (green #009E73 → blue #4467A3). Most hexbins show mid-range teal/green, with a few darker (higher fare) cells in the core and lighter (lower) on periphery. Opacity 0.75 lets basemap place names show through. Cell borders in dark rgba provide definition.
+      Legibility verdict: PASS — all text readable, no clipping, no dark-on-light failure.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) paper_bgcolor with the carto-darkmatter base map showing white/light road labels and outlines on a dark surface.
+      Chrome: Same title in light (#F0EFE8) ink at top — clearly visible against the dark surface. Colorbar uses elevated-dark (#242420) background with INK_SOFT (#B8B7B0) tick text, properly readable.
+      Data: Hexagonal cells display identical imprint_seq colors to the light render — the green-to-blue gradient is consistent. Borders changed to lighter rgba to maintain definition on dark background.
+      Legibility verdict: PASS — no dark-on-dark failures found; all chrome tokens flip correctly between themes.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title readable at 28pt, colorbar labels clear. Title could be slightly
-          larger.
+        comment: Title fontsize explicitly scaled (15px for 70-char title), colorbar
+          title 12px, ticks 10px — all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; hexagons do not interfere with labels.
+        comment: No text overlaps with data or other text elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Hexagons clearly visible with dark outlines and 0.75 opacity.
+        comment: Hexbins clearly visible at opacity=0.75; imprint_seq provides strong
+          contrast against basemap
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: YlOrRd is colorblind-safe sequential colormap.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good proportions, slight whitespace around edges.
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for geographic maps - colorbar has proper label with units.
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Colorbar well-placed on right, no distracting grid.
+        comment: imprint_seq (green→blue) is CVD-safe; no red-green confusion
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Map fills canvas well; 3200×1800 confirmed; colorbar positioned correctly
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes (appropriate for map); colorbar labeled 'Avg
+          Fare ($)' with units; title descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq used for continuous fare data; paper_bgcolor and all
+          chrome correctly theme-adaptive; no forbidden colormaps
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Theme-adaptive CARTO basemaps, styled colorbar with elevated-bg,
+          hex borders — clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Colorbar styled with bgcolor/border, theme-adaptive hex borders,
+          explicit margins — good refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Spatial pattern is visible but passive — no annotation highlights
+          the high-fare concentration zone
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct hexagonal binning map using H3 library.
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Lat/lon correctly mapped; fare values aggregated per cell.
-      - id: SC-03
+        comment: Correct hexagonal binning map using choropleth_map with custom GeoJSON
+          hexagons over CARTO basemap
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: All three aggregation methods computed. Missing size configurability
-          demonstration.
-      - id: SC-04
-        name: Data Range
+        comment: 'All features: configurable hex_size, count+sum+mean aggregation,
+          basemap, transparency (0.75), hover tooltips, colorbar'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within map bounds.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Lat/lon correctly mapped, mean_fare drives color, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar accurately represents average fare with dollar prefix.
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: false
-        comment: Uses 'NYC Taxi Fares' instead of standardized spec-id format.
+        comment: Title 'NYC Taxi Fares · hexbin-map-geographic · python · plotly ·
+          anyplot.ai' matches required format with descriptive prefix
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows clustering, density variation, fare variation by location.
+        comment: Shows spatial clustering, fare variation, hexbin aggregation with
+          count/sum/mean — comprehensive coverage
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: NYC taxi pickups is perfect real-world scenario.
+        comment: NYC taxi fare data — real-world, neutral, comprehensible scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Fare values ($20-100+) realistic for NYC. 5000 points appropriate.
+        comment: NYC coordinates (~40.76°N, -73.99°W), fare range $5–50+ (realistic
+          for NYC taxis), 5000 data points
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -158,51 +188,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → H3 → aggregation → GeoJSON →
-          plot → save.'
+        comment: No functions or classes; follows imports → data → hex binning → GeoJSON
+          → plot → save
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set for reproducibility.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: h3, numpy, pandas, plotly.express.'
+        comment: os, numpy, pandas, plotly.express — all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: cell_to_boundary called multiple times per row - inefficient.
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Vectorized numpy hex construction without function definitions; complexity
+          is appropriate to the task
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html correctly.
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png (write_image) and plot-{THEME}.html (write_html);
+          autosize=False with explicit width/height
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Excellent use of choropleth_map, custom GeoJSON, CARTO base map,
-          interactive hover, HTML export.
+        comment: px.choropleth_map with GeoJSON is the idiomatic plotly pattern for
+          geographic choropleth; update_traces and update_layout used correctly
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Choropleth map with custom GeoJSON, carto basemaps, hover_data with
+          $ format strings, HTML export — distinctive plotly features; hovertemplate
+          customization could push to 5/5
   verdict: APPROVED
 impl_tags:
-  dependencies:
-  - h3
+  dependencies: []
   techniques:
+  - colorbar
   - hover-tooltips
   - html-export
-  - colorbar
   patterns:
   - data-generation
   - groupby-aggregation

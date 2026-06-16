@@ -79,7 +79,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is colorblind-safe. Size variation provides redundant
+        comment: Imprint palette is colorblind-safe. Size variation provides redundant
           encoding beyond hue alone.
       - id: VQ-05
         name: Layout & Canvas

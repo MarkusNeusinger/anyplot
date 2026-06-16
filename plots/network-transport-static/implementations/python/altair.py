@@ -27,7 +27,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Station data - Regional rail network
 stations = [
@@ -160,7 +160,7 @@ node_labels = (
 node_ids = (
     alt.Chart(stations_df)
     .mark_text(fontSize=18, fontWeight="bold")
-    .encode(x=alt.X("x:Q", scale=x_scale), y=alt.Y("y:Q", scale=y_scale), text="id:N", color=alt.value(OKABE_ITO[0]))
+    .encode(x=alt.X("x:Q", scale=x_scale), y=alt.Y("y:Q", scale=y_scale), text="id:N", color=alt.value(IMPRINT[0]))
 )
 
 # Route edges (lines)
@@ -174,7 +174,7 @@ edges = (
         y2="y2:Q",
         color=alt.Color(
             "type:N",
-            scale=alt.Scale(domain=["Express", "Regional", "Local"], range=OKABE_ITO),
+            scale=alt.Scale(domain=["Express", "Regional", "Local"], range=IMPRINT),
             legend=alt.Legend(title="Route Type", titleFontSize=16, labelFontSize=14, orient="right"),
         ),
         tooltip=["route:N", "dep:N", "arr:N", "type:N"],
@@ -192,7 +192,7 @@ arrows = (
         y=alt.Y("ay:Q", scale=y_scale),
         angle=alt.Angle("angle_adjusted:Q"),
         color=alt.Color(
-            "type:N", scale=alt.Scale(domain=["Express", "Regional", "Local"], range=OKABE_ITO), legend=None
+            "type:N", scale=alt.Scale(domain=["Express", "Regional", "Local"], range=IMPRINT), legend=None
         ),
     )
 )

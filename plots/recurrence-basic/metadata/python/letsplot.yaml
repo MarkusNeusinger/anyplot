@@ -1,0 +1,254 @@
+library: letsplot
+language: python
+specification_id: recurrence-basic
+created: '2026-06-10T02:53:18Z'
+updated: '2026-06-10T03:13:48Z'
+generated_by: claude-sonnet
+workflow_run: 27249676491
+issue: 4592
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/python/letsplot/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Full spec compliance: binary recurrence plot with time-delay embedding (Takens''
+    theorem), correct percentile threshold, symmetric matrix with main diagonal correctly
+    filled'
+  - 'Both renders theme-adapt flawlessly — backgrounds (#FAF8F1 / #1A1A17), chrome,
+    and text all flip correctly; data color (brand green #009E73) stays constant'
+  - Thoughtful Line of Identity annotation using ELEVATED_BG creates a subtle but
+    visible reference diagonal without competing with the recurrence data
+  - Interactive letsplot features leveraged — layer_tooltips on geom_tile and HTML
+    export showcase the library's interactive capabilities
+  - Correct square canvas (ggsize(600,600) + scale=4 = 2400×2400 px) appropriate for
+    symmetric recurrence matrix, with coord_fixed(ratio=1.0) enforcing equal axis
+    scales
+  weaknesses:
+  - Design excellence is functional but modest — no typographic hierarchy beyond standard
+    defaults, no annotation pointing to characteristic recurrence structures (diagonal
+    lines indicating determinism, block structures signaling regime changes)
+  - Grid lines are fully removed which is correct, but the plot margins are somewhat
+    tight; adding explicit coord_cartesian expand or plot margin padding would give
+    the recurrence matrix slightly more breathing room
+  - The LoI (Line of Identity) geom_abline in ELEVATED_BG is subtle and nearly invisible
+    within the dense green tile pattern — a contrasting color (e.g., INK_SOFT with
+    alpha=0.5) would make the diagonal reference line more visually meaningful
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1) — correct, no pure white
+      Chrome: title "recurrence-basic · python · letsplot · anyplot.ai" dark ink, clearly readable at top; x-axis label "Time index i" and y-axis label "Time index j" in dark ink both readable; tick labels (0, 50, 100, 150, 200, 250) in INK_SOFT visible; no grid lines (correct choice for recurrence plot — grid would obscure the matrix pattern)
+      Data: brand green (#009E73) tiles fill the recurrence structure; the chaotic logistic map pattern is clearly visible with block structures and scattered recurrence points; a subtle ELEVATED_BG diagonal line (LoI) is faintly visible through the dense pattern
+      Legibility verdict: PASS — all text readable against the warm off-white background, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17) — correct, no pure black
+      Chrome: title, axis labels, and tick labels all rendered in light ink (#F0EFE8 / #B8B7B0); all elements clearly readable against the dark background; no dark-on-dark failures observed; text crisp and well-contrasted
+      Data: brand green (#009E73) tiles are identical to the light render — same color, same pattern; the green reads exceptionally well on the dark background; LoI diagonal similarly subtle
+      Legibility verdict: PASS — all chrome flips correctly; no dark-on-dark failures; data colors constant between themes
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (16/12/10); all text readable in both themes;
+          no light-on-light or dark-on-dark issues
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps with data or other elements; recurrence matrix tiles
+          are well-spaced
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Brand green tiles clearly visible on both backgrounds; alpha=0.9
+          appropriate for the tile density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single series green — CVD-safe, adequate contrast on both surfaces
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2400x2400 square canvas correct for symmetric matrix; coord_fixed(1.0)
+          enforces equal axes; no overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches required format; axes labeled 'Time index i/j' matching
+          spec requirement
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (only) series is #009E73 (Imprint pos 1); backgrounds #FAF8F1/#1A1A17;
+          chrome adapts correctly'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Functional brand green usage and subtle LoI annotation show some
+          thought; no typographic hierarchy beyond defaults; no annotation of characteristic
+          structures
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Grid correctly removed (right for recurrence plot), L-shaped axis
+          frame, no legend; margins slightly tight around matrix
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: LoI annotation provides structural reference; chaotic logistic map
+          shows characteristic block pattern; no annotation of diagnostic structures
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct binary recurrence plot using geom_tile with symmetric distance
+          matrix
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Main diagonal filled; time-delay embedding (Takens' theorem, dim=2,
+          delay=5); percentile-based epsilon; 250 time steps in recommended range
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: time_i → x, time_j → y; both axes show full 0-245 range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; no legend (correct for single-series)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows binary recurrence matrix with diagonal, time-delay embedding,
+          threshold-based recurrence — all spec aspects covered
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Logistic map at r=3.8 (chaotic regime) is a canonical nonlinear dynamics
+          example; neutral, scientifically appropriate data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 250 time steps within 200-1000 recommended; 15th percentile epsilon
+          gives ~15% recurrence rate; values in [0,1]
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes; linear procedural structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set; logistic map is deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: numpy, pandas, lets_plot, scipy.spatial.distance,
+          os'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean algorithm implementation with concise numpy operations for
+          distance matrix and threshold
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct grammar of graphics pattern; coord_fixed() for square aspect
+          ratio; proper ggsave scale parameter
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: layer_tooltips() on geom_tile uses letsplot's native interactive
+          tooltip API; HTML export via ggsave leverages the library's interactive
+          rendering engine
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - hover-tooltips
+  - html-export
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending

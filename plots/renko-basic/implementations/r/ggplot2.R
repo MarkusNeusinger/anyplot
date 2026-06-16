@@ -17,7 +17,7 @@ INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 
 # Color palette
 BULL        <- "#009E73"  # Okabe-Ito position 1 (green)
-BEAR        <- "#D55E00"  # Okabe-Ito position 2 (red/orange)
+BEAR        <- "#AE3030"  # imprint red — bearish
 
 # --- Data generation --------------------------------------------------------
 # Generate synthetic stock price data

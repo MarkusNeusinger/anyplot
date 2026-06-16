@@ -21,7 +21,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette for 5 clades
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Define primate species for phylogenetic tree
 species = ["Human", "Chimpanzee", "Gorilla", "Orangutan", "Gibbon", "Baboon", "Macaque", "Marmoset", "Lemur", "Tarsier"]
@@ -64,10 +64,10 @@ clade_mapping = {
 }
 
 clade_names = ["Great Apes", "Lesser Apes", "Old World Monkeys", "New World Monkeys", "Prosimians"]
-clade_colors = [OKABE_ITO[i] for i in range(5)]
+clade_colors = [IMPRINT[i] for i in range(5)]
 
 # Build color mapping for dendrogram links
-leaf_colors = [OKABE_ITO[clade_mapping[s]] for s in species]
+leaf_colors = [IMPRINT[clade_mapping[s]] for s in species]
 n = len(species)
 
 # Create inline link color list for all links in dendrogram
@@ -155,11 +155,11 @@ ax.annotate(
 for label in ax.get_yticklabels():
     species_name = label.get_text()
     if species_name in clade_mapping:
-        label.set_color(OKABE_ITO[clade_mapping[species_name]])
+        label.set_color(IMPRINT[clade_mapping[species_name]])
         label.set_fontweight("bold")
 
 # Add legend for clades (positioned to avoid overlap with tree)
-legend_elements = [Patch(facecolor=OKABE_ITO[i], edgecolor="none", label=clade_names[i]) for i in range(5)]
+legend_elements = [Patch(facecolor=IMPRINT[i], edgecolor="none", label=clade_names[i]) for i in range(5)]
 ax.legend(
     handles=legend_elements,
     loc="upper right",

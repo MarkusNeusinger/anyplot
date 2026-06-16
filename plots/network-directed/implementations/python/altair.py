@@ -73,13 +73,13 @@ edges = [
 ]
 
 # Okabe-Ito palette for groups
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 group_colors = {
-    "main": OKABE_ITO[0],  # Brand green
-    "core": OKABE_ITO[1],  # Vermillion
-    "service": OKABE_ITO[2],  # Blue
-    "util": OKABE_ITO[3],  # Reddish purple
-    "data": OKABE_ITO[4],  # Orange
+    "main": IMPRINT[0],  # Brand green
+    "core": IMPRINT[1],  # Vermillion
+    "service": IMPRINT[2],  # Blue
+    "util": IMPRINT[3],  # Reddish purple
+    "data": IMPRINT[4],  # Orange
 }
 
 # Node positions using hierarchical layout based on dependency depth

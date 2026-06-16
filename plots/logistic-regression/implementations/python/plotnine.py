@@ -34,10 +34,10 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-FAIL_COLOR = "#D55E00"  # Okabe-Ito position 2
-PASS_COLOR = "#009E73"  # Okabe-Ito position 1
-CURVE_COLOR = "#0072B2"  # Okabe-Ito position 3
+# imprint semantic anchors
+FAIL_COLOR = "#AE3030"  # imprint red - fail
+PASS_COLOR = "#009E73"  # imprint green - pass
+CURVE_COLOR = "#4467A3"  # imprint blue - regression curve
 
 # Data - Exam score vs Pass/Fail outcome
 np.random.seed(42)

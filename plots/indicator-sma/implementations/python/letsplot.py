@@ -38,7 +38,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID_COLOR = "#C0BFBA" if THEME == "light" else "#484844"
 
 # Okabe-Ito palette — first series always #009E73
-COLORS = {"Close": "#009E73", "SMA 20": "#D55E00", "SMA 50": "#0072B2", "SMA 200": "#CC79A7"}
+COLORS = {"Close": "#009E73", "SMA 20": "#C475FD", "SMA 50": "#4467A3", "SMA 200": "#BD8233"}
 
 # Data
 np.random.seed(42)

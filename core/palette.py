@@ -3,7 +3,7 @@
 Single source of truth for the 8 categorical hues, 3 semantic anchors,
 sequential cmap, and diverging cmap used across the project.
 
-Design rationale: docs/reference/palette-variants-v3/decision-rationale.md
+Design rationale: docs/reference/palette-variants/v3/decision-rationale.md
 
 Why "imprint": the palette is tuned for warm-cream paper backgrounds with
 matte ink-like categorical hues — the academic-publishing-imprint mood

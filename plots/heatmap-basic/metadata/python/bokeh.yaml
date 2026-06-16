@@ -1,135 +1,145 @@
 library: bokeh
+language: python
 specification_id: heatmap-basic
 created: '2025-12-23T00:48:06Z'
-updated: '2026-02-15T21:30:42Z'
-generated_by: claude-opus-4-6
-workflow_run: 20447966194
-issue: 0
-python_version: 3.14.3
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  - annotations
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  - columndatasource
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - custom-colormap
-  - edge-highlighting
-  - minimal-chrome
+updated: '2026-05-28T23:13:58Z'
+generated_by: claude-sonnet
+workflow_run: 26606562387
+issue: 691
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/python/bokeh/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent use of conditional text colors (white on dark cells, dark gray on light)
-    for optimal readability across all intensity levels
-  - Hand-crafted diverging palette with smooth blue to white to red progression, well-calibrated
-    symmetric range
-  - Clean removal of all chart chrome (grid, axis lines, outline) with white cell
-    borders creating a polished, modern look
-  - Dual output (PNG + HTML with HoverTool) leverages Bokeh interactive strengths
-  - Data tells a coherent geographic/seasonal story without requiring annotations
-  - construct_color_bar from renderer is idiomatic modern Bokeh
+  - Theme-adaptive cell annotation text colors (dark text on near-zero cream cells,
+    light text on deep red/blue cells) — sophisticated per-cell logic that goes well
+    beyond defaults
+  - 'Correct imprint_div 256-stop diverging palette with theme-adaptive midpoint (#FAF8F1
+    light / #1A1A17 dark) — follows brand spec exactly'
+  - 'Storytelling callout: most extreme anomaly cell is highlighted with a bold INK-colored
+    border that flips correctly between themes'
+  - 'Idiomatic Bokeh: uses linear_cmap transform, r.construct_color_bar() from renderer,
+    LabelSet for cell labels, figure with categorical x/y ranges, and HoverTool'
+  - Colorbar properly titled 'Anomaly (°C)' with both a descriptive label and units
+  - Cities ordered north-to-south (Oslo → Sydney), providing geographic insight into
+    latitudinal temperature patterns
+  - 'All chrome fully theme-adaptive: title, axis labels, tick labels, colorbar —
+    no dark-on-dark or light-on-light failures in either render'
+  - Square 2400×2400 canvas — correct format for symmetric heatmap grid; canvas gate
+    passed
   weaknesses:
-  - Color bar title Anomaly (°C) is slightly cramped at the right edge — could benefit
-    from more right margin or repositioning
-  - Blue-red diverging palette could be replaced with a more colorblind-safe alternative
-    (e.g., blue-orange or a perceptually uniform diverging scheme)
-  - Only 10 months shown (Jan-Oct) instead of full 12 — the data would be more complete
-    with all months
-  image_description: The plot displays a heatmap of monthly temperature anomalies
-    (°C) for 7 cities (Oslo, Berlin, Madrid, Cairo, Mumbai, Tokyo, Sydney) across
-    10 months (Jan–Oct 2024). A hand-crafted diverging blue-to-red color palette maps
-    negative anomalies (blue/cool) to positive anomalies (red/warm), centered on white
-    at zero. Each cell contains a value annotation with +/- sign, using conditional
-    text colors — white text on dark cells and dark gray text on light cells for readability.
-    A vertical color bar on the right shows the "Anomaly (°C)" scale from -2.5 to
-    2.5. The title reads "heatmap-basic · bokeh · pyplots.ai" at the top left. The
-    x-axis is labeled "Month (2024)" and the y-axis "City". Grid lines, axis lines,
-    and outlines are removed. White borders separate cells. The background is a subtle
-    off-white (#fafafa) with white plot borders. Northern cities (Oslo, Berlin) show
-    clear cold-winter/warm-summer seasonal patterns in blue-to-red, while Sydney shows
-    a reversed Southern Hemisphere pattern. Mumbai shows consistently warm anomalies.
+  - 'In dark mode, near-zero anomaly cells fill with the background color (#1A1A17
+    midpoint) making them visually indistinguishable from the surrounding border area
+    — only the white cell borders (line_color=''white'') define them. Consider a slightly
+    offset midpoint for dark mode (e.g. #2A2A24) to keep near-zero cells faintly visible
+    as distinct fills.'
+  - 'White cell borders (line_color=''white'', line_width=2) are stark against the
+    dark background in the dark render — a softer #B8B7B0 (INK_SOFT) border in dark
+    mode would reduce visual harshness without losing grid definition.'
+  - Cell annotation font size 26pt may be slightly on the small side for the 7×12
+    grid at 2400×2400; 28–30pt would improve readability at thumbnail scale without
+    overflowing cells.
+  - 'Data storytelling is limited to one highlighted extreme-value cell; a brief annotation
+    (e.g. ''Coldest anomaly: Berlin Feb'') would communicate the callout''s meaning
+    without requiring the viewer to inspect the colorbar.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct surface color, clearly NOT pure white.
+      Chrome: Title "heatmap-basic · python · bokeh · anyplot.ai" in dark INK (#1A1A17), large and centered; "Month (2024)" x-axis label and "City" y-axis label both in dark INK, proportional; tick labels (month abbreviations, city names) in INK_SOFT (#4A4A44), readable. Colorbar labeled "Anomaly (°C)" with tick labels from -2.5 to +2.5.
+      Data: 7 cities × 12 months heatmap with imprint_div diverging palette (matte red #AE3030 → cream midpoint → steel blue #4467A3). Near-zero cells are cream-toned, warm-season positive anomalies are blue, cool-season negative anomalies are red. Per-cell +/-.X annotations use dark text on near-zero cells and light text on deep-color cells. A thick black border highlights the most extreme cell (Berlin Feb, -2.7°C). Colorbar on right side.
+      Legibility verdict: PASS — all title, axis labels, tick labels, cell annotations, and colorbar labels clearly readable against light background. No light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct surface color, clearly NOT pure black.
+      Chrome: Title, axis labels, and tick labels flip to light INK (#F0EFE8 / #B8B7B0), all readable against dark background. Colorbar tick labels and title also in light tones.
+      Data: Data colors (red/blue extremes) are identical to light render — Imprint palette positions are theme-invariant. Near-zero cells fill with #1A1A17 (the dark-mode midpoint), making them visually merge with the background (only white cell borders distinguish them). The extreme-value highlight border is now cream/light (#F0EFE8), correctly adapting to dark INK token. All cell annotations are light (#F0EFE8) in dark mode.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all text is readable. Minor note: near-zero cells are hard to distinguish from background fill (design consequence of theme-adaptive midpoint), but cell borders keep the grid legible.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, tick
-          labels 18pt, cell annotations 22pt. All perfectly readable.'
+        comment: All chrome text readable in both themes. Cell annotations at 26pt
+          are legible but slightly small at thumbnail scale; 28-30pt would be better.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text anywhere in the plot.
+        comment: No overlapping elements. Grid layout ensures each cell annotation
+          is isolated.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Heatmap rectangles fill grid perfectly, all cells clearly distinguishable
-          with white borders.
+        comment: Extreme and moderate values clearly visible. Near-zero cells have
+          low fill contrast in dark mode but remain bounded by white borders.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
-        passed: false
-        comment: Blue-red diverging palette is standard but not one of the recommended
-          colorblind-safe palettes. Works for most colorblind types but deuteranopia
-          could find subtle mid-range values harder to differentiate.
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint diverging palette (red-to-blue) is CVD-safe. Matte red #AE3030
+          and steel blue #4467A3 are distinguishable under deuteranopia.'
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Good overall layout with plot filling most of canvas. Color bar title
-          slightly cramped at right edge.
+        passed: true
+        comment: Square 2400x2400 canvas. Good margins via min_border_*. Colorbar
+          fits in min_border_right=300. Title, labels, colorbar all within bounds.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Month (2024) with context, City descriptive for categorical axis.
+        comment: Title matches required format. X-axis 'Month (2024)' includes time
+          context. Colorbar labeled 'Anomaly (°C)' with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_div used correctly (signed data). Theme-adaptive midpoint
+          (#FAF8F1 light / #1A1A17 dark). Plot backgrounds correct for both themes.'
     design_excellence:
-      score: 15
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom hand-crafted diverging palette, white cell borders, conditional
-          text colors, removed chrome — clearly above defaults, approaching publication
-          quality.
+        comment: 'Above default: theme-adaptive per-cell annotation text color is
+          sophisticated; extreme-value highlight adds intentional design hierarchy;
+          clean professional presentation throughout.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: Grid removed, axis/tick lines removed, outline removed, custom background
-          colors, generous whitespace between cells. Very polished.
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear seasonal narrative: northern cities show cold winters to warm
-          summers, Sydney reversed, Mumbai consistently warm. Diverging colormap draws
-          eye to extremes.'
+        comment: 'All spines, ticks, and gridlines removed. White cell borders define
+          grid structure cleanly. Minimal chrome. Slight deduction: white borders
+          slightly harsh in dark mode.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Geographic city ordering (N→S) provides implicit latitudinal context.
+          Extreme anomaly highlighted as focal point. No explanatory annotation text
+          to communicate the callout's meaning.
     spec_compliance:
       score: 15
       max: 15
@@ -139,52 +149,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct heatmap with color-mapped matrix cells.
+        comment: Correct heatmap via p.rect() with color mapping.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diverging colormap, value annotations, colorbar legend, logical ordering
-          — all present.
+        comment: Diverging colormap (imprint_div) for signed data, cell value annotations
+          (LabelSet), colorbar legend, logical ordering (geographic N→S).
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=months, Y=cities, values mapped to fill color correctly.
+        comment: X=months, Y=cities, color=anomaly value. All 84 cells represented.
+          Y-range reversed so Oslo is at top.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Colorbar serves as legend with proper title.
+        comment: Title exactly 'heatmap-basic · python · bokeh · anyplot.ai'. No traditional
+          legend needed; colorbar with title serves that role.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows positive and negative values, seasonal patterns, geographic
-          variation, reversed Southern Hemisphere. Could show wider extremes or outlier
-          city.
+        comment: Full 7x12 matrix, both positive and negative values, cell annotations,
+          diverging colormap, colorbar — all heatmap features demonstrated.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly temperature anomalies by city — real, neutral, comprehensible
-          scientific scenario.
+        comment: Monthly temperature anomalies for real cities — scientifically plausible
+          domain, neutral topic, values (±2.7°C) realistic for climate data.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Anomalies range from -2.1 to +1.9 C — very realistic for monthly
-          temperature anomalies.
+        comment: Colorbar range ±2.5°C appropriate for modern monthly temperature
+          anomalies. Seasonal patterns realistically encoded per city latitude.
     code_quality:
       score: 10
       max: 10
@@ -194,47 +205,69 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports, Data, Plot, Save structure. No functions or classes.
+        comment: Sequential script. _lerp_hex and sys.path manipulation are necessary
+          utilities, not over-engineering.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) ensures deterministic data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no unused imports.
+        comment: 'All imports verified used: base64/io for CDP screenshot decode,
+          selenium for headless Chrome, PIL for crop, bokeh models all referenced.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code. Appropriate complexity.
+        comment: CDP captureScreenshot with captureBeyondViewport=True is more robust
+          than save_screenshot. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. No deprecated functions.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png. Uses Bokeh 3.9.0 API
+          correctly.
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses ColumnDataSource, linear_cmap, LabelSet, HoverTool, construct_color_bar
-          — all idiomatic Bokeh patterns.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: HoverTool for interactive HTML, construct_color_bar (modern Bokeh
-          API), linear_cmap transform, dual PNG+HTML output.
+        comment: ColumnDataSource, linear_cmap transform, r.construct_color_bar(),
+          LabelSet, figure with categorical ranges, HoverTool — all idiomatic Bokeh
+          patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses Bokeh-specific APIs: linear_cmap (transform layer), construct_color_bar()
+          on renderer, LabelSet layout model, HoverTool interactivity. Multiple distinctive
+          features beyond basic usage.'
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  - pillow
+  techniques:
+  - colorbar
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep: []
+  styling:
+  - custom-colormap
+  - minimal-chrome

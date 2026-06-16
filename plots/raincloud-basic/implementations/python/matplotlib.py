@@ -17,7 +17,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# anyplot palette positions 1-3
+# Imprint palette positions 1-3
 COLORS = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data: Reaction times (ms) for three experimental conditions

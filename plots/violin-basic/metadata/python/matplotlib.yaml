@@ -1,15 +1,242 @@
 library: matplotlib
+language: python
 specification_id: violin-basic
 created: '2025-12-23T00:35:08Z'
-updated: '2026-02-21T22:50:23Z'
-generated_by: claude-opus-4-6
-workflow_run: 20447775895
-issue: 0
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/violin-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 92
+updated: '2026-05-29T11:19:55Z'
+generated_by: claude-sonnet
+workflow_run: 26633788132
+issue: 722
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Perfect spec compliance — quartile markers (Q1, Q3), amber median line, and mirrored
+    density all present and clearly visible
+  - Excellent data design with four distinct distribution shapes (normal, tight cluster,
+    wide spread, bimodal) showcasing violin plots' full analytical power
+  - Amber semantic anchor on median line creates intentional visual hierarchy that
+    clearly distinguishes the median from Q1/Q3 lines
+  - Path effects (matplotlib.patheffects) on quantile lines provide visual depth and
+    legibility against colored violin bodies — distinctive matplotlib technique
+  - Bimodal annotation for Hamilton Prep highlights the most analytically interesting
+    feature, elevating the chart from display to storytelling
+  - 'Full theme adaptation: both light (#FAF8F1) and dark (#1A1A17) renders are clean
+    and readable with correct Imprint palette throughout'
+  weaknesses:
+  - 'DE-01 not reaching publication-ready level (8/8): the plot is above defaults
+    but lacks the final typographic polish — a descriptive title prefix (''Test Score
+    Distribution by School · violin-basic…'') and minor typography refinement would
+    push it to 8'
+  - Annotation uses inline hex literal '#BD8233' for color/arrowprops rather than
+    the named constant IMPRINT_PALETTE[3] — minor code style inconsistency but worth
+    aligning with the named-constant convention used elsewhere in the file
+  - Grid lines on Y-axis pass through the violin bodies, creating a subtle visual
+    tension. Moving to a slightly lower grid alpha (0.10) inside the violin area or
+    using only minor y-axis tick marks might further clean the composition
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "violin-basic · python · matplotlib · anyplot.ai" in dark ink, centered, approx 65-70% of plot width at fontsize 12pt — well proportioned. Y-axis label "Test Score (points)" and X-axis label "School" in dark ink at fontsize 10pt. Tick labels (0-100 on Y, school names on X) in INK_SOFT at fontsize 8pt — all readable. Top and right spines removed; left and bottom spines in INK_SOFT. Subtle Y-axis grid lines at alpha=0.15.
+      Data: Four violin bodies in Imprint canonical order — Lincoln HS green (#009E73), Roosevelt Acad. lavender (#C475FD), Jefferson HS blue (#4467A3), Hamilton Prep ochre (#BD8233). Each violin shows mirrored KDE density. White Q1/Q3 quantile lines and amber (#DDCC77) median lines visible inside each violin body, with subtle path-effect shadows for depth. Annotation "Two distinct performance groups" in ochre italic with arrow pointing to Hamilton Prep's bimodal waist.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title, axis labels, and tick labels rendered in light warm text (#F0EFE8 / #B8B7B0) — clearly visible against the dark background. Grid lines in subtle light tone. No dark-on-dark failures observed.
+      Data: Violin body colors are identical to light render — Lincoln HS green (#009E73), Roosevelt lavender (#C475FD), Jefferson blue (#4467A3), Hamilton ochre (#BD8233). Imprint palette data colors unchanged between themes (only chrome flips). White quantile lines and amber median lines remain clearly distinguishable. Annotation text in ochre readable against dark background.
+      Legibility verdict: PASS — all text readable against near-black background, no dark-on-dark failures, brand green #009E73 remains clearly visible
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title, axis labels, tick labels readable
+          in both themes; proportions correct
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements; annotation well-positioned
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Violin bodies prominent; quantile lines clearly visible with path
+          effects
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; alpha=0.8 on violin bodies aids distinguishability
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); subplots_adjust used; balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis 'Test Score (points)' has units; X-axis 'School' is descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; canonical Imprint order; backgrounds #FAF8F1
+          / #1A1A17; chrome theme-correct in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: amber median hierarchy, path effects for depth, matching
+          annotation color — clearly above defaults but not quite publication-ready'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, INK_SOFT violin edges — good refinement
+          above defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Bimodal annotation guides viewer to key insight; amber median emphasis;
+          four distinct distribution shapes tell a clear story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct violin plot with mirrored KDE density on both sides
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Quartile markers (Q1/Q3 white lines), median line (amber), mirrored
+          density all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories on X, test scores on Y, full 0-100 range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'violin-basic · python · matplotlib · anyplot.ai' correct;
+          no legend needed (x-axis labels serve as category labels)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Four distinct distribution shapes: normal (~75 center), tight high
+          cluster (~85), wide spread (~62), bimodal (two groups at ~70 and ~88)'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Test scores across four schools — real-world, neutral, educationally
+          relevant scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-100 test score range with np.clip; 150 points per category; realistic
+          school performance distribution differences
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports → tokens → data → plot → style → save. No functions
+          or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, matplotlib.patheffects, matplotlib.pyplot, numpy — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic; no fake interactivity; path effects cleanly applied
+          to cquantiles
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: plt.savefig(f'plot-{THEME}.png', dpi=400) — no bbox_inches='tight',
+          correct filename
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: violinplot() with quantiles parameter; accesses cquantiles from return
+          dict; idiomatic ax.* method usage throughout
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: matplotlib.patheffects (Stroke + Normal) on LineCollection — distinctively
+          matplotlib; cquantiles API access is library-specific; per-violin body color
+          iteration
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -23,204 +250,3 @@ impl_tags:
   - alpha-blending
   - edge-highlighting
   - grid-styling
-review:
-  strengths:
-  - 'Excellent data design: four distinct distribution shapes (normal, tight, wide,
-    bimodal) showcase the full power of violin plots'
-  - Path effects on quantile lines ensure legibility against colored bodies — a thoughtful
-    detail
-  - Coordinated annotation with matching color and arrow guides the viewer to the
-    bimodal insight
-  - Custom palette with edge color hierarchy adds depth and professional polish
-  - Yellow median line is immediately distinguishable from white quartile lines
-  weaknesses:
-  - Blue-green color pair may be slightly ambiguous for deuteranopia
-  - Default matplotlib font family used throughout — a custom sans-serif font could
-    elevate the aesthetic further
-  image_description: 'The plot displays four violin shapes representing test score
-    distributions across four schools: Lincoln HS (steel blue, #306998), Roosevelt
-    Acad. (muted green, #5BA58B), Jefferson HS (soft purple, #7A6FB5), and Hamilton
-    Prep (warm orange, #D4853F). Each violin has darker edge colors matching its fill.
-    Inside each violin, white horizontal lines mark Q1 and Q3, while a brighter yellow
-    line marks the median. Path effects (dark stroke behind lines) make quartile markers
-    legible against the colored bodies. Lincoln HS shows a broad normal distribution
-    centered ~75; Roosevelt Acad. shows a tight cluster around ~85; Jefferson HS has
-    the widest spread centered ~63 reaching down to ~30; Hamilton Prep shows a distinctive
-    bimodal shape with two bulges (~70 and ~88). An italic annotation in brown reads
-    "Two distinct performance groups" with an arrow pointing into Hamilton''s violin.
-    Top and right spines are removed, a subtle y-axis grid (alpha=0.2) is visible,
-    and the title reads "violin-basic · matplotlib · pyplots.ai" in the correct format.
-    Axis labels are "School" (x) and "Test Score (points)" (y).'
-  criteria_checklist:
-    visual_quality:
-      score: 29
-      max: 30
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 8
-        max: 8
-        passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, ticks
-          16pt, annotation 13pt'
-      - id: VQ-02
-        name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No overlapping text, well-spaced x-axis labels and annotation
-      - id: VQ-03
-        name: Element Visibility
-        score: 6
-        max: 6
-        passed: true
-        comment: Violins well-sized with alpha=0.8, quantile lines enhanced with path
-          effects
-      - id: VQ-04
-        name: Color Accessibility
-        score: 3
-        max: 4
-        passed: true
-        comment: Good palette but blue-green pair may challenge deuteranopia
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 4
-        max: 4
-        passed: true
-        comment: tight_layout with balanced margins, 16:9 well-utilized
-      - id: VQ-06
-        name: Axis Labels & Title
-        score: 2
-        max: 2
-        passed: true
-        comment: Test Score (points) with units, School descriptive
-    design_excellence:
-      score: 16
-      max: 20
-      items:
-      - id: DE-01
-        name: Aesthetic Sophistication
-        score: 6
-        max: 8
-        passed: true
-        comment: Custom palette with edge colors, path effects, yellow median emphasis,
-          coordinated annotation color
-      - id: DE-02
-        name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: Spines removed, subtle grid, path effects, edge highlighting; default
-          font is only rough edge
-      - id: DE-03
-        name: Data Storytelling
-        score: 5
-        max: 6
-        passed: true
-        comment: Bimodal annotation guides viewer, four distinct distributions create
-          comparative narrative
-    spec_compliance:
-      score: 15
-      max: 15
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 5
-        max: 5
-        passed: true
-        comment: Correct violin plot with KDE-based density shapes
-      - id: SC-02
-        name: Required Features
-        score: 4
-        max: 4
-        passed: true
-        comment: Quartile markers, mirrored density, median line all present
-      - id: SC-03
-        name: Data Mapping
-        score: 3
-        max: 3
-        passed: true
-        comment: X=categories, Y=test scores, all data visible
-      - id: SC-04
-        name: Title & Legend
-        score: 3
-        max: 3
-        passed: true
-        comment: Title format correct, legend not needed with x-axis labels
-    data_quality:
-      score: 15
-      max: 15
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 6
-        max: 6
-        passed: true
-        comment: Normal, tight, wide, and bimodal distributions showcase full violin
-          plot capability
-      - id: DQ-02
-        name: Realistic Context
-        score: 5
-        max: 5
-        passed: true
-        comment: 'School test scores: real-world, neutral, comprehensible with named
-          schools'
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 4
-        passed: true
-        comment: 0-100 scale with realistic means (62-85) and standard deviations
-          (4-15)
-    code_quality:
-      score: 10
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Linear flow: imports, data, plot, styling, annotation, save'
-      - id: CQ-02
-        name: Reproducibility
-        score: 2
-        max: 2
-        passed: true
-        comment: np.random.seed(42) set at top
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: 'All three imports used: patheffects, pyplot, numpy'
-      - id: CQ-04
-        name: Code Elegance
-        score: 2
-        max: 2
-        passed: true
-        comment: Clean, appropriate complexity, no over-engineering
-      - id: CQ-05
-        name: Output & API
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png, dpi=300, current API
-    library_mastery:
-      score: 7
-      max: 10
-      items:
-      - id: LM-01
-        name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Uses violinplot with quantiles parameter, parts dictionary for per-element
-          styling
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Path effects and direct LineCollection manipulation are matplotlib-specific
-  verdict: APPROVED

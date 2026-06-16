@@ -19,7 +19,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - generate synthetic two-moon classification data
 np.random.seed(42)
@@ -43,7 +43,7 @@ fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 # Plot decision regions with contourf
-ax.contourf(xx, yy, Z, alpha=0.3, colors=[OKABE_ITO[0], OKABE_ITO[1]], levels=[-0.5, 0.5, 1.5])
+ax.contourf(xx, yy, Z, alpha=0.3, colors=[IMPRINT[0], IMPRINT[1]], levels=[-0.5, 0.5, 1.5])
 
 # Add decision boundary line
 ax.contour(xx, yy, Z, colors=INK_SOFT, linewidths=2, levels=[0.5])
@@ -59,7 +59,7 @@ class_1_correct = (y == 1) & correct
 ax.scatter(
     X[class_0_correct, 0],
     X[class_0_correct, 1],
-    c=OKABE_ITO[0],
+    c=IMPRINT[0],
     s=150,
     alpha=0.9,
     edgecolors=PAGE_BG,
@@ -71,7 +71,7 @@ ax.scatter(
 ax.scatter(
     X[class_1_correct, 0],
     X[class_1_correct, 1],
-    c=OKABE_ITO[1],
+    c=IMPRINT[1],
     s=150,
     alpha=0.9,
     edgecolors=PAGE_BG,
@@ -89,7 +89,7 @@ if np.any(incorrect):
         ax.scatter(
             X[class_0_incorrect, 0],
             X[class_0_incorrect, 1],
-            c=OKABE_ITO[0],
+            c=IMPRINT[0],
             s=200,
             alpha=0.9,
             edgecolors=INK_SOFT,
@@ -102,7 +102,7 @@ if np.any(incorrect):
         ax.scatter(
             X[class_1_incorrect, 0],
             X[class_1_incorrect, 1],
-            c=OKABE_ITO[1],
+            c=IMPRINT[1],
             s=200,
             alpha=0.9,
             edgecolors=INK_SOFT,

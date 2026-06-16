@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 alluvial-opinion-flow: Opinion Flow Diagram
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-03
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-30
 """
+
+import os
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -12,211 +14,234 @@ import seaborn as sns
 from matplotlib.path import Path
 
 
-# Style — seaborn theming and context
-sns.set_style("white")
-sns.set_context("talk", font_scale=1.3)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Data: Survey tracking 1000 respondents on renewable energy support
-# across 4 quarterly waves — shows gradual polarization over time
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Data: AI-assisted diagnostics policy survey, 1,000 respondents over 4 quarterly waves
+# Pattern: gradual drift from net-skeptical to net-supportive as clinical evidence grows
 waves = ["Q1 2025", "Q2 2025", "Q3 2025", "Q4 2025"]
-categories = ["Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"]
+categories = ["Strongly Support", "Support", "Neutral", "Oppose", "Strongly Oppose"]
 
-# Diverging palette via seaborn: blue (agreement) → gray (neutral) → warm (disagreement)
-palette_rgb = sns.diverging_palette(220, 25, n=5, s=80, l=50)
-category_colors = {cat: tuple(palette_rgb[i]) for i, cat in enumerate(categories)}
+# Imprint palette — semantic mapping: positive→green/cyan, neutral→muted, negative→ochre/red
+category_colors = {
+    "Strongly Support": "#009E73",
+    "Support": "#2ABCCD",
+    "Neutral": INK_MUTED,
+    "Oppose": "#BD8233",
+    "Strongly Oppose": "#AE3030",
+}
 
-# Seaborn color utilities: lighter node fill variants and desaturated changing-flow colors
-node_light_colors = {cat: sns.light_palette(category_colors[cat], n_colors=5)[2] for cat in categories}
-changer_colors = {cat: sns.desaturate(category_colors[cat], 0.55) for cat in categories}
+# Desaturated variants for changing flows (seaborn-native desaturation — lower ratio = more muted)
+changer_colors = {cat: sns.desaturate(col, 0.35) for cat, col in category_colors.items()}
 
-# Respondent counts per category at each wave (total = 1000 per wave)
-# Pattern: Neutral shrinks as respondents polarize toward extremes
+# Label colors — lighter red for Strongly Oppose on dark surface to improve contrast
+label_colors = dict(category_colors)
+if THEME == "dark":
+    label_colors["Strongly Oppose"] = "#E06060"
+
+# Counts per category at each wave (row=category, col=wave; total=1000 per wave)
+# Gradual drift: skeptics convert as AI diagnostics prove effective across trials
 counts = np.array(
     [
-        [120, 150, 180, 210],  # Strongly Agree
-        [280, 260, 240, 230],  # Agree
-        [300, 250, 200, 160],  # Neutral
-        [200, 210, 220, 220],  # Disagree
-        [100, 130, 160, 180],  # Strongly Disagree
+        [80, 100, 130, 170],  # Strongly Support
+        [150, 200, 250, 310],  # Support
+        [300, 270, 240, 200],  # Neutral
+        [300, 270, 240, 200],  # Oppose
+        [170, 160, 140, 120],  # Strongly Oppose
     ]
 )
 
-# Flow transitions between consecutive waves
+# Flow transitions (row sums = source wave counts, col sums = target wave counts)
 flows = [
-    # Q1 → Q2
-    {
-        ("Strongly Agree", "Strongly Agree"): 105,
-        ("Strongly Agree", "Agree"): 10,
-        ("Strongly Agree", "Neutral"): 3,
-        ("Strongly Agree", "Disagree"): 1,
-        ("Strongly Agree", "Strongly Disagree"): 1,
-        ("Agree", "Strongly Agree"): 30,
-        ("Agree", "Agree"): 210,
-        ("Agree", "Neutral"): 25,
-        ("Agree", "Disagree"): 10,
-        ("Agree", "Strongly Disagree"): 5,
-        ("Neutral", "Strongly Agree"): 10,
-        ("Neutral", "Agree"): 30,
-        ("Neutral", "Neutral"): 200,
-        ("Neutral", "Disagree"): 40,
-        ("Neutral", "Strongly Disagree"): 20,
-        ("Disagree", "Strongly Agree"): 3,
-        ("Disagree", "Agree"): 7,
-        ("Disagree", "Neutral"): 20,
-        ("Disagree", "Disagree"): 145,
-        ("Disagree", "Strongly Disagree"): 25,
-        ("Strongly Disagree", "Strongly Agree"): 2,
-        ("Strongly Disagree", "Agree"): 3,
-        ("Strongly Disagree", "Neutral"): 2,
-        ("Strongly Disagree", "Disagree"): 14,
-        ("Strongly Disagree", "Strongly Disagree"): 79,
+    {  # Q1 → Q2
+        ("Strongly Support", "Strongly Support"): 65,
+        ("Strongly Support", "Support"): 10,
+        ("Strongly Support", "Neutral"): 3,
+        ("Strongly Support", "Oppose"): 1,
+        ("Strongly Support", "Strongly Oppose"): 1,
+        ("Support", "Strongly Support"): 22,
+        ("Support", "Support"): 115,
+        ("Support", "Neutral"): 8,
+        ("Support", "Oppose"): 3,
+        ("Support", "Strongly Oppose"): 2,
+        ("Neutral", "Strongly Support"): 7,
+        ("Neutral", "Support"): 55,
+        ("Neutral", "Neutral"): 215,
+        ("Neutral", "Oppose"): 18,
+        ("Neutral", "Strongly Oppose"): 5,
+        ("Oppose", "Strongly Support"): 4,
+        ("Oppose", "Support"): 12,
+        ("Oppose", "Neutral"): 25,
+        ("Oppose", "Oppose"): 230,
+        ("Oppose", "Strongly Oppose"): 29,
+        ("Strongly Oppose", "Strongly Support"): 2,
+        ("Strongly Oppose", "Support"): 8,
+        ("Strongly Oppose", "Neutral"): 19,
+        ("Strongly Oppose", "Oppose"): 18,
+        ("Strongly Oppose", "Strongly Oppose"): 123,
     },
-    # Q2 → Q3
-    {
-        ("Strongly Agree", "Strongly Agree"): 135,
-        ("Strongly Agree", "Agree"): 10,
-        ("Strongly Agree", "Neutral"): 3,
-        ("Strongly Agree", "Disagree"): 1,
-        ("Strongly Agree", "Strongly Disagree"): 1,
-        ("Agree", "Strongly Agree"): 30,
-        ("Agree", "Agree"): 195,
-        ("Agree", "Neutral"): 20,
-        ("Agree", "Disagree"): 10,
-        ("Agree", "Strongly Disagree"): 5,
-        ("Neutral", "Strongly Agree"): 10,
-        ("Neutral", "Agree"): 25,
-        ("Neutral", "Neutral"): 160,
-        ("Neutral", "Disagree"): 35,
-        ("Neutral", "Strongly Disagree"): 20,
-        ("Disagree", "Strongly Agree"): 3,
-        ("Disagree", "Agree"): 7,
-        ("Disagree", "Neutral"): 15,
-        ("Disagree", "Disagree"): 160,
-        ("Disagree", "Strongly Disagree"): 25,
-        ("Strongly Disagree", "Strongly Agree"): 2,
-        ("Strongly Disagree", "Agree"): 3,
-        ("Strongly Disagree", "Neutral"): 2,
-        ("Strongly Disagree", "Disagree"): 14,
-        ("Strongly Disagree", "Strongly Disagree"): 109,
+    {  # Q2 → Q3
+        ("Strongly Support", "Strongly Support"): 85,
+        ("Strongly Support", "Support"): 12,
+        ("Strongly Support", "Neutral"): 2,
+        ("Strongly Support", "Oppose"): 1,
+        ("Strongly Support", "Strongly Oppose"): 0,
+        ("Support", "Strongly Support"): 30,
+        ("Support", "Support"): 150,
+        ("Support", "Neutral"): 12,
+        ("Support", "Oppose"): 5,
+        ("Support", "Strongly Oppose"): 3,
+        ("Neutral", "Strongly Support"): 8,
+        ("Neutral", "Support"): 65,
+        ("Neutral", "Neutral"): 175,
+        ("Neutral", "Oppose"): 17,
+        ("Neutral", "Strongly Oppose"): 5,
+        ("Oppose", "Strongly Support"): 5,
+        ("Oppose", "Support"): 15,
+        ("Oppose", "Neutral"): 30,
+        ("Oppose", "Oppose"): 210,
+        ("Oppose", "Strongly Oppose"): 10,
+        ("Strongly Oppose", "Strongly Support"): 2,
+        ("Strongly Oppose", "Support"): 8,
+        ("Strongly Oppose", "Neutral"): 21,
+        ("Strongly Oppose", "Oppose"): 7,
+        ("Strongly Oppose", "Strongly Oppose"): 122,
     },
-    # Q3 → Q4
-    {
-        ("Strongly Agree", "Strongly Agree"): 165,
-        ("Strongly Agree", "Agree"): 10,
-        ("Strongly Agree", "Neutral"): 3,
-        ("Strongly Agree", "Disagree"): 1,
-        ("Strongly Agree", "Strongly Disagree"): 1,
-        ("Agree", "Strongly Agree"): 30,
-        ("Agree", "Agree"): 180,
-        ("Agree", "Neutral"): 15,
-        ("Agree", "Disagree"): 10,
-        ("Agree", "Strongly Disagree"): 5,
-        ("Neutral", "Strongly Agree"): 10,
-        ("Neutral", "Agree"): 30,
-        ("Neutral", "Neutral"): 120,
-        ("Neutral", "Disagree"): 25,
-        ("Neutral", "Strongly Disagree"): 15,
-        ("Disagree", "Strongly Agree"): 3,
-        ("Disagree", "Agree"): 7,
-        ("Disagree", "Neutral"): 20,
-        ("Disagree", "Disagree"): 170,
-        ("Disagree", "Strongly Disagree"): 20,
-        ("Strongly Disagree", "Strongly Agree"): 2,
-        ("Strongly Disagree", "Agree"): 3,
-        ("Strongly Disagree", "Neutral"): 2,
-        ("Strongly Disagree", "Disagree"): 14,
-        ("Strongly Disagree", "Strongly Disagree"): 139,
+    {  # Q3 → Q4
+        ("Strongly Support", "Strongly Support"): 120,
+        ("Strongly Support", "Support"): 8,
+        ("Strongly Support", "Neutral"): 1,
+        ("Strongly Support", "Oppose"): 1,
+        ("Strongly Support", "Strongly Oppose"): 0,
+        ("Support", "Strongly Support"): 40,
+        ("Support", "Support"): 190,
+        ("Support", "Neutral"): 13,
+        ("Support", "Oppose"): 5,
+        ("Support", "Strongly Oppose"): 2,
+        ("Neutral", "Strongly Support"): 8,
+        ("Neutral", "Support"): 85,
+        ("Neutral", "Neutral"): 130,
+        ("Neutral", "Oppose"): 14,
+        ("Neutral", "Strongly Oppose"): 3,
+        ("Oppose", "Strongly Support"): 1,
+        ("Oppose", "Support"): 20,
+        ("Oppose", "Neutral"): 35,
+        ("Oppose", "Oppose"): 175,
+        ("Oppose", "Strongly Oppose"): 9,
+        ("Strongly Oppose", "Strongly Support"): 1,
+        ("Strongly Oppose", "Support"): 7,
+        ("Strongly Oppose", "Neutral"): 21,
+        ("Strongly Oppose", "Oppose"): 5,
+        ("Strongly Oppose", "Strongly Oppose"): 106,
     },
 ]
 
-# Figure with two panels: main alluvial + net change barplot
-fig = plt.figure(figsize=(16, 9))
-gs = fig.add_gridspec(1, 2, width_ratios=[5, 1], wspace=0.05)
+# Figure: main alluvial panel + net change sidebar
+fig = plt.figure(figsize=(8, 4.5), dpi=400)
+fig.patch.set_facecolor(PAGE_BG)
+gs = fig.add_gridspec(1, 2, width_ratios=[5, 1])
 ax = fig.add_subplot(gs[0, 0])
 ax_net = fig.add_subplot(gs[0, 1])
+ax.set_facecolor(PAGE_BG)
+ax_net.set_facecolor(PAGE_BG)
 
-# --- Main alluvial diagram ---
+# Main alluvial diagram
 n_waves = len(waves)
 x_positions = np.linspace(0, 10, n_waves)
 bar_width = 0.55
 total_height = 100
-
 node_positions = {}
 
 for wave_idx, wave in enumerate(waves):
     x = x_positions[wave_idx]
     wave_total = counts[:, wave_idx].sum()
-
     y_bottom = 0
+
     for cat_idx, category in enumerate(categories):
         height = (counts[cat_idx, wave_idx] / wave_total) * total_height
         y_top = y_bottom + height
-
         node_positions[(wave_idx, category)] = (y_bottom, y_top)
 
-        rect = mpatches.Rectangle(
-            (x - bar_width / 2, y_bottom),
-            bar_width,
-            height,
-            facecolor=category_colors[category],
-            edgecolor=node_light_colors[category],
-            linewidth=2.5,
+        ax.add_patch(
+            mpatches.Rectangle(
+                (x - bar_width / 2, y_bottom),
+                bar_width,
+                height,
+                facecolor=category_colors[category],
+                edgecolor=PAGE_BG,
+                linewidth=1.0,
+            )
         )
-        ax.add_patch(rect)
 
         count_val = counts[cat_idx, wave_idx]
-
         if wave_idx == 0:
+            # Single-line for short nodes (≤ 8% of total) to prevent crowding
+            label_text = f"{category} (n={count_val})" if height <= 8 else f"{category}\n(n={count_val})"
             ax.text(
                 x - bar_width / 2 - 0.15,
                 (y_bottom + y_top) / 2,
-                f"{category}\n(n={count_val})",
+                label_text,
                 ha="right",
                 va="center",
-                fontsize=16,
+                fontsize=6.5,
                 fontweight="bold",
-                color=category_colors[category],
+                color=label_colors[category],
             )
         elif wave_idx == n_waves - 1:
             ax.text(
                 x + bar_width / 2 + 0.15,
                 (y_bottom + y_top) / 2,
-                f"(n={count_val})",
+                f"n={count_val}",
                 ha="left",
                 va="center",
-                fontsize=16,
+                fontsize=6.5,
                 fontweight="bold",
-                color=category_colors[category],
+                color=label_colors[category],
             )
-        else:
-            if height > 9:
-                ax.text(
-                    x,
-                    (y_bottom + y_top) / 2,
-                    f"n={count_val}",
-                    ha="center",
-                    va="center",
-                    fontsize=16,
-                    fontweight="semibold",
-                    color="white",
-                )
-
+        elif height > 9:
+            ax.text(
+                x,
+                (y_bottom + y_top) / 2,
+                f"n={count_val}",
+                ha="center",
+                va="center",
+                fontsize=6.5,
+                fontweight="bold",
+                color=PAGE_BG,
+            )
         y_bottom = y_top
 
-    ax.text(x, total_height + 3, wave, ha="center", va="bottom", fontsize=20, fontweight="bold")
+    ax.text(x, total_height + 3, wave, ha="center", va="bottom", fontsize=8, fontweight="bold", color=INK)
 
-# Draw flows between consecutive waves
-# Draw changers first (low opacity), then stable flows on top (high opacity)
+# Draw Bezier flow bands — changers first (low z), stable flows on top (high z)
 for flow_idx, flow_dict in enumerate(flows):
     x0 = x_positions[flow_idx]
     x1 = x_positions[flow_idx + 1]
-
     wave0_total = counts[:, flow_idx].sum()
     wave1_total = counts[:, flow_idx + 1].sum()
 
-    # Sort: changers first, stable last (so stable draws on top)
     sorted_flows = sorted(flow_dict.items(), key=lambda item: item[0][0] == item[0][1])
-
     source_offsets = {cat: node_positions[(flow_idx, cat)][0] for cat in categories}
     target_offsets = {cat: node_positions[(flow_idx + 1, cat)][0] for cat in categories}
 
@@ -232,7 +257,6 @@ for flow_idx, flow_dict in enumerate(flows):
         y1_bot = target_offsets[target_cat]
         y1_top = y1_bot + target_height
 
-        # Bezier curved band
         band_x0 = x0 + bar_width / 2
         band_x1 = x1 - bar_width / 2
         cx0 = band_x0 + 0.4 * (band_x1 - band_x0)
@@ -260,34 +284,28 @@ for flow_idx, flow_dict in enumerate(flows):
             Path.CURVE4,
             Path.CLOSEPOLY,
         ]
-        path = Path(verts, codes)
-
-        # Stable flows use full color at high opacity; changers use desaturated color
         is_stable = source_cat == target_cat
-        alpha = 0.60 if is_stable else 0.38
-
+        alpha = 0.58 if is_stable else 0.25
         color = category_colors[source_cat] if is_stable else changer_colors[source_cat]
-        patch = mpatches.PathPatch(path, facecolor=color, edgecolor=color, linewidth=0.3, alpha=alpha)
-        ax.add_patch(patch)
+        ax.add_patch(
+            mpatches.PathPatch(Path(verts, codes), facecolor=color, edgecolor=color, linewidth=0.3, alpha=alpha)
+        )
 
         source_offsets[source_cat] = y0_top
         target_offsets[target_cat] = y1_top
 
-# Main axes style — use seaborn despine
-ax.set_xlim(-4.0, 12.0)
+ax.set_xlim(-5.0, 12.5)
 ax.set_ylim(-8, 115)
 ax.set_aspect("auto")
 ax.set_xticks([])
 ax.set_yticks([])
 sns.despine(ax=ax, left=True, bottom=True, top=True, right=True)
-ax.set_facecolor("white")
 
-# --- Net change sidebar using seaborn barplot ---
+# Net change sidebar — seaborn barplot colored by category
 net_changes = counts[:, -1] - counts[:, 0]
 df_net = pd.DataFrame({"Category": categories, "Net Change": net_changes.tolist()})
-
-# Reversed order so bottom-to-top matches alluvial stacking
 cat_order = categories[::-1]
+
 sns.barplot(
     data=df_net,
     x="Net Change",
@@ -299,39 +317,42 @@ sns.barplot(
     ax=ax_net,
 )
 
-# Annotate bars with net change values
 for i, cat in enumerate(cat_order):
     val = net_changes[categories.index(cat)]
     sign = "+" if val > 0 else ""
-    offset = 5 if val >= 0 else -5
+    offset = 3 if val >= 0 else -3
     ha = "left" if val >= 0 else "right"
     ax_net.text(
-        val + offset, i, f"{sign}{val}", ha=ha, va="center", fontsize=14, fontweight="bold", color=category_colors[cat]
+        val + offset, i, f"{sign}{val}", ha=ha, va="center", fontsize=7, fontweight="bold", color=category_colors[cat]
     )
 
-ax_net.set_title("Net Shift\nQ1 → Q4", fontsize=16, fontweight="bold", pad=15)
+ax_net.set_title("Net Shift\nQ1→Q4", fontsize=8, fontweight="bold", pad=8, color=INK)
 ax_net.set_ylabel("")
 ax_net.set_xlabel("")
 ax_net.tick_params(axis="y", length=0)
 ax_net.set_yticklabels([])
-ax_net.axvline(0, color="#444444", linewidth=0.8, zorder=0)
-ax_net.xaxis.grid(True, alpha=0.15, linewidth=0.5)
+ax_net.tick_params(axis="x", labelsize=7, colors=INK_SOFT)
+ax_net.axvline(0, color=INK_SOFT, linewidth=0.8, zorder=0)
+ax_net.set_xlim(-155, 210)
+ax_net.xaxis.grid(True, alpha=0.15, linewidth=0.5, color=INK)
 sns.despine(ax=ax_net, left=True)
-ax_net.set_facecolor("white")
 
-# Title and subtitle
-fig.suptitle("alluvial-opinion-flow · seaborn · pyplots.ai", fontsize=24, fontweight="bold", y=0.97)
+# Title and footnote
+title = "alluvial-opinion-flow · python · seaborn · anyplot.ai"
+n_chars = len(title)
+ratio = 67 / n_chars if n_chars > 67 else 1.0
+title_fontsize = max(round(12 * ratio), 8)
+fig.suptitle(title, fontsize=title_fontsize, fontweight="bold", color=INK, y=0.97)
 fig.text(
     0.42,
-    0.02,
-    "Renewable Energy Survey · 1,000 respondents across 4 waves · Stable flows shown at higher opacity",
+    0.01,
+    "AI-Assisted Diagnostics Survey · 1,000 respondents · Stable flows at higher opacity",
     ha="center",
     va="bottom",
-    fontsize=16,
-    color="#666666",
+    fontsize=6.5,
+    color=INK_MUTED,
     style="italic",
 )
 
-fig.patch.set_facecolor("white")
-fig.subplots_adjust(left=0.12, right=0.98, top=0.90, bottom=0.08, wspace=0.05)
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+fig.subplots_adjust(left=0.12, right=0.98, top=0.88, bottom=0.06, wspace=0.08)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

@@ -30,7 +30,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - quarterly product performance over 3 years
 np.random.seed(42)
@@ -56,10 +56,10 @@ df = pd.DataFrame(
 # Define line styles and colors using Okabe-Ito palette
 linetype_values = {"Product A": "solid", "Product B": "dashed", "Product C": "dotted", "Product D": "dashdot"}
 color_values = {
-    "Product A": OKABE_ITO[0],
-    "Product B": OKABE_ITO[1],
-    "Product C": OKABE_ITO[2],
-    "Product D": OKABE_ITO[3],
+    "Product A": IMPRINT[0],
+    "Product B": IMPRINT[1],
+    "Product C": IMPRINT[2],
+    "Product D": IMPRINT[3],
 }
 
 # Theme-adaptive styling

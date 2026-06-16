@@ -1,0 +1,250 @@
+library: makie
+language: julia
+specification_id: heatmap-rainflow
+created: '2026-06-02T10:01:35Z'
+updated: '2026-06-02T10:27:01Z'
+generated_by: claude-sonnet
+workflow_run: 26812228421
+issue: 4465
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
+review:
+  strengths:
+  - Correct 2400x2400 square canvas with px_per_unit=2
+  - 'Imprint sequential colormap (#009E73 to #4467A3) correctly applied for single-polarity
+    continuous data'
+  - Log10 color scale with computed decade ticks (1/10/100/1000) is scientifically
+    appropriate and elegantly implemented
+  - Zero-count bins rendered as PAGE_BG (NaN to background) — seamless empty-bin treatment
+    in both themes
+  - Full theme-adaptive chrome — all INK/INK_SOFT tokens correctly applied to every
+    axis element
+  - 'Physically realistic data: exponential amplitude distribution + Gaussian mean
+    stress is fatigue-accurate'
+  - Contour iso-lines at fatigue-relevant thresholds (100/1000 cycles) and dominant-region
+    annotation are conceptually strong additions
+  weaknesses:
+  - Contour iso-lines use color=INK_SOFT (medium gray) with linewidth=1.5 — insufficient
+    contrast against the green-blue heatmap; increase linewidth to 2.5-3.0 and consider
+    using white with alpha=0.6 or INK for better visibility
+  - Annotation text at fontsize=11 (effective 22px on 2400px canvas) is too small
+    — increase to fontsize=14 or 16 for readability at mobile scale (~400px)
+  - Both contour lines and annotation appear effectively invisible in the rendered
+    output at full scale; verify they are rendering and increase visual weight
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light surface
+      Chrome: Title "Fatigue Spectrum · heatmap-rainflow · julia · makie · anyplot.ai" dark INK on cream — readable; axis labels "Mean Stress (MPa)" / "Cycle Amplitude (MPa)" dark INK; tick labels in INK_SOFT legible; colorbar label "Cycle Count" and decade ticks (1, 10, 100, 1000) readable
+      Data: Green (#009E73) to blue (#4467A3) gradient = Imprint sequential colormap; NaN (zero-count) bins appear as off-white patches matching PAGE_BG; data region occupies most of the 20x20 grid; contour iso-lines at 100/1000 cycles present in code but too faint to see clearly in output; annotation text at fontsize=11 too small to read at rendered scale
+      Legibility verdict: PASS for main chrome; FAIL for annotation (too small at 11pt / 22px effective)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface
+      Chrome: Title in light INK (#F0EFE8) on dark background — clearly readable; axis labels in INK light; tick labels in INK_SOFT (#B8B7B0) legible; colorbar ticks readable; no dark-on-dark failures
+      Data: Same green-to-blue gradient as light render — data colors identical, only chrome flips; NaN bins render as near-black (PAGE_BG = #1A1A17) seamlessly disappearing into background; same contour/annotation visibility issue as light render
+      Legibility verdict: PASS for main chrome; FAIL for annotation (same size issue)
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Main chrome excellent in both themes; annotation at fontsize=11 (22px
+          effective) too small for mobile scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Heatmap and NaN bins clearly visible; contour iso-lines (INK_SOFT,
+          linewidth=1.5) too faint against green-blue colormap
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint sequential green-to-blue; CVD-safe, no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 2400x2400 (1200x1200 @ px_per_unit=2); square format appropriate;
+          no overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Mean Stress (MPa) / Cycle Amplitude (MPa) with units; title format
+          correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'cgrad([#009E73, #4467A3]) = imprint_seq; backgrounds #FAF8F1/#1A1A17;
+          all chrome tokens applied'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Log10 scale with computed decade colorbar ticks elegant; NaN->PAGE_BG
+          seamless. Raised from default 4.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed; grid disabled; consistent INK/INK_SOFT
+          chrome; colgap for spacing. Raised from default 2.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Log scale communicates range; contour iso-lines and annotation conceptually
+          strong but too faint/invisible in output to guide viewer effectively
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 2D heatmap; amplitude on Y, mean on X per spec
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Sequential colormap, colorbar, axis labels with units, zero-count
+          bins distinct, bin centers on axes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=mean stress, Y=cycle amplitude, color=log10(count); all 20x20 bins
+          shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Fatigue Spectrum · heatmap-rainflow · julia · makie · anyplot.ai
+          follows optional descriptive prefix format; colorbar labeled Cycle Count
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 20x20 matrix, log scale, NaN handling, colorbar, contour overlay
+          and annotation in code but not clearly visible in output
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Bridge loading scenario; 200k cycles; exponential amplitude; Gaussian
+          mean at 100 MPa; MPa units
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Amplitude 0-200 MPa, mean -50 to 250 MPa, 200k cycles, 20x20 bins
+          — all plausible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean binning loop; proper NaN/log handling; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2) correct
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper Colorbar(fig[1,2], hm) idiom; colgap! for spacing; cgrad for
+          colormap; all Axis theme kwargs
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: contour! layered over heatmap!; nan_color=PAGE_BG; computed decade
+          colorbar ticks via ticks=(vals, labels)
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap

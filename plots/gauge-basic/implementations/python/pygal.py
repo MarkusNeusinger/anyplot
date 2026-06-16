@@ -30,7 +30,7 @@ max_value = 100
 thresholds = [30, 70]
 
 # Semantic threshold colors using Okabe-Ito hues (bad → warn → good)
-ZONE_COLORS = ("#D55E00", "#E69F00", "#009E73")
+ZONE_COLORS = ("#AE3030", "#DDCC77", "#009E73")  # imprint red/amber/green traffic-light
 
 if value < thresholds[0]:
     zone_label = "Poor"

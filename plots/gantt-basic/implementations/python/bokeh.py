@@ -54,7 +54,7 @@ df["end_ms"] = df["end"].astype("int64") // 10**6
 df["y"] = list(range(len(df) - 1, -1, -1))
 
 # Color mapping by category using Okabe-Ito palette
-okabe_ito = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+okabe_ito = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 categories = df["category"].unique().tolist()
 color_map = {cat: okabe_ito[i % len(okabe_ito)] for i, cat in enumerate(categories)}
 df["color"] = df["category"].map(color_map)

@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data - Average hourly temperature pattern (two seasons)
 np.random.seed(42)
@@ -49,8 +49,8 @@ fig.add_trace(
         theta=hours_closed,
         mode="lines+markers",
         name="Summer",
-        line=dict(color=OKABE_ITO[0], width=4),
-        marker=dict(size=10, color=OKABE_ITO[0]),
+        line=dict(color=IMPRINT[0], width=4),
+        marker=dict(size=10, color=IMPRINT[0]),
         hovertemplate="Hour: %{theta}°<br>Temp: %{r:.1f}°C<extra>Summer</extra>",
     )
 )
@@ -62,8 +62,8 @@ fig.add_trace(
         theta=hours_closed,
         mode="lines+markers",
         name="Winter",
-        line=dict(color=OKABE_ITO[1], width=4),
-        marker=dict(size=10, color=OKABE_ITO[1]),
+        line=dict(color=IMPRINT[1], width=4),
+        marker=dict(size=10, color=IMPRINT[1]),
         hovertemplate="Hour: %{theta}°<br>Temp: %{r:.1f}°C<extra>Winter</extra>",
     )
 )

@@ -21,9 +21,9 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # pos 1 — fatigue test data & Basquin fit
-C_UTS = "#D55E00"  # pos 2 — Ultimate Tensile Strength
-C_YS = "#0072B2"  # pos 3 — Yield Strength
-C_EL = "#CC79A7"  # pos 4 — Endurance Limit
+C_UTS = "#C475FD"  # pos 2 — Ultimate Tensile Strength
+C_YS = "#4467A3"  # pos 3 — Yield Strength
+C_EL = "#BD8233"  # pos 4 — Endurance Limit
 
 # Data — fatigue test results for medium-carbon steel specimens
 np.random.seed(42)

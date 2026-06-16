@@ -40,10 +40,10 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 CONTOUR_COLOR = "#333333" if THEME == "light" else "#CCCCCC"
 LABEL_COLOR = "#1A1A17" if THEME == "light" else "#F0EFE8"
-COAST_COLOR = "#0072B2"  # Okabe-Ito blue — works on both themes
+COAST_COLOR = "#4467A3"  # Okabe-Ito blue — works on both themes
 GRID_MAJOR = "#CCCAC3" if THEME == "light" else "#2E2E2B"
 GRID_MINOR = "#E0DDD7" if THEME == "light" else "#252522"
-CITY_COLOR = "#D55E00"  # Okabe-Ito vermillion — reference cities
+CITY_COLOR = "#C475FD"  # Okabe-Ito vermillion — reference cities
 ANNO_BG = "#FFFDF6" if THEME == "light" else "#242420"
 
 # Data — synthetic elevation for Western US mountain region

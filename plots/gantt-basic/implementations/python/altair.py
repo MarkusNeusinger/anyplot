@@ -21,7 +21,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 tasks = [
     {"task": "Project Planning", "category": "Planning", "start": "2024-01-02", "end": "2024-01-18"},
@@ -47,11 +47,11 @@ df = df.sort_values("start", ascending=True).reset_index(drop=True)
 task_order = df["task"].tolist()
 
 category_map = {
-    "Planning": OKABE_ITO[0],
-    "Design": OKABE_ITO[1],
-    "Development": OKABE_ITO[2],
-    "Testing": OKABE_ITO[3],
-    "Deployment": OKABE_ITO[4],
+    "Planning": IMPRINT[0],
+    "Design": IMPRINT[1],
+    "Development": IMPRINT[2],
+    "Testing": IMPRINT[3],
+    "Deployment": IMPRINT[4],
 }
 
 chart = (

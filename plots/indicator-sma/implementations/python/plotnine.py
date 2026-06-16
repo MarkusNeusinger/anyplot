@@ -31,8 +31,8 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
-GOLDEN_COLOR = "#E69F00"  # amber — Okabe-Ito position 5, "golden" signal
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+GOLDEN_COLOR = "#DDCC77"  # imprint amber — "golden cross" semantic
 DEATH_COLOR = INK_SOFT  # muted gray — "death" signal, theme-adaptive
 
 # Data — bull market (days 1–150) followed by bear market (days 150–300),
@@ -71,7 +71,7 @@ df_long["series"] = df_long["series"].map(series_labels)
 series_order = ["Price", "SMA 20", "SMA 50", "SMA 200"]
 df_long["series"] = pd.Categorical(df_long["series"], categories=series_order, ordered=True)
 
-colors = {"Price": OKABE_ITO[0], "SMA 20": OKABE_ITO[1], "SMA 50": OKABE_ITO[2], "SMA 200": OKABE_ITO[3]}
+colors = {"Price": IMPRINT[0], "SMA 20": IMPRINT[1], "SMA 50": IMPRINT[2], "SMA 200": IMPRINT[3]}
 
 # Separate data to draw SMAs behind price line at different thicknesses
 price_data = df_long[df_long["series"] == "Price"]

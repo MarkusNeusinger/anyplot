@@ -34,7 +34,7 @@ BASEMAP_EDGE = "#C0B5A8" if THEME == "light" else "#4A4945"
 GRID_COLOR = INK if THEME == "light" else INK
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data: Major world cities with population and region
 cities_data = {
@@ -267,12 +267,12 @@ df_continents = pd.DataFrame(continents)
 
 # Define region colors using Okabe-Ito palette
 region_colors = {
-    "Africa": OKABE_ITO[0],
-    "Asia": OKABE_ITO[1],
-    "Europe": OKABE_ITO[2],
-    "N. America": OKABE_ITO[3],
-    "Oceania": OKABE_ITO[4],
-    "S. America": OKABE_ITO[5],
+    "Africa": IMPRINT[0],
+    "Asia": IMPRINT[1],
+    "Europe": IMPRINT[2],
+    "N. America": IMPRINT[3],
+    "Oceania": IMPRINT[4],
+    "S. America": IMPRINT[5],
 }
 
 # Create the geographic scatter map

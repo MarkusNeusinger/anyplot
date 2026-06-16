@@ -344,7 +344,7 @@ filtering is served via a `?language=` query param on the hub, and the hub's
 canonical tag omits the query — so the hub and its language-filtered variants
 all consolidate on the same canonical URL. Legacy links to
 `/{spec_id}/{language}` redirect to `/{spec_id}?language={language}` (SPA
-client-side redirect via `app/src/router.tsx`; bots get a 301 from
+client-side redirect via `app/src/routes/index.tsx`; bots get a 301 from
 `/seo-proxy/{spec_id}/{language}` to `/seo-proxy/{spec_id}`).
 
 The interactive view follows the same pattern: `?view=interactive` is a
@@ -354,7 +354,7 @@ without the query string.
 ### Reserved Spec Slugs
 
 Spec IDs are top-level path segments, so they must not collide with reserved
-routes. The blocklist is enforced at runtime in `app/src/utils/paths.ts`
+routes. The blocklist is enforced at runtime in `app/src/routes/paths.ts`
 (`RESERVED_TOP_LEVEL`) and at spec creation time in `.github/workflows/spec-create.yml`:
 
 ```
@@ -389,7 +389,7 @@ changing the canonical.
 
 ### Path Utility
 
-Frontend URL generation is centralized in `app/src/utils/paths.ts`:
+Frontend URL generation is centralized in `app/src/routes/paths.ts`:
 - `specPath(specId, language?, library?)` — builds the three-tier URL based on
   which arguments are provided.
 - `langFromPath(pathname)` — extracts the language segment from a path.

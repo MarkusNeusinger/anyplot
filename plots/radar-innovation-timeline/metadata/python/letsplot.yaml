@@ -1,95 +1,105 @@
 library: letsplot
+language: python
 specification_id: radar-innovation-timeline
 created: '2026-02-18T21:45:34Z'
-updated: '2026-02-18T22:54:13Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22158672512
+updated: '2026-05-29T08:06:41Z'
+generated_by: claude-sonnet
+workflow_run: 26624615211
 issue: 4301
-python_version: 3.14.3
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/letsplot/plot.html
-quality_score: 88
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/python/letsplot/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Semantic ring color gradient (green to pink) communicates adoption readiness at
-    a glance
-  - Effective label repulsion algorithm prevents text overlap across 24 items
-  - 'Complete spec compliance: all features from the specification are implemented'
-  - Interactive tooltips via layer_tooltips() add value in HTML export
-  - Realistic technology data with sensible ring placements reflecting actual adoption
-    status
-  - Clean code structure with helpful section comments
+  - Semantic ring fill color gradient (green→yellow→orange→faint red) communicates
+    adoption readiness without extra annotation
+  - 270-degree arc with ring labels in the gap avoids cluttering the chart area —
+    smart structural layout
+  - Full theme-adaptive chrome using INK/INK_SOFT/ELEVATED_BG tokens; both renders
+    pass legibility checks
+  - Label repulsion algorithm substantially reduces worst-case label collisions
+  - letsplot-specific layer_tooltips() and dual HTML+PNG export make the implementation
+    distinctive
+  - 'Complete spec coverage: all 4 rings, 4 sectors, 24 technology items with connectors
+    and ring/sector labels'
   weaknesses:
-  - Innovation label font size (12) could be slightly larger for better readability
-    at full resolution
-  - Some whitespace between the plot area and bottom legend could be reduced
-  - Left side (AI & ML sector) shows minor label crowding with 6 items concentrated
-    there
-  - Ring label font size (12) is adequate but could benefit from being slightly larger
-  image_description: 'The plot displays a 270-degree radar/innovation radar chart
-    on a white background. Four concentric ring bands fill the arc from the center
-    outward: a green "Adopt" ring, a yellow "Trial" ring, an orange "Assess" ring,
-    and a pink/red "Hold" ring. The ring labels appear at the top gap of the arc with
-    white-filled background boxes. Four angular sectors divide the arc — "AI & ML"
-    (upper-left), "Biotech" (lower-left), "Sustainability" (lower-right), and "Infrastructure"
-    (upper-right) — with bold sector headers along the outer edge. Twenty-four innovation
-    items are plotted as colored dots: blue for AI & ML, deep pink for Biotech, teal
-    for Sustainability, and orange for Infrastructure. Each dot has a thin gray connector
-    line leading to its text label, placed to the left or right with outward alignment.
-    Labels have been separated by a repulsion algorithm to minimize overlap. A legend
-    at the bottom maps sector colors. The title "radar-innovation-timeline · letsplot
-    · pyplots.ai" appears at the top-left in bold.'
+  - Biodegradable PCBs and Fusion Energy labels overlap at the bottom arc — increase
+    MIN_Y_SEP from 0.75 to 0.90 and add more repulsion iterations for outer-ring Hold
+    items
+  - Innovation item labels at size=4.5mm may be borderline small on mobile (~400px
+    viewport) — increase to 5.0–5.5mm
+  - Lower-arc label density in Sustainability/Infrastructure boundary zone is crowded
+    — increase label-radius offset for Assess/Hold outer labels
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light surface
+      Chrome: Title "radar-innovation-timeline · python · letsplot · anyplot.ai" in bold dark text (INK=#1A1A17), readable. Sector headers "AI & ML", "Biotech", "Sustainability", "Infrastructure" in bold dark text, clearly visible. Ring labels (Hold/Assess/Trial/Adopt) in boxed callouts with elevated-background fill (#FFFDF6), readable. Legend "Sector" label and category entries at bottom, readable.
+      Data: Four sector colors — green (#009E73, AI & ML), lavender (#C475FD, Biotech), blue (#4467A3, Sustainability), ochre (#BD8233, Infrastructure). Ring fills: green tint (Adopt), pale yellow (Trial), light orange (Assess), faint red (Hold) at alpha=0.55. Data points size=4, colored by sector. Connector lines at alpha=0.25 (INK_MUTED).
+      Legibility verdict: PASS — all text elements readable; minor label crowding in lower arc but nothing unreadable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface
+      Chrome: Title rendered in light INK token (#F0EFE8), readable against dark background. Sector headers visible in light text. Ring label boxes use ELEVATED_BG (#242420) with INK_SOFT (#B8B7B0) text — readable. Legend entries readable. Ring boundary lines render in lighter tone with good contrast. No dark-on-dark failures detected.
+      Data: Data colors identical to light render — green, lavender, blue, ochre unchanged (theme-invariant Imprint palette). Ring fills at alpha=0.14 are very subtle, providing structural hint without competing with data points.
+      Legibility verdict: PASS — all chrome elements correctly flip to light-on-dark; data colors consistent with light render
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24, sector headers 15 bold,
-          ring labels 12 bold with white fill, innovation labels 12, legend 16/18).
-          All text readable at 3600x3600. Innovation labels slightly small but legible.
+        comment: All font sizes explicitly set. Readable in both themes. Innovation
+          labels at 4.5mm may be borderline at mobile scale given 24 items.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Label repulsion algorithm works well. Minor crowding in AI & ML sector
-          (6 items) but labels remain readable.
+        comment: 'Repulsion algorithm helps but residual overlaps remain: Biodegradable
+          PCBs and Fusion Energy are very close/overlapping in both renders.'
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Point size 8 with alpha 0.9 appropriate for 24 data points. Connector
-          lines subtle but visible.
+        comment: Data points at size=4 clearly visible and color-differentiated. Ring
+          fills at appropriate alpha provide structural depth.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue, orange, deep pink, and teal are clearly distinguishable in
-          most color vision deficiencies.
+        comment: Imprint palette, colorblind-safe, no red-green as sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 270-degree arc fills canvas well. Some excess whitespace between
-          plot and bottom legend.
+        comment: 2400x2400 square canvas correct for radar. 270-degree arc with ring
+          labels in gap is smart layout. Some crowding in lower arc.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes appropriately hidden for radar chart. Ring labels and sector
-          headers serve as descriptive labels.
+        comment: No axis labels needed for polar layout. Title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'AI & ML maps to #009E73 (first). Imprint canonical order followed.
+          Backgrounds #FAF8F1/#1A1A17. Theme-adaptive chrome applied throughout.'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -97,22 +107,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Semantic ring color gradient, custom sector palette, white-background
-          ring labels, thin connectors. Clearly above defaults.
+        comment: Semantic ring fill gradient communicates adoption readiness. Arc
+          gap for ring labels. Connector lines and repulsion show typographic care.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: All axes/ticks/grid removed. Structural lines subtly styled. Generous
-          whitespace. Nearly every detail considered.
+        comment: theme_void() stripped and rebuilt from scratch. Subtle ring boundaries
+          (0.3/alpha=0.5). Ring-label callout boxes with ELEVATED_BG fill.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Ring color gradient communicates urgency. Radial layout creates natural
-          visual hierarchy for adoption readiness.
+        comment: Concentric ring structure encodes time-horizon narrative. Semantic
+          color gradient guides readiness interpretation. Sector grouping aids comparison.
     spec_compliance:
       score: 15
       max: 15
@@ -122,29 +132,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct radial innovation radar with concentric time-horizon rings
-          and angular sector divisions.
+        comment: Correct radial chart with concentric rings and angular sector divisions.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: 270-degree layout, rings with boundaries,
-          ring labels, sector headers, distinct colors, smart label placement, legend,
-          background fills.'
+        comment: 'All required features: ring boundaries, ring labels, sector spokes,
+          sector headers, labeled points, color coding by sector, legend.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Innovations correctly placed in ring/sector. Angular positioning
-          distributes items evenly within sectors.
+        comment: Ring and sector assignments correct. 24 items within spec range (15-40).
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend maps all 4 sector colors.
+        comment: Title format correct. Legend labeled Sector with all four category
+          colors.
     data_quality:
       score: 15
       max: 15
@@ -154,22 +162,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 24 items across all 4 rings and all 4 sectors. Good variation in
-          density across groups.
+        comment: All 4 rings and 4 sectors populated, multiple items per ring demonstrate
+          grouping.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world technologies with sensible placements. Inspired by ThoughtWorks
-          Technology Radar.
+        comment: Real-world technology items (LLM Agents, mRNA Platforms, Edge Computing)
+          in plausible adoption rings. Neutral subject matter.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Ring placements sensible: LLM Agents in Adopt, Quantum ML in Hold.
-          Reflects real-world adoption status.'
+        comment: Technology readiness placements coherent with real-world adoption
+          timelines.
     code_quality:
       score: 10
       max: 10
@@ -179,33 +187,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: Imports, Data, Compute, Geometry, Plot, Save. No functions
-          or classes.'
+        comment: 'Linear flow: constants → data → geometry computation → plot construction
+          → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set before stochastic operations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. Specific named imports from lets_plot.
+        comment: All imported symbols used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized with clear sections. Label repulsion algorithm appropriate
-          for the problem.
+        comment: Appropriate complexity. No fake UI. Label repulsion loop justified.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html. No deprecated functions.
+        comment: Saves plot-{THEME}.png (scale=4 → 2400x2400) and plot-{THEME}.html.
+          Current API.
     library_mastery:
       score: 7
       max: 10
@@ -215,23 +223,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good ggplot grammar: multiple geom layers, aes mappings, scale_color_manual,
-          coord_fixed, theme customization.'
+        comment: Correct ggplot grammar with coord_fixed(), multi-geom layering, scale_color_manual,
+          theme_void() + custom theme, layer_tooltips().
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: layer_tooltips() for interactive hover in HTML export. geom_label
-          with fill/alpha. Dual PNG+HTML export.
-  verdict: REJECTED
+        comment: layer_tooltips() for tooltip definitions and dual PNG+HTML export
+          are letsplot-specific features.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
-  - annotations
   - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups

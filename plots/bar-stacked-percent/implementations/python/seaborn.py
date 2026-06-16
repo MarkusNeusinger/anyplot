@@ -20,7 +20,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Configure seaborn with theme-adaptive colors
 sns.set_theme(
@@ -73,13 +73,13 @@ bar_width = 0.6
 for i, company in enumerate(companies):
     bottom = df_cumsum.iloc[:, i - 1].values if i > 0 else np.zeros(len(quarters))
     heights = df_percent[company].values
-    ax.bar(x, heights, bar_width, bottom=bottom, label=company, color=OKABE_ITO[i], edgecolor=PAGE_BG, linewidth=1.5)
+    ax.bar(x, heights, bar_width, bottom=bottom, label=company, color=IMPRINT[i], edgecolor=PAGE_BG, linewidth=1.5)
 
     # Add percentage labels inside segments (only if segment is large enough)
     for j, (h, b) in enumerate(zip(heights, bottom, strict=True)):
         if h > 8:  # Only label if segment is > 8%
             # Determine text color based on background brightness
-            text_color = "#1A1A17" if OKABE_ITO[i] != "#009E73" else "white"
+            text_color = "#1A1A17" if IMPRINT[i] != "#009E73" else "white"
             ax.text(
                 x[j], b + h / 2, f"{h:.0f}%", ha="center", va="center", fontsize=14, fontweight="bold", color=text_color
             )

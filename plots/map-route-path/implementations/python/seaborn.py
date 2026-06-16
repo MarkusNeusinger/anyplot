@@ -97,7 +97,7 @@ ax_map.scatter(
 ax_map.scatter(
     df["lon"].iloc[-1],
     df["lat"].iloc[-1],
-    c="#D55E00",
+    c="#C475FD",
     s=400,
     marker="s",
     edgecolors=PAGE_BG,

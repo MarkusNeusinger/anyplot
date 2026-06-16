@@ -1,17 +1,18 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, userEvent } from '../test-utils';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { render, screen, userEvent } from 'src/test-utils';
 
 const trackEvent = vi.fn();
 
-vi.mock('../hooks', async () => {
-  const actual = await vi.importActual<typeof import('../hooks')>('../hooks');
+vi.mock('src/hooks', async () => {
+  const actual = await vi.importActual<typeof import('src/hooks')>('src/hooks');
   return {
     ...actual,
     useAnalytics: () => ({ trackEvent, trackPageview: vi.fn() }),
   };
 });
 
-import { SectionHeader } from './SectionHeader';
+import { SectionHeader } from 'src/components/SectionHeader';
 
 describe('SectionHeader', () => {
   beforeEach(() => {
@@ -29,7 +30,10 @@ describe('SectionHeader', () => {
     render(<SectionHeader prompt="❯" title="specs" linkText="specs.all()" linkTo="/specs" />);
 
     await user.click(screen.getByText('specs.all()'));
-    expect(trackEvent).toHaveBeenCalledWith('nav_click', { source: 'section_header', target: '/specs' });
+    expect(trackEvent).toHaveBeenCalledWith('nav_click', {
+      source: 'section_header',
+      target: '/specs',
+    });
   });
 
   it('renders an external link and tracks external_link with the hostname', async () => {
@@ -40,7 +44,7 @@ describe('SectionHeader', () => {
         title="visitors"
         linkText="plausible.view()"
         linkHref="https://plausible.io/anyplot.ai"
-      />,
+      />
     );
 
     const link = screen.getByText('plausible.view()');

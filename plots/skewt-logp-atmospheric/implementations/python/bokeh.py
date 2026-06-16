@@ -24,7 +24,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data
 np.random.seed(42)
@@ -139,7 +139,7 @@ for theta in np.arange(250, 400, 20):
     mask = (t_adiabat > -80) & (t_adiabat < 60)
     if np.any(mask):
         src = ColumnDataSource(data={"x": x_adiabat[mask], "y": p_range[mask]})
-        fig.line(x="x", y="y", source=src, line_color=OKABE_ITO[4], line_width=1.5, line_alpha=0.50, line_dash="dashed")
+        fig.line(x="x", y="y", source=src, line_color=IMPRINT[4], line_width=1.5, line_alpha=0.50, line_dash="dashed")
 
 # Moist adiabats (pseudoadiabats — simplified iterative approximation)
 for t_start in np.arange(-10, 35, 10):
@@ -157,7 +157,7 @@ for t_start in np.arange(-10, 35, 10):
     if np.any(mask):
         src = ColumnDataSource(data={"x": x_moist[mask], "y": p_range[mask]})
         fig.line(
-            x="x", y="y", source=src, line_color=OKABE_ITO[5], line_width=1.5, line_alpha=0.50, line_dash="dotdash"
+            x="x", y="y", source=src, line_color=IMPRINT[5], line_width=1.5, line_alpha=0.50, line_dash="dotdash"
         )
 
 # Mixing ratio lines
@@ -166,27 +166,27 @@ for mr in [1, 2, 4, 8, 12, 16, 20]:
     log_p = np.log10(p_range / 1000.0)
     x_mr = np.full_like(p_range, td_mr) - SKEW_FACTOR * log_p
     src = ColumnDataSource(data={"x": x_mr, "y": p_range})
-    fig.line(x="x", y="y", source=src, line_color=OKABE_ITO[3], line_width=1.2, line_alpha=0.40, line_dash="dotted")
+    fig.line(x="x", y="y", source=src, line_color=IMPRINT[3], line_width=1.2, line_alpha=0.40, line_dash="dotted")
 
 # Highlighted 0°C isotherm
 log_p_ref = np.log10(p_range / 1000.0)
 x_freeze = -SKEW_FACTOR * log_p_ref
 src_freeze = ColumnDataSource(data={"x": x_freeze, "y": p_range})
 fig.line(
-    x="x", y="y", source=src_freeze, line_color=OKABE_ITO[2], line_width=3, line_alpha=0.85, legend_label="0°C Isotherm"
+    x="x", y="y", source=src_freeze, line_color=IMPRINT[2], line_width=3, line_alpha=0.85, legend_label="0°C Isotherm"
 )
 
 # Temperature profile
 src_temp = ColumnDataSource(data={"x": x_temp, "y": pressure, "temp_c": np.round(temperature, 1)})
-fig.line(x="x", y="y", source=src_temp, line_color=OKABE_ITO[0], line_width=5, legend_label="Temperature")
-temp_scatter = fig.scatter(x="x", y="y", source=src_temp, size=14, color=OKABE_ITO[0], alpha=0.85)
+fig.line(x="x", y="y", source=src_temp, line_color=IMPRINT[0], line_width=5, legend_label="Temperature")
+temp_scatter = fig.scatter(x="x", y="y", source=src_temp, size=14, color=IMPRINT[0], alpha=0.85)
 
 # Dewpoint profile
 src_dew = ColumnDataSource(data={"x": x_dewpoint, "y": pressure, "dewpt_c": np.round(dewpoint, 1)})
 fig.line(
-    x="x", y="y", source=src_dew, line_color=OKABE_ITO[1], line_width=5, line_dash="dashed", legend_label="Dewpoint"
+    x="x", y="y", source=src_dew, line_color=IMPRINT[1], line_width=5, line_dash="dashed", legend_label="Dewpoint"
 )
-dew_scatter = fig.scatter(x="x", y="y", source=src_dew, size=14, color=OKABE_ITO[1], alpha=0.85, marker="diamond")
+dew_scatter = fig.scatter(x="x", y="y", source=src_dew, size=14, color=IMPRINT[1], alpha=0.85, marker="diamond")
 
 # HoverTools for interactive temperature/pressure display
 fig.add_tools(HoverTool(renderers=[temp_scatter], tooltips=[("Pressure", "@y{0} hPa"), ("Temperature", "@temp_c °C")]))
@@ -195,13 +195,13 @@ fig.add_tools(CrosshairTool(), WheelZoomTool())
 
 # Reference line labels
 fig.add_layout(
-    Label(x=-34, y=340, text="Dry Adiabats", text_font_size="33pt", text_color=OKABE_ITO[4], text_alpha=0.90)
+    Label(x=-34, y=340, text="Dry Adiabats", text_font_size="33pt", text_color=IMPRINT[4], text_alpha=0.90)
 )
 fig.add_layout(
-    Label(x=24, y=195, text="Moist Adiabats", text_font_size="33pt", text_color=OKABE_ITO[5], text_alpha=0.90)
+    Label(x=24, y=195, text="Moist Adiabats", text_font_size="33pt", text_color=IMPRINT[5], text_alpha=0.90)
 )
 fig.add_layout(
-    Label(x=-48, y=590, text="Mixing Ratio", text_font_size="33pt", text_color=OKABE_ITO[3], text_alpha=0.90)
+    Label(x=-48, y=590, text="Mixing Ratio", text_font_size="33pt", text_color=IMPRINT[3], text_alpha=0.90)
 )
 
 # Legend

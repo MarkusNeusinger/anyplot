@@ -19,7 +19,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (positions 1-3 for route types)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Set seaborn style with theme-adaptive colors
 sns.set_theme(
@@ -76,9 +76,9 @@ station_pos = {s["id"]: (s["x"], s["y"]) for s in stations}
 
 # Color mapping for route types using Okabe-Ito palette
 route_colors = {
-    "regional": OKABE_ITO[0],  # #009E73 - brand green
-    "local": OKABE_ITO[1],  # #D55E00 - vermillion
-    "express": OKABE_ITO[2],  # #0072B2 - blue
+    "regional": IMPRINT[0],  # #009E73 - brand green
+    "local": IMPRINT[1],  # #C475FD - vermillion
+    "express": IMPRINT[2],  # #4467A3 - blue
 }
 
 # Create figure
@@ -158,7 +158,7 @@ sns.scatterplot(
     x=station_x,
     y=station_y,
     s=1600,
-    color=OKABE_ITO[0],
+    color=IMPRINT[0],
     edgecolor=INK_SOFT,
     linewidth=2.5,
     ax=ax,
@@ -192,9 +192,9 @@ for s in stations:
 
 # Create legend
 legend_handles = [
-    mpatches.Patch(color=OKABE_ITO[0], label="Regional Express (RE)"),
-    mpatches.Patch(color=OKABE_ITO[1], label="Local Service (S)"),
-    mpatches.Patch(color=OKABE_ITO[2], label="Express (EX)"),
+    mpatches.Patch(color=IMPRINT[0], label="Regional Express (RE)"),
+    mpatches.Patch(color=IMPRINT[1], label="Local Service (S)"),
+    mpatches.Patch(color=IMPRINT[2], label="Express (EX)"),
 ]
 ax.legend(handles=legend_handles, loc="lower right", fontsize=15, framealpha=0.92, edgecolor=INK_SOFT)
 

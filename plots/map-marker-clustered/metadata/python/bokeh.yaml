@@ -15,7 +15,7 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-marke
 quality_score: 86
 review:
   strengths:
-  - 'Correct anyplot palette (Coffee→green #009E73, Express→purple, Roastery→red,
+  - 'Correct Imprint palette (Coffee→green #009E73, Express→purple, Roastery→red,
     Reserve→sky-blue) with full theme-adaptive chrome in both renders'
   - 'Excellent use of Bokeh geo-spatial features: WMTSTileSource with theme-matched
     CartoDB tiles (Positron light / Dark Matter dark), mercator projection'
@@ -90,7 +90,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is CVD-safe. White count labels on colored markers
+        comment: Imprint palette is CVD-safe. White count labels on colored markers
           have sufficient luminance contrast. All four category colors are clearly
           distinguishable.
       - id: VQ-05

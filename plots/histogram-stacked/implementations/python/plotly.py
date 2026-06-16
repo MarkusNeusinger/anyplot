@@ -27,7 +27,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (first series is ALWAYS #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Product weights from three production lines
 np.random.seed(42)
@@ -59,7 +59,7 @@ fig.add_trace(
         x=bin_centers,
         y=hist_a,
         name="Line A",
-        marker_color=OKABE_ITO[0],
+        marker_color=IMPRINT[0],
         width=bin_width * 0.9,
         hovertemplate="<b>Line A</b><br>Weight: %{x:.1f}g<br>Count: %{y}<extra></extra>",
     )
@@ -70,7 +70,7 @@ fig.add_trace(
         x=bin_centers,
         y=hist_b,
         name="Line B",
-        marker_color=OKABE_ITO[1],
+        marker_color=IMPRINT[1],
         width=bin_width * 0.9,
         hovertemplate="<b>Line B</b><br>Weight: %{x:.1f}g<br>Count: %{y}<extra></extra>",
     )
@@ -81,7 +81,7 @@ fig.add_trace(
         x=bin_centers,
         y=hist_c,
         name="Line C",
-        marker_color=OKABE_ITO[2],
+        marker_color=IMPRINT[2],
         width=bin_width * 0.9,
         hovertemplate="<b>Line C</b><br>Weight: %{x:.1f}g<br>Count: %{y}<extra></extra>",
     )

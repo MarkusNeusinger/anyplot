@@ -24,7 +24,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series ALWAYS #009E73)
-COLORS = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+COLORS = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 CATEGORIES = ["Product A", "Product B", "Product C", "Product D"]
 
 # Data - Market share evolution over time

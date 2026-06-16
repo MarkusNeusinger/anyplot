@@ -39,7 +39,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette
-OKABE_ITO = {"Historical": "#009E73", "Forecast": "#D55E00"}
+IMPRINT = {"Historical": "#009E73", "Forecast": "#C475FD"}
 
 # Data - Monthly electricity demand with forecast
 np.random.seed(42)
@@ -88,7 +88,7 @@ annotation_x = forecast_start + pd.DateOffset(months=1)
 annotation_y = float(df_ci_95["ymax"].max()) + 5
 
 # CI fill colors (same hue; alpha per-geom creates visual depth difference)
-CI_COLORS = {"95% CI": OKABE_ITO["Forecast"], "80% CI": OKABE_ITO["Forecast"]}
+CI_COLORS = {"95% CI": IMPRINT["Forecast"], "80% CI": IMPRINT["Forecast"]}
 
 # Plot
 plot = (
@@ -106,7 +106,7 @@ plot = (
     # Forecast line (dashed)
     + geom_line(data=df_forecast, mapping=aes(x="date", y="value", color="series"), size=1.0, linetype="dashed")
     # Color mapping for lines
-    + scale_color_manual(values=OKABE_ITO)
+    + scale_color_manual(values=IMPRINT)
     # Fill mapping for CI bands with legend entries
     + scale_fill_manual(values=CI_COLORS, name="CI bands")
     # Suppress "series" column header from color legend

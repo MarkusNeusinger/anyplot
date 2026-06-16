@@ -35,8 +35,8 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 
 # Okabe-Ito palette — first stage is brand green (#009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
-# Light orange (#E69F00) needs dark text for contrast; others use white.
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+# Light orange (#AE3030) needs dark text for contrast; others use white.
 TEXT_ON_FILL = ["white", "white", "white", "white", INK]
 
 # Data — sales funnel example from specification
@@ -82,7 +82,7 @@ plot = (
     ggplot()
     + geom_polygon(aes(x="x", y="y", fill="stage", group="stage"), data=df_poly, color=PAGE_BG, size=2)
     + geom_text(aes(x="x", y="y", label="label", color="text_color"), data=df_labels, size=12, fontface="bold")
-    + scale_fill_manual(values=OKABE_ITO[:n_stages], guide="none")
+    + scale_fill_manual(values=IMPRINT[:n_stages], guide="none")
     + scale_color_identity()
     + scale_y_reverse()
     + labs(title="funnel-basic · letsplot · anyplot.ai", x="", y="")

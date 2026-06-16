@@ -1,0 +1,265 @@
+library: ggplot2
+language: r
+specification_id: map-connection-lines
+created: '2026-05-28T00:59:50Z'
+updated: '2026-05-28T01:16:32Z'
+generated_by: claude-sonnet
+workflow_run: 26547758243
+issue: 3746
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
+review:
+  strengths:
+  - Custom great-circle arc computation with antimeridian splitting produces geographically
+    accurate curved routes without artifacts
+  - Dual encoding of passenger volume via both color (imprint_seq gradient) and line
+    thickness creates clear visual hierarchy
+  - Full theme-adaptive token system with correct PAGE_BG, ELEVATED_BG, INK, INK_SOFT,
+    INK_MUTED applied to all chrome elements
+  - Hollow airport markers with PAGE_BG stroke provide clean definition against both
+    light and dark backgrounds
+  - Well-placed city labels with per-airport hjust/vjust nudges reduce label-point
+    overlap on the map
+  - Antimeridian wrapping handled correctly — no horizontal artifacts crossing the
+    dateline
+  weaknesses:
+  - Frankfurt and London labels overlap in the European hub region — Frankfurt hjust=1.1
+    pushes text leftward onto London's label; adjust hjust/vjust or offset Frankfurt
+    differently to separate them
+  - No geographic projection applied — spec explicitly mentions Robinson or Natural
+    Earth projection for world maps; using raw lat/lon yields equirectangular distortion
+    that distorts high-latitude routes
+  - Helper function great_circle_arc defined at top level breaks KISS structure; inline
+    the arc computation or flatten into a single pipeline
+  - City label size (geom_text size=2.4, ~6.8pt equivalent) will be unreadable at
+    400px mobile thumbnail width — increase to at least size=2.8
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface
+      Chrome: Title "Global Flight Routes · map-connection-lines · r · ggplot2 · anyplot.ai" rendered in dark ink, centered, readable. Axis tick labels show cardinal lat/lon coordinates (60°N, 30°N, 0°, 30°S, 60°S and 120°W, 60°W, 0°, 60°E, 120°E) in INK_SOFT — all legible. No axis title labels (correct for geographic map). Legend title "Passengers (millions)" and tick values 2–5 readable in INK/INK_SOFT.
+      Data: 15 flight route arcs rendered as great-circle curves colored via imprint_seq gradient (#009E73 green for low-volume → #4467A3 blue for high-volume). Line thickness also scales with volume (0.5–2.6 linewidth). Alpha=0.60. World map base layer rendered in muted grey fill at 15% alpha. Subtle graticule lines at 25% alpha. Hollow airport markers in brand green #009E73 with warm off-white stroke at 12 city locations. City label text in INK_SOFT.
+      Frankfurt and London labels are positioned in close proximity in central Europe and appear to nearly overlap.
+      Legibility verdict: PASS — all chrome text readable; minor concern on Frankfurt/London label proximity.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface
+      Chrome: Title and all axis tick labels rendered in light text (#F0EFE8 / #B8B7B0), clearly visible against the dark background. Legend text light-colored. No dark-on-dark issues detected.
+      Data: Arc colors identical to light render — same green-to-blue imprint_seq gradient. Data colors are theme-invariant as required. Airport markers retain brand green #009E73 fill. World map base layer appears in muted near-black fill, providing sufficient contrast against the slightly lighter dark background. Graticule lines subtle.
+      Legibility verdict: PASS — all text legible on dark background; no dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; both themes fully readable; city labels
+          at geom_text size=2.4 (~6.8pt) may not survive 400px mobile scaling
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Frankfurt and London city labels are in close proximity and appear
+          to nearly overlap in the European hub region
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Arcs clearly visible at alpha=0.60, dual encoding of linewidth+color
+          effective; minor arc congestion near Europe is inherent to this data
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq gradient distinguishable by both hue and luminance; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800), good plot-to-canvas ratio, legend
+          well-positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis titles (correct map convention), descriptive title, cardinal
+          coordinate tick labels self-explanatory
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq (#009E73→#4467A3) for continuous data, #009E73 markers,
+          correct PAGE_BG both themes, theme-adaptive chrome throughout'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong professional design: hollow markers with PAGE_BG stroke,
+          graticule grid, custom token system, thoughtful map layout — clearly above
+          defaults'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Panel grid removed, subtle graticule at 25% alpha, panel border provides
+          map frame, generous margins, elevated legend background
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dual encoding (color + line thickness) for passenger volume creates
+          clear visual hierarchy; high-traffic trans-Pacific/trans-Atlantic routes
+          visually stand out
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Connection lines map with great-circle arcs — correct plot type fully
+          implemented
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Curved arcs, dual-encoded value, endpoint markers, transparency,
+          base map all present; spec mentions Robinson/Natural Earth projection but
+          equirectangular used instead
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Lon/lat correctly mapped to x/y; all 15 routes rendered; origin-destination
+          pairs correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''Global Flight Routes · map-connection-lines · r · ggplot2
+          · anyplot.ai'' — correct format with optional descriptive prefix; legend
+          ''Passengers (millions)'' correct'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 15 routes across all major continents, wide passenger range (1.1–5.1M),
+          both short and intercontinental routes covered
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real major international hub airports at accurate coordinates; plausible
+          annual passenger counts; neutral travel/business context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Passenger volumes in millions reflect realistic intercontinental
+          route volumes; airport coordinates accurate
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper function great_circle_arc defined (35 lines) — justified by
+          spherical math complexity but violates pure KISS flat-script structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all used; maps loaded via requireNamespace (used
+          in map_data)
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, antimeridian splitting is genuinely complex and well-implemented,
+          route loop is necessary
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: sprintf('plot-%s.png', THEME) correct, ragg::agg_png device used
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper grammar-of-graphics layering with multiple geoms from different
+          data sources, correct scale functions, guide_colorbar customization, theme_minimal
+          + theme() override pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: map_data() integration for base map, guide_colorbar with custom barwidth/barheight,
+          scale_linewidth_continuous for proportional arc weight — ggplot2-specific
+          capabilities
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - maps
+  techniques:
+  - colorbar
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - alpha-blending
+  - custom-colormap
+  - edge-highlighting

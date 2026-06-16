@@ -23,7 +23,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 CLUSTER_LABELS = ["Finance", "Healthcare", "Technology", "Sports", "Politics", "Science", "Entertainment"]
 
@@ -37,7 +37,7 @@ X_2d = tsne.fit_transform(X_high)
 fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-for i, (label, color) in enumerate(zip(CLUSTER_LABELS, OKABE_ITO, strict=False)):
+for i, (label, color) in enumerate(zip(CLUSTER_LABELS, IMPRINT, strict=False)):
     mask = labels == i
     ax.scatter(X_2d[mask, 0], X_2d[mask, 1], c=color, s=90, alpha=0.65, edgecolors=PAGE_BG, linewidth=0.5, label=label)
 

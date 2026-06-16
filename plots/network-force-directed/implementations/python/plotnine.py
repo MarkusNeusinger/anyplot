@@ -38,7 +38,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette — first series is always #009E73
 DEPARTMENT_NAMES = ["Engineering", "Design", "Marketing", "Sales"]
-DEPARTMENT_COLORS = {"Engineering": "#009E73", "Design": "#D55E00", "Marketing": "#0072B2", "Sales": "#CC79A7"}
+DEPARTMENT_COLORS = {"Engineering": "#009E73", "Design": "#C475FD", "Marketing": "#4467A3", "Sales": "#BD8233"}
 
 np.random.seed(42)
 

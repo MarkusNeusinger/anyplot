@@ -1,48 +1,50 @@
 library: matplotlib
+language: python
 specification_id: line-pca-variance-cumulative
 created: '2026-02-17T21:43:23Z'
-updated: '2026-02-17T22:14:30Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22116658417
+updated: '2026-05-29T05:42:24Z'
+generated_by: claude-sonnet
+workflow_run: 26619893268
 issue: 4131
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/matplotlib/plot.png
-preview_html: null
-quality_score: 96
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
 review:
   strengths:
-  - Excellent data storytelling with threshold crossing annotations that immediately
-    communicate key PCA decisions (8 components for 90%, 10 for 95%)
-  - Real Wine dataset provides authentic, reproducible PCA results rather than synthetic
-    data
-  - Path effects on the cumulative line create a subtle glow that adds visual polish
-  - Dynamic annotation positioning with curved arrows and styled boxes demonstrates
-    attention to detail
-  - Individual variance bars with cumulative line overlay implements the optional
-    spec enhancement well
-  - 'Strong visual hierarchy: bars recede (low alpha), line dominates, annotations
-    highlight key insights'
-  - Minor tick marks and dual-level grid (major/minor) add refinement without cluttering
+  - 'Perfect theme adaptation in both renders: all chrome tokens correctly applied,
+    no dark-on-dark or light-on-light failures'
+  - 'Sophisticated layered visual design: path-effect halo on cumulative line, fill_between
+    area, transparent bar overlay'
+  - Real, scientifically accurate data (sklearn wine dataset via actual PCA computation)
+  - All spec features implemented plus optional individual-variance bar enhancement
+  - Elbow detection via second-difference curvature is algorithmically correct and
+    annotated with precise component/percentage readout
+  - Annotation boxes use per-threshold colors (lavender/blue) that visually link each
+    callout to its threshold line
   weaknesses:
-  - DE-01 could reach 8/8 with slightly more typographic refinement (e.g., a custom
-    font family or more varied font weights)
-  - The elbow detection at component 2 (~55% variance) is mathematically correct but
-    could be visually more prominent since it is a key analytical insight
-  image_description: 'The plot displays a cumulative explained variance line chart
-    for PCA component selection using the Wine dataset (13 components). A bold blue
-    (#306998) cumulative variance line with white-filled circle markers rises from
-    ~36% at component 1 to ~100% at component 13, with a subtle light blue fill beneath
-    the curve. Light blue semi-transparent bars show individual variance ratios, decreasing
-    from ~36% (component 1) to near-zero (component 13). Two horizontal dashed threshold
-    lines are drawn: a dark amber/gold line at 90% and a deep red-violet line at 95%.
-    Diamond markers highlight where the cumulative curve crosses these thresholds
-    — at component 8 (90%) and component 10 (95%) — each annotated with curved arrows
-    pointing to boxed text labels. A green star marker identifies the elbow point
-    at component 2 (~55%), also annotated. The background is off-white (#FAFAFA),
-    top and right spines are removed, and a subtle y-axis grid aids reading. The legend
-    sits in the lower right. Title follows the required format: "line-pca-variance-cumulative
-    · matplotlib · pyplots.ai".'
+  - The 95% threshold annotation box is placed at y=99.5%, crowded near the upper
+    y-axis limit — lower text_y for i==1 from t+0.045 to t-0.07 and adjust arrow direction
+    to match 90% annotation pattern
+  - plt.tight_layout, plt.setp, and plt.savefig are pyplot-module calls; prefer ax.*/fig.*
+    for full idiomaticity
+  - DE-01 could reach 7-8 with a slightly heavier title font weight or a dataset caption
+    subtitle to elevate typographic hierarchy
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct surface color, not pure white
+      Chrome: Title "line-pca-variance-cumulative · python · matplotlib · anyplot.ai" in dark INK, clearly readable. Axis labels "Explained Variance" and "Number of Components" in dark INK at 10pt. Tick labels in INK_SOFT at 8pt, y-axis formatted as percentages (0%–100%+). Legend text in INK_SOFT. All annotation text readable.
+      Data: Brand green #009E73 cumulative variance line with open-circle markers and path-effect halo. Lavender #C475FD dashed 90% threshold. Blue #4467A3 dashed 95% threshold. Transparent green bars for individual variance. Star marker at PC2 (elbow).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black
+      Chrome: Title in light #F0EFE8 (INK token for dark theme), clearly readable against dark background. Axis labels and tick labels in light INK/INK_SOFT tones — no dark-on-dark failures detected. Legend frame uses dark elevated background (#242420). Annotation boxes use dark elevated fill with colored borders.
+      Data: Colors identical to light render — brand green #009E73 cumulative line, lavender #C475FD and blue #4467A3 threshold lines unchanged. Individual variance bars still visible as dark green shapes. Brand green reads clearly on the near-black surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -53,65 +55,78 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          annotations 13-14pt'
+        comment: All font sizes explicitly set (title formula-scaled, axis labels
+          10pt, ticks 8pt, legend 8pt, annotations 7pt). Proportions balanced; no
+          overflow. Both themes fully legible.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All annotations, labels, and data elements clearly separated
+        comment: Annotation boxes placed at y-levels well above data line at their
+          x-positions; arrows curve to threshold crossings without collision.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line width 3, marker size 10, diamond 13pt, star 18pt — well-adapted
-          for 13 data points
+        comment: Cumulative line prominent (2.5 linewidth + halo), circle markers
+          size 5, diamond markers size 7, star size 11. Well adapted to 13 discrete
+          data points.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue, dark amber, red-violet, sea green — all colorblind-distinguishable
+        comment: Imprint palette (green/lavender/blue) is CVD-safe. Redundant encoding
+          via distinct marker shapes.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 figure, tight_layout with padding, balanced margins
+        comment: Plot fills ~80% of canvas; balanced margins; legend anchored to lower-right
+          plot area. No content cut-off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Number of Components, Explained Variance
-          (%)'
+        comment: Y-axis 'Explained Variance' (units implicit via % tick formatter),
+          X-axis 'Number of Components'. Both descriptive.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; thresholds use Imprint positions 2 and 3;
+          backgrounds #FAF8F1/#1A1A17; chrome fully theme-adaptive.'
     design_excellence:
-      score: 17
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Custom palette, path effects glow, white-filled markers, styled annotation
-          boxes — clearly above defaults
+        comment: 'Strong design above defaults: path-effect halo, layered fill+bars+line,
+          colored annotation borders, open-circle markers with PAGE_BG fill.'
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Spines removed/thinned, subtle major+minor grid, custom tick colors,
-          refined legend frame
+        comment: L-shaped frame, y-axis-only grid at alpha=0.15, legend and annotation
+          boxes custom-styled. Near-perfect; minor crowding at top slightly reduces
+          spaciousness.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Threshold annotations communicate key PCA decisions; elbow point
-          adds insight; clear visual hierarchy
+        comment: 'Clear actionable story: elbow at PC2 (55%), thresholds at 8 and
+          10 components. Visual hierarchy guides eye effectively.'
     spec_compliance:
       score: 15
       max: 15
@@ -121,26 +136,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart with cumulative variance plus optional bar overlay
+        comment: Correct cumulative explained-variance line plot with optional individual
+          variance bar overlay.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: cumulative sum, percentage format, thresholds,
-          elbow, markers, bars'
+        comment: Cumulative sum, percentage format, dashed 90%/95% reference lines,
+          elbow annotation, discrete markers, bar overlay — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = component number (1-13), Y = cumulative explained variance (0-100%)
+        comment: X starts at 1, all 13 components shown, y-axis 0-100%+.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, descriptive legend labels matching data
+        comment: Title format correct; legend labels match all 5 data series.
     data_quality:
       score: 15
       max: 15
@@ -150,21 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows characteristic PCA elbow curve, diminishing individual variance,
-          threshold crossings
+        comment: Shows cumulative and individual variance, elbow detection, threshold
+          crossings — all key aspects of PCA scree analysis.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real scikit-learn Wine dataset — standard ML benchmark
+        comment: 'sklearn wine dataset: 13 real physicochemical features of Italian
+          wines. Neutral scientific domain.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Real PCA variance ratios from standardized Wine data; inherently
-          realistic values
+        comment: Values factually correct (derived from actual PCA). PC1 ~36%, 90%
+          at 8 components are accurate for wine dataset.
     code_quality:
       score: 10
       max: 10
@@ -174,49 +191,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports → Data → Plot → Save flow, no functions/classes
+        comment: 'Linear flow: imports -> data -> PCA -> plot -> save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic real dataset (load_wine), no randomness
+        comment: Deterministic sklearn wine dataset; no random state needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: patheffects, pyplot, ticker, numpy, sklearn modules'
+        comment: All imports used. sklearn dependencies are all exercised.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized with dynamic annotation positioning
+        comment: Clean Pythonic code. sys.path guard necessary to avoid name conflict
+          with matplotlib package.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, bbox_inches='tight', no deprecated functions
+        comment: Saves as plot-{THEME}.png at dpi=400; no bbox_inches='tight'; current
+          matplotlib API.
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert Axes methods, FuncFormatter, tick_params, path_effects, annotate
-          with arrowprops
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Path effects for glow, FuncFormatter, fill_between, AutoMinorLocator,
-          connectionstyle
+        comment: 'All plotting via ax.*; uses patheffects, FuncFormatter, fill_between,
+          annotate with arrowprops idiomatically. Minor: plt.tight_layout/setp/savefig
+          are pyplot-module calls.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: matplotlib.patheffects (pe.Stroke+pe.Normal halo) is distinctively
+          matplotlib. mticker.FuncFormatter and annotate with connectionstyle arc
+          curves leverage library depth.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -228,9 +250,8 @@ impl_tags:
   - dataset-loading
   - explicit-figure
   dataprep:
-  - pca
   - cumulative-sum
-  - normalization
+  - pca
   styling:
   - alpha-blending
   - edge-highlighting

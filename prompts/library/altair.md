@@ -120,23 +120,23 @@ chart = chart.interactive()
 
 ## Colors
 
-Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
+Use the Imprint palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
 
 ```python
-ANYPLOT_PALETTE = ['#009E73', '#C475FD', '#4467A3', '#BD8233',
+IMPRINT_PALETTE = ['#009E73', '#C475FD', '#4467A3', '#BD8233',
                    '#AE3030', '#2ABCCD', '#954477', '#99B314']
 ANYPLOT_AMBER = '#DDCC77'  # warning / caution (outside the categorical pool)
 
 # Single-series
-alt.Chart(df).mark_circle(color=ANYPLOT_PALETTE[0]).encode(x='x', y='y')
+alt.Chart(df).mark_circle(color=IMPRINT_PALETTE[0]).encode(x='x', y='y')
 
 # Multi-series
 alt.Chart(df).mark_circle().encode(
     x='x', y='y',
-    color=alt.Color('category:N', scale=alt.Scale(range=ANYPLOT_PALETTE)),
+    color=alt.Color('category:N', scale=alt.Scale(range=IMPRINT_PALETTE)),
 )
 
-# Continuous — only the two anyplot palette-derived cmaps are allowed:
+# Continuous — only the two Imprint palette-derived cmaps are allowed:
 # Sequential: two-stop range
 alt.Color('value:Q', scale=alt.Scale(range=['#009E73', '#4467A3']))
 # Diverging: three-stop range with domainMid at 0

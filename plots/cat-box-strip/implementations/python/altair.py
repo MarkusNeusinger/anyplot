@@ -52,7 +52,7 @@ df = pd.DataFrame(data)
 # Box plot layer
 boxplot = (
     alt.Chart(df)
-    .mark_boxplot(size=60, color=BRAND, median={"color": "#F0E442", "strokeWidth": 3}, opacity=0.8)
+    .mark_boxplot(size=60, color=BRAND, median={"color": "#954477", "strokeWidth": 3}, opacity=0.8)
     .encode(
         x=alt.X("Department:N", title="Department", axis=alt.Axis(labelFontSize=18, titleFontSize=22, labelAngle=0)),
         y=alt.Y(

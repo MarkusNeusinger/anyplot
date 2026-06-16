@@ -35,8 +35,8 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito categorical (positions 1, 2, 3)
 COLOR_A = "#009E73"
-COLOR_B = "#D55E00"
-COLOR_C = "#0072B2"
+COLOR_B = "#C475FD"
+COLOR_C = "#4467A3"
 
 # Geometry — three equally sized overlapping circles
 RADIUS = 1.5

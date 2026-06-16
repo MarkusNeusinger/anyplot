@@ -19,7 +19,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette for 4 departments
-GROUP_COLORS = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+GROUP_COLORS = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 GROUP_NAMES = ["Engineering", "Research", "Marketing", "Design"]
 
 # Data: social network of 20 people across 4 company departments
@@ -141,7 +141,7 @@ cross_edge_set = {(src, tgt) for src, tgt in edges if nodes[src]["group"] != nod
 fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-BRIDGE_COLOR = "#E69F00"  # Okabe-Ito amber — distinct cross-department highlight
+BRIDGE_COLOR = "#AE3030"  # Okabe-Ito amber — distinct cross-department highlight
 
 # Draw curved edges using FancyArrowPatch
 for src, tgt in edges:

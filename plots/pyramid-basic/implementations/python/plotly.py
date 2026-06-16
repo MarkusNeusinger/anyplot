@@ -43,7 +43,7 @@ fig.add_trace(
         x=female_population,
         orientation="h",
         name="Female",
-        marker_color="#D55E00",  # Okabe-Ito position 2
+        marker_color="#C475FD",  # Okabe-Ito position 2
         hovertemplate="Female<br>Age: %{y}<br>Population: %{customdata:,}k<extra></extra>",
         customdata=female_population,
     )

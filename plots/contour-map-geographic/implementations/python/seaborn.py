@@ -20,7 +20,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 OCEAN = "#C4D8EC" if THEME == "light" else "#182633"
 LAND = "#D8CEA8" if THEME == "light" else "#5A5040"
 COAST = "#7A7264" if THEME == "light" else "#8A8070"
-HIGHLIGHT = "#D55E00"  # Okabe-Ito warm orange — highlights Arctic signal
+HIGHLIGHT = "#C475FD"  # Okabe-Ito warm orange — highlights Arctic signal
 
 # Simplified world coastline polygons (major continents)
 WORLD_COASTLINES = [

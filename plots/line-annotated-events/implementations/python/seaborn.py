@@ -22,7 +22,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # Position 1 - bluish green for main series
-EVENT_COLOR = "#F0E442"  # Position 7 - yellow for annotations
+EVENT_COLOR = "#954477"  # Position 7 - yellow for annotations
 
 # Configure seaborn with theme tokens
 sns.set_theme(

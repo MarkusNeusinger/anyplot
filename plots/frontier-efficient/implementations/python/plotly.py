@@ -25,9 +25,9 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 BRAND = "#009E73"
-SECONDARY = "#D55E00"
-TERTIARY = "#0072B2"
-ACCENT_1 = "#CC79A7"
+SECONDARY = "#C475FD"
+TERTIARY = "#4467A3"
+ACCENT_1 = "#BD8233"
 
 # Data - Generate random portfolios and efficient frontier
 np.random.seed(42)

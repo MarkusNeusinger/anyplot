@@ -17,7 +17,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito colors for categorical data
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Titanic survival data with multiple categorical dimensions
 df = sns.load_dataset("titanic")
@@ -63,7 +63,7 @@ color_values = df["survived"].values
 fig = go.Figure(
     go.Parcats(
         dimensions=dimensions,
-        line={"color": color_values, "colorscale": [[0, OKABE_ITO[1]], [1, OKABE_ITO[0]]], "shape": "hspline"},
+        line={"color": color_values, "colorscale": [[0, IMPRINT[1]], [1, IMPRINT[0]]], "shape": "hspline"},
         hoveron="color",
         hoverinfo="count+probability",
         arrangement="freeform",

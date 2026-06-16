@@ -22,7 +22,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 COLOR_INCREASE = "#009E73"  # Okabe-Ito position 1 — upward change
-COLOR_DECREASE = "#D55E00"  # Okabe-Ito position 2 — downward change
+COLOR_DECREASE = "#AE3030"  # imprint red — downward change
 
 # Realistic product category data — Q1 vs Q4 sales comparison
 categories = [

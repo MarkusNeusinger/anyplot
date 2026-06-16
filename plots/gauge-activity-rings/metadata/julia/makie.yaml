@@ -1,0 +1,262 @@
+library: makie
+language: julia
+specification_id: gauge-activity-rings
+created: '2026-06-14T20:50:15Z'
+updated: '2026-06-14T21:12:01Z'
+generated_by: claude-sonnet
+workflow_run: 27511323812
+issue: 8648
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - 'Perfect Imprint palette compliance: outer ring green (#009E73), middle lavender
+    (#C475FD), inner blue (#4467A3) in canonical order 1-3; both themes render with
+    correct chrome adaptation'
+  - 'All required spec features present: rounded end caps, faint background tracks,
+    center summary text (76% COMPLETE), clockwise sweep from 12 oclock, outer-to-inner
+    progression'
+  - Realistic fitness tracker data (Move/Exercise/Stand) with accurate units and authentic
+    proportions; clean deterministic code with no over-engineering
+  - 'Strong visual hierarchy: center focal 76% COMPLETE text gives immediate insight
+    before the viewer reads the rings'
+  weaknesses:
+  - Bottom legend color dots (markersize=22, effective 44px) are half the visual weight
+    of ring strokes (LW=46, effective 92px) — increase legend markersize to ~36-42
+    for visual balance
+  - 'LM-02 limited: arc implemented via generic parametric math (x=r*cos(theta), y=r*sin(theta))
+    with scatter cap workaround; consider using Makie native arc!() or poly!() wedge
+    approach for a more distinctively CairoMakie implementation'
+  - Background tracks at 12% opacity in light mode are at the low end of perceptibility
+    — 15-18% would improve remaining-progress readability without adding visual noise
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light theme surface
+      Chrome: Title "gauge-activity-rings · julia · makie · anyplot.ai" in dark ink, clearly readable. Center "76%" bold large text in dark ink, "COMPLETE" in muted gray below it. Bottom legend: metric names in dark ink, value/goal labels in soft gray — all readable.
+      Data: Three concentric rings — outer green (#009E73) at ~70% sweep, middle lavender (#C475FD) at ~83%, inner blue (#4467A3) at ~75%. Faint background tracks at 12% opacity per ring. Rounded dot end caps at arc start and end.
+      Legibility verdict: PASS — all text elements readable against warm off-white background. No light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title and legend text are light cream/white, clearly readable against near-black. Center "76%" is light-colored, "COMPLETE" is muted light gray — both legible. No dark-on-dark failures.
+      Data: Ring colors are identical to light render — green, lavender, blue at same sweep fractions. Background tracks at 22% opacity produce subtly darker rings against near-black. Brand green #009E73 clearly visible.
+      Legibility verdict: PASS — all text readable against near-black background. Chrome correctly adapted for dark theme.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (titlesize=20, center 76% at 60, COMPLETE
+          at 18, legend at 16/13). Readable in both themes. Minor: legend dots (markersize=22)
+          disproportionately small relative to ring stroke width (LW=46).'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data collision. Legend strip, center text,
+          and title occupy cleanly separated zones.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Ring strokes at LW=46 (92px effective) are prominent. Background
+          tracks at 12% (light) and 22% (dark) opacity visible. End cap dots match
+          ring widths.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette positions 1-3 (green/lavender/blue) are colorblind-safe
+          with good hue separation.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 canvas correct for circular chart. Rings fill ~65%
+          of vertical space, legend below cleanly positioned. Balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes for radial chart; metric names and units in legend
+          adequately describe data.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 ✓. Positions 2 and 3 (#C475FD, #4467A3) canonical
+          Imprint order ✓. Backgrounds #FAF8F1 light / #1A1A17 dark ✓. Data colors
+          identical across renders ✓.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design above defaults. Concentric rings with background tracks,
+          clean center summary, structured bottom legend strip. Resembles polished
+          fitness dashboard. Not quite FiveThirtyEight level but genuinely above a
+          configured library default.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'All spines removed, no grid, generous whitespace, clean legend zone.
+          Deduction: legend dot size (markersize=22) doesn''t match visual weight
+          of ring strokes (LW=46).'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Visual hierarchy clear: center 76% COMPLETE is immediate focal takeaway,
+          outer-to-inner ring progression shows primary-to-secondary metrics. Different
+          completion levels create natural variety.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct activity rings chart: concentric partial arcs, clockwise
+          sweep from 12 o''clock, rounded end caps, faint background tracks, 3 rings.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Rounded end caps ✓, faint background tracks ✓, center label area
+          (76% COMPLETE) ✓, per-ring legend ✓, outer-to-inner ordering ✓, equal stroke
+          widths ✓, square aspect ratio ✓.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Move=420/600 (70%), Exercise=25/30 (83%), Stand=9/12 (75%) correctly
+          mapped to arc sweeps.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is 'gauge-activity-rings · julia · makie · anyplot.ai' ✓. Legend
+          identifies each ring by color, name, and current/goal value with units.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Three rings with distinct completion levels and distinct units, background
+          tracks, center summary, per-ring legend all demonstrate the full feature
+          set.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Daily fitness tracker scenario (Move/Exercise/Stand) is a real-world
+          use case. Values are authentic fitness tracker territory.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 420/600 kcal move goal, 25/30 min exercise, 9/12 hr stand — all factually
+          plausible and internally consistent.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports → tokens → data → figure → ring loop → center text
+          → legend → save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data; no random seed needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie (rendering), Colors (colorant""), Statistics (mean())
+          — all three are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean zip() loop over rings, well-named constants, no over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2 ✓.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses lines!() for parametric arcs, scatter!() for end caps, text!()
+          for annotations, DataAspect() for circular geometry, limits!() for coordinate
+          control. All idiomatic CairoMakie patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Parametric arc approach (x=r*cos(theta), y=r*sin(theta)) with scatter
+          dot end caps is valid but generic — same algorithm works in matplotlib or
+          R. DataAspect() is Makie-specific but minimal. Consider arc!() or poly!()
+          wedge geometry for more distinctively Makie implementation.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending

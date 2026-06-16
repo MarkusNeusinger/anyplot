@@ -111,14 +111,22 @@ class SpecStatusItem(BaseModel):
     title: str
     updated: str | None
     avg_score: float | None = None
-    # Library scores - None means no implementation
+    # Library scores - None means no implementation. One field per library in
+    # SUPPORTED_LIBRARIES (the values are populated via a dict-spread below, so
+    # this list must stay in sync with the registry — every supported library,
+    # including the JavaScript ones and the React muix entry, needs a field here
+    # or its column would silently disappear from the debug matrix).
     altair: float | None = None
     bokeh: float | None = None
+    chartjs: float | None = None
+    d3: float | None = None
+    echarts: float | None = None
     ggplot2: float | None = None
     highcharts: float | None = None
     letsplot: float | None = None
     makie: float | None = None
     matplotlib: float | None = None
+    muix: float | None = None
     plotly: float | None = None
     plotnine: float | None = None
     pygal: float | None = None
@@ -311,17 +319,10 @@ async def get_debug_status(request: Request, db: AsyncSession = Depends(require_
                 title=spec.title,
                 updated=most_recent.isoformat() if most_recent else None,
                 avg_score=round(avg_score, 1) if avg_score else None,
-                altair=spec_scores.get("altair"),
-                bokeh=spec_scores.get("bokeh"),
-                ggplot2=spec_scores.get("ggplot2"),
-                highcharts=spec_scores.get("highcharts"),
-                letsplot=spec_scores.get("letsplot"),
-                makie=spec_scores.get("makie"),
-                matplotlib=spec_scores.get("matplotlib"),
-                plotly=spec_scores.get("plotly"),
-                plotnine=spec_scores.get("plotnine"),
-                pygal=spec_scores.get("pygal"),
-                seaborn=spec_scores.get("seaborn"),
+                # One score field per supported library — spread so the set can
+                # never drift out of sync with the registry (the old hand-listed
+                # kwargs silently dropped chartjs/d3/echarts).
+                **{lib: spec_scores.get(lib) for lib in SUPPORTED_LIBRARIES},
             )
         )
 

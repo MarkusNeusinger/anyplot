@@ -19,7 +19,7 @@ review:
     + cluster circles + count labels + city labels in a single pipeline'
   - Per-city category weighting ensures each geographic cluster has a visually distinct
     dominant color
-  - coord_fixed with correct geographic aspect ratio and full anyplot palette compliance
+  - coord_fixed with correct geographic aspect ratio and full Imprint palette compliance
   - Both light and dark renders fully theme-adaptive with no dark-on-dark failures
   - 'Perfect spec compliance: all feasible static features implemented, interactive
     ones correctly omitted'
@@ -72,7 +72,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe anyplot palette; white text on colored circles provides
+        comment: CVD-safe Imprint palette; white text on colored circles provides
           good contrast
       - id: VQ-05
         name: Layout & Canvas
@@ -91,7 +91,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Canonical anyplot palette positions 1-4 assigned in order; both renders
+        comment: Canonical Imprint palette positions 1-4 assigned in order; both renders
           theme-correct
     design_excellence:
       score: 13

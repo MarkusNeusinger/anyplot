@@ -18,7 +18,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette (colorblind-safe, first series is brand green #009E73)
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
 
 # Data - Test scores across education levels
 np.random.seed(42)
@@ -43,9 +43,9 @@ for key in data:
 # Color sequence: 6 colors for box plot elements + 4 for strip points (one per category)
 color_sequence = []
 for i in range(4):
-    color_sequence.extend([OKABE_ITO[i]] * 6)  # 6 box elements per category
+    color_sequence.extend([IMPRINT[i]] * 6)  # 6 box elements per category
 for i in range(4):
-    color_sequence.append(OKABE_ITO[i])  # 1 strip series per category
+    color_sequence.append(IMPRINT[i])  # 1 strip series per category
 
 # Custom style for 4800x2700 px canvas with theme-adaptive colors
 custom_style = Style(

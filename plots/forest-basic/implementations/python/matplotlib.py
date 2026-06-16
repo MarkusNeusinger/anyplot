@@ -22,7 +22,7 @@ RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 OKABE_ITO_1 = "#009E73"  # Primary data color (brand green)
-OKABE_ITO_2 = "#D55E00"  # Secondary
+OKABE_ITO_2 = "#C475FD"  # Secondary
 
 # Data: Meta-analysis of RCTs comparing treatment efficacy (standardized mean difference)
 studies = [

@@ -18,8 +18,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
-BRAND = OKABE_ITO[0]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
+BRAND = IMPRINT[0]
 
 # Data
 iris = load_iris()
@@ -57,7 +57,7 @@ for species_idx in range(3):
                 x=t,
                 y=curve,
                 mode="lines",
-                line=dict(color=OKABE_ITO[species_idx], width=2),
+                line=dict(color=IMPRINT[species_idx], width=2),
                 opacity=0.4,
                 name=species_names[species_idx],
                 legendgroup=species_names[species_idx],

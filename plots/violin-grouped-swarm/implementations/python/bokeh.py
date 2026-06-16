@@ -33,7 +33,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Response times (ms) across 3 task types and 2 expertise levels
 np.random.seed(42)
@@ -56,7 +56,7 @@ for cat_idx, category in enumerate(categories):
             data.append({"category": category, "group": group, "value": val})
 
 # Color mapping
-colors = {group: OKABE_ITO[i] for i, group in enumerate(groups)}
+colors = {group: IMPRINT[i] for i, group in enumerate(groups)}
 
 # Create figure
 p = figure(

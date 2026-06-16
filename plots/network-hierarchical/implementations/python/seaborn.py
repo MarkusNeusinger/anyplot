@@ -19,12 +19,12 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - first series is always #009E73
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # bluish green (brand)
-    "#D55E00",  # vermillion
-    "#0072B2",  # blue
-    "#CC79A7",  # reddish purple
-    "#E69F00",  # orange
+    "#C475FD",  # vermillion
+    "#4467A3",  # blue
+    "#BD8233",  # reddish purple
+    "#AE3030",  # orange
 ]
 
 # Apply seaborn theme
@@ -138,8 +138,8 @@ node_types = [n["type"] for n in nodes]
 
 # Color mapping: directories vs files
 colors_by_type = {
-    "dir": OKABE_ITO[0],  # Brand green for directories
-    "file": OKABE_ITO[1],  # Vermillion for files
+    "dir": IMPRINT[0],  # Brand green for directories
+    "file": IMPRINT[1],  # Vermillion for files
 }
 node_colors = [colors_by_type[nt] for nt in node_types]
 

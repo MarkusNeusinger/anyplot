@@ -1,0 +1,274 @@
+library: letsplot
+language: python
+specification_id: line-cycle-seasonal
+created: '2026-06-15T03:52:11Z'
+updated: '2026-06-15T04:11:46Z'
+generated_by: claude-sonnet
+workflow_run: 27522681388
+issue: 8658
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/python/letsplot/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - 'Perfect spec compliance — all cycle plot elements implemented correctly: per-month
+    subseries lines, horizontal mean reference lines, vertical group dividers, month
+    labels in calendar order'
+  - Excellent data quality — 30-year European climate dataset (1991–2020) with realistic
+    temperature ranges and a scientifically plausible ~1.3°C warming trend over the
+    period
+  - Perfect code quality — KISS structure, deterministic seed (np.random.seed(42)),
+    clean imports, complete theme-adaptive chrome with all tokens (PAGE_BG, INK, INK_SOFT,
+    INK_MUTED, GRID_LINE) propagated correctly
+  - Clear visual hierarchy — brand green (#009E73) for subseries contrasts sharply
+    against the high-contrast INK mean reference lines (size=1.5), making the two-layer
+    story immediately readable
+  - 'Full Imprint palette and theme compliance — light render on #FAF8F1, dark render
+    on #1A1A17, data colors identical across themes, all text uses adaptive chrome
+    tokens in both renders'
+  weaknesses:
+  - Temperature annotation labels (geom_text size=3.5 mm ≈ 10pt) are on the small
+    side and may become barely readable when the 3200×1800 PNG is scaled to mobile
+    widths (~400 px) — increase to 4.5–5 mm for comfortable mobile legibility
+  - 'Minor annotation crowding in the Jul group: the ''22.0°C'' label at label_y =
+    mean + 0.8 sits very close to the highest subseries data points in that month
+    — increase label_y offset to 1.2–1.5 to clear the data'
+  - 'LM-02: letsplot''s interactive HTML output is saved but its distinctive interactive
+    capabilities (tooltips showing year and temperature value on hover over subseries
+    points) are not exploited — the HTML version is identical to the PNG rather than
+    leveraging geom_point with tooltip aesthetics'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, no pure white
+      Chrome: Title "line-cycle-seasonal · python · letsplot · anyplot.ai" in dark ink at top-left, readable. Y-axis label "Temperature (°C)" and X-axis label "Month" in dark ink, clearly visible. Month tick labels (Jan–Dec) in INK_SOFT, readable.
+      Data: 12 month groups laid out left to right. Each group shows a thin connected green (#009E73) subseries line tracing chronological temperature across 30 years (1991–2020). Horizontal black mean reference lines (INK, width=1.5) span each group's width — the key seasonal comparison visual. Temperature annotations (e.g., "0.5°C", "1.8°C", "11.1°C", "22.0°C") in INK_SOFT appear just above each mean line. Subtle vertical gray dividers separate the 12 groups. Grid lines are very subtle (size=0.25, GRID_LINE color).
+      Legibility verdict: PASS — all primary text elements readable. Annotation labels (size=3.5 mm) are small but readable at full resolution; may be marginal at mobile widths.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, no pure black
+      Chrome: Title visible in light cream text (#F0EFE8). Y-axis label "Temperature (°C)" and X-axis label "Month" in light text, clearly visible against the dark background. Month tick labels in #B8B7B0 (INK_SOFT dark), readable. Grid lines visible as subtle dark-gray lines on the dark background.
+      Data: Data colors are IDENTICAL to the light render — brand green (#009E73) subseries lines unchanged. Mean reference lines now appear in near-white (#F0EFE8 INK token), providing high contrast against the dark background. Annotations in #B8B7B0 (INK_SOFT dark), visible. Vertical dividers in #A8A79F (INK_MUTED dark), subtle and appropriate.
+      Legibility verdict: PASS — no dark-on-dark failures. All text elements readable. Both themes correctly flip only the chrome while keeping data colors constant.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All primary font sizes explicitly set (title=16, axis_title=12, axis_text=10).
+          Readable in both themes. Annotation labels (size=3.5 mm) are on the small
+          side for mobile widths.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No severe overlap. Minor crowding in Jul group where '22.0°C' annotation
+          sits close to the highest subseries data points.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Green subseries lines (size=0.9) and mean reference lines (size=1.5)
+          clearly visible. Vertical dividers appropriately subtle (size=0.4). Good
+          density adaptation.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single data color (#009E73) on neutral background. High contrast
+          between green subseries and INK mean lines. CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. 12 groups fill the landscape 3200x1800 canvas
+          well. No overflow, no clipping. Good proportions.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Temperature (°C)'' with units. X-axis: ''Month''. Title:
+          correct mandated format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (only) data series = #009E73 (brand green). Mean lines use
+          INK (theme-adaptive neutral anchor). Backgrounds #FAF8F1 (light) / #1A1A17
+          (dark). Data colors identical across themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above-default polish: explicit theme tokens, clear two-layer visual
+          hierarchy (green subseries vs INK mean lines). Looks professional but not
+          exceptional — well-configured library default rather than bespoke design.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Panel border removed (element_blank). Grid subtle (size=0.25, GRID_LINE
+          color). Legend suppressed (none). Clean appearance. Does not reach 'perfect'
+          as no additional spine removal or explicit whitespace tuning.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good visual hierarchy guides the viewer: high-contrast mean reference
+          lines (size=1.5) stand out as the key seasonal-comparison visual against
+          the thinner subseries lines. Temperature annotations add direct comparison
+          context. Warming trend visible within each month''s subseries slope.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct cycle plot / seasonal subseries plot. Seasonal groups laid
+          left to right, chronological subseries within each group, mean reference
+          lines — all spec-required elements present.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: horizontal mean reference line per group, shared y-axis,
+          vertical dividers between groups, calendar-order month labels (Jan–Dec),
+          chronological ordering within groups.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: computed x_pos (month group + year offset). Y: temperature. All
+          12 months and 30 years visible. Correct grouping by month_num.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''line-cycle-seasonal · python · letsplot · anyplot.ai''
+          — correct mandated format. No legend (single series, appropriate).'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all key cycle plot aspects: seasonal variation (large mean
+          differences across months), within-season trend (subtle warming slope in
+          each subseries), and year-to-year variability (noise around each line).'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Monthly mean temperature for a temperate European city 1991–2020.
+          Neutral scientific topic. Temperature values (Jan ~-1°C, Jul ~21°C) are
+          realistic for Central/Northern Europe.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 30-year period × 12 months = 360 points (in spec range). Warming
+          trend of ~1.3°C over 30 years is scientifically consistent with observed
+          European warming. Seasonal amplitude (~22°C peak-to-trough) is plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear script: imports → tokens → data → plot layers → save. No
+          functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before data generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All 17 imported names are used in the code. No unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable code. Variable names are clear. No over-engineering,
+          no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html using current ggsave
+          API with scale=4.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Excellent use of ggplot grammar: group aesthetic for subseries per
+          month, geom_segment for reference lines, scale_x_continuous with custom
+          breaks/labels for the non-standard x-positioning scheme. Idiomatic and well-structured.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: HTML export (letsplot's key interactive feature) is saved. However,
+          the interactive HTML does not leverage letsplot's distinctive capabilities
+          — no tooltips or hover mappings for the year/temperature data. HTML output
+          is static rather than genuinely interactive.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep: []
+  styling:
+  - grid-styling

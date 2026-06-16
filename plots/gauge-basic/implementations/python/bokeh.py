@@ -20,9 +20,9 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito zones: low / mid / high (intuitive + colorblind-safe)
-ZONE_LOW = "#D55E00"  # vermillion
-ZONE_MID = "#E69F00"  # orange
-ZONE_HIGH = "#009E73"  # brand bluish green (Okabe-Ito position 1)
+ZONE_LOW = "#AE3030"  # imprint red — bad
+ZONE_MID = "#DDCC77"  # imprint amber — caution
+ZONE_HIGH = "#009E73"  # imprint green — good
 
 # Data
 value = 72

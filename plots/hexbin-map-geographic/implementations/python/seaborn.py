@@ -1,141 +1,164 @@
-""" pyplots.ai
+""" anyplot.ai
 hexbin-map-geographic: Hexagonal Binning Map
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-20
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-27
 """
 
-import matplotlib.patches as mpatches
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap
 
 
-# Set seaborn style for consistent aesthetics
-sns.set_theme(style="whitegrid")
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Data: Simulated taxi pickup locations in New York City area
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Data: Simulated bird species observation locations in Pacific Northwest
 np.random.seed(42)
-n_points = 5000
+n_points = 7000
+center_lon, center_lat = -121.5, 46.8
+lon = np.random.normal(center_lon, 1.4, n_points)
+lat = np.random.normal(center_lat, 1.1, n_points)
 
-# NYC bounding box approximately
-center_lon, center_lat = -73.98, 40.75
-lon = np.random.normal(center_lon, 0.08, n_points)
-lat = np.random.normal(center_lat, 0.05, n_points)
+# Seattle urban birding hotspot (highest observer density)
+idx1 = np.where(np.random.random(n_points) < 0.22)[0]
+lon[idx1] = np.random.normal(-122.33, 0.10, len(idx1))
+lat[idx1] = np.random.normal(47.61, 0.08, len(idx1))
 
-# Add clustering for realistic density patterns
-# Manhattan cluster (higher density)
-mask1 = np.random.random(n_points) < 0.4
-lon[mask1] = np.random.normal(-73.97, 0.015, np.sum(mask1))
-lat[mask1] = np.random.normal(40.78, 0.015, np.sum(mask1))
+# Portland urban birding area
+idx2 = np.where(np.random.random(n_points) < 0.18)[0]
+lon[idx2] = np.random.normal(-122.68, 0.09, len(idx2))
+lat[idx2] = np.random.normal(45.52, 0.07, len(idx2))
 
-# Downtown/Financial District cluster
-mask2 = np.random.random(n_points) < 0.2
-lon[mask2] = np.random.normal(-74.01, 0.01, np.sum(mask2))
-lat[mask2] = np.random.normal(40.71, 0.012, np.sum(mask2))
+# Cascade Range wilderness cluster
+idx3 = np.where(np.random.random(n_points) < 0.13)[0]
+lon[idx3] = np.random.normal(-121.2, 0.20, len(idx3))
+lat[idx3] = np.random.normal(47.1, 0.20, len(idx3))
 
-# Brooklyn cluster
-mask3 = np.random.random(n_points) < 0.15
-lon[mask3] = np.random.normal(-73.95, 0.025, np.sum(mask3))
-lat[mask3] = np.random.normal(40.68, 0.018, np.sum(mask3))
+# Olympic Peninsula coastal hotspot
+idx4 = np.where(np.random.random(n_points) < 0.10)[0]
+lon[idx4] = np.random.normal(-123.7, 0.18, len(idx4))
+lat[idx4] = np.random.normal(47.9, 0.20, len(idx4))
 
-# Create DataFrame for seaborn
-df = pd.DataFrame({"longitude": lon, "latitude": lat})
+# Species richness score per observation (1–5); higher near urban birding hotspots.
+# Demonstrates mean aggregation — switch reduce_C_function=np.sum for sum aggregation.
+richness = np.random.uniform(1.0, 3.0, n_points)
+richness[idx1] += np.random.uniform(1.5, 2.0, len(idx1))  # Seattle: high richness
+richness[idx2] += np.random.uniform(1.0, 1.5, len(idx2))  # Portland: moderate-high
+richness = np.clip(richness, 1.0, 5.0)
 
-# Create figure with seaborn jointplot for hexbin visualization
-# This is seaborn's idiomatic approach for 2D density/hexbin plots
+df = pd.DataFrame({"Longitude": lon, "Latitude": lat, "Richness": richness})
+
+# imprint_seq: green (low richness) → blue (high richness) — anyplot sequential colormap
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
+
+# Plot — seaborn jointplot; square canvas: height=6, dpi=400 → 2400×2400 px
+# Mean aggregation per hexbin cell (count: omit C/reduce_C_function; sum: np.sum)
 g = sns.jointplot(
     data=df,
-    x="longitude",
-    y="latitude",
+    x="Longitude",
+    y="Latitude",
     kind="hex",
-    cmap="YlOrRd",
+    cmap=imprint_seq,
     mincnt=1,
-    gridsize=30,
-    marginal_kws={"bins": 40, "color": "#e34a33", "edgecolor": "white"},
-    joint_kws={"alpha": 0.85, "edgecolors": "white", "linewidths": 0.3},
-    height=12,
+    gridsize=28,
+    marginal_kws={"bins": 30, "color": "#009E73", "edgecolor": PAGE_BG, "alpha": 0.75},
+    joint_kws={
+        "C": df["Richness"].values,
+        "reduce_C_function": np.mean,
+        "alpha": 0.88,
+        "edgecolors": PAGE_BG,
+        "linewidths": 0.15,
+    },
+    height=6,
     ratio=8,
 )
+g.figure.set_dpi(400)
 
-# Get the main axes
+# Theme backgrounds
+g.figure.patch.set_facecolor(PAGE_BG)
 ax = g.ax_joint
+ax.set_facecolor(PAGE_BG)
+g.ax_marg_x.set_facecolor(PAGE_BG)
+g.ax_marg_y.set_facecolor(PAGE_BG)
 
-# Add simplified base map overlay - coastline/water boundary approximation for NYC
-# Hudson River / East River simplified boundary
-water_coords = [
-    # Hudson River west boundary
-    [(-74.02, 40.88), (-74.02, 40.70), (-74.05, 40.68), (-74.05, 40.60)],
-    # East River / Upper Bay
-    [(-74.02, 40.70), (-74.00, 40.68), (-73.98, 40.69), (-73.97, 40.70)],
-    # Long Island Sound boundary
-    [(-73.85, 40.82), (-73.80, 40.78), (-73.78, 40.75)],
-]
+# Explicit geographic bounds covering Pacific Northwest
+ax.set_xlim(-126.5, -116.5)
+ax.set_ylim(43.0, 51.0)
 
-for coords in water_coords:
-    xs, ys = zip(*coords, strict=True)
-    ax.plot(xs, ys, color="#4a90d9", linewidth=2.5, alpha=0.7, solid_capstyle="round")
+# --- Simplified Pacific NW geographic reference layer ---
+geo_kw = {"color": INK_SOFT, "alpha": 0.55, "lw": 1.0, "zorder": 3, "solid_capstyle": "round"}
 
-# Add land boundary patches for geographic context
-# Manhattan island approximate outline
-manhattan_outline = mpatches.FancyBboxPatch(
-    (-74.02, 40.70),
-    0.07,
-    0.15,
-    boxstyle="round,pad=0.01",
-    facecolor="none",
-    edgecolor="#2d5016",
-    linewidth=1.5,
-    alpha=0.5,
-)
-ax.add_patch(manhattan_outline)
+# Pacific Coastline (approximate, south to north)
+coast_lon = [-124.5, -124.4, -124.2, -124.1, -124.1, -124.3, -124.6, -124.7, -124.7]
+coast_lat = [43.0, 44.5, 45.5, 46.2, 46.5, 47.0, 47.8, 48.2, 48.5]
+ax.plot(coast_lon, coast_lat, **geo_kw)
 
-# Brooklyn approximate outline
-brooklyn_outline = mpatches.FancyBboxPatch(
-    (-74.01, 40.62),
-    0.12,
-    0.08,
-    boxstyle="round,pad=0.01",
-    facecolor="none",
-    edgecolor="#2d5016",
-    linewidth=1.5,
-    alpha=0.5,
-)
-ax.add_patch(brooklyn_outline)
+# US-Canada border (49°N)
+ax.plot([-126.5, -124.6], [49.0, 49.0], linestyle="--", **geo_kw)
+ax.text(-125.2, 49.2, "Canada", fontsize=7, color=INK_MUTED, ha="center", va="bottom")
 
-# Add geographic annotations for context
-ax.annotate(
-    "Manhattan", xy=(-73.97, 40.82), fontsize=14, color="#1a3d0c", ha="center", fontweight="bold", fontstyle="italic"
-)
-ax.annotate(
-    "Brooklyn", xy=(-73.95, 40.60), fontsize=14, color="#1a3d0c", ha="center", fontweight="bold", fontstyle="italic"
-)
-ax.annotate(
-    "Hudson\nRiver", xy=(-74.04, 40.76), fontsize=11, color="#2b6dad", ha="center", fontweight="bold", alpha=0.8
-)
+# WA-OR border (Columbia River, simplified west to east)
+wa_or_lon = [-124.1, -123.5, -122.9, -122.3, -121.5, -120.5, -119.7, -118.5, -116.9]
+wa_or_lat = [46.2, 46.0, 45.6, 45.5, 45.6, 45.7, 45.9, 46.0, 46.1]
+ax.plot(wa_or_lon, wa_or_lat, linestyle="--", **geo_kw)
 
-# Styling - axis labels with units (degree symbols)
-ax.set_xlabel("Longitude (°W)", fontsize=20)
-ax.set_ylabel("Latitude (°N)", fontsize=20)
-ax.tick_params(axis="both", labelsize=16)
+# State labels (in sparse-data areas east of main cluster)
+ax.text(-119.0, 48.5, "WA", fontsize=9, color=INK_MUTED, ha="center", fontweight="medium")
+ax.text(-119.0, 44.5, "OR", fontsize=9, color=INK_MUTED, ha="center", fontweight="medium")
 
-# Set axis limits to focus on data area with padding
-lon_margin = (lon.max() - lon.min()) * 0.12
-lat_margin = (lat.max() - lat.min()) * 0.12
-ax.set_xlim(lon.min() - lon_margin, lon.max() + lon_margin)
-ax.set_ylim(lat.min() - lat_margin, lat.max() + lat_margin)
+# Spines
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+for spine in ("left", "bottom"):
+    ax.spines[spine].set_color(INK_SOFT)
 
-# Add colorbar to main plot
-cbar = plt.colorbar(ax.collections[0], ax=ax, shrink=0.7, pad=0.02, aspect=25)
-cbar.set_label("Pickup Count", fontsize=18, labelpad=10)
-cbar.ax.tick_params(labelsize=16)
+# Axis labels and ticks
+ax.set_xlabel("Longitude (°W)", fontsize=10, color=INK)
+ax.set_ylabel("Latitude (°N)", fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
-# Title with required format (on figure to span full width)
-g.figure.suptitle("NYC Taxi Pickups · hexbin-map-geographic · seaborn · pyplots.ai", fontsize=24, y=0.98)
+# Colorbar
+cbar = plt.colorbar(ax.collections[0], ax=ax, shrink=0.65, pad=0.02, aspect=22)
+cbar.set_label("Mean Species Richness", fontsize=9, color=INK, labelpad=8)
+cbar.ax.tick_params(labelsize=7, colors=INK_SOFT)
+cbar.outline.set_edgecolor(INK_SOFT)
 
-# Set background color to light blue for water indication
-ax.set_facecolor("#e8f4f8")
+# City labels with ELEVATED_BG background for readability over hexbins
+bbox_props = {"boxstyle": "round,pad=0.2", "facecolor": ELEVATED_BG, "edgecolor": "none", "alpha": 0.80}
+ax.text(-122.33, 47.83, "Seattle", fontsize=8, color=INK, ha="center", fontstyle="italic", bbox=bbox_props, zorder=10)
+ax.text(-122.68, 45.27, "Portland", fontsize=8, color=INK, ha="center", fontstyle="italic", bbox=bbox_props, zorder=10)
 
-plt.tight_layout()
-plt.subplots_adjust(top=0.94)
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+# Title
+title = "hexbin-map-geographic · python · seaborn · anyplot.ai"
+n = len(title)
+title_fontsize = max(8, round(12 * (67 / n if n > 67 else 1.0)))
+g.figure.suptitle(title, fontsize=title_fontsize, color=INK, fontweight="medium")
+g.figure.subplots_adjust(top=0.91)
+
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

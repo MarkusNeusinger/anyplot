@@ -60,7 +60,7 @@ df = pd.DataFrame(data)
 fig, ax = plt.subplots(figsize=(16, 9))
 
 # Okabe-Ito palette (positions 1, 2, 3) - first series is always #009E73
-colors = ["#009E73", "#D55E00", "#0072B2"]
+colors = ["#009E73", "#C475FD", "#4467A3"]
 
 # Calculate positions for grouped lollipops
 x = np.arange(n_categories)

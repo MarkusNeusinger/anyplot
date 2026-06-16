@@ -27,11 +27,11 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette
-OKABE_ITO = (
+IMPRINT = (
     "#009E73",  # Brand green - position 1
-    "#D55E00",  # Vermillion - position 2
-    "#0072B2",  # Blue - position 3
-    "#CC79A7",  # Reddish purple - position 4
+    "#C475FD",  # Vermillion - position 2
+    "#4467A3",  # Blue - position 3
+    "#BD8233",  # Reddish purple - position 4
 )
 
 # Data - Multiple streamline patterns to showcase varied flow
@@ -96,7 +96,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=28,
     label_font_size=22,
     major_label_font_size=18,

@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (first series always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 wind_speed_labels = ["Light (0-10 km/h)", "Moderate (10-20 km/h)", "Strong (20+ km/h)"]
 
 # Data: Wind speed distribution by direction (8 compass points)
@@ -35,7 +35,7 @@ strong = np.array([3, 2, 1, 1, 2, 5, 6, 4])
 fig = go.Figure()
 
 # Add stacked bars for each wind speed category
-for data, label, color in zip([light, moderate, strong], wind_speed_labels, OKABE_ITO, strict=True):
+for data, label, color in zip([light, moderate, strong], wind_speed_labels, IMPRINT, strict=True):
     fig.add_trace(
         go.Barpolar(
             r=data,

@@ -19,7 +19,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 sns.set_theme(
     style="ticks",
@@ -50,7 +50,7 @@ total = pclass_totals.sum()
 pclass_order = [1, 2, 3]
 pclass_labels = ["1st Class", "2nd Class", "3rd Class"]
 fill_order = ["Survived", "Did Not Survive"]
-colors = [OKABE_ITO[0], OKABE_ITO[1]]
+colors = [IMPRINT[0], IMPRINT[1]]
 
 widths = [pclass_totals[p] / total for p in pclass_order]
 x_positions = np.cumsum([0] + widths[:-1])

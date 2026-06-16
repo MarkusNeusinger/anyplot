@@ -24,11 +24,11 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - first series is always #009E73
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # bluish green - first series
-    "#D55E00",  # vermillion
-    "#0072B2",  # blue
-    "#CC79A7",  # reddish purple
+    "#C475FD",  # vermillion
+    "#4467A3",  # blue
+    "#BD8233",  # reddish purple
 ]
 
 # Data - Test scores by study method (educational context)
@@ -136,7 +136,7 @@ for i, cat in enumerate(categories):
     xs_right = [(cat, float(xr)) for xr in x_right[::-1]]
 
     # Draw violin patch with Okabe-Ito color
-    violin_color = OKABE_ITO[i % len(OKABE_ITO)]
+    violin_color = IMPRINT[i % len(IMPRINT)]
     vr = p.patch(
         xs_left + xs_right,
         list(y_grid) + list(y_grid[::-1]),

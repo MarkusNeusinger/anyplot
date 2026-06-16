@@ -18,7 +18,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito for the 3 axes (positions 1, 2, 3)
-AXIS_COLORS = {"core": "#009E73", "utility": "#D55E00", "interface": "#0072B2"}
+AXIS_COLORS = {"core": "#009E73", "utility": "#C475FD", "interface": "#4467A3"}
 
 # Data: Software module dependency network
 np.random.seed(42)

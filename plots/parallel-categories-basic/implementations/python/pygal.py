@@ -23,7 +23,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 np.random.seed(42)
 
 # Okabe-Ito palette (first series is always #009E73)
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233")
 
 # Data: Product journey from category through distribution channel to outcome
 # Changed from Online/Store/Mobile to Distribution Channels (Direct/Wholesale/Retail)
@@ -80,10 +80,10 @@ base_counts = {
 
 # Category colors use Okabe-Ito palette (first series is brand green #009E73)
 category_colors = {
-    "Electronics": OKABE_ITO[0],  # #009E73 (bluish green - brand)
-    "Clothing": OKABE_ITO[1],  # #D55E00 (vermillion)
-    "Home & Garden": OKABE_ITO[2],  # #0072B2 (blue)
-    "Sports": OKABE_ITO[3],  # #CC79A7 (reddish purple)
+    "Electronics": IMPRINT[0],  # #009E73 (bluish green - brand)
+    "Clothing": IMPRINT[1],  # #C475FD (vermillion)
+    "Home & Garden": IMPRINT[2],  # #4467A3 (blue)
+    "Sports": IMPRINT[3],  # #BD8233 (reddish purple)
 }
 
 # Secondary colors for middle dimensions - distinct but complementary

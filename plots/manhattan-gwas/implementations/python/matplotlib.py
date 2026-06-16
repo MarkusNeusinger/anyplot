@@ -20,7 +20,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"
 
 # Okabe-Ito palette for chromosome alternation
-CHROM_COLORS = ["#009E73", "#D55E00"]  # Brand green and vermillion, alternating
+CHROM_COLORS = ["#009E73", "#C475FD"]  # Brand green and vermillion, alternating
 
 # Data - Simulate GWAS results for 22 chromosomes
 np.random.seed(42)

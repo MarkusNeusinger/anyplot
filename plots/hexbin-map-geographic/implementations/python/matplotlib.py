@@ -1,115 +1,112 @@
-""" pyplots.ai
+""" anyplot.ai
 hexbin-map-geographic: Hexagonal Binning Map
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-20
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-27
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Rectangle
 
 
-# Data: Simulated taxi pickup locations in New York City area
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Continuous colormap — imprint_seq (green → blue, single-polarity)
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
+
+# Base map surface colors
+WATER_BG = "#C8DFF0" if THEME == "light" else "#1C2D3A"
+LAND_BG = "#E8E5DB" if THEME == "light" else "#282820"
+
+# Data: NYC taxi pickup locations (5,000 simulated points)
 np.random.seed(42)
 n_points = 5000
 
-# Generate clustered points around Manhattan, Brooklyn, and Queens
-n_manhattan = 2500
-n_brooklyn = 1500
-n_queens = 1000
+lat_manhattan = np.random.normal(40.758, 0.030, 2500)
+lon_manhattan = np.random.normal(-73.985, 0.015, 2500)
+lat_brooklyn = np.random.normal(40.680, 0.040, 1500)
+lon_brooklyn = np.random.normal(-73.960, 0.030, 1500)
+lat_queens = np.random.normal(40.730, 0.030, 1000)
+lon_queens = np.random.normal(-73.850, 0.040, 1000)
 
-# Manhattan cluster (denser, central)
-lat_manhattan = np.random.normal(40.758, 0.03, n_manhattan)
-lon_manhattan = np.random.normal(-73.985, 0.015, n_manhattan)
-
-# Brooklyn cluster
-lat_brooklyn = np.random.normal(40.68, 0.04, n_brooklyn)
-lon_brooklyn = np.random.normal(-73.96, 0.03, n_brooklyn)
-
-# Queens cluster
-lat_queens = np.random.normal(40.73, 0.03, n_queens)
-lon_queens = np.random.normal(-73.85, 0.04, n_queens)
-
-# Combine all points
 lat = np.concatenate([lat_manhattan, lat_brooklyn, lat_queens])
 lon = np.concatenate([lon_manhattan, lon_brooklyn, lon_queens])
-
-# Optional value for aggregation (trip fare amounts in dollars)
 values = np.random.exponential(15, n_points) + 5
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+# Plot — landscape 3200 × 1800 px
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 
-# Set background color to represent water/land context
-ax.set_facecolor("#e8f4f8")
+# Base map: water background + land area rectangle
+ax.set_facecolor(WATER_BG)
+ax.add_patch(Rectangle((-74.05, 40.58), 0.35, 0.32, linewidth=0, facecolor=LAND_BG, zorder=0))
 
-# Add a light rectangle to suggest land area
-land = Rectangle((-74.05, 40.58), 0.35, 0.32, linewidth=0, facecolor="#f5f5f2", zorder=0)
-ax.add_patch(land)
-
-# Hexbin plot showing density with mean fare values
+# Hexbin: mean trip fare aggregated per hex cell
 hb = ax.hexbin(
     lon,
     lat,
     C=values,
     gridsize=35,
     reduce_C_function=np.mean,
-    cmap="YlOrRd",
+    cmap=imprint_seq,
     alpha=0.85,
-    edgecolors="#555555",
-    linewidths=0.4,
+    edgecolors=INK_MUTED,
+    linewidths=0.3,
     mincnt=1,
     zorder=2,
 )
 
 # Colorbar
-cbar = plt.colorbar(hb, ax=ax, shrink=0.85, pad=0.02, aspect=30)
-cbar.set_label("Mean Trip Fare ($)", fontsize=18, labelpad=10)
-cbar.ax.tick_params(labelsize=14)
+cbar = fig.colorbar(hb, ax=ax, shrink=0.90, pad=0.02, aspect=28, fraction=0.030)
+cbar.set_label("Mean Trip Fare ($)", fontsize=9, color=INK, labelpad=8)
+cbar.ax.tick_params(labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
+cbar.outline.set_edgecolor(INK_SOFT)
 
-# Set axis limits to NYC area
+# Axis limits and coordinate formatters
 ax.set_xlim(-74.05, -73.70)
 ax.set_ylim(40.58, 40.90)
-
-# Labels and title
-ax.set_xlabel("Longitude", fontsize=20)
-ax.set_ylabel("Latitude", fontsize=20)
-ax.set_title("hexbin-map-geographic · matplotlib · pyplots.ai", fontsize=24, pad=15)
-ax.tick_params(axis="both", labelsize=14)
-
-# Add geographic grid
-ax.grid(True, alpha=0.4, linestyle="--", color="#888888", zorder=1)
-
-# Add geographic context annotations
-locations = [(-73.985, 40.758, "Manhattan"), (-73.96, 40.68, "Brooklyn"), (-73.85, 40.73, "Queens")]
-for x, y, name in locations:
-    ax.annotate(
-        name,
-        xy=(x, y),
-        xytext=(x + 0.02, y + 0.03),
-        fontsize=14,
-        fontweight="bold",
-        color="#333333",
-        ha="left",
-        bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.7, edgecolor="#cccccc"),
-        zorder=5,
-    )
-
-# Add context text
-ax.text(
-    0.02,
-    0.02,
-    "NYC Taxi Pickup Density\n5,000 simulated points\nHexagonal binning with mean fare",
-    transform=ax.transAxes,
-    fontsize=12,
-    verticalalignment="bottom",
-    bbox=dict(boxstyle="round", facecolor="white", alpha=0.85, edgecolor="#cccccc"),
-    zorder=5,
-)
-
-# Format tick labels to show proper coordinate notation
 ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f"{abs(x):.2f}°W"))
 ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda y, p: f"{y:.2f}°N"))
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+# Style
+ax.set_xlabel("Longitude", fontsize=10, color=INK)
+ax.set_ylabel("Latitude", fontsize=10, color=INK)
+
+title = "hexbin-map-geographic · python · matplotlib · anyplot.ai"
+n = len(title)
+title_fs = max(8, round(12 * 67 / n)) if n > 67 else 12
+ax.set_title(title, fontsize=title_fs, fontweight="medium", color=INK, pad=10)
+
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
+ax.grid(True, alpha=0.12, linestyle="--", color=INK, zorder=1, linewidth=0.5)
+for spine in ax.spines.values():
+    spine.set_color(INK_SOFT)
+    spine.set_linewidth(0.5)
+
+# Borough annotations
+for x, y, name in [(-73.985, 40.758, "Manhattan"), (-73.960, 40.680, "Brooklyn"), (-73.850, 40.730, "Queens")]:
+    ax.annotate(
+        name,
+        xy=(x, y),
+        xytext=(x + 0.020, y + 0.025),
+        fontsize=9,
+        fontweight="bold",
+        color=INK,
+        ha="left",
+        bbox={"boxstyle": "round,pad=0.3", "facecolor": ELEVATED_BG, "alpha": 0.88, "edgecolor": INK_SOFT, "linewidth": 0.5},
+        zorder=5,
+    )
+
+# Layout — subplots_adjust controls padding; no bbox_inches='tight' in savefig
+fig.subplots_adjust(left=0.10, right=0.92, top=0.92, bottom=0.12)
+
+# Save
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

@@ -15,9 +15,9 @@
 ## What is anyplot?
 
 **anyplot** is an AI-powered platform for data visualization that automatically discovers, generates, tests, and
-maintains plotting examples. Browse hundreds of plots across major visualization libraries — matplotlib, seaborn,
-plotly, bokeh, altair, plotnine, pygal, highcharts, and lets-plot — with an architecture ready to welcome additional
-ecosystems over time.
+maintains plotting examples. Browse hundreds of plots across 15 major visualization libraries in Python, R, Julia, and
+JavaScript — matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, lets-plot, ggplot2, Makie.jl, Chart.js, D3.js,
+ECharts, Highcharts, and MUI X Charts (React) — with an architecture ready to welcome additional ecosystems over time.
 
 **Community-driven, AI-maintained** - Propose plot ideas via GitHub Issues, AI generates the code, automated quality
 checks ensure excellence. Zero manual coding required.
@@ -38,22 +38,31 @@ checks ensure excellence. Zero manual coding required.
 ## Architecture
 
 **Specification-first design**: Every plot starts as a Markdown spec (library-agnostic), then AI generates
-implementations for all 10 supported libraries across Python and R.
+implementations for all 15 supported libraries across Python, R, Julia, and JavaScript.
 
 ```
 plots/scatter-basic/
 ├── specification.md     # Library-agnostic specification
 ├── specification.yaml   # Tags, created, issue, suggested
 ├── metadata/            # Per-library metadata (quality scores, preview URLs)
-│   └── python/
-│       ├── matplotlib.yaml
-│       └── ...
-└── implementations/
-    └── python/
-        ├── matplotlib.py
-        ├── seaborn.py
-        ├── plotly.py
-        └── ... (6 more)
+│   ├── python/
+│   │   ├── matplotlib.yaml
+│   │   └── ...
+│   └── javascript/
+│       └── muix.yaml
+└── implementations/     # Grouped by language; one file per library
+    ├── python/
+    │   ├── matplotlib.py
+    │   ├── seaborn.py
+    │   └── ... (6 more)
+    ├── r/ggplot2.R
+    ├── julia/makie.jl
+    └── javascript/
+        ├── chartjs.js   # framework-agnostic JS libs → .js
+        ├── d3.js
+        ├── echarts.js
+        ├── highcharts.js
+        └── muix.tsx     # MUI X — React, authored as .tsx
 ```
 
 **Issue-based workflow**: GitHub Issues as state machine for plot lifecycle. Status tracked via live-updating table (no sub-issues). Each library generates in parallel, creating PRs to a feature branch.
@@ -70,8 +79,10 @@ See [docs/reference/](docs/reference/) for details.
 
 **Frontend**: React 19 • Vite • TypeScript • MUI
 
-**Plotting (Python)**: matplotlib • seaborn • plotly • bokeh • altair • plotnine • pygal • highcharts • lets-plot
+**Plotting (Python)**: matplotlib • seaborn • plotly • bokeh • altair • plotnine • pygal • lets-plot
 **Plotting (R)**: ggplot2
+**Plotting (Julia)**: Makie.jl
+**Plotting (JavaScript)**: Chart.js • D3.js • ECharts • Highcharts • MUI X Charts (React)
 
 **Infrastructure**: Google Cloud Run • Cloud SQL • Cloud Storage
 

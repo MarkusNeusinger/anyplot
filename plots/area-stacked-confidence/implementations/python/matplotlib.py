@@ -19,7 +19,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: quarterly energy consumption by source with measurement uncertainty
 np.random.seed(42)
@@ -73,34 +73,34 @@ ax.set_facecolor(PAGE_BG)
 
 # Plot stacked areas from bottom to top with enhanced styling
 # Solar (bottom layer)
-ax.fill_between(quarters, 0, solar_stack, color=OKABE_ITO[0], alpha=0.85, label="Solar", zorder=3)
-ax.fill_between(quarters, solar_lower, solar_upper, color=OKABE_ITO[0], alpha=0.25, linewidth=0, zorder=2)
-ax.plot(quarters, solar_lower, color=OKABE_ITO[0], linewidth=0.8, alpha=0.4, linestyle=":", zorder=1)
-ax.plot(quarters, solar_upper, color=OKABE_ITO[0], linewidth=0.8, alpha=0.4, linestyle=":", zorder=1)
+ax.fill_between(quarters, 0, solar_stack, color=IMPRINT[0], alpha=0.85, label="Solar", zorder=3)
+ax.fill_between(quarters, solar_lower, solar_upper, color=IMPRINT[0], alpha=0.25, linewidth=0, zorder=2)
+ax.plot(quarters, solar_lower, color=IMPRINT[0], linewidth=0.8, alpha=0.4, linestyle=":", zorder=1)
+ax.plot(quarters, solar_upper, color=IMPRINT[0], linewidth=0.8, alpha=0.4, linestyle=":", zorder=1)
 
 # Wind (second layer)
-ax.fill_between(quarters, solar_stack, wind_stack, color=OKABE_ITO[1], alpha=0.85, label="Wind", zorder=3)
-ax.fill_between(quarters, wind_lower, wind_upper, color=OKABE_ITO[1], alpha=0.25, linewidth=0, zorder=2)
-ax.plot(quarters, wind_lower, color=OKABE_ITO[1], linewidth=0.8, alpha=0.4, linestyle=":", zorder=1)
-ax.plot(quarters, wind_upper, color=OKABE_ITO[1], linewidth=0.8, alpha=0.4, linestyle=":", zorder=1)
+ax.fill_between(quarters, solar_stack, wind_stack, color=IMPRINT[1], alpha=0.85, label="Wind", zorder=3)
+ax.fill_between(quarters, wind_lower, wind_upper, color=IMPRINT[1], alpha=0.25, linewidth=0, zorder=2)
+ax.plot(quarters, wind_lower, color=IMPRINT[1], linewidth=0.8, alpha=0.4, linestyle=":", zorder=1)
+ax.plot(quarters, wind_upper, color=IMPRINT[1], linewidth=0.8, alpha=0.4, linestyle=":", zorder=1)
 
 # Hydro (third layer)
-ax.fill_between(quarters, wind_stack, hydro_stack, color=OKABE_ITO[2], alpha=0.85, label="Hydro", zorder=3)
-ax.fill_between(quarters, hydro_lower, hydro_upper, color=OKABE_ITO[2], alpha=0.25, linewidth=0, zorder=2)
-ax.plot(quarters, hydro_lower, color=OKABE_ITO[2], linewidth=0.8, alpha=0.4, linestyle=":", zorder=1)
-ax.plot(quarters, hydro_upper, color=OKABE_ITO[2], linewidth=0.8, alpha=0.4, linestyle=":", zorder=1)
+ax.fill_between(quarters, wind_stack, hydro_stack, color=IMPRINT[2], alpha=0.85, label="Hydro", zorder=3)
+ax.fill_between(quarters, hydro_lower, hydro_upper, color=IMPRINT[2], alpha=0.25, linewidth=0, zorder=2)
+ax.plot(quarters, hydro_lower, color=IMPRINT[2], linewidth=0.8, alpha=0.4, linestyle=":", zorder=1)
+ax.plot(quarters, hydro_upper, color=IMPRINT[2], linewidth=0.8, alpha=0.4, linestyle=":", zorder=1)
 
 # Natural Gas (top layer)
-ax.fill_between(quarters, hydro_stack, gas_stack, color=OKABE_ITO[3], alpha=0.85, label="Natural Gas", zorder=3)
-ax.fill_between(quarters, gas_lower, gas_upper, color=OKABE_ITO[3], alpha=0.25, linewidth=0, zorder=2)
-ax.plot(quarters, gas_lower, color=OKABE_ITO[3], linewidth=0.8, alpha=0.4, linestyle=":", zorder=1)
-ax.plot(quarters, gas_upper, color=OKABE_ITO[3], linewidth=0.8, alpha=0.4, linestyle=":", zorder=1)
+ax.fill_between(quarters, hydro_stack, gas_stack, color=IMPRINT[3], alpha=0.85, label="Natural Gas", zorder=3)
+ax.fill_between(quarters, gas_lower, gas_upper, color=IMPRINT[3], alpha=0.25, linewidth=0, zorder=2)
+ax.plot(quarters, gas_lower, color=IMPRINT[3], linewidth=0.8, alpha=0.4, linestyle=":", zorder=1)
+ax.plot(quarters, gas_upper, color=IMPRINT[3], linewidth=0.8, alpha=0.4, linestyle=":", zorder=1)
 
 # Add prominent center lines for clarity and visual hierarchy
-ax.plot(quarters, solar_stack, color=OKABE_ITO[0], linewidth=3, alpha=1.0, zorder=4, solid_capstyle="round")
-ax.plot(quarters, wind_stack, color=OKABE_ITO[1], linewidth=3, alpha=1.0, zorder=4, solid_capstyle="round")
-ax.plot(quarters, hydro_stack, color=OKABE_ITO[2], linewidth=3, alpha=1.0, zorder=4, solid_capstyle="round")
-ax.plot(quarters, gas_stack, color=OKABE_ITO[3], linewidth=3, alpha=1.0, zorder=4, solid_capstyle="round")
+ax.plot(quarters, solar_stack, color=IMPRINT[0], linewidth=3, alpha=1.0, zorder=4, solid_capstyle="round")
+ax.plot(quarters, wind_stack, color=IMPRINT[1], linewidth=3, alpha=1.0, zorder=4, solid_capstyle="round")
+ax.plot(quarters, hydro_stack, color=IMPRINT[2], linewidth=3, alpha=1.0, zorder=4, solid_capstyle="round")
+ax.plot(quarters, gas_stack, color=IMPRINT[3], linewidth=3, alpha=1.0, zorder=4, solid_capstyle="round")
 
 # Styling
 ax.set_xlabel("Quarter", fontsize=20, color=INK)

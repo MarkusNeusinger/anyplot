@@ -18,14 +18,14 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette for categories
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # bluish green (brand)
-    "#D55E00",  # vermillion
-    "#0072B2",  # blue
-    "#CC79A7",  # reddish purple
-    "#E69F00",  # orange
-    "#56B4E9",  # sky blue
-    "#F0E442",  # yellow
+    "#C475FD",  # vermillion
+    "#4467A3",  # blue
+    "#BD8233",  # reddish purple
+    "#AE3030",  # orange
+    "#2ABCCD",  # sky blue
+    "#954477",  # yellow
     "#1A1A1A" if THEME == "light" else "#E8E8E0",  # adaptive neutral
 ]
 
@@ -179,7 +179,7 @@ for cat_idx, cat_name in enumerate(category_names):
         y_cat = [y[i] for i in range(len(y)) if mask[i]]
         labels_cat = [labels[i] for i in range(len(labels)) if mask[i]]
 
-        color = OKABE_ITO[cat_idx]
+        color = IMPRINT[cat_idx]
         category_colors[cat_name] = color
 
         # Create hover text with detailed information

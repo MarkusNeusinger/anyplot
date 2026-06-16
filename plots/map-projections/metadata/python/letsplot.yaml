@@ -19,7 +19,7 @@ review:
     circles toward the poles are immediately readable as the story
   - 'Caption explicitly names the educational takeaway: ''equal-area circles grow
     toward the poles in Mercator projection'''
-  - Correct anyplot palette usage (land=#009E73 first, Tissot=#9418DB second) with
+  - Correct Imprint palette usage (land=#009E73 first, Tissot=#9418DB second) with
     perfect theme-adaptive chrome in both renders
   - PIL transparent-margin compositing is a clean, correct fix for letsplot's export
     behavior
@@ -80,7 +80,7 @@ review:
         max: 2
         passed: true
         comment: Green and purple are well-separated in hue and luminance; CVD-safe
-          anyplot palette.
+          Imprint palette.
       - id: VQ-05
         name: Layout & Canvas
         score: 4

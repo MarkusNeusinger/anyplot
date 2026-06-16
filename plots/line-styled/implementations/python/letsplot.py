@@ -22,7 +22,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Daily rainfall across different cities over a month
 np.random.seed(42)
@@ -64,7 +64,7 @@ plot = (
     ggplot(df, aes(x="Day", y="Rainfall", color="City", linetype="City"))
     + geom_line(size=2)
     + geom_point(size=3.5, alpha=0.7)
-    + scale_color_manual(values=OKABE_ITO)
+    + scale_color_manual(values=IMPRINT)
     + scale_linetype_manual(values=["solid", "dashed", "dotted", "longdash"])
     + labs(
         x="Day of Month", y="Rainfall (mm)", title="line-styled · letsplot · anyplot.ai", color="City", linetype="City"

@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito positions for start/end markers
 START_COLOR = "#009E73"  # position 1 — green
-END_COLOR = "#D55E00"  # position 2 — vermillion
+END_COLOR = "#C475FD"  # position 2 — vermillion
 
 # Data: Simulated hiking trail GPS track (San Francisco coastal path)
 np.random.seed(42)

@@ -22,7 +22,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (first series is ALWAYS #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: Quarterly revenue by product category
 quarters = ["Q1 2024", "Q2 2024", "Q3 2024", "Q4 2024", "Q1 2025"]
@@ -43,7 +43,7 @@ totals = [sum(revenue_data[p][i] for p in products) for i in range(len(quarters)
 fig = go.Figure()
 
 # Add stacked bars for each product
-for product, color in zip(products, OKABE_ITO, strict=True):
+for product, color in zip(products, IMPRINT, strict=True):
     fig.add_trace(
         go.Bar(
             name=product,

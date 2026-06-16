@@ -1,0 +1,282 @@
+library: ggplot2
+language: r
+specification_id: genome-track-multi
+created: '2026-06-02T08:14:39Z'
+updated: '2026-06-02T08:33:05Z'
+generated_by: claude-sonnet
+workflow_run: 26806739483
+issue: 4422
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Excellent multi-track layout using ggplot2's facet_grid with free_y scales — idiomatic,
+    clean, and perfectly suited to the genome browser pattern
+  - 'Biologically realistic data: chr12 coordinates, real gene names (RAPH1, KRAS2),
+    coverage peaks elevated over exonic regions reflecting actual RNA-seq signal'
+  - Imprint palette applied with semantic awareness across 7 categories (genes, coverage,
+    2 variant types, 2 regulatory types) — no palette violations
+  - 'Both light and dark themes work correctly with full theme-adaptive chrome: backgrounds,
+    text, strip labels, legend boxes all flip properly'
+  - Sophisticated use of geom_blank() anchors to lock the shared x-range across all
+    four facets — a non-obvious ggplot2 idiom used correctly
+  - 'Perfect code quality: KISS structure, set.seed(42), clean imports (only ggplot2
+    + ragg), idiomatic R throughout'
+  weaknesses:
+  - Strand direction encoded only in gene name labels ('RAPH1 (+)', 'KRAS2 (-)') —
+    spec requires arrows or chevrons on exon/intron elements to indicate strand direction
+    visually
+  - Track strip labels appear on the right side (ggplot2 facet_grid row default) rather
+    than the left side as the spec specifies — move strips to left using strip.placement
+    and switch argument in facet_grid
+  - Regulatory element text labels use geom_text size=2.2 mm (~6.25 pt) which is quite
+    small and may be barely legible at mobile widths (~400 px); consider size=2.8–3.0
+    mm
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1) — correct theme surface
+      Chrome: title "genome-track-multi · r · ggplot2 · anyplot.ai" rendered in dark ink, fully readable; x-axis label "chr12 position (Mb)" in dark ink, size 10pt; x-tick labels in INK_SOFT (#4A4A44) at 8pt, showing 1.000–1.100 Mb; facet strip labels ("Genes", "Coverage", "Variants", "Regulatory") in dark bold text on slightly elevated background — all readable; legend text in INK_SOFT at 8pt, readable
+      Data: Genes track shows green (#009E73) exon blocks for RAPH1 and lavender (#C475FD) blocks for KRAS2 with thin INK_SOFT intron connectors; Coverage track shows a blue (#4467A3) filled area with alpha=0.65 with realistic peaks over exonic regions; Variants track shows ochre (#BD8233) SNP lollipops and rose (#954477) Indel lollipops with heights encoding quality scores; Regulatory track shows matte-red (#AE3030) Promoter rectangles and cyan (#2ABCCD) Enhancer rectangle with small text labels inside
+      Legibility verdict: PASS — all text elements are clearly readable; regulatory label text (size=2.2mm) is on the small side but still legible at canvas size
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: title in light (#F0EFE8) text, fully readable against dark background; x-axis label and tick labels use INK_SOFT (#B8B7B0) — light on dark, readable; facet strip labels on elevated dark background (#242420) in light ink — readable; legend background uses elevated dark fill with light text — readable; no dark-on-dark failures detected
+      Data: all data colors are identical to the light render — RAPH1 green (#009E73), KRAS2 lavender (#C475FD), coverage blue (#4467A3), SNP ochre (#BD8233), Indel rose (#954477), Promoter red (#AE3030), Enhancer cyan (#2ABCCD) — Imprint palette data colors unchanged between themes as required
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set; title 12pt, axis title 10pt, tick
+          labels 8pt, strip labels 9pt — well-proportioned. Minor deduction: regulatory
+          geom_text labels at size=2.2mm (~6.25pt) are on the small side for mobile
+          readability.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements. Gene name labels, regulatory
+          text, and lollipop heads are all well-separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All track elements clearly visible: prominent exon rectangles, filled
+          coverage area, visible lollipop markers, regulatory rectangles with alpha=0.85.
+          Intron connector lines (linewidth=0.5) appropriately thin relative to exon
+          blocks.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe by design. Multiple visual cues (shape
+          + color) distinguish track types. No red-green only dependency.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Canvas: 3200x1800 (landscape), gate passed. Four tracks fill the
+          canvas well with balanced proportions. Legend at bottom close to plot. No
+          content cut-off.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X-axis: ''chr12 position (Mb)'' — descriptive with units. Y-axis:
+          NULL/blank (appropriate for genome browser). Title correct format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (RAPH1) = #009E73 brand green. All 7 categories use
+          Imprint palette positions 1–7 in sensible semantic order. Backgrounds #FAF8F1
+          light / #1A1A17 dark. Full chrome adaptation in both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Clearly above defaults: Imprint palette applied with semantic awareness
+          (red for Promoter, cyan for Enhancer), professional genome browser layout
+          with strip backgrounds and panel borders. Strong design but not quite FiveThirtyEight-level
+          polish.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Notable refinements: panel border with INK_SOFT color, x-grid removed
+          (appropriate for genomic position tracks), elevated strip and legend backgrounds
+          with matching color. Good attention to detail; whitespace a bit tight between
+          tracks (panel.spacing=0.15 lines).'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Visual hierarchy clearly guides viewer: gene structure (top) → expression
+          evidence (coverage) → variation → regulation (bottom). Color differentiation
+          creates instant track recognition. Coverage peaks over exons reinforces
+          gene structure context — biological insight embedded in the data choice.'
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: multi-track genome browser with 4 stacked vertical tracks
+          sharing a common x-axis.'
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Genes (exons+introns), Coverage (filled area), Variants (lollipops
+          with quality height), Regulatory (colored rectangles) all present. Minor
+          omission: strand direction shown only in gene name labels (''(+)''/''-'')
+          rather than as arrows or chevrons on the gene body as spec requires. Track
+          labels on right side (ggplot2 default) rather than left side as spec specifies.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis correctly shows genomic coordinates in Mb. Each track type
+          maps correct data geometry. geom_blank anchors ensure all facets share the
+          same 1.000–1.100 Mb range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''genome-track-multi · r · ggplot2 · anyplot.ai'' — correct
+          format. Legend labels: RAPH1(+), KRAS2(−), Variant (SNP/Indel), Enhancer,
+          Promoter — all match data.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All four track types fully populated with diverse data: 5 exon blocks
+          across 2 genes, continuous coverage signal with exonic peaks, 11 variants
+          of 2 types, 3 regulatory elements of 2 types.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: chr12 is a real human chromosome. RAPH1 and KRAS2 are real gene names.
+          1Mb genomic window is a realistic locus. Coverage depth (80-200x) is realistic
+          for RNA-seq. Variant quality scores (30-95) follow standard Phred-scale
+          conventions.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Exon sizes (hundreds to ~15kb bp) and intron sizes are realistic
+          for human genes. Exon coverage boost (+90 reads mean) correctly represents
+          higher read depth over transcribed regions.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear structure: imports → theme tokens → data definitions → plot
+          construction → save. No unnecessary functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) at top ensures reproducible random data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only library(ggplot2) and library(ragg) — both actively used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, idiomatic R. No over-engineering. Separate data frames per
+          track type is the correct ggplot2 pattern for multi-geometry faceted plots.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png using ragg::agg_png at 8x4.5in dpi=400
+          (3200x1800) — correct canvas. Uses ggplot2 3.5.1 API with linewidth= (not
+          deprecated size=).
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Highly idiomatic: facet_grid(track ~ ., scales=''free_y'', space=''fixed'')
+          is the canonical ggplot2 genome-browser pattern; geom_blank() for x-range
+          anchoring is a sophisticated but idiomatic idiom; factor() with explicit
+          levels for correct facet ordering; proper use of both fill and color scales
+          simultaneously.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: The grammar-of-graphics composition of multi-geometry facets (areas
+          + rectangles + segments + points + text in coordinated panels) is a distinctive
+          ggplot2 strength not easily replicated in other libraries. The facet_grid
+          with free_y for genome browser is a recognized ggplot2-specific idiom.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - ragg
+  techniques:
+  - faceting
+  - layer-composition
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

@@ -23,9 +23,9 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-PROFIT_COLOR = "#009E73"  # Position 1 (green) - always first series
-LOSS_COLOR = "#D55E00"  # Position 2 (orange)
+# imprint semantic anchors
+PROFIT_COLOR = "#009E73"  # green — profit
+LOSS_COLOR = "#AE3030"  # red — loss
 
 # Data - Quarterly profit/loss by business unit (in millions)
 units = [

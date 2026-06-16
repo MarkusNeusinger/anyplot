@@ -26,8 +26,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data colors (Okabe-Ito palette - theme-independent)
 PRICE_COLOR = "#009E73"  # Position 1: brand green
-SMA_COLOR = "#D55E00"  # Position 2: vermillion
-BAND_COLOR = "#0072B2"  # Position 3: blue
+SMA_COLOR = "#C475FD"  # Position 2: vermillion
+BAND_COLOR = "#4467A3"  # Position 3: blue
 
 # Data - Simulated stock price with realistic Bollinger Bands
 np.random.seed(42)

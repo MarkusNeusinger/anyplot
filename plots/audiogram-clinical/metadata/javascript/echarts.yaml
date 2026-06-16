@@ -1,0 +1,256 @@
+library: echarts
+language: javascript
+specification_id: audiogram-clinical
+created: '2026-06-15T00:18:17Z'
+updated: '2026-06-15T00:44:47Z'
+generated_by: claude-sonnet
+workflow_run: 27516292639
+issue: 8655
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/javascript/echarts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'All three repair targets addressed: band label fontSize raised to 12, bottom
+    margin increased to 140, cross path replaced with the cleaner two-diagonal-line
+    form'
+  - 'Full spec compliance retained: every required audiogram feature present and correctly
+    implemented'
+  - 'Perfect code quality: flat script, hard-coded deterministic data, semantic constant
+    naming'
+  - Effective use of ECharts markArea with integrated per-band labels — idiomatic
+    and clean
+  - 'Clinical semantic color exception (Imprint #AE3030 red / #4467A3 blue) correctly
+    documented and applied'
+  - Both renders fully theme-adaptive with no dark-on-dark failures
+  weaknesses:
+  - All four plot-area spines remain visible; removing top and right spines would
+    add visual polish consistent with anyplot style guide
+  - Severity band labels at fontSize 12 CSS (24 source-px) are still the smallest
+    element; fontSize 13 would give slightly more mobile comfort without crowding
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "audiogram-clinical · javascript · echarts · anyplot.ai" bold, centered, readable in dark ink. Y-axis name "Hearing Level (dB HL)" and x-axis name "Frequency (Hz)" in t.ink — readable. Tick labels in t.inkSoft — readable. Severity band labels at fontSize 12 CSS (24 source-px) at upper-right of each band — readable, smallest element in chart.
+      Data: Red (#AE3030) solid line with hollow circle (O) markers for right ear; blue (#4467A3) dashed line with X-cross markers for left ear. Six severity band fills: Normal (green tint), Mild (ochre tint), Moderate (yellow tint), Mod. Severe (lavender tint), Severe (red tint), Profound (blue-gray tint). Classic 4 kHz sensorineural notch clearly visible in both traces. Imprint semantic exception applied: #AE3030 red / #4467A3 blue.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title in near-white (t.ink for dark theme) — readable. Axis names and tick labels in light gray (t.inkSoft for dark theme) — readable. Severity band labels in light secondary text — readable. No dark-on-dark failures detected.
+      Data: Red and blue data colors identical to light render (only chrome flips). Severity band rgba fills remain distinguishable over dark background. Legend items clearly visible at bottom.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All chrome text explicitly sized and readable in both themes; severity
+          band labels at 12 CSS px (24 source-px) are the smallest element — marginally
+          tight at mobile scale (~400 px)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or marker collisions detected in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 16 px circles, 20 px cross markers, 2.5 px lines well-proportioned
+          for 7 data points; severity bands do not obscure data
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/blue plus circle/X redundant encoding; shape distinction prevents
+          red-green dependency
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas appropriate for audiogram; grid.bottom 140 gives comfortable
+          breathing room; no clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Frequency (Hz) and Hearing Level (dB HL) with units; title matches
+          mandated format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Clinical semantic exception: red = Imprint #AE3030 (palette[4]),
+          blue = Imprint #4467A3 (palette[2]); code comment documents reasoning; backgrounds
+          and chrome are theme-adaptive in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Thoughtful clinical aesthetic: semantic color convention, subtle
+          severity-band fills with per-band labels, cleaner X-cross path; above defaults
+          but not publication-exceptional'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Theme-adaptive grid and ink tokens throughout; bottom margin improved
+          to 140; all four plot-area spines remain visible — top/right spine removal
+          would increase polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Severity bands deliver immediate clinical interpretation; inverted
+          axis clearly represents increasing loss; 4 kHz notch is a natural focal
+          point guiding the viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Clinical audiogram with inverted y-axis, standard audiometric x-axis,
+          conventional O/X markers, six severity bands
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Inverted y-axis, categorical log-equivalent x-axis with kHz shorthand,
+          red circle right ear, dashed blue X left ear, all six severity bands with
+          labels, legend
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Frequency on x (125-8k), dB HL on y (-10 to 120 inverted); both ears
+          mapped correctly; thresholds ordered ascending in frequency
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: audiogram-clinical · javascript · echarts · anyplot.ai; Legend:
+          Right Ear (O) / Left Ear (X)'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both ears, all seven standard audiometric frequencies, inverted axis,
+          all severity zones covered, O/X markers, connecting lines, legend; asymmetric
+          pattern between ears shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic high-frequency sensorineural notch at 4 kHz; thresholds clinically
+          plausible and asymmetric; neutral educational content
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard audiometric range -10 to 120 dB HL; 10 dB interval gridlines;
+          all threshold values within clinical bounds
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat module-level script; no functions or classes; severity band
+          config as simple constant array
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully hard-coded deterministic data; no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses window.echarts and window.ANYPLOT_TOKENS globals
+          only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: markArea bands built via .map(); semantic color constants RED/BLUE;
+          cleaner crossPath with clinical rationale documented
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'echarts.init on #container with animation: false; harness handles
+          PNG/HTML output'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correctly uses category axis, inverse y-axis, markArea for region
+          shading, custom path:// symbol, dashed lineStyle — all idiomatic ECharts
+          patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: markArea with per-band labels is a distinctive ECharts capability
+          used effectively; custom SVG path:// symbol for X marker is a notable library-specific
+          technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns: []
+  dataprep: []
+  styling:
+  - alpha-blending

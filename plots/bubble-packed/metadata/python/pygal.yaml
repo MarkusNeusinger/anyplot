@@ -1,60 +1,58 @@
 library: pygal
+language: python
 specification_id: bubble-packed
 created: '2025-12-23T09:17:15Z'
-updated: '2026-02-23T16:54:40Z'
-generated_by: claude-opus-4-6
-workflow_run: 20456561911
-issue: 0
-python_version: 3.14.3
+updated: '2026-05-29T23:07:23Z'
+generated_by: claude-sonnet
+workflow_run: 26666073878
+issue: 992
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/pygal/plot.html
-quality_score: 86
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - custom-legend
-  - hover-tooltips
-  - html-export
-  patterns:
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - gradient-fill
-  - edge-highlighting
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/pygal/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent use of pygal add_xml_filter pipeline for custom SVG rendering of a chart
-    type pygal does not natively support
-  - Polished visual design with radial gradients, white stroke borders, dashed group
-    boundaries, and highlight ring on largest bubble
-  - Effective group-affinity packing algorithm that clusters related departments with
-    area-weighted recentering
-  - Realistic department budget context with appropriate dollar values and meaningful
-    labels
-  - Correct area-based scaling (sqrt) ensures honest visual perception of values
+  - Creative and correct use of pygal's add_xml_filter to implement a packed bubble
+    chart type not natively supported by pygal
+  - 'Perfect Imprint palette compliance: Technology=slot 1 (#009E73), Marketing=slot
+    2, Operations=slot 3, Sales=slot 4; canonical order maintained'
+  - 'Full theme-adaptive chrome: all INK/INK_SOFT/INK_MUTED/PAGE_BG tokens propagated
+    correctly; both renders pass legibility checks'
+  - Radial gradient fills via SVG defs give polished 3D bubble appearance — clear
+    design investment
+  - In-bubble text intelligently adapts font size and color (white vs. near-black)
+    based on bubble size and fill color
+  - Static deterministic data with realistic department budget context (perfectly
+    neutral)
+  - Dual output (PNG + interactive HTML) correctly implemented
   weaknesses:
-  - Technology group label sits close to Sales cluster creating minor visual crowding
-  - All four groups have exactly 4 items each - varying group sizes would better demonstrate
-    the chart flexibility
-  - Core visualization relies on custom SVG rather than pygal native charting reducing
-    library mastery score
-  image_description: 'The plot displays a packed bubble chart titled "bubble-packed
-    · pygal · pyplots.ai" showing department budget allocations across four color-coded
-    groups. Technology (steel blue): Software Development ($450K, largest central
-    bubble with highlight ring), Cloud Infrastructure ($280K), Data Analytics ($180K),
-    Security ($120K). Marketing (amber/gold): Digital Marketing ($350K), Brand & Creative
-    ($220K), Events ($150K), PR ($90K). Operations (teal): Facilities ($280K), HR
-    & Recruiting ($200K), Legal ($160K), Admin ($100K). Sales (salmon/coral): Enterprise
-    ($380K), SMB ($250K), Partners ($170K), Support ($110K). Each bubble has a polished
-    radial gradient fill with white stroke borders. Groups are clustered together
-    with subtle dashed boundary circles. Group labels with totals appear above or
-    below each cluster. A four-column legend at the bottom shows group names with
-    totals. The layout is centered on a white background.'
+  - Smallest two bubbles (AI Research $95K r~92px, Admin $105K r~98px) get minimum
+    label font size ~24-25 SVG px; at mobile widths (~400px thumbnail) these labels
+    become very difficult to read — raise minimum label font size floor from 24 to
+    30 SVG px
+  - 'Group label ''Technology: $1,190K'' at bottom of its cluster crowds ''Marketing:
+    $700K'' just below it; slightly larger vertical clearance or font size reduction
+    from 38px to 32px would reduce visual tension'
+  - The pygal.Pie base with empty series as legend scaffolding is functional but carries
+    invisible pie geometry in the SVG; a cleaner base canvas would be preferable
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Chrome: Title "bubble-packed · python · pygal · anyplot.ai" in dark ink — clearly readable. Group labels in Imprint palette colors (green, lavender, blue, ochre) above/below clusters — all readable. Legend at bottom with 4 group entries — readable.
+      Data: 15 bubbles with radial gradient fills. Technology group (brand green #009E73) is correct first position. Marketing lavender, Operations blue, Sales ochre in canonical order slots 2-4. Largest bubble (Software Dev $480K) at center with highlight ring. Dashed boundary circles group related bubbles.
+      Legibility verdict: PASS — no light-on-light failures; smallest bubble labels ($95K, $105K) are tight but readable at full resolution
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title appears in light INK (#F0EFE8) — readable against dark background. Group labels in same Imprint palette colors — adequate contrast on dark. Legend text appears as lighter tone against dark background — readable. No dark-on-dark failures detected.
+      Data: Colors identical to light render — brand green, lavender, blue, ochre all carry over unchanged. Gradient fills visible on dark background. In-bubble text (white on dark bubbles, near-black on lavender) works correctly on dark surface.
+      Legibility verdict: PASS — both renders pass theme-readability checks
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -62,44 +60,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout (title 72px, legend 42px, group
-          labels 38px, bubble labels scaled by radius). All text readable; smallest
-          labels slightly tight but legible.
+        comment: Title and group labels clearly readable in both themes; in-bubble
+          text for the two smallest bubbles ($95K, $105K) is tight at mobile scale
+          (min font ~24-25 SVG px)
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Bubbles well-separated with padding. Technology group label sits
-          close to Sales cluster creating minor crowding.
+        comment: 'Layout largely clean; group label ''Technology: $1,190K'' sits close
+          to Marketing label at bottom creating mild crowding'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 16 bubbles clearly visible with distinct gradient fills and white
-          stroke borders. Good size variation.
+        comment: All 15 bubbles clearly distinct with gradient fills; density appropriate
+          for this count
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette used; no red-green sole signal; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue, amber, teal, coral provide excellent hue and luminance contrast.
-          Colorblind-safe.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Packed bubbles well-centered filling ~60-65% of canvas. Slight wasted
-          space on left and right edges.
+        comment: 3200x1800 landscape; nothing cut off; generous margins; bubbles fill
+          content zone well
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No traditional axes (appropriate for packed bubble). Title correct
-          format. Group and bubble labels include $K units.
+        comment: No traditional axes needed; group labels and in-bubble text serve
+          labeling; title in correct format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Technology=#009E73 (slot 1), Marketing=#C475FD (slot 2), Operations=#4467A3
+          (slot 3), Sales=#BD8233 (slot 4); backgrounds #FAF8F1/#1A1A17 correct'
     design_excellence:
       score: 14
       max: 20
@@ -109,22 +113,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, radial gradient fills, white stroke borders, dashed
-          group boundaries, highlight ring, custom font family. Clearly above defaults.
+        comment: Radial gradient fills, dashed group boundary circles, highlight ring
+          on largest bubble, per-group text color adaptation — clear design intent
+          above defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Gradient fills, white strokes, dashed boundaries, generous padding,
-          clean white background. Multiple intentional design touches.
+        comment: No axes, no grid, subtle boundary circles, clean margins; gradient
+          fills add polish; legend carries standard pygal chrome
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Good visual hierarchy: largest budget centered with highlight ring,
-          group clustering shows relationships, group totals enable comparison.'
+        comment: Size hierarchy makes Software Dev dominant; highlight ring reinforces
+          focal point; group totals in cluster labels aid comparison
     spec_compliance:
       score: 15
       max: 15
@@ -134,108 +139,124 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct packed bubble chart with circles packed without overlap using
-          greedy group-affinity packing.
+        comment: Correct packed bubble chart with greedy packing and group-affinity
+          scoring
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Area-based scaling, labels inside circles, SVG tooltips, color encodes
-          group, group clustering with boundaries.
+        comment: Area-based sizing, packing without overlap, in-bubble labels, group
+          color encoding, group clustering with boundary circles
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Values correctly determine circle area via sqrt scaling. All 16 items
-          represented. Groups correctly clustered.
+        comment: 15 items across 4 groups; value->circle area; group->color; all items
+          visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format. Legend shows all four groups with formatted
-          totals.
+        comment: Title is 'bubble-packed · python · pygal · anyplot.ai'; legend shows
+          all 4 groups with totals
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 16 items across 4 groups with good value range ($90K-$450K). All
-          groups have exactly 4 items; varying sizes would show more flexibility.
+        comment: 'Demonstrates all spec aspects: categorical labels, value sizing,
+          group coloring, packing, in-bubble text, group clustering with boundary
+          annotation'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Department budget allocation is a real, neutral business scenario
-          with specific realistic labels.
+        comment: Department budget allocation ($95K-$480K) highly plausible; groups
+          (Technology, Marketing, Operations, Sales) universally recognizable; neutral
+          data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Budget values $90K-$450K realistic for department allocations. Group
-          totals $740K-$1,030K sensible.
+        comment: 15 items within spec's 10-100 range; 5x value spread gives meaningful
+          visual size variation
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: add_packed_bubbles function required by pygal XML filter API. Nested
-          _text helper adds thin layer of structure.
+        comment: Only add_packed_bubbles function exists, required by pygal XML filter
+          API; packing logic is linear at module level
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded and deterministic. Packing algorithm uses no randomness.
+        comment: Static hardcoded data; deterministic greedy packing algorithm; no
+          randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: math, pygal, pygal.etree.etree, pygal.style.Style.'
+        comment: All imports (math, os, sys, pygal, etree, Style) actively used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-commented code. Packing algorithm appropriately complex.
-          No fake UI elements.
+        comment: sys.path guard is standard pygal self-import workaround; XML filter
+          pattern is idiomatic; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via render_to_png. Also produces plot.html. Uses
-          current pygal API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; uses current pygal
+          API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Uses pygal Style system, chart configuration, legend infrastructure,
-          and render methods. Core visualization is custom SVG via XML filter since
-          pygal lacks native packed bubble support.
+        comment: Uses Style object for all theme tokens; add_xml_filter for SVG extension;
+          render_to_png + render() for dual output; correct approach for extending
+          pygal beyond native chart types
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Leverages pygal add_xml_filter pipeline, pygal.etree for SVG creation,
-          native SVG title tooltips, dual render PNG+HTML.
-  verdict: REJECTED
+        comment: XML filter for raw SVG manipulation, SVG defs radial gradients, native
+          SVG title tooltips, interactive HTML export; -1 for using pygal.Pie with
+          empty slices as legend scaffolding
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  - annotations
+  patterns:
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - gradient-fill
+  - alpha-blending

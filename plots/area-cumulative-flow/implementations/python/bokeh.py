@@ -32,7 +32,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette — first series always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data — 90-day Kanban board for a software delivery team
 np.random.seed(42)
@@ -86,7 +86,7 @@ p = figure(
 )
 
 # Stacked areas — each color corresponds to the matching stacker
-renderers = p.varea_stack(stackers=stages, x="date", color=OKABE_ITO, alpha=0.82, source=source)
+renderers = p.varea_stack(stackers=stages, x="date", color=IMPRINT, alpha=0.82, source=source)
 
 # Subtle boundary lines at each stage transition
 cum_vals = np.zeros(days)

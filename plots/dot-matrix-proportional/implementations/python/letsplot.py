@@ -21,7 +21,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data — clinical trial side effect profile (n = 100 patients)
 categories = ["No Side Effects", "Mild Effects", "Moderate Effects", "Severe Effects"]
@@ -62,7 +62,7 @@ anyplot_theme = theme(
 plot = (
     ggplot(df, aes(x="col", y="row", color="legend"))  # noqa: F405
     + geom_point(size=8, alpha=0.95)  # noqa: F405
-    + scale_color_manual(values=OKABE_ITO)  # noqa: F405
+    + scale_color_manual(values=IMPRINT)  # noqa: F405
     + labs(title="dot-matrix-proportional · letsplot · anyplot.ai")  # noqa: F405
     + theme_void()  # noqa: F405
     + ggsize(1200, 1200)  # noqa: F405

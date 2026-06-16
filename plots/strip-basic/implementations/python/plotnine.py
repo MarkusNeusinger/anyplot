@@ -30,7 +30,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Patient response times (seconds) across different drug treatments
 np.random.seed(42)
@@ -54,7 +54,7 @@ df = pd.DataFrame(data, columns=["treatment", "response_time"])
 plot = (
     ggplot(df, aes(x="treatment", y="response_time", color="treatment"))
     + geom_point(position=position_jitter(width=0.25, height=0, random_state=42), size=4, alpha=0.65)
-    + scale_color_manual(values=OKABE_ITO)
+    + scale_color_manual(values=IMPRINT)
     + labs(x="Treatment Group", y="Response Time (seconds)", title="strip-basic · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(

@@ -20,7 +20,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette — first series always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Hierarchical data: Company budget breakdown (in $K)
 # Level 1: Departments, Level 2: Teams, Level 3: Projects
@@ -68,7 +68,7 @@ for i, (dept, teams) in enumerate(data.items()):
     dept_total = sum(sum(projs.values()) for projs in teams.values())
     level1_names.append(dept)
     level1_values.append(dept_total)
-    base_color = OKABE_ITO[i % len(OKABE_ITO)]
+    base_color = IMPRINT[i % len(IMPRINT)]
     level1_colors.append(base_color)
 
     # Light palette for child levels shows branch relationships via seaborn
@@ -152,7 +152,7 @@ ax_sun.text(0, 0, f"${total_budget:,}K\nTotal", ha="center", va="center", fontsi
 ax_sun.set_aspect("equal")
 
 # Bar chart with palette matching sunburst branch colors
-dept_palette = dict(zip(level1_names, OKABE_ITO, strict=True))
+dept_palette = dict(zip(level1_names, IMPRINT, strict=True))
 df_dept = pd.DataFrame({"Department": level1_names, "Budget ($K)": level1_values})
 sns.barplot(
     data=df_dept,

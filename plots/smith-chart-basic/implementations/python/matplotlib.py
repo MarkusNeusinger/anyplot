@@ -25,8 +25,8 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-OI_2 = "#D55E00"  # Okabe-Ito position 2 — VSWR circles
-OI_3 = "#0072B2"  # Okabe-Ito position 3 — boundary / matched condition
+OI_2 = "#C475FD"  # Okabe-Ito position 2 — VSWR circles
+OI_3 = "#4467A3"  # Okabe-Ito position 3 — boundary / matched condition
 
 # Data — antenna impedance sweep 1–6 GHz
 Z0 = 50

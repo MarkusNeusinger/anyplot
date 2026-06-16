@@ -34,7 +34,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - 252 trading days with slight fat tails (mixture of normals)
 np.random.seed(42)
@@ -69,16 +69,16 @@ df_normal = pd.DataFrame({"x": x_range, "y": normal_scaled})
 stats_label = f"Mean: {mean_ret:.2f}%\nStd Dev: {std_ret:.2f}%\nSkewness: {skewness:.2f}\nExc. Kurtosis: {kurtosis:.2f}"
 
 # Okabe-Ito fill: center green (pos 1), both tails vermillion (pos 2)
-fill_colors = {"Left Tail": OKABE_ITO[1], "Center": OKABE_ITO[0], "Right Tail": OKABE_ITO[1]}
+fill_colors = {"Left Tail": IMPRINT[1], "Center": IMPRINT[0], "Right Tail": IMPRINT[1]}
 
 # Plot
 plot = (
     ggplot(df, aes(x="returns", fill="region"))
     + geom_histogram(bins=30, color=PAGE_BG, alpha=0.85, size=0.3)
-    + geom_line(data=df_normal, mapping=aes(x="x", y="y"), color=OKABE_ITO[2], size=1.2, inherit_aes=False)
+    + geom_line(data=df_normal, mapping=aes(x="x", y="y"), color=IMPRINT[2], size=1.2, inherit_aes=False)
     + geom_vline(xintercept=mean_ret, linetype="dashed", color=INK, size=0.8)
-    + geom_vline(xintercept=lower_tail, linetype="dotted", color=OKABE_ITO[1], size=0.8)
-    + geom_vline(xintercept=upper_tail, linetype="dotted", color=OKABE_ITO[1], size=0.8)
+    + geom_vline(xintercept=lower_tail, linetype="dotted", color=IMPRINT[1], size=0.8)
+    + geom_vline(xintercept=upper_tail, linetype="dotted", color=IMPRINT[1], size=0.8)
     + scale_fill_manual(values=fill_colors, name="Region")
     + annotate(
         "label",

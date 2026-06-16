@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 BRAND = "#009E73"  # Okabe-Ito position 1 — Q-Q scatter points
-REF_COLOR = "#D55E00"  # Okabe-Ito position 2 — reference line
+REF_COLOR = "#C475FD"  # Okabe-Ito position 2 — reference line
 
 # Data - sample with slight positive skew to demonstrate Q-Q plot interpretation
 np.random.seed(42)

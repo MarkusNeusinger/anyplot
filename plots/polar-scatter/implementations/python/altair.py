@@ -19,7 +19,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (positions 1, 2, 3 for three categories)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Synthetic wind measurements with prevailing directions
 np.random.seed(42)
@@ -142,7 +142,7 @@ points = (
         y=alt.Y("y:Q", axis=None, scale=alt.Scale(domain=[-25, 25])),
         color=alt.Color(
             "time_of_day:N",
-            scale=alt.Scale(domain=["Morning", "Afternoon", "Evening"], range=OKABE_ITO),
+            scale=alt.Scale(domain=["Morning", "Afternoon", "Evening"], range=IMPRINT),
             title="Time of Day",
         ),
         tooltip=[

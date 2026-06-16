@@ -1,18 +1,49 @@
-""" pyplots.ai
+""" anyplot.ai
 recurrence-basic: Recurrence Plot for Nonlinear Time Series
-Library: bokeh 3.9.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-14
+Library: bokeh 3.9.1 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-10
 """
 
+import io
+import os
+import sys
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png, save
-from bokeh.models import BasicTicker, ColorBar, ColumnDataSource, HoverTool, Label, LinearColorMapper
-from bokeh.palettes import Cividis256
-from bokeh.plotting import figure
-from bokeh.resources import CDN
+from PIL import Image
 
 
-# Data - Lorenz attractor x-component
+# Workaround: remove current directory from import path to avoid shadowing
+# the bokeh package with this file (bokeh.py) when run in-place
+original_path = sys.path.copy()
+sys.path = [p for p in sys.path if p != "" and not (os.path.isfile(os.path.join(p, "bokeh.py")) if p else False)]
+
+try:
+    from bokeh.io import output_file, save
+    from bokeh.models import BasicTicker, ColorBar, ColumnDataSource, HoverTool, Label, LinearColorMapper
+    from bokeh.plotting import figure
+    from bokeh.resources import CDN
+    from selenium import webdriver
+    from selenium.webdriver.chrome.options import Options
+finally:
+    sys.path = original_path
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint sequential colormap: brand green → blue (256 stops, single-polarity)
+_c0 = np.array([0x00, 0x9E, 0x73])  # #009E73
+_c1 = np.array([0x44, 0x67, 0xA3])  # #4467A3
+IMPRINT_SEQ256 = [
+    "#{:02X}{:02X}{:02X}".format(*(int(round(v)) for v in (_c0 + (_c1 - _c0) * t / 255.0))) for t in range(256)
+]
+
+# Data — Lorenz attractor x-component
 np.random.seed(42)
 dt = 0.01
 num_steps = 5000
@@ -27,11 +58,10 @@ for step in range(num_steps):
     lx, ly, lz = lx + dx, ly + dy, lz + dz
     trajectory[step] = lx
 
-# Downsample to 500 points for clear visualization
 signal = trajectory[::10]
 n_points = len(signal)
 
-# Time-delay embedding (Takens' theorem)
+# Time-delay embedding (Takens' theorem): dim=3, delay=5
 tau = 5
 dim = 3
 n_embedded = n_points - (dim - 1) * tau
@@ -39,147 +69,158 @@ embedded = np.empty((n_embedded, dim))
 for d in range(dim):
     embedded[:, d] = signal[d * tau : d * tau + n_embedded]
 
-# Compute pairwise Euclidean distance matrix
+# Pairwise Euclidean distance matrix
 diff = embedded[:, np.newaxis, :] - embedded[np.newaxis, :, :]
 dist_matrix = np.sqrt(np.sum(diff**2, axis=2))
-
-# Binary recurrence threshold for storytelling overlay
 threshold = np.percentile(dist_matrix, 10)
-
-# Normalize distances for color mapping (0 = identical, 1 = max distance)
 max_dist = dist_matrix.max()
 dist_normalized = dist_matrix / max_dist
+dist_flipped = dist_normalized[::-1, :]  # row 0 at top
 
-# Flip vertically so origin is top-left (row 0 at top)
-dist_flipped = dist_normalized[::-1, :]
+color_mapper = LinearColorMapper(palette=IMPRINT_SEQ256, low=0.0, high=1.0)
 
-# Perceptually uniform colormap - reversed so dark = recurrent (close), light = distant
-palette = list(reversed(Cividis256))
-
-color_mapper = LinearColorMapper(palette=palette, low=0.0, high=1.0)
-
-# Create square figure
+# Plot — square 2400×2400 canonical
 n = n_embedded
 p = figure(
-    width=3600,
-    height=3600,
-    title="Lorenz Attractor · recurrence-basic · bokeh · pyplots.ai",
+    width=2400,
+    height=2400,
+    title="recurrence-basic · python · bokeh · anyplot.ai",
     x_axis_label="Time Index (Lorenz x-component, dt=0.01)",
     y_axis_label="Time Index (Lorenz x-component, dt=0.01)",
     toolbar_location=None,
     tools="",
     x_range=(0, n),
     y_range=(0, n),
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
-# Plot distance-based recurrence matrix as image
 p.image(image=[dist_flipped], x=0, y=0, dw=n, dh=n, color_mapper=color_mapper)
 
-# Add ColorBar to show distance scale
 color_bar = ColorBar(
     color_mapper=color_mapper,
     ticker=BasicTicker(desired_num_ticks=6),
     label_standoff=16,
     border_line_color=None,
+    background_fill_color=PAGE_BG,
     location=(0, 0),
     title="Normalized Distance",
-    title_text_font_size="18pt",
-    major_label_text_font_size="16pt",
+    title_text_font_size="28pt",
+    title_text_color=INK,
+    major_label_text_font_size="24pt",
+    major_label_text_color=INK_SOFT,
     width=40,
     padding=30,
 )
 p.add_layout(color_bar, "right")
 
-# Add threshold contour line annotation for storytelling
-# Mark the recurrence threshold on the colorbar
-threshold_norm = threshold / max_dist
-
-# Storytelling: annotate key recurrence features visible against the colormap
-label_block = Label(
-    x=200,
-    y=260,
-    text="Laminar regime",
-    text_font_size="22pt",
-    text_color="white",
-    text_font_style="bold",
-    text_alpha=0.85,
-    background_fill_color="#306998",
-    background_fill_alpha=0.6,
+p.add_layout(
+    Label(
+        x=200,
+        y=260,
+        text="Laminar regime",
+        text_font_size="28pt",
+        text_color=INK,
+        text_font_style="bold",
+        background_fill_color=ELEVATED_BG,
+        background_fill_alpha=0.88,
+    )
 )
-p.add_layout(label_block)
-
-label_diag = Label(
-    x=120,
-    y=160,
-    text="Deterministic diagonals",
-    text_font_size="22pt",
-    text_color="white",
-    text_font_style="bold",
-    text_alpha=0.85,
-    background_fill_color="#306998",
-    background_fill_alpha=0.6,
-    angle=0.78,
+p.add_layout(
+    Label(
+        x=120,
+        y=160,
+        text="Deterministic diagonals",
+        text_font_size="28pt",
+        text_color=INK,
+        text_font_style="bold",
+        background_fill_color=ELEVATED_BG,
+        background_fill_alpha=0.88,
+        angle=0.78,
+    )
 )
-p.add_layout(label_diag)
-
-# Threshold annotation in top-left corner
-label_threshold = Label(
-    x=10,
-    y=n - 20,
-    text=f"Recurrence threshold \u03b5 = {threshold:.1f} (10th percentile)",
-    text_font_size="18pt",
-    text_color="white",
-    text_alpha=0.9,
-    background_fill_color="#2c3e50",
-    background_fill_alpha=0.7,
+p.add_layout(
+    Label(
+        x=10,
+        y=n - 25,
+        text=f"Recurrence threshold ε = {threshold:.1f} (10th percentile)",
+        text_font_size="24pt",
+        text_color=INK,
+        background_fill_color=ELEVATED_BG,
+        background_fill_alpha=0.88,
+    )
 )
-p.add_layout(label_threshold)
 
-# HoverTool on a transparent scatter overlay for interactivity
-# Sample grid points for hover info (every 20th point for performance)
+# HoverTool via invisible scatter overlay (idiomatic Bokeh for image plots)
 hover_step = 20
 hover_xs, hover_ys, hover_dists, hover_recs = [], [], [], []
 for i in range(0, n, hover_step):
     for j in range(0, n, hover_step):
         hover_xs.append(i + hover_step // 2)
         hover_ys.append(j + hover_step // 2)
-        d = dist_matrix[i, j]
-        hover_dists.append(round(float(d), 2))
-        hover_recs.append("Yes" if d <= threshold else "No")
+        dist_ij = dist_matrix[i, j]
+        hover_dists.append(round(float(dist_ij), 2))
+        hover_recs.append("Yes" if dist_ij <= threshold else "No")
 
 hover_source = ColumnDataSource(data={"x": hover_xs, "y": hover_ys, "distance": hover_dists, "recurrent": hover_recs})
-
 invisible_scatter = p.scatter(x="x", y="y", source=hover_source, size=hover_step, fill_alpha=0, line_alpha=0)
-
-hover = HoverTool(
-    renderers=[invisible_scatter],
-    tooltips=[
-        ("Time i", "@x"),
-        ("Time j", "@y"),
-        ("Distance", "@distance"),
-        ("Recurrent (d < {:.1f})".format(threshold), "@recurrent"),
-    ],
+p.add_tools(
+    HoverTool(
+        renderers=[invisible_scatter],
+        tooltips=[
+            ("Time i", "@x"),
+            ("Time j", "@y"),
+            ("Distance", "@distance"),
+            ("Recurrent (d < {:.1f})".format(threshold), "@recurrent"),
+        ],
+    )
 )
-p.add_tools(hover)
 
-# Styling
-p.title.text_font_size = "28pt"
-p.title.text_color = "#2c3e50"
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
-
+# Style — theme-adaptive chrome
+p.title.text_font_size = "50pt"
+p.title.text_color = INK
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
 p.xgrid.grid_line_color = None
 p.ygrid.grid_line_color = None
 p.axis.minor_tick_line_color = None
-p.axis.axis_line_color = "#666666"
-p.axis.major_tick_line_color = "#666666"
-p.outline_line_color = None
-p.background_fill_color = "#fafafa"
-p.border_fill_color = "white"
-p.min_border_right = 120
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+p.outline_line_color = INK_SOFT
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
 
-# Save
-export_png(p, filename="plot.png")
-save(p, filename="plot.html", resources=CDN, title="recurrence-basic · bokeh · pyplots.ai")
+# Save HTML then screenshot with headless Chrome (export_png not used — snap shim fails)
+output_file(f"plot-{THEME}.html")
+save(p, resources=CDN)
+
+# Window is H+200 tall so the full bokeh canvas renders; PIL crops to W×H.
+W, H = 2400, 2400
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H + 200}",
+    "--hide-scrollbars",
+    "--force-device-scale-factor=1",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H + 200)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+raw = driver.get_screenshot_as_png()
+driver.quit()
+Image.open(io.BytesIO(raw)).crop((0, 0, W, H)).save(f"plot-{THEME}.png")

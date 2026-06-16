@@ -1,55 +1,51 @@
 library: seaborn
+language: python
 specification_id: band-basic
 created: '2025-12-23T09:08:43Z'
-updated: '2026-02-23T14:08:56Z'
-generated_by: claude-opus-4-6
-workflow_run: 20456382170
-issue: 0
-python_version: '3.14'
+updated: '2026-05-29T17:25:53Z'
+generated_by: claude-sonnet
+workflow_run: 26651405841
+issue: 979
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/band-basic/seaborn/plot.png
-preview_html: null
-quality_score: 94
-impl_tags:
-  dependencies: []
-  techniques:
-  - custom-legend
-  patterns:
-  - data-generation
-  - explicit-figure
-  dataprep:
-  - cumulative-sum
-  styling:
-  - alpha-blending
-  - grid-styling
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/band-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/band-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Expert use of seaborn native statistical aggregation (errorbar with prediction
-    intervals) from ensemble long-format data
-  - Realistic weather forecast context with physically plausible ensemble divergence
-  - Intentional blue/gold color scheme with clear visual hierarchy (z-ordered gold
-    mean above blue band)
-  - 'Thorough styling: removed spines, subtle dashed grid, explicit font sizes, polished
-    legend'
+  - 'Excellent use of seaborn''s statistical estimation API: errorbar=("pi", 95) on
+    a long-format 200-member ensemble is the idiomatic way to build a band plot in
+    seaborn'
+  - 'Perfect spec compliance and data quality: all required band-plot features present,
+    realistic meteorological domain, correct scales'
+  - 'Flawless theme adaptation: all chrome tokens (background, text, grid, legend
+    box) correctly switch between light and dark; data colors stay identical across
+    themes'
+  - Clean KISS code structure with seed, no functions, and correct savefig API usage
   weaknesses:
-  - LM-02 could reach 5/5 by incorporating additional distinctive seaborn features
-    (e.g., sns.set_context or objects interface)
-  - DE-01 could reach 7-8 with more refined typography (e.g., font family selection)
-    or additional design elements
-  image_description: The plot shows a band chart depicting a 7-day ensemble weather
-    forecast. A semi-transparent steel-blue band represents the 95% prediction interval,
-    widening progressively from left to right as forecast uncertainty grows with horizon.
-    A contrasting golden-yellow center line traces the ensemble mean temperature,
-    following a sinusoidal diurnal cycle with a gradual warming trend. The title reads
-    "band-basic · seaborn · pyplots.ai" at the top. The x-axis is labeled "Forecast
-    Horizon (days)" and the y-axis "Temperature (°C)". A legend in the upper left
-    identifies "Ensemble Mean" (gold line) and "95% Prediction Interval" (blue band).
-    Top and right spines are removed, and a subtle dashed grid at low alpha provides
-    reference without clutter. The plot uses a 16:9 landscape layout with good canvas
-    utilization.
+  - Band is somewhat narrow relative to the dominant 12°C diurnal swing, making the
+    uncertainty feature less visually prominent; a wider ensemble drift (e.g. 0.12
+    σ instead of 0.08) would make the PI more visible while staying realistic
+  - 'DE-01 ceiling at 4/8: plot reads as a well-configured default; adding intentional
+    typographic hierarchy (e.g. bolder title weight, slightly larger mean line) would
+    lift it toward publication-ready'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "band-basic · python · seaborn · anyplot.ai" in dark ink, clearly readable; axis labels "Forecast Horizon (days)" and "Temperature (°C)" in dark ink; tick labels in #4A4A44 (INK_SOFT); legend in upper-left with elevated-bg frame
+      Data: Band fill in #009E73 (Imprint position 1) with alpha≈0.25; center line in #4467A3 (Imprint position 3) at linewidth=2.5; diurnal temperature cycle over 7 days with 95% prediction interval
+      Legibility verdict: PASS — all text readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title and axis labels in light off-white (#F0EFE8); tick labels in #B8B7B0 (INK_SOFT dark); legend box in #242420 (ELEVATED_BG dark) — all readable
+      Data: Band fill still #009E73 with alpha (appears darker on dark surface, as expected); center line still #4467A3 — identical data colors to light render; only chrome has flipped
+      Legibility verdict: PASS — no dark-on-dark failures detected; all text clearly visible against dark background
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -57,67 +53,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          legend 16pt'
+        comment: 'All sizes explicitly set: title 12pt, axes 10pt, ticks 8pt; both
+          renders readable; title spans ~70% width as expected for long mandated format'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements; legend positioned cleanly in upper
-          left
+        comment: No text or element collisions; legend in upper-left avoids data region
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Band alpha=0.3 appropriate for data density; linewidth=3 center line
-          clearly visible
+        comment: Band and center line visible; band is slightly narrow relative to
+          12°C diurnal swing amplitude, reducing prominence of the uncertainty feature
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/gold scheme is colorblind-safe with excellent contrast
+        comment: Blue line and green band are CVD-safe (distinct under deuteranopia/protanopia);
+          redundant encoding via legend
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 figsize with tight_layout; plot fills canvas well with balanced
-          margins
+        comment: Canvas 3200×1800, good margins, plot fills canvas well, no overflow
+          or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Forecast Horizon (days), Temperature
-          (°C)'
+        comment: Forecast Horizon (days) and Temperature (°C) both include units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Band fill=#009E73 (Imprint pos 1), center line=#4467A3 (Imprint
+          pos 3); backgrounds #FAF8F1/#1A1A17; all chrome theme-adaptive'
     design_excellence:
-      score: 15
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Intentional blue/gold color scheme; custom legend styling; coherent
-          visual identity above defaults
+        comment: Well-configured with Imprint palette and theme tokens; intentional
+          but reads as polished library default rather than exceptional custom design
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed; dashed grid at alpha=0.15; generous whitespace;
-          z-ordering on mean line
+        comment: Spines removed via sns.despine(), subtle y-axis grid (alpha=0.15),
+          legend framealpha=0.9; visible refinement above defaults
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Growing band width communicates increasing forecast uncertainty;
-          gold center line creates clear visual hierarchy
+        comment: Growing forecast uncertainty with diurnal cycle tells clear meteorological
+          story; blue-on-green hierarchy guides eye to the mean; uncertainty-grows-with-horizon
+          message readable without annotation
     spec_compliance:
       score: 15
       max: 15
@@ -127,28 +130,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct band plot with filled region and contrasting center line
+        comment: Correct band plot with filled region and central trend line in contrasting
+          color
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill alpha=0.3, contrasting center line, smooth
-          continuous data
+        comment: Semi-transparent fill (alpha=0.25), central contrasting line, smooth
+          interpolation all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=forecast horizon, Y=temperature; band shows uncertainty, center
-          shows mean
+        comment: X=forecast day, Y=temperature; all data visible across full x-range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels Ensemble Mean and 95% Prediction
-          Interval are descriptive
+        comment: Title is 'band-basic · python · seaborn · anyplot.ai'; legend labels
+          'Ensemble Mean' and '95% Prediction Interval' are accurate
     data_quality:
       score: 15
       max: 15
@@ -158,22 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Widening band, sinusoidal central trend, varying band width, mean
-          vs interval relationship
+        comment: Shows band boundaries, central mean, widening uncertainty over time
+          — all band-basic features represented
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 200-member ensemble weather forecast with diurnal temperature cycle;
-          scientifically grounded and neutral
+        comment: 200-member ensemble weather forecast is a canonical real-world use
+          case for band plots
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature 9-21°C for diurnal cycle is realistic; 7-day forecast
-          horizon is standard meteorology
+        comment: 9-25°C range with 6°C diurnal amplitude and 2.8°C 7-day trend are
+          plausible for continental mid-latitude summer forecast
     code_quality:
       score: 10
       max: 10
@@ -183,33 +186,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data generation, plot, styling, save; no functions
-          or classes'
+        comment: Imports → theme tokens → data → plot → save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at the start
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imports (matplotlib, numpy, pandas, seaborn) are used
+        comment: All imports used; sys.path fix for local filename collision is documented
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic; leverages seaborn native aggregation; appropriate
-          complexity
+        comment: Clean and idiomatic; post-hoc ax.lines[0].set_color() reassignment
+          is a minor hack but well-commented
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300; uses modern errorbar parameter
+        comment: Saves as plot-{THEME}.png with no bbox_inches=tight
     library_mastery:
       score: 9
       max: 10
@@ -219,13 +221,24 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of sns.lineplot with long-format DataFrame, estimator=mean,
-          errorbar=(pi,95); axes-level API with sns.set_theme
+        comment: sns.lineplot with estimator=mean and errorbar=(pi, 95) on long-format
+          16000-row data; sns.set_theme + sns.set_context + sns.despine all used correctly
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: errorbar=(pi,95) natively computes prediction intervals from 200
-          ensemble members; distinctive seaborn feature
+        comment: 'errorbar=(pi, 95) with 200-member ensemble is distinctively seaborn:
+          automatic percentile interval from long-format data in a single call'
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - grid-styling

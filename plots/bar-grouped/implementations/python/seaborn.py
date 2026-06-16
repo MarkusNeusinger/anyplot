@@ -25,7 +25,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data: Customer satisfaction across departments and regions
 data = {
@@ -58,7 +58,7 @@ fig, ax = plt.subplots(figsize=(16, 9))
 
 # Plot grouped bars
 sns.barplot(
-    data=df, x="Region", y="Score", hue="Department", palette=OKABE_ITO, ax=ax, edgecolor="white", linewidth=1.5
+    data=df, x="Region", y="Score", hue="Department", palette=IMPRINT, ax=ax, edgecolor="white", linewidth=1.5
 )
 
 # Styling

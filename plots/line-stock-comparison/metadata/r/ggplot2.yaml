@@ -16,7 +16,7 @@ quality_score: 88
 review:
   strengths:
   - 'All spec requirements implemented: rebased-to-100 normalization, reference line
-    at 100, 4-series comparison with correct anyplot palette order'
+    at 100, 4-series comparison with correct Imprint palette order'
   - 'Excellent data storytelling: NVDA ribbon fill creates clear focal point highlighting
     outperformance vs other series'
   - 'Realistic, accurate historical context: SVB bank collapse (Mar 2023), NVDA AI
@@ -40,7 +40,7 @@ review:
     Light render (plot-light.png):
       Background: Warm off-white #FAF8F1 — correct anyplot light surface, not pure white.
       Chrome: Title "line-stock-comparison · r · ggplot2 · anyplot.ai" in dark INK (#1A1A17) clearly readable. Subtitle in softer INK_SOFT. Y-axis label "Rebased Price (Start = 100)" and X-axis label "Date" in dark INK, properly sized (10pt). Tick labels in INK_SOFT (8pt), x-axis ticks rotated 30° for date readability. Grid lines subtle (0.18 linewidth, soft alpha). All text is legible against the warm off-white background.
-      Data: Four lines in anyplot palette canonical order — NVDA (#009E73 green, first series correct), MSFT (#9418DB purple), AAPL (#B71D27 red), SPY (#16B8F3 sky blue). Subtle green ribbon fill under NVDA line emphasizing outperformance. SVB region shaded in faint red (#B71D27 at alpha=0.07). Dashed horizontal reference line at rebased=100. Vertical dotted event markers with styled label annotations (SVB Collapse in red, NVDA AI Surge in green, Rates Peak in INK_SOFT). End-of-line ticker labels: NVDA visible at ~150, AAPL at ~90-95; MSFT label appears as "MSF." — the "T" is obscured, likely overlapping with the nearby SPY end label (both stocks finish at similar values ~115-120).
+      Data: Four lines in Imprint palette canonical order — NVDA (#009E73 green, first series correct), MSFT (#9418DB purple), AAPL (#B71D27 red), SPY (#16B8F3 sky blue). Subtle green ribbon fill under NVDA line emphasizing outperformance. SVB region shaded in faint red (#B71D27 at alpha=0.07). Dashed horizontal reference line at rebased=100. Vertical dotted event markers with styled label annotations (SVB Collapse in red, NVDA AI Surge in green, Rates Peak in INK_SOFT). End-of-line ticker labels: NVDA visible at ~150, AAPL at ~90-95; MSFT label appears as "MSF." — the "T" is obscured, likely overlapping with the nearby SPY end label (both stocks finish at similar values ~115-120).
       Legibility verdict: PASS overall, with VQ-02 concern on MSFT/SPY end-label overlap at right edge.
 
     Dark render (plot-dark.png):
@@ -82,7 +82,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette is colorblind-safe by design. 4 colors with good
+        comment: Imprint palette is colorblind-safe by design. 4 colors with good
           perceptual separation. No red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas

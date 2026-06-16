@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
-import { buildClaudePrompt } from './claudePrompt';
+import { buildClaudePrompt } from 'src/utils/claudePrompt';
 
 describe('buildClaudePrompt', () => {
   beforeEach(() => {

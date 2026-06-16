@@ -39,7 +39,7 @@ RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 TRAINING_COLOR = "#009E73"  # bluish green
-VALIDATION_COLOR = "#D55E00"  # vermillion
+VALIDATION_COLOR = "#C475FD"  # vermillion
 
 # Data - Simulated training history with typical loss curve behavior
 np.random.seed(42)

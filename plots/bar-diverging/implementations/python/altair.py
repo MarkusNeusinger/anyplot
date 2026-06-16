@@ -24,7 +24,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 POSITIVE_COLOR = "#009E73"  # Okabe-Ito position 1 (brand green)
-NEGATIVE_COLOR = "#D55E00"  # Okabe-Ito position 2 (vermillion)
+NEGATIVE_COLOR = "#AE3030"  # imprint red — negative
 
 # Data - Customer satisfaction survey results by department
 data = pd.DataFrame(

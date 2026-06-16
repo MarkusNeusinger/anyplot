@@ -172,12 +172,12 @@ df_points = pd.DataFrame({"x": x_points, "y": y_points})
 # Cell colors - diverse palette starting with Okabe-Ito positions
 colors_20 = [
     "#009E73",
-    "#D55E00",
-    "#0072B2",
-    "#CC79A7",
-    "#E69F00",
-    "#56B4E9",
-    "#F0E442",
+    "#C475FD",
+    "#4467A3",
+    "#BD8233",
+    "#AE3030",
+    "#2ABCCD",
+    "#954477",
     "#306998",
     "#8DD3C7",
     "#BEBADA",

@@ -27,7 +27,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 # Okabe-Ito palette for up/down coloring
 BRAND = "#009E73"  # Position 1 - bluish green, first series
 UP_COLOR = BRAND  # Use brand green for up days
-DOWN_COLOR = "#D55E00"  # Position 2 - vermillion for down days
+DOWN_COLOR = "#AE3030"  # imprint red — down days
 
 # Data - Generate realistic stock price data for 45 trading days
 np.random.seed(42)

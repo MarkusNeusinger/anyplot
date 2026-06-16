@@ -1,0 +1,288 @@
+library: chartjs
+language: javascript
+specification_id: line-training-load-pmc
+created: '2026-06-13T20:58:39Z'
+updated: '2026-06-13T21:21:56Z'
+generated_by: claude-sonnet
+workflow_run: 27478675969
+issue: 8646
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/javascript/chartjs/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - Perfect spec compliance — all PMC elements (CTL, ATL, TSB, daily TSS) correctly
+    implemented with dual Y-axes
+  - Two-toned TSB fill (positive=blue, negative=red) using semantic Imprint palette
+    exceptions appropriately (red = fatigue/overload)
+  - Elegant legend filtering via filter callback hiding underscore-prefixed helper
+    datasets cleanly
+  - Deterministic LCG with fixed seed provides reproducible synthetic training data
+    with realistic 4-week periodization cycles and taper
+  - Sophisticated Chart.js mixed chart (bar + multiple line types) with per-dataset
+    yAxisID and secondary grid suppression — expert-level library usage
+  - 'Perfect Imprint palette compliance throughout: CTL first series = #009E73, ATL
+    = #C475FD, TSS bars = #4467A3, theme-adaptive chrome via tokens'
+  weaknesses:
+  - The daily TSS bars reach 80–160 units while CTL only grows to 40–50 after 180
+    days, making the bars visually dominate and partially obscure the CTL/ATL smoothed
+    lines — the spec says TSS bars should be light background elements, not dominant
+    foreground elements. Consider capping bar height via a secondary axis or reducing
+    to TSS/3 for display.
+  - The ATL (fatigue) dashed purple line is sometimes hard to track through the dense
+    TSS bar region in the lower chart area — the 7-day EWMA should spike above the
+    bars occasionally but reads as noise through the bar forest
+  - No clear visual focal point or storytelling emphasis — no annotation for the taper
+    phase start or a notable recovery peak, meaning the viewer must read the data
+    without visual guidance
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "Training Load PMC · line-training-load-pmc · javascript · chartjs · anyplot.ai" visible and correctly scaled (titleSize=19px from length-based formula). Left Y-axis "CTL / ATL / TSS" and right Y-axis "TSB (Form)" labels readable. X-axis "Date" label present. All tick labels on both axes readable.
+      Data: Fitness (CTL) rendered as thick green (#009E73) line — first Imprint series, correctly first categorical slot. Fatigue (ATL) is a dashed lavender line (#C475FD) — second Imprint slot. Daily TSS bars in blue (#4467A3, ~40% opacity) fill the lower portion. TSB positive fill is blue (palette[2]+opacity), TSB negative fill is red (#AE3030+opacity, semantic anchor for fatigue/overloaded state). TSB=0 reference line is dashed inkSoft. Legend at top-right shows: Daily TSS, Form (TSB), Fatigue (ATL), Fitness (CTL).
+      Visual observation: The TSS bars (reaching 80-160 on left axis) are visually dominant relative to CTL/ATL lines (running at 20-50). A large red negative-TSB fill covers most of the upper area of the chart, reflecting realistic sustained negative form during heavy training. The CTL green line and ATL purple dashed line are visible but somewhat compressed into the lower area.
+      Legibility verdict: PASS — all text elements readable against warm off-white background. No light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title visible in light ink. Axis labels, tick labels all rendered in light-colored text (t.ink and t.inkSoft adaptive tokens). Grid lines subtle. Canvas background filled via beforeDraw plugin using t.pageBg.
+      Data: All data colors identical to light render — CTL green (#009E73), ATL lavender (#C475FD), TSS bars blue, TSB fills (blue positive / red negative) unchanged as expected for Imprint palette. Only chrome flips between themes.
+      Legibility verdict: PASS — no dark-on-dark issues. Title and axis labels clearly visible against near-black background. All tick text is light-colored.
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title: computed from length formula,
+          axis labels: 14px, ticks: 12px, legend: 14px). Readable in both themes.
+          Minor deduction for the dense visual layering slightly affecting readability
+          of individual elements in the crowded lower area.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text-on-text or legend-on-data overlap. Minor deduction for visual
+          crowding in lower area where TSS bars, CTL line, and ATL dashed line coexist
+          densely — though semi-transparency mitigates this.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: All series visible. CTL (green) and ATL (purple dashed) run in lower
+          ~30% of left axis since CTL only reaches 40-50 while TSS bars reach 80-160,
+          making the analytical lines somewhat compressed behind the bar forest.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe. TSB two-tone uses blue vs red (not green-red),
+          and the main series are green/purple/blue which are well-distinguished under
+          CVD simulations.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). Layout fills canvas well. Dual Y-axes
+          correctly positioned. Minor deduction for visual density making the chart
+          feel slightly cramped in the data area.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title with descriptive prefix, X-axis 'Date', left Y 'CTL / ATL /
+          TSS', right Y 'TSB (Form)'. All descriptive and contextual.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'CTL first series = #009E73 (palette[0]). ATL = #C475FD (palette[1]).
+          TSS bars = #4467A3 (palette[2]). TSB negative fill = #AE3030 (palette[4],
+          matte red — semantic exception for fatigue/overloaded state, appropriate).
+          Background via t.pageBg token in both themes. All chrome via t.ink/t.inkSoft/t.grid
+          tokens.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above average: two-toned TSB fill, mixed chart types, semantic color
+          exceptions, dynamic title sizing. Well above generic defaults but not publication-ready
+          polish — the dense multi-layer appearance lacks the breathing room of exceptional
+          design.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Secondary Y-axis grid suppressed (drawOnChartArea: false), font
+          sizes explicit, legend styled with usePointStyle and custom padding, canvas
+          background plugin ensures proper theme bg. Solid refinements though chart
+          doesn''t achieve minimal-chrome elegance.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Visual hierarchy present: thick CTL vs dashed ATL, two-toned TSB
+          fill clearly separates fresh/fatigued zones, realistic periodization visible
+          in bar height pattern. Taper visible in data but no visual emphasis. Above
+          default (2) but no focal point or annotation to guide the viewer.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'PMC chart correctly implemented: CTL smooth line, ATL dashed line,
+          TSB filled area (two-toned), daily TSS as bars. All required chart types
+          present.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: CTL smoother than ATL (42-day vs 7-day EWMA), secondary Y-axis for
+          TSB, TSB=0 reference line, two-toned fill for positive/negative form, legend
+          with all four series named, TSS bars as background element.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X-axis: dates. Left Y: CTL/ATL/TSS. Right Y: TSB. TSB = prev_CTL
+          - prev_ATL. EWMA formulas correctly implemented.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''Training Load PMC · line-training-load-pmc · javascript
+          · chartjs · anyplot.ai'' — correct format with descriptive prefix. Legend:
+          Daily TSS, Form (TSB), Fatigue (ATL), Fitness (CTL).'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows build weeks, recovery weeks (35% load), taper phase (exponential
+          load reduction after week 24), all four PMC metrics, realistic day-of-week
+          periodization with rest days.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Endurance athlete 6-month training block. Realistic TSS values (0-160),
+          day-of-week patterns (rest Mon/Sun, long Saturday), 4-week macrocycle (3
+          build + 1 recovery). Non-controversial, plausible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: TSS 0-160 (realistic range for endurance training). CTL 20-50 (realistic
+          for recreational athlete starting a plan). ATL oscillating above CTL during
+          build phases. TSB typically negative during heavy training, positive during
+          recovery.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Data generation → mount → chart. Small LCG helper function justified
+          for deterministic pseudorandomness without seeded Math.random. No unnecessary
+          abstractions.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic LCG with fixed seed (lcgState = 7919). Fully reproducible.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'JavaScript: relies on window globals (ANYPLOT_TOKENS, Chart). No
+          unused imports/requires.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. Legend filter callback is elegant. TSB split
+          into pos/neg arrays is clean. Day-base array is readable.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Chart.js 4.4.7 API. animation: false set. responsive: true, maintainAspectRatio:
+          false set. Harness handles PNG output. fill: ''origin'', borderDash all
+          current API.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert-level: mixed chart types per-dataset (type: ''bar''/''line''),
+          per-dataset yAxisID, fill: ''origin'' for area, tension for smoothing, borderDash
+          for dashed lines, maxTicksLimit for tick density, canvas background plugin
+          pattern.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Uses Chart.js plugin API (canvasBg beforeDraw), legend filter callback,
+          usePointStyle+pointStyleWidth for custom legend icons, dual-axis with drawOnChartArea:
+          false on secondary grid. Multiple distinctively Chart.js features. Slight
+          deduction as some features are available in similar libraries.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - time-series
+  - rolling-window
+  styling:
+  - alpha-blending

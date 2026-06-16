@@ -39,7 +39,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Product performance dashboard
 np.random.seed(42)
@@ -48,7 +48,7 @@ np.random.seed(42)
 n_days = 60
 days = np.arange(n_days)
 products = ["Alpha", "Beta", "Gamma"]
-colors_panel_a = OKABE_ITO[:3]
+colors_panel_a = IMPRINT[:3]
 
 df_overview = pd.concat(
     [
@@ -116,7 +116,7 @@ p_overview = (
 p_category = (
     ggplot(df_category, aes(x="quarter", y="revenue", fill="quarter"))
     + geom_bar(stat="identity", width=0.7, show_legend=False)
-    + scale_fill_manual(values=OKABE_ITO[:4])
+    + scale_fill_manual(values=IMPRINT[:4])
     + labs(x="Quarter", y="Revenue (k$)", title="Q Revenue")
     + theme_minimal()
     + anyplot_theme
@@ -126,7 +126,7 @@ p_category = (
 # Panel C: Units vs Margin - scatter (bottom-left)
 p_scatter = (
     ggplot(df_scatter, aes(x="units", y="margin"))
-    + geom_point(size=3, color=OKABE_ITO[0], alpha=0.7)
+    + geom_point(size=3, color=IMPRINT[0], alpha=0.7)
     + labs(x="Units Sold", y="Margin (%)", title="Margin Analysis")
     + theme_minimal()
     + anyplot_theme
@@ -147,7 +147,7 @@ p_heatmap = (
 # Panel E: Monthly Score - bar plot (bottom-right)
 p_monthly = (
     ggplot(df_monthly, aes(x="month", y="score"))
-    + geom_bar(stat="identity", fill=OKABE_ITO[0], width=0.6, show_legend=False)
+    + geom_bar(stat="identity", fill=IMPRINT[0], width=0.6, show_legend=False)
     + labs(x="Month", y="Score", title="Performance")
     + theme_minimal()
     + anyplot_theme

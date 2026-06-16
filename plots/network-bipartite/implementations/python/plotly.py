@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 STUDENT_COLOR = "#009E73"  # Okabe-Ito position 1
-COURSE_COLOR = "#D55E00"  # Okabe-Ito position 2
+COURSE_COLOR = "#C475FD"  # Okabe-Ito position 2
 EDGE_COLOR = "rgba(107,106,99,0.30)" if THEME == "light" else "rgba(168,167,159,0.22)"
 
 # Data - student-course enrollment network

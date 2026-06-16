@@ -24,7 +24,7 @@ review:
     stocks at any date
   - 'Full theme adaptation: all chrome tokens correctly flip between light and dark
     with no legibility failures in either render'
-  - Anyplot palette used in canonical order; brand green (#009E73) correctly assigned
+  - Imprint palette used in canonical order; brand green (#009E73) correctly assigned
     to AAPL as the first series
   weaknesses:
   - Top and right plot borders remain visible in both renders (default Plotly frame);
@@ -78,7 +78,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette used (colorblind-safe); no red-green sole signal
+        comment: Imprint palette used (colorblind-safe); no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 3

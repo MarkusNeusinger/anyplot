@@ -27,14 +27,14 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette (colorblind-safe)
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # brand green (position 1)
-    "#D55E00",  # vermillion (position 2)
-    "#0072B2",  # blue (position 3)
-    "#CC79A7",  # reddish purple (position 4)
-    "#E69F00",  # orange (position 5)
-    "#56B4E9",  # sky blue (position 6)
-    "#F0E442",  # yellow (position 7)
+    "#C475FD",  # vermillion (position 2)
+    "#4467A3",  # blue (position 3)
+    "#BD8233",  # reddish purple (position 4)
+    "#AE3030",  # orange (position 5)
+    "#2ABCCD",  # sky blue (position 6)
+    "#954477",  # yellow (position 7)
 ]
 
 # Data - Customer journey through product categories
@@ -53,21 +53,21 @@ x_pos = {"Channel": 0, "Category": 250, "Outcome": 500}
 
 # Color maps using Okabe-Ito palette
 channel_colors = {
-    "Direct": OKABE_ITO[0],  # brand green
-    "Search": OKABE_ITO[1],  # vermillion
-    "Social": OKABE_ITO[2],  # blue
-    "Email": OKABE_ITO[3],  # reddish purple
+    "Direct": IMPRINT[0],  # brand green
+    "Search": IMPRINT[1],  # vermillion
+    "Social": IMPRINT[2],  # blue
+    "Email": IMPRINT[3],  # reddish purple
 }
 category_colors = {
-    "Electronics": OKABE_ITO[0],  # green
-    "Clothing": OKABE_ITO[1],  # vermillion
-    "Home": OKABE_ITO[2],  # blue
-    "Sports": OKABE_ITO[3],  # reddish purple
+    "Electronics": IMPRINT[0],  # green
+    "Clothing": IMPRINT[1],  # vermillion
+    "Home": IMPRINT[2],  # blue
+    "Sports": IMPRINT[3],  # reddish purple
 }
 outcome_colors = {
-    "Purchase": OKABE_ITO[0],  # green
-    "Abandon": OKABE_ITO[1],  # vermillion
-    "Browse": OKABE_ITO[2],  # blue
+    "Purchase": IMPRINT[0],  # green
+    "Abandon": IMPRINT[1],  # vermillion
+    "Browse": IMPRINT[2],  # blue
 }
 
 scale_factor = 3.5

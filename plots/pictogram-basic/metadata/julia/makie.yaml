@@ -1,0 +1,248 @@
+library: makie
+language: julia
+specification_id: pictogram-basic
+created: '2026-06-03T14:18:30Z'
+updated: '2026-06-03T14:43:45Z'
+generated_by: claude-sonnet
+workflow_run: 26889994398
+issue: 4674
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - Semantic fruit-to-color mapping (lime→Bananas, green→Apples, ochre→Oranges, lavender→Grapes,
+    red→Mangoes) is well-reasoned and reader-intuitive
+  - Partial icon rendering using ghost circle (25% alpha) + filled pie sector is technically
+    sophisticated and visually clear
+  - 'All spec requirements met: unit legend, fractional icons, left-aligned grid layout,
+    category labels on y-axis'
+  - Full spec compliance — 5 categories, realistic FAO production data, correct title
+    format with descriptive prefix
+  - Clean flat script with zero unnecessary abstractions; code is readable and maintainable
+  weaknesses:
+  - DataAspect() causes excessive vertical whitespace above and below the icon rows
+    — the pictogram content occupies only ~50% of canvas height; adjust ylims or remove
+    DataAspect and manually enforce circle proportions
+  - Focal annotation fontsize=10 renders small at final resolution; increase to 11-12
+    for readability
+  - 'DE-02: Background whitespace is unbalanced due to DataAspect constraint — consider
+    layout tuning to better fill the landscape canvas'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "Fruit Production · pictogram-basic · julia · makie · anyplot.ai" in dark ink, well-proportioned; y-axis category labels (Bananas, Apples, Oranges, Grapes, Mangoes) in INK_SOFT (#4A4A44), readable; value labels ("116 Mt"..."57 Mt") on right side at fontsize 12, readable; focal annotation "↑ world's most produced fruit" in small but legible text near Bananas row; unit legend "● = 20 million tonnes" at bottom visible
+      Data: 5 icon rows — lime circles (Bananas), teal/brand-green (Apples), ochre (Oranges), lavender (Grapes), matte-red (Mangoes); partial icons rendered as ghost circle with 25% alpha + filled pie sector; all icons clearly visible against background
+      Legibility verdict: PASS — all text and data elements are readable on the light surface
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light cream text (INK = #F0EFE8), clearly readable; y-axis category labels in INK_SOFT (#B8B7B0), readable; value labels and legend text visible against dark background; no dark-on-dark failure detected
+      Data: Colors identical to light render (lime, teal, ochre, lavender, matte-red) — only chrome flipped, data palette unchanged; partial icon ghost circles now show against dark background with appropriate alpha
+      Legibility verdict: PASS — all text readable against dark surface; brand green #009E73 (Apples) remains clearly visible
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set; title (20pt), y-ticks (14pt), value labels
+          (12pt), annotation (10pt) all readable at full res in both themes; annotation
+          at 10pt is slightly small
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-text or text-icon collisions; generous row and column spacing
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All icons clearly visible; partial icon technique (ghost + pie sector)
+          is effective in both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette with CVD-safe colors; semantic exception (fruit hues)
+          well-reasoned
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 canvas; DataAspect() causes ~50% vertical space
+          waste above and below icon rows
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title with spec-id, language, library; category labels
+          clear; unit legend explicit
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception correctly applied (fruit colors); backgrounds
+          #FAF8F1/#1A1A17; data colors identical across themes'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Semantic color mapping shows intentionality; pie-sector partial icons
+          are technically sophisticated; focal annotation adds design polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: All spines removed, no grid (appropriate for pictogram); but DataAspect
+          creates excessive empty space on canvas
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Data sorted descending, focal annotation highlights world leader;
+          value labels enable quick comparison
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct isotype/pictogram chart with icon-grid-per-category layout
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Unit legend, partial icons, left-aligned grid rows, category labels
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 5 categories within 3-8 spec range; realistic FAO data; icons proportional
+          to values
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title format correct: descriptive prefix + spec-id · julia · makie
+          · anyplot.ai; unit legend explicit'
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Full pictogram with partial icons, unit legend, category labels;
+          spec mentions 'icon' optional column for per-category icons but implementation
+          uses uniform circles
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real FAO 2021-22 data, realistic scale, neutral agricultural context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 20 million tonnes per icon is sensible for the data range (57-116
+          Mt)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) present; data is deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: 60-gon polygon circles and pie-sector math are clean and correct
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: poly! for custom shapes, text! for annotations, DataAspect() for
+          proportional axes — all idiomatic CairoMakie
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: DataAspect() is a distinctive Makie feature; 60-gon polygon trick
+          is Makie-specific; could leverage Makie's layout system more to fix the
+          whitespace issue
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - patches
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending

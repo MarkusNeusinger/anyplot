@@ -30,7 +30,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3"]
+IMPRINT = ["#009E73", "#C475FD", "#AE3030", "#4467A3"]
 
 # Data — synthetic stock price paths via geometric Brownian motion
 n_days = 252
@@ -113,7 +113,7 @@ legend_items = []
 label_ms_offset = 8 * DAY_MS
 for i, symbol in enumerate(stocks):
     lw = 7 if symbol in (best, worst) else 4
-    line = p.line(x=df["date"], y=df[symbol], line_width=lw, line_color=ANYPLOT_PALETTE[i], alpha=0.9)
+    line = p.line(x=df["date"], y=df[symbol], line_width=lw, line_color=IMPRINT[i], alpha=0.9)
     legend_items.append((symbol, [line]))
 
     # End-of-series label showing symbol and final value with vertical alignment fix
@@ -123,7 +123,7 @@ for i, symbol in enumerate(stocks):
             x=final_date_ms + label_ms_offset,
             y=label_ys[symbol],
             text=f"{symbol} {final_vals[symbol]:.0f}",
-            text_color=ANYPLOT_PALETTE[i],
+            text_color=IMPRINT[i],
             text_font_size="28pt",
             text_font_style="bold",
             text_baseline="middle",

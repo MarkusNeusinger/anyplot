@@ -125,7 +125,7 @@ im = ax.imshow(
 )
 
 # Sensor locations (slightly more visible than before)
-ax.scatter(longitudes, latitudes, s=25, c="#0072B2", alpha=0.45, edgecolors="none", label="Sensor Locations")
+ax.scatter(longitudes, latitudes, s=25, c="#4467A3", alpha=0.45, edgecolors="none", label="Sensor Locations")
 
 # Colorbar
 cbar = plt.colorbar(im, ax=ax, shrink=0.8, pad=0.02)

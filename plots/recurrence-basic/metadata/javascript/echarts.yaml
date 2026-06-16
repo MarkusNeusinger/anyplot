@@ -1,0 +1,250 @@
+library: echarts
+language: javascript
+specification_id: recurrence-basic
+created: '2026-06-10T03:05:39Z'
+updated: '2026-06-10T03:26:41Z'
+generated_by: claude-sonnet
+workflow_run: 27250022654
+issue: 4592
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/javascript/echarts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Complete spec compliance: time-delay embedding (Takens'' theorem), Euclidean
+    distance, symmetric matrix, main diagonal all correctly implemented'
+  - Physically correct Lorenz attractor with canonical parameters (sigma=10, rho=28,
+    beta=8/3) and proper 300-step burn-in period
+  - Correct imprint_seq palette (green=recurrent/near, blue=distant) — semantically
+    meaningful and brand-compliant continuous colormap
+  - Both themes render cleanly with proper chrome adaptation; no legibility failures
+    in either light or dark render
+  - 'Clean minimal design: axis lines, axis ticks, and split lines all hidden; heatmap
+    fills the square canvas without clutter'
+  - Fully deterministic and reproducible — fixed initial conditions, no RNG, pure
+    numerical Lorenz integration
+  weaknesses:
+  - 'Colorbar labels (''Far''/''Near'') use fontSize: 12 which is slightly small at
+    2400x2400 canvas — increase to 14-15 for better legibility'
+  - 'DE-03 is modest: no annotation or emphasis element guides the viewer to the most
+    interesting structural features (main diagonal, block transitions) — a brief subtitle
+    or small annotation would lift storytelling'
+  - LM-02 is solid but not exceptional; no use of ECharts-specific enhancements such
+    as advanced visualMap itemStyle beyond the minimal inRange color stops
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "recurrence-basic · javascript · echarts · anyplot.ai" centered, dark text, fully readable. Both "Time Index" axis labels (x and y) clearly legible. Tick labels at 0, 50, 100, 150, 200, 250 on both axes — dark text, readable. Colorbar "Far"/"Near" labels visible but slightly small (fontSize: 12).
+      Data: imprint_seq colormap — brand green (#009E73) for near/recurrent states, blue (#4467A3) for far/distant states. 300x300 pairwise distance matrix of Lorenz attractor x-component via time-delay embedding. Clear block structures and diagonal bands visible. Main diagonal (distance=0) present as bright-green band.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title, axis labels, tick labels, and colorbar labels all rendered in light tones against the dark background. No dark-on-dark failures observed. All text is clearly readable.
+      Data: Identical color pattern to light render — same green-to-blue imprint_seq encoding. Data colors are theme-independent as required. Brand green #009E73 clearly visible as the "Near" anchor of the color scale.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Title, axis labels, and tick labels all readable in both themes.
+          Colorbar Far/Near labels (fontSize: 12) slightly small but legible.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; colorbar does not overlap heatmap area.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 300x300 heatmap cells render correctly; green-to-blue contrast
+          is clear.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (green to blue) is CVD-safe; no red-green-only encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas, canvas gate passed, adequate margins, nothing clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes labeled Time Index; title correctly formatted.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses t.seq (imprint_seq) for continuous data. Background transparent.
+          Chrome adapts between themes.
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Correct imprint_seq palette, semantically appropriate encoding, clean
+          typography, domain sophistication in data generation.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axis lines, axis ticks, split lines all explicitly hidden. Clean
+          minimal heatmap design.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Near/Far colorbar labels provide semantic orientation. Lorenz dynamics
+          create meaningful patterns. No additional annotations or focal-point emphasis.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Distance-based recurrence matrix; continuous-distance variant explicitly
+          permitted by spec.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Time-delay embedding (Takens DELAY=8, 2D state space), Euclidean
+          distance, symmetric matrix, main diagonal present (distance=0), square aspect
+          ratio.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Both axes map to time index 0-299; color maps to normalized distance.
+          300 time steps within 200-1000 recommended range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is 'recurrence-basic · javascript · echarts · anyplot.ai';
+          colorbar labels Near/Far match semantic intent.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Main diagonal, block structures (regime changes), deterministic diagonal
+          bands, symmetric matrix all present.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Lorenz attractor with canonical parameters (sigma=10, rho=28, beta=8/3)
+          and proper 300-step burn-in.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 300 time steps, DELAY=8 embedding delay, Float32Array for 90000-cell
+          matrix.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat procedural script; no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Deterministic: fixed initial conditions (lx=1.0, ly=0.0, lz=0.0),
+          no RNG.'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses only globals (echarts, window.ANYPLOT_TOKENS).
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Float32Array for performance on 90k elements; clear variable naming.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows harness contract correctly; no explicit file writes.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: heatmap series, visualMap for continuous color, category axes, progressive:0
+          for full render, emphasis.disabled for static output.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: ECharts visualMap with inRange color for continuous data; proper
+          [col,row,value] heatmap format; progressive rendering control. Solid but
+          not highly advanced.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
+  - minimal-chrome

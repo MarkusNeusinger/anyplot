@@ -1,82 +1,127 @@
 library: plotnine
+language: python
 specification_id: piano-roll-midi
 created: '2026-03-07T19:46:37Z'
-updated: '2026-03-07T20:15:24Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22805912195
+updated: '2026-06-03T03:55:27Z'
+generated_by: claude-sonnet
+workflow_run: 26861817386
 issue: 4565
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/plotnine/plot.png
-preview_html: null
+language_version: 3.13.13
+library_version: 0.15.5
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 91
 review:
   strengths:
-  - Excellent data storytelling with chord labels, dynamic markings, and climax annotation
-    creating a musical narrative
-  - Cohesive purple-themed design with inferno colormap that feels domain-appropriate
-  - Complete spec compliance with all required features present
-  - Realistic musical data with proper I-IV-V-I progression showing varied durations
-    and dynamics
-  - Clean use of theme_void() as a base for full visual control
+  - Piano-key alternating backgrounds with correct theme adaptation (WHITE_KEY_BG/BLACK_KEY_BG
+    tokens) — genuinely distinctive domain-aware design
+  - Three-tier grid hierarchy (dotted beat lines, solid measure boundaries, dashed
+    octave lines) creates elegant visual structure
+  - Chord progression labels (I, IV, V, I) and dynamic markings (mf, ff, dim., p)
+    provide real musical narrative context
+  - 'Imprint sequential colormap (#009E73 soft → #4467A3 loud) applied correctly for
+    velocity encoding — proper imprint_seq use'
+  - 'Complete spec compliance: note names on Y-axis, velocity colorbar, beat/measure
+    grid, pitch range auto-fitted, all required features present'
+  - Flat KISS code structure with all font sizes explicitly set via element_text —
+    no functions or classes, fully reproducible with hardcoded data
+  - Climax annotation (#AE3030 italic) correctly highlights the musical peak at C5
+    in measure 2
+  - Both themes render correctly with no dark-on-dark or light-on-light failures —
+    all chrome tokens thread through properly
   weaknesses:
-  - Y-axis pitch labels slightly crowded where adjacent pitches are both labeled
-  image_description: The plot displays a MIDI piano roll visualization on a light
-    purple/white background. Horizontal colored rectangles represent musical notes,
-    positioned by pitch (y-axis, labeled C3 through C5 with note names) and time (x-axis,
-    0-16 beats). The inferno colormap maps velocity from dark purple (soft, ~60) to
-    yellow (loud, ~120). Alternating row shading distinguishes black keys (slightly
-    darker lavender) from white keys (lighter). Vertical dotted lines mark beats,
-    solid gray lines mark measure boundaries at beats 0, 4, 8, 12, 16. Chord labels
-    (I (C), IV (F), V (G), I (C)) appear at the top, and dynamic markings (mf, ff,
-    dim., p) at the bottom. A red italic "← climax" annotation marks the C5 note.
-    The title reads "piano-roll-midi · plotnine · pyplots.ai" in bold dark text. A
-    velocity colorbar legend is on the right side.
+  - 'In dark render, black-key rows (#0D0D0B) against the #1A1A17 background provide
+    very little contrast — the piano key distinction is barely perceptible in dark
+    mode, making the chromatic structure hard to read. Consider boosting BLACK_KEY_BG
+    dark value slightly (e.g. #151510) while keeping it below #1A1A17.'
+  - 'LM-02: The plotnine implementation uses the grammar of graphics well but a piano
+    roll of this type can be replicated in matplotlib with similar effort — no distinctively
+    plotnine-only feature (e.g. stat_* transforms, facet_grid, position adjustments)
+    is leveraged.'
+  - 'DE-03: The data storytelling through chord labels and dynamic markings is good
+    but the visual hierarchy between the melody notes (higher pitch, high velocity)
+    and accompaniment chords (lower pitch, lower velocity) is implicit rather than
+    visually reinforced — e.g., a subtle size or alpha difference between melody and
+    bass notes would strengthen the focal point.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct. The piano roll rows alternate between two subtle warm grays: lighter (#EDE9DE) for white keys and slightly darker (#D8D4C8) for black keys. The contrast between these two shading values is clearly visible and creates the piano-keyboard-style visual structure.
+      Chrome: Bold title "piano-roll-midi · python · plotnine · anyplot.ai" is readable in dark #1A1A17 ink. Y-axis tick labels (C3, G3, C4, G4, C5) and X-axis tick labels (0, 4, 8, 12, 16) are clearly readable in #4A4A44 (INK_SOFT). X-axis label "Time (beats)" and Y-axis label "Pitch" are readable in #1A1A17. Chord labels (I (C), IV (F), V (G), I (C)) and dynamic markings (mf, ff, dim., p) are visible in muted ink tones. Velocity colorbar labeled "Velocity" with 60/80/100/120 ticks is readable.
+      Data: Note rectangles rendered from #009E73 (green, low velocity ~60) to #4467A3 (blue, high velocity ~115). The C5 "climax" note at beat 6–7.5 is deep blue (velocity 115), clearly the peak. Bass notes (C3, E3, G3) are rendered in mid-green. Melody notes show the crescendo to climax and subsequent diminuendo. "← climax" annotation in #AE3030 italic marks the peak. Measure lines (solid), beat lines (dotted), octave lines (dashed) provide clear structural grid.
+      Legibility verdict: PASS — all text readable, correct theme colors throughout.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct. Row alternation is present: white-key rows (#272720) are subtly lighter than the background, black-key rows (#0D0D0B) are darker — nearly invisible at #0D0D0B. The piano key distinction is much more subtle in dark mode than light mode.
+      Chrome: Title in light #F0EFE8 ink — clearly readable. Y-axis and X-axis tick labels in #B8B7B0 — readable. Axis labels "Pitch" and "Time (beats)" in light ink — readable. Chord labels in #B8B7B0 — readable. Dynamic markings in #A8A79F — small but legible. Velocity colorbar readable. No dark-on-dark failures detected.
+      Data: Note rectangle colors are identical to light render (#009E73 to #4467A3 gradient) — Imprint data colors are theme-independent, confirmed. The "← climax" annotation in #AE3030 is visible against the dark background. Measure and beat grid lines are visible as slightly lighter/darker lines.
+      Legibility verdict: PASS — all text readable with appropriate light-on-dark chrome. Minor note: black-key row distinction (#0D0D0B vs #1A1A17 background) is barely perceptible in dark mode.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, axis titles=20, ticks=16,
-          legend=16/14'
+        comment: 'All font sizes explicitly set (title 12pt, axis labels 10pt, tick
+          labels 8pt, geom_text annotations 3.5-4mm). All text readable in both themes.
+          Minor: dynamic markings (INK_MUTED at size=3.5mm) are at the minimum viable
+          size but still legible.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Slight crowding on y-axis where adjacent pitches have labels close
-          together
+        comment: No overlapping text or data elements. Chord labels well-separated
+          at measure midpoints. Dynamic markings well-placed below piano roll. Climax
+          annotation positioned above C5 note with adequate clearance.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Note rectangles clearly visible with good height and contrast
+        comment: Note rectangles clearly visible in both themes with dark border outline.
+          Varying widths (duration) and colors (velocity) clearly distinguishable.
+          35 notes at appropriate scale.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Velocity colormap green-to-blue (imprint_seq) is CVD-safe (green
+          and blue distinguish well under deuteranopia/protanopia). No red-green sole
+          signal. Dark note outlines provide redundant structural encoding.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Inferno colormap is perceptually uniform and colorblind-safe
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good 16:9 proportions, minor extra whitespace above chord labels
+        comment: 3200x1800 landscape. Piano roll fills the canvas well with appropriate
+          margins. Colorbar legend positioned right. coord_cartesian ensures note
+          rectangles don't overflow. No clipping detected at any edge.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (beats) and Pitch (note) are descriptive with units
+        comment: Title 'piano-roll-midi · python · plotnine · anyplot.ai' correct
+          format. X-axis 'Time (beats)' — descriptive with units. Y-axis 'Pitch' with
+          note names on ticks (C3, G3, C4, G4, C5). All informative.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Continuous velocity data uses imprint_seq (low=#009E73, high=#4467A3)
+          — correct. Background #FAF8F1 light / #1A1A17 dark — correct. Data colors
+          identical across both renders. All chrome tokens theme-adaptive. Piano key
+          shading colors are structural (not data colors) — acceptable.'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -84,22 +129,28 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Cohesive purple color scheme with inferno colormap, chord numerals
-          and dynamic markings
+        comment: 'Strong design clearly above defaults: piano key alternating backgrounds
+          with theme adaptation, chord progression labels, dynamic markings, climax
+          annotation in semantic red, three-tier grid hierarchy. Shows genuine domain
+          expertise and intentional visual design.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: theme_void base with selective restoration, subtle grid hierarchy,
-          polished legend
+        comment: theme_void() as base removes all default chrome. Three-tier grid
+          hierarchy (dotted beat lines 0.25, solid measure lines 0.5, dashed octave
+          lines 0.35) is well-executed visual refinement. Clean colorbar, proper whitespace
+          (plot_margin=0.02). Above minimal-refinement default.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Musical narrative with climax annotation, dynamic markings, chord
-          progression labels
+        comment: 'Visual hierarchy: I-IV-V-I chord labels create harmonic narrative.
+          mf→ff→dim→p dynamic markings tell the intensity arc. Climax annotation with
+          red color draws the eye to the musical peak. Good storytelling but melody/bass
+          distinction not visually reinforced (no size/alpha differentiation).'
     spec_compliance:
       score: 15
       max: 15
@@ -109,26 +160,34 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct piano roll with horizontal rectangles by pitch and time
+        comment: 'Correct piano roll visualization: horizontal rectangles for notes,
+          Y=pitch, X=time, width=duration, color=velocity. Piano keyboard row structure
+          in background.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: key shading, note names, grid lines, velocity
-          coloring, auto-fit range'
+        comment: 'All required features: note names on Y-axis (C3/G3/C4/G4/C5), alternating
+          black/white key backgrounds, beat grid (dotted) and measure grid (solid),
+          velocity colormap (sequential green-to-blue), pitch range auto-fitted with
+          margin.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time (beats), Y=pitch (note names), all data visible
+        comment: X=time in beats, Y=pitch (MIDI numbers 48-72 with note names), color=velocity,
+          width=duration. All 4 measures (16 beats) visible. Chord progression and
+          melody fully shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, velocity colorbar legend present
+        comment: Title 'piano-roll-midi · python · plotnine · anyplot.ai' matches
+          required format exactly. Velocity colorbar labeled correctly. Y-axis displays
+          note names (spec requirement for human-readable pitch labels).
     data_quality:
       score: 15
       max: 15
@@ -138,20 +197,27 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Chord progressions, varying durations, varying velocities, bass+melody
-          separation
+        comment: 'Shows all piano roll features: chord voicings (multiple simultaneous
+          notes), melodic runs (eighth/quarter notes), varying note durations, full
+          velocity range (60-115), bass + melody register coverage, 4-measure phrase
+          structure with chord progression.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real I-IV-V-I chord progression in C major with melodic contour
+        comment: I-IV-V-I chord progression (C→F→G→C) is a canonical Western music
+          structure. Velocity values (60-115) are realistic for a mf to ff musical
+          phrase. Note durations (0.5-3.0 beats) are musically plausible. The climax
+          at measure 2 (ff, C5) is musically authentic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: MIDI pitches 48-72, velocities 60-115, durations 0.5-3.0 beats
+        comment: MIDI values 48-72 (C3-C5) appropriate range for a 2-octave piano
+          arrangement. Velocity 60-115 within MIDI range (0-127). 16 beats = 4 measures
+          in 4/4 time. All values factually correct for MIDI piano roll context.
     code_quality:
       score: 10
       max: 10
@@ -161,60 +227,77 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, dataframes, plot, save'
+        comment: 'Flat script: tokens → data → derived data → plot layers → save.
+          No functions or classes. Clear organization with comments marking sections.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set, data is deterministic
+        comment: np.random.seed(42) set. Data is fully hardcoded tuples — deterministic
+          regardless of seed. Fully reproducible.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports from plotnine are used: ggplot, aes, geom_rect, geom_segment,
+          geom_text, geom_vline, annotate, scale_fill_gradient, scale_x_continuous,
+          scale_y_continuous, coord_cartesian, labs, guide_colorbar, theme, theme_void,
+          element_text, element_line, element_rect. numpy, pandas, os all used.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, appropriate complexity
+        comment: Pythonic, appropriate complexity for the visualization. No fake interactivity.
+          List comprehensions for bg_rows and label generation. Multiple DataFrames
+          for different geom layers is the correct plotnine pattern.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, current API
+        comment: Saves as plot-{THEME}.png using plot.save() with correct dpi=400,
+          width=8, height=4.5, units='in'. Current plotnine 0.15.5 API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Proper grammar of graphics with theme_void base for full control
+        comment: 'Expertly uses plotnine''s grammar of graphics: multiple geom layers
+          on different data frames (bg_df for backgrounds, df for notes, measure_labels,
+          dynamic_labels, octave_lines), scale functions for both axes and fill, coord_cartesian
+          for clipping, guide_colorbar for legend, fine-grained theme() customization.
+          Idiomatic plotnine.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: theme_void, scale_fill_cmap with guide_colorbar, annotate, per-layer
-          data
+        comment: 'Uses some plotnine-specific features: multiple data frame layers
+          in a single ggplot() chain, guide_colorbar() for colorbar customization,
+          annotate() for text overlays, element_text/element_rect/element_line theme
+          components. The piano roll structure itself could be replicated in matplotlib
+          — no uniquely-plotnine statistical transformation (stat_*, position_*, facet_*)
+          is leveraged.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - colorbar
   - annotations
   - layer-composition
-  - colorbar
+  - manual-ticks
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
   - custom-colormap
-  - grid-styling
   - edge-highlighting

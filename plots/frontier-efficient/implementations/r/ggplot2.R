@@ -17,8 +17,8 @@ PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-OKABE_ITO   <- c("#009E73", "#D55E00", "#0072B2", "#CC79A7",
-                 "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT   <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+                 "#AE3030", "#2ABCCD", "#954477")
 
 # --- Data: Generate random portfolios and efficient frontier ----------------
 
@@ -129,28 +129,28 @@ p <- ggplot() +
   geom_line(
     data = frontier_curve,
     aes(x = risk, y = return),
-    color = OKABE_ITO[1], linewidth = 1.2, alpha = 0.9
+    color = IMPRINT[1], linewidth = 1.2, alpha = 0.9
   ) +
   # Capital market line
   geom_line(
     data = cml_df,
     aes(x = risk, y = return),
-    color = OKABE_ITO[2], linewidth = 1.0, linetype = "dashed", alpha = 0.7
+    color = IMPRINT[2], linewidth = 1.0, linetype = "dashed", alpha = 0.7
   ) +
   # Key points
   geom_point(
     data = min_var_port,
     aes(x = risk, y = return),
-    color = OKABE_ITO[3], size = 5.5, shape = 23, fill = OKABE_ITO[3]
+    color = IMPRINT[3], size = 5.5, shape = 23, fill = IMPRINT[3]
   ) +
   geom_point(
     data = max_sharpe_port,
     aes(x = risk, y = return),
-    color = OKABE_ITO[4], size = 5.5, shape = 21, fill = OKABE_ITO[4]
+    color = IMPRINT[4], size = 5.5, shape = 21, fill = IMPRINT[4]
   ) +
   # Scale for Sharpe coloring
   scale_color_gradient(
-    low = INK_SOFT, high = OKABE_ITO[1],
+    low = INK_SOFT, high = IMPRINT[1],
     name = "Sharpe\nRatio",
     breaks = scales::pretty_breaks(n = 3),
     guide = guide_colorbar(barwidth = 0.8, barheight = 6)

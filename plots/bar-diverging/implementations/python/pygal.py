@@ -22,8 +22,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito palette: brand green for positive, vermillion for negative
-OKABE_ITO = ("#009E73", "#D55E00")
+# imprint semantic anchors: green for positive, red for negative
+IMPRINT = ("#009E73", "#AE3030")
 
 # Data - Customer satisfaction survey scores by department
 # Positive = satisfied, Negative = dissatisfied (scale -100 to +100)
@@ -54,7 +54,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=IMPRINT,
     title_font_size=28,
     label_font_size=22,
     major_label_font_size=18,

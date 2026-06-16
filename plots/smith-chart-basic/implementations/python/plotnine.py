@@ -35,7 +35,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data — Smith chart grid
 Z0 = 50
@@ -113,15 +113,15 @@ plot = (
     + geom_path(aes(x="x", y="y", group="grp"), data=reactance_df, color=INK_SOFT, size=0.4, alpha=0.4)
     + geom_path(aes(x="x", y="y"), data=boundary_df, color=INK, size=1.0)
     + geom_path(aes(x="x", y="y"), data=axis_df, color=INK_SOFT, size=0.5)
-    + geom_path(aes(x="x", y="y"), data=impedance_df, color=OKABE_ITO[0], size=1.5)
-    + geom_point(aes(x="x", y="y"), data=impedance_df, color=OKABE_ITO[0], size=2.5, alpha=0.65)
+    + geom_path(aes(x="x", y="y"), data=impedance_df, color=IMPRINT[0], size=1.5)
+    + geom_point(aes(x="x", y="y"), data=impedance_df, color=IMPRINT[0], size=2.5, alpha=0.65)
     + geom_segment(
-        aes(x="x", xend="xend", y="y", yend="yend"), data=arr_df, color=OKABE_ITO[0], size=2.0, arrow=arrow(length=0.10)
+        aes(x="x", xend="xend", y="y", yend="yend"), data=arr_df, color=IMPRINT[0], size=2.0, arrow=arrow(length=0.10)
     )
     + geom_text(aes(x="x_label", y="y_label", label="label"), data=labels_df, color=INK, size=9, fontweight="bold")
     + geom_text(aes(x="x", y="y", label="label"), data=r_labels_df, color=INK_MUTED, size=8)
-    + annotate("point", x=0, y=0, color=OKABE_ITO[1], size=4)
-    + annotate("text", x=0.15, y=-0.20, label="Z=Z₀", color=OKABE_ITO[1], size=9)
+    + annotate("point", x=0, y=0, color=IMPRINT[1], size=4)
+    + annotate("text", x=0.15, y=-0.20, label="Z=Z₀", color=IMPRINT[1], size=9)
     + coord_fixed(ratio=1, xlim=(-1.3, 1.3), ylim=(-1.3, 1.3))
     + scale_x_continuous(breaks=[])
     + scale_y_continuous(breaks=[])

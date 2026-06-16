@@ -18,7 +18,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito categorical palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: Programming languages positioned by paradigm similarity
 # (simulating dimensionality reduction output)
@@ -160,7 +160,7 @@ categories = [
     "systems",
 ]
 
-category_to_color = {"dynamic": OKABE_ITO[0], "functional": OKABE_ITO[1], "systems": OKABE_ITO[2], "jvm": OKABE_ITO[3]}
+category_to_color = {"dynamic": IMPRINT[0], "functional": IMPRINT[1], "systems": IMPRINT[2], "jvm": IMPRINT[3]}
 
 color_list = [category_to_color[cat] for cat in categories]
 
@@ -195,10 +195,10 @@ ax.grid(True, alpha=0.1, linewidth=0.8, color=INK)
 
 # Legend
 legend_elements = [
-    Patch(facecolor=OKABE_ITO[0], label="Dynamic/Scripting"),
-    Patch(facecolor=OKABE_ITO[1], label="Functional"),
-    Patch(facecolor=OKABE_ITO[2], label="Systems"),
-    Patch(facecolor=OKABE_ITO[3], label="JVM-based"),
+    Patch(facecolor=IMPRINT[0], label="Dynamic/Scripting"),
+    Patch(facecolor=IMPRINT[1], label="Functional"),
+    Patch(facecolor=IMPRINT[2], label="Systems"),
+    Patch(facecolor=IMPRINT[3], label="JVM-based"),
 ]
 leg = ax.legend(handles=legend_elements, loc="upper right", fontsize=16, framealpha=0.9)
 if leg:

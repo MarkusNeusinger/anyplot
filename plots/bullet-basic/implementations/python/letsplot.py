@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 bullet-basic: Basic Bullet Chart
-Library: letsplot 4.8.2 | Python 3.14.3
-Quality: 89/100 | Updated: 2026-02-22
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-29
 """
 # ruff: noqa: F405
 
@@ -14,13 +14,34 @@ from lets_plot import *  # noqa: F403, F405
 
 LetsPlot.setup_html()
 
-# Data - KPI dashboard with varied performance levels
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — semantic exception: green = above/success, red = below/failure
+ABOVE_COLOR = "#009E73"  # brand green
+BELOW_COLOR = "#AE3030"  # matte red
+
+# Grayscale band shades — adjusted per theme so bands are visible on both surfaces
+if THEME == "light":
+    BAND_GOOD = "#D0D0D0"
+    BAND_SAT = "#989898"
+    BAND_POOR = "#585858"
+else:
+    BAND_GOOD = "#3C3C38"
+    BAND_SAT = "#565650"
+    BAND_POOR = "#707068"
+
+# Data — Q4 2024 KPI dashboard with varied performance levels
 metrics = ["Revenue ($K)", "Profit Margin (%)", "Satisfaction", "New Customers"]
-actual = [275, 88, 3.8, 42]
-target = [300, 85, 4.5, 40]
-poor = [100, 40, 2.5, 15]
-satisfactory = [200, 70, 3.5, 30]
-good = [350, 100, 5.0, 50]
+actual = [275, 38, 3.8, 42]
+target = [300, 42, 4.5, 40]
+poor = [100, 20, 2.5, 15]
+satisfactory = [200, 35, 3.5, 30]
+good = [350, 50, 5.0, 50]
 
 n = len(metrics)
 
@@ -30,17 +51,16 @@ target_pct = [target[i] / good[i] * 100 for i in range(n)]
 poor_pct = [poor[i] / good[i] * 100 for i in range(n)]
 sat_pct = [satisfactory[i] / good[i] * 100 for i in range(n)]
 
-# Above/below target for color differentiation
 status = ["Above Target" if actual[i] >= target[i] else "Below Target" for i in range(n)]
 
-# Y positions (reversed for top-to-bottom reading, compact spacing)
+# Y positions — reversed for top-to-bottom reading
 y_spacing = 0.90
 y_pos = [i * y_spacing for i in range(n - 1, -1, -1)]
 bar_h = 0.38
 narrow_h = 0.17
 marker_h = 0.33
 
-# Qualitative range bands (grayscale per Stephen Few convention)
+# Qualitative range bands (grayscale, Stephen Few convention)
 range_rows = []
 for i in range(n):
     y = y_pos[i]
@@ -49,7 +69,7 @@ for i in range(n):
     range_rows.append({"xmin": 0, "xmax": poor_pct[i], "ymin": y - bar_h, "ymax": y + bar_h, "band": "Poor"})
 df_ranges = pd.DataFrame(range_rows)
 
-# Actual value bars with metadata for interactive tooltips
+# Actual value bars with interactive tooltips
 actual_rows = []
 for i in range(n):
     y = y_pos[i]
@@ -75,24 +95,37 @@ for i in range(n):
     target_rows.append({"x": target_pct[i], "y": y - marker_h, "xend": target_pct[i], "yend": y + marker_h})
 df_target = pd.DataFrame(target_rows)
 
-# Value annotations for precise reading (in original units)
-annot_labels = ["$275K", "88%", "3.8", "42"]
+# Value annotations (actual units, beside each bar)
+# When the bar end is within 8 pp of the target marker, place annotation after the
+# marker instead of between bar-end and marker to avoid overlap.
+annot_labels = ["$275K", "38%", "3.8", "42"]
 annot_rows = []
 for i in range(n):
-    annot_rows.append({"x": actual_pct[i] + 2, "y": float(y_pos[i]), "label": annot_labels[i], "status": status[i]})
+    crowd_target = actual_pct[i] < target_pct[i] and (target_pct[i] - actual_pct[i]) < 8
+    if crowd_target:
+        annot_rows.append(
+            {"x": target_pct[i] + 2, "y": float(y_pos[i]), "label": annot_labels[i], "status": status[i], "hjust": 0.0}
+        )
+    else:
+        annot_rows.append(
+            {"x": actual_pct[i] + 4, "y": float(y_pos[i]), "label": annot_labels[i], "status": status[i], "hjust": 0.0}
+        )
 df_annot = pd.DataFrame(annot_rows)
 
-# Band legend annotation (compact text explaining grayscale ranges)
-df_band_note = pd.DataFrame(
-    [{"x": 0, "y": -0.55, "label": "Bands:  Dark = Poor  ·  Medium = Satisfactory  ·  Light = Good"}]
-)
+# Band legend note — dark-mode bands are lighter for Poor (more contrast on dark bg),
+# so the descriptor text must flip to avoid being factually wrong in dark render
+if THEME == "light":
+    band_note_text = "Bands:  Dark = Poor  ·  Medium = Satisfactory  ·  Light = Good"
+else:
+    band_note_text = "Bands:  Light = Poor  ·  Medium = Satisfactory  ·  Dark = Good"
+df_band_note = pd.DataFrame([{"x": 0, "y": -0.58, "label": band_note_text}])
 
 # Build layered bullet chart
 plot = (
     ggplot()
     # Qualitative range bands
     + geom_rect(data=df_ranges, mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="band"), size=0)
-    # Actual value bars — color-coded by target achievement with letsplot tooltips
+    # Actual value bars
     + geom_rect(
         data=df_actual,
         mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="status"),
@@ -105,69 +138,71 @@ plot = (
             .line("Achievement|@{achievement}")
         ),
     )
-    # Target markers (prominent vertical lines)
-    + geom_segment(data=df_target, mapping=aes(x="x", y="y", xend="xend", yend="yend"), size=2.5, color="#1a1a1a")
-    # Value annotations beside each bar — color-coded by target achievement
+    # Target markers — thin vertical lines in INK color
+    + geom_segment(data=df_target, mapping=aes(x="x", y="y", xend="xend", yend="yend"), size=2.5, color=INK)
+    # Value annotations beside each bar
     + geom_text(
         data=df_annot,
         mapping=aes(x="x", y="y", label="label", color="status"),
-        size=12,
+        size=5,
         hjust=0,
         fontface="bold",
         show_legend=False,
     )
-    # Band legend (text note explaining grayscale qualitative ranges)
-    + geom_text(data=df_band_note, mapping=aes(x="x", y="y", label="label"), size=10, hjust=0, color="#666666")
-    # Color scales
+    # Band legend explanation
+    + geom_text(data=df_band_note, mapping=aes(x="x", y="y", label="label"), size=4, hjust=0, color=INK_MUTED)
+    # Fill scale — bands (grey) + status (Imprint palette)
     + scale_fill_manual(
         values={
-            "Good": "#C8C8C8",
-            "Satisfactory": "#969696",
-            "Poor": "#525252",
-            "Above Target": "#2D6A4F",
-            "Below Target": "#C0785A",
+            "Good": BAND_GOOD,
+            "Satisfactory": BAND_SAT,
+            "Poor": BAND_POOR,
+            "Above Target": ABOVE_COLOR,
+            "Below Target": BELOW_COLOR,
         },
-        labels={"Above Target": "Above Target", "Below Target": "Below Target"},
+        labels={"Above Target": "↑ Above Target", "Below Target": "↓ Below Target"},
         breaks=["Above Target", "Below Target"],
         name="Performance",
     )
-    # Color scale for annotations (matches fill colors, no separate legend)
-    + scale_color_manual(values={"Above Target": "#2D6A4F", "Below Target": "#C0785A"}, guide="none")
+    + scale_color_manual(values={"Above Target": ABOVE_COLOR, "Below Target": BELOW_COLOR}, guide="none")
     # Axes
-    + scale_x_continuous(name="Performance (%)", limits=[0, 105], expand=[0, 1])
-    + scale_y_continuous(breaks=y_pos, labels=metrics, limits=[-0.75, 3.25], expand=[0, 0])
+    + scale_x_continuous(name="Performance (%)", limits=[0, 108], expand=[0, 1])
+    + scale_y_continuous(breaks=y_pos, labels=metrics, limits=[-0.78, 3.25], expand=[0, 0])
     + labs(
-        title="bullet-basic · letsplot · pyplots.ai", subtitle="Q4 2024 Dashboard — Actual vs. Target Performance", y=""
+        title="bullet-basic · python · letsplot · anyplot.ai",
+        subtitle="Q4 2024 Dashboard — Actual vs. Target Performance",
+        y="",
     )
-    # Theme — refined styling with subtle background
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=24, face="bold"),
-        plot_subtitle=element_text(size=16, color="#555555"),
-        axis_title_x=element_text(size=20),
+        plot_title=element_text(size=16, face="bold", color=INK),
+        plot_subtitle=element_text(size=11, color=INK_SOFT),
+        axis_title_x=element_text(size=12, color=INK),
         axis_title_y=element_blank(),
-        axis_text_x=element_text(size=16),
-        axis_text_y=element_text(size=18, face="bold"),
+        axis_text_x=element_text(size=10, color=INK_SOFT),
+        axis_text_y=element_text(size=10, face="bold", color=INK_SOFT),
         legend_position="bottom",
         legend_direction="horizontal",
-        legend_title=element_text(size=14, face="bold"),
-        legend_text=element_text(size=14),
+        legend_title=element_text(size=10, face="bold", color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         panel_grid_major_y=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_grid_major_x=element_line(size=0.3, color="#E0E0E0"),
-        plot_background=element_rect(fill="#FAFAFA", color="#FAFAFA"),
+        panel_grid_major_x=element_line(size=0.3, color=INK_SOFT),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save
-ggsave(plot, "plot.png", scale=3)
-ggsave(plot, "plot.html")
+# Save — theme-suffixed, scale=4 yields 3200×1800 px
+ggsave(plot, f"plot-{THEME}.png", scale=4)
+ggsave(plot, f"plot-{THEME}.html")
 
-# Move files from lets-plot-images subfolder
-if os.path.exists("lets-plot-images/plot.png"):
-    shutil.move("lets-plot-images/plot.png", "plot.png")
-if os.path.exists("lets-plot-images/plot.html"):
-    shutil.move("lets-plot-images/plot.html", "plot.html")
+# Move from lets-plot-images subfolder if ggsave placed files there
+for fname in [f"plot-{THEME}.png", f"plot-{THEME}.html"]:
+    src = os.path.join("lets-plot-images", fname)
+    if os.path.exists(src):
+        shutil.move(src, fname)
 if os.path.exists("lets-plot-images"):
     shutil.rmtree("lets-plot-images")

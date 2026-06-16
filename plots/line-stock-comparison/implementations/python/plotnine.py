@@ -39,7 +39,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3"]
+IMPRINT = ["#009E73", "#C475FD", "#AE3030", "#4467A3"]
 
 # Data
 np.random.seed(42)
@@ -77,7 +77,7 @@ plot = (
     + geom_ribbon(
         data=spy_ribbon_df,
         mapping=aes(x="date", ymin="ymin", ymax="ymax"),
-        fill=ANYPLOT_PALETTE[3],
+        fill=IMPRINT[3],
         alpha=0.08,
         inherit_aes=False,
     )
@@ -86,7 +86,7 @@ plot = (
     + geom_line(data=spy_df, size=1.6)
     + geom_point(data=last_df, size=2.5, show_legend=False)
     + geom_text(data=last_df, mapping=aes(x="label_date", label="label"), size=7, ha="left", show_legend=False)
-    + scale_color_manual(values=ANYPLOT_PALETTE)
+    + scale_color_manual(values=IMPRINT)
     + scale_x_date(date_labels="%b '%y", date_breaks="2 months", limits=[dates[0], x_max])
     + labs(
         x="Date",

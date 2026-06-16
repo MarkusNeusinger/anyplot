@@ -1,42 +1,61 @@
 library: letsplot
+language: python
 specification_id: indicator-ichimoku
 created: '2026-03-12T14:16:42Z'
-updated: '2026-03-12T14:41:25Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23006287717
+updated: '2026-06-08T01:52:24Z'
+generated_by: claude-sonnet
+workflow_run: 27111268350
 issue: 4669
-python_version: 3.14.3
-library_version: 4.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/letsplot/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/python/letsplot/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent use of letsplot-specific tooltip system (layer_tooltips with formatted
-    price data)
-  - Colorblind-safe palette throughout (blue/orange instead of red/green)
-  - Strong data storytelling with subtitle narrating the trend shift and gold diamond
-    crossover markers
-  - All five Ichimoku components correctly computed and rendered with proper shifts
-  - 'Clean visual refinement: subtle grid, removed ticks, styled legend with border'
+  - 'Full Imprint palette compliance with correct semantic exceptions: BULL=#009E73,
+    BEAR=#AE3030, Tenkan=#C475FD, Kijun=#4467A3, Chikou=#BD8233, TK signal=amber #DDCC77'
+  - All 5 Ichimoku lines rendered correctly with proper shifts (Chikou 26 bars back,
+    Senkou Spans 26 bars forward)
+  - Cloud (Kumo) correctly split into bullish/bearish segments with color-coded fills
+    and appropriate alpha=0.15
+  - Rich letsplot-native layer_tooltips() with formatted OHLC data on hover, and manual_key=layer_key()
+    for custom legend entries
+  - Descriptive subtitle narrates the data story ('Kumo shifts green→red as trend
+    reverses mid-year; amber diamonds mark TK crossovers')
+  - 'Both light and dark renders are theme-correct: warm off-white #FAF8F1 / near-black
+    #1A1A17 backgrounds, all chrome elements flip correctly'
+  - Y-only horizontal grid (X-grid blanked), tick marks removed, legend styled with
+    elevated background — above library defaults
+  - 'Perfect spec compliance: all required features, correct data mapping, standard
+    Ichimoku parameters (9, 26, 52), proper candlestick coloring'
   weaknesses:
-  - Legend slightly overlaps candlestick data in upper right corner
-  - Chikou Span could be slightly more visible (alpha=0.6 with gray is faint)
-  image_description: The plot displays an Ichimoku Cloud chart overlaid on candlestick
-    price data spanning March-September 2024. The title "indicator-ichimoku · letsplot
-    · pyplots.ai" appears in bold at the top left, with an italic subtitle describing
-    the trend reversal. The x-axis is labeled "Trading Day (2024)" with date tick
-    marks from Mar 14 through Sep 26. The y-axis shows "Price ($)" from ~$145 to ~$195.
-    Candlesticks use blue for bullish and orange for bearish days. The Tenkan-sen
-    is a solid blue line, Kijun-sen a solid magenta/pink line, and Chikou Span a dashed
-    gray line shifted backward. The Kumo cloud is filled between Senkou Span A and
-    B with light blue (bullish) and light peach/orange (bearish) shading. Gold diamond
-    markers highlight TK Crossover points. A legend in the upper right identifies
-    Tenkan-sen, Kijun-sen, Chikou Span, and TK Crossover. The background is clean
-    white with subtle horizontal gridlines only.
+  - 'VQ-04 minor CVD concern: green (#009E73) vs red (#AE3030) is the sole directional
+    signal for candlestick bodies and cloud — spec mandates this convention but adding
+    a shape redundancy (e.g. up/down arrow fill) would improve CVD accessibility'
+  - Grid lines use INK at full opacity (panel_grid_major_y=element_line(color=INK))
+    rather than the style-guide recommended rgba(26,26,23,0.15) / rgba(240,239,232,0.15)
+    — results in slightly more prominent grid on dark render
+  - 'LM-02: While layer_tooltips() and manual_key=layer_key() are letsplot-distinctive,
+    no use of letsplot''s sampling or other advanced compositional features; library
+    distinctiveness is good but not maximal'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot surface
+      Chrome: Title "indicator-ichimoku · python · letsplot · anyplot.ai" in bold dark #1A1A17, ~60% of canvas width — well-proportioned. Subtitle in italic INK_SOFT below. Axis label "Price ($)" (Y) and "Trading Day (2024)" (X) in dark ink, size=12. Tick labels at size=10 in INK_SOFT. All chrome readable.
+      Data: Bullish candles in #009E73 (Imprint green), bearish in #AE3030 (matte red). Tenkan-sen in lavender #C475FD, Kijun-sen in blue #4467A3, Chikou Span in dashed ochre #BD8233. Cloud fills: green-tinted bullish Kumo in first half, transitioning to red-tinted bearish Kumo in second half (circa Aug). Amber diamond TK Crossover markers at approximately 4 crossover points. Legend box in top-left with FFFDF6 elevated background.
+      Legibility verdict: PASS — all text elements readable, no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface
+      Chrome: Title and subtitle in light #F0EFE8 — clearly readable. Axis labels, tick labels in lighter INK_SOFT #B8B7B0. Legend box with dark elevated #242420 background. Grid lines appear as thin light horizontal lines (slightly more visible than on light render, using full INK color at size=0.3 rather than rgba opacity).
+      Data: Data colors identical to light render — BULL #009E73, BEAR #AE3030, Tenkan #C475FD, Kijun #4467A3, Chikou #BD8233 dashed, amber crossover diamonds — all confirmed same as light render.
+      Legibility verdict: PASS — no dark-on-dark failures. All text is light-colored against the near-black background. Brand green #009E73 clearly visible. One minor note: grid lines are slightly more prominent in dark render due to full-opacity INK instead of rgba(240,239,232,0.15), but not a legibility failure.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -44,44 +63,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=24, axis_title=20, axis_text=16,
-          legend=13-15), all perfectly readable
+        comment: All font sizes explicitly set; title at 16, subtitle 11, axis titles
+          12, tick labels 10, legend 10. Well-proportioned in both themes.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Minor overlap of legend box with some candlestick data in upper right;
-          all text remains readable
+        comment: No significant overlap. Legend has elevated fill background. Dense
+          Ichimoku area inherently busy but not illegible.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All elements visible; Chikou Span (dashed gray at alpha=0.6) is slightly
-          faint but discernible
+        comment: Candlesticks prominent, Ichimoku lines at 1.0-1.2 size, cloud fills
+          at alpha=0.15 (subtle but visible), amber crossover diamonds clearly visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 1
+        max: 2
         passed: true
-        comment: Blue/orange candlesticks instead of red/green; all line colors distinguishable
-          for colorblind viewers
+        comment: Green/red sole directional signal for candlesticks and cloud — spec-mandated
+          convention but CVD-problematic. Minor deduction.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Landscape format fills canvas well, balanced margins, good proportions
-          for time-series data
+        comment: 3200x1800 landscape. Chart fills canvas well. No content clipped.
+          Legend positioned in plot area.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Trading Day (2024) and Price ($)'
+        comment: 'Y: ''Price ($)'' with unit; X: ''Trading Day (2024)'' with temporal
+          context.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Full Imprint compliance with documented semantic exceptions. Backgrounds
+          correct for both themes. All chrome adaptive.
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -89,24 +116,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom colorblind-safe palette, intentional color hierarchy, bold
-          title with italic subtitle, professional polish above defaults
+        comment: 'Strong design: intentional Imprint semantic palette, subtitle narrative,
+          cloud polarity split, TK signal markers, styled legend — clearly above defaults.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Minimal theme, x-grid removed, subtle y-grid, ticks removed, clean
-          white background, styled legend with border
+        comment: Y-only grid, tick marks removed, theme_minimal, spines clean. Grid
+          uses full INK opacity rather than rgba — slightly more prominent than ideal
+          on dark render.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Subtitle narrates trend reversal, gold diamond crossover markers
-          create focal points, data shows bullish-to-bearish transition
+        comment: Subtitle explicitly narrates the story. Cloud polarity shift is the
+          visual focal point. Crossover markers create secondary emphasis. Good hierarchy.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -114,29 +142,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct candlestick chart with Ichimoku cloud overlay
+        comment: Correct Ichimoku Cloud chart with candlestick base, all 5 lines,
+          and Kumo fill.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All five Ichimoku lines present, cloud filled with color-changing
-          fill, proper bullish/bearish coloring
+        comment: 'All spec features: color-coded cloud, Tenkan/Kijun lines, Chikou
+          shift, Senkou future shift, standard parameters (9,26,52), conventional
+          candlestick colors.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=trading dates, Y=price; axes show full data range
+        comment: Date on X, Price on Y. All data visible in range.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend shows indicator lines but omits Senkou
-          Spans/cloud labels
+        comment: Title matches required format. Legend shows Tenkan-sen, Kijun-sen,
+          Chikou Span, TK Crossover with correct colors.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -144,21 +174,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows bullish and bearish candles, cloud transitions, TK crossover
-          signals, all five Ichimoku components
+        comment: 'Shows all Ichimoku aspects: bullish/bearish candles, cloud polarity
+          shift, multiple crossovers, Chikou above/below price, Span divergence.'
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Simulated stock OHLC with realistic random walk; plausible but synthetic
+        comment: Simulated 2024 daily OHLC stock data with realistic price range and
+          volatility.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Stock prices $145-$195, 200 trading days, standard Ichimoku parameters
-          (9, 26, 52)
+        comment: Price $145-195 plausible. Random walk with 2.5 daily sigma is realistic.
+          Wicks proportionate.
     code_quality:
       score: 10
       max: 10
@@ -168,32 +199,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data generation, Ichimoku computation, plot
-          construction, save'
+        comment: Clean Imports→Data→Plot→Save with no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at the start
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: numpy, pandas, lets_plot - all used
+        comment: os, numpy, pandas, lets_plot — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, clear variable names, appropriate complexity
+        comment: Clean, well-organized. noqa comments on every geom line are verbose
+          but necessary for letsplot wildcard import.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via ggsave with scale=3
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current letsplot API.
     library_mastery:
       score: 9
       max: 10
@@ -203,29 +234,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert ggplot grammar: geom_ribbon, geom_rect, geom_segment, geom_line,
-          geom_point; proper scale_*_manual'
+        comment: 'Expert letsplot usage: layer_tooltips() with rich formatting, manual_key=layer_key(),
+          guides(), scale_*_manual, element_* theme system. Idiomatic throughout.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses letsplot-specific layer_tooltips with formatted hover info,
-          manual_key/layer_key for legend, HTML export
+        comment: layer_tooltips() with .title().line().format() chain and tooltips='none'
+          suppression, manual_key=layer_key() for fixed-color layers — distinctively
+          letsplot. One point reserved for not using sampling or other advanced compositional
+          features.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - custom-legend
-  - hover-tooltips
   - manual-ticks
+  - hover-tooltips
+  - html-export
+  - custom-legend
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
-  - rolling-window
   - time-series
+  - rolling-window
   styling:
   - alpha-blending
-  - grid-styling

@@ -1,0 +1,251 @@
+library: matplotlib
+language: python
+specification_id: depth-order-book
+created: '2026-06-15T02:40:25Z'
+updated: '2026-06-15T02:54:57Z'
+generated_by: claude-sonnet
+workflow_run: 27520236773
+issue: 8657
+language_version: 3.13.13
+library_version: 3.11.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - 'Semantic Imprint palette assignment: green (#009E73) for bids, matte-red (#AE3030)
+    for asks — finance-domain convention using valid Imprint positions 1 and 5'
+  - fill_between with step= and hatch patterns provides redundant encoding (hue +
+    texture) for colorblind accessibility
+  - Styled annotation callout (mid price + spread) with elevated background, dynamically
+    positioned — meets spec requirement cleanly
+  - Dynamic title fontsize formula correctly handles the 70-char title without overflow
+  - 'Correct step data construction: epsilon offset at best bid/ask creates the vertical
+    wall without rounding artifacts'
+  - 'All spec features implemented: cumulative step areas, semi-transparent fills,
+    solid outline strokes, bid-ask spread gap, mid-price dashed line, order book walls'
+  weaknesses:
+  - Annotation fontsize at 7.5pt may be hard to read at mobile thumbnail widths (~400px
+    rendered width) — consider 8-9pt to match tick label legibility
+  - Fill alpha=0.2 produces very dark fill area in the dark theme (merges toward background);
+    slightly higher alpha (0.25-0.30) would improve fill visibility on dark
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "BTC/USD Order Book · depth-order-book · python · matplotlib · anyplot.ai" in dark ink (#1A1A17), spans ~80-85% of canvas width at dynamically scaled fontsize. Y-axis "Cumulative Volume (BTC)" and X-axis "Price (USD)" in dark ink at 10pt — both clearly readable. X-axis tick labels ($59,800–$60,200) rotated 30°, fully readable. Y-axis tick labels (0–175) in soft dark gray, clearly readable. Legend "Bids (Buy)" / "Asks (Sell)" in styled elevated-bg frame — readable. Mid-price annotation "Mid $60,000 / Spread $10" in small (7.5pt) gray text on elevated-bg box — readable at canvas size.
+      Data: Bid area uses first Imprint color #009E73 (brand green) as fill (alpha=0.2) and step line (linewidth=2.0) with backslash hatch. Ask area uses #AE3030 (Imprint pos 5, semantic red for sell/loss) with forward-slash hatch. Two visible bid walls (~BTC 127 at $59,905, ~BTC 182 at $59,820). One ask wall (~BTC 70 at $60,115). Cumulative volumes range 0–182 BTC bid side, 0–155 BTC ask side. Dashed mid-price line visible at $60,000.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title in light #F0EFE8 ink — clearly readable against dark bg. Axis labels in same light ink. Tick labels in light gray #B8B7B0 — clearly distinguishable from dark background. No dark-on-dark failures observed. Legend text in #B8B7B0 on dark elevated background #242420 frame — readable. Annotation box uses #242420 elevated bg with #B8B7B0 border and #A8A79F muted text — readable.
+      Data: Bid color #009E73 and Ask color #AE3030 are identical to light render — data colors unchanged, only chrome flips. Fill areas (alpha=0.2 on #1A1A17) produce deep teal and deep maroon fills; step outline lines remain clearly visible. Hatch patterns visible but subtle on dark bg.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicitly set; annotation at 7.5pt may be small at mobile
+          scale; both renders fully readable at canvas size
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Step lines (linewidth=2.0) and fills clearly visible; walls produce
+          dramatic visible jumps
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/red semantic pair is finance-domain convention; hatch patterns
+          provide redundant encoding beyond hue
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; plot fills canvas well with balanced margins
+          via subplots_adjust
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Cumulative Volume (BTC) and Price (USD) both descriptive with units;
+          spec-compliant title with descriptive prefix
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Bid #009E73 (Imprint pos 1); Ask #AE3030 (Imprint pos 5, semantic
+          exception for sell/loss); backgrounds #FAF8F1/#1A1A17; chrome fully theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above plain configured default: hatching patterns, styled annotation
+          callout, semantic palette assignment, dynamic title fontsize. Thoughtful
+          but not FiveThirtyEight-level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed (top/right), y-axis-only subtle grid at alpha=0.15,
+          legend and annotation box styled with elevated backgrounds, explicit margin
+          control
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Strong semantic color contrast conveys bid/ask meaning; mid-price
+          dashed line focal point with annotation; visible walls tell liquidity story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct cumulative step area chart with both bid and ask sides
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: cumulative step areas, semi-transparent fills,
+          solid outlines, spread gap, mid-price line, annotation, order book walls'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Price on X, cumulative quantity on Y, bid descends left-to-right,
+          ask rises, Y starts at 0
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows {Descriptive Title} · {spec-id} · python · matplotlib
+          · anyplot.ai format; legend labels Bids (Buy) / Asks (Sell) clear
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both sides, visible spread gap, support/resistance walls on both
+          sides, cumulative volume imbalance visible
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: BTC/USD order book is real, comprehensible, neutral; BTC at ~$60,000
+          historically plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: $5 tick over 50 levels = $250 range realistic; cumulative volumes
+          up to ~180 BTC plausible; $10 spread = 0.017% realistic for liquid crypto
+          pair
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports → constants → data → plot → style → save; no functions
+          or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All 5 imports used (os, numpy, matplotlib.patches, matplotlib.pyplot,
+          matplotlib.ticker)
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic; data construction appropriately explicit for step
+          chart; no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png, no bbox_inches='tight', current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses axes methods throughout (fill_between, step, axvline, annotate,
+          legend); mticker.FuncFormatter; plt.setp; mpatches.Patch
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: fill_between with step= parameter is matplotlib-specific; hatch patterns
+          on fill_between; mpatches.Patch for custom legend swatches
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - patches
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - grid-styling

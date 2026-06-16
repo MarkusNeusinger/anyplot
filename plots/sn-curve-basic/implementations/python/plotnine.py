@@ -36,7 +36,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - S-N curve for steel specimen fatigue testing
 np.random.seed(42)
@@ -105,31 +105,31 @@ anyplot_theme = theme(
 plot = (
     ggplot()
     # ±2σ scatter band via geom_ribbon — idiomatic plotnine uncertainty visualization
-    + geom_ribbon(df_fit, aes(x="cycles", ymin="stress_lower", ymax="stress_upper"), fill=OKABE_ITO[0], alpha=0.12)
+    + geom_ribbon(df_fit, aes(x="cycles", ymin="stress_lower", ymax="stress_upper"), fill=IMPRINT[0], alpha=0.12)
     # Basquin fit line
-    + geom_line(df_fit, aes(x="cycles", y="stress"), color=OKABE_ITO[0], size=1.2, alpha=0.85)
+    + geom_line(df_fit, aes(x="cycles", y="stress"), color=IMPRINT[0], size=1.2, alpha=0.85)
     # Data points — shape mapped to type for runout vs failure distinction
-    + geom_point(df, aes(x="cycles", y="stress", shape="type"), color=OKABE_ITO[0], size=4.2, alpha=0.80)
+    + geom_point(df, aes(x="cycles", y="stress", shape="type"), color=IMPRINT[0], size=4.2, alpha=0.80)
     # geom_rug exposes marginal data density along both axes — distinctive plotnine feature
-    + geom_rug(df, aes(x="cycles", y="stress"), color=OKABE_ITO[0], alpha=0.35, size=0.5)
+    + geom_rug(df, aes(x="cycles", y="stress"), color=IMPRINT[0], alpha=0.35, size=0.5)
     # Reference lines with Okabe-Ito colors; endurance limit slightly thicker as focal point
-    + geom_hline(yintercept=ultimate_strength, linetype="dashed", color=OKABE_ITO[1], size=0.9, alpha=0.85)
-    + geom_hline(yintercept=yield_strength, linetype="dashed", color=OKABE_ITO[2], size=0.9, alpha=0.85)
-    + geom_hline(yintercept=endurance_limit, linetype="dashed", color=OKABE_ITO[3], size=1.2, alpha=0.90)
+    + geom_hline(yintercept=ultimate_strength, linetype="dashed", color=IMPRINT[1], size=0.9, alpha=0.85)
+    + geom_hline(yintercept=yield_strength, linetype="dashed", color=IMPRINT[2], size=0.9, alpha=0.85)
+    + geom_hline(yintercept=endurance_limit, linetype="dashed", color=IMPRINT[3], size=1.2, alpha=0.90)
     + annotate(
         "text",
         x=1e3,
         y=ultimate_strength + 20,
         label="Ultimate Strength (550 MPa)",
         size=10,
-        color=OKABE_ITO[1],
+        color=IMPRINT[1],
         ha="left",
     )
     + annotate(
-        "text", x=2e5, y=yield_strength + 20, label="Yield Strength (350 MPa)", size=10, color=OKABE_ITO[2], ha="left"
+        "text", x=2e5, y=yield_strength + 20, label="Yield Strength (350 MPa)", size=10, color=IMPRINT[2], ha="left"
     )
     + annotate(
-        "text", x=1e3, y=endurance_limit - 25, label="Endurance Limit (250 MPa)", size=10, color=OKABE_ITO[3], ha="left"
+        "text", x=1e3, y=endurance_limit - 25, label="Endurance Limit (250 MPa)", size=10, color=IMPRINT[3], ha="left"
     )
     # Logarithmic scales
     + scale_x_log10()

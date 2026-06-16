@@ -20,9 +20,9 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_GREEN = "#009E73"
-OKABE_ORANGE = "#D55E00"
-OKABE_BLUE = "#0072B2"
+IMPRINT_GREEN = "#009E73"
+IMPRINT_LAVENDER = "#C475FD"
+IMPRINT_BLUE = "#4467A3"
 
 sns.set_theme(
     style="white",
@@ -38,9 +38,9 @@ sns.set_theme(
 
 # Data
 circles = [
-    {"name": "Overhyped", "color": OKABE_GREEN, "center": (0.00, 0.55)},
-    {"name": "Actually Useful", "color": OKABE_ORANGE, "center": (-0.476, -0.275)},
-    {"name": "Secretly Loved", "color": OKABE_BLUE, "center": (0.476, -0.275)},
+    {"name": "Overhyped", "color": IMPRINT_GREEN, "center": (0.00, 0.55)},
+    {"name": "Actually Useful", "color": IMPRINT_LAVENDER, "center": (-0.476, -0.275)},
+    {"name": "Secretly Loved", "color": IMPRINT_BLUE, "center": (0.476, -0.275)},
 ]
 
 zone_items = {

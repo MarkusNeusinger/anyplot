@@ -1,91 +1,111 @@
 library: altair
+language: python
 specification_id: scatter-ashby-material
 created: '2026-03-11T14:58:25Z'
-updated: '2026-03-11T15:32:43Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22958873170
+updated: '2026-06-03T16:07:03Z'
+generated_by: claude-sonnet
+workflow_run: 26896204624
 issue: 4677
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/altair/plot.html
-quality_score: 88
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/python/altair/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent spec compliance with all required and optional features including convex-hull
-    envelopes and performance index guide lines
-  - Strong design with custom palette, variable envelope opacity, and subtle grid
-    styling creating a polished professional appearance
-  - Realistic materials science data with actual material names and appropriate property
-    ranges
-  - Expert Altair usage with layered composition, interactive selection, and declarative
-    encoding
+  - Full Ashby chart implementation with scipy ConvexHull envelopes, not just scatter
+    points
+  - E/rho performance-index guide lines add genuine materials-science storytelling
+  - 'Complete theme adaptation: all chrome tokens correctly applied in both light
+    and dark renders'
+  - 'Imprint palette canonical order correctly assigned; first family is brand green
+    #009E73'
+  - 'Strong Altair-idiomatic usage: declarative hover selection via selection_point,
+    layer composition, condition-based encoding'
+  - Realistic materials data with correct property ranges and real material names
+    (Aluminum, Steel, Alumina, CFRP, etc.)
+  - Canvas pad-only logic correctly implemented with raised SystemExit on overshoot
   weaknesses:
-  - Helper functions (convex_hull, _cross) break KISS structure — ideally inlined
-    or use scipy
-  - Right-side padding is generous, slightly unbalanced canvas utilization
-  - Metals family label partially obscured by envelope boundary
-  - Guide line labels (E/rho) are very faint and could be more readable
-  image_description: 'The plot displays an Ashby material selection chart as a log-log
-    scatter plot with "Density (kg/m³)" on the x-axis (range 10–20,000) and "Young''s
-    Modulus (GPa)" on the y-axis (range 0.001–1,000). Six material families are shown:
-    Metals (steel blue), Polymers (orange), Ceramics (teal), Composites (salmon/coral),
-    Elastomers (purple), and Foams (olive green). Each family is represented by individual
-    circular markers with white strokes inside colored convex-hull envelope regions
-    with semi-transparent fills. Family labels are positioned near their respective
-    regions. Two dashed diagonal guide lines for E/ρ = 0.01 and E/ρ = 0.1 traverse
-    the plot with italic labels at the right edge. The title reads "scatter-ashby-material
-    · altair · pyplots.ai" with a subtitle "Young''s Modulus vs Density across material
-    families". A legend titled "Material Family" sits in the upper-right corner with
-    a subtle border. The background is a soft off-white (#FAFBFC) with very subtle
-    grid lines.'
+  - Metals family label is positioned within the dense scatter cluster; label_nudge
+    (0.0, -0.22) places it inside the marker cloud — a larger y-nudge or horizontal
+    shift toward the envelope edge would improve visibility
+  - Marker stroke on dark theme is PAGE_BG (#1A1A17), making the ring highlight invisible
+    against the dark background — using INK_SOFT or semi-transparent white would preserve
+    separation from light mode
+  - Log-scale gridlines on both axes create a somewhat busy crosshatch even at opacity=0.15
+    — removing x-axis grid (configure_axisX(grid=False)) would reduce visual clutter
+    typical of Ashby charts
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 — correct theme surface
+      Chrome: title "scatter-ashby-material · python · altair · anyplot.ai" in dark ink, readable; subtitle in secondary ink; Y-axis "Young's Modulus (GPa)" and X-axis "Density (kg/m³)" both clearly labeled with units; tick labels at all log intervals readable; legend "Material Family" in upper-right with light fill and subtle border
+      Data: Six convex-hull envelope regions filled with Imprint palette — Metals (#009E73 teal-green, top-right), Ceramics (#4467A3 blue, upper-center), Composites (#BD8233 ochre, middle), Polymers (#C475FD lavender, center), Elastomers (#AE3030 red, lower-center), Foams (#2ABCCD cyan, left). Scatter markers with white-ring strokes visible. Two dashed E/rho guide lines with italic labels.
+      Legibility verdict: PASS — all text readable; Metals label partially competes with dense scatter cluster but still legible
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 — correct dark theme surface
+      Chrome: title, subtitle, axis labels, tick labels all render in light ink (#F0EFE8 / #B8B7B0 range) — no dark-on-dark failures; legend text light-colored against elevated dark fill (#242420); grid lines subtle
+      Data: colors identical to light render — first series Metals = #009E73, remaining families follow Imprint canonical order; envelope fills visible against dark surface; family labels in matching Imprint colors readable against dark background; marker strokes set to PAGE_BG (#1A1A17) making ring highlights invisible on dark (minor issue, markers still clearly visible by fill color)
+      Legibility verdict: PASS — all text readable against dark background; no chrome failures
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis titles 22pt, tick
-          labels 18pt, legend 16-18pt, family labels 16pt'
+        comment: 'All font sizes explicitly set (title=16, subtitle=12, axis=12, tick=10,
+          labels=11); readable both themes. Minor deduction: Metals label partially
+          competing with dense scatter cluster.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: 'Minor: Metals label partially obscured by envelope boundary; Ceramics/Metals
-          envelopes overlap slightly'
+        comment: Five of six family labels clearly separated. Metals label embedded
+          in scatter cluster, minimal overlap but still legible.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Marker size 150 appropriate for ~61 points with white stroke; Elastomers
-          cluster somewhat tight
+        comment: ~61 points at medium density; altair area size 80-120 with opacity
+          0.75-0.95; all data clearly visible; envelopes and guide lines visible.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette CVD-safe; redundant encoding via envelope regions
+          and direct labels.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Colorblind-safe palette with blue, orange, teal, coral, purple, olive
-          green
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good proportions but right padding (200px) creates some wasted space
+        comment: Chart fills ~70-75% canvas; canvas gate passed; legend well-placed;
+          generous padding; no overflow or cut-off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Density (kg/m³) and Young's Modulus (GPa) - descriptive with units
+        comment: Young's Modulus (GPa) and Density (kg/m^3) both descriptive with
+          units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series Metals = #009E73; canonical Imprint order; backgrounds
+          #FAF8F1 light / #1A1A17 dark; all chrome theme-adaptive in both renders.'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -93,22 +113,26 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, custom font family, white marker strokes, off-white
-          background, variable envelope opacity
+        comment: 'Clearly above defaults: convex-hull envelopes with variable fill
+          opacity, smooth basis-closed interpolation, performance-index guide lines
+          with italic labels, direct family labels with page-bg halos, hover-highlight
+          interactivity, subtitle. Professional Ashby chart aesthetic.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: View stroke removed, grid opacity 0.12, custom axis colors, legend
-          with border, generous padding
+        comment: 'Spines removed, subtle grid (gridOpacity=0.15), generous whitespace,
+          legend with rounded corners. Minor deduction: log-scale generates many gridlines
+          on both axes creating a crosshatch pattern that is slightly busy.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Envelope regions create family groupings, guide lines add engineering
-          context, variable opacity adds depth
+        comment: E/rho performance-index guide lines explicitly guide material selection
+          decisions. Ashby layout organises families for comparison. Above the default
+          data-displayed level.
     spec_compliance:
       score: 15
       max: 15
@@ -118,26 +142,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Log-log scatter plot, correct chart type
+        comment: Correct log-log scatter with family convex-hull envelope regions;
+          classic Ashby chart.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Log scales, envelope regions, family labels, axis labels with units,
-          distinct colors, guide lines
+        comment: Both log axes, colored bubble regions (convex hull), direct family
+          text labels, units on axes, distinct family colors, optional E/rho guide
+          lines — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Density on X, modulus on Y, both log-scaled, all data visible
+        comment: X = Density (kg/m^3), Y = Young's Modulus (GPa), both log-scaled,
+          all data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and legend with Material Family heading
+        comment: Title is exactly 'scatter-ashby-material · python · altair · anyplot.ai';
+          legend 'Material Family' with all 6 families.
     data_quality:
       score: 15
       max: 15
@@ -147,56 +175,59 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 6 families, 61 materials, wide property ranges, envelopes and guide
-          lines
+        comment: All 6 material families; scatter points + envelope regions + guide
+          lines; realistic spread across multiple decades.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real materials science domain with actual material names
+        comment: Classic materials science Ashby chart; real material names (Aluminum,
+          Steel, Alumina, CFRP, Natural Rubber, etc.); appropriate family taxonomy.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic density and modulus values for each material family
+        comment: Density range 20-20,000 kg/m^3 and modulus 0.001-1000 GPa factually
+          correct for these material classes. Family property ranges are realistic.
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Defines convex_hull and _cross helper functions, violating flat script
-          structure
+        passed: true
+        comment: 'Linear flow: imports -> data generation -> envelope computation
+          -> chart layers -> save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas - all used
+        comment: All imports used; importlib pattern documented as path-conflict workaround.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Manual convex hull implementation adds verbosity; serves legitimate
-          purpose
+        passed: true
+        comment: Clean, appropriate complexity; scipy ConvexHull is the right tool
+          for envelope computation; no fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html, current Altair 6 API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; correct vl-convert
+          pad-only logic.
     library_mastery:
       score: 9
       max: 10
@@ -206,23 +237,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert use of declarative grammar: layered composition, encoding
-          types, scale/legend/title objects, configure methods'
+        comment: Expertly uses alt.layer() composition, proper encoding types (Q/N/O),
+          configure_axis/view/legend/title, resolve_scale, all idiomatic Altair patterns.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Interactive selection_point, tooltip encoding, basis-closed interpolation,
-          resolve_scale
-  verdict: REJECTED
+        comment: 'Distinctly Altair: selection_point with on=pointerover for hover
+          highlighting; alt.condition for dynamic size/opacity encoding; interpolate=basis-closed
+          for smooth closed envelope curves; fillOpacity as quantitative encoding
+          channel; resolve_scale(color=shared, fill=independent). One point held:
+          label-halo technique is a workaround rather than native Altair affordance.'
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - scipy
+  - pillow
   techniques:
   - layer-composition
   - hover-tooltips
-  - annotations
   - html-export
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
@@ -230,4 +266,3 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling

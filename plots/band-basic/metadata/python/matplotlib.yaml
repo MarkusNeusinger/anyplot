@@ -1,64 +1,52 @@
 library: matplotlib
+language: python
 specification_id: band-basic
 created: '2025-12-23T09:08:22Z'
-updated: '2026-02-23T14:12:58Z'
-generated_by: claude-opus-4-6
-workflow_run: 20456381970
-issue: 0
-python_version: '3.14'
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/band-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - custom-legend
-  patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep:
-  - interpolation
-  styling:
-  - custom-colormap
-  - gradient-fill
-  - alpha-blending
-  - grid-styling
+updated: '2026-05-29T17:23:50Z'
+generated_by: claude-sonnet
+workflow_run: 26651308935
+issue: 979
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/band-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/band-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Gradient band fill using pcolormesh with gouraud shading is a sophisticated and
-    visually effective technique
-  - Blue-orange color contrast is intentional, accessible, and creates clear visual
-    separation
-  - Annotation highlights meaningful threshold crossing for data storytelling
-  - Path effects (glow) on center line and clean annotation styling show attention
-    to design detail
-  - Expert-level matplotlib usage with multiple distinctive features (pcolormesh,
-    custom colormaps, path_effects)
-  - Perfect spec compliance with all required features implemented
+  - Gradient confidence band via pcolormesh with Gouraud shading is a sophisticated
+    matplotlib-native technique that beautifully communicates probability mass distribution
+    across the CI
+  - Path effects glow on the center forecast line adds depth and visual hierarchy
+    without cluttering
+  - 'Full theme-adaptive chrome: both light and dark renders correctly and completely
+    styled with no dark-on-dark or light-on-light failures'
+  - Asymmetric CI (wider upper tail) adds domain realism and makes the data scientifically
+    plausible for extended-range temperature forecasting
+  - Threshold annotation provides a clear narrative anchor guiding the viewer to the
+    key insight
+  - 'Clean code structure: all imports used, seed set, correct canvas size (3200x1800),
+    no bbox_inches=''tight'''
   weaknesses:
-  - Boundary dashed lines slightly faint where gradient fades to near-zero at edges
-  - Confidence interval is symmetric — asymmetric intervals could show more band-plot
-    variety
-  - Gradient near band edges becomes very faint, relying mainly on dashed lines for
-    boundary definition
-  image_description: 'The plot displays a 30-day temperature forecast band chart.
-    The x-axis is labeled "Day of Month" (1–30) and the y-axis "Temperature (°C)"
-    (approximately 12–22°C). A solid orange/rust center line (#c4622d, linewidth=3
-    with a subtle glow effect via path_effects) traces a sinusoidal forecast peaking
-    around day 15 at ~19.5°C. The confidence band is rendered as a smooth gradient
-    fill using pcolormesh with gouraud shading — the fill is most opaque (deep blue,
-    #306998) near the center line and fades to near-transparent at the edges, creating
-    a heat-map-like density effect. Dashed blue boundary lines (alpha=0.65, lw=1.8)
-    mark the 95% CI edges. The band widens progressively from left to right, visually
-    conveying increasing forecast uncertainty. An annotation in the lower-right reads
-    "Uncertainty exceeds ±3°C" with an arrow pointing to approximately day 19 where
-    the interval crosses this threshold. A custom legend in the upper-left identifies
-    "95% Confidence Interval" (blue patch) and "Forecast Mean" (orange line). Top
-    and right spines are removed. Subtle y-axis gridlines (alpha=0.2) are visible.
-    The title reads "band-basic · matplotlib · pyplots.ai".'
+  - DE-01 is 'strong design' territory (5/8) but not yet publication-ready; the gradient
+    technique is impressive yet overall composition could push further toward FiveThirtyEight
+    level
+  - Annotation at minimum 8pt font may be slightly small at mobile scale (~400px width
+    rendering); consider 9pt
+  - plt.tight_layout() used instead of fig.tight_layout() — minor idiomaticity concern
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "band-basic · python · matplotlib · anyplot.ai" in dark ink, fully visible at top. Axis labels "Day of Month" (x) and "Temperature (°C)" (y) in dark INK color. Tick labels in INK_SOFT (#4A4A44). Legend frame in ELEVATED_BG (#FFFDF6) with INK_SOFT border and text. Annotation box "Uncertainty exceeds ±3°C" in ELEVATED_BG with INK_SOFT text, positioned lower-right with arc arrow.
+      Data: Gradient confidence band in brand green #009E73, ranging from near-transparent at edges to alpha~0.45 near center. Dashed boundary lines in #009E73 at alpha=0.65. Center forecast line in lavender #C475FD with glow path effect. First series correctly uses #009E73.
+      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
+      Chrome: Title in light #F0EFE8 — clearly readable. Axis labels in light INK color. Tick labels in INK_SOFT (#B8B7B0). Legend frame in dark ELEVATED_BG (#242420) with light border and text. Annotation box in #242420 with light-gray INK_SOFT text. No dark-on-dark failures detected.
+      Data: Confidence band and center line retain identical colors to light render — #009E73 band and #C475FD center line are unchanged. Only chrome elements flipped. Brand green #009E73 clearly visible on dark surface.
+      Legibility verdict: PASS — all text clearly readable against dark background; no dark-on-dark failures
   criteria_checklist:
     visual_quality:
       score: 29
@@ -66,68 +54,75 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, xlabel=20, ylabel=20, ticks=16,
-          legend=16, annotation=14'
+        comment: All font sizes explicitly set; readable in both themes; annotation
+          at minimum 8pt is borderline at mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; legend in upper-left, annotation in lower-right,
-          all well-positioned
+        comment: No overlaps; annotation positioned below lower CI boundary with offset;
+          legend clear of data
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Gradient band and center line clearly visible; boundary dashed lines
-          slightly faint at edges
+        comment: Gradient band, dashed boundaries, and glow center line all clearly
+          visible
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue-orange colorblind-safe combination with strong contrast
+        comment: Imprint palette green+lavender; CVD-safe; no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 figure with tight_layout, well-balanced canvas utilization
+        comment: Canvas gate passed 3200x1800; good proportions; no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Temperature (°C) with units, Day of Month descriptive
+        comment: Day of Month (x), Temperature (°C) with units (y); title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Band=#009E73 (Imprint pos 1), center=#C475FD (Imprint pos 2); correct
+          theme backgrounds; full chrome adaptation
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: gradient fill via pcolormesh, blue-orange color contrast,
-          path_effects glow, custom colormap'
+        comment: 'Above defaults: pcolormesh gradient + gouraud shading + custom LinearSegmentedColormap
+          with alpha ramp + path effects glow; not yet FiveThirtyEight publication-ready'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle grid, gradient fill transitions, glow effect,
-          clean annotation styling, custom legend
+        comment: Top/right spines removed; y-grid alpha=0.15 subtle; styled legend
+          frame and annotation box; clear refinement above defaults
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Gradient hierarchy (center=certain, edges=uncertain), annotation
-          highlights threshold crossing, contrasting center line as focal point
+        comment: Annotation marks ±3°C uncertainty threshold; widening gradient band
+          visually encodes growing forecast uncertainty
     spec_compliance:
       score: 15
       max: 15
@@ -137,50 +132,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct band plot with filled region and central trend line
+        comment: Correct band plot with filled region between boundary lines
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent gradient fill, central line in contrasting color,
-          smooth interpolation, boundary lines
+        comment: Semi-transparent fill, central trend line in contrasting color, smooth
+          interpolation (300-point grid), boundary lines
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=days, Y=temperature correctly mapped, full data range shown
+        comment: x=days, y_lower, y_upper, y_center all correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, legend labels match data
+        comment: Title format correct; legend labels '95% Confidence Interval' and
+          'Forecast Mean' descriptive and accurate
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Widening band, clear trend, boundary lines; symmetric intervals only
+        comment: 'Shows all band features: gradient fill, boundary dashes, center
+          line, asymmetric CI, threshold annotation'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Temperature forecast with 95% CI is a real-world neutral weather
-          scenario
+        comment: 30-day temperature forecast with 95% CI; asymmetric warm-bias uncertainty
+          is meteorologically realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperatures 12-22°C and uncertainty 0.8-4.4°C realistic for weather
-          forecasts
+        comment: Temperatures 12-22°C plausible; uncertainty growing from ~0.5°C to
+          ~4°C over 30 days aligns with NWP skill decay
     code_quality:
       score: 10
       max: 10
@@ -190,48 +187,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean flat structure: Imports → Data → Colors → Plot → Legend →
-          Style → Save'
+        comment: Linear Imports->Data->Plot->Save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set, data is deterministic mathematical formula
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: mcolors, pe, plt, np, Patch'
+        comment: All 6 imports (os, mcolors, pe, plt, np, Patch) are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pcolormesh gradient adds justified complexity; no fake functionality
+        comment: Appropriate complexity for gradient technique; no fake UI; clean
+          separation
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, bbox_inches=tight, no deprecated API
+        comment: savefig without bbox_inches='tight'; correct plot-{THEME}.png naming
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert-level: ax methods, pcolormesh, custom colormaps, path_effects,
-          custom legend handles'
+        comment: 'Uses ax methods for data; explicit fig,ax=plt.subplots(); plt.setp
+          for batch styling; minor: plt.tight_layout() instead of fig.tight_layout()'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: pcolormesh with gouraud shading, patheffects.Stroke, LinearSegmentedColormap,
-          rasterized rendering
+        comment: pcolormesh with shading='gouraud' for gradient band and matplotlib.patheffects
+          (Stroke+Normal glow) are distinctly matplotlib features adding real visual
+          value
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - patches
+  patterns:
+  - data-generation
+  - matrix-construction
+  - explicit-figure
+  dataprep:
+  - interpolation
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - gradient-fill

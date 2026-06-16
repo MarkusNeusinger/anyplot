@@ -15,7 +15,7 @@ preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - Correct anyplot palette order (AAPL=green, GOOGL=purple, MSFT=red, SPY=sky-blue)
+  - Correct Imprint palette order (AAPL=green, GOOGL=purple, MSFT=red, SPY=sky-blue)
     with perfect theme-adaptive chrome in both light and dark renders
   - 'Intentional visual hierarchy: SPY benchmark rendered at 1.6 line weight vs 0.9
     for others, clearly distinguishing the reference series'
@@ -85,7 +85,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette is CVD-safe by design; 4 series with distinct hue+luminance
+        comment: Imprint palette is CVD-safe by design; 4 series with distinct hue+luminance
           separation
       - id: VQ-05
         name: Layout & Canvas

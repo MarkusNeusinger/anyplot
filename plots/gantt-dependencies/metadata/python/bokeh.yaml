@@ -1,45 +1,58 @@
 library: bokeh
+language: python
 specification_id: gantt-dependencies
 created: '2026-01-15T21:03:23Z'
-updated: '2026-02-25T15:10:25Z'
-generated_by: claude-opus-4-6
-workflow_run: 21046152112
+updated: '2026-06-02T14:05:00Z'
+generated_by: claude-sonnet
+workflow_run: 26822893445
 issue: 3830
-python_version: '3.14'
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/bokeh/plot.html
-quality_score: 93
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/python/bokeh/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Critical path computation with forward/backward pass creates genuine analytical
-    value and strong visual focal point
-  - Dual output (PNG + interactive HTML with hover tooltips) leverages Bokeh distinctive
-    strengths
-  - Custom cohesive color palette with excellent visual hierarchy (critical vs non-critical
-    arrows, group vs task typography)
-  - 'Complete spec compliance with all required features: dependency arrows, groupings,
-    aggregate span bars, legend explaining line styles'
-  - Realistic software project data with varied dependency patterns (sequential, parallel,
-    convergent)
+  - Excellent critical path calculation and visualization with dark outlines highlighting
+    critical tasks
+  - Full spec compliance — dependency arrows with arrowhead patches, group aggregate
+    span bars, indented task hierarchy, and legend explaining dependency/critical-path
+    line styles
+  - Theme-adaptive chrome throughout — title, axis labels, LabelSet task labels, legend,
+    and arrow colors all correctly use INK/INK_SOFT tokens in both themes
+  - Correct Imprint palette in canonical order for all 4 phases; group colors are
+    consistent between group headers and task bars
+  - Alternating row band BoxAnnotations significantly improve row scanability on a
+    dense 12-task chart
+  - Well-implemented Selenium/CDP viewport override produces the exact 3200×1800 canvas
+    (gate passed)
   weaknesses:
-  - 'Non-critical dependency arrows are quite faint (alpha=0.45, #BBBBBB) — slightly
-    increasing visibility while maintaining hierarchy would help'
-  - Left margin has 14 days of padding for label positioning, creating some unused
-    canvas space
-  image_description: 'The plot displays a Gantt chart for a software development project
-    with 12 tasks organized across 4 phases (Requirements, Design, Development, Testing).
-    Task bars are color-coded by phase: steel blue for Requirements, warm amber for
-    Design, forest green for Development, and muted rose for Testing. Each phase has
-    a semi-transparent aggregate span bar showing the overall phase duration. Dependency
-    arrows connect predecessor task ends to successor task starts — critical path
-    arrows are bold black lines with filled arrowheads, while non-critical arrows
-    are light gray. Critical path tasks have a dark outline border. The y-axis uses
-    custom LabelSet labels with bold group headers and indented task names. The x-axis
-    shows a timeline from Jan 2026 to Mar 2026 with "Timeline (Weeks)" label. A legend
-    in the top right identifies all four phases plus "Dependency" and "Critical Path"
-    line styles. Alternating row bands improve readability. The background is #FAFAFA
-    with subtle dashed vertical grid lines.'
+  - Non-critical dependency arrow opacity (0.65) and line_width (2.5) vs critical
+    (0.9, 4.0) is a good distinction but in the dark render the normal arrows are
+    somewhat hard to trace at a glance — slight increase in line_width or alpha for
+    normal arrows would help
+  - Task label font size (22pt) is meaningfully smaller than x-axis tick labels (34pt)
+    — while the hierarchy is intentional, the gap is wide enough that task names become
+    the hardest element to read; 26-28pt would better balance the hierarchy
+  - min_border_left=50 is well below the guide-recommended 180 — acceptable here because
+    y-axis is hidden and labels are LabelSet-positioned within the x range, but it
+    limits future adjustability
+  - LM-02 could showcase more distinctively Bokeh features — e.g. a TapTool to highlight
+    a task+its dependency chain, or a RangeTool for timeline zoom
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
+      Chrome: Title "gantt-dependencies · python · bokeh · anyplot.ai" bold at top in near-black #1A1A17 — clearly readable. X-axis label "Timeline (Weeks)" in italics, readable. X-axis tick labels (Jan 01 2026 / Jan 15 / Feb 01 / Feb 15 / Mar 01) readable in INK_SOFT dark gray. Task labels on left side: group headers (Requirements, Design, Development, Testing) in bold 30pt INK, individual task names in 22pt INK_SOFT — all readable. Legend top-right with elevated background, 6 items: Requirements, Design, Development, Testing, Dependency, Critical Path — all legible.
+      Data: Four phase colors from Imprint palette in canonical order — Requirements #009E73 (brand green), Design #C475FD (lavender), Development #4467A3 (blue), Testing #BD8233 (ochre). Group aggregate span bars semi-transparent. Dependency arrows in INK_SOFT gray with triangular arrowheads. Critical path tasks (Stakeholder Review → Requirements Sign-off → System Architecture → Database Design → Backend Core → API Integration → Integration Testing → User Acceptance) highlighted with dark border outlines.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface, not pure black.
+      Chrome: Title and axis labels render in near-white #F0EFE8 (INK for dark theme) — clearly readable. Tick labels and task labels in #B8B7B0 (INK_SOFT dark theme) — readable against dark background. Legend has elevated #242420 background with INK_SOFT border. No dark-on-dark issues: all text is light-on-dark with sufficient contrast.
+      Data: Data colors are IDENTICAL to light render — same brand green, lavender, blue, ochre. Dependency arrows shift to INK_SOFT (#B8B7B0) and critical path arrows to INK (#F0EFE8) — both visible against dark background. Alternating row bands (subtle INK tint at 4% alpha) remain gently visible.
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome elements correctly adapt to dark theme.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -47,48 +60,56 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 42pt, x-axis label 28pt, tick
-          labels 22pt, group labels 24pt bold, task labels 20pt'
+        comment: Title, axis labels, tick labels, and LabelSet task labels all readable
+          in both themes. 22pt task labels vs 34pt tick labels creates a slightly
+          wide gap in hierarchy but remains legible.
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No overlapping text elements, task labels well-spaced, legend compact
-          and non-overlapping
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 'Task bars and critical path clearly visible; non-critical arrows
-          quite faint (alpha=0.45, #BBBBBB) but intentional for hierarchy'
+        comment: No text overlap; dependency arrows are clean with L-shaped routing.
+          Arrows are slightly dense in the convergence zones but no severe collision.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Task bars clearly visible; group span bars semi-transparent and distinct;
+          dependency and critical-path arrows distinguishable by weight and color.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; critical path uses outline rather than
+          color-alone encoding.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Steel blue, warm amber, forest green, muted rose are colorblind-distinguishable;
-          critical path uses universal black
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good layout filling ~65% of canvas; minor wasted space on left due
-          to 14-day label padding
+        comment: Canvas gate passed (3200x1800). Title well-positioned, legend in
+          top-right doesn't overlap data, good internal spacing.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows spec format, x-axis labeled Timeline (Weeks), y-axis
-          rendered via descriptive LabelSet
+        comment: Title matches spec-id format exactly. X-axis 'Timeline (Weeks)' is
+          descriptive. Y-axis hidden appropriately with LabelSet task labels.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (Requirements). Canonical Imprint order: green/lavender/blue/ochre.
+          Backgrounds #FAF8F1 / #1A1A17. Both renders theme-correct.'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -96,22 +117,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom cohesive palette, intentional hierarchy between critical/non-critical,
-          group/task typography differentiation, white edge borders
+        comment: 'Above default (4): alternating row bands, semi-transparent group
+          aggregate bars, critical path outlined overlay, hierarchical bold/regular
+          label distinction, clean dependency arrows with arrowhead patches.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Y-grid hidden, x-grid subtle dashed, outline removed, alternating
-          row bands, toolbar hidden for PNG
+        comment: 'Above default (2): y-axis hidden, subtle dashed x-grid at 12% alpha,
+          elevated legend background, no unnecessary spines. Clean minimal chrome.'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Critical path emphasis guides viewer to most important sequence;
-          bold vs subdued arrows create clear focal point
+        comment: 'Above default (2): critical path prominently highlighted, group
+          hierarchy creates clear visual structure, phase color coding identifies
+          dependencies at a glance, arrows narrate scheduling constraints.'
     spec_compliance:
       score: 15
       max: 15
@@ -121,28 +144,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Gantt chart with horizontal bars representing task timelines
+        comment: Correct Gantt chart with dependencies — horizontal bars, group hierarchy,
+          dependency arrows.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: dependency arrows, task groupings, aggregate
-          span bars, indentation, dependency type differentiation, legend'
+        comment: Dependency arrows from predecessor right-edge to successor left-edge;
+          group aggregate span bars; hierarchical organization; legend for dependency
+          types; critical path bonus.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis datetime, tasks organized by group, all 12 tasks and 4 groups
-          visible, dependencies correctly mapped
+        comment: X-axis shows datetime timeline; tasks ordered by group then sequence;
+          all 12 tasks visible with correct temporal positioning.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend includes 4 phases plus Dependency and
-          Critical Path entries
+        comment: 'Title: ''gantt-dependencies · python · bokeh · anyplot.ai''. Legend
+          labels match phase names plus Dependency and Critical Path explanations.'
     data_quality:
       score: 15
       max: 15
@@ -152,22 +177,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Sequential, parallel, and convergent dependencies; critical path;
-          varied durations 1-11 days
+        comment: 'All Gantt aspects shown: individual task bars, group aggregate bars,
+          finish-to-start dependency arrows, critical path computation and visualization.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real software development project with plausible phases and tasks,
-          neutral business context
+        comment: Software development project with realistic phases (Requirements
+          → Design → Development → Testing), plausible task names, and correctly sequenced
+          dependencies.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 12 tasks across ~2 months, realistic working-day durations, weekend
-          gaps between phases
+        comment: 12 tasks across 4 phases — within the 10-50 task range specified.
+          Timeline spans Jan-Mar 2026, appropriate for a software sprint cycle.
     code_quality:
       score: 10
       max: 10
@@ -177,59 +203,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: Data, DataFrame, Critical path, Figure, Rendering,
-          Save. No functions/classes'
+        comment: No functions or classes; linear script with well-organized sections.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded dates and task names
+        comment: Data is hardcoded — fully deterministic, no random seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: pandas, bokeh.io, bokeh.models, bokeh.plotting'
+        comment: All imports used; appropriate bokeh models imported; selenium for
+          headless capture.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized sections, appropriate complexity for critical path
-          algorithm, no fake functionality
+        comment: Appropriate complexity for a Gantt with critical path; clear section
+          comments; no fake interactivity (real HoverTool).
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png plus HTML export, current Bokeh
-          3.8 API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html using current bokeh
+          + selenium API.
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert Bokeh patterns: ColumnDataSource, figure with datetime, hbar,
-          LabelSet, BoxAnnotation, multi_line, patches, Legend with LegendItem'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: HoverTool with rich tooltips, dual PNG+HTML export, BoxAnnotation
-          for row bands — distinctively Bokeh
+        comment: 'Above default (3): ColumnDataSource for all renderers, LabelSet
+          for custom axis labels, BoxAnnotation for row bands, Legend with explicit
+          LegendItems, HoverTool with multi-field tooltips, multi_line + patches for
+          dependency arrows.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Above default (1): interactive HTML export (bokeh specialty), HoverTool
+          with rich per-task tooltip, CDP-override Selenium capture, BoxAnnotation
+          underlays. Could further leverage TapTool or JS callbacks for dependency
+          highlighting.'
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - hover-tooltips
   - html-export
   - custom-legend
+  - annotations
   patterns:
   - columndatasource
   - iteration-over-groups
@@ -237,5 +269,4 @@ impl_tags:
   - time-series
   styling:
   - alpha-blending
-  - grid-styling
   - edge-highlighting

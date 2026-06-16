@@ -1,24 +1,21 @@
 import { useEffect, useState } from 'react';
+
 import { Helmet } from 'react-helmet-async';
 import { Link as RouterLink } from 'react-router-dom';
+
 import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
 import Link from '@mui/material/Link';
 import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
 
-import { useAnalytics } from '../hooks';
-import { useTheme } from '../hooks/useLayoutContext';
-import { API_URL } from '../constants';
-import { specPath } from '../utils/paths';
-import { buildSrcSet, getFallbackSrc } from '../utils/responsiveImage';
-import { selectPreviewUrl } from '../utils/themedPreview';
-import { SectionHeader } from '../components/SectionHeader';
-import {
-  typography,
-  colors,
-  semanticColors,
-  fontSize,
-} from '../theme';
+import { SectionHeader } from 'src/components/SectionHeader';
+import { useAnalytics } from 'src/hooks';
+import { useTheme } from 'src/hooks/useLayoutContext';
+import { ApiError, apiGet, endpoints } from 'src/lib/api';
+import { paths, specPath } from 'src/routes/paths';
+import { colors, fontSize, semanticColors, typography } from 'src/theme';
+import { buildSrcSet, getFallbackSrc } from 'src/utils/responsiveImage';
+import { selectPreviewUrl } from 'src/utils/themedPreview';
 
 interface LibraryStats {
   id: string;
@@ -96,11 +93,23 @@ function scoreColor(score: number | null): string {
   return colors.error;
 }
 
-
 function formatNum(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return n.toLocaleString();
+}
+
+// Shorter labels for the fixed-width (80px) library column so every row stays
+// on a single line. The API's canonical names ("Apache ECharts", "MUI X
+// Charts") wrap to two lines here; we keep the full names elsewhere (Libraries
+// page, SEO, plot-of-the-day) and only trim them in this dense histogram list.
+const STATS_LIB_LABELS: Record<string, string> = {
+  echarts: 'ECharts',
+  muix: 'MUI X',
+};
+
+function statsLibLabel(lib: Pick<LibraryStats, 'id' | 'name'>): string {
+  return STATS_LIB_LABELS[lib.id] ?? lib.name;
 }
 
 export function StatsPage() {
@@ -112,37 +121,44 @@ export function StatsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    trackPageview('/stats');
+    trackPageview(paths.stats);
   }, [trackPageview]);
 
   useEffect(() => {
-    fetch(`${API_URL}/insights/dashboard`)
-      .then(r => { if (!r.ok) throw new Error(`${r.status}`); return r.json(); })
+    apiGet<DashboardData>(endpoints.insightsDashboard)
       .then(setData)
-      .catch(e => setError(e.message))
+      // Keep the pre-ApiError user-visible string: a bare status code for
+      // HTTP failures, the raw message for network errors.
+      .catch(e => setError(e instanceof ApiError ? `${e.status}` : e.message))
       .finally(() => setLoading(false));
   }, []);
 
   // Visitors load separately so a Plausible outage / missing API key never
-  // blocks the rest of the dashboard from rendering.
+  // blocks the rest of the dashboard from rendering (non-2xx and network
+  // errors both fall through to the empty-points placeholder).
   useEffect(() => {
-    fetch(`${API_URL}/insights/visitors`)
-      .then(r => (r.ok ? r.json() : null))
-      .then((res: VisitorsResponse | null) => setVisitors(res?.points ?? []))
+    apiGet<VisitorsResponse>(endpoints.insightsVisitors)
+      .then(res => setVisitors(res?.points ?? []))
       .catch(() => setVisitors([]));
   }, []);
 
-  if (loading) return (
-    <Box sx={{ py: 4, textAlign: 'center' }}>
-      <Typography sx={{ fontFamily: typography.fontFamily, color: semanticColors.mutedText }}>loading stats...</Typography>
-    </Box>
-  );
+  if (loading)
+    return (
+      <Box sx={{ py: 4, textAlign: 'center' }}>
+        <Typography sx={{ fontFamily: typography.fontFamily, color: semanticColors.mutedText }}>
+          loading stats...
+        </Typography>
+      </Box>
+    );
 
-  if (error || !data) return (
-    <Box sx={{ py: 4, textAlign: 'center' }}>
-      <Typography sx={{ fontFamily: typography.fontFamily, color: colors.error }}>failed to load stats{error ? `: ${error}` : ''}</Typography>
-    </Box>
-  );
+  if (error || !data)
+    return (
+      <Box sx={{ py: 4, textAlign: 'center' }}>
+        <Typography sx={{ fontFamily: typography.fontFamily, color: colors.error }}>
+          failed to load stats{error ? `: ${error}` : ''}
+        </Typography>
+      </Box>
+    );
 
   const dailyImpls = data.daily_impls ?? [];
   const maxDaily = Math.max(...dailyImpls.map(d => d.count), 1);
@@ -155,13 +171,28 @@ export function StatsPage() {
     <>
       <Helmet>
         <title>stats | anyplot.ai</title>
-        <meta name="description" content="Platform statistics for anyplot.ai — plot counts, quality scores, library coverage, and more." />
+        <meta
+          name="description"
+          content="Platform statistics for anyplot.ai — plot counts, quality scores, library coverage, and more."
+        />
         <link rel="canonical" href="https://anyplot.ai/stats" />
       </Helmet>
 
       <Box sx={{ pt: { xs: 2, md: 3 }, pb: 4 }}>
         {/* Summary Counters */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' }, gap: 2, mt: 3, mb: 4 }}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: 'repeat(2, 1fr)',
+              sm: 'repeat(3, 1fr)',
+              md: 'repeat(6, 1fr)',
+            },
+            gap: 2,
+            mt: 3,
+            mb: 4,
+          }}
+        >
           {[
             { label: 'specifications', value: data.total_specs, suffix: '' },
             { label: 'implementations', value: data.total_implementations, suffix: '' },
@@ -170,11 +201,29 @@ export function StatsPage() {
             { label: 'avg quality', value: data.avg_quality_score, suffix: '' },
             { label: 'coverage', value: data.coverage_percent, suffix: '%' },
           ].map(item => (
-            <Box key={item.label} sx={{ textAlign: 'center', p: 2, border: '1px solid var(--rule)', borderRadius: 1 }}>
-              <Typography sx={{ fontFamily: typography.serif, fontSize: '2rem', fontWeight: 300, color: 'var(--ink)', lineHeight: 1.2 }}>
+            <Box
+              key={item.label}
+              sx={{ textAlign: 'center', p: 2, border: '1px solid var(--rule)', borderRadius: 1 }}
+            >
+              <Typography
+                sx={{
+                  fontFamily: typography.serif,
+                  fontSize: '2rem',
+                  fontWeight: 300,
+                  color: 'var(--ink)',
+                  lineHeight: 1.2,
+                }}
+              >
                 {typeof item.value === 'number' ? `${formatNum(item.value)}${item.suffix}` : '—'}
               </Typography>
-              <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, mt: 0.5 }}>
+              <Typography
+                sx={{
+                  fontFamily: typography.fontFamily,
+                  fontSize: fontSize.xs,
+                  color: semanticColors.mutedText,
+                  mt: 0.5,
+                }}
+              >
                 {item.label}
               </Typography>
             </Box>
@@ -194,44 +243,92 @@ export function StatsPage() {
           />
         </Box>
         <Box sx={{ mt: 1, mb: 3 }}>
-          <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, mb: 0.5 }}>
-            unique visitors · last 28 days{visitors !== null && visitorPoints.length > 0 ? ` · ${formatNum(totalVisitors)} total` : ''}
+          <Typography
+            sx={{
+              fontFamily: typography.fontFamily,
+              fontSize: fontSize.xs,
+              color: semanticColors.mutedText,
+              mb: 0.5,
+            }}
+          >
+            unique visitors · last 28 days
+            {visitors !== null && visitorPoints.length > 0
+              ? ` · ${formatNum(totalVisitors)} total`
+              : ''}
           </Typography>
           {visitors === null ? (
             <Box sx={{ height: 70, display: 'flex', alignItems: 'center' }}>
-              <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: semanticColors.mutedText }}>
+              <Typography
+                sx={{
+                  fontFamily: typography.fontFamily,
+                  fontSize: fontSize.xxs,
+                  color: semanticColors.mutedText,
+                }}
+              >
                 loading visitor data...
               </Typography>
             </Box>
           ) : visitorPoints.length === 0 ? (
             <Box sx={{ height: 70, display: 'flex', alignItems: 'center' }}>
-              <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: semanticColors.mutedText }}>
+              <Typography
+                sx={{
+                  fontFamily: typography.fontFamily,
+                  fontSize: fontSize.xxs,
+                  color: semanticColors.mutedText,
+                }}
+              >
                 visitor data unavailable — see plausible.io/anyplot.ai
               </Typography>
             </Box>
           ) : (
             <>
-              <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 0.25, height: 70, overflow: 'hidden' }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'flex-end',
+                  gap: 0.25,
+                  height: 70,
+                  overflow: 'hidden',
+                }}
+              >
                 {visitorPoints.map(point => (
-                  <Tooltip key={point.date} title={`${point.date}: ${point.visitors} visitors`} arrow>
-                    <Box sx={{
-                      flex: 1,
-                      height: `${Math.max((point.visitors / maxVisitors) * 100, 3)}%`,
-                      bgcolor: colors.primaryDark,
-                      opacity: 0.5,
-                      borderRadius: '2px 2px 0 0',
-                      minHeight: 2,
-                      '&:hover': { opacity: 0.8 },
-                      transition: 'opacity 0.15s ease',
-                    }} />
+                  <Tooltip
+                    key={point.date}
+                    title={`${point.date}: ${point.visitors} visitors`}
+                    arrow
+                  >
+                    <Box
+                      sx={{
+                        flex: 1,
+                        height: `${Math.max((point.visitors / maxVisitors) * 100, 3)}%`,
+                        bgcolor: colors.primaryDark,
+                        opacity: 0.5,
+                        borderRadius: '2px 2px 0 0',
+                        minHeight: 2,
+                        '&:hover': { opacity: 0.8 },
+                        transition: 'opacity 0.15s ease',
+                      }}
+                    />
                   </Tooltip>
                 ))}
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.25 }}>
-                <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.micro, color: semanticColors.mutedText }}>
+                <Typography
+                  sx={{
+                    fontFamily: typography.fontFamily,
+                    fontSize: fontSize.micro,
+                    color: semanticColors.mutedText,
+                  }}
+                >
                   {visitorPoints[0]?.date}
                 </Typography>
-                <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.micro, color: semanticColors.mutedText }}>
+                <Typography
+                  sx={{
+                    fontFamily: typography.fontFamily,
+                    fontSize: fontSize.micro,
+                    color: semanticColors.mutedText,
+                  }}
+                >
                   {visitorPoints[visitorPoints.length - 1]?.date}
                 </Typography>
               </Box>
@@ -244,86 +341,175 @@ export function StatsPage() {
           <SectionHeader prompt="❯" title={<em>libraries</em>} />
         </Box>
         {/* Quality distribution per library */}
-        <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, mb: 1 }}>
+        <Typography
+          sx={{
+            fontFamily: typography.fontFamily,
+            fontSize: fontSize.xs,
+            color: semanticColors.mutedText,
+            mb: 1,
+          }}
+        >
           quality distribution 50–100 · count · avg
         </Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          {[...data.library_stats].sort((a, b) => (b.avg_score ?? 0) - (a.avg_score ?? 0)).map(lib => {
-            const allBuckets = Array.from({ length: 10 }, (_, i) => {
-              const lo = 50 + i * 5;
-              const key = `${lo}-${lo + 5}`;
-              return [key, lib.score_buckets[key] ?? 0] as const;
-            });
-            const maxBucket = Math.max(...allBuckets.map(([, c]) => c), 1);
-            return (
-              <Box key={lib.id} sx={{ display: 'flex', alignItems: 'flex-end', gap: 1.5 }}>
-                <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, width: 80, textAlign: 'right', flexShrink: 0, pb: '2px' }}>
-                  {lib.name}
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: '1px', height: 22, flex: 1 }}>
-                  {allBuckets.map(([bucket, count]) => {
-                    const lo = parseInt(bucket.split('-')[0]);
-                    return (
-                      <Tooltip key={bucket} title={`${bucket}: ${count}`} arrow>
-                        <Box sx={{
-                          flex: 1,
-                          height: count > 0 ? `${Math.max((count / maxBucket) * 100, 15)}%` : 0,
-                          bgcolor: scoreColor(lo >= 90 ? 95 : lo >= 75 ? 80 : 50),
-                          opacity: 0.6,
-                          borderRadius: '1px 1px 0 0',
-                        }} />
-                      </Tooltip>
-                    );
-                  })}
+          {[...data.library_stats]
+            .sort((a, b) => (b.avg_score ?? 0) - (a.avg_score ?? 0))
+            .map(lib => {
+              const allBuckets = Array.from({ length: 10 }, (_, i) => {
+                const lo = 50 + i * 5;
+                const key = `${lo}-${lo + 5}`;
+                return [key, lib.score_buckets[key] ?? 0] as const;
+              });
+              const maxBucket = Math.max(...allBuckets.map(([, c]) => c), 1);
+              return (
+                <Box key={lib.id} sx={{ display: 'flex', alignItems: 'flex-end', gap: 1.5 }}>
+                  <Typography
+                    sx={{
+                      fontFamily: typography.fontFamily,
+                      fontSize: fontSize.xs,
+                      color: semanticColors.mutedText,
+                      width: 80,
+                      textAlign: 'right',
+                      flexShrink: 0,
+                      pb: '2px',
+                    }}
+                  >
+                    {statsLibLabel(lib)}
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'flex-end',
+                      gap: '1px',
+                      height: 22,
+                      flex: 1,
+                    }}
+                  >
+                    {allBuckets.map(([bucket, count]) => {
+                      const lo = parseInt(bucket.split('-')[0]);
+                      return (
+                        <Tooltip key={bucket} title={`${bucket}: ${count}`} arrow>
+                          <Box
+                            sx={{
+                              flex: 1,
+                              height: count > 0 ? `${Math.max((count / maxBucket) * 100, 15)}%` : 0,
+                              bgcolor: scoreColor(lo >= 90 ? 95 : lo >= 75 ? 80 : 50),
+                              opacity: 0.6,
+                              borderRadius: '1px 1px 0 0',
+                            }}
+                          />
+                        </Tooltip>
+                      );
+                    })}
+                  </Box>
+                  <Typography
+                    sx={{
+                      fontFamily: typography.fontFamily,
+                      fontSize: fontSize.xxs,
+                      color: semanticColors.mutedText,
+                      width: 70,
+                      flexShrink: 0,
+                      pb: '2px',
+                      textAlign: 'right',
+                    }}
+                  >
+                    {lib.impl_count} · {lib.avg_score ?? '—'}
+                  </Typography>
                 </Box>
-                <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: semanticColors.mutedText, width: 70, flexShrink: 0, pb: '2px', textAlign: 'right' }}>
-                  {lib.impl_count} · {lib.avg_score ?? '—'}
-                </Typography>
-              </Box>
-            );
-          })}
+              );
+            })}
         </Box>
 
         {/* LOC distribution per library */}
-        <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, mt: 2, mb: 1 }}>
+        <Typography
+          sx={{
+            fontFamily: typography.fontFamily,
+            fontSize: fontSize.xs,
+            color: semanticColors.mutedText,
+            mt: 2,
+            mb: 1,
+          }}
+        >
           lines of code per implementation 0–400+ · avg
         </Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          {[...data.library_stats].sort((a, b) => (a.avg_loc ?? 999) - (b.avg_loc ?? 999)).map(lib => {
-            const locRanges = Array.from({ length: 20 }, (_, i) => `${i * 20}-${(i + 1) * 20}`).concat('400+');
-            const locBuckets = locRanges.map(key => [key, lib.loc_buckets[key] ?? 0] as const);
-            const maxLoc = Math.max(...locBuckets.map(([, c]) => c), 1);
-            return (
-              <Box key={lib.id} sx={{ display: 'flex', alignItems: 'flex-end', gap: 1.5 }}>
-                <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, width: 80, textAlign: 'right', flexShrink: 0, pb: '2px' }}>
-                  {lib.name}
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: '1px', height: 22, flex: 1 }}>
-                  {locBuckets.map(([bucket, count]) => (
-                    <Tooltip key={bucket} title={`${bucket} lines: ${count}`} arrow>
-                      <Box sx={{
-                        flex: 1,
-                        height: count > 0 ? `${Math.max((count / maxLoc) * 100, 15)}%` : 0,
-                        bgcolor: colors.primaryDark,
-                        opacity: 0.4,
-                        borderRadius: '1px 1px 0 0',
-                      }} />
-                    </Tooltip>
-                  ))}
+          {[...data.library_stats]
+            .sort((a, b) => (a.avg_loc ?? 999) - (b.avg_loc ?? 999))
+            .map(lib => {
+              const locRanges = Array.from(
+                { length: 20 },
+                (_, i) => `${i * 20}-${(i + 1) * 20}`
+              ).concat('400+');
+              const locBuckets = locRanges.map(key => [key, lib.loc_buckets[key] ?? 0] as const);
+              const maxLoc = Math.max(...locBuckets.map(([, c]) => c), 1);
+              return (
+                <Box key={lib.id} sx={{ display: 'flex', alignItems: 'flex-end', gap: 1.5 }}>
+                  <Typography
+                    sx={{
+                      fontFamily: typography.fontFamily,
+                      fontSize: fontSize.xs,
+                      color: semanticColors.mutedText,
+                      width: 80,
+                      textAlign: 'right',
+                      flexShrink: 0,
+                      pb: '2px',
+                    }}
+                  >
+                    {statsLibLabel(lib)}
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'flex-end',
+                      gap: '1px',
+                      height: 22,
+                      flex: 1,
+                    }}
+                  >
+                    {locBuckets.map(([bucket, count]) => (
+                      <Tooltip key={bucket} title={`${bucket} lines: ${count}`} arrow>
+                        <Box
+                          sx={{
+                            flex: 1,
+                            height: count > 0 ? `${Math.max((count / maxLoc) * 100, 15)}%` : 0,
+                            bgcolor: colors.primaryDark,
+                            opacity: 0.4,
+                            borderRadius: '1px 1px 0 0',
+                          }}
+                        />
+                      </Tooltip>
+                    ))}
+                  </Box>
+                  <Typography
+                    sx={{
+                      fontFamily: typography.fontFamily,
+                      fontSize: fontSize.xxs,
+                      color: semanticColors.mutedText,
+                      width: 70,
+                      flexShrink: 0,
+                      pb: '2px',
+                      textAlign: 'right',
+                    }}
+                  >
+                    avg {lib.avg_loc?.toFixed(0) ?? '—'}
+                  </Typography>
                 </Box>
-                <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: semanticColors.mutedText, width: 70, flexShrink: 0, pb: '2px', textAlign: 'right' }}>
-                  avg {lib.avg_loc?.toFixed(0) ?? '—'}
-                </Typography>
-              </Box>
-            );
-          })}
+              );
+            })}
         </Box>
 
         {/* Coverage dot matrix — right after libraries */}
         <Box sx={{ mt: 4 }}>
           <SectionHeader prompt="❯" title={<em>coverage</em>} />
         </Box>
-        <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, mb: 1 }}>
+        <Typography
+          sx={{
+            fontFamily: typography.fontFamily,
+            fontSize: fontSize.xs,
+            color: semanticColors.mutedText,
+            mb: 1,
+          }}
+        >
           {data.coverage_percent}% · {data.total_implementations} of {data.total_specs * 9} possible
         </Typography>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '2px' }}>
@@ -336,8 +522,14 @@ export function StatsPage() {
                   component={RouterLink}
                   to={specPath(row.spec_id)}
                   sx={{
-                    display: 'block', width: 10, height: 10, borderRadius: '2px',
-                    bgcolor: count === 0 ? 'var(--bg-elevated)' : `rgba(34, 197, 94, ${0.15 + intensity * 0.7})`,
+                    display: 'block',
+                    width: 10,
+                    height: 10,
+                    borderRadius: '2px',
+                    bgcolor:
+                      count === 0
+                        ? 'var(--bg-elevated)'
+                        : `rgba(34, 197, 94, ${0.15 + intensity * 0.7})`,
                     textDecoration: 'none',
                     '&:hover': { outline: `1px solid ${colors.success}` },
                   }}
@@ -347,11 +539,35 @@ export function StatsPage() {
           })}
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
-          <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.micro, color: semanticColors.mutedText }}>less</Typography>
+          <Typography
+            sx={{
+              fontFamily: typography.fontFamily,
+              fontSize: fontSize.micro,
+              color: semanticColors.mutedText,
+            }}
+          >
+            less
+          </Typography>
           {[0, 0.25, 0.5, 0.75, 1].map(v => (
-            <Box key={v} sx={{ width: 8, height: 8, borderRadius: '1px', bgcolor: `rgba(34, 197, 94, ${0.15 + v * 0.7})` }} />
+            <Box
+              key={v}
+              sx={{
+                width: 8,
+                height: 8,
+                borderRadius: '1px',
+                bgcolor: `rgba(34, 197, 94, ${0.15 + v * 0.7})`,
+              }}
+            />
           ))}
-          <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.micro, color: semanticColors.mutedText }}>more</Typography>
+          <Typography
+            sx={{
+              fontFamily: typography.fontFamily,
+              fontSize: fontSize.micro,
+              color: semanticColors.mutedText,
+            }}
+          >
+            more
+          </Typography>
         </Box>
 
         {/* Timeline — daily implementation updates over the last 28 days.
@@ -362,30 +578,59 @@ export function StatsPage() {
             <Box sx={{ mt: 4 }}>
               <SectionHeader prompt="❯" title={<em>timeline</em>} />
             </Box>
-            <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, mb: 0.5 }}>
+            <Typography
+              sx={{
+                fontFamily: typography.fontFamily,
+                fontSize: fontSize.xs,
+                color: semanticColors.mutedText,
+                mb: 0.5,
+              }}
+            >
               implementations updated · last 28 days · {totalDailyImpls} total
             </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 0.25, height: 70, overflow: 'hidden' }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'flex-end',
+                gap: 0.25,
+                height: 70,
+                overflow: 'hidden',
+              }}
+            >
               {dailyImpls.map(point => (
                 <Tooltip key={point.date} title={`${point.date}: ${point.count} updated`} arrow>
-                  <Box sx={{
-                    flex: 1,
-                    height: `${Math.max((point.count / maxDaily) * 100, 3)}%`,
-                    bgcolor: colors.primaryDark,
-                    opacity: 0.5,
-                    borderRadius: '2px 2px 0 0',
-                    minHeight: 2,
-                    '&:hover': { opacity: 0.8 },
-                    transition: 'opacity 0.15s ease',
-                  }} />
+                  <Box
+                    sx={{
+                      flex: 1,
+                      height: `${Math.max((point.count / maxDaily) * 100, 3)}%`,
+                      bgcolor: colors.primaryDark,
+                      opacity: 0.5,
+                      borderRadius: '2px 2px 0 0',
+                      minHeight: 2,
+                      '&:hover': { opacity: 0.8 },
+                      transition: 'opacity 0.15s ease',
+                    }}
+                  />
                 </Tooltip>
               ))}
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.25 }}>
-              <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.micro, color: semanticColors.mutedText }}>
+              <Typography
+                sx={{
+                  fontFamily: typography.fontFamily,
+                  fontSize: fontSize.micro,
+                  color: semanticColors.mutedText,
+                }}
+              >
                 {dailyImpls[0]?.date}
               </Typography>
-              <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.micro, color: semanticColors.mutedText }}>
+              <Typography
+                sx={{
+                  fontFamily: typography.fontFamily,
+                  fontSize: fontSize.micro,
+                  color: semanticColors.mutedText,
+                }}
+              >
                 {dailyImpls[dailyImpls.length - 1]?.date}
               </Typography>
             </Box>
@@ -396,46 +641,120 @@ export function StatsPage() {
         <Box sx={{ mt: 4 }}>
           <SectionHeader prompt="❯" title={<em>top rated</em>} />
         </Box>
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' }, gap: 1.5 }}>
-          {data.top_implementations.slice(0, 8).map((impl) => {
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: 'repeat(2, 1fr)',
+              sm: 'repeat(3, 1fr)',
+              md: 'repeat(4, 1fr)',
+            },
+            gap: 1.5,
+          }}
+        >
+          {data.top_implementations.slice(0, 8).map(impl => {
             const previewUrl = selectPreviewUrl(impl, isDark);
             return (
-            <Link
-              key={`${impl.spec_id}-${impl.library_id}`}
-              component={RouterLink}
-              to={specPath(impl.spec_id, impl.language, impl.library_id)}
-              sx={{ textDecoration: 'none', color: 'inherit', '&:hover': { opacity: 0.85 }, transition: 'opacity 0.15s ease' }}
-              onClick={() => trackEvent('stats_top_impl_click', { spec: impl.spec_id, library: impl.library_id })}
-            >
-              <Box sx={{ border: '1px solid var(--rule)', borderRadius: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                <Box sx={{ width: '100%', aspectRatio: '16/9', overflow: 'hidden', flexShrink: 0 }}>
-                  {previewUrl ? (
-                    <Box component="picture" key={previewUrl} sx={{ display: 'block', width: '100%', height: '100%' }}>
-                      <source type="image/webp" srcSet={buildSrcSet(previewUrl, 'webp')} sizes="(max-width: 599px) 50vw, 25vw" />
-                      <source type="image/png" srcSet={buildSrcSet(previewUrl, 'png')} sizes="(max-width: 599px) 50vw, 25vw" />
-                      <Box component="img" src={getFallbackSrc(previewUrl)} alt={impl.spec_title} loading="lazy"
-                        sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                      />
+              <Link
+                key={`${impl.spec_id}-${impl.library_id}`}
+                component={RouterLink}
+                to={specPath(impl.spec_id, impl.language, impl.library_id)}
+                sx={{
+                  textDecoration: 'none',
+                  color: 'inherit',
+                  '&:hover': { opacity: 0.85 },
+                  transition: 'opacity 0.15s ease',
+                }}
+                onClick={() =>
+                  trackEvent('stats_top_impl_click', {
+                    spec: impl.spec_id,
+                    library: impl.library_id,
+                  })
+                }
+              >
+                <Box
+                  sx={{
+                    border: '1px solid var(--rule)',
+                    borderRadius: 1,
+                    overflow: 'hidden',
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                >
+                  <Box
+                    sx={{ width: '100%', aspectRatio: '16/9', overflow: 'hidden', flexShrink: 0 }}
+                  >
+                    {previewUrl ? (
+                      <Box
+                        component="picture"
+                        key={previewUrl}
+                        sx={{ display: 'block', width: '100%', height: '100%' }}
+                      >
+                        <source
+                          type="image/webp"
+                          srcSet={buildSrcSet(previewUrl, 'webp')}
+                          sizes="(max-width: 599px) 50vw, 25vw"
+                        />
+                        <source
+                          type="image/png"
+                          srcSet={buildSrcSet(previewUrl, 'png')}
+                          sizes="(max-width: 599px) 50vw, 25vw"
+                        />
+                        <Box
+                          component="img"
+                          src={getFallbackSrc(previewUrl)}
+                          alt={impl.spec_title}
+                          loading="lazy"
+                          sx={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            display: 'block',
+                          }}
+                        />
+                      </Box>
+                    ) : (
+                      <Box sx={{ width: '100%', height: '100%', bgcolor: 'var(--bg-elevated)' }} />
+                    )}
+                  </Box>
+                  <Box sx={{ p: 1 }}>
+                    <Typography
+                      sx={{
+                        fontFamily: typography.fontFamily,
+                        fontSize: fontSize.xxs,
+                        color: 'var(--ink-soft)',
+                        lineHeight: 1.3,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {impl.spec_title}
+                    </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.25 }}>
+                      <Typography
+                        sx={{
+                          fontFamily: typography.fontFamily,
+                          fontSize: fontSize.xxs,
+                          color: semanticColors.mutedText,
+                        }}
+                      >
+                        {impl.library_id}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontFamily: typography.fontFamily,
+                          fontSize: fontSize.xxs,
+                          color: scoreColor(impl.quality_score),
+                          fontWeight: 600,
+                        }}
+                      >
+                        {impl.quality_score}
+                      </Typography>
                     </Box>
-                  ) : (
-                    <Box sx={{ width: '100%', height: '100%', bgcolor: 'var(--bg-elevated)' }} />
-                  )}
-                </Box>
-                <Box sx={{ p: 1 }}>
-                  <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: 'var(--ink-soft)', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {impl.spec_title}
-                  </Typography>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.25 }}>
-                    <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: semanticColors.mutedText }}>
-                      {impl.library_id}
-                    </Typography>
-                    <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: scoreColor(impl.quality_score), fontWeight: 600 }}>
-                      {impl.quality_score}
-                    </Typography>
                   </Box>
                 </Box>
-              </Box>
-            </Link>
+              </Link>
             );
           })}
         </Box>
@@ -447,41 +766,81 @@ export function StatsPage() {
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
           {Object.entries(data.tag_distribution).map(([category, values]) => {
             const paramMap: Record<string, string> = {
-              plot_type: 'plot', data_type: 'data', domain: 'dom', features: 'feat',
-              dependencies: 'dep', techniques: 'tech', patterns: 'pat', dataprep: 'prep', styling: 'style',
+              plot_type: 'plot',
+              data_type: 'data',
+              domain: 'dom',
+              features: 'feat',
+              dependencies: 'dep',
+              techniques: 'tech',
+              patterns: 'pat',
+              dataprep: 'prep',
+              styling: 'style',
             };
             const param = paramMap[category];
             const entries = Object.entries(values);
             return (
-            <Box key={category}>
-              <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, mb: 0.5 }}>
-                {category.replace('_', ' ')}
-              </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                {entries.slice(0, 20).map(([tag, count]) => {
-                  const size = count >= 100 ? fontSize.md : count >= 50 ? fontSize.xs : count >= 10 ? fontSize.xxs : fontSize.xxs;
-                  const weight = count >= 50 ? 600 : count >= 10 ? 500 : 400;
-                  const opacity = count >= 100 ? 1 : count >= 50 ? 0.85 : count >= 10 ? 0.7 : 0.5;
-                  return (
-                    <Link
-                      key={tag}
-                      component={RouterLink}
-                      to={param ? `/plots?${param}=${encodeURIComponent(tag)}` : '/plots'}
-                      onClick={() => { if (param) trackEvent('tag_click', { param, value: tag, source: 'stats' }); }}
-                      sx={{
-                        fontFamily: typography.fontFamily, fontSize: size, fontWeight: weight, textDecoration: 'none',
-                        px: 0.75, py: 0.25, borderRadius: 0.5,
-                        color: 'var(--ink-soft)',
-                        opacity: opacity,
-                        '&:hover': { color: colors.primaryDark, opacity: 1 },
-                      }}
-                    >
-                      {tag}<Box component="span" sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.micro, color: semanticColors.mutedText, ml: 0.5 }}>{count}</Box>
-                    </Link>
-                  );
-                })}
+              <Box key={category}>
+                <Typography
+                  sx={{
+                    fontFamily: typography.fontFamily,
+                    fontSize: fontSize.xs,
+                    color: semanticColors.mutedText,
+                    mb: 0.5,
+                  }}
+                >
+                  {category.replace('_', ' ')}
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {entries.slice(0, 20).map(([tag, count]) => {
+                    const size =
+                      count >= 100
+                        ? fontSize.md
+                        : count >= 50
+                          ? fontSize.xs
+                          : count >= 10
+                            ? fontSize.xxs
+                            : fontSize.xxs;
+                    const weight = count >= 50 ? 600 : count >= 10 ? 500 : 400;
+                    const opacity = count >= 100 ? 1 : count >= 50 ? 0.85 : count >= 10 ? 0.7 : 0.5;
+                    return (
+                      <Link
+                        key={tag}
+                        component={RouterLink}
+                        to={param ? paths.plotsFiltered(param, tag) : paths.plots}
+                        onClick={() => {
+                          if (param)
+                            trackEvent('tag_click', { param, value: tag, source: 'stats' });
+                        }}
+                        sx={{
+                          fontFamily: typography.fontFamily,
+                          fontSize: size,
+                          fontWeight: weight,
+                          textDecoration: 'none',
+                          px: 0.75,
+                          py: 0.25,
+                          borderRadius: 0.5,
+                          color: 'var(--ink-soft)',
+                          opacity: opacity,
+                          '&:hover': { color: colors.primaryDark, opacity: 1 },
+                        }}
+                      >
+                        {tag}
+                        <Box
+                          component="span"
+                          sx={{
+                            fontFamily: typography.fontFamily,
+                            fontSize: fontSize.micro,
+                            color: semanticColors.mutedText,
+                            ml: 0.5,
+                          }}
+                        >
+                          {count}
+                        </Box>
+                      </Link>
+                    );
+                  })}
+                </Box>
               </Box>
-            </Box>
             );
           })}
         </Box>

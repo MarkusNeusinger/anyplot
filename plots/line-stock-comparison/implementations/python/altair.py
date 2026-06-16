@@ -23,7 +23,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3"]
+IMPRINT = ["#009E73", "#C475FD", "#AE3030", "#4467A3"]
 
 # Data
 np.random.seed(42)
@@ -49,7 +49,7 @@ base = alt.Chart(df).encode(
     color=alt.Color(
         "symbol:N",
         title="Symbol",
-        scale=alt.Scale(domain=symbols, range=ANYPLOT_PALETTE),
+        scale=alt.Scale(domain=symbols, range=IMPRINT),
         legend=alt.Legend(titleFontSize=10, labelFontSize=10, symbolSize=120),
     ),
     tooltip=[

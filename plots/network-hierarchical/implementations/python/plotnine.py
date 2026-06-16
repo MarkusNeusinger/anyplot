@@ -33,7 +33,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - first series always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: Software company organizational hierarchy (22 employees, 4 levels)
 nodes = [
@@ -120,10 +120,10 @@ level_names = {0: "Level 0: CEO", 1: "Level 1: VPs", 2: "Level 2: Directors", 3:
 
 # Map level names to Okabe-Ito colors
 level_colors = {
-    "Level 0: CEO": OKABE_ITO[0],
-    "Level 1: VPs": OKABE_ITO[1],
-    "Level 2: Directors": OKABE_ITO[2],
-    "Level 3: Team": OKABE_ITO[3],
+    "Level 0: CEO": IMPRINT[0],
+    "Level 1: VPs": IMPRINT[1],
+    "Level 2: Directors": IMPRINT[2],
+    "Level 3: Team": IMPRINT[3],
 }
 
 # Node sizes by level

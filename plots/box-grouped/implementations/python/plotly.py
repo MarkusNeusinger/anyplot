@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Employee performance scores by department and experience level
 np.random.seed(42)
@@ -73,7 +73,7 @@ for i, subcat in enumerate(subcategories):
             x=x_vals,
             y=y_vals,
             name=subcat,
-            marker_color=OKABE_ITO[i],
+            marker_color=IMPRINT[i],
             boxmean=False,
             line={"width": 2},
             marker={"size": 8, "opacity": 0.7},

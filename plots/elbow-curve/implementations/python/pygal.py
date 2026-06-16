@@ -29,7 +29,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 BRAND = "#009E73"
-ACCENT = "#D55E00"
+ACCENT = "#C475FD"
 
 # Document clustering: optimal k determined by elbow curve
 # Represents topic grouping analysis on a text corpus

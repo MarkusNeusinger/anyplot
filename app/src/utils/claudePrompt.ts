@@ -7,17 +7,24 @@
 export function buildClaudePrompt(
   message: string,
   path: string | null,
-  reaction: string | null,
+  reaction: string | null
 ): string {
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const url = path ? `${origin}${path}` : origin || '(unknown URL)';
   const kind =
-    reaction === 'bug' ? 'bug report'
-    : reaction === 'idea' ? 'feature request'
-    : reaction === 'thumbs_down' ? 'negative feedback'
-    : reaction === 'thumbs_up' ? 'positive feedback'
-    : 'feedback';
-  const quoted = message.split('\n').map(line => `> ${line}`).join('\n');
+    reaction === 'bug'
+      ? 'bug report'
+      : reaction === 'idea'
+        ? 'feature request'
+        : reaction === 'thumbs_down'
+          ? 'negative feedback'
+          : reaction === 'thumbs_up'
+            ? 'positive feedback'
+            : 'feedback';
+  const quoted = message
+    .split('\n')
+    .map(line => `> ${line}`)
+    .join('\n');
   return `A user left the following ${kind} on ${url}:
 
 ${quoted}

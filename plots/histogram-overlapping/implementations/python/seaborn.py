@@ -19,7 +19,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - employee response times (ms) by department
 np.random.seed(42)
@@ -33,12 +33,12 @@ ax.set_facecolor(PAGE_BG)
 
 # Plot overlapping histograms
 sns.histplot(
-    engineering, bins=25, alpha=0.5, color=OKABE_ITO[0], label="Engineering", edgecolor=PAGE_BG, linewidth=0.5, ax=ax
+    engineering, bins=25, alpha=0.5, color=IMPRINT[0], label="Engineering", edgecolor=PAGE_BG, linewidth=0.5, ax=ax
 )
 sns.histplot(
-    marketing, bins=25, alpha=0.5, color=OKABE_ITO[1], label="Marketing", edgecolor=PAGE_BG, linewidth=0.5, ax=ax
+    marketing, bins=25, alpha=0.5, color=IMPRINT[1], label="Marketing", edgecolor=PAGE_BG, linewidth=0.5, ax=ax
 )
-sns.histplot(sales, bins=25, alpha=0.5, color=OKABE_ITO[2], label="Sales", edgecolor=PAGE_BG, linewidth=0.5, ax=ax)
+sns.histplot(sales, bins=25, alpha=0.5, color=IMPRINT[2], label="Sales", edgecolor=PAGE_BG, linewidth=0.5, ax=ax)
 
 # Labels and styling
 ax.set_xlabel("Response Time (ms)", fontsize=20, color=INK)

@@ -22,8 +22,8 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito — pos 1 (historical), pos 2 (forecast), pos 6 (CI bands)
 HISTORICAL_COLOR = "#009E73"
-FORECAST_COLOR = "#D55E00"
-CI_COLOR = "#56B4E9"
+FORECAST_COLOR = "#C475FD"
+CI_COLOR = "#2ABCCD"
 
 # Data — monthly retail sales, 3-year history + 12-month ARIMA-style forecast
 np.random.seed(42)

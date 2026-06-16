@@ -27,7 +27,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 BRAND = "#009E73"  # Okabe-Ito position 1
-BAND_COLOR = "#0072B2"  # Okabe-Ito position 3
+BAND_COLOR = "#4467A3"  # Okabe-Ito position 3
 
 # Data - Generate synthetic stock price data with Bollinger Bands
 np.random.seed(42)

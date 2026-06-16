@@ -21,8 +21,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 BRAND = "#009E73"  # Okabe-Ito pos 1 — main histogram bars
-TAIL_COLOR = "#D55E00"  # Okabe-Ito pos 2 — tail regions
-CURVE_COLOR = "#0072B2"  # Okabe-Ito pos 3 — normal distribution curve
+TAIL_COLOR = "#C475FD"  # Okabe-Ito pos 2 — tail regions
+CURVE_COLOR = "#4467A3"  # Okabe-Ito pos 3 — normal distribution curve
 
 # Data — simulate daily stock returns with slight fat tails (t-distribution df=8)
 np.random.seed(42)

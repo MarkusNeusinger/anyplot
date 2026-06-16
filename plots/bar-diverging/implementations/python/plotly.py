@@ -19,7 +19,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette: position 1 (green) for positive, position 2 (orange) for negative
 POSITIVE_COLOR = "#009E73"
-NEGATIVE_COLOR = "#D55E00"
+NEGATIVE_COLOR = "#AE3030"  # imprint red — semantic negative
 
 # Data: Customer satisfaction survey results by department
 # Scores range from -100 (very dissatisfied) to +100 (very satisfied)

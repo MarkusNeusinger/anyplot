@@ -1,0 +1,263 @@
+library: makie
+language: julia
+specification_id: sequence-logo-basic
+created: '2026-06-02T12:12:24Z'
+updated: '2026-06-02T12:53:49Z'
+generated_by: claude-sonnet
+workflow_run: 26818018403
+issue: 4421
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Correct sequence logo implementation with information content scaling
+  - Imprint palette applied with appropriate DNA bioinformatics semantic exception
+    (A=#009E73, C=#4467A3, G=#BD8233, T=#AE3030)
+  - Conserved TATA-box core highlighted with subtle background band (positions 2-6)
+  - Proportionally-scaled letter glyphs using dynamic fontsize calculation (contrib
+    × PTS_PER_BIT × FILL_FACTOR)
+  - 'Theme-adaptive chrome fully wired: all text elements use INK/INK_SOFT tokens
+    for both light and dark renders'
+  - Clean KISS code structure — flat script with no functions or classes
+  - TATA-box binding site is a real, biologically accurate motif with plausible frequency
+    distributions
+  - Correct IC formula (2 + Σ f·log2(f)) and proper ordering (most frequent on top)
+  weaknesses:
+  - 'DE-01: Design sophistication is above defaults but not yet publication-ready
+    — consider a more structured typography hierarchy (bolder title relative to axis
+    labels) and slightly more whitespace padding around the plot area'
+  - 'DE-02: The conserved core band (opacity 0.04) is very subtle — slightly increasing
+    to 0.06–0.07 would make it more visible without distracting from the data; consider
+    adding a small text annotation labeling the band as TATA-box core'
+  - 'LM-01/LM-02: The dynamic glyph sizing is a good Makie technique, but using a
+    `Makie.SpecApi` or custom recipe approach would elevate library mastery further'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — confirmed correct, clearly distinct from pure white.
+      Chrome: Title "TATA-box Motif · sequence-logo-basic · julia · makie · anyplot.ai" is dark and readable (~60% canvas width). X-axis label "Position" and Y-axis label "Information content (bits)" are dark at 14pt, clearly legible. Tick labels at 12pt are readable in INK_SOFT (#4A4A44). Horizontal y-grid lines are very subtle (15% opacity).
+      Data: 10-position DNA sequence logo. A=brand green (#009E73), C=blue (#4467A3), G=ochre (#BD8233), T=matte red (#AE3030). Positions 2-6 have high IC (~1.0 bits) showing conserved TATA-box core. Position 7 has very low IC (mixed frequencies), visible as thin colored bands. A subtle gray background band spans positions 2-6 (conserved core annotation). White letter glyphs scale proportionally with bar height. Legend shows A/C/G/T nucleotides with correct colors.
+      Legibility verdict: PASS — all text readable, no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — confirmed correct, clearly distinct from pure black.
+      Chrome: Title readable in light color (#F0EFE8). Axis labels and tick labels visible in light INK/INK_SOFT tokens. Subtle grid lines visible. Legend box uses elevated dark background (#242420) with light text.
+      Data: Data colors are identical to light render — A=#009E73, C=#4467A3, G=#BD8233, T=#AE3030. The conserved core band appears as a slightly lighter region against the near-black background (subtle but visible). White letter glyphs visible on colored bars.
+      Legibility verdict: PASS — no dark-on-dark failures observed. All text elements use correct light-theme token equivalents.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (titlesize dynamic, xlabelsize=14,
+          ylabelsize=14, xticklabelsize=12, yticklabelsize=12, legend labelsize=12).
+          Proportions good in both themes. Title ~60% canvas width.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Legend in separate column. All labels
+          clear.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All bars visible. Colors clearly distinguish nucleotides. Position
+          7 thin bars correctly represent low IC — this is expected sequence logo
+          behavior.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette with semantic exception. White text on colored
+          bars provides good contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas correct. Plot fills ~70% of canvas. Legend in right
+          column. Balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Position'', Y: ''Information content (bits)'' — descriptive
+          with units. Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Perfect palette compliance. DNA semantic exception: A=#009E73 (Imprint
+          pos 1), C=#4467A3 (pos 3), G=#BD8233 (pos 4), T=#AE3030 (pos 5). Backgrounds
+          #FAF8F1/#1A1A17 correct. Both renders theme-correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured defaults: conserved core band, proportional
+          glyph sizing, white text overlay, semantic palette. Not yet publication-ready
+          — typography could be more structured.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: top/right spines removed, y-grid only at 0.15 opacity,
+          subtle bar stroke (0.4), low-opacity background band. Multiple customizations
+          above defaults.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Conserved core band highlights TATA-box positions 2-6. Visual hierarchy
+          through bar heights naturally shows conservation vs mixed positions. Clear
+          story.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct sequence logo — letters stacked vertically, height proportional
+          to IC.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: vertical stacking, IC scaling, DNA color scheme,
+          Position/IC(bits) axes, scaled glyphs.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Position 1-10, Y=Information content (bits) 0-2. All data shown
+          correctly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''TATA-box Motif · sequence-logo-basic · julia · makie ·
+          anyplot.ai''. Legend shows A/C/G/T with correct colors.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all 4 DNA nucleotides, conserved positions (high IC ~1.0 bits),
+          mixed position (low IC ~0.04 bits), information content scaling.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: TATA-box transcription factor binding site — a real, well-known biological
+          motif. Neutral scientific context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: IC correctly computed (2 + Σf·log2f), max 2 bits for DNA. Frequencies
+          sum to 1.0 per position. Biologically accurate TATA-box pattern (TATAAA).
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat script: theme tokens → data → IC calculation → plot → save.
+          No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) present. Data is deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: using CairoMakie, Colors, Random — all three actively used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity. No fake interactivity. List comprehensions
+          used appropriately.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit = 2) — correct format
+          and API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses poly!, text!, Rect2f, PolyElement idiomatically. Correct Makie
+          patterns for custom visualization. One step below expert (could use a recipe
+          approach).
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Dynamic fontsize calculation for scaled glyphs, PolyElement for custom
+          legend, Rect2f for both data bars and annotation band — all distinctive
+          Makie features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

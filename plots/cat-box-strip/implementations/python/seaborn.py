@@ -21,7 +21,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - brand green for boxes, vermillion for strip points
 BRAND = "#009E73"
-ACCENT = "#D55E00"
+ACCENT = "#C475FD"
 
 # Data - product quality scores across manufacturing batches
 np.random.seed(42)

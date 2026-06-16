@@ -20,11 +20,11 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # bluish green (brand — first series)
-    "#D55E00",  # vermillion
-    "#0072B2",  # blue
-    "#CC79A7",  # reddish purple
+    "#C475FD",  # vermillion
+    "#4467A3",  # blue
+    "#BD8233",  # reddish purple
 ]
 
 # Data - Monthly retail sales over 6 years (72 months = 6 full annual cycles)
@@ -51,7 +51,7 @@ decomposition = seasonal_decompose(ts, model="additive", period=12)
 fig, axes = plt.subplots(4, 1, figsize=(16, 12), sharex=True, facecolor=PAGE_BG)
 
 # Original series
-axes[0].plot(dates, ts.values, color=OKABE_ITO[0], linewidth=2.5)
+axes[0].plot(dates, ts.values, color=IMPRINT[0], linewidth=2.5)
 axes[0].set_facecolor(PAGE_BG)
 axes[0].set_ylabel("Original (Sales USD)", fontsize=20, color=INK)
 axes[0].tick_params(axis="y", labelsize=16, colors=INK_SOFT)
@@ -61,21 +61,21 @@ axes[0].set_title(
 )
 
 # Trend component
-axes[1].plot(dates, decomposition.trend, color=OKABE_ITO[1], linewidth=2.5)
+axes[1].plot(dates, decomposition.trend, color=IMPRINT[1], linewidth=2.5)
 axes[1].set_facecolor(PAGE_BG)
 axes[1].set_ylabel("Trend (Sales USD)", fontsize=20, color=INK)
 axes[1].tick_params(axis="y", labelsize=16, colors=INK_SOFT)
 axes[1].grid(True, alpha=0.15, linewidth=0.8, color=INK)
 
 # Seasonal component
-axes[2].plot(dates, decomposition.seasonal, color=OKABE_ITO[2], linewidth=2.5)
+axes[2].plot(dates, decomposition.seasonal, color=IMPRINT[2], linewidth=2.5)
 axes[2].set_facecolor(PAGE_BG)
 axes[2].set_ylabel("Seasonal (Sales USD)", fontsize=20, color=INK)
 axes[2].tick_params(axis="y", labelsize=16, colors=INK_SOFT)
 axes[2].grid(True, alpha=0.15, linewidth=0.8, color=INK)
 
 # Residual component
-axes[3].plot(dates, decomposition.resid, color=OKABE_ITO[3], linewidth=2.5)
+axes[3].plot(dates, decomposition.resid, color=IMPRINT[3], linewidth=2.5)
 axes[3].axhline(y=0, color=INK_SOFT, linestyle="-", linewidth=1, alpha=0.3)
 axes[3].set_facecolor(PAGE_BG)
 axes[3].set_ylabel("Residual (Sales USD)", fontsize=20, color=INK)

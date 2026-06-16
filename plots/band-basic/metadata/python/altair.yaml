@@ -1,102 +1,104 @@
 library: altair
+language: python
 specification_id: band-basic
 created: '2025-12-23T09:10:02Z'
-updated: '2026-02-23T14:27:15Z'
-generated_by: claude-opus-4-6
-workflow_run: 20456385370
-issue: 0
-python_version: '3.14'
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/band-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/band-basic/altair/plot.html
-quality_score: 94
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - layer-composition
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
-  - grid-styling
+updated: '2026-05-29T17:43:33Z'
+generated_by: claude-sonnet
+workflow_run: 26651698434
+issue: 979
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/band-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/band-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/band-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/band-basic/python/altair/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Cohesive monochromatic blue palette with three intentional tones creates visual
-    depth and professional polish
-  - Dual confidence bands (50% + 95% CI) exceed spec requirements and add analytical
-    value
-  - Growing uncertainty narrative is immediately apparent and reinforced by the red
-    annotation callout
-  - Interactive features (tooltips, hover guide) work in HTML export without polluting
-    static PNG output
-  - All text sizes explicitly set with appropriate hierarchy (28/22/18/16pt)
+  - Dual 50%+95% CI bands with layered opacity create visual depth and demonstrate
+    the full probability envelope
+  - 'Brand-green signal / Imprint-blue uncertainty / matte-red callout: clear three-tier
+    color hierarchy from the Imprint palette'
+  - 'Interactive HTML: alt.selection_point(nearest=True) with alt.condition hover
+    opacity and guide rule — expert use of Altair declarative selection grammar'
+  - Growing-width band convincingly communicates sensor drift; annotation quantifies
+    it at the focal point
+  - Canvas padding correctly centres the vl-convert output on the 3200x1800 target
   weaknesses:
-  - Axis line/tick styling remains at Altair defaults rather than being refined (DE-02)
-  - Interactive features (selection, tooltips) are invisible in the static PNG — only
-    benefit the HTML export (LM-02)
-  image_description: 'The plot displays a band chart with an oscilloscope signal theme
-    over a 0-10 second time range. A dark navy center line traces a sinusoidal wave
-    with upward linear drift (approximately 2*sin(x) + 0.5x), ranging from about -2.5
-    mV to 6 mV. Two semi-transparent blue confidence bands surround it: a lighter
-    outer band (95% CI, teal-blue at 0.25 opacity) and a darker inner band (50% CI,
-    deeper blue at 0.3 opacity). Both bands visibly widen from left to right, illustrating
-    growing uncertainty over time. At x approximately 9.1 seconds, a red dashed vertical
-    rule spans the full 95% CI width, with bold red annotation text "95% CI: +/-3.7
-    mV" offset to the right. The title reads "band-basic - altair - pyplots.ai" in
-    large font at the top. Axes are labeled "Time (s)" (x-axis) and "Oscilloscope
-    Signal (mV)" (y-axis). Grid lines are very subtle with light gray color. The view
-    border is removed. The layout fills the 4800x2700 canvas well with balanced margins.'
+  - Outer band opacity=0.15 falls below the spec 0.2-0.4 minimum; raise to at least
+    0.20 for spec compliance
+  - Inner 50% CI band has no label — add a legend or a second annotation identifying
+    50% CI so viewers understand both bands without prior knowledge
+  - Annotation font size=12px is on the small side; consider raising to 13-14px to
+    improve mobile readability
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "band-basic · python · altair · anyplot.ai" in dark ink, readable. Axis labels "Time (s)" and "Oscilloscope Signal (mV)" in dark color, readable. Tick labels in INK_SOFT (#4A4A44), clearly legible. Y-axis grid subtle at 0.12 opacity.
+      Data: Central trend line in brand green #009E73. Outer 95% CI band in Imprint blue #4467A3 at 0.15 opacity. Inner 50% CI band in #4467A3 at 0.30 opacity. Dashed matte-red vertical rule and annotation "95% CI: ±3.7 mV" at x≈9. All data elements clearly visible.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in off-white (#F0EFE8), readable. Axis labels and tick labels in light (#B8B7B0), clearly visible against dark background. No dark-on-dark text failures.
+      Data: Colors identical to light render — brand green #009E73 central line, Imprint blue #4467A3 confidence bands, matte red #AE3030 annotation. Data colors unchanged across themes (only chrome flips).
+      Legibility verdict: PASS — all chrome tokens correctly flipped. Matte-red annotation on dark bg has marginally lower contrast but bold weight ensures readability. No failures detected.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis titles 22pt, tick
-          labels 18pt, annotation 16pt bold. All perfectly readable.'
+        comment: All font sizes explicitly set; all text readable in both themes.
+          Annotation at fontSize=12px bold is slightly small for mobile.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Annotation positioned with dx=10 to
-          avoid collision.
+        comment: No overlapping text or data collisions in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Center line clearly visible against bands. Bands distinguishable
-          via different blue tones and opacity. Smooth monotone interpolation.
+        comment: 100 points at medium density; central line strokeWidth=2.5 clearly
+          visible; both CI bands distinguishable.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Monochromatic blue scheme is colorblind-safe. Red accent for annotation
-          only, good contrast.
+        comment: Imprint palette green/blue/red provides strong CVD-safe contrast.
+          No red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800x2700 canvas well utilized with balanced margins.
+        comment: Canvas correctly padded to 3200x1800. Good plot-to-canvas ratio,
+          balanced margins, no clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (s) and Oscilloscope Signal (mV) both descriptive with units.
+        comment: Time (s) and Oscilloscope Signal (mV) are descriptive with units.
+          Title in correct format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green). Band fill #4467A3 (Imprint pos
+          3). Callout #AE3030 (semantic red). Light bg #FAF8F1. Dark bg #1A1A17. Chrome
+          tokens correctly adaptive in both renders.'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -104,25 +106,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Cohesive monochromatic blue palette with three intentional tones
-          creating visual depth. Red accent for annotation provides strong contrast.
-          Clearly above defaults.
+        comment: 'Strong design: three-color hierarchy (green signal, blue uncertainty,
+          red callout), dual-opacity layered bands, annotation quantifies focal point.
+          Above defaults but not publication-perfect.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid (0.15 opacity), view border removed. Axis line styling
-          remains at Altair defaults.
+        comment: X-axis grid disabled; y-axis grid at 0.12 opacity; configure_view(stroke=None)
+          removes border; theme-adaptive axis colors. Genuine refinement above defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Widening band communicates growing uncertainty. Dual-band approach
-          adds depth. Red annotation creates focal point.
+        comment: Growing-width band communicates sensor drift. Annotation at widest
+          point creates focal moment. Dual CI bands layer probabilistic narrative.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -130,28 +132,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct band plot with filled region between boundary lines.
+        comment: 'Correct band plot: filled area between boundary lines with central
+          trend line.'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Semi-transparent fill, contrasting center line, smooth interpolation.
-          Exceeds spec with inner 50% CI band.
+        comment: Central line, smooth monotone interpolation, confidence band all
+          present. Outer band opacity=0.15 below spec 0.2-0.4 minimum. Inner 50% CI
+          unlabeled.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped, 100 data points within range, axes show full
-          data extent.
+        comment: x=Time(s), y_lower/y_upper=CI boundaries, y_center=trend line. All
+          axes show full data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. No legend needed for single-series
-          band plot.
+        comment: Title exactly 'band-basic · python · altair · anyplot.ai'. No legend
+          needed for single-concept band chart.
     data_quality:
       score: 15
       max: 15
@@ -161,21 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows widening uncertainty, sinusoidal + linear trend, dual CI bands,
-          and annotated callout.
+        comment: 'Demonstrates all band-basic aspects: outer 95% CI, inner 50% CI,
+          central trend, growing-width narrative.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Oscilloscope voltage measurement with sensor drift uncertainty. Neutral
-          scientific context.
+        comment: Oscilloscope voltage measurement with sinusoidal signal and growing
+          sensor drift uncertainty — realistic, domain-neutral engineering scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Millivolt range and 0-10s timespan realistic for oscilloscope measurements.
+        comment: 0-10s time axis and -2 to +10mV signal amplitude sensible for electronics
+          measurement. 100 data points at appropriate density.
     code_quality:
       score: 10
       max: 10
@@ -185,33 +190,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot layers, combine, save. No functions
-          or classes.'
+        comment: 'Linear structure: imports -> data -> chart layers -> properties
+          -> save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data generation with np.linspace and np.sin.
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All three imports (altair, numpy, pandas) are used.
+        comment: 'All imports used: altair, numpy, pandas, PIL.Image (for canvas padding).'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-structured. Interactive features are legitimate Altair
-          capabilities.
+        comment: Clean idiomatic Altair layer composition. Interactive tooltips legitimate
+          for interactive library. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png with scale_factor=3.0. Uses current Altair 6.x API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html using current Altair
+          6.1.0 API.
     library_mastery:
       score: 9
       max: 10
@@ -221,14 +227,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Declarative grammar: mark_area, mark_line, mark_rule, mark_text,
-          mark_point. Proper encoding with type shorthand. Layer composition with
-          + operator.'
+        comment: 'Expert use: mark_area for bands, layer composition with + operator,
+          alt.selection_point for nearest-point interactivity, alt.condition for conditional
+          encoding, proper Q/N types, configure_axis/configure_view for chrome.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: alt.selection_point with nearest, alt.condition for conditional encoding,
-          rich tooltips, HTML export. Core visualization uses standard marks.
+        comment: 'Altair-distinctive: alt.selection_point(nearest=True, on=pointerover)
+          with alt.condition hover opacity — unique to Vega-Lite event-driven selections.
+          Dual HTML+PNG output. Interactive guide rule hidden in static PNG (minor
+          gap).'
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - pillow
+  techniques:
+  - layer-composition
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

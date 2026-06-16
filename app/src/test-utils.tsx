@@ -1,9 +1,11 @@
-import { render, type RenderOptions } from '@testing-library/react';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { MemoryRouter } from 'react-router-dom';
 import type { ReactElement, ReactNode } from 'react';
 
-const theme = createTheme();
+import { render, type RenderOptions } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+
+import { ThemeProvider } from '@mui/material/styles';
+
+import { theme } from 'src/theme';
 
 function AllProviders({ children }: { children: ReactNode }) {
   return (
@@ -18,5 +20,5 @@ function customRender(ui: ReactElement, options?: Omit<RenderOptions, 'wrapper'>
 }
 
 export { customRender as render };
-export { screen, within, waitFor, act } from '@testing-library/react';
+export { screen, within, waitFor, act, fireEvent } from '@testing-library/react';
 export { default as userEvent } from '@testing-library/user-event';

@@ -37,7 +37,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Quarterly revenue by product line across regions
 regions = ["North", "South", "East", "West"]
@@ -65,7 +65,7 @@ plot = (
     ggplot(df)
     + geom_segment(mapping=aes(x="x_pos", xend="x_pos", y="y_start", yend="revenue", color="product"), size=2)
     + geom_point(mapping=aes(x="x_pos", y="revenue", color="product"), size=8)
-    + scale_color_manual(values=OKABE_ITO, name="Product Line")
+    + scale_color_manual(values=IMPRINT, name="Product Line")
     + labs(x="Region", y="Revenue ($ thousands)", title="lollipop-grouped · Python · letsplot · anyplot.ai")
     + scale_x_continuous(breaks=list(range(len(regions))), labels=regions)
     + scale_y_continuous(limits=[0, 300])

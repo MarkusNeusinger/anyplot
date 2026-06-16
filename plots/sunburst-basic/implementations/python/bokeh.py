@@ -38,16 +38,16 @@ hierarchy = [
     {"level_1": "Engineering", "level_2": "Frontend", "level_3": "Web App", "value": 100},
     {"level_1": "Engineering", "level_2": "Frontend", "level_3": "Mobile", "value": 60},
     {"level_1": "Engineering", "level_2": "DevOps", "level_3": "Infrastructure", "value": 50},
-    # Marketing (Okabe-Ito position 5: #E69F00)
+    # Marketing (Okabe-Ito position 5: #AE3030)
     {"level_1": "Marketing", "level_2": "Digital", "level_3": "Social Media", "value": 45},
     {"level_1": "Marketing", "level_2": "Digital", "level_3": "SEO", "value": 35},
     {"level_1": "Marketing", "level_2": "Content", "level_3": "Blog", "value": 30},
     {"level_1": "Marketing", "level_2": "Content", "level_3": "Video", "value": 40},
-    # Sales (Okabe-Ito position 3: #0072B2)
+    # Sales (Okabe-Ito position 3: #4467A3)
     {"level_1": "Sales", "level_2": "Enterprise", "level_3": "EMEA", "value": 70},
     {"level_1": "Sales", "level_2": "Enterprise", "level_3": "APAC", "value": 55},
     {"level_1": "Sales", "level_2": "SMB", "level_3": "Direct Sales", "value": 45},
-    # Operations (Okabe-Ito position 4: #CC79A7)
+    # Operations (Okabe-Ito position 4: #BD8233)
     {"level_1": "Operations", "level_2": "Support", "level_3": "Tier 1", "value": 40},
     {"level_1": "Operations", "level_2": "Support", "level_3": "Tier 2", "value": 25},
     {"level_1": "Operations", "level_2": "HR", "level_3": "Recruiting", "value": 30},
@@ -55,10 +55,10 @@ hierarchy = [
 
 # Department color families using Okabe-Ito bases with tints for child levels
 dept_colors = {
-    "Engineering": {"base": "#009E73", "mid": "#55C4A4", "light": "#AAE0D5"},
-    "Marketing": {"base": "#E69F00", "mid": "#F0BC4D", "light": "#F7D899"},
-    "Sales": {"base": "#0072B2", "mid": "#4DA6D5", "light": "#99CDE8"},
-    "Operations": {"base": "#CC79A7", "mid": "#DDA5C5", "light": "#EED2E3"},
+    "Engineering": {"base": "#009E73", "mid": "#55C4A4", "light": "#AAE0D5"},  # imprint green family
+    "Marketing": {"base": "#AE3030", "mid": "#C56666", "light": "#DEAAAA"},  # imprint red family
+    "Sales": {"base": "#4467A3", "mid": "#7A93BD", "light": "#B0BFD8"},  # imprint blue family
+    "Operations": {"base": "#BD8233", "mid": "#D1A668", "light": "#E5C9A3"},  # imprint ochre family
 }
 
 # Clearer abbreviations than 3-char truncation

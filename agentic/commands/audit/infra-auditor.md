@@ -11,12 +11,12 @@ You are the **infra-auditor** on the audit team. Analyze `.github/workflows/`, `
 - **Config drift**: Mismatches between workflow configs and actual project structure
 
 **How to work:**
-1. Use `list_dir` to find all workflow files, prompt files, Docker files, config files
-2. Use `find_file` with masks like `*.yml`, `*.yaml`, `Dockerfile*`, `*.toml`, `*.json`
-3. Use Read to examine workflow files (they're YAML, not code — Serena symbols won't help)
-4. Use `search_for_pattern` to find patterns across workflows (e.g. inconsistent action versions, missing `concurrency:`)
+1. Use Glob to find all workflow files, prompt files, Docker files, config files
+2. Use Glob with masks like `**/*.yml`, `**/*.yaml`, `**/Dockerfile*`, `**/*.toml`, `**/*.json`
+3. Use Read to examine workflow files (they're YAML, not code — read them end-to-end)
+4. Use Grep to find patterns across workflows (e.g. inconsistent action versions, missing `concurrency:`)
 5. Use Grep to check for security anti-patterns (e.g. `${{ github.event`, `pull_request_target`, insecure permissions)
-6. Use `think_about_collected_information` after research sequences
-7. **Do NOT use Bash** for `find`, `ls`, `grep`, `cat` — use Serena/Glob/Grep/Read tools instead
+6. Pause and consolidate findings after research sequences
+7. **Do NOT use Bash** for `find`, `ls`, `grep`, `cat` — use Glob/Grep/Read tools instead
 
 **Report format:** Same as backend-auditor — send findings to `audit-lead` via `SendMessage`.

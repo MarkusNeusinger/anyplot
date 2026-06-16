@@ -25,7 +25,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # First series (Fail)
-SECONDARY = "#D55E00"  # Second series (Pass)
+SECONDARY = "#C475FD"  # Second series (Pass)
 
 # Data - Study hours vs exam pass/fail
 np.random.seed(42)

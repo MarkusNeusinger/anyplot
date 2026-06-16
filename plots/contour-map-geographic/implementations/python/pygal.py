@@ -352,8 +352,8 @@ svg_parts.append(
 )
 
 # Pressure center labels (H/L): data-encoding colors, domain-conventional
-HIGH_COLOR = "#D55E00"  # Okabe-Ito vermillion — high pressure
-LOW_COLOR = "#0072B2"  # Okabe-Ito blue — low pressure
+HIGH_COLOR = "#C475FD"  # Okabe-Ito vermillion — high pressure
+LOW_COLOR = "#4467A3"  # Okabe-Ito blue — low pressure
 centers = [(200, 35, "H", HIGH_COLOR), (185, 53, "L", LOW_COLOR), (145, 45, "L", LOW_COLOR)]
 for lon_c, lat_c, label, color in centers:
     if lon_min <= lon_c <= lon_max and lat_min <= lat_c <= lat_max:

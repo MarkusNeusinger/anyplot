@@ -64,8 +64,8 @@ nodes["Company"]["value"] = sum(nodes[c]["value"] for c in nodes["Company"]["chi
 # Depth-based colors using Okabe-Ito palette
 depth_colors = {
     0: BRAND,  # Root: brand green
-    1: "#D55E00",  # Departments: vermillion
-    2: "#0072B2",  # Teams: blue
+    1: "#C475FD",  # Departments: vermillion
+    2: "#4467A3",  # Teams: blue
 }
 
 # Circle packing layout

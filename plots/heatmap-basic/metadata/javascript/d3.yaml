@@ -1,0 +1,273 @@
+library: d3
+language: javascript
+specification_id: heatmap-basic
+created: '2026-06-02T23:45:54Z'
+updated: '2026-06-03T00:01:26Z'
+generated_by: claude-opus
+workflow_run: 26854497008
+issue: 691
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Uses the Imprint diverging colormap via d3.scaleSequential(d3.interpolateRgbBasis(t.div))
+    with the correct [-1, 1] domain — perfect VQ-07 compliance and the theme-adaptive
+    midpoint flips automatically with light/dark
+  - Per-cell value text color is picked dynamically by WCAG contrast ratio against
+    the actual cell fill, so annotations stay readable across saturated blues, saturated
+    reds, and near-midpoint cells in both themes — no dark-on-dark or light-on-light
+    failures
+  - 'Storytelling touches that go beyond a raw matrix: 1.6 px ink-color stroke on
+    the diagonal (visual backbone), font-weight bump to 700 for |r| > 0.5 (equity
+    cluster and treasury anti-correlation block read as figures), and asset-class-ordered
+    rows/columns clustering risk assets together'
+  - 'Square 2400×2400 orientation declared via the //# anyplot-orientation: square
+    directive — appropriate for a symmetric correlation matrix and the canvas gate
+    passes'
+  - Realistic asset-class correlation matrix (post-2020 regime) — equity cluster ~0.6–0.8,
+    treasuries anti-correlate with risk assets, gold near zero. Symmetric with diagonal
+    = 1.0. Realistic context (DQ-02) and factual proportions (DQ-03)
+  - 'Idiomatic D3: scaleBand for both axes, scaleSequential + interpolateRgbBasis
+    for the cmap, axisTop/axisLeft for labels, axisRight on a scaleLinear for the
+    colorbar, linearGradient defs for the smooth colorbar gradient'
+  - Pearson r colorbar with explicit tick values [-1, -0.5, 0, 0.5, 1] and +.1f format
+    — units/legend are unambiguous
+  weaknesses:
+  - 'CQ-01 (KISS Structure): three helper functions (relLum, contrast, textOn) at
+    module scope deviate from the strict imports → data → plot → save flow. They are
+    well-scoped and necessary for the per-cell contrast pick, but they cost a small
+    KISS deduction. If inline-able as a one-liner without losing clarity, prefer that;
+    otherwise leave as is'
+  - 'DE-01 (Aesthetic Sophistication): strong but not yet Nature-tier. The diagonal
+    stroke and weight bump are good moves; consider also slightly de-emphasising near-zero
+    cells (e.g., lower font opacity for |r| < 0.15) so the eye lands on the structurally
+    meaningful blocks even faster'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white around #FAF8F1 — correct, not pure white.
+      Chrome: title "heatmap-basic · javascript · d3 · anyplot.ai" in dark ink (#1A1A17) at the top, centered, readable. Row labels (left) and rotated -38° column labels (top) in INK_SOFT (#4A4A44) — all 10 asset names readable, no overlap with adjacent labels or the matrix. Colorbar axis ticks ("+1.0", "+0.5", "+0.0", "-0.5", "-1.0") on the right in INK_SOFT, and the "Pearson r" caption sits above the gradient bar.
+      Data: 10×10 correlation matrix using the Imprint diverging colormap (matte-red #AE3030 → near-neutral midpoint #FAF8F1 → blue #4467A3). Equity cluster (rows 0–4) is visibly blue-positive; Treasuries row dips into red against equities; Gold row near-neutral. Diagonal cells have a thin ink stroke and read "1.00". Value labels per cell are dark on light cells and light on saturated blue cells (dynamic WCAG contrast pick), with weight 700 on |r| > 0.5.
+      Legibility verdict: PASS.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black around #1A1A17 — correct, not pure black.
+      Chrome: title in light ink (#F0EFE8), row/column labels in INK_SOFT (#B8B7B0). All chrome legible against the dark surface. Colorbar ticks and "Pearson r" caption in light INK_SOFT, no dark-on-dark failures anywhere.
+      Data: identical hue/saturation to the light render — the matte-red ↔ blue diverging gradient is preserved (only the midpoint chrome flips from light-cream to near-black). The dynamic textOn picker keeps cell value labels readable: saturated cells (|r| → 1) get light text, mid-saturation cells get dark text. Equity cluster still reads as the obvious positive block, treasury row as the negative band.
+      Legibility verdict: PASS.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font-sizes explicitly set (title 38px, labels 24px, values 22px,
+          colorbar 22px). Readable in both themes and at scaled-down mobile widths
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Rotated -38° column labels avoid collision; row labels separated
+          from matrix by 14px padding; colorbar offset 70px from matrix
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Cells fill the inner plot area with 0.04 padding; gradient is smooth
+          (32 stops); diagonal accent stroke 1.6px is visible without dominating
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint diverging is CVD-safe; redundant encoding via cell-value
+          annotations + per-cell WCAG-driven text color
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400×2400, balanced margins (top 170, right 180, bottom 60,
+          left 220) reserve room for rotated col labels and colorbar; no overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title in mandated format; colorbar labeled 'Pearson r' with units;
+          row/col asset labels are the axis tick labels and are self-explanatory for
+          a correlation matrix
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Uses t.div (Imprint diverging stops) via d3.interpolateRgbBasis
+          — not viridis/jet/BrBG. Backgrounds #FAF8F1 light / #1A1A17 dark, chrome
+          theme-correct in both'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: deliberate diagonal stroke, weight bump on strong
+          correlations, asset-class ordering. Not yet Nature-tier but clearly above
+          defaults'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axis domain lines removed, no spines, 0px tick marks, subtle 0.6px
+          colorbar border, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Visual hierarchy via 1.6px diagonal stroke + weight 700 for |r|>0.5
+          — eye lands on equity cluster and treasury anti-correlation block first
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Heatmap with diverging colormap — exact plot type from spec
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Diverging colormap (spec: ''data with positive/negative values''),
+          in-cell value annotations, colorbar legend, logical asset-class ordering
+          — all four spec notes satisfied'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Both axes show all 10 asset labels; cell values map to color via
+          the [-1,1] domain
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'heatmap-basic · javascript · d3 · anyplot.ai'; colorbar
+          labeled 'Pearson r' with [-1,+1] ticks
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Full diverging range used: strong positive cluster, strong negative
+          cells (treasuries × equities), near-zero cells (gold), diagonal=1. All heatmap
+          features visible'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Asset-class correlation matrix — canonical finance use case, neutral,
+          real-world plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Symmetric matrix, diagonal=1.00, off-diagonal values in [-0.42, 0.84]
+          — proportions match post-2020 asset-class correlations
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Three small helper functions (relLum, contrast, textOn) deviate from
+          strict imports → data → plot flow, but are scoped and motivated by the dynamic
+          contrast pick
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded deterministic data — no RNG needed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses only the d3 global per the d3 prompt's contract — no extra imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Comments explain WHY (storytelling, theme-adaptive contrast). No
+          fake interactivity. No over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Renders to #container per d3 harness contract; produces plot-light.png/plot-dark.png
+          automatically'
+    library_features:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: scaleBand on both axes, scaleSequential + interpolateRgbBasis for
+          the diverging cmap, axisTop/axisLeft for label rendering, axisRight for
+          the colorbar — textbook D3
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Leverages D3-specific facilities: linearGradient <defs> for the
+          colorbar gradient with 32 stops, d3.color + interpolateRgbBasis for color
+          math, d3.format(''+.1f'') for signed colorbar ticks'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - correlation-matrix
+  styling:
+  - custom-colormap
+  - publication-ready

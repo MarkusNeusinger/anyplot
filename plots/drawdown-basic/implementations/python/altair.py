@@ -18,8 +18,8 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-DD_COLOR = "#B71D27"  # anyplot palette pos 3 — semantic: loss/drawdown
-REC_COLOR = "#009E73"  # anyplot palette pos 1 — semantic: recovery/new high
+DD_COLOR = "#AE3030"  # Imprint palette pos 3 — semantic: loss/drawdown
+REC_COLOR = "#009E73"  # Imprint palette pos 1 — semantic: recovery/new high
 
 # Data — simulated asset price over ~2 years with drawdowns and recoveries
 np.random.seed(42)
@@ -101,7 +101,7 @@ zero_rule = (
 
 max_dd_point = (
     alt.Chart(max_dd_df)
-    .mark_point(size=250, color="#9418DB", filled=True, stroke=INK, strokeWidth=1.5)
+    .mark_point(size=250, color="#C475FD", filled=True, stroke=INK, strokeWidth=1.5)
     .encode(x="date:T", y="drawdown:Q")
 )
 

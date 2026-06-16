@@ -21,7 +21,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 COLOR_A = "#009E73"  # Okabe-Ito position 1 — researchers
-COLOR_B = "#D55E00"  # Okabe-Ito position 2 — papers
+COLOR_B = "#C475FD"  # Okabe-Ito position 2 — papers
 
 sns.set_theme(
     style="ticks",

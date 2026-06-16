@@ -1,14 +1,18 @@
-""" pyplots.ai
+""" anyplot.ai
 hexbin-basic: Basic Hexbin Plot
-Library: letsplot 4.8.2 | Python 3.14.3
-Quality: 92/100 | Updated: 2026-02-21
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-29
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
+    coord_fixed,
+    element_blank,
     element_line,
     element_rect,
     element_text,
@@ -17,7 +21,7 @@ from lets_plot import (
     ggsize,
     labs,
     layer_tooltips,
-    scale_fill_viridis,
+    scale_fill_gradient,
     theme,
     theme_minimal,
 )
@@ -25,6 +29,13 @@ from lets_plot.export import ggsave
 
 
 LetsPlot.setup_html()
+
+# Theme tokens (Imprint palette — theme-adaptive chrome)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - Simulated GPS ping density across a metro area (km from city center)
 np.random.seed(42)
@@ -65,29 +76,34 @@ plot = (
         .line("density|@..density..")
         .format("@..density..", ".3f"),
     )
-    + scale_fill_viridis(name="Ping Count", option="magma", trans="sqrt", begin=0.05, end=0.95)
+    + scale_fill_gradient(low="#009E73", high="#4467A3", name="Ping Count", trans="sqrt")
+    + coord_fixed()
     + labs(
-        x="East\u2013West (km from center)",
-        y="North\u2013South (km from center)",
-        title="hexbin-basic \u00b7 letsplot \u00b7 pyplots.ai",
-        subtitle="GPS ping density \u2014 sqrt-scaled color reveals low-density structure",
+        x="East–West (km from center)",
+        y="North–South (km from center)",
+        title="hexbin-basic · python · letsplot · anyplot.ai",
+        subtitle="GPS ping density — sqrt-scaled Imprint sequential colormap",
     )
     + theme_minimal()
     + theme(
-        axis_title=element_text(size=22),
-        axis_text=element_text(size=18),
-        plot_title=element_text(size=26, face="bold"),
-        plot_subtitle=element_text(size=17, color="#666666"),
-        legend_text=element_text(size=16),
-        legend_title=element_text(size=18, face="bold"),
-        panel_grid=element_line(color="#E0E0E0", size=0.3, linetype="dashed"),
-        panel_background=element_rect(fill="#F5F5F0"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_blank(),
+        panel_grid_minor=element_blank(),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT),
+        plot_title=element_text(size=16, face="bold", color=INK),
+        plot_subtitle=element_text(size=11, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_text=element_text(size=10, color=INK_SOFT),
+        legend_title=element_text(size=12, face="bold", color=INK),
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save PNG (scale=3 gives 4800x2700)
-ggsave(plot, "plot.png", path=".", scale=3)
+# Save PNG (scale=4 gives 3200×1800)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 
 # Save HTML for interactive tooltips
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")

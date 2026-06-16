@@ -1,103 +1,116 @@
 library: seaborn
+language: python
 specification_id: bump-basic
 created: '2025-12-23T09:18:13Z'
-updated: '2026-02-22T21:15:44Z'
-generated_by: claude-opus-4-6
-workflow_run: 20456606720
-issue: 0
-python_version: 3.14.3
+updated: '2026-05-29T13:33:55Z'
+generated_by: claude-sonnet
+workflow_run: 26638997085
+issue: 982
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bump-basic/seaborn/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - manual-ticks
-  patterns:
-  - data-generation
-  - explicit-figure
-  dataprep: []
-  styling:
-  - grid-styling
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Perfect visual quality with all font sizes explicitly set, colorblind-safe palette,
-    and no overlap
-  - Effective data storytelling through end-of-line labels with bold emphasis for
-    top-ranked teams
-  - Very refined visual design with subtle y-axis-only grid, removed spines, and clean
-    direct labels replacing legend
-  - Excellent data quality showing diverse ranking trajectories with realistic sports
-    league context
-  - Clean, idiomatic seaborn code following KISS structure
+  - Correct Imprint palette with Apple (#009E73) first, canonical order for remaining
+    4 companies
+  - Alpha hierarchy de-emphasizes lower-ranked companies, creating clear visual prominence
+    for Apple and Microsoft
+  - Amber dashed vertical line + 'overtake' annotation at Q2'23–Q3'23 crossing is
+    an excellent storytelling device
+  - End-of-line direct labels replace the legend cleanly, reducing visual clutter
+  - Distinct marker shapes per company (circle/square/diamond/triangle/cross) provide
+    redundant encoding for CVD safety
+  - Y-axis correctly inverted with rank 1 at top; only y-axis grid shown at alpha=0.15;
+    spines removed via sns.despine
+  - Theme-adaptive chrome fully implemented — light (#FAF8F1) and dark (#1A1A17) backgrounds,
+    all text/grid tokens flip correctly
+  - 'Data is factually grounded: Microsoft did overtake Apple in late 2023, Nvidia
+    did rise dramatically due to AI boom'
   weaknesses:
-  - Library mastery could reach higher with more distinctive seaborn features
-  - Design could reach publication quality with additional hierarchy like varying
-    line opacity for lower-ranked teams
-  image_description: 'The plot displays a bump chart tracking 5 sports teams (Lions,
-    Tigers, Bears, Eagles, Wolves) across 6 competition weeks. The Y-axis shows "League
-    Position (Rank)" inverted so rank 1 is at the top and rank 5 at the bottom. The
-    X-axis shows "Competition Week" from Week 1 through Week 6. Each team has a distinct
-    color and marker shape: Lions (blue circles), Tigers (orange X markers), Bears
-    (purple squares), Eagles (teal plus markers), Wolves (rose diamond markers). Lines
-    are thick and markers are large, making trajectories easy to follow. End-of-line
-    labels on the right identify each team directly, with bold weight for the top-2
-    ranked teams (Lions, Tigers). The legend has been removed in favor of these direct
-    labels. Top and right spines are removed, y-axis grid uses subtle dashed lines
-    at very low alpha (0.15), x-axis grid is disabled. The title reads "bump-basic
-    · seaborn · pyplots.ai" in medium-weight font. The overall design is clean and
-    professional with a muted, colorblind-safe palette.'
+  - The 'overtake' annotation is at fontsize=7pt (~39 source pixels), which at 400px
+    mobile width renders as ~5px — nearly invisible at small display sizes. Consider
+    bumping to fontsize=8pt or 9pt.
+  - 'LM-02 is limited: most of the bump-chart logic is matplotlib-level code (line
+    alpha loops, ax.annotate); seaborn''s distinctive FacetGrid / multi-encoding features
+    (hue+style+markers simultaneously via relplot) are used well but the annotation
+    layer is library-agnostic.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "bump-basic · python · seaborn · anyplot.ai" in dark ink, clearly readable at top. Y-axis label "Market Cap Rank" and X-axis label "Quarter" in dark ink at fontsize=10. Tick labels (Q1'22–Q4'23 on X; 1–5 on Y) in secondary ink (#4A4A44) at fontsize=8. End-of-line company labels ("Microsoft", "Apple", "Nvidia", "Alphabet", "Amazon") in their respective data colors at fontsize=8 — all readable.
+      Data: 5 companies rendered with Imprint palette in canonical order: Apple=#009E73 (circles), Microsoft=#C475FD (squares), Amazon=#4467A3 (diamonds), Alphabet=#BD8233 (triangles), Nvidia=#AE3030 (crosses). Alpha hierarchy applied — Apple and Microsoft at full opacity, Nvidia at 0.75, Alphabet/Amazon at 0.55. Amber (#DDCC77) dashed vertical line at Q2.5'23 marks the crossing, with an "overtake" label in amber italic at fontsize=7.
+      Legibility verdict: PASS — all critical text is readable. The "overtake" annotation at 7pt is very small but intentionally tertiary.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title in light ink (#F0EFE8), clearly visible. Axis labels and tick labels in light secondary tone (#B8B7B0). Grid lines subtle. End-of-line labels in their respective data colors — all readable against dark background. No dark-on-dark failures observed. Brand green #009E73 (Apple) remains clearly visible on dark background.
+      Data: Colors are identical to the light render — Apple=#009E73, Microsoft=#C475FD, Amazon=#4467A3, Alphabet=#BD8233, Nvidia=#AE3030. Alpha hierarchy preserved. Amber dashed vertical line visible. "overtake" annotation in amber, readable.
+      Legibility verdict: PASS — all text is readable against the dark background. No chrome inversion failures. Data colors match light render exactly.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16, annotations=15.
-          All text clearly readable'
+        comment: 'All font sizes explicitly set (title=12, axis=10, ticks=8, labels=8).
+          Well-proportioned in both renders. Minor: ''overtake'' annotation at fontsize=7
+          (~5px at 400px mobile) is nearly invisible at small display sizes.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap. End-of-line labels at distinct rank positions, x-axis
-          labels well-spaced
+        comment: No overlapping text or data elements. End-of-line labels are well-spaced.
+          'overtake' annotation does not collide with line markers.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Large markers (18) with 5 distinct shapes, thick lines (linewidth=4).
-          Perfectly adapted to 30 data points
+        comment: markersize=14 and linewidth=3 are appropriate for 5 entities with
+          8 time points (sparse data). Alpha hierarchy is intentional and still keeps
+          all series distinguishable.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Fully colorblind-safe muted palette (blue, orange, purple, teal,
-          rose). Marker shapes provide additional redundancy
+        comment: Imprint palette with distinct marker shapes per company provides
+          redundant encoding. CVD-safe palette with ΔE ≥ 13.7 through n=5.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 figsize with tight_layout and bbox_inches='tight'. Plot fills
-          canvas well with balanced margins
+        comment: subplots_adjust(left=0.09, right=0.87, top=0.90, bottom=0.13) provides
+          generous margins. Right margin extended to accommodate end-of-line labels.
+          Canvas well-utilized.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Competition Week and League Position (Rank) are descriptive with
-          clarifier
+        comment: 'Y-axis: ''Market Cap Rank'' (descriptive, no units needed for ordinal
+          ranks). X-axis: ''Quarter'' (descriptive). Title: correct format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Apple) = #009E73. Remaining 4 companies follow canonical
+          Imprint order (#C475FD, #4467A3, #BD8233, #AE3030). Light bg=#FAF8F1, dark
+          bg=#1A1A17. All chrome tokens theme-adaptive. Amber used correctly for warning
+          annotation.'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -105,22 +118,26 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom muted palette, end-of-line labels, distinct markers, bold
-          for top-2 teams. Clearly above defaults
+        comment: 'Strong design: alpha hierarchy creates perceptual prominence for
+          top-ranked companies, direct end-of-line labels eliminate legend clutter,
+          crossing highlight annotation adds narrative layer. Clearly above a well-configured
+          default.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed, dashed grid at alpha=0.15 y-axis only, generous whitespace,
-          clean direct labels
+        comment: Spines removed via sns.despine, y-only grid at alpha=0.15, generous
+          margins via subplots_adjust, no legend box. Good refinement visible.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: End-of-line labels with bold for top-2 create visual hierarchy. Data
-          trajectories tell clear stories
+        comment: 'Visual hierarchy guides the reader: alpha de-emphasizes lower-ranked
+          companies, amber crossing line + ''overtake'' annotation direct attention
+          to the key event. Story is clear (Microsoft overtook Apple; Nvidia rose
+          sharply). Good storytelling.'
     spec_compliance:
       score: 15
       max: 15
@@ -130,27 +147,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bump chart with connected lines showing ranking changes over
-          time
+        comment: 'Correct bump chart: rank on inverted Y-axis, time on X-axis, connected
+          lines per entity, dot markers at each period.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: inverted Y-axis, distinct colors, dot
-          markers, connecting lines'
+        comment: Y-axis inverted (rank 1 at top), distinct colors and labels for each
+          entity, dot markers at each period, lines connecting same entity across
+          all periods.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=period, Y=rank, all data visible with correct axis orientation
+        comment: Quarter on X, Rank on Y (inverted). All 5 companies × 8 quarters
+          shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format. End-of-line labels correctly identify all teams
+        comment: Title is exactly 'bump-basic · python · seaborn · anyplot.ai'. End-of-line
+          labels correctly identify all 5 companies.
     data_quality:
       score: 15
       max: 15
@@ -160,20 +180,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows rises, falls, fluctuation, stability, and crossover points
+        comment: 'Shows rank stability (Apple at #1 for 6 quarters), crossing/overtake
+          (Apple↔Microsoft), dramatic rise (Nvidia #5→#3), and rank swapping (Amazon/Alphabet).
+          All key bump chart dynamics represented.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Sports league standings with plausible team names. Neutral real-world
-          scenario
+        comment: Tech company market cap rankings by quarter (2022–2023). Real-world
+          business scenario, neutral, comprehensible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Ranks 1-5 for 5 teams across 6 weeks. Realistic for league standings
+        comment: 'Factually grounded: Microsoft did overtake Apple in market cap in
+          late 2023; Nvidia did rise dramatically due to AI hardware demand. Proportions
+          are historically accurate.'
     code_quality:
       score: 10
       max: 10
@@ -183,31 +207,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports-Data-Plot-Style-Save flow, no functions or classes
+        comment: 'Linear structure: imports → tokens → data → theme setup → plot →
+          style → annotations → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data
+        comment: Fully deterministic — hardcoded rank data, no random generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: matplotlib.pyplot, pandas, seaborn'
+        comment: Only os, matplotlib.pyplot, pandas, seaborn — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: Clean, idiomatic. Alpha loop and end-of-line annotation loop are
+          appropriate complexity for the effect. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at dpi=300, current seaborn API
+        comment: Saves as plot-{THEME}.png. Uses current seaborn 0.13 API. No bbox_inches='tight'.
     library_mastery:
       score: 7
       max: 10
@@ -217,13 +243,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses sns.lineplot with hue/style/markers, sns.set_theme, sns.despine,
-          sns.color_palette. Axes-level API
+        comment: Uses sns.relplot with kind='line', hue, style, markers simultaneously
+          — seaborn's figure-level multi-encoding API. sns.set_theme with rc dict
+          for theme-adaptive chrome. sns.despine for spine removal. Good idiomatic
+          usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Leverages hue+style combination, marker dict mapping, set_theme with
-          rc, despine, color_palette
+        comment: Multi-level encoding via relplot(hue + style + markers) is a distinctive
+          seaborn feature. However, annotation and alpha loop code is library-agnostic
+          matplotlib. Some distinctive features used.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - custom-legend
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

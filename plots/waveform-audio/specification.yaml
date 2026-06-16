@@ -6,7 +6,7 @@ title: Audio Waveform Plot
 
 # Specification tracking
 created: "2026-03-06T19:52:41Z"
-updated: null
+updated: "2026-06-03T00:54:06Z"
 issue: 4563
 suggested: MarkusNeusinger
 
@@ -22,6 +22,7 @@ tags:
   domain:
     - engineering
     - science
+    - signal-processing
   features:
     - basic
     - temporal

@@ -1,0 +1,519 @@
+/**
+ * SpecDetailView component - Single implementation detail view.
+ *
+ * Shows large image with library carousel and action buttons.
+ * Toggles between static preview (PNG) and interactive HTML iframe.
+ */
+
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import DownloadIcon from '@mui/icons-material/Download';
+import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined';
+import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
+import Skeleton from '@mui/material/Skeleton';
+import Tooltip from '@mui/material/Tooltip';
+
+import { API_URL } from 'src/constants';
+import { useTheme } from 'src/hooks/useLayoutContext';
+import { colors, fontSize, typography } from 'src/theme';
+import type { Implementation } from 'src/types';
+import { buildDetailSrcSet, DETAIL_SIZES } from 'src/utils/responsiveImage';
+import { selectPreviewHtml, selectPreviewUrl } from 'src/utils/themedPreview';
+
+const INITIAL_WIDTH = 1600;
+const INITIAL_HEIGHT = 900;
+
+interface SpecDetailViewProps {
+  specTitle: string;
+  selectedLibrary: string;
+  currentImpl: Implementation | null;
+  implementations: Implementation[];
+  imageLoaded: boolean;
+  codeCopied: string | null;
+  downloadDone: string | null;
+  viewMode: 'preview' | 'interactive';
+  reportUrl: string;
+  onViewModeChange: (mode: 'preview' | 'interactive') => void;
+  onImageLoad: () => void;
+  onCopyCode: (impl: Implementation) => void;
+  onDownload: (impl: Implementation) => void;
+  onReport: () => void;
+  onTrackEvent: (event: string, props?: Record<string, string | undefined>) => void;
+}
+
+export function SpecDetailView({
+  specTitle,
+  selectedLibrary,
+  currentImpl,
+  implementations,
+  imageLoaded,
+  codeCopied,
+  downloadDone,
+  viewMode,
+  reportUrl,
+  onViewModeChange,
+  onImageLoad,
+  onCopyCode,
+  onDownload,
+  onReport,
+  onTrackEvent,
+}: SpecDetailViewProps) {
+  const sortedImpls = [...implementations].sort((a, b) => a.library_id.localeCompare(b.library_id));
+  const currentIndex = sortedImpls.findIndex(impl => impl.library_id === selectedLibrary);
+
+  // Static preview zoom + pan
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [zoomed, setZoomed] = useState(false);
+  const [origin, setOrigin] = useState({ x: 50, y: 50 });
+  const [animating, setAnimating] = useState(false);
+  const animTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const prevLibRef = useRef(selectedLibrary);
+
+  // Reset zoom when library changes
+  useEffect(() => {
+    if (prevLibRef.current !== selectedLibrary) {
+      prevLibRef.current = selectedLibrary;
+      setZoomed(false);
+      setOrigin({ x: 50, y: 50 });
+    }
+  }, [selectedLibrary]);
+
+  // Interactive iframe state — scaled to fit container
+  const interactiveContainerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+  const [contentWidth, setContentWidth] = useState(INITIAL_WIDTH);
+  const [contentHeight, setContentHeight] = useState(INITIAL_HEIGHT);
+  const [sizeReady, setSizeReady] = useState(false);
+
+  const updateScale = useCallback(() => {
+    if (!interactiveContainerRef.current) return;
+    const padding = 24;
+    const cw = interactiveContainerRef.current.clientWidth - padding;
+    const ch = interactiveContainerRef.current.clientHeight - padding;
+    const sx = cw / contentWidth;
+    const sy = ch / contentHeight;
+    setScale(Math.min(sx, sy) * 0.98);
+  }, [contentWidth, contentHeight]);
+
+  useEffect(() => {
+    if (viewMode !== 'interactive') return;
+    const handleMessage = (event: MessageEvent) => {
+      const allowedOrigins = [
+        window.location.origin,
+        'https://anyplot.ai',
+        'https://api.anyplot.ai',
+        'http://localhost:8000',
+      ];
+      if (!allowedOrigins.includes(event.origin)) return;
+      if (event.data?.type === 'anyplot-size') {
+        const { width, height } = event.data;
+        if (typeof width === 'number' && typeof height === 'number' && width > 0 && height > 0) {
+          setContentWidth(width);
+          setContentHeight(height);
+          setSizeReady(true);
+        }
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [viewMode]);
+
+  useEffect(() => {
+    if (viewMode !== 'interactive') return;
+    const timer = setTimeout(updateScale, 100);
+    window.addEventListener('resize', updateScale);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', updateScale);
+    };
+  }, [viewMode, updateScale]);
+
+  // Reset interactive size when switching library — React 19 "adjust state on prop change".
+  const [prevLibrary, setPrevLibrary] = useState(selectedLibrary);
+  if (prevLibrary !== selectedLibrary) {
+    setPrevLibrary(selectedLibrary);
+    setSizeReady(false);
+    setContentWidth(INITIAL_WIDTH);
+    setContentHeight(INITIAL_HEIGHT);
+  }
+
+  const handleZoomToggle = useCallback(
+    (e: React.MouseEvent) => {
+      if (!containerRef.current) return;
+      if (!zoomed) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setOrigin({
+          x: ((e.clientX - rect.left) / rect.width) * 100,
+          y: ((e.clientY - rect.top) / rect.height) * 100,
+        });
+      }
+      setAnimating(true);
+      setZoomed(z => !z);
+      if (animTimerRef.current) clearTimeout(animTimerRef.current);
+      animTimerRef.current = setTimeout(() => setAnimating(false), 300);
+    },
+    [zoomed]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (animTimerRef.current) clearTimeout(animTimerRef.current);
+    };
+  }, []);
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!zoomed || animating || !containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      setOrigin({
+        x: ((e.clientX - rect.left) / rect.width) * 100,
+        y: ((e.clientY - rect.top) / rect.height) * 100,
+      });
+    },
+    [zoomed, animating]
+  );
+
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent) => {
+      if (!zoomed || animating || !containerRef.current) return;
+      const touch = e.touches[0];
+      const rect = containerRef.current.getBoundingClientRect();
+      setOrigin({
+        x: ((touch.clientX - rect.left) / rect.width) * 100,
+        y: ((touch.clientY - rect.top) / rect.height) * 100,
+      });
+    },
+    [zoomed, animating]
+  );
+
+  const { isDark } = useTheme();
+  const previewUrl = selectPreviewUrl(currentImpl, isDark);
+  const previewHtml = selectPreviewHtml(currentImpl, isDark);
+  const interactiveAvailable = !!previewHtml;
+
+  // Overlay action buttons (report/copy/download/open/preview/raw) sit on top of
+  // the preview image. In dark mode the preview is dark, so a bright white button
+  // clashes — adapt the surface and icon ink to the active theme.
+  const overlayButtonSx = {
+    bgcolor: isDark ? 'rgba(36,36,32,0.9)' : 'rgba(255,255,255,0.9)',
+    color: 'var(--ink)',
+    '&:hover': {
+      bgcolor: isDark ? '#242420' : '#fff',
+      color: colors.primary,
+    },
+  } as const;
+  const proxyUrl = (url: string) =>
+    `${API_URL}/proxy/html?url=${encodeURIComponent(url)}&origin=${encodeURIComponent(window.location.origin)}`;
+
+  return (
+    <Box sx={{ maxWidth: { xs: '100%', md: 1200, lg: 1400, xl: 1600 }, mx: 'auto' }}>
+      {viewMode === 'interactive' && interactiveAvailable && previewHtml ? (
+        <Box
+          ref={interactiveContainerRef}
+          sx={{
+            position: 'relative',
+            borderRadius: 2,
+            overflow: 'hidden',
+            bgcolor: 'var(--bg-surface)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            aspectRatio: '16/9',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            p: 1.5,
+          }}
+        >
+          <Box
+            sx={{
+              bgcolor: 'var(--bg-surface)',
+              overflow: 'hidden',
+              width: contentWidth * scale,
+              height: contentHeight * scale,
+              opacity: sizeReady ? 1 : 0,
+              transition: 'opacity 0.2s ease-in-out',
+            }}
+          >
+            <iframe
+              src={proxyUrl(previewHtml)}
+              width={contentWidth}
+              height={contentHeight}
+              style={{
+                width: contentWidth,
+                height: contentHeight,
+                border: 'none',
+                transform: `scale(${scale})`,
+                transformOrigin: 'top left',
+              }}
+              title={`${specTitle} - ${selectedLibrary} interactive`}
+            />
+          </Box>
+
+          <Box sx={{ position: 'absolute', top: 8, left: 8, display: 'flex', gap: 0.5 }}>
+            <Tooltip title=".report()" disableFocusListener>
+              <IconButton
+                component="a"
+                href={reportUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={onReport}
+                aria-label="Report issue"
+                sx={overlayButtonSx}
+                size="medium"
+              >
+                <FlagOutlinedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+
+          <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5 }}>
+            <Tooltip title=".preview()" disableFocusListener>
+              <IconButton
+                onClick={() => {
+                  onViewModeChange('preview');
+                  onTrackEvent('view_mode_change', { mode: 'preview', library: selectedLibrary });
+                }}
+                aria-label="Show static preview"
+                sx={overlayButtonSx}
+                size="medium"
+              >
+                <ImageOutlinedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title=".raw()" disableFocusListener>
+              <IconButton
+                onClick={() =>
+                  previewHtml && window.open(previewHtml, '_blank', 'noopener,noreferrer')
+                }
+                aria-label="Open raw HTML"
+                sx={overlayButtonSx}
+                size="medium"
+              >
+                <OpenInNewIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        </Box>
+      ) : (
+        <Box
+          ref={containerRef}
+          role="button"
+          tabIndex={0}
+          aria-label={zoomed ? 'Zoom out' : 'Zoom in'}
+          onClick={handleZoomToggle}
+          onKeyDown={(e: React.KeyboardEvent) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleZoomToggle(e as unknown as React.MouseEvent);
+            }
+          }}
+          onMouseMove={handleMouseMove}
+          onTouchMove={handleTouchMove}
+          sx={{
+            position: 'relative',
+            borderRadius: 2,
+            overflow: 'hidden',
+            bgcolor: 'var(--bg-surface)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            aspectRatio: '16/9',
+            cursor: zoomed ? 'zoom-out' : 'zoom-in',
+            touchAction: zoomed ? 'none' : 'auto',
+            outline: 'none',
+            '&:focus-visible': { boxShadow: `0 0 0 2px ${colors.primary}` },
+            '&:hover .impl-counter': { opacity: 1 },
+          }}
+        >
+          {!imageLoaded && (
+            <Skeleton
+              variant="rectangular"
+              sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+            />
+          )}
+          {previewUrl && (
+            <Box
+              component="picture"
+              key={previewUrl}
+              sx={{ display: imageLoaded ? 'contents' : 'none' }}
+            >
+              <source
+                type="image/webp"
+                srcSet={buildDetailSrcSet(previewUrl, 'webp')}
+                sizes={DETAIL_SIZES}
+              />
+              <source
+                type="image/png"
+                srcSet={buildDetailSrcSet(previewUrl, 'png')}
+                sizes={DETAIL_SIZES}
+              />
+              <Box
+                component="img"
+                src={`${previewUrl.replace(/\.png$/, '')}_1200.png`}
+                alt={`${specTitle} - ${selectedLibrary}`}
+                onLoad={onImageLoad}
+                sx={{
+                  display: 'block',
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                  transform: zoomed ? 'scale(2.5)' : 'scale(1)',
+                  transformOrigin: `${origin.x}% ${origin.y}%`,
+                  transition: animating ? 'transform 0.3s ease' : 'none',
+                }}
+                onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                  const target = e.target as HTMLImageElement;
+                  if (!target.dataset.fallback) {
+                    target.dataset.fallback = '1';
+                    target
+                      .closest('picture')
+                      ?.querySelectorAll('source')
+                      .forEach(s => s.remove());
+                    target.removeAttribute('srcset');
+                    target.src = previewUrl;
+                  }
+                }}
+              />
+            </Box>
+          )}
+
+          {currentImpl &&
+            (codeCopied === currentImpl.library_id || downloadDone === currentImpl.library_id) && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  bgcolor: 'rgba(0,0,0,0.7)',
+                  color: '#fff',
+                  px: 1.5,
+                  py: 0.5,
+                  borderRadius: 1,
+                  fontFamily: typography.fontFamily,
+                  fontSize: fontSize.sm,
+                  pointerEvents: 'none',
+                  zIndex: 2,
+                }}
+              >
+                {codeCopied === currentImpl.library_id ? '>>> .copied' : '>>> .downloaded'}
+              </Box>
+            )}
+
+          <Box
+            onClick={e => e.stopPropagation()}
+            sx={{
+              position: 'absolute',
+              top: 8,
+              left: 8,
+              display: zoomed ? 'none' : 'flex',
+              gap: 0.5,
+            }}
+          >
+            <Tooltip title=".report()" disableFocusListener>
+              <IconButton
+                component="a"
+                href={reportUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e: React.MouseEvent) => {
+                  (e.currentTarget as HTMLElement).blur();
+                  onReport();
+                }}
+                aria-label="Report issue"
+                sx={overlayButtonSx}
+                size="medium"
+              >
+                <FlagOutlinedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+
+          <Box
+            onClick={e => e.stopPropagation()}
+            sx={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              display: zoomed ? 'none' : 'flex',
+              gap: 0.5,
+            }}
+          >
+            {currentImpl && (
+              <Tooltip title=".copy()" disableFocusListener>
+                <IconButton
+                  onClick={(e: React.MouseEvent) => {
+                    (e.currentTarget as HTMLElement).blur();
+                    onCopyCode(currentImpl);
+                  }}
+                  aria-label="Copy code"
+                  sx={overlayButtonSx}
+                  size="medium"
+                >
+                  <ContentCopyIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
+            {currentImpl && (
+              <Tooltip title=".download()" disableFocusListener>
+                <IconButton
+                  onClick={(e: React.MouseEvent) => {
+                    (e.currentTarget as HTMLElement).blur();
+                    onDownload(currentImpl);
+                  }}
+                  aria-label="Download PNG"
+                  sx={overlayButtonSx}
+                  size="medium"
+                >
+                  <DownloadIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
+            {interactiveAvailable && (
+              <Tooltip title=".open()" disableFocusListener>
+                <IconButton
+                  onClick={() => {
+                    onViewModeChange('interactive');
+                    onTrackEvent('view_mode_change', {
+                      mode: 'interactive',
+                      library: selectedLibrary,
+                    });
+                  }}
+                  aria-label="Show interactive"
+                  sx={overlayButtonSx}
+                  size="medium"
+                >
+                  <PlayArrowIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
+
+          {implementations.length > 1 && !zoomed && (
+            <Box
+              className="impl-counter"
+              sx={{
+                position: 'absolute',
+                bottom: 8,
+                right: 8,
+                px: 1,
+                py: 0.25,
+                bgcolor: 'rgba(0,0,0,0.6)',
+                borderRadius: 1,
+                fontSize: '0.75rem',
+                fontFamily: typography.fontFamily,
+                color: '#fff',
+                opacity: 0,
+                transition: 'opacity 0.2s',
+              }}
+            >
+              {currentIndex + 1}/{implementations.length}
+            </Box>
+          )}
+        </Box>
+      )}
+    </Box>
+  );
+}

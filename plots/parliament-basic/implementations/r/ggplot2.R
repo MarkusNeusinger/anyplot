@@ -16,8 +16,8 @@ PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-OKABE_ITO   <- c("#009E73", "#D55E00", "#0072B2", "#CC79A7",
-                 "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT   <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+                 "#AE3030", "#2ABCCD", "#954477")
 
 # --- Data -------------------------------------------------------------------
 # Create party data with seat counts
@@ -41,7 +41,7 @@ seat_idx <- 1
 for (i in 1:nrow(parties)) {
   party_name <- parties$party[i]
   party_seats <- parties$seats[i]
-  party_color_idx <- min(i, length(OKABE_ITO))
+  party_color_idx <- min(i, length(IMPRINT))
 
   for (j in 1:party_seats) {
     row_idx <- ceiling(seat_idx / seats_per_row)
@@ -69,7 +69,7 @@ for (i in 1:nrow(parties)) {
 }
 
 # Map color indices to actual colors
-seat_data$color <- OKABE_ITO[seat_data$color_idx]
+seat_data$color <- IMPRINT[seat_data$color_idx]
 
 # --- Plot -------------------------------------------------------------------
 p <- ggplot(seat_data, aes(x = x, y = y, fill = party)) +
@@ -82,11 +82,11 @@ p <- ggplot(seat_data, aes(x = x, y = y, fill = party)) +
     show.legend = TRUE
   ) +
   scale_color_manual(
-    values = setNames(OKABE_ITO[1:nrow(parties)], parties$party),
+    values = setNames(IMPRINT[1:nrow(parties)], parties$party),
     guide = guide_legend(ncol = 1, title = "Party", title.position = "top")
   ) +
   scale_fill_manual(
-    values = setNames(OKABE_ITO[1:nrow(parties)], parties$party),
+    values = setNames(IMPRINT[1:nrow(parties)], parties$party),
     guide = "none"
   ) +
   coord_fixed() +

@@ -22,7 +22,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 BRAND = "#009E73"
-ALT_COLOR = "#D55E00"
+ALT_COLOR = "#C475FD"
 
 np.random.seed(42)
 X, y = make_moons(n_samples=200, noise=0.25, random_state=42)
@@ -85,7 +85,7 @@ if np.any(incorrect_mask):
         X1[incorrect_mask],
         X2[incorrect_mask],
         s=300,
-        edgecolors="#CC79A7",
+        edgecolors="#BD8233",
         linewidths=3.5,
         facecolors="none",
         alpha=0.95,
@@ -124,7 +124,7 @@ legend_elements = [
         color="w",
         markerfacecolor="none",
         markersize=14,
-        markeredgecolor="#CC79A7",
+        markeredgecolor="#BD8233",
         markeredgewidth=3.5,
         label="Misclassified",
     ),

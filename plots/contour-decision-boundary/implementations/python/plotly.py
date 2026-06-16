@@ -20,7 +20,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Generate moon-shaped classification data
 np.random.seed(42)
@@ -52,7 +52,7 @@ fig.add_trace(
         x=np.linspace(x_min, x_max, 150),
         y=np.linspace(y_min, y_max, 150),
         z=Z_prob,
-        colorscale=[[0, OKABE_ITO[0]], [1, OKABE_ITO[1]]],
+        colorscale=[[0, IMPRINT[0]], [1, IMPRINT[1]]],
         opacity=0.4,
         showscale=True,
         colorbar=dict(
@@ -90,7 +90,7 @@ fig.add_trace(
         x=X_class0[:, 0],
         y=X_class0[:, 1],
         mode="markers",
-        marker=dict(size=14, color=OKABE_ITO[0], line=dict(color=PAGE_BG, width=2), symbol="circle"),
+        marker=dict(size=14, color=IMPRINT[0], line=dict(color=PAGE_BG, width=2), symbol="circle"),
         name="Class 0",
         hovertemplate="Feature 1: %{x:.2f}<br>Feature 2: %{y:.2f}<br>Class: 0<extra></extra>",
     )
@@ -102,7 +102,7 @@ fig.add_trace(
         x=X_class1[:, 0],
         y=X_class1[:, 1],
         mode="markers",
-        marker=dict(size=14, color=OKABE_ITO[1], line=dict(color=PAGE_BG, width=2), symbol="diamond"),
+        marker=dict(size=14, color=IMPRINT[1], line=dict(color=PAGE_BG, width=2), symbol="diamond"),
         name="Class 1",
         hovertemplate="Feature 1: %{x:.2f}<br>Feature 2: %{y:.2f}<br>Class: 1<extra></extra>",
     )

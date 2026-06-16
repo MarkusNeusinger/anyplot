@@ -1,6 +1,7 @@
-import { useEffect, useRef, useCallback } from 'react';
-import type { PlotImage } from '../types';
-import { BATCH_SIZE } from '../constants';
+import { useCallback, useEffect, useRef } from 'react';
+
+import { BATCH_SIZE } from 'src/constants';
+import type { PlotImage } from 'src/types';
 
 interface UseInfiniteScrollProps {
   allImages: PlotImage[];
@@ -98,14 +99,14 @@ export function useInfiniteScroll({
     if (!hasMore) return;
 
     const observer = new IntersectionObserver(
-      (entries) => {
+      entries => {
         if (entries[0].isIntersecting) {
           loadMore();
         }
       },
       {
         threshold: 0.1,
-        rootMargin: '2400px 0px'
+        rootMargin: '2400px 0px',
       }
     );
 

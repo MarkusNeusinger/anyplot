@@ -31,7 +31,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 BRAND = "#009E73"
-SECONDARY = "#D55E00"
+SECONDARY = "#C475FD"
 
 # Data - Meta-analysis of blood pressure reduction trials
 np.random.seed(42)

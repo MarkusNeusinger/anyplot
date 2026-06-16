@@ -20,7 +20,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data - Software Development Project Timeline
 tasks = [
@@ -47,11 +47,11 @@ df = df.sort_values("start").reset_index(drop=True)
 
 # Color map using Okabe-Ito palette
 color_map = {
-    "Planning": OKABE_ITO[0],
-    "Design": OKABE_ITO[1],
-    "Development": OKABE_ITO[2],
-    "Testing": OKABE_ITO[3],
-    "Deployment": OKABE_ITO[4],
+    "Planning": IMPRINT[0],
+    "Design": IMPRINT[1],
+    "Development": IMPRINT[2],
+    "Testing": IMPRINT[3],
+    "Deployment": IMPRINT[4],
 }
 
 # Create Gantt chart using timeline

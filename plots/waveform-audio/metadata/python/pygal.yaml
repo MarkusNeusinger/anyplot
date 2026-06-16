@@ -1,40 +1,53 @@
 library: pygal
+language: python
 specification_id: waveform-audio
 created: '2026-03-07T14:58:06Z'
-updated: '2026-03-07T15:35:37Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22801238622
+updated: '2026-06-03T01:50:43Z'
+generated_by: claude-sonnet
+workflow_run: 26857545980
 issue: 4563
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/pygal/plot.html
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/python/pygal/plot-dark.html
 quality_score: 87
 review:
   strengths:
-  - 'Excellent spec compliance: all required features present (filled area, zero-line,
-    envelope, symmetric y-range)'
-  - Strong data storytelling with peak transient marker and decay envelope creating
-    clear narrative
-  - Colorblind-safe palette (blue + orange) with good contrast
-  - Leverages pygal-specific per-point dict format for rich interactive tooltips
-  - Clean KISS code structure with realistic audio data (A3 note, 220Hz + harmonics)
+  - 'Perfect spec compliance: fills all required features (filled waveform, zero-line,
+    semi-transparent fill, envelope, time axis, normalized amplitude)'
+  - 'Excellent data quality: physically realistic A3 musical note with harmonics and
+    exponential decay, appropriate scale'
+  - 'Flawless code quality: clean KISS structure, seeded for reproducibility, all
+    imports used, correct pygal API'
+  - 'Correct Imprint palette usage: green waveform, purple envelope, semantic red
+    for peak transient'
+  - Both themes render correctly with proper chrome adaptation — no dark-on-dark failures
+  - 'Idiomatic pygal: per-point dict tooltips, cubic interpolation, explicit canvas
+    sizing'
+  - Interactive HTML output with rich per-point tooltip labels (time + amplitude for
+    each of 1200 points)
   weaknesses:
-  - DE-02 limited by pygal inability to remove plot frame/spines — box border still
-    visible
-  - Peak transient marker is small relative to the dense waveform
-  - DE-01 could benefit from more refined typography/color treatment for publication
-    quality
-  image_description: The plot displays an audio waveform of a synthesized A3 note
-    (220 Hz) with harmonics over approximately 0.15 seconds. The waveform is rendered
-    as a blue filled area symmetric around the zero baseline, showing dense oscillations
-    with a clear attack transient near t=0.01s followed by exponential decay. An orange
-    dashed line traces the decay envelope both above and below the waveform. A dark
-    blue dot marks the peak transient at maximum amplitude (~0.92). The background
-    is white with a light gray (#f5f6f8) plot area and subtle horizontal y-axis grid
-    lines. The x-axis shows "Time (s)" from 0.00 to 0.14+, and the y-axis shows "Amplitude"
-    from -1.000 to 1.000. The legend at the bottom lists "Waveform", "Decay envelope",
-    and "Peak transient". The title reads "waveform-audio · pygal · pyplots.ai".
+  - Zero reference line is somewhat subtle behind the dense waveform fill — could
+    use a slightly higher stroke-width or INK color to stand out more clearly
+  - 'Design excellence is moderate: while the color hierarchy and dashed envelope
+    show intent, the chart retains pygal default box frame and does not push into
+    highly polished territory'
+  - 'Data storytelling is functional but not exceptional: no annotations beyond the
+    peak marker, envelope story is implicit rather than guided'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light surface
+      Chrome: Title "waveform-audio · python · pygal · anyplot.ai" in dark ink — clearly readable. X-axis label "Time (s)" and Y-axis label "Amplitude" visible at appropriate sizes. Tick labels on both axes readable. Legend at bottom with "Waveform", "Decay envelope", "Peak transient" — all legible.
+      Data: Green (#009E73, Imprint pos 1) semi-transparent filled waveform showing oscillatory A3 note with decay. Purple (#C475FD, Imprint pos 2) dashed upper/lower envelope bounds. Red (#AE3030, semantic) dot marking peak transient at ~0.014s. Dashed gray zero-reference line at y=0.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface
+      Chrome: Title, axis labels, tick labels, and legend all flip to light text — clearly readable. No dark-on-dark failures detected.
+      Data: Identical data colors to light render — green waveform, purple envelope, red peak, gray zero line. Brand green #009E73 reads clearly on dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 28
@@ -45,41 +58,48 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=62, label=40, major_label=36,
-          legend=34); all text clearly readable
+        comment: Font sizes correctly set per pygal guide (title=66, label=56, major_label=44,
+          legend=44). Both renders fully legible.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; x-axis labels well-spaced, legend at bottom
-          clear
+        comment: Clean layout throughout. No collisions between text, data, or annotations.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Waveform clearly rendered with 1200 points; envelope visible; peak
-          dot small but identifiable
+        comment: Waveform fill, envelope dashed lines, and peak marker are visible.
+          Zero reference line somewhat subtle behind dense fill.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue (#306998) + orange (#E69F00) colorblind-safe palette with good
-          contrast
+        comment: Imprint palette used correctly. CVD-safe green/purple/red combination.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins
+        comment: Canvas 3200x1800 correct. Canvas gate passed. Generous margins, nothing
+          clipped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (s) with units, Amplitude appropriate for normalized signal
+        comment: 'Title matches required format. X: Time (s), Y: Amplitude — descriptive
+          with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 correct. Imprint positions used. Backgrounds
+          #FAF8F1/#1A1A17 correct. Both renders theme-correct.'
     design_excellence:
       score: 12
       max: 20
@@ -89,21 +109,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom colorblind-safe palette, light gray plot background, intentional
-          font hierarchy; above defaults but not publication-ready
+        comment: 'Above defaults. Intentional color hierarchy: green primary, purple
+          envelope, semantic red peak. Semi-transparent fill, cubic interpolation,
+          dashed envelope with round linecaps.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Y-guides only, subtle grid, but pygal default box frame still visible
+        comment: Y-guides only (correct for waveform). Dashed stroke with custom dasharray
+          and round linecaps, opacity on fill. Pygal box frame present (expected for
+          library).
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Peak transient marker and decay envelope create visual hierarchy
-          and attack-decay narrative
+        comment: Red peak marker creates clear focal point. Decay envelope provides
+          dynamic range context. Color hierarchy guides eye from primary signal to
+          boundary to extreme event.
     spec_compliance:
       score: 15
       max: 15
@@ -113,26 +137,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct XY waveform visualization
+        comment: Correct filled area waveform, symmetric above and below zero, time
+          domain.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: filled area, zero-line, envelope, symmetric
-          y-range, synthetic audio'
+        comment: Filled area, zero-line, semi-transparent fill, envelope, x-axis in
+          seconds, y-axis -1 to 1.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time, Y=amplitude, axes show full range
+        comment: 'X: time in seconds 0.0-0.15, Y: normalized amplitude -1.0 to 1.0.
+          ~6600 samples (within 5000-50000 spec range).'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels descriptive and match data
+        comment: Title exactly 'waveform-audio · python · pygal · anyplot.ai'. Legend
+          labels clear and descriptive.
     data_quality:
       score: 15
       max: 15
@@ -142,21 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows attack transient, harmonic content, exponential decay, both
-          polarities, envelope boundary
+        comment: Oscillatory shape, attack-decay dynamics, harmonics, dynamic range,
+          peak transient, envelope bounds, zero baseline.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: A3 note (220 Hz) with harmonics is a real-world audio scenario
+        comment: A3 musical note (220 Hz) with physical harmonics and exponential
+          decay. Standard 44100 Hz sample rate.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 220Hz fundamental, 0.15s duration, 44.1kHz sample rate, normalized
-          amplitude
+        comment: 'Y: -1.0 to +1.0 normalized. Amplitude peaks at 0.92 — realistic
+          headroom. 0.15s shows attack-sustain-decay pattern.'
     code_quality:
       score: 10
       max: 10
@@ -166,31 +194,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data generation, style, chart, save'
+        comment: No functions or classes. Flat linear structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; data deterministic via sine functions
+        comment: np.random.seed(42) set. Signal fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: numpy, pygal, Style — all used
+        comment: All imported modules used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; per-point dict format leverages pygal features
+        comment: Per-point dict format with value/label is correct pygal pattern.
+          Import shadowing workaround is necessary and commented.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via render_to_png
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses current pygal
+          3.1.0 API.
     library_mastery:
       score: 7
       max: 10
@@ -200,16 +230,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of pygal XY chart, Style class, fill, stroke_style, legend
-          config, cubic interpolation
+        comment: Per-point dict format with value/label tuples, stroke_style dict,
+          fill=True, interpolate=cubic, legend_at_bottom, explicit_size — all idiomatic
+          pygal.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Per-point dict format with custom labels for rich tooltips, HTML
-          export, stroke_style with dasharray
-  verdict: REJECTED
+        comment: Rich per-point interactive tooltips across 1200 data points (distinctive
+          pygal feature). Interactive HTML output. Custom stroke dasharray/linecap.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -221,4 +252,3 @@ impl_tags:
   - normalization
   styling:
   - alpha-blending
-  - grid-styling

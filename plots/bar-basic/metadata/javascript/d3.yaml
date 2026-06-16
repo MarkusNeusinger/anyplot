@@ -1,0 +1,268 @@
+library: d3
+language: javascript
+specification_id: bar-basic
+created: '2026-06-02T23:12:59Z'
+updated: '2026-06-02T23:18:00Z'
+generated_by: claude-opus
+workflow_run: 26853380533
+issue: 612
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-basic/javascript/d3/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'First categorical series is the brand green #009E73 (Imprint palette position
+    1) — applied identically across both themes.'
+  - 'Theme-adaptive chrome is fully wired through ANYPLOT_TOKENS — light render reads
+    on #FAF8F1 with dark text, dark render reads on #1A1A17 with light text. No dark-on-dark
+    or light-on-light failures.'
+  - Bars are sorted descending ($184M → $59M), creating an immediate visual hierarchy
+    and ranking story — strong DE-03 storytelling without resorting to forbidden annotations.
+  - Value labels above each bar ($184M, $153M, …) enable precise reading and are positioned
+    12 px above the bar top without overlapping the title or neighbouring labels.
+  - Y-axis grid is drawn behind the bars with subtle 15% ink opacity, gridline tickSize=-iw
+    and tickFormat empty — exactly the recommended D3 idiom for embedded gridlines,
+    with no chartjunk.
+  - Y-axis domain line removed and x-axis baseline kept as a thin inkSoft rule, giving
+    the clean L-shape implied by the style guide.
+  - Title format follows the mandated `{Descriptive Title} · bar-basic · javascript
+    · d3 · anyplot.ai` pattern at 28 px, fitting comfortably without clipping.
+  - 'Code follows the D3 prompt skeleton exactly: reads window.ANYPLOT_SIZE + ANYPLOT_TOKENS,
+    appends a single <svg> to #container, builds data in memory deterministically
+    — no fetch, no imports, no hard-coded canvas dimensions.'
+  - Realistic, neutral business scenario (quarterly revenue by consumer-products category)
+    with plausible $59M–$184M range covering a wide value spread for DQ-01 feature
+    coverage.
+  weaknesses:
+  - 'DE-01 ceiling: design is competent and clearly above defaults, but lacks one
+    distinguishing flourish (e.g. emphasised top bar via slightly stronger fill, a
+    thin baseline rule with a value annotation, or a soft secondary band to compare
+    against a target) that would push it into publication-ready territory.'
+  - 'LM-02: the implementation uses only basic D3 building blocks (scaleBand, scaleLinear,
+    axisBottom/Left, selectAll/join). These are correct and idiomatic but could be
+    replicated in many libraries — leaves room to leverage a more distinctive D3 feature
+    (e.g. d3.format for the dollar-millions ticks instead of a manual template literal,
+    or a curated d3.scaleSequential applied to bar fills) without changing the chart''s
+    identity.'
+  - Axis-label fontsize 24 px is slightly generous for the short 'Product Category'
+    string; reducing to ~20 px would tighten the proportional balance with the 20–22
+    px tick labels.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white at #FAF8F1 — correct (not pure white).
+      Chrome: bold dark-ink title "Quarterly Revenue by Category · bar-basic · javascript · d3 · anyplot.ai" centred at 28 px; inkSoft secondary tick labels ($0M..$200M on Y in $50M steps, eight category names on X); inkSoft axis titles "Quarterly Revenue (USD millions)" rotated 90° on left and "Product Category" centred below; subtle horizontal gridlines at ~15% ink opacity. All chrome fully readable against the cream background.
+      Data: 8 vertical bars in brand green #009E73 (Imprint palette[0]), sorted descending from Beverages $184M to Household $59M; dark-ink value labels ($184M, $153M, $138M, $122M, $97M, $86M, $75M, $59M) sit ~12 px above each bar.
+      Legibility verdict: PASS.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black at #1A1A17 — correct (not pure black).
+      Chrome: bold light-ink title (#F0EFE8) at the same 28 px; light-secondary (#B8B7B0) tick labels and axis titles; subtle horizontal gridlines using light ink at ~15% opacity, still visible. No dark-on-dark failures — every text element renders crisply against the dark surface.
+      Data: identical brand green #009E73 bars in the same descending order; value labels now in light ink (#F0EFE8) above each bar, clearly visible. Data colours are byte-identical to the light render; only chrome flipped.
+      Legibility verdict: PASS.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (20-28 px); both renders readable;
+          balanced X/Y axis labels and ticks; no overflow or clipping.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap — value labels sit cleanly above bars, no tick collisions
+          across 8 categories.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars are prominent, single solid fill, well-spaced via scaleBand
+          padding=0.28.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green carries strong luminance contrast on both surfaces; single
+          series so no CVD pair issues.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Generous margins, no clipping, balanced whitespace; canvas gate passed
+          (no /tmp/anyplot-canvas-gate.txt).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Quarterly Revenue (USD millions)'' includes units; ''Product Category''
+          descriptive.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; background #FAF8F1/#1A1A17; chrome theme-correct
+          in both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above defaults — sorted bars, value labels, subtle grid, removed
+          y-domain — but lacks a standout flourish (target line, emphasised top bar)
+          to reach publication-ready.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Tick marks removed (tickSize=0); 15% opacity grid; floating axes;
+          tickPadding tuned. Clean L-shape.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Bars sorted descending establishes a clear ranking narrative; value
+          labels reinforce precise reading.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Vertical bar chart — exact match to bar-basic spec.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Consistent bar widths via scaleBand; value labels above each bar;
+          single colour for all bars; adequate spacing — all spec notes honoured.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category on X, value on Y; full data range visible (0–$200M domain
+          via .nice()).
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'Quarterly Revenue by Category · bar-basic · javascript · d3
+          · anyplot.ai' matches the optional descriptive-prefix format; single series
+          so legend correctly omitted.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Eight categories with a wide spread ($59M–$184M) exercise the full
+          visual range of the plot type.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Quarterly consumer-products revenue — neutral business scenario,
+          no controversial content.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Mid-eight-figure to low-nine-figure category revenue is plausible
+          for a regional consumer-products company.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: data → svg → scales → grid → bars → labels → axes →
+          title. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Inline literal data, fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses only the d3 global and ANYPLOT_TOKENS / ANYPLOT_SIZE as required
+          — no imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Idiomatic D3 selections and joins; no fake interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness emits plot-{theme}.png + .html as required for the interactive-library
+          bucket.
+    library_features:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Textbook D3: scaleBand + scaleLinear, axisBottom/Left, selectAll().data().join(),
+          tickSize/tickFormat/.nice() for the embedded grid.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Generic-but-correct D3; nothing here that couldn't be replicated
+          in another library with minor syntax changes.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - grid-styling

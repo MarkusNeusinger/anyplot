@@ -91,7 +91,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 4-color anyplot palette (CVD-safe by design). White labels on colored
+        comment: 4-color Imprint palette (CVD-safe by design). White labels on colored
           cluster markers provide strong contrast. No red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
@@ -116,7 +116,7 @@ review:
         passed: true
         comment: 'First series #009E73 (Coffee Shop). Canonical order positions 1-4.
           Backgrounds #FAF8F1 light / #1A1A17 dark. Data colors identical across themes.
-          No non-anyplot cmaps used.'
+          No non-Imprint cmaps used.'
     design_excellence:
       score: 14
       max: 20

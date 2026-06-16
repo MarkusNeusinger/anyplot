@@ -1,0 +1,257 @@
+library: pygal
+language: python
+specification_id: depth-order-book
+created: '2026-06-15T02:46:27Z'
+updated: '2026-06-15T03:12:32Z'
+generated_by: claude-sonnet
+workflow_run: 27520588428
+issue: 8657
+language_version: 3.13.13
+library_version: 3.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/depth-order-book/python/pygal/plot-dark.html
+quality_score: 83
+review:
+  strengths:
+  - 'Perfect spec compliance: all required features (cumulative step curves, staircase
+    shape, bid/ask colors, spread gap, mid-price dashed line with annotation, synthetic
+    order walls) correctly implemented'
+  - 'Semantic Imprint palette usage: #009E73 for bids (financial buy convention) and
+    #AE3030 for asks (financial sell convention) — both from Imprint palette with
+    appropriate semantic exception'
+  - Realistic, neutral BTC/USD scenario with plausible order book mechanics (exponential
+    distribution, wall multipliers, tick size)
+  - Full theme adaptation with explicit font size hierarchy in both renders
+  - Clean KISS code with reproducible seed and correct dual-output (PNG + HTML)
+  weaknesses:
+  - 'Legend overlaps with bid area fill: 5-item pygal legend placed in chart viewport
+    upper-left where the bid staircase top is at max cumulative volume. Fix: add legend_at_bottom=True
+    to chart constructor or set explicit chart margins to push legend outside the
+    data area'
+  - 'Wall callout dots are subtle: dots_size=12 creates small markers relative to
+    the 3200px canvas. Fix: increase dots_size to 18-22 in the Style object to make
+    the 8x and 9x markers more prominent'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "BTC/USD Order Book · depth-order-book · python · pygal · anyplot.ai" fully visible in dark ink at top. Y-axis label "Cumulative Volume (BTC)" and X-axis label "Price (USD)" readable. Tick labels (price 59600–60400, volume 0–160) readable. 5-item legend (Bids, Asks, Mid $60,000 · ..., 8x Bid Wall, 9x Ask Wall) in upper-left.
+      Data: Green (#009E73) filled staircase area for bids, descending from ~160 BTC cumulative at leftmost price to near-zero at mid-price. Red (#AE3030) filled staircase area for asks, ascending from near-zero at mid-price to ~160 BTC at rightmost price. Semi-transparent fill (opacity 0.5) shows staircase steps cleanly. Dashed vertical line at mid-price $60,000. Wall callout dots present (small).
+      Legibility verdict: PASS — all text dark on light background, no contrast failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title, axis labels, tick labels all in near-white (#F0EFE8) ink — clearly readable against dark background. Legend text light-colored. Dashed mid-price line visible. No dark-on-dark failures detected.
+      Data: Colors identical palette assignment (#009E73 bids, #AE3030 asks) — visual appearance slightly more muted due to semi-transparent fill mixing with dark background (expected SVG opacity behavior, not a palette change). Staircase structure clearly visible.
+      Legibility verdict: PASS — no dark-on-dark failures, all chrome elements readable
+  criteria_checklist:
+    visual_quality:
+      score: 24
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title=66, labels=56, major_labels=44,
+          legend=44, value=36); title formula correct at 67 chars. Minor: legend truncates
+          Mid $60,000 · Spread $10 label with ellipsis.'
+      - id: VQ-02
+        name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: 5-item legend in upper-left overlaps with top of bid step area fill.
+          Pygal positions legend inside chart viewport.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Step areas very prominent. Dashed mid-price line visible. Wall callout
+          dots present but subtle at dots_size=12.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/red financial convention with redundant positional encoding
+          (left vs right of mid-price) and legend labels.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 gate passed. Step areas fill plot area well. Minor
+          deduction for legend positioning reducing effective plot area.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Price (USD) and Cumulative Volume (BTC) — descriptive with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'BID_COLOR=#009E73 (first series = brand green); ASK_COLOR=#AE3030
+          (semantic exception for financial sell convention); mid-price uses INK_MUTED
+          anchor; backgrounds #FAF8F1/#1A1A17; chrome fully theme-adaptive.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Intentional semantic color choices, explicit font hierarchy, custom
+          Style. Well-configured above defaults, not publication-ready.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-only grid guides, semi-transparent fill (0.5 opacity), dashed mid-price
+          line with custom stroke_style, x_label_rotation=30, explicit stroke_width.
+          Above default baseline.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: V-shape focal point at bid-ask spread gap, dashed mid-price annotation,
+          wall callout dots (8x, 9x) add quantitative storytelling.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct market depth chart with two filled cumulative step areas
+          around mid-price.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Cumulative sum from best price outward, staircase curves, green bids
+          + red asks with semi-transparent fill, spread gap, dashed mid-price line
+          with spread annotation, Y-axis from zero, synthetic data.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Price on X-axis, Cumulative Volume on Y-axis. Bids left of $60,000,
+          asks right. All 50 levels per side.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title format: {Descriptive Title} · {spec-id} · python · pygal ·
+          anyplot.ai. Legend labels descriptive.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: cumulative step curves both sides, multiple visible
+          order walls (6x, 8x, 5x bid; 7x, 9x, 4x ask), bid-ask spread gap, asymmetry
+          between sides.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: BTC/USD order book snapshot near $60,000 with $10 tick, exponential
+          order sizes, wall multipliers — consistent with real liquid crypto exchange.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: $60,000 BTC price, cumulative depth ~160 BTC per side, $10 tick realistic,
+          exponential distribution with scale=2.5 plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: Imports → Theme tokens → Data generation → Staircase
+          construction → Style → Chart → Add series → Save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, sys, numpy, pygal, pygal.style.Style — all used. sys.path manipulation
+          necessary to prevent shadowing.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and Pythonic. Staircase loop construction appropriate for plot
+          type. Title scaling formula concise.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html (pygal is interactive;
+          HTML expected per library guide).
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses pygal.XY with fill=True, per-series show_dots/fill/stroke/stroke_style
+          overrides — idiomatic pygal patterns. Generates both PNG and interactive
+          HTML.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: stroke_style with dasharray for dashed mid-price line, per-series
+          fill=False/stroke=False/show_dots=True overrides, interactive HTML export
+          — features distinctive to pygal vs static libraries.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending

@@ -18,9 +18,9 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-BULLISH = "#009E73"  # Green for up bricks (Okabe-Ito position 1)
-BEARISH = "#D55E00"  # Orange for down bricks (Okabe-Ito position 2)
+# imprint semantic anchors
+BULLISH = "#009E73"  # green — up bricks
+BEARISH = "#AE3030"  # red — down bricks
 
 # Generate synthetic stock price data
 np.random.seed(42)

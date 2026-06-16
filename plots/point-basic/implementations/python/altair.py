@@ -25,7 +25,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - first series is always #009E73 (brand green)
 BRAND = "#009E73"
-SECONDARY = "#D55E00"
+SECONDARY = "#C475FD"
 REFERENCE_LINE = "#888888"
 
 # Data - Treatment effect estimates with 95% confidence intervals

@@ -18,7 +18,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette for categories
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: Software project milestones
 data = pd.DataFrame(
@@ -77,10 +77,10 @@ data["y_label"] = [2.4 if i % 2 == 0 else -2.4 for i in range(len(data))]
 
 # Color scale using Okabe-Ito palette
 category_colors = {
-    "Planning": OKABE_ITO[0],
-    "Development": OKABE_ITO[1],
-    "Testing": OKABE_ITO[2],
-    "Release": OKABE_ITO[3],
+    "Planning": IMPRINT[0],
+    "Development": IMPRINT[1],
+    "Testing": IMPRINT[2],
+    "Release": IMPRINT[3],
 }
 color_scale = alt.Scale(domain=list(category_colors.keys()), range=list(category_colors.values()))
 

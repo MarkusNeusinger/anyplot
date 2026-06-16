@@ -18,14 +18,14 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito discrete colorscale: Setosa=#009E73, Versicolor=#D55E00, Virginica=#0072B2
+# Okabe-Ito discrete colorscale: Setosa=#009E73, Versicolor=#C475FD, Virginica=#4467A3
 OI_COLORSCALE = [
     [0.0, "#009E73"],
     [0.33, "#009E73"],
-    [0.33, "#D55E00"],
-    [0.67, "#D55E00"],
-    [0.67, "#0072B2"],
-    [1.0, "#0072B2"],
+    [0.33, "#C475FD"],
+    [0.67, "#C475FD"],
+    [0.67, "#4467A3"],
+    [1.0, "#4467A3"],
 ]
 
 # Data - Iris-like dataset for multivariate demonstration

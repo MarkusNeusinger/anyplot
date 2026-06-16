@@ -31,8 +31,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (positions 1-3)
 BRAND = "#009E73"  # Position 1 - first series (price)
-ACCENT_BLUE = "#0072B2"  # Position 3 - SMA and bands
-ACCENT_ORANGE = "#D55E00"  # Position 2 - optional
+ACCENT_BLUE = "#4467A3"  # Position 3 - SMA and bands
+ACCENT_ORANGE = "#C475FD"  # Position 2 - optional
 
 # Data - Generate synthetic stock price data
 np.random.seed(42)

@@ -1,153 +1,188 @@
 library: plotnine
+language: python
 specification_id: hexbin-map-geographic
 created: '2026-01-20T21:15:48Z'
-updated: '2026-01-20T21:28:37Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21187394864
+updated: '2026-05-27T13:45:26Z'
+generated_by: claude-sonnet
+workflow_run: 26513631488
 issue: 3767
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/plotnine/plot.png
-preview_html: null
-quality_score: 90
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Creative implementation of hexbin map using manual hexagon polygon construction
-    with geom_polygon
-  - 'Good use of layered approach: coastline basemap + hexagonal bins'
-  - Proper geographic context with realistic NYC-like coordinates and multiple hotspots
-  - YlOrRd sequential colormap provides good density differentiation
-  - Clean KISS code structure with reproducible seed
+  - Correct imprint_seq gradient (#009E73→#4467A3) with sqrt transform for right-skewed
+    density distribution
+  - Theme-adaptive water and land colors with geographic polygon context
+  - All font sizes explicitly set with proper hierarchy (title 12pt, axis 10pt, ticks
+    8pt, legend 8pt)
+  - Hotspot labels (Downtown, Midtown, JFK Airport) provide geographic context
+  - coord_fixed preserves geographic proportions accurately
+  - 'Spec-compliant: hexagonal binning, color legend, base map context, alpha transparency,
+    count aggregation'
   weaknesses:
-  - Title format includes extra "Taxi Pickup Density" prefix (should be exactly "{spec-id}
-    · {library} · pyplots.ai")
-  - Some low-density hexagons blend with the coastline due to similar light colors
-  - Layout has some wasted whitespace due to coord_fixed ratio constraint
-  image_description: 'The plot displays a hexagonal binning map showing taxi pickup
-    density across a NYC-like metropolitan region. The visualization uses a YlOrRd
-    (yellow-orange-red) sequential colormap ranging from light yellow (low density,
-    ~200 pickups) to dark red/maroon (high density, ~1200+ pickups). A light blue
-    background represents water, while a gray polygon outline depicts the coastline/land
-    boundary. Multiple density hotspots are visible: a high-density maroon cluster
-    around downtown (-74.0, 40.75), a red cluster near the airport area (-73.8, 40.68),
-    and several orange hexagons in midtown. Lower-density yellow hexagons form the
-    periphery representing residential/scattered areas. White edges separate individual
-    hexagons for visual clarity. The legend displays "Pickup Count" with a continuous
-    color scale. Axis labels include units (Longitude (°) and Latitude (°)).'
+  - Hotspot labels (size=3 geom_label) are very small — barely readable at canvas
+    scale; increase to size=4-4.5 for better legibility
+  - 'DE-01 moderate (5/8): design is thoughtful but not publication-level; could benefit
+    from a more distinctive color treatment for the land/water contrast'
+  - 'LM-02 partial (3/5): manual hexbin polygon construction could leverage plotnine
+    trans and grammar features more distinctively; no native geom_hex exploration'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface.
+      Panel: Light blue water color (#C5D9EF) fills the geographic panel area; a gray-beige land polygon outlines the NYC coastline.
+      Data: Hexagonal bins cover the NYC area with colors from #009E73 (green, low density) through teal to #4467A3 (blue, high density). Dense clusters clearly visible around downtown and midtown coordinates. JFK airport cluster visible in lower-right.
+      Chrome: Title "hexbin-map-geographic · python · plotnine · anyplot.ai" rendered in dark #1A1A17, clearly visible. Axis labels "Longitude (°)" and "Latitude (°)" in dark ink, tick labels in INK_SOFT (#4A4A44). Legend box "Pickups" with elevated background, gradient bar, values 200–800.
+      Labels: "Downtown", "Midtown", "JFK Airport" geom_label annotations present but quite small (size=3 mm).
+      Legibility verdict: PASS — all primary text elements readable; hotspot labels small but visible.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface.
+      Panel: Dark navy water color (#1A2535); dark charcoal land polygon (#2C2C27) with edge visible.
+      Data: Hexagonal bins maintain IDENTICAL colors to light render — same #009E73→#4467A3 gradient, same density pattern. Data color identity preserved across themes. ✓
+      Chrome: Title in light #F0EFE8, clearly readable against dark background. Axis labels and tick labels in light INK/INK_SOFT tokens — no dark-on-dark issues. Legend box uses #242420 elevated background with light text. Panel border visible in INK_SOFT.
+      Labels: "Downtown", "Midtown", "JFK Airport" labels visible with elevated dark background.
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome adapts correctly to dark theme.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt bold, axis titles at 20pt, tick labels at 16pt - all
-          clearly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: No overlapping text elements; hexagons have white edge separation
+        comment: All font sizes explicitly set (title 12pt, axis_title 10pt, axis_text
+          8pt, legend 8pt). Title ~75% width — expected. Hotspot labels (size=3 mm)
+          slightly small.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements.
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Hexagons visible and distinguishable; alpha at 0.85 works well but
-          some low-count hexagons blend slightly with coastline
+        comment: Hexagonal bins clearly visible with strong color gradient showing
+          density variation.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: YlOrRd colormap is colorblind-safe sequential palette
+        comment: Green-to-blue gradient is CVD-safe with luminance variation. Good
+          contrast between hexbin fills and background.
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good use of canvas, but some unused space due to coord_fixed constraint
+        comment: Map well-centered, legend on right, canvas utilized well. coord_fixed
+          preserves geographic proportions.
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with degree units
+        comment: Longitude (°) and Latitude (°) — descriptive with units.
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Subtle grid (alpha 0.3), legend well-positioned on right
+        comment: 'scale_fill_gradient(low=''#009E73'', high=''#4467A3'') = imprint_seq
+          compliant. Backgrounds #FAF8F1/#1A1A17 correct. Chrome theme-adaptive in
+          both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Thoughtful geographic design: theme-adaptive water/land colors,
+          sqrt transform for density, hotspot labels. Above configured default but
+          not publication-level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid removed, panel border retained appropriately for map frame,
+          theme-adaptive backgrounds for land/water. Some refinement visible.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear hotspots at Downtown/Midtown/JFK with labels and density gradient.
+          sqrt transform improves discrimination. Visual hierarchy guides reader to
+          key areas.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct hexagonal binning map with geographic context
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Lat/Lon correctly mapped to axes, count aggregated per hexagon
-      - id: SC-03
+        comment: Correct hexagonal binning map with discrete cells.
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has hexbin, colormap, legend, basemap coastline, transparency; missing
-          interactive tooltips (but plotnine is static)
-      - id: SC-04
-        name: Data Range
+        comment: Hexagonal grid, color encoding for count, sequential colormap, legend,
+          base geographic context (coastline polygon), alpha transparency, count aggregation.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis limits
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Longitude on X, Latitude on Y, count drives fill color. coord_fixed
+          for geographic accuracy.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labeled with appropriate scale
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: false
-        comment: Title includes extra 'Taxi Pickup Density' prefix instead of pure
-          '{spec-id} · {library} · pyplots.ai' format
+        comment: 'Title: ''hexbin-map-geographic · python · plotnine · anyplot.ai''.
+          Legend labeled ''Pickups'' with correct gradient.'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple density clusters (downtown, midtown, airport, residential);
-          demonstrates hexbin aggregation well
+        comment: Multiple clusters (downtown, midtown, JFK, Brooklyn, scattered),
+          full density gradient utilized, spatial distribution across NYC area.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: NYC taxi pickup scenario is plausible and neutral
+        comment: NYC taxi pickup data — classic hexbin use case, neutral and realistic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Coordinates in valid NYC range; pickup counts plausible
+        comment: NYC lat/lon coordinates factually correct. Trip duration values (11-38
+          min) realistic for city vs. airport trips.
     code_quality:
       score: 10
       max: 10
@@ -157,58 +192,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, seed, data generation, hex calculation, plot,
-          save'
+        comment: 'Linear flow: imports → data → hex construction → plot → save. No
+          functions/classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current plotnine API
+        comment: Manual hexagonal binning is appropriately complex for plotnine's
+          lack of native geom_hex; well-structured.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at 300 DPI
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with correct dpi=400, width=8, height=4.5.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Proper ggplot grammar: layer composition, coord_fixed, scale transformations,
+          theme() with element_* API. Good plotnine patterns.'
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses plotnine grammar of graphics (ggplot + geom_polygon + aes +
-          scale_fill_continuous + coord_fixed + theme), but no advanced features like
-          faceting
+        comment: Uses trans='sqrt' in scale_fill_gradient (ggplot2 grammar feature),
+          coord_fixed for geographic mapping, and geom_polygon layer composition.
+          Distinctive but manual hexbin limits the score.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - patches
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
-  - matrix-construction
   dataprep:
   - binning
   styling:
-  - custom-colormap
   - alpha-blending
-  - edge-highlighting
-  - grid-styling
+  - custom-colormap

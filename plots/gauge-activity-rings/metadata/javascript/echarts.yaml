@@ -1,0 +1,293 @@
+library: echarts
+language: javascript
+specification_id: gauge-activity-rings
+created: '2026-06-14T20:54:54Z'
+updated: '2026-06-14T21:17:39Z'
+generated_by: claude-sonnet
+workflow_run: 27511480903
+issue: 8648
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/javascript/echarts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Correct ECharts gauge-series implementation with concentric rings, roundCap end
+    caps, and faint background tracks — exactly as the spec calls for
+  - Imprint palette positions 1–3 correctly assigned to the three rings (green→Steps,
+    lavender→Active Min, blue→Stand); colors identical across light and dark renders
+  - Square orientation directive present; rings fill the canvas well with no wasted
+    space
+  - Center graphic overlay in matching ring colors elegantly links legend to each
+    ring without a separate legend box
+  - 'Data is realistic and varied: 45.2% / 95% / 100% completion levels create immediate
+    visual narrative showing Steps as the laggard'
+  - 'Perfect spec compliance: 90° start, clockwise sweep, roundCap, background track,
+    equal stroke widths, three rings from outer to inner'
+  - 'Clean, idiomatic ECharts code — gauge series with axisLine track, pointer/tick/label
+    disabled, graphic layer for annotations; animation: false correctly set'
+  weaknesses:
+  - Secondary text elements — 'Daily Goals' header and the bottom raw-values row ('4,521
+    / 10,000 steps · 57 / 60 min · 12 / 12 hr') — are at fontSize 16 CSS px. At the
+    400px mobile srcset width these render at ~3–4 px and are barely legible. Increase
+    both to at least 18–20 CSS px to remain readable at mobile scale.
+  - Design polish in the center label area is functional but plain — five stacked
+    lines of text (italic header + 3 metric lines + bottom row) feel slightly cluttered.
+    Consider tightening vertical spacing, making the percentage values larger/more
+    prominent, or consolidating the bottom raw-values row into the center area with
+    a cleaner layout.
+  - DE-01 (Aesthetic Sophistication) is at the 'well-configured default' level — the
+    rings themselves are clean but the composition lacks extra polish (e.g., a soft
+    inner glow on the progress arc tip, slightly varied ring widths to create visual
+    weight hierarchy, or a cleaner center-label typographic scale).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correctly set via transparent backgroundColor, page surface shows through. PASS.
+      Chrome: Title "gauge-activity-rings · javascript · echarts · anyplot.ai" at fontSize 22 in t.ink (dark ink), centered at top — fully readable. Center "Daily Goals" italic label at fontSize 16 in t.inkSoft — readable at full res, very small at 400px mobile. Three metric labels (Steps: 45.2%, Active Min: 95%, Stand: 100%) at fontSize 22 bold in their respective ring colors — clearly readable. Bottom raw-values row at fontSize 16 in t.inkSoft — readable at full res but very small (~3–4 px) at the 400px srcset variant.
+      Data: Outer ring (Steps, #009E73 brand green) sweeps ~45% of the circle clockwise from 12 o'clock. Middle ring (Active Min, #C475FD lavender) sweeps ~95%, nearly a full circle. Inner ring (Stand, #4467A3 blue) is a complete 100% circle. Background tracks visible as faint same-hue circles at ~15% opacity behind each arc. Rounded end caps on the progress arcs are clear. Rings are thick and prominent, filling the canvas well.
+      Legibility verdict: PASS — all primary text readable; secondary 16px text borderline at mobile scale.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correctly set via transparent background, dark page surface shows through. PASS.
+      Chrome: Title in t.ink (#F0EFE8 light cream) — clearly readable against the dark background. Center "Daily Goals" in t.inkSoft (#B8B7B0) — readable. Metric labels in their respective ring colors (green, lavender, blue) — all highly visible and bright against dark surface. Bottom raw-values row in t.inkSoft (#B8B7B0) at fontSize 16 — readable at full res, very small at 400px. No dark-on-dark failures detected.
+      Data: Identical data colors to light render — outer ring green, middle ring lavender, inner ring blue. Colors are vivid against the dark background, especially the lavender which appears very bright. Background tracks at 15% opacity are darker and subtler on the near-black surface, still distinguishable. Full-circle Stand ring clearly complete.
+      Legibility verdict: PASS — all primary text readable. Secondary 16px text (Daily Goals header and bottom values row) is small but passes at full resolution; at 400px mobile it is barely legible.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set. Title (22px) and center metric labels
+          (22px bold) are well-proportioned and readable in both themes. Secondary
+          text — 'Daily Goals' header and bottom raw-values row — at fontSize 16 CSS
+          px is readable at full resolution but very small (~3–4 px) at the 400px
+          mobile srcset variant.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements. Rings are well-spaced, center
+          text stack is clean, bottom row clears the outer ring.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Rings are thick (34 CSS px → 68 physical px) and clearly visible.
+          Progress arcs with roundCap are prominent. Background tracks at 15% opacity
+          are subtle but distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Three distinct Imprint hue families (green, purple, blue) — CVD-safe
+          separation across all simulations. Sufficient luminance difference between
+          all rings and both backgrounds.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square orientation correctly chosen for radial chart. Rings fill
+          most of the 2400×2400 canvas. Balanced whitespace. Title and bottom row
+          well-positioned.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes needed for this chart type. Title is correct.
+          Center labels show metric names with percentage. Bottom row provides raw
+          values with units (steps, min, hr).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Steps/outer ring) is #009E73 brand green via t.palette[0].
+          Second ring uses t.palette[1] (#C475FD lavender), third uses t.palette[2]
+          (#4467A3 blue). Background is transparent (pageBg shows). Text uses t.ink
+          and t.inkSoft theme-adaptive tokens. Data colors identical between light
+          and dark renders.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured use of ECharts gauge series. The matching ring-color
+          center labels are a thoughtful design touch. However, the overall composition
+          sits at the 'well-configured library default' level — the center label area
+          is functional but not visually refined, and there are no extra aesthetic
+          touches (glow effects, typographic hierarchy variation, weight contrast
+          between rings) that would elevate this to strong design.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No unnecessary chart elements. Background tracks at appropriate 15%
+          opacity. Font weight variation (normal title, italic header, bold metric
+          labels) shows attention to typography. Center text layout is somewhat cluttered
+          with five stacked lines. Could benefit from tighter spacing and cleaner
+          typographic scale.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Data selection (45.2% / 95% / 100%) creates an immediately readable
+          visual narrative — the outer Steps ring is conspicuously less complete,
+          drawing the eye to the gap. The center percentage labels reinforce this
+          hierarchy. Visual storytelling is clear through the arc completion differences.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct activity rings chart: concentric partial arcs with roundCap,
+          90° start clockwise, background tracks, three rings.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: rounded end caps, faint background tracks,
+          clockwise sweep from top, 3 rings outer→inner, distinct color per ring,
+          equal stroke widths, square aspect ratio, center label area showing metric
+          completions, raw values displayed.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: metric→ring, value/goal→arc length (pct clamped to 100), all data
+          correctly mapped and visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is exactly 'gauge-activity-rings · javascript · echarts · anyplot.ai'.
+          Center labels serve as per-ring legend with metric names in matching ring
+          colors.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Three rings show varied completion levels: partial (45.2%), near-complete
+          (95%), and fully complete (100%). This covers the range of the chart type
+          well.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Daily fitness goal tracking (Steps 4521/10000, Active Min 57/60,
+          Stand 12/12) — a real-world, neutral, comprehensible scenario directly referenced
+          in the spec examples.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 10,000 steps/day is the canonical daily step goal. 60 active minutes
+          is the WHO daily moderate activity recommendation. 12 stand hours aligns
+          with Apple Watch's stand goal (stand once per hour for 12 hours). All values
+          are factually grounded.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat script: Data → Init → Option. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded — fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports. Uses only window.ANYPLOT_TOKENS and window.echarts globals
+          as specified.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean usage of .map() for series and graphic elements. Geometry constants
+          (radii, ringW) named clearly. Comments explain coordinate math. No over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: '//# anyplot-orientation: square directive present. echarts.init
+          without explicit size or devicePixelRatio. animation: false set.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert use of ECharts gauge series: startAngle/endAngle for clockwise-from-top
+          orientation, progress.roundCap for rounded end caps, axisLine for background
+          track, multiple series at different radii for concentric rings. Correctly
+          disables pointer, axisTick, splitLine, axisLabel, detail, title. graphic
+          layer used for custom center overlay.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: The multiple-concentric-gauge-series technique for activity rings
+          is a distinctly ECharts approach — using gauge series with roundCap and
+          different radius values to achieve the activity rings effect is documented
+          as an ECharts-specific pattern. The graphic overlay for custom center text
+          is also an ECharts-specific API.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  - annotations
+  - polar-projection
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending

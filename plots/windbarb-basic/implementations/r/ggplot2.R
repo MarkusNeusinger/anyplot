@@ -16,9 +16,9 @@ INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
 GRID_COLOR  <- if (THEME == "light") "#E4E2DB" else "#2F2F2C"
-OKABE_ITO   <- c("#009E73", "#D55E00", "#0072B2", "#CC79A7",
-                 "#E69F00", "#56B4E9", "#F0E442")
-BARB_COLOR  <- OKABE_ITO[1]
+IMPRINT   <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+                 "#AE3030", "#2ABCCD", "#954477")
+BARB_COLOR  <- IMPRINT[1]
 
 # --- Wind field data ----------------------------------------------------------
 # 9x7 grid of surface weather stations over eastern North America

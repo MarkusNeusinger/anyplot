@@ -1,0 +1,262 @@
+library: muix
+language: javascript
+specification_id: scatter-connected-temporal
+created: '2026-06-09T23:50:44Z'
+updated: '2026-06-10T00:21:00Z'
+generated_by: claude-sonnet
+workflow_run: 27242702921
+issue: 4675
+language_version: 22.22.3
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/javascript/muix/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Historically accurate US Phillips Curve data (1970-2009) providing real economic
+    context and factual accuracy
+  - Excellent use of MUI X composition API (useXScale/useYScale) for data-coordinate
+    custom SVG overlay — a genuinely distinctive library feature
+  - Four-color decade segmentation with directional arrowheads creates clear temporal
+    narrative
+  - Null-masking for decade path segmentation is an elegant MUI X pattern for multi-series
+    line charts with gaps
+  - Year annotations at the 1973 oil shock and 2008 financial crisis provide narrative
+    depth without over-annotating
+  - Correct Imprint palette application with t.palette[0]-[3] and theme-adaptive chrome
+    through ANYPLOT_TOKENS
+  weaknesses:
+  - Title font size (19px CSS) is slightly below the 22px CSS guideline for JS libraries;
+    minor legibility reduction at small display sizes
+  - Annotation text (fontSize=12 SVG units) is on the smaller side for mobile readability
+    — increase to 13-14
+  - MUI X default chart frame/border retained; removing or softening via sx override
+    would improve visual refinement (DE-02)
+  - Lower-left annotation cluster (1989/1990, 1999/2000 labels near 4-6% unemployment)
+    is dense, though not overlapping thanks to dx/dy offsets
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white approximately #FAF8F1 — correct light theme surface
+      Chrome: Title "Phillips Curve · scatter-connected-temporal · javascript · muix · anyplot.ai" in dark ink, centered at top (fontSize 19 CSS). X-axis label "Unemployment Rate (%)" and Y-axis label "Inflation Rate (%)" in dark ink with explicit sizes. Tick labels (fontSize 14 CSS) clearly readable. Year annotation labels (fontSize 12 SVG) visible but small.
+      Data: 4 decade paths — 1970s in #009E73 (first series, brand green ✓), 1980s in #C475FD (lavender), 1990s in #4467A3 (blue), 2000s in #BD8233 (ochre). Custom circle markers (r=6) with page-bg outline stroke. Directional arrowheads at decade midpoints. Year annotations at 1970, 1973, 1979, 1980, 1989, 1990, 1999, 2000, 2008, 2009.
+      Legibility verdict: PASS — all text readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Near-black approximately #1A1A17 — correct dark theme surface
+      Chrome: Title, axis labels, and tick labels all render in light/cream-colored text — no dark-on-dark failures detected. Year annotations use t.inkSoft which is theme-adaptive. Chart frame and grid lines adapt correctly.
+      Data: Colors identical to light render — 1970s green, 1980s lavender, 1990s blue, 2000s ochre. Custom markers and arrowheads at same positions with same colors. Chrome-only flip confirmed.
+      Legibility verdict: PASS — all text clearly readable against near-black background, no dark-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 19px CSS, axis labels 16px,
+          ticks 14px, annotations 12px SVG). All readable in both themes. Slight dock:
+          title below 22px CSS guideline and annotations small for mobile.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Decade-boundary labels use opposite dx/dy offsets to minimize crowding.
+          Lower-left cluster is tight but readable without clear collision.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Custom circle marks (r=6 CSS px) with page-bg stroke are perfectly
+          sized for 10 points per series. Line strokeWidth=2.5 appropriate for data
+          density.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette provides CVD-safe spacing across 4 hue families.
+          Directional arrows use same series colors for redundant encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: No canvas gate failure. Chart fills 848/900 CSS px height. Balanced
+          margins, legend inside plot area top-right, no edge clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Unemployment Rate (%) and Inflation Rate (%) with units. Descriptive
+          title prefix Phillips Curve.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 correct. Imprint palette canonical order for
+          subsequent series. Background #FAF8F1/#1A1A17. Chrome theme-correct in both
+          renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Clearly above generic defaults: Imprint palette correctly applied,
+          custom SVG markers with page-bg outlines, directional arrowheads, professional
+          Phillips Curve narrative. Not quite publication-ready.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid opacity reduced to 0.25 via sx override, custom circle marks,
+          line strokeWidth set. MUI X default chart frame retained, capping at good
+          not perfect.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: color differentiates decades, arrows encode
+          direction, annotations at 1973 oil shock and 2008 financial crisis create
+          focal narrative moments.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct connected scatter with temporal path.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: chronological connection, key point annotations,
+          directional arrows, visible markers, color temporal encoding.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=unemployment, Y=inflation, time as traversal order and decade hue.
+          All 40 years shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows Phillips Curve · scatter-connected-temporal · javascript
+          · muix · anyplot.ai format. Legend shows decade labels.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: connected path, directional flow, multi-series
+          temporal segmentation, annotations at economic events.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: US Phillips Curve data 1970-2009 is real and well-known. Neutral
+          economic domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Values historically accurate: 1980 inflation 13.5%, 2009 unemployment
+          9.3%, negative 2009 inflation -0.4%.'
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Clean structure but two helper components (TemporalOverlay, CustomMark)
+          add complexity. Both are architecturally necessary for React/MUI X hooks
+          pattern.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hard-coded as constants. Fully deterministic, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: LineChart, useXScale, useYScale, Box, Typography.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic React/MUI X code. Null-masking for decade segmentation
+          is elegant. No fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness handles plot-light.png/dark.png + HTML output.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert use of MUI X composition pattern: useXScale/useYScale hooks
+          inside child component, slots.mark, slotProps.legend, skipAnimation, sx
+          overrides — all idiomatic.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'useXScale/useYScale composition hooks for data-coordinate SVG overlay
+          is distinctive MUI X feature. slots.mark custom renderer. Minor dock: arrowhead
+          SVG is hand-rolled rather than a native MUI X feature.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - grid-styling

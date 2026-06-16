@@ -39,7 +39,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 BRAND = "#009E73"  # Okabe-Ito position 1
-ACCENT = "#D55E00"  # Okabe-Ito position 2
+ACCENT = "#C475FD"  # Okabe-Ito position 2
 
 # Data - bimodal distribution for compelling visualization
 np.random.seed(42)

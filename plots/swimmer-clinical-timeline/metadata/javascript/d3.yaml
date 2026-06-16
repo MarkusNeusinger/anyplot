@@ -1,0 +1,248 @@
+library: d3
+language: javascript
+specification_id: swimmer-clinical-timeline
+created: '2026-06-08T06:25:35Z'
+updated: '2026-06-08T06:45:29Z'
+generated_by: claude-sonnet
+workflow_run: 27119516983
+issue: 4670
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/javascript/d3/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Correct and complete swimmer plot matching all spec requirements (sorted bars,
+    event markers, ongoing arrows, treatment arm coloring, legend)
+  - Smart use of D3's symbol generator with distinct shapes per event type — both
+    clinically meaningful and CVD-safe redundant encoding
+  - Median reference line adds real clinical storytelling value, creating a focal
+    point for duration comparison
+  - Full Imprint palette compliance with correct semantic choices (amber for adverse
+    events, matte red for progressive disease)
+  - Both renders pass legibility checks; dark theme adaptation is complete with no
+    dark-on-dark failures
+  - Adaptive symbol sizing ensures markers remain proportional to bar height
+  weaknesses:
+  - Y-axis patient labels at 12px CSS could be bumped to 13px for slightly better
+    mobile-scale legibility
+  - legendHeader helper function is a minor KISS deviation; could be inlined if strict
+    flat-script is required
+  - DE-02 visual refinement could reach 6/6 by adding a faint bottom border below
+    legend sections and slightly more vertical spacing between the three legend groups
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "swimmer-clinical-timeline · javascript · d3 · anyplot.ai" at 22px, bold, dark ink — clearly readable. X-axis label "Months on Treatment" at 14px, dark. X-tick labels at 13px, y-axis patient ID labels at 12px — all readable against light background.
+      Data: 20 horizontal bars sorted longest-to-shortest. Arm A (green #009E73) and Arm B (lavender #C475FD) at 0.72 opacity. Event markers: blue triangles (Partial Response), ochre stars (Complete Response), dark-red diamonds (Progressive Disease), amber circles (Adverse Event). Right-pointing arrows for ongoing patients. Dashed median line at 13.5 months.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct theme surface
+      Chrome: Title, axis labels, tick labels, and legend text all render in light tones (inkSoft #B8B7B0 / ink #F0EFE8). No dark-on-dark failures observed. Grid lines and median line adapt to theme. Legend section headers use elevated background token (#242420) for subtle grouping.
+      Data: Bar colors (green #009E73 / lavender #C475FD) and event marker colors are identical to the light render — only chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; readable in both themes. Y-axis labels
+          at 12px CSS slightly small for 20 rows.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or markers; 0.35 band padding provides clear
+          row separation
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Adaptive symbol sizing; ongoing arrows scale with bar height; all
+          elements clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Shape-redundant encoding supplements color; green/lavender are CVD-safe
+          pair
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization; right-side legend fits cleanly within margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X-axis: Months on Treatment (with units); Y-axis patient IDs self-explanatory
+          for swimmer plot'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: palette[0]=#009E73 for Arm A; palette[1]=#C475FD for Arm B; amber
+          for AE; matte red for PD; pageBg tokens; both renders theme-correct
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: rounded bars, semi-transparent fills, distinct D3
+          symbol types, median reference line, legend pill headers — clearly above
+          defaults'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Domain lines removed, subtle t.grid gridlines, white edge strokes
+          on event markers, clean legend whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Median reference line creates clinical focal point; arm coloring
+          structures comparison; sorted duration gives immediate cohort narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct swimmer plot with horizontal patient bars
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: sorted bars, distinct event symbols, ongoing
+          arrows, legend, time x-axis, patient y-axis, arm coloring'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time(months), Y=patient IDs, bar width=duration, event markers
+          at exact time positions
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels all series and event types accurately
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both arms, all 4 event types, mix of ongoing/completed, diverse event
+          combinations
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Authentic Phase II oncology trial with clinical event names and realistic
+          cohort size
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Duration 3-28 months appropriate for Phase II; all events within
+          patient duration bounds
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: One small legendHeader helper used 3x — minor deviation from flat-script
+          pattern
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hard-coded; fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses only the d3 global as prescribed
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable, no over-engineering, no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Current D3 7.9.0 API; harness handles output files
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Proper D3 patterns: scaleBand, scaleLinear, axisBottom/Left, selectAll/data/join,
+          d3.symbol()'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: d3.symbol() with parameterized types (Triangle/Star/Diamond/Circle)
+          is distinctly D3; SVG path manipulation for arrows
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

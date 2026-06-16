@@ -1,59 +1,51 @@
 library: matplotlib
+language: python
 specification_id: bump-basic
 created: '2025-12-23T09:18:16Z'
-updated: '2026-02-22T21:15:40Z'
-generated_by: claude-opus-4-6
-workflow_run: 20456607471
-issue: 0
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bump-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - manual-ticks
-  patterns:
-  - iteration-over-groups
-  - explicit-figure
-  dataprep: []
-  styling:
-  - alpha-blending
-  - grid-styling
-  - edge-highlighting
+updated: '2026-05-29T13:31:56Z'
+generated_by: claude-sonnet
+workflow_run: 26638901768
+issue: 982
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent data storytelling with visual hierarchy (top-3 emphasis) and two narrative
-    annotations highlighting key lead changes
-  - End-of-line labels are a superior design choice over a legend for bump charts,
-    providing direct labeling
-  - White path effects create clean line separation at crossing points, solving a
-    common bump chart readability issue
-  - Custom colorblind-conscious palette with intentional design choices throughout
-  - Perfect spec compliance and data quality with realistic Formula 1 context
+  - Smooth cubic spline interpolation for elegant bump curves
+  - Rank-encoded marker sizes (rank 1 = largest) create visual hierarchy
+  - Subtle P1 zone background band focuses attention on the lead
+  - Path effects (withStroke) on end-of-line labels for legibility across both themes
+  - Full Imprint palette compliance with correct canonical order
+  - No bbox_inches=tight — canvas dimensions exact at 3200×1800
+  - Direct driver labels instead of legend — ideal for bump chart readability
   weaknesses:
-  - Annotation text at 12pt is slightly below the recommended 16pt minimum for text
-    elements
-  - Brown and grey colors for lower-ranked drivers could be marginally confusing under
-    certain color vision deficiencies
-  image_description: 'The plot displays a bump chart tracking Formula 1 driver championship
-    standings across 8 Grand Prix races (Bahrain through Monaco). Seven drivers are
-    represented by colored lines with circle markers: Verstappen (dark blue), Hamilton
-    (purple), Norris (cyan), Leclerc (red), Sainz (orange), Piastri (brown), and Russell
-    (grey). The Y-axis is inverted so rank 1 sits at the top. The top 3 title contenders
-    (Verstappen, Hamilton, Norris) are visually emphasized with thicker lines (4px),
-    larger markers, and full opacity, while lower-ranked drivers use thinner lines
-    and reduced alpha (0.55). End-of-line labels on the right directly identify each
-    driver, replacing a traditional legend. Two annotations with curved arrows highlight
-    key narrative moments: "Hamilton takes the lead" at Suzuka and "Norris peaks at
-    P1" at Miami. A subtle y-axis grid (alpha=0.2) provides reference. Top and right
-    spines are removed. X-axis tick labels are rotated 25 degrees. White path effects
-    create clean separation where lines cross.'
+  - 'Some driver label colors (Norris #4467A3 blue, Sainz #AE3030 red) have borderline
+    contrast on the dark #1A1A17 background — the path_effects stroke foreground=PAGE_BG
+    uses near-black on dark theme, which does not boost label-to-background contrast.
+    Consider a cream/INK_SOFT foreground for dark theme: path_effects=[pe.withStroke(linewidth=2,
+    foreground=INK_SOFT if THEME == dark else PAGE_BG)]'
+  - 'LM-02: Cubic spline is scipy-based (not matplotlib-native); while path_effects.withStroke
+    is distinctly matplotlib, the overall technique mix relies on an external dependency
+    for the key bump-curve feature'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, no pure white.
+      Chrome: Title "bump-basic · python · matplotlib · anyplot.ai" at fontsize=13 — readable, fills ~70% of width. X-axis label "Grand Prix" and Y-axis label "Championship Position" at fontsize=10 — appropriately sized and balanced. Tick labels at fontsize=8, rotated 30° on x-axis — all readable. All chrome is dark ink on light background — no legibility issues.
+      Data: Seven smooth cubic spline bump curves, each in Imprint palette canonical order: Verstappen=#009E73 (brand green, first series ✓), Hamilton=#C475FD (lavender), Norris=#4467A3 (blue), Leclerc=#BD8233 (ochre), Sainz=#AE3030 (red), Piastri=#2ABCCD (cyan), Russell=#954477 (rose). Rank-encoded scatter markers at each data point, with rank-1 markers largest and rank-7 smallest. End-of-line labels on the right side in each driver's Imprint color with path_effects stroke halo. Subtle P1 zone band adds emphasis. Subtle horizontal gridlines at alpha=0.15.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface, no pure black.
+      Chrome: Title, axis labels, and tick labels all use light INK tokens — clearly readable against dark background. No dark-on-dark failures for structural chrome elements.
+      Data: Imprint palette data colors are identical to light render — Verstappen still #009E73, all drivers retain same colors (only chrome flipped). Markers and spline lines clearly visible against dark surface. End-of-line driver labels retain their Imprint palette color with path_effects stroke using PAGE_BG (#1A1A17 in dark theme) — the stroke background matches the canvas, helping separate labels from crossing bump lines but not adding luminance contrast. Some driver colors (notably Norris #4467A3 and Sainz #AE3030) have borderline contrast on #1A1A17 background (~3.4:1 and ~2.9:1), though labels remain legible at source pixel size (~44px).
+      Legibility verdict: PASS (marginal) — all labels readable, with slight contrast concern for two driver label colors on dark surface.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -61,48 +53,56 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All primary text sizes explicitly set (title 24pt, labels 20pt, ticks
-          16pt, end-labels 16pt). Annotation text at 12pt slightly below 16pt standard
-          but still legible.
+        comment: All font sizes explicitly set with good hierarchy (title=13, axes=10,
+          ticks=8). Marginally lower contrast for Norris and Sainz label colors on
+          dark background — path_effects stroke = PAGE_BG does not boost contrast
+          in dark theme.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Rotated x-axis labels well-spaced, end-of-line
-          labels don't collide, annotations sit cleanly above data.
+        comment: No overlapping text. End-of-line labels are placed at final rank
+          positions (all distinct 1-7), well-spaced. Bump lines cross but are visual
+          elements, not text.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Top drivers highly visible with large markers and thick lines. Lower-ranked
-          drivers at alpha=0.55 intentionally de-emphasized but still traceable. White
-          path effects handle crossings well.
+        comment: Rank-encoded marker sizes (s=50 to 180) and linewidth=2.0 are well-adapted
+          to 7 series × 8 points density. All series clearly distinguishable.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Seven distinct hues avoid pure red-green confusion. Brown and grey
-          could be somewhat similar under certain color vision deficiencies, mitigated
-          by end-of-line labels.
+        comment: Imprint palette is CVD-safe. With 7 series, direct end-of-line labels
+          provide mandatory redundant encoding (per style guide requirement for n=7).
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions, plot fills canvas well with balanced margins.
-          Right-side space for labels, top area for annotations.
+        comment: Canvas exactly 3200×1800px. subplots_adjust margins appropriate;
+          right-side label area is intentional for bump chart design. Good balance.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels (Grand Prix, Championship Position). Units not
-          applicable for categorical/ordinal data. Title follows correct format.
+        comment: X-axis 'Grand Prix', Y-axis 'Championship Position' — descriptive.
+          No units needed for ordinal rank.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series Verstappen=#009E73 ✓. All 7 drivers use canonical Imprint
+          order. Light background #FAF8F1, dark #1A1A17. Theme-adaptive chrome (INK/INK_SOFT
+          tokens throughout). Data colors identical across themes.'
     design_excellence:
-      score: 16
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -110,24 +110,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom 7-color palette, visual hierarchy via line weight/opacity/marker
-          size, end-of-line labels, white path-effect outlines. Above configured defaults,
-          professional.
+        comment: 'Strong design clearly above defaults: smooth cubic spline curves,
+          rank-encoded marker sizes, P1 zone background band, path_effects for label
+          legibility. Multiple intentional design choices working together.'
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle y-axis grid at alpha=0.2, generous
-          whitespace, white stroke path effects for clean line separation.
+        comment: 'Very refined: top/right spines removed (L-frame), subtle y-axis-only
+          grid (alpha=0.15), generous margins, marker edgecolors=PAGE_BG for clean
+          look, path effects on labels. Near-perfect refinement.'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Strong storytelling with top-3 visual hierarchy and two narrative
-          annotations for key lead changes. Could annotate Verstappen reclaiming P1
-          at Monaco for full score.
+        comment: 'Good visual hierarchy: P1 zone band creates focal point, rank-encoded
+          marker sizes emphasize importance, viewer is guided to see lead changes.
+          Clear story of Verstappen vs Hamilton battle.'
     spec_compliance:
       score: 15
       max: 15
@@ -137,28 +138,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bump chart with lines connecting rankings over time periods.
+        comment: Correct bump chart with smooth lines, rank inversion, and all required
+          characteristics.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Inverted Y-axis, distinct colors, dot markers, lines connecting same
-          entity across all periods.
+        comment: Y-axis inverted, distinct colors/labels for each entity, dot markers
+          at each period, lines connecting same entity. All spec features present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = race periods, Y = championship position. All 7 drivers across
-          8 races correctly mapped.
+        comment: X=Grand Prix (periods), Y=Championship Position (rank inverted).
+          All 7 drivers × 8 races visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. End-of-line labels clearly identify
-          all entities.
+        comment: Title 'bump-basic · python · matplotlib · anyplot.ai' matches required
+          format. No traditional legend — direct end-of-line labels used (appropriate
+          for bump charts).
     data_quality:
       score: 15
       max: 15
@@ -168,22 +171,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows rank swaps, dramatic overtakes, bottom stability, and leader
-          reclaiming position. Excellent variation.
+        comment: 'Shows all bump chart features: lead changes, rank stability (Piastri/Russell
+          bottom), overtakes, crossing lines, consistent leaders and consistent back-markers.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Formula 1 championship with real driver names and Grand Prix circuit
-          names. Neutral sports domain.
+        comment: F1 driver standings over 8 real Grand Prix venues — realistic, neutral,
+          sports context. Real driver names and circuit names.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 7 drivers ranked 1-7 across 8 races. Within spec guidance of 5-10
-          entities, 4-8 periods.
+        comment: Rankings 1-7 across 8 races, with plausible position changes (no
+          teleportation from P1 to P7 in one race). Data constraints respected.
     code_quality:
       score: 10
       max: 10
@@ -193,51 +196,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot loop, annotations, styling, save.
-          No functions or classes.'
+        comment: 'Clean linear structure: imports → theme tokens → data → canvas →
+          plot loop → labels → axes styling → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data. No random elements.
+        comment: Data is fully hardcoded (deterministic), no random seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All three imports used: matplotlib.pyplot, matplotlib.patheffects,
-          numpy.'
+        comment: 'All 5 imports are used: os, matplotlib.patheffects (pe.withStroke),
+          matplotlib.pyplot, numpy, scipy.interpolate.CubicSpline.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code. Dictionary iteration, set-based checks. Appropriate
-          complexity.
+        comment: Clean Pythonic code, appropriate complexity, no over-engineering,
+          no fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at 300 dpi with bbox_inches tight. No deprecated
-          API usage.
+        comment: plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG) — no
+          bbox_inches=tight ✓, correct naming, current API.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert idiomatic matplotlib: ax.* methods throughout (not plt.*),
+          ax.scatter/ax.plot/ax.text/ax.tick_params, spine control, axis grid methods.
+          fig, ax = plt.subplots() pattern.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Proper axes-based API, correct fig/ax pattern, tight_layout, savefig
-          with quality settings.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses matplotlib-specific path_effects (pe.Stroke, pe.withStroke)
-          and annotation system with arrowprops/connectionstyle.
+        comment: matplotlib.patheffects.withStroke is distinctly matplotlib-specific
+          for label legibility. ax.axhspan for P1 band is also matplotlib-native.
+          Main bump curve technique uses scipy CubicSpline (external dependency) rather
+          than a matplotlib-native approach.
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - alpha-blending
+  - edge-highlighting

@@ -1,0 +1,277 @@
+library: plotnine
+language: python
+specification_id: climograph-walter-lieth
+created: '2026-06-15T01:26:12Z'
+updated: '2026-06-15T01:44:38Z'
+generated_by: claude-sonnet
+workflow_run: 27517859787
+issue: 8656
+language_version: 3.13.13
+library_version: 0.15.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - Correct 1:2 Walter-Lieth scaling convention (precip/2 on temperature axis) — core
+    climograph requirement met
+  - Semantic color override well justified (temperature=#AE3030 red, precipitation=#4467A3
+    blue) with both being valid Imprint palette colors for their domains
+  - Manual right-side precipitation axis elegantly implemented using geom_segment/geom_text
+    with spec-mandated ticks at 0/20/40/60/100 mm
+  - 'Station metadata header (subtitle) contains all required fields: station name,
+    elevation, annual mean temperature, annual total precipitation, and climate normal
+    period'
+  - Theme-adaptive chrome correctly implemented; dark render remains readable with
+    adaptive fill alpha (0.60 dark vs 0.35 light)
+  - Clean flat code structure with no functions or classes; hardcoded Athens climate
+    normals are realistic and reproducible
+  weaknesses:
+  - Missing hatched/dotted fill patterns — spec explicitly calls for 'blue/hatched'
+    humid fills and 'red/dotted' arid fills; solid semi-transparent ribbons used instead.
+    Consider using matplotlib hatch patterns via geom_ribbon draw_params or overlaying
+    a geom_ribbon with a hatched pattern using matplotlib's patch hatch property accessible
+    via the plotnine after_plot hook
+  - Frost month indicator feature is architecturally absent — the code has no logic
+    to draw colored baseline bands for months with mean temperature < 0°C. Athens
+    data has no frost months (min Jan = 9.9°C) so this doesn't appear visually, but
+    the feature would be missing if the station were changed. Add conditional frost
+    band segments even if they render empty for this data
+  - Legend ordering places 'Precipitation (mm)' first then 'Temperature (°C)' — minor
+    inconsistency since temperature is the primary variable and is defined first in
+    df_lines, yet appears second in the bottom legend
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matches the anyplot light surface exactly — no pure white.
+      Chrome: Bold dark title "Athens · climograph-walter-lieth · python · plotnine · anyplot.ai" is fully legible. Subtitle "Athens, Greece · 107 m a.s.l. · T̅ = 19.2 °C · ΣP = 390 mm · 1991–2020" is smaller but readable. Left axis label "Temperature (°C)" and x-axis label "Month" are clear. Month tick labels (J F M A M J J A S O N D) are readable. Right-side manual precipitation axis has tick marks and mm labels (0/20/40/60/100) visible. Rotated "Precipitation (mm)" annotation is small but legible.
+      Data: Red line (#AE3030) traces the temperature curve peaking in Jul–Aug (~29–30°C) and dipping in Jan (~10°C). Blue line (#4467A3) traces the scaled precipitation curve, peaking in Dec (~35 on temperature scale = 71 mm). Semi-transparent blue ribbon fills humid winter/spring/autumn periods; semi-transparent red ribbon fills the arid summer period (Jun–Sep). Dashed horizontal line at 0°C provides frost reference.
+      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17), the correct anyplot dark surface — not pure black.
+      Chrome: Title and subtitle render in light (#F0EFE8 / #B8B7B0) text against the dark surface, fully legible. Axis labels, tick labels, and right-side precipitation axis labels are all readable with appropriate INK_SOFT token (#B8B7B0). No dark-on-dark text failures detected.
+      Data: Imprint palette colors (red #AE3030 and blue #4467A3) are identical to the light render as required — only chrome flips. Fill alpha is higher in dark mode (0.60 vs 0.35) making the humid (blue) and arid (red) ribbons more prominent against the near-black surface. The dashed 0°C reference line remains subtle but visible. Bottom legend with blue/red line swatches is readable.
+      Legibility verdict: PASS — all text elements are clearly readable against the dark background; no dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes. Right-side 'Precipitation (mm)'
+          rotated annotation is slightly small (annotate size=4mm) but legible. Subtitle
+          at 8pt is compact but acceptable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element overlap in either render. Right-side tick labels
+          are well-spaced.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Temperature and precipitation lines are clearly visible in both
+          themes. Fills are appropriately semi-transparent (alpha adaptive: 0.35 light
+          / 0.60 dark).'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red (#AE3030) vs blue (#4467A3) distinction is CVD-safe — deuteranopes
+          and protanopes can still distinguish red from blue. Not a red-green sole-signal
+          scenario.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800 confirmed). Proportions are good; manual
+          right axis integrates cleanly into the layout. No overflow or clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Temperature (°C) on left axis, Precipitation (mm) on right axis,
+          Month on x-axis. All labeled with units as per spec.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception valid: temperature=red (#AE3030, Imprint slot
+          5) and precipitation=blue (#4467A3, Imprint slot 3) are canonical Imprint
+          colors used for their domain-expected hues. Backgrounds are #FAF8F1 (light)
+          and #1A1A17 (dark). Both renders theme-correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above-default score: intentional semantic color assignment, theme-adaptive
+          fill alpha, clean typography hierarchy. Not exceptional — fills are plain
+          semi-transparent without hatching differentiation.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: panel_border=element_blank() removes all borders cleanly; axis_line
+          provides L-shaped frame. Y-axis-only subtle grid (alpha=0.18). Legend without
+          box frame. Well refined.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Humid and arid ribbon fills directly answer the key climograph question.
+          Dashed 0°C reference line adds meaningful frost context. Seasonal arc of
+          Mediterranean climate emerges clearly.
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Walter-Lieth climograph with dual curves, correct 1:2 scaling,
+          fills, and secondary precipitation axis.
+      - id: SC-02
+        name: Required Features
+        score: 2
+        max: 4
+        passed: false
+        comment: 'Missing: (1) hatched fill for humid periods and dotted fill for
+          arid periods — spec calls these ''the diagram''s defining visual feature'';
+          solid semi-transparent fills used instead. (2) Frost month baseline indicator
+          feature is architecturally absent, though not visually missing for Athens
+          data.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Temperature on left axis, scaled precipitation on right axis, all
+          12 months represented. Walter-Lieth 1:2 convention correctly applied (precip/2).
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'Athens · climograph-walter-lieth · python · plotnine · anyplot.ai'
+          follows {Descriptive Title} · {spec-id} · {lang} · {lib} · anyplot.ai format.
+          Legend labels match data series.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows temperature trend, precipitation trend, humid/arid fills, dual
+          axis, 0°C reference line, station metadata. Frost month indicator not exercised
+          (no Athens month < 0°C).
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Athens, Greece (107m) 1991-2020 climate normals — well-known Mediterranean
+          station, climatologically accurate, neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature range 9.9–29.5°C and precipitation 6–71mm are accurate
+          for Athens. Walter-Lieth axis scaling applied correctly.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions or classes. Direct and readable.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded climate normal arrays — fully deterministic, no randomness
+          needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imported names from plotnine are used. numpy and pandas used
+          throughout.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean numpy/pandas data prep. Ribbon bounds computed clearly. No
+          fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: plot.save(f'plot-{THEME}.png', dpi=400, width=8, height=4.5, units='in')
+          — correct output naming and API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Uses plotnine grammar of graphics correctly: geom_ribbon, geom_line,
+          geom_segment, geom_text, annotate, scale functions, theme. Long-format df_lines
+          with color aesthetic for legend is idiomatic.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: geom_ribbon for fills, manual axis simulation with geom_segment/geom_text,
+          dynamic title size calculation, theme-adaptive fill alpha. Good plotnine-specific
+          approaches, though hatching (a missing feature) would have elevated this
+          further.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - manual-ticks
+  patterns:
+  - wide-to-long
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending

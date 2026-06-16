@@ -17,7 +17,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Test scores from three different study methods
 np.random.seed(42)
@@ -57,7 +57,7 @@ chart = (
         ),
         color=alt.Color(
             "Study Method:N",
-            scale=alt.Scale(domain=["Traditional Study", "Active Recall", "Passive Reading"], range=OKABE_ITO),
+            scale=alt.Scale(domain=["Traditional Study", "Active Recall", "Passive Reading"], range=IMPRINT),
             legend=alt.Legend(title="Study Method", titleFontSize=18, labelFontSize=16, orient="right"),
         ),
         order=alt.Order("Study Method:N", sort="ascending"),

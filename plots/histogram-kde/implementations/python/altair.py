@@ -21,7 +21,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # Position 1 - first series
-ACCENT = "#F0E442"  # Position 7 - for KDE line
+ACCENT = "#954477"  # Position 7 - for KDE line
 
 # Data - bimodal distribution for interesting KDE demonstration
 np.random.seed(42)

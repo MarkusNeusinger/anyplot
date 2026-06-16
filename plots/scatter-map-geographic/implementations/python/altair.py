@@ -274,11 +274,11 @@ basemap = (
 # Define color scale for regions using Okabe-Ito palette positions
 region_colors = {
     "Asia": "#009E73",  # OI position 1 (brand green)
-    "Africa": "#D55E00",  # OI position 2 (vermillion)
-    "Europe": "#0072B2",  # OI position 3 (blue)
-    "North America": "#CC79A7",  # OI position 4 (reddish purple)
-    "South America": "#E69F00",  # OI position 5 (orange)
-    "Oceania": "#56B4E9",  # OI position 6 (sky blue)
+    "Africa": "#C475FD",  # OI position 2 (vermillion)
+    "Europe": "#4467A3",  # OI position 3 (blue)
+    "North America": "#BD8233",  # OI position 4 (reddish purple)
+    "South America": "#AE3030",  # OI position 5 (orange)
+    "Oceania": "#2ABCCD",  # OI position 6 (sky blue)
 }
 
 # Create scatter points layer

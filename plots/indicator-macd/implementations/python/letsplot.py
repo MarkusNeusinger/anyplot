@@ -22,7 +22,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # First series (green)
-SECONDARY = "#D55E00"  # Orange
+SECONDARY = "#BD8233"  # imprint ochre — signal line (categorical contrast)
 
 # Generate realistic stock price data with momentum
 np.random.seed(42)
@@ -78,7 +78,7 @@ plot = (
     )
     + geom_hline(yintercept=0, color=INK_SOFT, size=0.8, linetype="dashed")
     + geom_line(data=df_lines, mapping=aes(x="day_num", y="value", color="line_type"), size=1.5)
-    + scale_fill_manual(values={"Positive": "#56B4E9", "Negative": "#D55E00"}, name="Histogram")
+    + scale_fill_manual(values={"Positive": "#2ABCCD", "Negative": "#AE3030"}, name="Histogram")  # imprint red for negative bars
     + scale_color_manual(values={"MACD Line": BRAND, "Signal Line": SECONDARY}, name="Lines")
     + labs(x="Trading Day", y="MACD Value", title="indicator-macd · letsplot · anyplot.ai")
     + theme_minimal()

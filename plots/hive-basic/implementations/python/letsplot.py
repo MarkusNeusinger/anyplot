@@ -22,7 +22,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette for categorical node types (positions 1-3)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data: Software module dependency network with 3 module types
 np.random.seed(42)
@@ -158,7 +158,7 @@ labels_df = pd.DataFrame(label_positions)
 # Map edges to colors using Okabe-Ito palette
 edge_color_map = {}
 for axis in axis_angles.keys():
-    edge_color_map[f"Within {axis}"] = OKABE_ITO[axis_to_color_idx[axis]]
+    edge_color_map[f"Within {axis}"] = IMPRINT[axis_to_color_idx[axis]]
 edge_color_map["Between axes"] = INK_SOFT
 
 # Build the plot
@@ -177,7 +177,7 @@ plot = (
         aes(x="x", y="y", label="label"), data=labels_df, size=14, fontface="bold", color=INK, show_legend=False
     )
     # Color scales using Okabe-Ito palette
-    + scale_fill_manual(values=OKABE_ITO)
+    + scale_fill_manual(values=IMPRINT)
     + scale_color_manual(values=edge_color_map)
     + scale_size(range=[5, 12])
     # Styling - expand limits to show axis labels

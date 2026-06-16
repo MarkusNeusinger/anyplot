@@ -18,7 +18,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series must be #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: Voter migration between political parties across 4 election cycles
 # Time points: 2012, 2016, 2020, 2024
@@ -71,10 +71,10 @@ node_padding = 20
 
 # Colors for each category (using Okabe-Ito palette)
 category_colors = {
-    "Conservative": OKABE_ITO[0],  # #009E73 (brand green)
-    "Liberal": OKABE_ITO[1],  # #D55E00 (vermillion)
-    "Progressive": OKABE_ITO[2],  # #0072B2 (blue)
-    "Independent": OKABE_ITO[3],  # #CC79A7 (reddish purple)
+    "Conservative": IMPRINT[0],  # #009E73 (brand green)
+    "Liberal": IMPRINT[1],  # #C475FD (vermillion)
+    "Progressive": IMPRINT[2],  # #4467A3 (blue)
+    "Independent": IMPRINT[3],  # #BD8233 (reddish purple)
 }
 
 # Calculate totals at each time point for each category

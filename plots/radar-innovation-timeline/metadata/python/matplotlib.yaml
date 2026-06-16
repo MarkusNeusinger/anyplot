@@ -1,49 +1,55 @@
 library: matplotlib
+language: python
 specification_id: radar-innovation-timeline
 created: '2026-02-18T21:44:11Z'
-updated: '2026-02-18T22:46:44Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22158662380
+updated: '2026-05-29T08:10:52Z'
+generated_by: claude-sonnet
+workflow_run: 26623921720
 issue: 4301
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/matplotlib/plot.png
-preview_html: null
-quality_score: 88
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
 review:
   strengths:
-  - Excellent spec compliance — all features from the specification are faithfully
-    implemented including 270-degree arc, ring fills, sector divisions, and labeled
-    items
-  - Strong visual hierarchy through marker size scaling by ring (near-term prominent,
-    far-future subtle) which reinforces the data story
-  - Realistic, recognizable technology items with plausible ring assignments that
-    make the chart immediately useful as a reference
-  - Colorblind-safe palette with redundant marker shape encoding per sector
-  - Smart label placement strategy with alternating above/below offsets, angular jittering,
-    and white background boxes
+  - Correct Imprint palette in canonical order (positions 1–4) for the 4 sectors,
+    plus distinct marker shapes per sector — excellent redundant CVD-safe encoding
+  - Progressive marker sizes by ring (inner=largest) creates intuitive visual hierarchy
+    — near-term innovations stand out over exploratory long-term items
+  - Full theme-adaptive implementation — ring fills, legend frame, label bboxes, text
+    colors, and ring boundary lines all flip correctly between light and dark themes
+  - 'Excellent data quality: 23 real current technologies in ThoughtWorks-radar terminology
+    with plausible 2026 ring assignments across a neutral business-tech domain'
+  - 'All spec features present: concentric rings with fills and boundary arcs, sector
+    dividers, ring time-horizon labels in gap, sector headers along outer edge, legend'
   weaknesses:
-  - Some label crowding in dense ring-sector intersections, particularly in the AI
-    & ML Adopt/Trial area where RAG Pipelines and LLM Agents labels are very close
-  - Item labels at fontsize 15 are slightly below the 16pt guideline for this canvas
-    size
-  image_description: 'The plot is a 270-degree (three-quarter circle) radar chart
-    on a square canvas. Four concentric rings represent time horizons — Adopt (innermost,
-    pastel blue fill), Trial (pastel green), Assess (pastel yellow), and Hold (outermost,
-    pastel pink) — each labeled in bold italic gray text in the gap at the upper-right.
-    Four angular sectors divide the arc: AI & ML (upper-left), Cloud & Infra (lower-left),
-    Data Engineering (bottom), and Security (right), with bold black sector headers
-    along the outer edge. Twenty-two technology items are plotted as colored markers:
-    blue circles for AI & ML, orange squares for Cloud & Infra, teal-green diamonds
-    for Data Engineering, and pink triangles for Security. Each marker has a white-backgrounded
-    text label. Marker sizes decrease from inner rings (Adopt, largest) to outer rings
-    (Hold, smallest), creating a visual hierarchy emphasizing near-term technologies.
-    Gray boundary arcs and sector divider lines provide structure. A "Sectors" legend
-    in the lower-right maps colors and shapes to categories. The title "radar-innovation-timeline
-    · matplotlib · pyplots.ai" sits at the top.'
+  - 'Label overlap in inner rings (Adopt, Trial): ''FinOps Tooling'' and ''Edge Computing''
+    visually crowd each other in the Cloud & Infra sector; ''AI Threat Detection''
+    and ''Homomorphic Encryption'' are cramped — increase base_offset for Adopt ring
+    or reduce label font to 6pt in innermost rings'
+  - plt.scatter([], []) used for legend proxy artists — minor idiomatic issue; prefer
+    matplotlib.lines.Line2D([], [], marker=..., linestyle='None') for proxy handles
+  - Labels in outer-left area ('Serverless Containers', 'Quantum Cloud APIs') extend
+    close to the left canvas margin — increase left subplots_adjust margin slightly
+    (0.05 → 0.08)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "radar-innovation-timeline · python · matplotlib · anyplot.ai" fully visible at top (~55% of canvas width), dark ink text; ring labels (Hold, Assess, Trial, Adopt) in italic bold at 9pt in the arc gap on the right, clearly readable; sector headers (AI & ML, Cloud & Infra, Data Engineering, Security) in bold at 10pt along the outer arc, all readable; item labels at 7–8pt with elevated-surface bbox backgrounds (#FFFDF6), readable but crowded in inner rings
+      Data: Green circles (#009E73) for AI & ML, lavender squares (#C475FD) for Cloud & Infra, blue diamonds (#4467A3) for Data Engineering, ochre triangles (#BD8233) for Security — all clearly visible with decreasing marker size toward outer rings (Adopt=110, Trial=85, Assess=65, Hold=50); ring fills use subtle pastel tints appropriate for light theme; legend box in lower-right with FFFDF6 background and INK_SOFT border
+      Legibility verdict: PASS — all text readable; minor crowding in the Adopt inner ring where FinOps Tooling/Edge Computing labels are close; no text unreadable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title, ring labels, sector headers all rendered in light INK (#F0EFE8 / B8B7B0 range), clearly readable against dark background; label bboxes use #242420 elevated dark surface; legend frame with dark elevated background; no dark-on-dark failures observed
+      Data: Colors identical to light render — green #009E73 circles, lavender #C475FD squares, blue #4467A3 diamonds, ochre #BD8233 triangles; ring fills use dark-themed tints (#1E2E25, #261A2E, #1A2030, #2E2018) that correctly separate the rings on the dark surface
+      Legibility verdict: PASS — all chrome flips correctly; data colors unchanged; no dark-on-dark text; brand green #009E73 clearly visible on dark background
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 24
       max: 30
       items:
       - id: VQ-01
@@ -51,72 +57,89 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24, sectors 20, rings 18, legend
-          16, item labels 15). Item labels at 15pt slightly below 16pt guideline but
-          readable with white background boxes.
+        comment: 'Font sizes explicitly set throughout: 12pt title, 10pt sector headers,
+          9pt ring labels, 7–8pt item labels, 8pt legend. Readable in both themes.
+          Minor deduction for 7pt item labels in the inner Adopt ring which may be
+          marginal on mobile.'
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: 'Some crowding in dense areas: RAG Pipelines and LLM Agents labels
-          very close; inner Adopt ring near sector boundaries is dense. White background
-          boxes mitigate but don''t fully eliminate overlap.'
+        comment: 'Moderate label crowding in inner rings: ''FinOps Tooling''/''Edge
+          Computing'' in Cloud & Infra Trial/Assess, and ''AI Threat Detection''/''Homomorphic
+          Encryption'' in Security. Labels are still readable due to bbox backgrounds
+          but definitely cramped.'
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Marker sizes scaled by ring (280 to 130) create clear visual hierarchy.
-          Different marker shapes per sector add redundant encoding.
+        comment: All 23 data points visible with appropriate marker sizes (50–110).
+          Progressive size encoding is excellent. Minor deduction for inner-ring crowding
+          where multiple markers from different sectors are at similar radii.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Okabe-Ito inspired palette avoids red-green conflicts. Marker shapes
-          provide additional non-color distinction.
+        comment: Four Imprint palette colors plus four distinct marker shapes — excellent
+          redundant encoding. CVD-safe palette. No red-green issues.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square 12x12 figure fits radar chart well. 270-degree arc uses space
-          effectively. Some items near canvas edges slightly crowded.
+        comment: 'Square 2400×2400 canvas appropriate for polar chart. Plot fills
+          the canvas well with balanced margins. Minor deduction: labels in outer-left
+          area (''Serverless Containers'', ''Quantum Cloud APIs'') extend close to
+          the left canvas margin.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Ring labels and sector labels are descriptive. No traditional axes
-          needed for this chart type.
+        comment: Polar chart has ring labels (Adopt/Trial/Assess/Hold) and sector
+          headers as axis equivalents — descriptive and clear. Title in correct format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint palette positions 1–4 in canonical order (#009E73, #C475FD,
+          #4467A3, #BD8233). Light bg #FAF8F1, dark bg #1A1A17. Data colors identical
+          between themes. Chrome flips correctly.'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: pastel ring fills, Okabe-Ito colors, marker size
-          hierarchy, white label boxes. Clearly above defaults, approaches publication
-          quality.'
+        comment: 'Clearly above default: custom ring fills (pastel light/dark tints),
+          progressive marker sizes encoding ring proximity, distinct marker shapes,
+          label bbox backgrounds. Thoughtful design intentionality. Docked for crowding
+          issues that hurt polish.'
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Polar spine removed, grid/ticks hidden, custom ring fills, subtle
-          gray boundaries, white-background label boxes.
+        comment: 'Excellent refinement: all polar default decorations removed (grid,
+          ticks, polar spine), custom ring boundary arcs, sector dividers, theme-adaptive
+          ring fills, label backgrounds with elevated surface. Very polished polar
+          layout.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Marker size hierarchy reinforces adopt-now-vs-future narrative. Radar
-          layout communicates strategic positioning. Sector grouping enables cross-category
-          patterns.
+        comment: Visual hierarchy through marker size (inner=prominent) tells the
+          'near-term innovations are immediate' story. Sector color+shape encoding
+          helps comparisons. No single focal insight is highlighted, preventing a
+          higher score.
     spec_compliance:
       score: 15
       max: 15
@@ -126,54 +149,60 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct radial radar chart with concentric rings and angular sectors
-          matching ThoughtWorks Technology Radar style.
+        comment: Correct innovation radar with concentric time-horizon rings and angular
+          sector division. 300-degree arc with label gap. All structural elements
+          present.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: concentric rings, sector divisions, distinct
-          markers/colors, labeled items, 270-degree layout, ring fills, legend.'
+        comment: 'All spec features: concentric ring fills, boundary arcs, ring time-horizon
+          labels, sector dividers, sector headers along outer edge, labeled item points,
+          legend mapping colors/markers to sectors.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Ring correctly maps to time horizon, sector to category, items at
-          ring-sector intersections.
+        comment: Items correctly placed in their ring (Adopt=innermost, Hold=outermost)
+          and sector. 23 innovations across all 4 rings and 4 sectors.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title uses exact spec-id · library · pyplots.ai format. Legend maps
-          all four sectors correctly.
+        comment: 'Title: ''radar-innovation-timeline · python · matplotlib · anyplot.ai''
+          — correct format. Legend labeled ''Sectors'' with all 4 category markers
+          and labels.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All 4 rings and 4 sectors populated with varying item counts (4-6
-          per sector) showing varied maturity distribution.
+        comment: 23 items cover all 4 rings (2–6 per ring) and all 4 sectors. Good
+          distribution showing both near-term (LLM Agents, Kubernetes) and speculative
+          (Neuromorphic Chips, Quantum Cloud APIs) items.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real technology names with plausible ring assignments reflecting
-          current technology landscape.
+        comment: Real current technologies (RAG Pipelines, Apache Iceberg, Zero Trust
+          Arch, Post-Quantum Crypto) in ThoughtWorks-radar terminology. Neutral business/tech
+          domain, no controversial content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 22 items across 4 rings and 4 sectors within spec range of 15-40
-          items.
+        comment: 23 items well within the 15–40 range. Ring assignments are plausible
+          for 2026 (Kubernetes=Adopt, LLM Agents=Adopt, Neuromorphic Chips=Hold, Post-Quantum
+          Crypto=Assess).
     code_quality:
       score: 10
       max: 10
@@ -183,36 +212,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, position computation, plot, save. No
-          functions or classes.'
+        comment: 'Linear: imports → tokens → data → position computation → plot →
+          save. No functions or classes. Position computation is necessarily complex
+          for this chart type.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before random operations.
+        comment: np.random.seed(42) set before jitter generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy, both fully utilized.
+        comment: Only os, matplotlib.pyplot, numpy — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Position calculation is moderately complex but necessary. Well-commented
-          sections, no over-engineering.
+        comment: Clean code, appropriate complexity. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at dpi=300 with bbox_inches tight. No deprecated
-          APIs.
-    library_features:
-      score: 8
+        comment: Saves as plot-{THEME}.png, dpi=400, no bbox_inches='tight'.
+    library_mastery:
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -220,16 +248,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses axes methods for plotting. Polar projection via fig.add_subplot.
-          plt.scatter for legend handles is standard pattern.
+        comment: 'Good polar axes usage: ax.fill_between in polar, ax.scatter, ax.text,
+          ax.set_ylim for radial limit. Minor: plt.scatter([], []) for legend handles
+          — prefer Line2D or PathCollection proxy artists.'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Polar projection with fill_between in polar coordinates for ring
-          fills is distinctive to matplotlib.
-  verdict: REJECTED
+        comment: Uses matplotlib's polar projection with fill_between for ring fills,
+          custom arc drawing with np.linspace in polar coords, custom sector dividers
+          — features distinctive to matplotlib's low-level polar API.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -239,7 +269,9 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
+  - minimal-chrome

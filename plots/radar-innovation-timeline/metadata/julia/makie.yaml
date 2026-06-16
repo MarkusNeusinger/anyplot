@@ -1,0 +1,265 @@
+library: makie
+language: julia
+specification_id: radar-innovation-timeline
+created: '2026-05-29T07:58:14Z'
+updated: '2026-05-29T08:24:56Z'
+generated_by: claude-sonnet
+workflow_run: 26624789481
+issue: 4301
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - 'Perfect Imprint palette compliance: correct canonical order for 4 sectors, #009E73
+    as first series, theme-adaptive chrome in both renders with no dark-on-dark failures.'
+  - 'Beautiful layered design: subtle sector wedge fills (0.07 alpha palette tints)
+    + alternating ring shading + low-alpha ring arcs create spatial depth without
+    visual noise.'
+  - 'Perfect spec compliance: 270° three-quarter layout, all rings and sectors labeled,
+    all 24 items correctly placed with smart radial-offset label placement.'
+  - 'Realistic, professional data: recognizable technology radar context (LLM APIs,
+    RAG, eBPF, Sigstore, Post-Quantum, etc.) with factually plausible horizon assignments.'
+  - Frameless legend and fully hidden decorations/spines produce a clean, publication-ready
+    radar chart.
+  weaknesses:
+  - Item labels at fontsize=10 (effective 20px at 2400px canvas) are borderline small
+    for 400px mobile readability; increase to fontsize=11 with radial offset kept
+    at 0.055.
+  - 'No storytelling focal point: all 24 items rendered identically — consider markersize=16
+    for outermost Hold ring items (vs 13 for inner rings) to add subtle emphasis on
+    long-horizon bets.'
+  - pol2cart utility function is a minor KISS deviation; could be inlined as 'x, y
+    = r*cos(θ), r*sin(θ)' at each callsite.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "radar-innovation-timeline · julia · makie · anyplot.ai" in dark INK at top — readable. Sector headers (AI & ML, Cloud & Infra, Security, DevEx) colored in their Imprint palette hues outside outermost ring — readable. Ring labels (Adopt, Trial, Assess, Hold) in INK_MUTED at bottom gap along vertical axis — readable. Legend text in INK_SOFT below chart — readable.
+      Data: AI & ML sector in #009E73 (brand green), Cloud & Infra in #C475FD (lavender), Security in #4467A3 (blue), DevEx in #BD8233 (ochre). Correct Imprint canonical order. 24 data points as filled circles with PAGE_BG stroke. Sector wedge fills at 0.07 alpha palette tints. Ring fills at alternating 0.08/0.02 neutral alpha.
+      Legibility verdict: PASS — all text readable against warm off-white background, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light INK (#F0EFE8) — clearly readable. Sector headers in same Imprint palette hues — readable against dark surface. Ring labels in INK_MUTED (#A8A79F) — readable. Item labels in INK_SOFT (#B8B7B0) — readable gray against near-black background. Legend text in INK_SOFT — readable.
+      Data: All four Imprint palette colors identical to light render (#009E73, #C475FD, #4467A3, #BD8233) — data colors do not flip between themes, only chrome flips. Sector and ring fills provide subtle depth on dark surface.
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome elements render in appropriately light tones against the near-black background
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=20, sector headers=14, ring
+          labels=12, item labels=10). Item labels borderline small at mobile scale
+          (20px effective at 2400px canvas).
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Radial offsets prevent most collisions. Minor crowding risk in inner
+          Adopt ring between angularly close pairs but all text reads distinctly.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: markersize=13 with PAGE_BG stroke well-proportioned for 24 data points;
+          all markers clearly visible in both themes.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Four distinct Imprint hue families; CVD-safe palette; marker stroke
+          aids separation from tinted sector fills.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas 2400x2400 correct for symmetric radar; chart fills
+          ~70% of canvas area; no elements cut off; canvas gate passed.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Ring labels (Adopt/Trial/Assess/Hold) and sector headers serve as
+          descriptive axes for a radar chart.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 correct; canonical Imprint order; background
+          #FAF8F1 light / #1A1A17 dark; all chrome tokens theme-adaptive; data colors
+          identical across both renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: sector wedge fills (0.07 alpha palette tints) overlay
+          alternating ring fills; sector headers colored in palette hue; PAGE_BG marker
+          strokes; frameless legend. Clearly above defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All decorations and spines hidden; no grid (appropriate for radar);
+          ring arcs at 30% alpha; generous whitespace; legend frameless. Near-perfect
+          refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Spatial/color organization guides reader to sector groupings and
+          time-horizon progression. No focal emphasis draws attention to a specific
+          insight.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct innovation radar with concentric rings (time horizons), angular
+          sectors (categories), labeled point items, 270° three-quarter layout.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Concentric rings with boundary arcs, ring labels in bottom gap, sector
+          headers, distinct colors per sector, ring and sector background fills, 24
+          labeled items with radial label offsets, legend.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 24 items correctly placed in ring/sector intersections with fine-grained
+          angular fraction control.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'radar-innovation-timeline · julia · makie · anyplot.ai' correct
+          format; horizontal frameless legend with correct sector labels.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All four rings and all four sectors populated; realistic spread from
+          Adopt (Kubernetes, GitHub Actions) to Hold (AGI Infra, Unikernels, Post-Quantum).
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real technology radar domain with recognizable technologies (LLM
+          APIs, RAG, eBPF, Sigstore, SBOM, Post-Quantum, OpenTelemetry, DORA Metrics);
+          plausible horizon placement; neutral professional context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Technology positions across rings are factually plausible; 24 items
+          across 4x4 grid is appropriate for a strategic radar.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: One utility function (pol2cart) defined; used ~7 times but technically
+          violates strict no-functions KISS.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set; data is deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all used; no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized constants, comprehension for RING_CENTERS, tuple array
+          for ITEMS; no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2; current CairoMakie
+          API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of poly!, lines!, scatter!, text!, Label, Legend, MarkerElement,
+          DataAspect(), hidedecorations!, hidespines!, xlims!, ylims!. Comprehensive
+          but stops short of Makie recipes or Observables.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: poly! for polygon fills is distinctively Makie; MarkerElement for
+          custom legend is Makie-specific; DataAspect() for circle rendering. Manual
+          polar→Cartesian approach limits distinctiveness ceiling.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - custom-legend
+  - annotations
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting

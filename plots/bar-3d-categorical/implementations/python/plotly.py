@@ -17,7 +17,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID_COLOR = "#D0CEC7" if THEME == "light" else "#2D2D2A"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data
 np.random.seed(42)
@@ -64,7 +64,7 @@ for p_idx, prod in enumerate(products):
             i=ii,
             j=jj,
             k=kk,
-            color=OKABE_ITO[p_idx],
+            color=IMPRINT[p_idx],
             opacity=1.0,
             name=prod,
             showlegend=True,

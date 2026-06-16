@@ -18,7 +18,7 @@ review:
   - 'Raincloud geometry is textbook-correct: half-violin cloud rises above each category
     baseline, box plot sits centered on the baseline, jittered rain points fall below
     — the cloud/rain metaphor reads instantly.'
-  - 'Anyplot palette applied in canonical order — Control is #009E73 green (mandatory
+  - 'Imprint palette applied in canonical order — Control is #009E73 green (mandatory
     first-series brand color), then purple/blue/brown for Treatment A/B/C.'
   - Both light (#FAF8F1) and dark (#1A1A17) renders use the correct warm backgrounds;
     theme tokens (INK, INK_SOFT, BOX_FILL) thread through every chrome element — no
@@ -68,7 +68,7 @@ review:
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17 — correct dark theme surface, not pure black.
       Chrome: light-ink title, light-ink italic axis labels, INK_SOFT tick labels (B8B7B0) on both axes — all clearly visible against the dark background. Grid lines are at the slightly raised GRID_ALPHA=0.20 and stay subtle but visible. Legend on the right uses INK_SOFT text. No dark-on-dark text failures — every chrome element threads through the theme tokens correctly.
-      Data: identical colors to light render — Control green, Treatment A purple, Treatment B blue, Treatment C brown (the four anyplot palette positions are unchanged between themes, only chrome flips). Box plot fills use the elevated dark surface #242420 with white borders, which reads cleanly. The category-color median line still pops inside each box.
+      Data: identical colors to light render — Control green, Treatment A purple, Treatment B blue, Treatment C brown (the four Imprint palette positions are unchanged between themes, only chrome flips). Box plot fills use the elevated dark surface #242420 with white borders, which reads cleanly. The category-color median line still pops inside each box.
       Legibility verdict: PASS.
 
     Both renders pass the theme-readability checklist. The "bimodal distribution" annotation that the code adds at (x=475, y=2.35) is not visually locatable in either render — flagged in weaknesses as a storytelling failure rather than a legibility failure, since it appears to be a positioning/contrast issue rather than chrome being chopped.
@@ -104,7 +104,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is CVD-safe; color is redundant with y-axis position
+        comment: Imprint palette is CVD-safe; color is redundant with y-axis position
           so it isn't the sole signal.
       - id: VQ-05
         name: Layout & Canvas
@@ -124,7 +124,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; canonical anyplot palette order; PAGE_BG correct
+        comment: 'First series #009E73; canonical Imprint palette order; PAGE_BG correct
           for both themes.'
     design_excellence:
       score: 11

@@ -44,7 +44,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito colors for classes
-CLASS_COLORS = ["#009E73", "#D55E00"]  # Positions 1 and 2 of the palette
+CLASS_COLORS = ["#009E73", "#C475FD"]  # Positions 1 and 2 of the palette
 
 # Data - Generate synthetic classification data
 np.random.seed(42)

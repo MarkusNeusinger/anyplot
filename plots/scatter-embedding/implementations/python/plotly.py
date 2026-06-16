@@ -20,7 +20,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data — simulate document embeddings in 50-dimensional topic space
 np.random.seed(42)
@@ -45,7 +45,7 @@ for i, topic in enumerate(topics):
             y=X_2d[mask, 1],
             mode="markers",
             name=topic,
-            marker={"color": OKABE_ITO[i], "size": 8, "opacity": 0.65, "line": {"color": PAGE_BG, "width": 0.5}},
+            marker={"color": IMPRINT[i], "size": 8, "opacity": 0.65, "line": {"color": PAGE_BG, "width": 0.5}},
         )
     )
 

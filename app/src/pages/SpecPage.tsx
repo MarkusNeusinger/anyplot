@@ -1,25 +1,34 @@
-import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
-import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+
 import { Helmet } from 'react-helmet-async';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import Skeleton from '@mui/material/Skeleton';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { NotFoundPage } from './NotFoundPage';
+import Typography from '@mui/material/Typography';
 
-import { API_URL, GITHUB_URL, LANG_DISPLAY } from '../constants';
-import { typography, colors, fontSize, semanticColors } from '../theme';
-import { useAnalytics, useCodeFetch } from '../hooks';
-import { useAppData } from '../hooks';
-import { specPath } from '../utils/paths';
-import { LibraryPills } from '../components/LibraryPills';
-import { RelatedSpecs } from '../components/RelatedSpecs';
+import { GITHUB_URL, LANG_DISPLAY } from 'src/constants';
+import { useAnalytics, useCodeFetch } from 'src/hooks';
+import { useAppData } from 'src/hooks';
+import { ApiError, apiGet, apiUrl, endpoints } from 'src/lib/api';
+import { NotFoundPage } from 'src/pages/NotFoundPage';
+import { paths, specPath } from 'src/routes/paths';
+import { LibraryPills } from 'src/sections/spec-detail/LibraryPills';
+import { RelatedSpecs } from 'src/sections/spec-detail/RelatedSpecs';
+import { colors, fontSize, semanticColors, typography } from 'src/theme';
 
-const SpecTabs = lazy(() => import('../components/SpecTabs').then(m => ({ default: m.SpecTabs })));
-const SpecOverview = lazy(() => import('../components/SpecOverview').then(m => ({ default: m.SpecOverview })));
-const SpecDetailView = lazy(() => import('../components/SpecDetailView').then(m => ({ default: m.SpecDetailView })));
-import type { Implementation } from '../types';
+const SpecTabs = lazy(() =>
+  import('src/sections/spec-detail/SpecTabs').then(m => ({ default: m.SpecTabs }))
+);
+const SpecOverview = lazy(() =>
+  import('src/sections/spec-detail/SpecOverview').then(m => ({ default: m.SpecOverview }))
+);
+const SpecDetailView = lazy(() =>
+  import('src/sections/spec-detail/SpecDetailView').then(m => ({ default: m.SpecDetailView }))
+);
+import type { Implementation } from 'src/types';
 
 interface SpecDetail {
   id: string;
@@ -73,7 +82,7 @@ export function SpecPage() {
   const languageFilter = mode === 'hub' ? carouselLanguage : null;
 
   const getLibraryMeta = useCallback(
-    (libraryId: string) => librariesData.find((lib) => lib.id === libraryId),
+    (libraryId: string) => librariesData.find(lib => lib.id === libraryId),
     [librariesData]
   );
 
@@ -88,27 +97,31 @@ export function SpecPage() {
       setHighlightedTags([]);
 
       try {
-        const res = await fetch(`${API_URL}/specs/${specId}`);
-        if (!res.ok) {
-          setError(res.status === 404 ? 'Spec not found' : 'Failed to load spec');
-          return;
-        }
-
-        const data: SpecDetail = await res.json();
+        const data = await apiGet<SpecDetail>(endpoints.spec(specId));
         setSpecData(data);
 
         // Detail mode: validate library matches an impl in the requested language.
         // If no match, fall back to the hub with a language filter to preserve intent.
         if (urlLibrary && urlLanguage) {
           const matched = data.implementations.find(
-            (i) => i.library_id === urlLibrary && i.language === urlLanguage,
+            i => i.library_id === urlLibrary && i.language === urlLanguage
           );
           if (!matched) {
-            navigate({ pathname: specPath(specId!), search: `?language=${encodeURIComponent(urlLanguage)}` }, { replace: true });
+            navigate(
+              {
+                pathname: specPath(specId!),
+                search: `?language=${encodeURIComponent(urlLanguage)}`,
+              },
+              { replace: true }
+            );
             return;
           }
         }
       } catch (err) {
+        if (err instanceof ApiError) {
+          setError(err.status === 404 ? 'Spec not found' : 'Failed to load spec');
+          return;
+        }
         console.error('Error fetching spec:', err);
         setError('Failed to load spec');
       } finally {
@@ -127,13 +140,13 @@ export function SpecPage() {
   const carouselImpls = useMemo(() => {
     if (!specData) return [];
     if (!carouselLanguage) return specData.implementations;
-    return specData.implementations.filter((i) => i.language === carouselLanguage);
+    return specData.implementations.filter(i => i.language === carouselLanguage);
   }, [specData, carouselLanguage]);
 
   // Languages present in this spec (for hub mode)
   const availableLanguages = useMemo(() => {
     if (!specData) return [];
-    return Array.from(new Set(specData.implementations.map((i) => i.language))).sort();
+    return Array.from(new Set(specData.implementations.map(i => i.language))).sort();
   }, [specData]);
 
   // If ?language= points at a language that has no implementations, drop it.
@@ -161,7 +174,7 @@ export function SpecPage() {
   // Get current implementation (only in detail mode)
   const currentImpl = useMemo(() => {
     if (!specData || !selectedLibrary) return null;
-    return specData.implementations.find((impl) => impl.library_id === selectedLibrary) || null;
+    return specData.implementations.find(impl => impl.library_id === selectedLibrary) || null;
   }, [specData, selectedLibrary]);
 
   // Prefetch code in background when impl detail page opens. Pass urlLanguage
@@ -173,7 +186,8 @@ export function SpecPage() {
     }
   }, [specId, selectedLibrary, urlLanguage, fetchCode]);
 
-  const currentCode = specId && selectedLibrary ? getCode(specId, selectedLibrary, urlLanguage) : null;
+  const currentCode =
+    specId && selectedLibrary ? getCode(specId, selectedLibrary, urlLanguage) : null;
 
   // Build a `?language=…` query string when the carousel scope is pinned.
   // Empty otherwise — kept stable to avoid clutter in shareable URLs.
@@ -185,7 +199,7 @@ export function SpecPage() {
   const handleLibrarySelect = useCallback(
     (libraryId: string) => {
       if (!specId || !specData) return;
-      const impl = specData.implementations.find((i) => i.library_id === libraryId);
+      const impl = specData.implementations.find(i => i.library_id === libraryId);
       if (!impl) return;
       setImageLoaded(false);
       navigate(`${specPath(specId, impl.language, libraryId)}${carouselQuery}`, { replace: true });
@@ -199,7 +213,7 @@ export function SpecPage() {
   const handleImplClick = useCallback(
     (libraryId: string) => {
       if (!specId) return;
-      const impl = specData?.implementations.find((i) => i.library_id === libraryId);
+      const impl = specData?.implementations.find(i => i.library_id === libraryId);
       const lang = impl?.language || urlLanguage;
       if (!lang) return;
       navigate(`${specPath(specId, lang, libraryId)}${carouselQuery}`);
@@ -218,7 +232,7 @@ export function SpecPage() {
       else params.delete('view');
       setSearchParams(params, { replace: true });
     },
-    [searchParams, setSearchParams],
+    [searchParams, setSearchParams]
   );
 
   // Keep URL in sync with what's actually rendered: if interactive is requested
@@ -239,7 +253,7 @@ export function SpecPage() {
     async (impl: Implementation) => {
       if (!specId) return;
       const link = document.createElement('a');
-      link.href = `${API_URL}/download/${specId}/${impl.library_id}`;
+      link.href = apiUrl(endpoints.download(specId, impl.library_id));
       link.download = `${specId}-${impl.library_id}.png`;
       document.body.appendChild(link);
       link.click();
@@ -252,13 +266,14 @@ export function SpecPage() {
         page: mode === 'detail' ? 'spec_detail' : 'spec_hub',
       });
     },
-    [specId, trackEvent, mode],
+    [specId, trackEvent, mode]
   );
 
   const handleCopyCode = useCallback(
     async (impl: Implementation) => {
       try {
-        const code = impl.code || (specId ? await fetchCode(specId, impl.library_id, impl.language) : null);
+        const code =
+          impl.code || (specId ? await fetchCode(specId, impl.library_id, impl.language) : null);
         if (!code) return;
         await navigator.clipboard.writeText(code);
         setCodeCopied(impl.library_id);
@@ -294,7 +309,7 @@ export function SpecPage() {
     if (mode === 'hub') {
       trackPageview();
     } else if (mode === 'detail' && selectedLibrary) {
-      trackPageview(`/${specId}/${urlLanguage}/${selectedLibrary}`);
+      trackPageview(specPath(specId, urlLanguage, selectedLibrary));
     }
   }, [specData, mode, specId, urlLanguage, selectedLibrary, languageFilter, trackPageview]);
 
@@ -304,9 +319,14 @@ export function SpecPage() {
 
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') return;
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'SELECT'
+      )
+        return;
       const sorted = [...carouselImpls].sort((a, b) => a.library_id.localeCompare(b.library_id));
-      const idx = sorted.findIndex((impl) => impl.library_id === selectedLibrary);
+      const idx = sorted.findIndex(impl => impl.library_id === selectedLibrary);
       if (idx < 0) return;
 
       if (e.key === 'ArrowLeft') {
@@ -328,9 +348,14 @@ export function SpecPage() {
   if (loading) {
     return (
       <Box sx={{ textAlign: 'center', py: 8 }}>
-        <Skeleton variant="rectangular" width="100%" height={400} sx={{ maxWidth: 800, mx: 'auto', borderRadius: 2 }} />
+        <Skeleton
+          variant="rectangular"
+          width="100%"
+          height={400}
+          sx={{ maxWidth: 800, mx: 'auto', borderRadius: 2 }}
+        />
         <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', mt: 2 }}>
-          {[1, 2, 3, 4].map((i) => (
+          {[1, 2, 3, 4].map(i => (
             <Skeleton key={i} variant="rounded" width={80} height={32} />
           ))}
         </Box>
@@ -347,7 +372,12 @@ export function SpecPage() {
         <Typography variant="h5" sx={{ mb: 2, color: semanticColors.mutedText }}>
           {error}
         </Typography>
-        <Button component={Link} to="/" startIcon={<ArrowBackIcon />} sx={{ color: colors.primary }}>
+        <Button
+          component={Link}
+          to={paths.home}
+          startIcon={<ArrowBackIcon />}
+          sx={{ color: colors.primary }}
+        >
           Back to Home
         </Button>
       </Box>
@@ -376,10 +406,9 @@ export function SpecPage() {
         : '';
 
   // Implementations to render in the grid: hub mode optionally filtered by ?language=
-  const gridImpls =
-    languageFilter
-      ? specData.implementations.filter((i) => i.language === languageFilter)
-      : specData.implementations;
+  const gridImpls = languageFilter
+    ? specData.implementations.filter(i => i.language === languageFilter)
+    : specData.implementations;
 
   const breadcrumbItems: { name: string; item: string }[] = [
     { name: 'anyplot', item: 'https://anyplot.ai/' },
@@ -436,7 +465,9 @@ export function SpecPage() {
         {currentImpl?.preview_url && <meta property="og:image" content={currentImpl.preview_url} />}
         <meta property="og:url" content={canonical} />
         <link rel="canonical" href={canonical} />
-        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd).replace(/</g, '\\u003c')}</script>
+        <script type="application/ld+json">
+          {JSON.stringify(breadcrumbJsonLd).replace(/</g, '\\u003c')}
+        </script>
         {softwareSourceJsonLd && (
           <script type="application/ld+json">
             {JSON.stringify(softwareSourceJsonLd).replace(/</g, '\\u003c')}
@@ -452,7 +483,9 @@ export function SpecPage() {
               href={buildReportUrl()}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => trackEvent('report_issue', { spec: specId, library: selectedLibrary || undefined })}
+              onClick={() =>
+                trackEvent('report_issue', { spec: specId, library: selectedLibrary || undefined })
+              }
               sx={{
                 fontFamily: typography.mono,
                 fontSize: fontSize.sm,
@@ -506,101 +539,110 @@ export function SpecPage() {
         </Typography>
 
         <Suspense fallback={<Box sx={{ minHeight: 400 }} />}>
-        {mode !== 'detail' ? (
-          <>
-            <SpecOverview
-              specId={specId || ''}
-              specTitle={specData.title}
-              implementations={gridImpls}
-              codeCopied={codeCopied}
-              downloadDone={downloadDone}
-              openTooltip={openTooltip}
-              onImplClick={handleImplClick}
-              onCopyCode={handleCopyCode}
-              onDownload={handleDownload}
-              onTooltipToggle={setOpenTooltip}
-              getLibraryMeta={getLibraryMeta}
-              onTrackEvent={trackEvent}
-            />
+          {mode !== 'detail' ? (
+            <>
+              <SpecOverview
+                specId={specId || ''}
+                specTitle={specData.title}
+                implementations={gridImpls}
+                codeCopied={codeCopied}
+                downloadDone={downloadDone}
+                openTooltip={openTooltip}
+                onImplClick={handleImplClick}
+                onCopyCode={handleCopyCode}
+                onDownload={handleDownload}
+                onTooltipToggle={setOpenTooltip}
+                getLibraryMeta={getLibraryMeta}
+                onTrackEvent={trackEvent}
+              />
 
-            <SpecTabs
-              code={null}
-              specId={specData.id}
-              title={specData.title}
-              description={specData.description}
-              applications={specData.applications}
-              data={specData.data}
-              notes={specData.notes}
-              tags={specData.tags}
-              created={specData.created}
-              updated={specData.updated}
-              imageDescription={undefined}
-              strengths={undefined}
-              weaknesses={undefined}
-              qualityScore={null}
-              criteriaChecklist={undefined}
-              libraryId=""
-              onTrackEvent={trackEvent}
-              overviewMode={true}
-              highlightedTags={highlightedTags}
-            />
-          </>
-        ) : (
-          <>
-            <LibraryPills
-              implementations={carouselImpls}
-              selectedLibrary={selectedLibrary || ''}
-              onSelect={handleLibrarySelect}
-              onAll={() => navigate(specPath(specId!))}
-            />
+              <SpecTabs
+                code={null}
+                specId={specData.id}
+                title={specData.title}
+                description={specData.description}
+                applications={specData.applications}
+                data={specData.data}
+                notes={specData.notes}
+                tags={specData.tags}
+                created={specData.created}
+                updated={specData.updated}
+                imageDescription={undefined}
+                strengths={undefined}
+                weaknesses={undefined}
+                qualityScore={null}
+                criteriaChecklist={undefined}
+                libraryId=""
+                onTrackEvent={trackEvent}
+                overviewMode={true}
+                highlightedTags={highlightedTags}
+              />
+            </>
+          ) : (
+            <>
+              <LibraryPills
+                implementations={carouselImpls}
+                selectedLibrary={selectedLibrary || ''}
+                onSelect={handleLibrarySelect}
+                onAll={() => navigate(specPath(specId!))}
+              />
 
-            <SpecDetailView
-              specTitle={specData.title}
-              selectedLibrary={selectedLibrary || ''}
-              currentImpl={currentImpl}
-              implementations={carouselImpls}
-              imageLoaded={imageLoaded}
-              codeCopied={codeCopied}
-              downloadDone={downloadDone}
-              viewMode={viewMode}
-              reportUrl={buildReportUrl()}
-              onViewModeChange={handleViewModeChange}
-              onImageLoad={() => setImageLoaded(true)}
-              onCopyCode={handleCopyCode}
-              onDownload={handleDownload}
-              onReport={() => trackEvent('report_issue', { spec: specId, library: selectedLibrary || undefined })}
-              onTrackEvent={trackEvent}
-            />
+              <SpecDetailView
+                specTitle={specData.title}
+                selectedLibrary={selectedLibrary || ''}
+                currentImpl={currentImpl}
+                implementations={carouselImpls}
+                imageLoaded={imageLoaded}
+                codeCopied={codeCopied}
+                downloadDone={downloadDone}
+                viewMode={viewMode}
+                reportUrl={buildReportUrl()}
+                onViewModeChange={handleViewModeChange}
+                onImageLoad={() => setImageLoaded(true)}
+                onCopyCode={handleCopyCode}
+                onDownload={handleDownload}
+                onReport={() =>
+                  trackEvent('report_issue', {
+                    spec: specId,
+                    library: selectedLibrary || undefined,
+                  })
+                }
+                onTrackEvent={trackEvent}
+              />
 
-
-            <SpecTabs
-              code={currentCode || currentImpl?.code || null}
-              specId={specData.id}
-              title={specData.title}
-              description={specData.description}
-              applications={specData.applications}
-              data={specData.data}
-              notes={specData.notes}
-              tags={specData.tags}
-              created={specData.created}
-              updated={specData.updated}
-              imageDescription={currentImpl?.review_image_description}
-              strengths={currentImpl?.review_strengths}
-              weaknesses={currentImpl?.review_weaknesses}
-              implTags={currentImpl?.impl_tags}
-              qualityScore={currentImpl?.quality_score || null}
-              criteriaChecklist={currentImpl?.review_criteria_checklist}
-              generatedAt={currentImpl?.generated_at}
-              libraryId={selectedLibrary || ''}
-              language={currentImpl?.language || urlLanguage || 'python'}
-              onTrackEvent={trackEvent}
-              highlightedTags={highlightedTags}
-            />
-          </>
-        )}
+              <SpecTabs
+                code={currentCode || currentImpl?.code || null}
+                specId={specData.id}
+                title={specData.title}
+                description={specData.description}
+                applications={specData.applications}
+                data={specData.data}
+                notes={specData.notes}
+                tags={specData.tags}
+                created={specData.created}
+                updated={specData.updated}
+                imageDescription={currentImpl?.review_image_description}
+                strengths={currentImpl?.review_strengths}
+                weaknesses={currentImpl?.review_weaknesses}
+                implTags={currentImpl?.impl_tags}
+                qualityScore={currentImpl?.quality_score || null}
+                criteriaChecklist={currentImpl?.review_criteria_checklist}
+                generatedAt={currentImpl?.generated_at}
+                libraryId={selectedLibrary || ''}
+                language={currentImpl?.language || urlLanguage || 'python'}
+                onTrackEvent={trackEvent}
+                highlightedTags={highlightedTags}
+              />
+            </>
+          )}
         </Suspense>
 
-        <RelatedSpecs specId={specId!} mode={mode === 'detail' ? 'full' : 'spec'} library={selectedLibrary || undefined} onHoverTags={setHighlightedTags} />
+        <RelatedSpecs
+          specId={specId!}
+          mode={mode === 'detail' ? 'full' : 'spec'}
+          library={selectedLibrary || undefined}
+          onHoverTags={setHighlightedTags}
+        />
       </Box>
     </>
   );

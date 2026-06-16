@@ -1,7 +1,8 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen } from '../test-utils';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../hooks', () => ({
+import { render, screen } from 'src/test-utils';
+
+vi.mock('src/hooks', () => ({
   useAnalytics: () => ({ trackPageview: vi.fn(), trackEvent: vi.fn() }),
   useInfiniteScroll: () => ({ loadMoreRef: { current: null } }),
   useFilterState: () => ({
@@ -36,22 +37,24 @@ vi.mock('../hooks', () => ({
 }));
 
 vi.mock('react-helmet-async', () => ({
-  Helmet: ({ children }: { children: React.ReactNode }) => <div data-testid="helmet">{children}</div>,
+  Helmet: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="helmet">{children}</div>
+  ),
 }));
 
-vi.mock('../components/FilterBar', () => ({
+vi.mock('src/sections/plots-gallery/FilterBar', () => ({
   FilterBar: () => <div data-testid="filterbar">FilterBar</div>,
 }));
 
-vi.mock('../components/ImagesGrid', () => ({
+vi.mock('src/sections/plots-gallery/ImagesGrid', () => ({
   ImagesGrid: () => <div data-testid="images-grid">ImagesGrid</div>,
 }));
 
-vi.mock('../components/Footer', () => ({
+vi.mock('src/layouts/Footer', () => ({
   Footer: () => <div data-testid="footer">Footer</div>,
 }));
 
-import { PlotsPage } from './PlotsPage';
+import { PlotsPage } from 'src/pages/PlotsPage';
 
 describe('PlotsPage', () => {
   beforeEach(() => {

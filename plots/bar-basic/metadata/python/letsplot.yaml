@@ -1,125 +1,133 @@
 library: letsplot
+language: python
 specification_id: bar-basic
 created: '2025-12-23T00:23:43Z'
-updated: '2026-02-14T14:56:42Z'
-generated_by: claude-opus-4-6
-workflow_run: 20447581463
-issue: 0
-python_version: '3.14'
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-basic/letsplot/plot.html
+updated: '2026-05-28T09:53:44Z'
+generated_by: claude-sonnet
+workflow_run: 26566637789
+issue: 612
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-basic/python/letsplot/plot-dark.html
 quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - layer-composition
-  - html-export
-  patterns: []
-  dataprep: []
-  styling:
-  - grid-styling
 review:
   strengths:
-  - 'Excellent data storytelling: the +38% vs. next leader annotation and mean reference
-    line guide the viewer through the data narrative effectively'
-  - Strong idiomatic lets-plot usage with expert application of the grammar of graphics,
-    including layer_tooltips, flavor_high_contrast_light, and dollar-formatted scales
-  - Clean, well-structured code with deterministic data and logical annotation preparation
-  - Intentional color hierarchy using Python Blue with a darker variant to highlight
-    the leader bar
+  - Correct vertical bar chart with all 6 department bars fully visible and well-proportioned
+  - 'Brand green #009E73 used correctly for single-series bars'
+  - Value labels above each bar with dollar formatting ($45,200 etc.) add precision
+    reading
+  - Mean reference line with annotation provides clear context for comparison
+  - Bars sorted descending creates natural visual ranking
+  - Both light and dark themes fully implemented with adaptive chrome tokens
+  - Custom theme correctly sets all chrome elements (background, grid, axis lines,
+    text) as theme-adaptive
+  - layer_tooltips() with custom title and revenue line format is distinctive letsplot
+    usage
+  - HTML export alongside PNG leverages letsplot's interactive capability
+  - Y-axis-only grid (x-axis grid removed) is clean and appropriate
   weaknesses:
-  - The +38% vs. next annotation crowds the $45,200 value label on the Electronics
-    bar — consider increasing the vertical offset between the two text layers
-  - Y-axis upper limit of $50,000 leaves unused space above the tallest bar while
-    compressing lower values — consider a tighter y-axis max to improve proportions
-  - Layout could be tighter — rotated x-labels consume significant bottom margin and
-    overall canvas utilization is around 50%
-  image_description: 'The plot displays a vertical bar chart titled "bar-basic · letsplot
-    · pyplots.ai" showing quarterly revenue by department. Six steel-blue bars represent
-    Electronics ($45,200), Clothing ($32,800), Home & Garden ($28,500), Sports ($31,400),
-    Books ($18,900), and Toys & Games ($19,800). The Electronics bar is rendered in
-    a darker navy shade (#1E4F72) to highlight it as the leader, with a bold italic
-    annotation "+38% vs. next" positioned above it in matching dark blue. Every bar
-    carries a bold currency-formatted value label just above its top. A dashed gray
-    horizontal reference line at approximately $29,433 spans the full width, labeled
-    "Avg: $29,433" near the right edge in gray italic. X-axis category labels are
-    rotated 45 degrees for readability. The y-axis runs from $0 to $50,000 with dollar-formatted
-    ticks. The chart uses the lets-plot high-contrast light flavor with only subtle
-    horizontal grid lines, creating a clean, professional appearance.'
+  - Average annotation text (size=3) is quite small — barely readable at full resolution
+    and will be very hard to read at mobile widths (~400px); increase to size=3.5
+    or 4
+  - Design Excellence is moderate — the plot is clean and functional but lacks the
+    publication-ready polish (e.g. no spine removal is explicitly coded, though letsplot
+    may handle it internally)
+  - 'DE-01 below exceptional: could benefit from more intentional typographic hierarchy
+    (e.g. bolder title weight, slightly larger axis labels relative to tick labels)'
+  - 'LM-02: layer_tooltips is used but more distinctive letsplot features could be
+    leveraged (e.g. geom_label with custom tooltips format, or more advanced scale
+    formatting)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white.
+      Chrome: Title "bar-basic · python · letsplot · anyplot.ai" in dark ink (#1A1A17) at top-left, clearly readable. X-axis label "Department" and Y-axis label "Quarterly Revenue ($)" in dark ink, readable. Tick labels in muted dark (#4A4A44), readable at 30-degree rotation. Y-axis grid lines are subtle horizontal lines.
+      Data: Six bars in brand green (#009E73) sorted descending from Electronics ($45,200) to Books ($18,900). Bold dollar-formatted value labels above each bar in dark ink. Dashed horizontal mean line in tertiary muted color with small italic "Avg: $29,433" annotation near Toys & Games position.
+      Legibility verdict: PASS — all text readable against light background. Average annotation is small (size=3) but legible at full resolution.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black.
+      Chrome: Title in light cream (#F0EFE8), clearly readable against dark background. Axis labels in light cream, tick labels in light-muted (#B8B7B0) — no dark-on-dark failures. Grid lines are subtle and visible. Axis lines in light-muted.
+      Data: Six bars remain in brand green (#009E73) — identical to light render, only chrome flipped. Value labels now in light cream (#F0EFE8) against dark background, readable. Mean line and annotation text in #A8A79F (muted light), readable.
+      Legibility verdict: PASS — all text readable against dark background. No dark-on-dark failures detected. Data colors are identical between light and dark renders.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt, tick
-          labels 16pt, value labels 13pt bold. All perfectly readable at 4800x2700.'
+        comment: 'All sizes explicitly set; title/axis/tick all readable in both themes.
+          Minor deduction: average annotation is size=3 (too small for mobile viewports)'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Nearly clean; the +38% vs. next annotation and $45,200 value label
-          on Electronics are close together, creating slight visual crowding though
-          both remain legible.
+        comment: No overlapping elements; rotated tick labels prevent collision
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars well-proportioned at width=0.7, consistent spacing, data clearly
-          distinguishable.
+        comment: Bars are prominent and clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single series uses CVD-safe brand green; good contrast in both themes
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Single blue hue family, fully colorblind-safe.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 2
-        max: 4
-        passed: false
-        comment: Functional but not optimal. Y-axis extends to $50K while data tops
-          at $45K. Rotated x-labels consume significant bottom margin. Plot fills
-          roughly 50% of canvas.
+        comment: 3200x1800 canvas used correctly (800x450 @ scale=4); good proportions
+          and margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Department and Quarterly Revenue ($) are descriptive with unit indicator.
+        comment: Y-axis includes units ($); x-axis is descriptive; title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series uses #009E73; backgrounds are #FAF8F1 (light) / #1A1A17
+          (dark); chrome tokens flip correctly'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Strong design with intentional color hierarchy, high-contrast light
-          flavor, bold value labels. Above defaults, approaching publication quality.
+        comment: 'Above well-configured default: brand color, adaptive chrome, value
+          labels, mean reference line. Not exceptional — no spine removal coded, typography
+          hierarchy modest'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Horizontal x-grid removed, subtle y-grid with custom color/size,
-          minor grid blanked. Good but spines still present.
+        comment: Y-axis-only grid is a good choice; explicit color theming for all
+          chrome. Some refinement visible above defaults
       - id: DE-03
         name: Data Storytelling
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: 'Excellent: leader annotation quantifies the gap, mean reference
-          line contextualizes performance, value labels enable precise comparison.'
+        comment: Descending sort creates natural ranking; mean line provides comparison
+          context; value labels enable precise reading. Visual hierarchy present
     spec_compliance:
       score: 15
       max: 15
@@ -129,53 +137,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct vertical bar chart with rectangular bars proportional to
-          values.
+        comment: Correct vertical bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: consistent bar widths, value labels,
-          highlighted bar, adequate spacing.'
+        comment: Consistent bar widths, value labels above bars, single color, adequate
+          bar spacing
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x-axis, values on y-axis, all 6 data points visible.
+        comment: Categories on x-axis, values on y-axis, all 6 departments visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format bar-basic · letsplot · pyplots.ai. No
-          legend needed, show_legend=False correctly set.
+        comment: Title matches required format exactly; no legend for single-series
+          (correct omission)
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Good variety: non-monotonic ordering, clear leader, middle pack,
-          and laggards. Minor deduction: no near-tie pair.'
+        comment: 'Shows full range: value labels, sorted bars, reference line, formatted
+          axes'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Quarterly revenue by department is a neutral, plausible business
-          scenario.
+        comment: Retail department quarterly revenue — neutral, realistic business
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Revenue values in $18K-$45K range are realistic for quarterly department
-          figures.
+        comment: Revenue values $18K-$45K per quarter are plausible for retail departments;
+          Electronics leading is realistic
     code_quality:
       score: 10
       max: 10
@@ -185,34 +192,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, annotation prep, plot, save. No
-          functions or classes.'
+        comment: 'Linear structure: imports → theme tokens → data → theme → plot →
+          save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded data.
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Wildcard import follows library recommended pattern. pandas is used.
-          No unused imports.
+        comment: os, pandas, lets_plot, ggsave — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic. Annotation dataframes are idiomatic lets-plot
-          approach.
+        comment: Clean, well-organized; noqa comments appropriate for wildcard import
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale=3 for 4800x2700, also exports HTML.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API used
     library_mastery:
       score: 8
       max: 10
@@ -222,13 +227,24 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert ggplot grammar with geom_bar, scale_fill_identity, position_nudge,
-          scale_x_discrete, dollar formatting.
+        comment: 'ggplot grammar idiomatically applied: ggsize, scale_x_discrete,
+          scale_y_continuous, position_nudge, element_* theme customization'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layer_tooltips with title/line, flavor_high_contrast_light,
-          and label_format. Lets-plot specific but not dramatically unique.
+        comment: layer_tooltips() with chained .title()/.line() and label_format='${,d}'
+          are distinctive letsplot features; HTML export leverages interactive capability
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  - layer-composition
+  patterns: []
+  dataprep: []
+  styling:
+  - grid-styling

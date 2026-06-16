@@ -28,7 +28,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 ICE_COLOR = "#009E73"  # Okabe-Ito position 1 — ICE lines
-PDP_COLOR = "#D55E00"  # Okabe-Ito position 2 — PDP line
+PDP_COLOR = "#C475FD"  # Okabe-Ito position 2 — PDP line
 
 # Data: house price predictions from GradientBoostingRegressor
 np.random.seed(42)

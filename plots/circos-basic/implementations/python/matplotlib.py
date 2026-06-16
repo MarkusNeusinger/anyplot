@@ -25,14 +25,14 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (positions 1-7, plus position 8 for neutral)
-OKABE_ITO = [
+IMPRINT = [
     "#009E73",  # 1: bluish green (brand)
-    "#D55E00",  # 2: vermillion
-    "#0072B2",  # 3: blue
-    "#CC79A7",  # 4: reddish purple
-    "#E69F00",  # 5: orange
-    "#56B4E9",  # 6: sky blue
-    "#F0E442",  # 7: yellow
+    "#C475FD",  # 2: vermillion
+    "#4467A3",  # 3: blue
+    "#BD8233",  # 4: reddish purple
+    "#AE3030",  # 5: orange
+    "#2ABCCD",  # 6: sky blue
+    "#954477",  # 7: yellow
 ]
 
 # Data: Genomic chromosome interactions
@@ -108,8 +108,8 @@ for i in range(n_chroms):
     x = np.concatenate([x_outer, x_inner])
     y = np.concatenate([y_outer, y_inner])
 
-    color_idx = i % len(OKABE_ITO)
-    ax.fill(x, y, color=OKABE_ITO[color_idx], alpha=0.85, edgecolor=PAGE_BG, linewidth=1.5)
+    color_idx = i % len(IMPRINT)
+    ax.fill(x, y, color=IMPRINT[color_idx], alpha=0.85, edgecolor=PAGE_BG, linewidth=1.5)
 
     # Add segment label
     mid_angle = np.radians((start + end) / 2)
@@ -137,8 +137,8 @@ for i in range(n_chroms):
     x = np.concatenate([x_outer, x_inner])
     y = np.concatenate([y_outer, y_inner])
 
-    color_idx = i % len(OKABE_ITO)
-    ax.fill(x, y, color=OKABE_ITO[color_idx], alpha=0.5, edgecolor="none")
+    color_idx = i % len(IMPRINT)
+    ax.fill(x, y, color=IMPRINT[color_idx], alpha=0.5, edgecolor="none")
 
 # Draw connections (ribbons for synteny blocks)
 max_value = max(c[2] for c in connections)
@@ -191,8 +191,8 @@ for source, target, value in connections:
     codes = [Path.MOVETO, Path.CURVE3, Path.CURVE3, Path.LINETO, Path.CURVE3, Path.CURVE3, Path.CLOSEPOLY]
 
     path = Path(verts, codes)
-    color_idx = idx1 % len(OKABE_ITO)
-    patch = mpatches.PathPatch(path, facecolor=OKABE_ITO[color_idx], alpha=0.4, edgecolor="none")
+    color_idx = idx1 % len(IMPRINT)
+    patch = mpatches.PathPatch(path, facecolor=IMPRINT[color_idx], alpha=0.4, edgecolor="none")
     ax.add_patch(patch)
 
 # Title
@@ -204,7 +204,7 @@ ax.set_ylim(-1.4, 1.4)
 
 # Legend (outside the plot)
 legend_elements = [
-    mpatches.Patch(facecolor=OKABE_ITO[i % len(OKABE_ITO)], label=chromosomes[i], alpha=0.85) for i in range(n_chroms)
+    mpatches.Patch(facecolor=IMPRINT[i % len(IMPRINT)], label=chromosomes[i], alpha=0.85) for i in range(n_chroms)
 ]
 leg = ax.legend(
     handles=legend_elements,

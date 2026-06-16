@@ -21,9 +21,9 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette — positions 1–4
 PRICE_COLOR = "#009E73"  # position 1 — first series (close price)
-SMA20_COLOR = "#D55E00"  # position 2
-SMA50_COLOR = "#0072B2"  # position 3
-SMA200_COLOR = "#CC79A7"  # position 4
+SMA20_COLOR = "#C475FD"  # position 2
+SMA50_COLOR = "#4467A3"  # position 3
+SMA200_COLOR = "#BD8233"  # position 4
 
 # Data
 np.random.seed(42)

@@ -21,7 +21,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Quarterly product performance metrics
 np.random.seed(42)
@@ -45,7 +45,7 @@ plot = (
     ggplot(df, aes(x="Quarter", y="Revenue", color="Product"))
     + geom_line(size=2.5)
     + geom_point(size=6, alpha=0.9)
-    + scale_color_manual(values=OKABE_ITO)
+    + scale_color_manual(values=IMPRINT)
     + scale_x_continuous(breaks=list(range(1, 13)))
     + labs(x="Quarter", y="Revenue (Million USD)", title="line-markers · letsplot · anyplot.ai")
     + theme_minimal()

@@ -19,8 +19,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
-OKABE_ITO_VERMILLION = "#D55E00"  # Position 2 - red/orange for up-regulated
-OKABE_ITO_BLUE = "#0072B2"  # Position 3 - blue for down-regulated
+OKABE_ITO_VERMILLION = "#C475FD"  # Position 2 - red/orange for up-regulated
+OKABE_ITO_BLUE = "#4467A3"  # Position 3 - blue for down-regulated
 
 # Data - Simulated differential gene expression results
 np.random.seed(42)

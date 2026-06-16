@@ -34,7 +34,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Market share by quarter for tech companies
 quarters = ["Q1 2023", "Q2 2023", "Q3 2023", "Q4 2023", "Q1 2024", "Q2 2024"]
@@ -80,7 +80,7 @@ df["Quarter"] = pd.Categorical(df["Quarter"], categories=quarters, ordered=True)
 df["Company"] = pd.Categorical(df["Company"], categories=companies_ordered, ordered=True)
 
 # Color mapping with Okabe-Ito palette
-color_map = {"Others": OKABE_ITO[3], "Xiaomi": OKABE_ITO[2], "Samsung": OKABE_ITO[1], "Apple": OKABE_ITO[0]}
+color_map = {"Others": IMPRINT[3], "Xiaomi": IMPRINT[2], "Samsung": IMPRINT[1], "Apple": IMPRINT[0]}
 
 # Theme-adaptive colors for legend and text
 anyplot_theme = theme(

@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 RULE = (0.10, 0.10, 0.09, 0.18) if THEME == "light" else (0.94, 0.94, 0.91, 0.22)
 
 BEFORE_COLOR = "#009E73"  # Okabe-Ito 1 — first series
-AFTER_COLOR = "#D55E00"  # Okabe-Ito 2
+AFTER_COLOR = "#C475FD"  # Okabe-Ito 2
 
 # Data: Employee satisfaction scores before and after workplace policy changes
 categories = ["Engineering", "Marketing", "Sales", "HR", "Finance", "Operations", "Customer Support", "Product"]

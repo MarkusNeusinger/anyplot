@@ -1,4 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
+
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlineOutlined';
+import CloseIcon from '@mui/icons-material/Close';
+import ForumIcon from '@mui/icons-material/ForumOutlined';
+import ThumbDownIcon from '@mui/icons-material/ThumbDownOutlined';
+import ThumbUpIcon from '@mui/icons-material/ThumbUpOutlined';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
@@ -9,15 +15,11 @@ import TextField from '@mui/material/TextField';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Tooltip from '@mui/material/Tooltip';
-import ForumIcon from '@mui/icons-material/ForumOutlined';
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlineOutlined';
-import ThumbUpIcon from '@mui/icons-material/ThumbUpOutlined';
-import ThumbDownIcon from '@mui/icons-material/ThumbDownOutlined';
-import CloseIcon from '@mui/icons-material/Close';
-import { API_URL } from '../constants';
-import { useAnalytics } from '../hooks';
-import { useLocalStorage } from '../hooks/useLocalStorage';
-import { RESERVED_TOP_LEVEL } from '../utils/paths';
+
+import { useAnalytics } from 'src/hooks';
+import { useLocalStorage } from 'src/hooks/useLocalStorage';
+import { apiPost, endpoints } from 'src/lib/api';
+import { RESERVED_TOP_LEVEL } from 'src/routes/paths';
 
 const MAX_MESSAGE_LENGTH = 500;
 const SESSION_KEY = 'anyplot_feedback_session';
@@ -58,7 +60,7 @@ function newSessionId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
     const bytes = new Uint8Array(16);
     crypto.getRandomValues(bytes);
-    return `s-${Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')}`;
+    return `s-${Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('')}`;
   }
   // Browser without Web Crypto support (e.g. very old, or insecure context). The
   // session id is an opaque correlation handle, not a credential — a coarse
@@ -135,7 +137,9 @@ export function FeedbackWidget() {
   // so the footer's top edge runs exactly through the FAB centre.
   const FAB_CENTER_FROM_BOTTOM_XS = 32;
   const liftTransform =
-    lift > FAB_CENTER_FROM_BOTTOM_XS ? `translateY(-${lift - FAB_CENTER_FROM_BOTTOM_XS}px)` : 'none';
+    lift > FAB_CENTER_FROM_BOTTOM_XS
+      ? `translateY(-${lift - FAB_CENTER_FROM_BOTTOM_XS}px)`
+      : 'none';
 
   const [sessionId, setSessionId] = useLocalStorage<string>(SESSION_KEY, '');
 
@@ -198,7 +202,11 @@ export function FeedbackWidget() {
     if (mode === 'quick') setMode('closed');
   };
 
-  const buildPayload = (overrides: { message: string | null; reaction: Reaction | null; contact: string | null }) => ({
+  const buildPayload = (overrides: {
+    message: string | null;
+    reaction: Reaction | null;
+    contact: string | null;
+  }) => ({
     message: overrides.message,
     reaction: overrides.reaction,
     contact: overrides.contact,
@@ -216,12 +224,10 @@ export function FeedbackWidget() {
     // the row was never written.
     setMode('closed');
     try {
-      const response = await fetch(`${API_URL}/feedback`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(buildPayload({ message: null, reaction: r, contact: null })),
-      });
-      if (!response.ok) return;
+      await apiPost<unknown>(
+        endpoints.feedback,
+        buildPayload({ message: null, reaction: r, contact: null })
+      );
       setThanksVisible(true);
       trackEvent('feedback_submitted', {
         path: getCurrentPath() || undefined,
@@ -231,8 +237,8 @@ export function FeedbackWidget() {
         mode: 'quick',
       });
     } catch {
-      // Network failure — drop silently. The quick interaction has no error UI
-      // surface (we closed the FAB optimistically); the user can retry.
+      // Non-2xx or network failure — drop silently. The quick interaction has
+      // no error UI surface (we closed the FAB optimistically); the user can retry.
     }
   };
 
@@ -252,17 +258,10 @@ export function FeedbackWidget() {
     setError(null);
 
     try {
-      const response = await fetch(`${API_URL}/feedback`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(
-          buildPayload({ message: trimmed || null, reaction, contact: contact.trim() || null })
-        ),
-      });
-
-      if (!response.ok) {
-        throw new Error(`status ${response.status}`);
-      }
+      await apiPost<unknown>(
+        endpoints.feedback,
+        buildPayload({ message: trimmed || null, reaction, contact: contact.trim() || null })
+      );
 
       trackEvent('feedback_submitted', {
         path: getCurrentPath() || undefined,
@@ -426,15 +425,20 @@ export function FeedbackWidget() {
           <Box sx={{ py: 3, textAlign: 'center' }} role="status" aria-live="polite">
             <Box sx={{ fontSize: 28, mb: 1 }}>🙏</Box>
             <Box sx={{ fontWeight: 600 }}>Thanks!</Box>
-            <Box sx={{ fontSize: 13, color: 'var(--ink-muted)', mt: 0.5 }}>
-              We read every note.
-            </Box>
+            <Box sx={{ fontSize: 13, color: 'var(--ink-muted)', mt: 0.5 }}>We read every note.</Box>
           </Box>
         ) : (
           <Box component="form" onSubmit={handleSubmit} noValidate>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+            <Box
+              sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}
+            >
               <Box sx={{ fontWeight: 600 }}>Quick feedback</Box>
-              <IconButton size="small" onClick={handleClose} aria-label="Close feedback" disabled={submitting}>
+              <IconButton
+                size="small"
+                onClick={handleClose}
+                aria-label="Close feedback"
+                disabled={submitting}
+              >
                 <CloseIcon fontSize="small" />
               </IconButton>
             </Box>
@@ -447,8 +451,10 @@ export function FeedbackWidget() {
               fullWidth
               placeholder="Bug, idea, typo, anything…"
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              slotProps={{ htmlInput: { maxLength: MAX_MESSAGE_LENGTH, 'aria-label': 'Feedback message' } }}
+              onChange={e => setMessage(e.target.value)}
+              slotProps={{
+                htmlInput: { maxLength: MAX_MESSAGE_LENGTH, 'aria-label': 'Feedback message' },
+              }}
               disabled={submitting}
               sx={{ mb: 1.5 }}
             />
@@ -461,8 +467,13 @@ export function FeedbackWidget() {
               aria-label="Reaction"
               sx={{ display: 'flex', flexWrap: 'wrap', mb: 1.5 }}
             >
-              {REACTIONS.map((r) => (
-                <ToggleButton key={r.value} value={r.value} aria-label={r.label} sx={{ fontSize: 18, px: 1.5 }}>
+              {REACTIONS.map(r => (
+                <ToggleButton
+                  key={r.value}
+                  value={r.value}
+                  aria-label={r.label}
+                  sx={{ fontSize: 18, px: 1.5 }}
+                >
                   {r.glyph}
                 </ToggleButton>
               ))}
@@ -473,7 +484,7 @@ export function FeedbackWidget() {
               size="small"
               placeholder="Name or email (optional)"
               value={contact}
-              onChange={(e) => setContact(e.target.value)}
+              onChange={e => setContact(e.target.value)}
               slotProps={{ htmlInput: { maxLength: 255, 'aria-label': 'Contact (optional)' } }}
               disabled={submitting}
               sx={{ mb: 1 }}
@@ -494,14 +505,23 @@ export function FeedbackWidget() {
             </Box>
 
             {/* Honeypot — real users never see this, bots will fill it and trip the server-side guard. */}
-            <Box aria-hidden="true" sx={{ position: 'absolute', left: '-9999px', width: 1, height: 1, overflow: 'hidden' }}>
+            <Box
+              aria-hidden="true"
+              sx={{
+                position: 'absolute',
+                left: '-9999px',
+                width: 1,
+                height: 1,
+                overflow: 'hidden',
+              }}
+            >
               <input
                 type="text"
                 name="website"
                 tabIndex={-1}
                 autoComplete="off"
                 value={website}
-                onChange={(e) => setWebsite(e.target.value)}
+                onChange={e => setWebsite(e.target.value)}
               />
             </Box>
 

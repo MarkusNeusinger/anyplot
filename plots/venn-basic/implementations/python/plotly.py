@@ -43,8 +43,8 @@ cx = [distance * np.cos(a) for a in angles]
 cy = [distance * np.sin(a) for a in angles]
 
 # Okabe-Ito palette with transparency
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
-fill_colors = ["rgba(0,158,115,0.45)", "rgba(213,94,0,0.45)", "rgba(0,114,178,0.45)"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
+fill_colors = ["rgba(0, 158, 115, 0.45)", "rgba(196, 117, 253, 0.45)", "rgba(68, 103, 163, 0.45)"]
 
 hover_texts = [
     f"<b>Python</b><br>Total: {set_sizes[0]}<br>Only Python: {only_a}<br>Python ∩ JS: {only_ab}<br>Python ∩ SQL: {only_ac}",
@@ -65,7 +65,7 @@ for i in range(3):
             y=y_circle,
             fill="toself",
             fillcolor=fill_colors[i],
-            line={"color": OKABE_ITO[i], "width": 3},
+            line={"color": IMPRINT[i], "width": 3},
             mode="lines",
             name=set_labels[i],
             showlegend=False,

@@ -27,7 +27,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 BRAND = "#009E73"  # Okabe-Ito position 1
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Load Iris dataset
 iris = load_iris()
@@ -122,7 +122,7 @@ plot = (
         title="biplot-pca · letsplot · anyplot.ai",
         color="Species",
     )
-    + scale_color_manual(values=OKABE_ITO)  # noqa: F405
+    + scale_color_manual(values=IMPRINT)  # noqa: F405
     + scale_x_continuous(expand=[0.15, 0.15])  # noqa: F405
     + scale_y_continuous(expand=[0.15, 0.15])  # noqa: F405
     + theme_minimal()  # noqa: F405

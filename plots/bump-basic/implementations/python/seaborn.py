@@ -1,106 +1,148 @@
-""" pyplots.ai
+""" anyplot.ai
 bump-basic: Basic Bump Chart
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 92/100 | Updated: 2026-02-22
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-29
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
 
-# Data - Sports league standings over 6 weeks
-teams = ["Lions", "Tigers", "Bears", "Eagles", "Wolves"]
-weeks = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5", "Week 6"]
-ranks = [
-    3,
-    2,
-    1,
-    1,
-    2,
-    1,  # Lions - start mid, climb to top
-    1,
-    1,
-    2,
-    3,
-    1,
-    2,  # Tigers - start top, fluctuate
-    5,
-    4,
-    4,
-    2,
-    3,
-    3,  # Bears - steady climb from bottom
-    2,
-    3,
-    3,
-    4,
-    4,
-    5,  # Eagles - gradual decline
-    4,
-    5,
-    5,
-    5,
-    5,
-    4,  # Wolves - mostly bottom, slight recovery
-]
-df = pd.DataFrame(
-    {"Team": [team for team in teams for _ in weeks], "Competition Week": weeks * len(teams), "League Position": ranks}
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+ANYPLOT_AMBER = "#DDCC77"
+
+# Imprint palette — 8 hues, canonical order, first series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Data — Tech company market cap rankings by quarter (2022–2023)
+companies = ["Apple", "Microsoft", "Amazon", "Alphabet", "Nvidia"]
+quarters = ["Q1'22", "Q2'22", "Q3'22", "Q4'22", "Q1'23", "Q2'23", "Q3'23", "Q4'23"]
+
+ranks_data = {
+    "Apple": [1, 1, 1, 1, 1, 1, 2, 2],
+    "Microsoft": [2, 2, 2, 2, 2, 2, 1, 1],
+    "Amazon": [3, 3, 4, 4, 4, 5, 5, 5],
+    "Alphabet": [4, 4, 3, 3, 3, 3, 4, 4],
+    "Nvidia": [5, 5, 5, 5, 5, 4, 3, 3],
+}
+
+rows = []
+for company, r_list in ranks_data.items():
+    for q, r in zip(quarters, r_list, strict=False):
+        rows.append({"Company": company, "Quarter": q, "Rank": r})
+df = pd.DataFrame(rows)
+
+# Theme-adaptive seaborn setup
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
 )
 
-# Colorblind-safe muted palette via seaborn (Python Blue first)
-palette = sns.color_palette(["#306998", "#D4823E", "#8B6CAF", "#3A9E8F", "#C27185"])
-markers = {"Lions": "o", "Tigers": "X", "Bears": "s", "Eagles": "P", "Wolves": "D"}
+palette = IMPRINT_PALETTE[: len(companies)]
+markers = {"Apple": "o", "Microsoft": "s", "Amazon": "D", "Alphabet": "^", "Nvidia": "P"}
 
-# Refined theme
-sns.set_theme(style="whitegrid", rc={"grid.linestyle": "--", "grid.alpha": 0.15})
-fig, ax = plt.subplots(figsize=(16, 9))
-
-sns.lineplot(
+# Figure-level relplot — leverages seaborn's FacetGrid API for layout control
+g = sns.relplot(
     data=df,
-    x="Competition Week",
-    y="League Position",
-    hue="Team",
-    style="Team",
+    x="Quarter",
+    y="Rank",
+    hue="Company",
+    style="Company",
     markers=markers,
     dashes=False,
-    markersize=18,
-    linewidth=4,
+    markersize=14,
+    linewidth=3,
     palette=palette,
-    hue_order=teams,
+    hue_order=companies,
     sort=False,
-    ax=ax,
+    kind="line",
+    height=4.5,
+    aspect=16 / 9,
+    legend=False,
 )
+g.figure.set_dpi(400)
+g.figure.set_facecolor(PAGE_BG)
 
-# Invert y-axis so rank 1 is at top
+ax = g.axes[0, 0]
+ax.set_facecolor(PAGE_BG)
+
+# Rank 1 at top
 ax.invert_yaxis()
 ax.set_yticks([1, 2, 3, 4, 5])
 ax.xaxis.grid(False)
+ax.yaxis.grid(True)
 sns.despine(ax=ax)
 
-# Style
-ax.set_xlabel("Competition Week", fontsize=20)
-ax.set_ylabel("League Position (Rank)", fontsize=20)
-ax.set_title("bump-basic · seaborn · pyplots.ai", fontsize=24, fontweight="medium", pad=20)
-ax.tick_params(axis="both", labelsize=16)
+# Alpha hierarchy — de-emphasize lower final-ranked companies
+final_ranks = {c: ranks_data[c][-1] for c in companies}
+for line in ax.get_lines():
+    label = line.get_label()
+    if label in final_ranks:
+        fr = final_ranks[label]
+        line.set_alpha(1.0 if fr <= 2 else (0.75 if fr == 3 else 0.55))
 
-# End-of-line labels for direct identification and storytelling
-final_positions = {team: ranks[i * 6 + 5] for i, team in enumerate(teams)}
-for i, team in enumerate(teams):
-    rank = final_positions[team]
+# Crossing highlight — Apple/Microsoft overtake between Q2'23 (idx 5) and Q3'23 (idx 6)
+# Categorical x-axis maps quarters to integer positions 0–7
+CROSSING_X = 5.5
+ax.axvline(x=CROSSING_X, color=ANYPLOT_AMBER, alpha=0.45, linewidth=1.5, linestyle="--", zorder=0)
+# Label near rank 1 (top of inverted y-axis) where Apple/Microsoft cross
+# ax.get_xaxis_transform(): x=data coords, y=axes fraction (1=top of display)
+ax.text(
+    CROSSING_X,
+    0.90,
+    "overtake",
+    fontsize=7,
+    color=ANYPLOT_AMBER,
+    ha="center",
+    va="bottom",
+    style="italic",
+    transform=ax.get_xaxis_transform(),
+)
+
+# Style
+title = "bump-basic · python · seaborn · anyplot.ai"
+ax.set_title(title, fontsize=12, fontweight="medium", color=INK, pad=12)
+ax.set_xlabel("Quarter", fontsize=10, color=INK)
+ax.set_ylabel("Market Cap Rank", fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+
+# End-of-line labels replacing legend
+n_quarters = len(quarters)
+for i, company in enumerate(companies):
+    rank = ranks_data[company][-1]
+    fr = rank
+    alpha_val = 1.0 if fr <= 2 else (0.75 if fr == 3 else 0.55)
     ax.annotate(
-        team,
-        xy=(5, rank),
-        xytext=(12, 0),
+        company,
+        xy=(n_quarters - 1, rank),
+        xytext=(10, 0),
         textcoords="offset points",
-        fontsize=15,
+        fontsize=8,
         fontweight="bold" if rank <= 2 else "normal",
         color=palette[i],
         va="center",
+        alpha=alpha_val,
     )
 
-# Remove legend (replaced by end-of-line labels for cleaner design)
-ax.get_legend().remove()
-
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+g.figure.subplots_adjust(left=0.09, right=0.87, top=0.90, bottom=0.13)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

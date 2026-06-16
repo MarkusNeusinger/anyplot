@@ -19,8 +19,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette for waterfall types
 POSITIVE_COLOR = "#009E73"  # Position 1: brand green for positive
-NEGATIVE_COLOR = "#D55E00"  # Position 2: vermillion/red for negative
-TOTAL_COLOR = "#0072B2"  # Position 3: blue for totals
+NEGATIVE_COLOR = "#AE3030"  # imprint red — negative
+TOTAL_COLOR = "#4467A3"  # Position 3: blue for totals
 
 # Data: Quarterly financial breakdown from revenue to net income
 categories = ["Revenue", "Cost of Goods", "Gross Profit", "Operating Expenses", "Other Income", "Taxes", "Net Income"]

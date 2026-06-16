@@ -22,8 +22,8 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 WALL_COLOR = "#1A1A17" if THEME == "light" else "#E0DFD8"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
-ENTRY_COLOR = "#0072B2"  # Okabe-Ito position 3, theme-independent (same in light and dark)
-GOAL_COLOR = "#E69F00"  # Okabe-Ito position 5, theme-independent
+ENTRY_COLOR = "#4467A3"  # Okabe-Ito position 3, theme-independent (same in light and dark)
+GOAL_COLOR = "#AE3030"  # Okabe-Ito position 5, theme-independent
 
 # Difficulty: "easy" / "medium" / "hard" — scales sector density (more sectors = harder maze)
 DIFFICULTY = os.getenv("ANYPLOT_DIFFICULTY", "medium")

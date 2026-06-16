@@ -62,8 +62,8 @@ events["y_pos"] = y_min + events["y_offset"] * y_range
 plot = (
     ggplot(df, aes(x="date", y="value"))
     + geom_line(color="#009E73", size=1.2, alpha=0.9)
-    + geom_vline(aes(xintercept="event_date"), data=events, color="#D55E00", linetype="dashed", size=1.0, alpha=0.8)
-    + geom_point(aes(x="event_date", y="y_pos"), data=events, color="#D55E00", size=4, shape="D")
+    + geom_vline(aes(xintercept="event_date"), data=events, color="#C475FD", linetype="dashed", size=1.0, alpha=0.8)
+    + geom_point(aes(x="event_date", y="y_pos"), data=events, color="#C475FD", size=4, shape="D")
     + geom_text(
         aes(x="event_date", y="y_pos", label="event_label"),
         data=events,

@@ -21,7 +21,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito categorical palette (positions 1-6)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data — experimental measurements with associated uncertainties
 np.random.seed(42)
@@ -34,7 +34,7 @@ upper_errors = np.array([2.1, 3.5, 2.8, 2.8, 2.2, 2.5])
 
 upper = means + upper_errors
 lower = means - lower_errors
-colors = OKABE_ITO[: len(categories)]
+colors = IMPRINT[: len(categories)]
 
 source = ColumnDataSource(
     data={"categories": categories, "means": means, "upper": upper, "lower": lower, "colors": colors}

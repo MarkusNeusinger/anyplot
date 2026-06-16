@@ -22,7 +22,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito brand colors for diverging bars
 POSITIVE_COLOR = "#009E73"  # Brand green
-NEGATIVE_COLOR = "#D55E00"  # Vermillion
+NEGATIVE_COLOR = "#AE3030"  # imprint red — negative
 
 # Data - Customer satisfaction survey (Net Promoter Score style)
 categories = [

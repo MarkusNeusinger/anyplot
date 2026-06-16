@@ -23,7 +23,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BULL_COLOR = "#009E73"  # Okabe-Ito position 1 — X columns (bullish)
-BEAR_COLOR = "#D55E00"  # Okabe-Ito position 2 — O columns (bearish)
+BEAR_COLOR = "#AE3030"  # imprint red — O columns (bearish)
 
 # Data
 np.random.seed(42)
@@ -144,13 +144,13 @@ pf_marks = (
 
 support_layer = (
     alt.Chart(support_df)
-    .mark_line(strokeDash=[5, 3], strokeWidth=1.5, color="#0072B2", opacity=0.7)
+    .mark_line(strokeDash=[5, 3], strokeWidth=1.5, color="#4467A3", opacity=0.7)
     .encode(x="column:O", y="price:Q")
 )
 
 resist_layer = (
     alt.Chart(resist_df)
-    .mark_line(strokeDash=[5, 3], strokeWidth=1.5, color="#CC79A7", opacity=0.7)
+    .mark_line(strokeDash=[5, 3], strokeWidth=1.5, color="#BD8233", opacity=0.7)
     .encode(x="column:O", y="price:Q")
 )
 

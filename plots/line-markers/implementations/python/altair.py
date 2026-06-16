@@ -25,7 +25,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: Quality control measurements over time (sparse dataset where each point matters)
 np.random.seed(42)
@@ -46,7 +46,7 @@ df = pd.DataFrame(
 base_chart = alt.Chart(df).encode(
     x=alt.X("Time (hours):Q", title="Time (hours)"),
     y=alt.Y("Quality (%):Q", title="Quality (%)"),
-    color=alt.Color("Batch:N", scale=alt.Scale(range=OKABE_ITO[:3])),
+    color=alt.Color("Batch:N", scale=alt.Scale(range=IMPRINT[:3])),
     strokeDash=alt.StrokeDash(
         "Batch:N", scale=alt.Scale(domain=["Batch A", "Batch B", "Batch C"], range=[[], [5, 5], [2, 2]])
     ),

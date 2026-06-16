@@ -17,7 +17,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"  # Okabe-Ito position 1
-SECONDARY = "#D55E00"  # Okabe-Ito position 2 for regression line
+SECONDARY = "#C475FD"  # Okabe-Ito position 2 for regression line
 
 # Data: Study hours vs exam scores (realistic educational context)
 np.random.seed(42)

@@ -20,7 +20,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 COLOR_UP = "#009E73"  # Okabe-Ito position 1 (brand green)
-COLOR_DOWN = "#D55E00"  # Okabe-Ito position 2 (vermillion)
+COLOR_DOWN = "#AE3030"  # imprint red — down days
 
 # Data - Generate 60 trading days of realistic OHLC + volume data
 np.random.seed(42)

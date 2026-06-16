@@ -41,7 +41,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 EDGE_COLOR = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito categorical palette (first series always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: A small social network with 20 people in 4 departments
 np.random.seed(42)
@@ -211,7 +211,7 @@ plot = (
         alpha=0.95,
     )
     + geom_text(aes(x="x", y="label_y", label="label"), data=df_nodes, size=12, color=INK_SOFT, fontface="bold")
-    + scale_color_manual(values=OKABE_ITO, name="Department")
+    + scale_color_manual(values=IMPRINT, name="Department")
     + scale_size_identity()
     + scale_x_continuous(limits=(-0.05, 1.05))
     + scale_y_continuous(limits=(-0.05, 1.05))

@@ -40,7 +40,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
         with:
           fetch-depth: 0
 
@@ -108,6 +108,16 @@ jobs:
             makie)
               LANGUAGE="julia"
               EXT=".jl"
+              ;;
+            chartjs|d3|echarts|highcharts)
+              LANGUAGE="javascript"
+              EXT=".js"
+              ;;
+            muix)
+              # MUI X — JavaScript with framework=react, authored as TSX and
+              # bundled through the render harness's esbuild React branch.
+              LANGUAGE="javascript"
+              EXT=".tsx"
               ;;
             *)
               LANGUAGE="python"
@@ -262,12 +272,16 @@ jobs:
               "altair":     "Most likely cause: vl-convert padding title/legend outside `width`/`height`. Add `configure_view(continuousWidth=…, continuousHeight=…)` + zero `padding` and normalize the saved PNG with the PIL crop/pad snippet in `prompts/library/altair.md`.",
               "plotly":     "Most likely cause: `autosize=True` or implicit margin growth. Set `autosize=False` and pin `margin=dict(...)` explicitly.",
               "bokeh":      "Most likely cause: bokeh toolbar adding ~30-50 px above the figure. Set `toolbar_location=None`.",
-              "highcharts": "Most likely cause: Chrome chrome eating viewport space. Use `Emulation.setDeviceMetricsOverride` via CDP (see `prompts/library/highcharts.md` Save section) — `--window-size` alone is not authoritative in headless mode.",
+              "highcharts": "The harness owns exact pixels (Playwright deviceScaleFactor 2 over a fixed mount). Call `Highcharts.chart('container', {...})` and let it auto-size to `#container` — do NOT set `chart.width`/`chart.height`. Use `//# anyplot-orientation: square` only for square specs.",
               "pygal":      "Check that `pygal.<Chart>(width=…, height=…)` and the SVG→PNG conversion don't override dims.",
               "plotnine":   "Check `ggsave(width=…, height=…, units='in', dpi=400)` and `theme(figure_size=…)`; do not pass `bbox_inches='tight'`.",
               "letsplot":   "Check `ggsize(W, H)` and `ggsave(..., scale=4)` pair — only the two canonical pairs land on target.",
               "ggplot2":    "Check `ggsave(width=…, height=…, units='in', dpi=400)` with `ragg::agg_png`.",
               "makie":      "Check `Figure(resolution=(1600, 900))` + `save(..., px_per_unit=2)` (landscape) or `resolution=(1200, 1200)` + `px_per_unit=2` (square) — those are the only two canonical pairs.",
+              "chartjs":    "The harness owns exact pixels (Playwright deviceScaleFactor 2 over a fixed mount). Drift means the snippet forced its own canvas size: set `responsive: true` + `maintainAspectRatio: false` and let the canvas fill `#container` — do NOT set canvas width/height. Use `//# anyplot-orientation: square` only for square specs.",
+              "d3":         "The harness owns exact pixels (Playwright deviceScaleFactor 2 over a fixed mount). Size the `<svg>` to `window.ANYPLOT_SIZE` (1600×900 landscape / 1200×1200 square) — never hard-code other dimensions. Use `//# anyplot-orientation: square` only for square specs.",
+              "echarts":    "The harness owns exact pixels (Playwright deviceScaleFactor 2 over a fixed mount). Call `echarts.init(document.getElementById('container'))` with no explicit width/height so it fills the mount; do not pass a `devicePixelRatio` (the page already runs at 2×). Use `//# anyplot-orientation: square` only for square specs.",
+              "muix":       "The harness owns exact pixels (Playwright deviceScaleFactor 2 over a fixed mount via a MUI ThemeProvider). Size the chart with `width={window.ANYPLOT_SIZE.width}` / `height={window.ANYPLOT_SIZE.height}` (1600×900 landscape / 1200×1200 square) — never hard-code other dimensions. Use `//# anyplot-orientation: square` only for square specs.",
           }
           cause = causes.get(LIBRARY, f"Review `prompts/library/{LIBRARY}.md` 'Canvas — hard rule' section.")
 
@@ -295,7 +309,7 @@ jobs:
         id: review
         continue-on-error: true
         timeout-minutes: 30
-        uses: anthropics/claude-code-action@24492741e0ccfdef4c1d19da8e11e0f373d07494  # v1
+        uses: anthropics/claude-code-action@11ba60486e4aec9ddfeafcf4bb3f00b028ac2c16  # v1
         env:
           LIBRARY: ${{ steps.pr.outputs.library }}
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
@@ -645,7 +659,9 @@ jobs:
 
           # Human-readable runtime label for the header. Extend this map when a new
           # language joins the catalog.
-          RUNTIME_LABEL = {"python": "Python", "r": "R", "julia": "Julia"}.get(language, language.capitalize())
+          RUNTIME_LABEL = {"python": "Python", "r": "R", "julia": "Julia", "javascript": "JavaScript"}.get(
+              language, language.capitalize()
+          )
 
           with open(impl_file, "r") as f:
               content = f.read()
@@ -690,6 +706,29 @@ jobs:
               # appears as the first non-blank line of a file, the regex
               # falls through and the canonical header is prepended above it.
               pattern = r"\A(?:#(?:[ \t][^\n]*|)\n)+"
+              if re.match(pattern, content):
+                  new_content = re.sub(pattern, new_header + "\n", content, count=1)
+              else:
+                  new_content = new_header + "\n" + content
+          elif language == "javascript":
+              # JavaScript has no docstring syntax; anyplot uses a leading `//`
+              # line-comment block, mirroring the Julia/R conventions.
+              title_safe = title.replace("\n", " ")
+              new_header = (
+                  "// anyplot.ai\n"
+                  f"// {spec_id}: {title_safe}\n"
+                  f"// Library: {library} {lib_version} | {RUNTIME_LABEL} {lang_version}\n"
+                  f"// Quality: {score}/100 | {date_info}"
+              )
+              # Match a leading run of `//`-comment lines (the existing header).
+              # The negative lookahead `(?!#)` excludes `//#`-prefixed lines —
+              # those are anyplot directives (e.g. `//# anyplot-orientation:
+              # square`) the harness reads, NOT header lines, so they must
+              # survive the rewrite. The run therefore stops at the first
+              # directive; if a directive is the first line of the file the
+              # regex falls through and the canonical header is prepended above
+              # it. (#6947 prepend-fallback.)
+              pattern = r"\A(?://(?!#)[^\n]*\n)+"
               if re.match(pattern, content):
                   new_content = re.sub(pattern, new_header + "\n", content, count=1)
               else:

@@ -70,7 +70,7 @@ sns.set_theme(
 )
 
 # Okabe-Ito palette - first series is always brand green
-okabe_ito = [BRAND, "#D55E00", "#0072B2"]
+okabe_ito = [BRAND, "#C475FD", "#4467A3"]
 face_colors = [okabe_ito[t] for t in subset_target]
 
 # Create figure

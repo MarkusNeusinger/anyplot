@@ -26,7 +26,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette — first series is always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data — Test scores across different teaching methods
 np.random.seed(42)
@@ -53,14 +53,14 @@ for i, group in enumerate(groups):
             name=group,
             box_visible=True,
             meanline_visible=True,
-            fillcolor=OKABE_ITO[i],
+            fillcolor=IMPRINT[i],
             opacity=0.7,
             line={"color": INK_SOFT, "width": 2},
             points="outliers",
             pointpos=0,
             marker={"size": 8, "color": INK_SOFT, "opacity": 0.6},
             box={"fillcolor": PAGE_BG, "line": {"color": INK_SOFT, "width": 2}, "width": 0.15},
-            meanline={"color": OKABE_ITO[i], "width": 3},
+            meanline={"color": IMPRINT[i], "width": 3},
         )
     )
 

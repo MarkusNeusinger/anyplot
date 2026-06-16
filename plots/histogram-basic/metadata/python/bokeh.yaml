@@ -1,64 +1,58 @@
 library: bokeh
+language: python
 specification_id: histogram-basic
 created: '2025-12-23T00:23:11Z'
-updated: '2026-02-13T22:35:25Z'
-generated_by: claude-opus-4-6
-workflow_run: 20447578559
-issue: 0
-python_version: 3.14.0
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/bokeh/plot.html
+updated: '2026-05-28T07:43:55Z'
+generated_by: claude-sonnet
+workflow_run: 26560895515
+issue: 654
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/python/bokeh/plot-dark.html
 quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - hover-tooltips
-  - custom-legend
-  - html-export
-  patterns:
-  - data-generation
-  - columndatasource
-  dataprep:
-  - binning
-  styling:
-  - custom-colormap
-  - alpha-blending
-  - edge-highlighting
-  - grid-styling
 review:
   strengths:
-  - Excellent data storytelling with bimodal distribution annotations, median/mean
-    lines, and descriptive subtitle
-  - 'Strong use of Bokeh-specific features: linear_cmap color gradient, HoverTool,
-    ColumnDataSource, formal Legend model'
-  - Publication-quality typography hierarchy with explicitly set font sizes at multiple
-    tiers
-  - 'Clean visual refinement: removed spines, subtle grid, white bar separators, well-balanced
-    color palette'
-  - Realistic marathon finish time scenario with appropriate data generation showing
-    multimodal distribution
+  - imprint_seq gradient fill on histogram bars (low→green, high→blue) is a sophisticated
+    and idiomatic Bokeh design choice that adds visual depth and density encoding
+  - Bimodal marathon distribution with labeled group annotations and median/mean reference
+    lines delivers clear, compelling data storytelling
+  - All font sizes explicitly set (title ~50pt, axis labels 42pt, ticks 34pt, annotations
+    28pt) — well-proportioned in both themes
+  - 'Full theme-adaptive chrome: background, text, legend, and grid all correctly
+    flip between #FAF8F1 and #1A1A17 surfaces'
+  - HoverTool with bin-range and count tooltips, explicit LegendItem construction,
+    NumeralTickFormatter, and HTML export all showcase idiomatic Bokeh features
+  - Reproducible synthetic data (np.random.seed(42)) with realistic marathon finish
+    time distribution (right-skewed bimodal) and factually plausible values
   weaknesses:
-  - Legend placement in far top-right corner is somewhat isolated from the data area;
-    positioning it closer to the main distribution would improve layout balance
-  - Code is slightly verbose in the Legend model construction and slower_bin_idx calculation
-  image_description: The plot displays a histogram of marathon finish times using
-    28 bins spanning approximately 120-420 minutes. Bars are colored with a blue gradient
-    via Bokeh's linear_cmap — darker blues for higher counts, lighter blues for lower
-    counts. A solid red vertical line marks the median (~251 min) and a dashed teal
-    vertical line marks the mean (~259 min), both annotated in a legend in the top-right
-    corner. Two bold text annotations with downward-pointing triangles label the "Main
-    group (~4 hr pace)" peak region and the "Slower group (~5 hr pace)" secondary
-    mode. A subtitle reads "N = 500 runners | Right-skewed bimodal distribution".
-    The x-axis is labeled "Finish Time (min)" and the y-axis "Number of Runners".
-    The title reads "histogram-basic · bokeh · pyplots.ai". The background is clean
-    white with no x-grid and a very subtle y-grid. Y-axis starts at 0. The bimodal
-    structure is clearly visible with a dominant peak around 240-250 min, a secondary
-    bump around 295-310 min, and an outlier tail extending past 370 min.
+  - Full box outline (p.outline_line_color = INK_SOFT) creates a four-sided frame
+    instead of the preferred L-shaped axes — in Bokeh this can be approximated by
+    setting outline_line_color=None and ensuring only left/bottom axis lines are visible;
+    reduces DE-02 by ~1-2 points
+  - LM-02 could reach 5/5 with one additional Bokeh-distinctive technique (e.g. a
+    Band glyph for IQR shading, a Span annotation for a threshold, or a callback-powered
+    selection highlight on the HTML artifact)
+  - 'Minor: the ''Main group'' annotation anchor x=190 sits at the left shoulder of
+    the distribution rather than above the mode (~250 min) — clearer if shifted to
+    x=220-230 so the ▼ glyph is closer to the peak'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Bold dark title "histogram-basic · python · bokeh · anyplot.ai" fills ~70% of canvas width and is clearly readable. X-axis label "Finish Time (min)" and Y-axis label "Number of Runners" both at 42pt, dark ink, well-balanced. Tick labels at 34pt in INK_SOFT are fully readable. Legend in top-left corner shows solid red Median:251 min and dashed ochre Mean:259 min with 34pt text — all text readable against the light background.
+      Data: 28 histogram bars colored by count via imprint_seq gradient (#009E73 green at low-count edges → #4467A3 blue at the high-count peak). Bars span ~130–400 min. Right-skewed bimodal distribution clearly visible with main peak around 250 min and secondary shoulder around 290-310 min. Matte red (#AE3030) vertical median line and dashed ochre (#BD8233) mean line bisect the distribution. Annotations "▼ Main group (~4 hr pace)" and "▼ Slower group (~5 hr pace)" label the two modes. Subtitle "N = 500 runners │ Right-skewed bimodal distribution" in muted ink above the plot area.
+      Legibility verdict: PASS — all text elements clearly readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and axis labels rendered in light #F0EFE8 ink — clearly visible against the dark surface. Tick labels in #B8B7B0 (INK_SOFT dark token) — readable. Legend box uses elevated dark background (#242420) with light label text — no dark-on-dark failure. Subtle light-on-dark grid lines at alpha 0.15.
+      Data: Bar colors are IDENTICAL to light render (same imprint_seq gradient from green to blue — only chrome flips). Median and mean reference lines maintain the same colors. Annotations in INK_SOFT dark token remain readable.
+      Legibility verdict: PASS — all text readable against the dark background, no dark-on-dark failures observed
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -66,66 +60,82 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 38pt, axis labels 28pt, ticks
-          22pt, annotations 22pt. Perfectly readable.'
+        comment: 'All font sizes explicitly set: title ~50pt (dynamic), axis labels
+          42pt, ticks 34pt, legend 34pt, annotations 28pt. Well-proportioned in both
+          themes, no overflow.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Annotations, legend, subtitle all well-separated.
+        comment: No text overlaps detected. Subtitle, annotations, and legend are
+          spatially separated. Legend at top-left clears the low-count bars.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars well-sized for 28 bins with ~500 data points. White line separators
-          make bins distinct.
+        comment: 28-bin histogram bars clearly visible. Gradient coloring visually
+          prominent. Reference lines at line_width=5 are easily seen.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq is CVD-safe. Median/mean lines distinguished by both
+          color and linestyle (solid vs dashed) — no red-green confusion.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue monochromatic palette is colorblind-safe. Median and mean lines
-          distinguishable by color and dash style.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 2
-        max: 4
-        passed: false
-        comment: Legend pushed to far top-right corner, somewhat isolated. Right side
-          has moderate empty space from distribution tail.
+        comment: Plot fills ~70% of canvas. Generous min_border values (bottom=160,
+          left=180, top=110). Y-range extends to 1.22x max_count giving good headroom
+          for annotations.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Finish Time (min) and Number of Runners.'
+        comment: 'X: ''Finish Time (min)'' with units. Y: ''Number of Runners'' descriptive.
+          Title follows required format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq colormap (#009E73→#4467A3) correctly applied to continuous
+          density encoding. Backgrounds #FAF8F1/#1A1A17. Theme-adaptive chrome tokens
+          correctly applied to both renders.'
     design_excellence:
-      score: 17
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: linear_cmap blue gradient creates visual depth. Typography hierarchy
-          well-considered. Harmonious color choices.
+        comment: 'Strong design clearly above defaults: imprint_seq gradient fill
+          on bars, layered reference lines, subtitle, and annotations create a professional,
+          polished chart. Not yet at FiveThirtyEight publication level (no custom
+          font, box outline instead of L-spines).'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Removed x-grid, subtle y-grid, removed spines, clean frame, white
-          bar separators. Very polished.
+        comment: X-grid disabled, Y-grid at subtle alpha=0.15. Generous whitespace
+          via min_border. Full box outline frame (outline_line_color=INK_SOFT) rather
+          than preferred L-shaped spines reduces score slightly.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Annotations identify both distribution modes, median/mean with values,
-          subtitle with sample size and distribution description.
+        comment: 'Clear bimodal story: gradient encoding shows density, annotations
+          label each group, median vs mean divergence visible, subtitle states the
+          distribution shape. Visual hierarchy guides the reader to the main insight.'
     spec_compliance:
       score: 15
       max: 15
@@ -135,27 +145,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct chart type: histogram with frequency bars.'
+        comment: Correct histogram with p.quad() — bars touch edge-to-edge with thin
+          PAGE_BG separating lines.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Clear bin edges, no gaps, readable labels, appropriate bin count,
-          Y-axis starts at zero.
+        comment: No gaps between bars, thin visible edges, readable axis labels with
+          units, 28 bins (appropriate for 500 pts), Y-axis starts at 0.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Values on x-axis, frequency on y-axis. All data visible.
+        comment: 'X: continuous finish time variable; Y: count (Number of Runners).
+          All 500 data points binned and displayed.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Legend labels correctly identify median
-          and mean with values.
+        comment: Title is 'histogram-basic · python · bokeh · anyplot.ai' (exact required
+          format). Legend labels median and mean with correct values.
     data_quality:
       score: 15
       max: 15
@@ -165,23 +177,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows multimodal distribution, central tendency divergence, spread,
-          right-skewness, and outlier tail.
+        comment: Bimodal distribution with right skew, wide range (130-400 min), outlier
+          tail, varying bin heights — shows all histogram features.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Marathon finish times — realistic, neutral, universally comprehensible
-          scenario.
+        comment: 'Marathon finish times: neutral, real-world, comprehensible scenario.
+          Bimodal groups (4hr pace and 5hr pace) represent plausible runner cohorts.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 120-420 minute marathon times are realistic for recreational runners.
+        comment: Main group at ~240 min (4hr marathon), slower group ~305 min (5hr+)
+          — factually correct for recreational marathon runners. Scale and deviations
+          are plausible.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -189,32 +203,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports, data, plot, save. No functions or classes.'
+        comment: 'Linear flow: imports → tokens → data → histogram → figure → glyphs
+          → annotations → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. No unused imports.
+        comment: 'All imports used: io (BytesIO), os (getenv), sys (path fix), time
+          (sleep), pathlib (resolve), PIL (Image), numpy, bokeh modules, selenium.'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Slightly verbose Legend model construction and slower_bin_idx calculation.
+        passed: true
+        comment: Clean, Pythonic. Dynamic title font size calculation is appropriate.
+          sys.path fix is a necessary workaround. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. No deprecated functions.
-    library_features:
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current bokeh 3.8.2
+          API. Correct Selenium crop to W×H.
+    library_mastery:
       score: 9
       max: 10
       items:
@@ -223,13 +241,35 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert Bokeh patterns: ColumnDataSource, figure, quad glyphs, HoverTool,
-          Legend model, linear_cmap, NumeralTickFormatter.'
+        comment: ColumnDataSource, figure.quad(), linear_cmap, HoverTool, explicit
+          Legend/LegendItem, Label, NumeralTickFormatter — all idiomatic Bokeh high-level
+          API patterns.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: linear_cmap for color mapping, HoverTool, formal Legend model, hover_fill_color,
-          dual HTML+PNG export. Hover not visible in PNG.
+        comment: linear_cmap density coloring of bars (Bokeh-specific transform),
+          HoverTool with bin-range tooltips, explicit LegendItem construction for
+          custom swatches, HTML interactive output. One notch below 5 — no Band/Span
+          or callback usage.
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  - pillow
+  techniques:
+  - hover-tooltips
+  - html-export
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - grid-styling
+  - edge-highlighting

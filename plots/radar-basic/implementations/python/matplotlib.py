@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 SERIES_1 = "#009E73"  # Okabe-Ito position 1
-SERIES_2 = "#D55E00"  # Okabe-Ito position 2
+SERIES_2 = "#C475FD"  # Okabe-Ito position 2
 
 # Data - Employee performance comparison across six competencies
 categories = ["Communication", "Technical Skills", "Teamwork", "Problem Solving", "Leadership", "Creativity"]

@@ -1,9 +1,12 @@
-import { describe, it, expect } from 'vitest';
-import { createTooltipId, parseTooltipId, isTooltipOpen } from './tooltip';
+import { describe, expect, it } from 'vitest';
+
+import { createTooltipId, isTooltipOpen, parseTooltipId } from 'src/utils/tooltip';
 
 describe('createTooltipId', () => {
   it('creates spec tooltip ID', () => {
-    expect(createTooltipId('spec', 'scatter-basic', 'matplotlib')).toBe('spec-scatter-basic-matplotlib');
+    expect(createTooltipId('spec', 'scatter-basic', 'matplotlib')).toBe(
+      'spec-scatter-basic-matplotlib'
+    );
   });
 
   it('creates lib tooltip ID', () => {
@@ -51,11 +54,15 @@ describe('parseTooltipId', () => {
 
 describe('isTooltipOpen', () => {
   it('returns true when tooltip matches', () => {
-    expect(isTooltipOpen('spec-scatter-basic-matplotlib', 'spec', 'scatter-basic', 'matplotlib')).toBe(true);
+    expect(
+      isTooltipOpen('spec-scatter-basic-matplotlib', 'spec', 'scatter-basic', 'matplotlib')
+    ).toBe(true);
   });
 
   it('returns false when tooltip does not match', () => {
-    expect(isTooltipOpen('spec-scatter-basic-matplotlib', 'spec', 'heatmap', 'seaborn')).toBe(false);
+    expect(isTooltipOpen('spec-scatter-basic-matplotlib', 'spec', 'heatmap', 'seaborn')).toBe(
+      false
+    );
   });
 
   it('returns false when openTooltip is null', () => {

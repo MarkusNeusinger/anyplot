@@ -23,7 +23,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID_COLOR = "#D9D8D1" if THEME == "light" else "#3A3A37"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data
 np.random.seed(42)
@@ -101,10 +101,10 @@ plot = (
         linetype="dashed",
         inherit_aes=False,
     )
-    + geom_vline(xintercept=lower_tail, color=OKABE_ITO[1], size=1, linetype="dotted", alpha=0.8)  # noqa: F405
-    + geom_vline(xintercept=upper_tail, color=OKABE_ITO[1], size=1, linetype="dotted", alpha=0.8)  # noqa: F405
+    + geom_vline(xintercept=lower_tail, color=IMPRINT[1], size=1, linetype="dotted", alpha=0.8)  # noqa: F405
+    + geom_vline(xintercept=upper_tail, color=IMPRINT[1], size=1, linetype="dotted", alpha=0.8)  # noqa: F405
     + scale_fill_manual(  # noqa: F405
-        values={"Normal Range (±2σ)": OKABE_ITO[0], "Tail (beyond ±2σ)": OKABE_ITO[1]}, name="Region"
+        values={"Normal Range (±2σ)": IMPRINT[0], "Tail (beyond ±2σ)": IMPRINT[1]}, name="Region"
     )
     + labs(  # noqa: F405
         x="Daily Returns (%)", y="Density", title="histogram-returns-distribution · python · letsplot · anyplot.ai"

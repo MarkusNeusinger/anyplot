@@ -39,7 +39,7 @@ dim_categories = {
 }
 
 # Okabe-Ito palette for channel colors
-colors = {"Online": "#009E73", "Store": "#D55E00", "Mobile": "#0072B2"}
+colors = {"Online": "#009E73", "Store": "#C475FD", "Mobile": "#4467A3"}
 
 # Create figure
 fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)

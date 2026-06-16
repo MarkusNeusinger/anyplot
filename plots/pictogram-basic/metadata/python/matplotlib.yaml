@@ -1,0 +1,262 @@
+library: matplotlib
+language: python
+specification_id: pictogram-basic
+created: '2026-06-03T13:53:11Z'
+updated: '2026-06-03T14:10:57Z'
+generated_by: claude-sonnet
+workflow_run: 26888779131
+issue: 4674
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - 'Technically precise partial-icon arc polygon: arccos chord geometry correctly
+    computes the filled portion, cleanly rendered in both themes with theme-adaptive
+    muted background'
+  - Perfect spec compliance — all required features (unit legend, partial icons, left-aligned
+    rows, category labels, value annotations) correctly implemented
+  - Theme-adaptive chrome fully applied — all text, spine, and legend colors respond
+    to ANYPLOT_THEME; no dark-on-dark failures in either render
+  - Clean KISS code — no functions/classes, deterministic hardcoded data, all imports
+    used, no bbox_inches='tight'
+  - Canvas correctly set to 3200×1800 (figsize=(8,4.5) dpi=400) without drift
+  weaknesses:
+  - DE-03 storytelling is minimal — Apples (highest at 43 Mt) has no visual emphasis
+    beyond icon count; a subtle annotation or bold category label could guide the
+    viewer's eye to the top entry
+  - Value annotation fontsize (9pt) is borderline at mobile scale (~400px); bumping
+    to 10pt would improve legibility without crowding
+  - DE-01 stops at functional sophistication — category labels have no weight variation
+    (e.g. bold for highest), no secondary visual element to reinforce hierarchy beyond
+    raw icon quantity
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface
+      Chrome: Title "Estimated Global Fruit Production · pictogram-basic · python · matplotlib · anyplot.ai" in dark INK, compact ~9pt but fully readable. Category labels (Apples, Oranges, Bananas, Grapes, Mangoes) in INK_SOFT at 10pt on the left y-axis — clear and well-spaced. Value annotations ("43 Mt", "32 Mt", etc.) in INK_SOFT at 9pt to the right of each row — visible. Legend "= 5 million tonnes" in lower right with elevated-bg frame and thin INK_SOFT border. L-frame spines (top/right removed), no grid.
+      Data: Rows of brand green (#009E73) filled circles for full icons. Partial icons show a very pale gray (INK_MUTED at alpha=0.25) background circle with a green arc polygon filling the left fractional portion — cleanly rendered. Apples: 8 full + 0.6 partial; Oranges: 6 full + 0.4 partial; Bananas: 5 full + 0.4 partial; Grapes: 3 full + 0.6 partial; Mangoes: 4 full + 0.6 partial.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface
+      Chrome: Title in F0EFE8 light ink — clearly readable. Category labels and value annotations rendered in B8B7B0 (INK_SOFT dark) — readable against the dark background. Legend frame uses #242420 (ELEVATED_BG dark) background with INK_SOFT border, legend text light. Left/bottom spines use INK_SOFT dark tone.
+      Data: Brand green circles are identical to the light render (#009E73) — unchanged across themes as required. Partial icon backgrounds are darker (INK_MUTED at alpha=0.25 on #1A1A17) producing a subtle dark gray — still provides visual distinction from the black background.
+      Legibility verdict: PASS — no dark-on-dark failures, all text clearly readable; brand green #009E73 is fully visible against the dark surface
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title 9pt (correctly scaled for long
+          string), category labels 10pt, value annotations 9pt, legend 8pt — readable
+          at desktop; value annotations borderline at mobile scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements in either render; value annotations placed
+          with clearance from last icon
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Large circles prominent; partial icons clearly distinct with gray
+          background and green arc fill
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series in #009E73 (brand green); CVD-safe; full vs. partial
+          provides shape redundancy'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 canvas; good proportions via subplots_adjust; legend
+          well-placed; no content clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title with required spec-id format; category names serve
+          as effective axis labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; all chrome tokens
+          theme-adaptive in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above default (4); intentional clean circular icon design, elegant
+          partial-icon arc polygon, consistent Imprint palette; does not yet reach
+          strong design (6) — no typography weight variation or secondary visual hierarchy
+          element
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, y-axis tick marks length=0, no grid, legend
+          with styled frame — clearly above defaults (2) but not fully polished (6)
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Pictogram format is inherently storytelling; comparison clear through
+          icon count; value labels add precision; but no emphasis on leading category
+          Apples — viewer not explicitly guided
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct pictogram (ISOTYPE) with circle icons in horizontal rows
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required: repeated icons per category, consistent unit (5 Mt/icon),
+          unit legend, partial icons for fractional remainders, left-aligned grid
+          layout, category labels on left axis'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories correctly mapped to rows; values accurately converted
+          to icon counts; partial fractions computed correctly
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'Estimated Global Fruit Production · pictogram-basic · python
+          · matplotlib · anyplot.ai' matches required format with descriptive prefix;
+          legend 'green patch = 5 million tonnes' clear and correct
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 5 categories with varying quantities (3–9 icons per row); partial
+          icons present for all categories; demonstrates range and scale differences
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Estimated global fruit production is a real, comprehensible, neutral
+          agricultural/scientific topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 5 Mt per icon is reasonable; values (43, 32, 27, 18, 23 Mt) are plausible
+          for major global fruit crops; Apples highest is consistent with real-world
+          data
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear script: imports → tokens → data → layout params → figure
+          → draw → labels → title → legend → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic — hardcoded data, no random generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All 5 imports used: os, mpatches, plt, np, Polygon'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code; arccos chord computation is appropriately complex
+          for the partial-icon task; no over-engineering; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png at dpi=400; no bbox_inches='tight'; current
+          matplotlib API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper ax.add_patch, ax.set_yticks/yticklabels, ax.tick_params, ax.spines,
+          ax.legend(handles=[...]) — all idiomatic axes-method patterns; appropriate
+          for a chart type with no high-level API
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: matplotlib.patches.Circle + Polygon for custom icon rendering; arc
+          geometry via arccos/linspace for partial-fill polygon is a sophisticated
+          matplotlib-specific technique not replicable in other libraries without
+          significant extra work
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  - manual-ticks
+  - annotations
+  - custom-legend
+  patterns:
+  - iteration-over-groups
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending

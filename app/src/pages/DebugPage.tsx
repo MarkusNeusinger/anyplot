@@ -1,19 +1,22 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+
 import { Link as RouterLink } from 'react-router-dom';
+
+import CheckIcon from '@mui/icons-material/Check';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
 import Link from '@mui/material/Link';
 import Tooltip from '@mui/material/Tooltip';
-import IconButton from '@mui/material/IconButton';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import CheckIcon from '@mui/icons-material/Check';
+import Typography from '@mui/material/Typography';
 
-import { DEBUG_API_URL, LIBRARIES, LIB_ABBREV, LIB_TO_LANG } from '../constants';
-import { specPath } from '../utils/paths';
-import { SectionHeader } from '../components/SectionHeader';
-import { useCopyCode } from '../hooks';
-import { buildClaudePrompt } from '../utils/claudePrompt';
-import { typography, colors, semanticColors, fontSize } from '../theme';
+import { SectionHeader } from 'src/components/SectionHeader';
+import { DEBUG_API_URL, LIB_ABBREV, LIB_TO_LANG, LIBRARIES } from 'src/constants';
+import { useCopyCode } from 'src/hooks';
+import { fetchWithAuth } from 'src/lib/api';
+import { specPath } from 'src/routes/paths';
+import { colors, fontSize, semanticColors, typography } from 'src/theme';
+import { buildClaudePrompt } from 'src/utils/claudePrompt';
 
 // ============================================================================
 // Types
@@ -24,13 +27,20 @@ interface SpecStatus {
   title: string;
   updated: string | null;
   avg_score: number | null;
+  // One score field per library in LIBRARIES — keep in sync with the registry
+  // (the matrix renders a column for every LIBRARIES entry and indexes this by
+  // id, so a missing field would read as undefined and miscount).
   altair: number | null;
   bokeh: number | null;
+  chartjs: number | null;
+  d3: number | null;
+  echarts: number | null;
   ggplot2: number | null;
   highcharts: number | null;
   letsplot: number | null;
   makie: number | null;
   matplotlib: number | null;
+  muix: number | null;
   plotly: number | null;
   plotnine: number | null;
   pygal: number | null;
@@ -206,20 +216,25 @@ const ADMIN_TOKEN_KEY = 'anyplot.adminToken';
 // One-shot guard for the SPA-routed → CF Access page-gate bootstrap.
 const RELOAD_GUARD_KEY = 'anyplot.debugAuthReloaded';
 const readAdminToken = (): string => {
-  try { return sessionStorage.getItem(ADMIN_TOKEN_KEY) ?? ''; } catch { return ''; }
+  try {
+    return sessionStorage.getItem(ADMIN_TOKEN_KEY) ?? '';
+  } catch {
+    return '';
+  }
 };
 const writeAdminToken = (value: string): void => {
-  try { sessionStorage.setItem(ADMIN_TOKEN_KEY, value); } catch { /* sessionStorage may be unavailable */ }
+  try {
+    sessionStorage.setItem(ADMIN_TOKEN_KEY, value);
+  } catch {
+    /* sessionStorage may be unavailable */
+  }
 };
 const clearAdminToken = (): void => {
-  try { sessionStorage.removeItem(ADMIN_TOKEN_KEY); } catch { /* noop */ }
-};
-
-const adminFetch = (url: string, token: string, init: RequestInit = {}): Promise<Response> => {
-  const headers: Record<string, string> = { ...((init.headers as Record<string, string>) || {}) };
-  if (token) headers['X-Admin-Token'] = token;
-  if (init.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
-  return fetch(url, { credentials: 'include', ...init, headers });
+  try {
+    sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+  } catch {
+    /* noop */
+  }
 };
 
 export function DebugPage() {
@@ -244,7 +259,8 @@ export function DebugPage() {
   const [topThumbsUp, setTopThumbsUp] = useState<FeedbackTopPage[]>([]);
   const [topThumbsDown, setTopThumbsDown] = useState<FeedbackTopPage[]>([]);
   const [feedbackMessages, setFeedbackMessages] = useState<FeedbackMessageItem[]>([]);
-  const [feedbackStatusFilter, setFeedbackStatusFilter] = useState<FeedbackMessageFilter>(DEFAULT_MESSAGE_FILTER);
+  const [feedbackStatusFilter, setFeedbackStatusFilter] =
+    useState<FeedbackMessageFilter>(DEFAULT_MESSAGE_FILTER);
 
   // React 19 "adjust state on prop change": reset loading/error when fetch deps change.
   if (prevFetchKey.adminToken !== adminToken || prevFetchKey.reloadCounter !== reloadCounter) {
@@ -254,13 +270,17 @@ export function DebugPage() {
   }
 
   useEffect(() => {
-    adminFetch(`${DEBUG_API_URL}/debug/status`, adminToken)
+    fetchWithAuth(`${DEBUG_API_URL}/debug/status`, adminToken)
       .then(async r => {
         // Reaching here means the fetch promise resolved (the response may
         // still be 401/403/503 — those are handled below). Clear the one-shot
         // reload guard so a future cross-origin CF Access redirect can
         // re-trigger the bootstrap.
-        try { sessionStorage.removeItem(RELOAD_GUARD_KEY); } catch { /* sessionStorage may be unavailable in private mode */ }
+        try {
+          sessionStorage.removeItem(RELOAD_GUARD_KEY);
+        } catch {
+          /* sessionStorage may be unavailable in private mode */
+        }
         // 403 is the Cloudflare Access JWT path's denial: a signed-in Google
         // account that isn't on the admin_allowed_emails allow-list. Surface
         // it on the auth-required screen with the server's message so the
@@ -271,7 +291,9 @@ export function DebugPage() {
             const body = await r.json().catch(() => ({}));
             throw new Error(body?.message || 'this account is not authorized for /debug');
           }
-          throw new Error(r.status === 503 ? 'admin auth not configured on server' : 'admin token required');
+          throw new Error(
+            r.status === 503 ? 'admin auth not configured on server' : 'admin token required'
+          );
         }
         if (!r.ok) throw new Error(`${r.status}`);
         setAuthRequired(false);
@@ -288,9 +310,17 @@ export function DebugPage() {
         // the second load ALSO fails (e.g. wrong allow-list).
         if (e instanceof TypeError) {
           let alreadyTried = false;
-          try { alreadyTried = !!sessionStorage.getItem(RELOAD_GUARD_KEY); } catch { /* sessionStorage may be unavailable in private mode */ }
+          try {
+            alreadyTried = !!sessionStorage.getItem(RELOAD_GUARD_KEY);
+          } catch {
+            /* sessionStorage may be unavailable in private mode */
+          }
           if (!alreadyTried) {
-            try { sessionStorage.setItem(RELOAD_GUARD_KEY, '1'); } catch { /* sessionStorage may be unavailable in private mode */ }
+            try {
+              sessionStorage.setItem(RELOAD_GUARD_KEY, '1');
+            } catch {
+              /* sessionStorage may be unavailable in private mode */
+            }
             // replace() not assign() — assign would push the broken pre-auth
             // /debug onto the back-stack, so the user could navigate back
             // into the same loop after logging in.
@@ -309,12 +339,15 @@ export function DebugPage() {
     const tick = async () => {
       const started = performance.now();
       try {
-        const r = await adminFetch(`${DEBUG_API_URL}/debug/ping`, adminToken);
+        const r = await fetchWithAuth(`${DEBUG_API_URL}/debug/ping`, adminToken);
         const totalMs = performance.now() - started;
         if (!r.ok) throw new Error(`${r.status}`);
         const json: { database_connected: boolean } = await r.json();
         if (cancelled) return;
-        setPings(prev => [...prev.slice(-(PING_HISTORY - 1)), { ms: totalMs, ok: json.database_connected }]);
+        setPings(prev => [
+          ...prev.slice(-(PING_HISTORY - 1)),
+          { ms: totalMs, ok: json.database_connected },
+        ]);
       } catch {
         if (cancelled) return;
         const totalMs = performance.now() - started;
@@ -323,7 +356,10 @@ export function DebugPage() {
     };
     tick();
     const id = setInterval(tick, PING_INTERVAL_MS);
-    return () => { cancelled = true; clearInterval(id); };
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
   }, [adminToken, authRequired]);
 
   useEffect(() => {
@@ -331,13 +367,15 @@ export function DebugPage() {
     let cancelled = false;
     const qs = feedbackStatusFilter ? `?status=${feedbackStatusFilter}&limit=50` : '?limit=50';
     Promise.all([
-      adminFetch(`${DEBUG_API_URL}/debug/feedback/top?reaction=thumbs_up&limit=15`, adminToken).then(r =>
-        r.ok ? (r.json() as Promise<FeedbackTopPage[]>) : []
-      ),
-      adminFetch(`${DEBUG_API_URL}/debug/feedback/top?reaction=thumbs_down&limit=15`, adminToken).then(r =>
-        r.ok ? (r.json() as Promise<FeedbackTopPage[]>) : []
-      ),
-      adminFetch(`${DEBUG_API_URL}/debug/feedback/messages${qs}`, adminToken).then(r =>
+      fetchWithAuth(
+        `${DEBUG_API_URL}/debug/feedback/top?reaction=thumbs_up&limit=15`,
+        adminToken
+      ).then(r => (r.ok ? (r.json() as Promise<FeedbackTopPage[]>) : [])),
+      fetchWithAuth(
+        `${DEBUG_API_URL}/debug/feedback/top?reaction=thumbs_down&limit=15`,
+        adminToken
+      ).then(r => (r.ok ? (r.json() as Promise<FeedbackTopPage[]>) : [])),
+      fetchWithAuth(`${DEBUG_API_URL}/debug/feedback/messages${qs}`, adminToken).then(r =>
         r.ok ? (r.json() as Promise<FeedbackMessageItem[]>) : []
       ),
     ])
@@ -360,7 +398,7 @@ export function DebugPage() {
     const prev = feedbackMessages;
     setFeedbackMessages(prev.map(m => (m.id === id ? { ...m, status: newStatus } : m)));
     try {
-      const r = await adminFetch(`${DEBUG_API_URL}/debug/feedback/${id}`, adminToken, {
+      const r = await fetchWithAuth(`${DEBUG_API_URL}/debug/feedback/${id}`, adminToken, {
         method: 'PATCH',
         body: JSON.stringify({ status: newStatus }),
       });
@@ -400,19 +438,30 @@ export function DebugPage() {
 
     if (searchText) {
       const q = searchText.toLowerCase();
-      filtered = filtered.filter(s => s.id.toLowerCase().includes(q) || s.title.toLowerCase().includes(q));
+      filtered = filtered.filter(
+        s => s.id.toLowerCase().includes(q) || s.title.toLowerCase().includes(q)
+      );
     }
     if (showIncomplete) filtered = filtered.filter(s => countImpls(s) < LIBRARIES.length);
     if (showLowScores) filtered = filtered.filter(hasLowScore);
-    if (missingLibrary) filtered = filtered.filter(s => s[missingLibrary as keyof SpecStatus] === null);
+    if (missingLibrary)
+      filtered = filtered.filter(s => s[missingLibrary as keyof SpecStatus] === null);
 
     filtered.sort((a, b) => {
       let cmp = 0;
       switch (sortKey) {
-        case 'updated': cmp = (a.updated || '').localeCompare(b.updated || ''); break;
-        case 'id': cmp = a.id.localeCompare(b.id); break;
-        case 'title': cmp = a.title.localeCompare(b.title); break;
-        case 'avg_score': cmp = (a.avg_score ?? 0) - (b.avg_score ?? 0); break;
+        case 'updated':
+          cmp = (a.updated || '').localeCompare(b.updated || '');
+          break;
+        case 'id':
+          cmp = a.id.localeCompare(b.id);
+          break;
+        case 'title':
+          cmp = a.title.localeCompare(b.title);
+          break;
+        case 'avg_score':
+          cmp = (a.avg_score ?? 0) - (b.avg_score ?? 0);
+          break;
       }
       return sortDir === 'desc' ? -cmp : cmp;
     });
@@ -433,10 +482,21 @@ export function DebugPage() {
     return (
       <Box sx={{ py: 4, maxWidth: 420, mx: 'auto' }}>
         <SectionHeader prompt="❯" title={<em>debug · admin auth</em>} />
-        <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, mb: 2 }}>
+        <Typography
+          sx={{
+            fontFamily: typography.fontFamily,
+            fontSize: fontSize.xs,
+            color: semanticColors.mutedText,
+            mb: 2,
+          }}
+        >
           {error || 'sign in via your browser session, or paste an admin token as a fallback.'}
         </Typography>
-        <Box component="form" onSubmit={handleTokenSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <Box
+          component="form"
+          onSubmit={handleTokenSubmit}
+          sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}
+        >
           <Box
             component="input"
             type="password"
@@ -472,7 +532,14 @@ export function DebugPage() {
               </Box>
             )}
           </Box>
-          <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: semanticColors.mutedText, mt: 1 }}>
+          <Typography
+            sx={{
+              fontFamily: typography.fontFamily,
+              fontSize: fontSize.xxs,
+              color: semanticColors.mutedText,
+              mt: 1,
+            }}
+          >
             stored in sessionStorage — clears when this tab closes.
           </Typography>
         </Box>
@@ -502,10 +569,12 @@ export function DebugPage() {
 
   // Derived KPIs
   const totalImplsWithScore = data.library_stats.reduce(
-    (acc, l) => acc + (l.avg_score !== null ? l.impl_count : 0), 0
+    (acc, l) => acc + (l.avg_score !== null ? l.impl_count : 0),
+    0
   );
   const weightedScoreSum = data.library_stats.reduce(
-    (acc, l) => acc + (l.avg_score !== null ? l.avg_score * l.impl_count : 0), 0
+    (acc, l) => acc + (l.avg_score !== null ? l.avg_score * l.impl_count : 0),
+    0
   );
   const avgQuality = totalImplsWithScore > 0 ? weightedScoreSum / totalImplsWithScore : null;
 
@@ -536,26 +605,62 @@ export function DebugPage() {
         const okPings = pings.filter(p => p.ok);
         const currentOk = latest ? latest.ok : data.system.database_connected;
         const currentMs = latest ? latest.ms : data.system.api_response_time_ms;
-        const avgMs = okPings.length > 0 ? okPings.reduce((a, p) => a + p.ms, 0) / okPings.length : null;
+        const avgMs =
+          okPings.length > 0 ? okPings.reduce((a, p) => a + p.ms, 0) / okPings.length : null;
         const maxMs = Math.max(...pings.map(p => p.ms), 1);
         return (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: { xs: 1.5, md: 3 }, mt: -2, mb: 3, fontSize: fontSize.xs, fontFamily: typography.fontFamily }}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              gap: { xs: 1.5, md: 3 },
+              mt: -2,
+              mb: 3,
+              fontSize: fontSize.xs,
+              fontFamily: typography.fontFamily,
+            }}
+          >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-              <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: currentOk ? colors.success : colors.error }} />
-              <Typography component="span" sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: 'var(--ink-soft)' }}>
+              <Box
+                sx={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  bgcolor: currentOk ? colors.success : colors.error,
+                }}
+              />
+              <Typography
+                component="span"
+                sx={{
+                  fontFamily: typography.fontFamily,
+                  fontSize: fontSize.xs,
+                  color: 'var(--ink-soft)',
+                }}
+              >
                 database {currentOk ? 'connected' : 'down'}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Tooltip
-                title={avgMs !== null ? `avg ${avgMs.toFixed(0)}ms · max ${maxMs.toFixed(0)}ms · ${pings.length} samples` : 'measuring...'}
+                title={
+                  avgMs !== null
+                    ? `avg ${avgMs.toFixed(0)}ms · max ${maxMs.toFixed(0)}ms · ${pings.length} samples`
+                    : 'measuring...'
+                }
                 arrow
               >
-                <Box sx={{
-                  display: 'flex', alignItems: 'flex-end', gap: '1px',
-                  height: 18, width: PING_HISTORY * 4,
-                  borderBottom: '1px solid var(--rule)', px: 0.25,
-                }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'flex-end',
+                    gap: '1px',
+                    height: 18,
+                    width: PING_HISTORY * 4,
+                    borderBottom: '1px solid var(--rule)',
+                    px: 0.25,
+                  }}
+                >
                   {Array.from({ length: PING_HISTORY }).map((_, i) => {
                     const idx = pings.length - PING_HISTORY + i;
                     const p = idx >= 0 ? pings[idx] : null;
@@ -574,20 +679,39 @@ export function DebugPage() {
                   })}
                 </Box>
               </Tooltip>
-              <Typography component="span" sx={{
-                fontFamily: typography.fontFamily, fontSize: fontSize.xs,
-                color: currentOk ? pingColor(currentMs) : colors.error,
-                fontWeight: 600, minWidth: 52,
-              }}>
+              <Typography
+                component="span"
+                sx={{
+                  fontFamily: typography.fontFamily,
+                  fontSize: fontSize.xs,
+                  color: currentOk ? pingColor(currentMs) : colors.error,
+                  fontWeight: 600,
+                  minWidth: 52,
+                }}
+              >
                 {currentMs.toFixed(0)}ms
               </Typography>
               {avgMs !== null && (
-                <Typography component="span" sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: semanticColors.mutedText }}>
+                <Typography
+                  component="span"
+                  sx={{
+                    fontFamily: typography.fontFamily,
+                    fontSize: fontSize.xxs,
+                    color: semanticColors.mutedText,
+                  }}
+                >
                   avg {avgMs.toFixed(0)}
                 </Typography>
               )}
             </Box>
-            <Typography component="span" sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText }}>
+            <Typography
+              component="span"
+              sx={{
+                fontFamily: typography.fontFamily,
+                fontSize: fontSize.xs,
+                color: semanticColors.mutedText,
+              }}
+            >
               updated {new Date(data.system.timestamp).toLocaleTimeString()}
             </Typography>
           </Box>
@@ -595,13 +719,40 @@ export function DebugPage() {
       })()}
 
       {/* KPI Grid */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' }, gap: 2, mb: 4 }}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' },
+          gap: 2,
+          mb: 4,
+        }}
+      >
         {kpis.map(item => (
-          <Box key={item.label} sx={{ textAlign: 'center', p: 2, border: '1px solid var(--rule)', borderRadius: 1 }}>
-            <Typography sx={{ fontFamily: typography.serif, fontSize: '2rem', fontWeight: 300, color: 'var(--ink)', lineHeight: 1.2 }}>
-              {typeof item.value === 'number' ? `${formatNum(item.value)}${item.suffix ?? ''}` : '—'}
+          <Box
+            key={item.label}
+            sx={{ textAlign: 'center', p: 2, border: '1px solid var(--rule)', borderRadius: 1 }}
+          >
+            <Typography
+              sx={{
+                fontFamily: typography.serif,
+                fontSize: '2rem',
+                fontWeight: 300,
+                color: 'var(--ink)',
+                lineHeight: 1.2,
+              }}
+            >
+              {typeof item.value === 'number'
+                ? `${formatNum(item.value)}${item.suffix ?? ''}`
+                : '—'}
             </Typography>
-            <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, mt: 0.5 }}>
+            <Typography
+              sx={{
+                fontFamily: typography.fontFamily,
+                fontSize: fontSize.xs,
+                color: semanticColors.mutedText,
+                mt: 0.5,
+              }}
+            >
               {item.label}
             </Typography>
           </Box>
@@ -610,30 +761,53 @@ export function DebugPage() {
 
       {/* Daily Activity Bar Chart */}
       <SectionHeader prompt="❯" title={<em>daily activity</em>} />
-      <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, mb: 1 }}>
+      <Typography
+        sx={{
+          fontFamily: typography.fontFamily,
+          fontSize: fontSize.xs,
+          color: semanticColors.mutedText,
+          mb: 1,
+        }}
+      >
         implementation updates · last 30 days
       </Typography>
-      <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 0.25, height: 70, overflow: 'hidden' }}>
+      <Box
+        sx={{ display: 'flex', alignItems: 'flex-end', gap: 0.25, height: 70, overflow: 'hidden' }}
+      >
         {data.daily_impls.map(point => (
           <Tooltip key={point.date} title={`${point.date}: ${point.impls_updated} impls`} arrow>
-            <Box sx={{
-              flex: 1,
-              height: `${Math.max((point.impls_updated / maxDaily) * 100, point.impls_updated > 0 ? 3 : 0)}%`,
-              bgcolor: colors.primaryDark,
-              opacity: 0.5,
-              borderRadius: '2px 2px 0 0',
-              minHeight: point.impls_updated > 0 ? 2 : 0,
-              '&:hover': { opacity: 0.8 },
-              transition: 'opacity 0.15s ease',
-            }} />
+            <Box
+              sx={{
+                flex: 1,
+                height: `${Math.max((point.impls_updated / maxDaily) * 100, point.impls_updated > 0 ? 3 : 0)}%`,
+                bgcolor: colors.primaryDark,
+                opacity: 0.5,
+                borderRadius: '2px 2px 0 0',
+                minHeight: point.impls_updated > 0 ? 2 : 0,
+                '&:hover': { opacity: 0.8 },
+                transition: 'opacity 0.15s ease',
+              }}
+            />
           </Tooltip>
         ))}
       </Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.25 }}>
-        <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.micro, color: semanticColors.mutedText }}>
+        <Typography
+          sx={{
+            fontFamily: typography.fontFamily,
+            fontSize: fontSize.micro,
+            color: semanticColors.mutedText,
+          }}
+        >
           {firstDate}
         </Typography>
-        <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.micro, color: semanticColors.mutedText }}>
+        <Typography
+          sx={{
+            fontFamily: typography.fontFamily,
+            fontSize: fontSize.micro,
+            color: semanticColors.mutedText,
+          }}
+        >
           {lastDate}
         </Typography>
       </Box>
@@ -642,59 +816,115 @@ export function DebugPage() {
       <Box sx={{ mt: 4 }}>
         <SectionHeader prompt="❯" title={<em>libraries</em>} />
       </Box>
-      <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, mb: 1 }}>
+      <Typography
+        sx={{
+          fontFamily: typography.fontFamily,
+          fontSize: fontSize.xs,
+          color: semanticColors.mutedText,
+          mb: 1,
+        }}
+      >
         impl count · avg · min–max
       </Typography>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        {[...data.library_stats].sort((a, b) => b.impl_count - a.impl_count).map(lib => (
-          <Box
-            key={lib.id}
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: '80px 1fr 40px 40px 70px',
-              gap: 1.5,
-              alignItems: 'center',
-              fontFamily: typography.fontFamily,
-              fontSize: fontSize.xxs,
-            }}
-          >
-            <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, textAlign: 'right' }}>
-              {lib.name}
-            </Typography>
-            <Box sx={{ height: 10, bgcolor: 'var(--bg-elevated)', borderRadius: '2px', overflow: 'hidden' }}>
-              <Box sx={{
-                width: `${(lib.impl_count / maxLibCount) * 100}%`,
-                height: '100%',
-                bgcolor: colors.primaryDark,
-                opacity: 0.5,
-              }} />
+        {[...data.library_stats]
+          .sort((a, b) => b.impl_count - a.impl_count)
+          .map(lib => (
+            <Box
+              key={lib.id}
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: '80px 1fr 40px 40px 70px',
+                gap: 1.5,
+                alignItems: 'center',
+                fontFamily: typography.fontFamily,
+                fontSize: fontSize.xxs,
+              }}
+            >
+              <Typography
+                sx={{
+                  fontFamily: typography.fontFamily,
+                  fontSize: fontSize.xs,
+                  color: semanticColors.mutedText,
+                  textAlign: 'right',
+                }}
+              >
+                {lib.name}
+              </Typography>
+              <Box
+                sx={{
+                  height: 10,
+                  bgcolor: 'var(--bg-elevated)',
+                  borderRadius: '2px',
+                  overflow: 'hidden',
+                }}
+              >
+                <Box
+                  sx={{
+                    width: `${(lib.impl_count / maxLibCount) * 100}%`,
+                    height: '100%',
+                    bgcolor: colors.primaryDark,
+                    opacity: 0.5,
+                  }}
+                />
+              </Box>
+              <Typography
+                sx={{
+                  fontFamily: typography.fontFamily,
+                  fontSize: fontSize.xxs,
+                  color: 'var(--ink-soft)',
+                  fontWeight: 600,
+                  textAlign: 'right',
+                }}
+              >
+                {lib.impl_count}
+              </Typography>
+              <Typography
+                sx={{
+                  fontFamily: typography.fontFamily,
+                  fontSize: fontSize.xxs,
+                  color: scoreColor(lib.avg_score),
+                  fontWeight: 600,
+                  textAlign: 'right',
+                }}
+              >
+                {lib.avg_score ?? '—'}
+              </Typography>
+              <Typography
+                sx={{
+                  fontFamily: typography.fontFamily,
+                  fontSize: fontSize.xxs,
+                  color: semanticColors.mutedText,
+                  textAlign: 'right',
+                }}
+              >
+                {lib.min_score?.toFixed(0) ?? '—'}–{lib.max_score?.toFixed(0) ?? '—'}
+              </Typography>
             </Box>
-            <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: 'var(--ink-soft)', fontWeight: 600, textAlign: 'right' }}>
-              {lib.impl_count}
-            </Typography>
-            <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: scoreColor(lib.avg_score), fontWeight: 600, textAlign: 'right' }}>
-              {lib.avg_score ?? '—'}
-            </Typography>
-            <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: semanticColors.mutedText, textAlign: 'right' }}>
-              {lib.min_score?.toFixed(0) ?? '—'}–{lib.max_score?.toFixed(0) ?? '—'}
-            </Typography>
-          </Box>
-        ))}
+          ))}
       </Box>
-      <Box sx={{
-        display: 'grid',
-        gridTemplateColumns: '80px 1fr 40px 40px 70px',
-        gap: 1.5,
-        mt: 0.5,
-        fontFamily: typography.fontFamily,
-        fontSize: fontSize.micro,
-        color: semanticColors.mutedText,
-      }}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: '80px 1fr 40px 40px 70px',
+          gap: 1.5,
+          mt: 0.5,
+          fontFamily: typography.fontFamily,
+          fontSize: fontSize.micro,
+          color: semanticColors.mutedText,
+        }}
+      >
         <span />
         <span />
-        <Box component="span" sx={{ textAlign: 'right' }}>count</Box>
-        <Box component="span" sx={{ textAlign: 'right' }}>avg</Box>
-        <Box component="span" sx={{ textAlign: 'right' }}>min–max</Box>
+        <Box component="span" sx={{ textAlign: 'right' }}>
+          count
+        </Box>
+        <Box component="span" sx={{ textAlign: 'right' }}>
+          avg
+        </Box>
+        <Box component="span" sx={{ textAlign: 'right' }}>
+          min–max
+        </Box>
       </Box>
 
       {/* Recent Activity */}
@@ -711,7 +941,10 @@ export function DebugPage() {
                 to={specPath(act.spec_id, act.language_id, act.library_id)}
                 sx={{
                   display: 'grid',
-                  gridTemplateColumns: { xs: '55px 1fr 30px', sm: '65px 90px minmax(0, 1fr) 30px 130px' },
+                  gridTemplateColumns: {
+                    xs: '55px 1fr 30px',
+                    sm: '65px 90px minmax(0, 1fr) 30px 130px',
+                  },
                   gap: { xs: 1, sm: 1.5 },
                   alignItems: 'center',
                   textDecoration: 'none',
@@ -721,34 +954,74 @@ export function DebugPage() {
                   '&:hover': { bgcolor: 'var(--bg-surface)' },
                 }}
               >
-                <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText }}>
+                <Typography
+                  sx={{
+                    fontFamily: typography.fontFamily,
+                    fontSize: fontSize.xs,
+                    color: semanticColors.mutedText,
+                  }}
+                >
                   {timeAgo(act.updated)}
                 </Typography>
-                <Typography sx={{
-                  fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: 'var(--ink-soft)',
-                  display: { xs: 'none', sm: 'block' },
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}>
+                <Typography
+                  sx={{
+                    fontFamily: typography.fontFamily,
+                    fontSize: fontSize.xs,
+                    color: 'var(--ink-soft)',
+                    display: { xs: 'none', sm: 'block' },
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
                   {act.library_id}
                 </Typography>
-                <Typography sx={{
-                  fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: 'var(--ink)',
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0,
-                }}>
-                  <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' }, color: semanticColors.mutedText, mr: 0.5 }}>
+                <Typography
+                  sx={{
+                    fontFamily: typography.fontFamily,
+                    fontSize: fontSize.xs,
+                    color: 'var(--ink)',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    minWidth: 0,
+                  }}
+                >
+                  <Box
+                    component="span"
+                    sx={{
+                      display: { xs: 'inline', sm: 'none' },
+                      color: semanticColors.mutedText,
+                      mr: 0.5,
+                    }}
+                  >
                     {act.library_id} ·
                   </Box>
                   {act.spec_title}
                 </Typography>
-                <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: scoreColor(act.quality_score), fontWeight: 600, textAlign: 'right' }}>
+                <Typography
+                  sx={{
+                    fontFamily: typography.fontFamily,
+                    fontSize: fontSize.xs,
+                    color: scoreColor(act.quality_score),
+                    fontWeight: 600,
+                    textAlign: 'right',
+                  }}
+                >
                   {act.quality_score !== null ? Math.round(act.quality_score) : '—'}
                 </Typography>
-                <Typography sx={{
-                  fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: semanticColors.mutedText,
-                  display: { xs: 'none', sm: 'block' },
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  textAlign: 'right',
-                }}>
+                <Typography
+                  sx={{
+                    fontFamily: typography.fontFamily,
+                    fontSize: fontSize.xxs,
+                    color: semanticColors.mutedText,
+                    display: { xs: 'none', sm: 'block' },
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    textAlign: 'right',
+                  }}
+                >
                   {act.generated_by ?? '—'}
                 </Typography>
               </Link>
@@ -766,17 +1039,37 @@ export function DebugPage() {
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, alignItems: 'baseline' }}>
             {data.common_weaknesses.map(w => {
               const ratio = w.count / maxWeakness;
-              const size = ratio >= 0.8 ? fontSize.md : ratio >= 0.5 ? fontSize.sm : ratio >= 0.25 ? fontSize.xs : fontSize.xxs;
+              const size =
+                ratio >= 0.8
+                  ? fontSize.md
+                  : ratio >= 0.5
+                    ? fontSize.sm
+                    : ratio >= 0.25
+                      ? fontSize.xs
+                      : fontSize.xxs;
               const weight = ratio >= 0.5 ? 600 : 400;
               const opacity = ratio >= 0.8 ? 1 : ratio >= 0.5 ? 0.85 : ratio >= 0.25 ? 0.7 : 0.55;
               return (
-                <Box key={w.text} sx={{
-                  fontFamily: typography.fontFamily, fontSize: size, fontWeight: weight,
-                  color: 'var(--ink-soft)', opacity, px: 0.75, py: 0.25, borderRadius: 0.5,
-                  bgcolor: 'var(--bg-surface)', border: '1px solid var(--rule)',
-                }}>
+                <Box
+                  key={w.text}
+                  sx={{
+                    fontFamily: typography.fontFamily,
+                    fontSize: size,
+                    fontWeight: weight,
+                    color: 'var(--ink-soft)',
+                    opacity,
+                    px: 0.75,
+                    py: 0.25,
+                    borderRadius: 0.5,
+                    bgcolor: 'var(--bg-surface)',
+                    border: '1px solid var(--rule)',
+                  }}
+                >
                   {w.text}
-                  <Box component="span" sx={{ fontSize: fontSize.micro, color: semanticColors.mutedText, ml: 0.5 }}>
+                  <Box
+                    component="span"
+                    sx={{ fontSize: fontSize.micro, color: semanticColors.mutedText, ml: 0.5 }}
+                  >
                     {w.count}
                   </Box>
                 </Box>
@@ -801,7 +1094,9 @@ export function DebugPage() {
             key={section.title}
             component="details"
             sx={{
-              border: '1px solid var(--rule)', borderRadius: 1, p: 0,
+              border: '1px solid var(--rule)',
+              borderRadius: 1,
+              p: 0,
               '& > summary': { cursor: 'pointer', listStyle: 'none' },
               '& > summary::-webkit-details-marker': { display: 'none' },
             }}
@@ -809,18 +1104,34 @@ export function DebugPage() {
             <Box
               component="summary"
               sx={{
-                display: 'flex', alignItems: 'center', gap: 1, px: 1.5, py: 1,
-                fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: 'var(--ink-soft)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                px: 1.5,
+                py: 1,
+                fontFamily: typography.fontFamily,
+                fontSize: fontSize.xs,
+                color: 'var(--ink-soft)',
               }}
             >
-              <Box component="span" sx={{ color: semanticColors.mutedText }}>▸</Box>
-              <Box component="span" sx={{ fontWeight: 600 }}>{section.title}</Box>
+              <Box component="span" sx={{ color: semanticColors.mutedText }}>
+                ▸
+              </Box>
+              <Box component="span" sx={{ fontWeight: 600 }}>
+                {section.title}
+              </Box>
               <Box component="span" sx={{ color: semanticColors.mutedText }}>
                 {section.items.length}
               </Box>
             </Box>
             {section.items.length > 0 && (
-              <Box sx={{ display: 'flex', flexDirection: 'column', borderTop: '1px solid var(--rule)' }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  borderTop: '1px solid var(--rule)',
+                }}
+              >
                 {section.items.map((item, idx) => (
                   <Link
                     key={`${item.id}-${idx}`}
@@ -829,21 +1140,46 @@ export function DebugPage() {
                     sx={{
                       display: 'grid',
                       gridTemplateColumns: { xs: '1fr auto', sm: 'minmax(140px, 200px) 1fr auto' },
-                      gap: 1, px: 1.5, py: 0.75, alignItems: 'center',
-                      textDecoration: 'none', color: 'inherit',
-                      fontFamily: typography.fontFamily, fontSize: fontSize.xs,
+                      gap: 1,
+                      px: 1.5,
+                      py: 0.75,
+                      alignItems: 'center',
+                      textDecoration: 'none',
+                      color: 'inherit',
+                      fontFamily: typography.fontFamily,
+                      fontSize: fontSize.xs,
                       borderTop: idx > 0 ? '1px solid var(--rule)' : 'none',
                       '&:hover': { bgcolor: 'var(--bg-surface)' },
                     }}
                   >
-                    <Box component="span" sx={{ color: colors.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <Box
+                      component="span"
+                      sx={{
+                        color: colors.primary,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
                       {item.id}
                     </Box>
-                    <Box component="span" sx={{ color: semanticColors.mutedText, display: { xs: 'none', sm: 'inline' }, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <Box
+                      component="span"
+                      sx={{
+                        color: semanticColors.mutedText,
+                        display: { xs: 'none', sm: 'inline' },
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
                       {item.issue}
                     </Box>
                     {item.value && (
-                      <Box component="span" sx={{ color: colors.error, whiteSpace: 'nowrap', textAlign: 'right' }}>
+                      <Box
+                        component="span"
+                        sx={{ color: colors.error, whiteSpace: 'nowrap', textAlign: 'right' }}
+                      >
                         {item.value}
                       </Box>
                     )}
@@ -859,7 +1195,14 @@ export function DebugPage() {
       <Box sx={{ mt: 4 }}>
         <SectionHeader prompt="❯" title={<em>feedback · top pages</em>} />
       </Box>
-      <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, mb: 1 }}>
+      <Typography
+        sx={{
+          fontFamily: typography.fontFamily,
+          fontSize: fontSize.xs,
+          color: semanticColors.mutedText,
+          mb: 1,
+        }}
+      >
         grouped by URL — clickable
       </Typography>
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
@@ -880,12 +1223,21 @@ export function DebugPage() {
           <option value="open">open (new + in progress)</option>
           <option value="">all statuses</option>
           {FEEDBACK_STATUS_OPTIONS.map(s => (
-            <option key={s} value={s}>{s.replace('_', ' ')}</option>
+            <option key={s} value={s}>
+              {s.replace('_', ' ')}
+            </option>
           ))}
         </Box>
       </Box>
       {feedbackMessages.length === 0 ? (
-        <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, py: 2 }}>
+        <Typography
+          sx={{
+            fontFamily: typography.fontFamily,
+            fontSize: fontSize.xs,
+            color: semanticColors.mutedText,
+            py: 2,
+          }}
+        >
           no messages{feedbackStatusFilter ? ` with status "${feedbackStatusFilter}"` : ''}
         </Typography>
       ) : (
@@ -894,10 +1246,13 @@ export function DebugPage() {
             <Box
               key={m.id}
               sx={{
-                border: '1px solid var(--rule)', borderRadius: 1, p: 1.5,
+                border: '1px solid var(--rule)',
+                borderRadius: 1,
+                p: 1.5,
                 display: 'grid',
                 gridTemplateColumns: { xs: '1fr', sm: 'auto 1fr auto' },
-                columnGap: 1.5, rowGap: 0.5,
+                columnGap: 1.5,
+                rowGap: 0.5,
                 alignItems: 'start',
                 bgcolor: m.status === 'new' ? 'var(--bg-surface)' : 'transparent',
               }}
@@ -905,13 +1260,23 @@ export function DebugPage() {
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, minWidth: 90 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                   <Box component="span" sx={{ fontSize: 14 }}>
-                    {m.reaction === 'thumbs_up' ? '👍'
-                      : m.reaction === 'thumbs_down' ? '👎'
-                      : m.reaction === 'idea' ? '💡'
-                      : m.reaction === 'bug' ? '🪲'
-                      : '—'}
+                    {m.reaction === 'thumbs_up'
+                      ? '👍'
+                      : m.reaction === 'thumbs_down'
+                        ? '👎'
+                        : m.reaction === 'idea'
+                          ? '💡'
+                          : m.reaction === 'bug'
+                            ? '🪲'
+                            : '—'}
                   </Box>
-                  <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: semanticColors.mutedText }}>
+                  <Typography
+                    sx={{
+                      fontFamily: typography.fontFamily,
+                      fontSize: fontSize.xxs,
+                      color: semanticColors.mutedText,
+                    }}
+                  >
                     {timeAgo(m.created_at)}
                   </Typography>
                 </Box>
@@ -920,9 +1285,13 @@ export function DebugPage() {
                     component={RouterLink}
                     to={m.path}
                     sx={{
-                      fontFamily: typography.fontFamily, fontSize: fontSize.xxs,
-                      color: colors.primary, textDecoration: 'none',
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      fontFamily: typography.fontFamily,
+                      fontSize: fontSize.xxs,
+                      color: colors.primary,
+                      textDecoration: 'none',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
                       '&:hover': { textDecoration: 'underline' },
                     }}
                   >
@@ -931,14 +1300,26 @@ export function DebugPage() {
                 )}
               </Box>
               <Box sx={{ minWidth: 0 }}>
-                <Typography sx={{
-                  fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: 'var(--ink)',
-                  whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-                }}>
+                <Typography
+                  sx={{
+                    fontFamily: typography.fontFamily,
+                    fontSize: fontSize.xs,
+                    color: 'var(--ink)',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                  }}
+                >
                   {m.message}
                 </Typography>
                 {m.contact && (
-                  <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: semanticColors.mutedText, mt: 0.5 }}>
+                  <Typography
+                    sx={{
+                      fontFamily: typography.fontFamily,
+                      fontSize: fontSize.xxs,
+                      color: semanticColors.mutedText,
+                      mt: 0.5,
+                    }}
+                  >
                     contact: {m.contact}
                   </Typography>
                 )}
@@ -956,7 +1337,9 @@ export function DebugPage() {
                   sx={{ ...nativeControlSx, cursor: 'pointer', alignSelf: 'start' }}
                 >
                   {FEEDBACK_STATUS_OPTIONS.map(s => (
-                    <option key={s} value={s}>{s.replace('_', ' ')}</option>
+                    <option key={s} value={s}>
+                      {s.replace('_', ' ')}
+                    </option>
                   ))}
                 </Box>
               </Box>
@@ -971,10 +1354,16 @@ export function DebugPage() {
       </Box>
 
       {/* Filter Bar */}
-      <Box sx={{
-        display: 'flex', gap: 1, mb: 2, flexWrap: { xs: 'nowrap', sm: 'wrap' },
-        overflowX: { xs: 'auto', sm: 'visible' }, pb: { xs: 0.5, sm: 0 },
-      }}>
+      <Box
+        sx={{
+          display: 'flex',
+          gap: 1,
+          mb: 2,
+          flexWrap: { xs: 'nowrap', sm: 'wrap' },
+          overflowX: { xs: 'auto', sm: 'visible' },
+          pb: { xs: 0.5, sm: 0 },
+        }}
+      >
         <Box
           component="input"
           type="search"
@@ -996,7 +1385,8 @@ export function DebugPage() {
             borderColor: showIncomplete ? colors.primary : 'var(--rule)',
           }}
         >
-          incomplete {'<'}{LIBRARIES.length}
+          incomplete {'<'}
+          {LIBRARIES.length}
         </Box>
         <Box
           component="button"
@@ -1021,13 +1411,21 @@ export function DebugPage() {
         >
           <option value="">missing library: any</option>
           {LIBRARIES.map(lib => (
-            <option key={lib} value={lib}>missing: {lib}</option>
+            <option key={lib} value={lib}>
+              missing: {lib}
+            </option>
           ))}
         </Box>
-        <Typography sx={{
-          fontFamily: typography.fontFamily, fontSize: fontSize.xs,
-          color: semanticColors.mutedText, alignSelf: 'center', flexShrink: 0, ml: { xs: 0, sm: 'auto' },
-        }}>
+        <Typography
+          sx={{
+            fontFamily: typography.fontFamily,
+            fontSize: fontSize.xs,
+            color: semanticColors.mutedText,
+            alignSelf: 'center',
+            flexShrink: 0,
+            ml: { xs: 0, sm: 'auto' },
+          }}
+        >
           {filteredSpecs.length} / {data.total_specs}
         </Typography>
       </Box>
@@ -1036,23 +1434,51 @@ export function DebugPage() {
       <Box sx={{ display: { xs: 'none', md: 'block' }, overflowX: 'auto' }}>
         <Box sx={{ minWidth: 780 }}>
           {/* Header row */}
-          <Box sx={{
-            display: 'grid',
-            gridTemplateColumns: `180px minmax(180px, 1fr) 50px 50px repeat(${LIBRARIES.length}, 40px) 80px`,
-            gap: 0, alignItems: 'center',
-            position: 'sticky', top: 0, zIndex: 1,
-            bgcolor: 'var(--bg-page)',
-            borderBottom: '1px solid var(--rule)',
-            py: 1,
-          }}>
-            <SortableHeader label="spec id" active={sortKey === 'id'} dir={sortDir} onClick={() => handleSort('id')} />
-            <SortableHeader label="title" active={sortKey === 'title'} dir={sortDir} onClick={() => handleSort('title')} />
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: `180px minmax(180px, 1fr) 50px 50px repeat(${LIBRARIES.length}, 40px) 80px`,
+              gap: 0,
+              alignItems: 'center',
+              position: 'sticky',
+              top: 0,
+              zIndex: 1,
+              bgcolor: 'var(--bg-page)',
+              borderBottom: '1px solid var(--rule)',
+              py: 1,
+            }}
+          >
+            <SortableHeader
+              label="spec id"
+              active={sortKey === 'id'}
+              dir={sortDir}
+              onClick={() => handleSort('id')}
+            />
+            <SortableHeader
+              label="title"
+              active={sortKey === 'title'}
+              dir={sortDir}
+              onClick={() => handleSort('title')}
+            />
             <HeaderCell>#</HeaderCell>
-            <SortableHeader label="avg" active={sortKey === 'avg_score'} dir={sortDir} onClick={() => handleSort('avg_score')} center />
+            <SortableHeader
+              label="avg"
+              active={sortKey === 'avg_score'}
+              dir={sortDir}
+              onClick={() => handleSort('avg_score')}
+              center
+            />
             {LIBRARIES.map(lib => (
-              <HeaderCell key={lib} center>{LIB_ABBREV[lib] ?? lib.slice(0, 3)}</HeaderCell>
+              <HeaderCell key={lib} center>
+                {LIB_ABBREV[lib] ?? lib.slice(0, 3)}
+              </HeaderCell>
             ))}
-            <SortableHeader label="updated" active={sortKey === 'updated'} dir={sortDir} onClick={() => handleSort('updated')} />
+            <SortableHeader
+              label="updated"
+              active={sortKey === 'updated'}
+              dir={sortDir}
+              onClick={() => handleSort('updated')}
+            />
           </Box>
 
           {/* Body rows */}
@@ -1064,7 +1490,9 @@ export function DebugPage() {
                 sx={{
                   display: 'grid',
                   gridTemplateColumns: `180px minmax(180px, 1fr) 50px 50px repeat(${LIBRARIES.length}, 40px) 80px`,
-                  gap: 0, alignItems: 'center', py: 0.5,
+                  gap: 0,
+                  alignItems: 'center',
+                  py: 0.5,
                   borderBottom: '1px solid var(--rule)',
                   '&:hover': { bgcolor: 'var(--bg-surface)' },
                 }}
@@ -1073,39 +1501,71 @@ export function DebugPage() {
                   component={RouterLink}
                   to={specPath(spec.id)}
                   sx={{
-                    fontFamily: typography.fontFamily, fontSize: fontSize.xs,
-                    color: colors.primary, textDecoration: 'none',
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    fontFamily: typography.fontFamily,
+                    fontSize: fontSize.xs,
+                    color: colors.primary,
+                    textDecoration: 'none',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
                     '&:hover': { textDecoration: 'underline' },
                   }}
                 >
                   {spec.id}
                 </Link>
-                <Typography sx={{
-                  fontFamily: typography.fontFamily, fontSize: fontSize.xs,
-                  color: semanticColors.labelText,
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', pr: 1,
-                }}>
+                <Typography
+                  sx={{
+                    fontFamily: typography.fontFamily,
+                    fontSize: fontSize.xs,
+                    color: semanticColors.labelText,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    pr: 1,
+                  }}
+                >
                   {spec.title}
                 </Typography>
-                <Typography sx={{
-                  fontFamily: typography.fontFamily, fontSize: fontSize.xs, fontWeight: 600,
-                  color: implCount === LIBRARIES.length ? colors.success : implCount > 0 ? semanticColors.mutedText : 'var(--ink-muted)',
-                  textAlign: 'center',
-                }}>
+                <Typography
+                  sx={{
+                    fontFamily: typography.fontFamily,
+                    fontSize: fontSize.xs,
+                    fontWeight: 600,
+                    color:
+                      implCount === LIBRARIES.length
+                        ? colors.success
+                        : implCount > 0
+                          ? semanticColors.mutedText
+                          : 'var(--ink-muted)',
+                    textAlign: 'center',
+                  }}
+                >
                   {implCount}/{LIBRARIES.length}
                 </Typography>
-                <Typography sx={{
-                  fontFamily: typography.fontFamily, fontSize: fontSize.xs, fontWeight: 600,
-                  color: scoreColor(spec.avg_score), textAlign: 'center',
-                }}>
+                <Typography
+                  sx={{
+                    fontFamily: typography.fontFamily,
+                    fontSize: fontSize.xs,
+                    fontWeight: 600,
+                    color: scoreColor(spec.avg_score),
+                    textAlign: 'center',
+                  }}
+                >
                   {spec.avg_score !== null ? spec.avg_score.toFixed(1) : '—'}
                 </Typography>
                 {LIBRARIES.map(lib => {
                   const score = spec[lib as keyof SpecStatus] as number | null;
                   if (score === null) {
                     return (
-                      <Box key={lib} sx={{ textAlign: 'center', fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: 'var(--ink-muted)' }}>
+                      <Box
+                        key={lib}
+                        sx={{
+                          textAlign: 'center',
+                          fontFamily: typography.fontFamily,
+                          fontSize: fontSize.xs,
+                          color: 'var(--ink-muted)',
+                        }}
+                      >
                         —
                       </Box>
                     );
@@ -1116,8 +1576,11 @@ export function DebugPage() {
                       component={RouterLink}
                       to={specPath(spec.id, LIB_TO_LANG[lib] ?? 'python', lib)}
                       sx={{
-                        textAlign: 'center', textDecoration: 'none',
-                        fontFamily: typography.fontFamily, fontSize: fontSize.xs, fontWeight: 600,
+                        textAlign: 'center',
+                        textDecoration: 'none',
+                        fontFamily: typography.fontFamily,
+                        fontSize: fontSize.xs,
+                        fontWeight: 600,
                         color: scoreColor(score),
                         '&:hover': { opacity: 0.7 },
                       }}
@@ -1126,7 +1589,13 @@ export function DebugPage() {
                     </Link>
                   );
                 })}
-                <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: semanticColors.mutedText }}>
+                <Typography
+                  sx={{
+                    fontFamily: typography.fontFamily,
+                    fontSize: fontSize.xxs,
+                    color: semanticColors.mutedText,
+                  }}
+                >
                   {spec.updated ? formatDateShort(spec.updated) : '—'}
                 </Typography>
               </Box>
@@ -1141,8 +1610,12 @@ export function DebugPage() {
           <Box
             key={spec.id}
             sx={{
-              border: '1px solid var(--rule)', borderRadius: 1, p: 1.5,
-              display: 'flex', flexDirection: 'column', gap: 1,
+              border: '1px solid var(--rule)',
+              borderRadius: 1,
+              p: 1.5,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1,
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
@@ -1150,18 +1623,29 @@ export function DebugPage() {
                 component={RouterLink}
                 to={specPath(spec.id)}
                 sx={{
-                  flex: 1, fontFamily: typography.fontFamily, fontSize: fontSize.sm,
-                  color: 'var(--ink)', textDecoration: 'none', fontWeight: 500,
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  flex: 1,
+                  fontFamily: typography.fontFamily,
+                  fontSize: fontSize.sm,
+                  color: 'var(--ink)',
+                  textDecoration: 'none',
+                  fontWeight: 500,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
                   '&:hover': { color: colors.primary },
                 }}
               >
                 {spec.title}
               </Link>
-              <Typography sx={{
-                fontFamily: typography.fontFamily, fontSize: fontSize.xs,
-                color: scoreColor(spec.avg_score), fontWeight: 600, flexShrink: 0,
-              }}>
+              <Typography
+                sx={{
+                  fontFamily: typography.fontFamily,
+                  fontSize: fontSize.xs,
+                  color: scoreColor(spec.avg_score),
+                  fontWeight: 600,
+                  flexShrink: 0,
+                }}
+              >
                 avg {spec.avg_score !== null ? spec.avg_score.toFixed(0) : '—'}
               </Typography>
             </Box>
@@ -1171,9 +1655,15 @@ export function DebugPage() {
                 const missing = score === null;
                 const abbrev = LIB_ABBREV[lib] ?? lib.slice(0, 3);
                 const commonSx = {
-                  display: 'inline-flex', alignItems: 'center', gap: 0.5,
-                  px: 0.75, py: 0.25, borderRadius: 0.5,
-                  fontFamily: typography.fontFamily, fontSize: fontSize.xxs, fontWeight: 600,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  px: 0.75,
+                  py: 0.25,
+                  borderRadius: 0.5,
+                  fontFamily: typography.fontFamily,
+                  fontSize: fontSize.xxs,
+                  fontWeight: 600,
                   textDecoration: 'none',
                   bgcolor: missing ? 'var(--bg-elevated)' : `${scoreColor(score)}22`,
                   color: missing ? 'var(--ink-muted)' : scoreColor(score),
@@ -1199,8 +1689,18 @@ export function DebugPage() {
                 );
               })}
             </Box>
-            <Box sx={{ display: 'flex', gap: 1, fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: semanticColors.mutedText }}>
-              <Box component="span" sx={{ color: colors.primary }}>{spec.id}</Box>
+            <Box
+              sx={{
+                display: 'flex',
+                gap: 1,
+                fontFamily: typography.fontFamily,
+                fontSize: fontSize.xxs,
+                color: semanticColors.mutedText,
+              }}
+            >
+              <Box component="span" sx={{ color: colors.primary }}>
+                {spec.id}
+              </Box>
               <Box component="span">·</Box>
               <Box component="span">{spec.updated ? timeAgo(spec.updated) : 'no activity'}</Box>
             </Box>
@@ -1215,14 +1715,36 @@ export function DebugPage() {
 // Sortable header helpers
 // ============================================================================
 
-function FeedbackTopList({ title, items, accent }: { title: string; items: FeedbackTopPage[]; accent: string }) {
+function FeedbackTopList({
+  title,
+  items,
+  accent,
+}: {
+  title: string;
+  items: FeedbackTopPage[];
+  accent: string;
+}) {
   return (
     <Box sx={{ border: '1px solid var(--rule)', borderRadius: 1, p: 1.5 }}>
-      <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, fontWeight: 600, color: 'var(--ink-soft)', mb: 1 }}>
+      <Typography
+        sx={{
+          fontFamily: typography.fontFamily,
+          fontSize: fontSize.xs,
+          fontWeight: 600,
+          color: 'var(--ink-soft)',
+          mb: 1,
+        }}
+      >
         {title}
       </Typography>
       {items.length === 0 ? (
-        <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: semanticColors.mutedText }}>
+        <Typography
+          sx={{
+            fontFamily: typography.fontFamily,
+            fontSize: fontSize.xxs,
+            color: semanticColors.mutedText,
+          }}
+        >
           no entries yet
         </Typography>
       ) : (
@@ -1233,30 +1755,47 @@ function FeedbackTopList({ title, items, accent }: { title: string; items: Feedb
               sx={{
                 display: 'grid',
                 gridTemplateColumns: '32px 1fr auto',
-                gap: 1, alignItems: 'baseline',
-                py: 0.4, borderBottom: '1px solid var(--rule)',
+                gap: 1,
+                alignItems: 'baseline',
+                py: 0.4,
+                borderBottom: '1px solid var(--rule)',
                 '&:last-of-type': { borderBottom: 'none' },
               }}
             >
-              <Typography sx={{
-                fontFamily: typography.fontFamily, fontSize: fontSize.xxs,
-                color: accent, fontWeight: 600, textAlign: 'right',
-              }}>
+              <Typography
+                sx={{
+                  fontFamily: typography.fontFamily,
+                  fontSize: fontSize.xxs,
+                  color: accent,
+                  fontWeight: 600,
+                  textAlign: 'right',
+                }}
+              >
                 {it.count}
               </Typography>
               <Link
                 component={RouterLink}
                 to={it.path}
                 sx={{
-                  fontFamily: typography.fontFamily, fontSize: fontSize.xs,
-                  color: colors.primary, textDecoration: 'none',
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  fontFamily: typography.fontFamily,
+                  fontSize: fontSize.xs,
+                  color: colors.primary,
+                  textDecoration: 'none',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
                   '&:hover': { textDecoration: 'underline' },
                 }}
               >
                 {it.path}
               </Link>
-              <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.micro, color: semanticColors.mutedText }}>
+              <Typography
+                sx={{
+                  fontFamily: typography.fontFamily,
+                  fontSize: fontSize.micro,
+                  color: semanticColors.mutedText,
+                }}
+              >
                 {it.last_seen ? timeAgo(it.last_seen) : ''}
               </Typography>
             </Box>
@@ -1267,7 +1806,15 @@ function FeedbackTopList({ title, items, accent }: { title: string; items: Feedb
   );
 }
 
-function CopyClaudePromptButton({ message, path, reaction }: { message: string; path: string | null; reaction: string | null }) {
+function CopyClaudePromptButton({
+  message,
+  path,
+  reaction,
+}: {
+  message: string;
+  path: string | null;
+  reaction: string | null;
+}) {
   const { copied, copyToClipboard } = useCopyCode();
   return (
     <Tooltip title={copied ? 'copied — paste into Claude Code' : 'copy prompt for Claude Code'}>
@@ -1291,29 +1838,51 @@ function CopyClaudePromptButton({ message, path, reaction }: { message: string; 
 
 function HeaderCell({ children, center }: { children: React.ReactNode; center?: boolean }) {
   return (
-    <Typography sx={{
-      fontFamily: typography.fontFamily, fontSize: fontSize.xs, fontWeight: 600,
-      color: 'var(--ink-soft)', textAlign: center ? 'center' : 'left',
-    }}>
+    <Typography
+      sx={{
+        fontFamily: typography.fontFamily,
+        fontSize: fontSize.xs,
+        fontWeight: 600,
+        color: 'var(--ink-soft)',
+        textAlign: center ? 'center' : 'left',
+      }}
+    >
       {children}
     </Typography>
   );
 }
 
 function SortableHeader({
-  label, active, dir, onClick, center,
-}: { label: string; active: boolean; dir: SortDir; onClick: () => void; center?: boolean }) {
+  label,
+  active,
+  dir,
+  onClick,
+  center,
+}: {
+  label: string;
+  active: boolean;
+  dir: SortDir;
+  onClick: () => void;
+  center?: boolean;
+}) {
   return (
     <Box
       component="button"
       type="button"
       onClick={onClick}
       sx={{
-        background: 'none', border: 'none', p: 0, cursor: 'pointer',
-        fontFamily: typography.fontFamily, fontSize: fontSize.xs, fontWeight: 600,
+        background: 'none',
+        border: 'none',
+        p: 0,
+        cursor: 'pointer',
+        fontFamily: typography.fontFamily,
+        fontSize: fontSize.xs,
+        fontWeight: 600,
         color: active ? colors.primary : 'var(--ink-soft)',
         textAlign: center ? 'center' : 'left',
-        display: 'flex', alignItems: 'center', gap: 0.25,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 0.25,
         justifyContent: center ? 'center' : 'flex-start',
         '&:hover': { color: colors.primaryDark },
       }}

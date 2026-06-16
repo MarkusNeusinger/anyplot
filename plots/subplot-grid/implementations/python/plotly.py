@@ -26,7 +26,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Financial dashboard example
 np.random.seed(42)
@@ -62,18 +62,18 @@ fig = make_subplots(
 
 # Subplot 1: Line chart - Stock price with moving average
 fig.add_trace(
-    go.Scatter(x=dates, y=price, mode="lines", name="Price", line={"color": OKABE_ITO[0], "width": 3}), row=1, col=1
+    go.Scatter(x=dates, y=price, mode="lines", name="Price", line={"color": IMPRINT[0], "width": 3}), row=1, col=1
 )
 fig.add_trace(
     go.Scatter(
-        x=dates, y=ma_20, mode="lines", name="20-day MA", line={"color": OKABE_ITO[1], "width": 2, "dash": "dash"}
+        x=dates, y=ma_20, mode="lines", name="20-day MA", line={"color": IMPRINT[1], "width": 2, "dash": "dash"}
     ),
     row=1,
     col=1,
 )
 
 # Subplot 2: Bar chart - Volume
-volume_colors = [OKABE_ITO[0] if r >= 0 else OKABE_ITO[1] for r in returns]
+volume_colors = [IMPRINT[0] if r >= 0 else IMPRINT[1] for r in returns]
 fig.add_trace(go.Bar(x=dates, y=volume, name="Volume", marker={"color": volume_colors, "opacity": 0.8}), row=1, col=2)
 
 # Subplot 3: Histogram - Daily returns distribution
@@ -82,7 +82,7 @@ fig.add_trace(
         x=daily_returns,
         nbinsx=20,
         name="Returns",
-        marker={"color": OKABE_ITO[0], "opacity": 0.75, "line": {"color": PAGE_BG, "width": 1}},
+        marker={"color": IMPRINT[0], "opacity": 0.75, "line": {"color": PAGE_BG, "width": 1}},
     ),
     row=2,
     col=1,
@@ -95,7 +95,7 @@ fig.add_trace(
         y=price,
         mode="markers",
         name="Price-Volume",
-        marker={"color": OKABE_ITO[0], "size": 14, "opacity": 0.7, "line": {"color": PAGE_BG, "width": 1}},
+        marker={"color": IMPRINT[0], "size": 14, "opacity": 0.7, "line": {"color": PAGE_BG, "width": 1}},
     ),
     row=2,
     col=2,

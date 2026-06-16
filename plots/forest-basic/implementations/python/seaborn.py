@@ -127,7 +127,7 @@ diamond = mpatches.Polygon(
         [pooled_ci_upper, diamond_y + diamond_height / 2],
     ],
     closed=True,
-    facecolor="#F0E442",
+    facecolor="#954477",
     edgecolor=BRAND,
     linewidth=2,
     zorder=3,

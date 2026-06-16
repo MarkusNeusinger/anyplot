@@ -17,7 +17,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 np.random.seed(42)
 
@@ -70,7 +70,7 @@ data_smooth = np.array([np.maximum(make_interp_spline(months, series, k=3)(month
 fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-ax.stackplot(months_fine, data_smooth, labels=categories, colors=OKABE_ITO, baseline="wiggle", alpha=0.85)
+ax.stackplot(months_fine, data_smooth, labels=categories, colors=IMPRINT, baseline="wiggle", alpha=0.85)
 
 ax.set_xlabel("Month (Jan 2023 – Dec 2024)", fontsize=20, color=INK)
 ax.set_title("streamgraph-basic · matplotlib · anyplot.ai", fontsize=24, color=INK, fontweight="medium")

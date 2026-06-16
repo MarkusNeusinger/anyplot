@@ -72,18 +72,18 @@ values = [
 colors = [
     ELEVATED_BG,  # Company root — adapts cleanly to both light and dark themes
     "#009E73",  # Engineering — Okabe-Ito #1 (dominant: 37.5%)
-    "#D55E00",  # Sales — Okabe-Ito #2
-    "#0072B2",  # Marketing — Okabe-Ito #3
-    "#CC79A7",  # Operations — Okabe-Ito #4
-    "#00B589",  # Backend — lighter green
+    "#C475FD",  # Sales — Okabe-Ito #2
+    "#4467A3",  # Marketing — Okabe-Ito #3
+    "#BD8233",  # Operations — Okabe-Ito #4
+    "#2DAE89",  # Backend — lighter green
     "#009E73",  # Frontend — base green
     "#007A58",  # DevOps — darker green
-    "#F07030",  # Enterprise — lighter vermillion
-    "#D55E00",  # SMB — base vermillion
-    "#2090CC",  # Digital — lighter blue
-    "#0072B2",  # Brand — base blue
-    "#DD99C0",  # HR — lighter pink
-    "#CC79A7",  # Finance — base pink
+    "#D195FE",  # Enterprise — lighter lavender
+    "#C475FD",  # SMB — base lavender
+    "#6883B6",  # Digital — lighter blue
+    "#4467A3",  # Brand — base blue
+    "#CC9852",  # HR — lighter ochre
+    "#BD8233",  # Finance — base ochre
 ]
 
 fig = go.Figure(

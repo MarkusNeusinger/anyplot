@@ -16,11 +16,11 @@ const ELEVATED_BG = THEME == "light" ? colorant"#FFFDF6" : colorant"#242420"
 const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 
-const ANYPLOT_PALETTE = [
+const IMPRINT = [
     colorant"#009E73",  # 1 — brand green  (NVDA)
-    colorant"#9418DB",  # 2 — purple       (AAPL)
-    colorant"#B71D27",  # 3 — red          (AMZN)
-    colorant"#16B8F3",  # 4 — sky blue     (SPY)
+    colorant"#C475FD",  # 2 — purple       (AAPL)
+    colorant"#AE3030",  # 3 — red          (AMZN)
+    colorant"#4467A3",  # 4 — sky blue     (SPY)
 ]
 
 # Data: 252 trading days (~1 year) for 4 assets, normalized to 100
@@ -100,7 +100,7 @@ hlines!(ax, [100.0]; color = ref_col, linewidth = 1.2, linestyle = :dash)
 # Stock series lines
 for j in 1:4
     lines!(ax, days, prices[:, j];
-        color     = ANYPLOT_PALETTE[j],
+        color     = IMPRINT[j],
         linewidth = 2.5,
         label     = TICKERS[j],
     )
@@ -112,7 +112,7 @@ for j in 1:4
     final_val = prices[end, j]
     text!(ax, N_DAYS + 3, final_val;
         text     = string(round(Int, final_val)),
-        color    = ANYPLOT_PALETTE[j],
+        color    = IMPRINT[j],
         fontsize = 11,
         align    = (:left, :center),
     )

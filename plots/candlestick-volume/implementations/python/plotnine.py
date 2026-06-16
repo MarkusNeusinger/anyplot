@@ -46,9 +46,9 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette: Up (green), Down (orange)
+# imprint semantic anchors: Up (green), Down (red)
 UP_COLOR = "#009E73"
-DOWN_COLOR = "#D55E00"
+DOWN_COLOR = "#AE3030"
 
 # Generate realistic OHLC data
 np.random.seed(42)

@@ -19,7 +19,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 np.random.seed(42)
 
@@ -74,8 +74,8 @@ base_theme = theme_minimal() + theme(
 # Panel A: Wide time series (top, spans all 3 columns)
 plot_a = (
     ggplot(df_overview, aes("day_num", "revenue"))
-    + geom_area(fill=OKABE_ITO[0], alpha=0.3)
-    + geom_line(color=OKABE_ITO[0], size=2)
+    + geom_area(fill=IMPRINT[0], alpha=0.3)
+    + geom_line(color=IMPRINT[0], size=2)
     + labs(x="Day", y="Revenue ($)", title="Daily Revenue Overview")
     + base_theme
 )
@@ -83,7 +83,7 @@ plot_a = (
 # Panel B: Bar chart (middle row, spans 2/3 width)
 plot_b = (
     ggplot(df_bar, aes("category", "sales"))
-    + geom_bar(stat="identity", fill=OKABE_ITO[0], color=INK_SOFT, size=0.6, alpha=0.85)
+    + geom_bar(stat="identity", fill=IMPRINT[0], color=INK_SOFT, size=0.6, alpha=0.85)
     + labs(x="Product Category", y="Units Sold", title="Sales by Product")
     + base_theme
     + theme(axis_text_x=element_text(angle=45, hjust=1))
@@ -92,8 +92,8 @@ plot_b = (
 # Panel C: Scatter plot (middle row, 1/3 width)
 plot_c = (
     ggplot(df_scatter, aes("effort", "output"))
-    + geom_point(color=OKABE_ITO[0], size=6, alpha=0.7, fill=OKABE_ITO[0])
-    + geom_smooth(method="lm", color=OKABE_ITO[1], size=1.5, se=False)
+    + geom_point(color=IMPRINT[0], size=6, alpha=0.7, fill=IMPRINT[0])
+    + geom_smooth(method="lm", color=IMPRINT[1], size=1.5, se=False)
     + labs(x="Effort (hours)", y="Output (units)", title="Effort vs Output")
     + base_theme
 )
@@ -101,7 +101,7 @@ plot_c = (
 # Panel D: Histogram (bottom left)
 plot_d = (
     ggplot(df_hist, aes("metric"))
-    + geom_histogram(bins=25, fill=OKABE_ITO[0], color=INK_SOFT, alpha=0.8, size=0.3)
+    + geom_histogram(bins=25, fill=IMPRINT[0], color=INK_SOFT, alpha=0.8, size=0.3)
     + labs(x="Performance Score", y="Frequency", title="Score Distribution")
     + base_theme
 )
@@ -109,8 +109,8 @@ plot_d = (
 # Panel E: Line chart with points (bottom middle)
 plot_e = (
     ggplot(df_line, aes("month_num", "growth"))
-    + geom_line(color=OKABE_ITO[0], size=2.5)
-    + geom_point(color=OKABE_ITO[0], size=8, fill=OKABE_ITO[0], alpha=0.8)
+    + geom_line(color=IMPRINT[0], size=2.5)
+    + geom_point(color=IMPRINT[0], size=8, fill=IMPRINT[0], alpha=0.8)
     + scale_x_continuous(breaks=list(range(6)), labels=months)
     + labs(x="Month", y="Growth Rate (%)", title="Monthly Growth")
     + base_theme

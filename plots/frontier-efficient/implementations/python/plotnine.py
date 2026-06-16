@@ -32,7 +32,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data
 np.random.seed(42)
@@ -97,9 +97,9 @@ df_frontier = pd.DataFrame({"risk": frontier_risks, "return": frontier_returns})
 plot = (
     ggplot()
     + geom_point(df_portfolios, aes(x="risk", y="return", color="sharpe"), size=3, alpha=0.6)
-    + geom_line(df_frontier, aes(x="risk", y="return"), color=OKABE_ITO[0], size=2.5)
-    + annotate("point", x=min_var_risk, y=min_var_return, color=OKABE_ITO[4], size=6, shape="s")
-    + annotate("point", x=max_sharpe_risk, y=max_sharpe_return, color=OKABE_ITO[4], size=6, shape="D")
+    + geom_line(df_frontier, aes(x="risk", y="return"), color=IMPRINT[0], size=2.5)
+    + annotate("point", x=min_var_risk, y=min_var_return, color=IMPRINT[4], size=6, shape="s")
+    + annotate("point", x=max_sharpe_risk, y=max_sharpe_return, color=IMPRINT[4], size=6, shape="D")
     + annotate("text", x=min_var_risk + 0.012, y=min_var_return, label="Min Var", size=14, ha="left", color=INK)
     + annotate(
         "text", x=max_sharpe_risk + 0.012, y=max_sharpe_return, label="Max Sharpe", size=14, ha="left", color=INK

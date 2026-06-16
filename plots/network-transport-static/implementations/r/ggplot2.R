@@ -19,10 +19,10 @@ INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
 
-OKABE_ITO   <- c(
+IMPRINT   <- c(
   "#009E73",  # 1 — regional (first categorical series)
-  "#D55E00",  # 2 — express
-  "#0072B2"   # 3 — local
+  "#C475FD",  # 2 — express
+  "#4467A3"   # 3 — local
 )
 
 # --- Data: Regional rail network with 12 stations and 30 routes ----------------
@@ -48,7 +48,7 @@ routes <- data.frame(
 # Map route types to colors
 route_colors <- data.frame(
   route_type = c("Regional", "Express", "Local"),
-  color = OKABE_ITO,
+  color = IMPRINT,
   stringsAsFactors = FALSE
 )
 
@@ -133,7 +133,7 @@ p <- ggplot() +
   # Scale colors for route types
   scale_color_manual(
     name = "Route Type",
-    values = c("Regional" = OKABE_ITO[1], "Express" = OKABE_ITO[2], "Local" = OKABE_ITO[3])
+    values = c("Regional" = IMPRINT[1], "Express" = IMPRINT[2], "Local" = IMPRINT[3])
   ) +
   coord_fixed(ratio = 1) +
   labs(title = "network-transport-static · r · ggplot2 · anyplot.ai") +

@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette — first series always #009E73
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Survey response scores grouped by demographic category
 np.random.seed(42)
@@ -47,7 +47,7 @@ for i, (cat, values) in enumerate(data.items()):
             y=values,
             mode="markers",
             name=cat,
-            marker={"size": 14, "opacity": 0.6, "color": OKABE_ITO[i]},
+            marker={"size": 14, "opacity": 0.6, "color": IMPRINT[i]},
             hovertemplate=f"{cat}<br>Value: %{{y:.1f}}<extra></extra>",
         )
     )

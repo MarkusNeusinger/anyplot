@@ -1,117 +1,129 @@
 library: bokeh
+language: python
 specification_id: line-pca-variance-cumulative
 created: '2026-02-17T21:47:21Z'
-updated: '2026-02-17T22:02:20Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 22116658622
+updated: '2026-05-29T05:50:27Z'
+generated_by: claude-sonnet
+workflow_run: 26620101752
 issue: 4131
-python_version: 3.14.3
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/bokeh/plot.html
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/bokeh/plot-dark.html
 quality_score: 91
 review:
   strengths:
-  - 'Excellent use of Bokeh-distinctive features: Band for area fill, HoverTool for
-    interactivity, dual PNG+HTML export'
-  - Strong data storytelling with glow-ring highlighted threshold crossings and clear
-    annotations at decision points
-  - Real dataset (Wine) provides authentic PCA variance distribution rather than synthetic
-    data
-  - Thoughtful colorblind-safe palette with teal/purple threshold differentiation
-  - All font sizes explicitly set and well-proportioned for 4800x2700 canvas
+  - Full spec compliance with all required features implemented using the actual scikit-learn
+    Wine dataset for authentic PCA distributions
+  - 'Excellent data storytelling: threshold lines, glow rings, and precise crossing
+    annotations create an immediately readable narrative about component selection
+    trade-offs'
+  - 'Sophisticated Bokeh usage: Band fill, Span, HoverTool with named renderer, and
+    CDP-based screenshot are idiomatic library-distinctive features'
+  - 'Perfect Imprint palette and theme compliance: canonical color order throughout,
+    fully theme-adaptive chrome in both light and dark renders'
+  - Deterministic reproducibility using a real dataset with no randomness required
   weaknesses:
-  - HoverTool renderer attachment uses fragile magic index p.renderers[2] — could
-    break if render order changes
-  - Right-edge threshold labels (90%, 95%) are positioned close to the canvas boundary
-    and could benefit from slightly more margin
-  image_description: 'The plot displays a cumulative explained variance curve for
-    PCA on the Wine dataset with 13 principal components. A dark blue line with circular
-    markers traces the cumulative variance from ~36% (component 1) rising steeply
-    through the first few components and flattening as it approaches 100% at component
-    13. Light blue semi-transparent bars underneath show each component''s individual
-    variance contribution, forming a decreasing pattern. A subtle blue-gray band fills
-    the area under the cumulative curve. Two horizontal dashed threshold lines cross
-    the plot: a teal/cyan line at 90% and a purple line at 95%. The 90% crossing point
-    is highlighted at component 8 (92.0%) with a teal glow-ring marker and annotation
-    text. The 95% crossing is highlighted at component 10 (96.2%) with a purple glow-ring
-    marker and annotation. Threshold labels "90%" and "95%" appear in matching colors
-    on the right edge. The title reads "line-pca-variance-cumulative · bokeh · pyplots.ai"
-    centered at top. Axis labels are "Number of Principal Components" (x) and "Explained
-    Variance (%)" (y). A legend in center-right shows "Individual Variance" and "Cumulative
-    Variance". The background is light gray with subtle dashed y-grid lines and nearly
-    invisible dotted x-grid lines. All text is clearly readable.'
+  - Full 4-sided box frame from outline_line_color=INK_SOFT — remove top/right spines
+    by setting p.outline_line_color = None to achieve L-shaped spine aesthetic (DE-02
+    deduction)
+  - Crossing annotation text at 24pt is the smallest text on the canvas; at mobile
+    scale (~400px) these labels may become hard to read — consider increasing to 28-30pt
+  - Individual variance bars at fill_alpha=0.20 are very subtle in the dark render,
+    nearly blending with the dark background — increase to 0.28-0.32 for dark theme
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "line-pca-variance-cumulative · python · bokeh · anyplot.ai" is bold, centered, dark ink, ~75% of plot width. Y-axis label "Cumulative Explained Variance (%)" and X-axis label "Number of Principal Components" are italic dark ink (42pt). Tick labels on both axes in INK_SOFT dark gray — all clearly readable.
+      Data: Cumulative variance line in brand green (#009E73) with white-bordered circular markers at all 13 components. Transparent green area band beneath curve. Lavender (#C475FD) individual variance bars at alpha=0.20 (subtle secondary). Blue (#4467A3) dashed 90% threshold line and ochre (#BD8233) dashed 95% threshold line. Glow rings and crossing annotations ("8 components (92.0%)" in blue, "10 components (96.2%)" in ochre). Legend center-right with elevated background.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17) — correct dark theme surface
+      Chrome: All text flips to light/cream: title, axis labels, tick labels all in INK (~#F0EFE8) and INK_SOFT (~#B8B7B0) — fully readable against the dark background. No dark-on-dark failures. Legend has elevated dark background (#242420).
+      Data: Colors identical to light render — brand green cumulative line and markers, lavender bars, blue and ochre threshold lines and annotations. Green area fill is very faint at alpha=0.08 on dark background (barely visible) but not a legibility issue. Brand green #009E73 remains clearly visible.
+      Legibility verdict: PASS — all primary text readable, data colors unchanged from light render
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 36pt, axis labels 26pt, ticks
-          20pt, annotations 22pt, legend 24pt'
+        comment: All font sizes explicitly set and well-proportioned; annotation labels
+          at 24pt may be tight at 400px mobile scale
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Minor proximity between 90% right-edge label and threshold line;
-          8 components annotation slightly awkward but readable
+        comment: No significant overlap; minor crowding near upper-right annotation
+          (10 components at 96.2%) near 100% y-range
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Markers size 22, line width 6, bar width 0.5 — well-adapted for 13
-          data points
+        comment: Line and markers well-sized for 13 sparse points; individual variance
+          bars (alpha=0.20) very faint in dark render
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette with good luminance contrast between all
+          series
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Colorblind-safe: blue primary, teal for 90%, purple for 95%'
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 4
-        passed: true
-        comment: Good layout with explicit padding, right margin slightly tight with
-          threshold labels
+        comment: 3200x1800 canvas well-utilized; min_border_* reservations prevent
+          clipping; content well distributed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Number of Principal Components, Explained
-          Variance (%)'
+        comment: Cumulative Explained Variance (%) includes units; Number of Principal
+          Components is descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Imprint canonical order, backgrounds #FAF8F1/#1A1A17,
+          fully theme-adaptive chrome'
     design_excellence:
-      score: 16
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Custom palette, glow-ring highlights, Band fill, coordinated teal/purple
-          thresholds
+        comment: 'Strong: Band fill, glow rings, intentional Imprint palette, layered
+          visualization elements clearly above defaults'
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: Dashed y-grid 0.2 alpha, dotted x-grid nearly invisible, custom background,
-          generous padding
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Threshold crossings highlighted with glow markers and annotated with
-          component counts
+        comment: Subtle grid, generous margins, theme-adaptive chrome; deduction for
+          outline_line_color=INK_SOFT maintaining 4-sided box frame
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Excellent: threshold lines, glow rings, crossing annotations guide
+          viewer directly to component selection decisions'
     spec_compliance:
       score: 15
       max: 15
@@ -121,52 +133,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: cumulative line plot with individual variance bars overlay'
+        comment: Correct line plot of cumulative explained variance vs. PCA components
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: cumulative sum, percentage, dashed thresholds
-          at 90%/95%, markers, bars overlay, annotations'
+        comment: Cumulative y-axis, percentage scale, 90%/95% threshold lines, markers,
+          elbow annotation, individual variance bars
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = component number (1-13), Y = cumulative variance (%)
+        comment: 'X: 1-13 components; Y: 0-100% cumulative variance; x-range starts
+          at 1'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match data
+        comment: Title is exactly the required format; legend labels match data series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows PCA elbow curve, diminishing returns, individual contributions,
-          threshold crossings
+        comment: Demonstrates cumulative curve, individual bars, elbow pattern, threshold
+          crossings, full 0-100% range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real dataset: sklearn Wine dataset with 13 chemical features'
+        comment: Uses real scikit-learn Wine dataset (13 chemical features) — authentic
+          PCA output, neutral food chemistry domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Actual PCA output values, first component ~36%, cumulative reaching
-          ~100%
+        comment: First component ~36% variance is factually correct for Wine dataset;
+          threshold crossings at 8 and 10 components are accurate
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -174,32 +188,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports, data, plot, save. No functions or classes'
+        comment: 'Linear: imports -> data -> plot -> save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data from sklearn Wine dataset
+        comment: Deterministic real dataset; no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used; no orphaned entries
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Fragile magic index p.renderers[2] for HoverTool, slightly verbose
-          Label objects
+        passed: true
+        comment: Appropriate complexity; title fontsize scaling formula concise; PIL
+          normalization guard pragmatic
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png, also saves plot.html
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png; Selenium CDP pattern
+          correct
     library_mastery:
       score: 9
       max: 10
@@ -209,23 +224,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert Bokeh: ColumnDataSource, figure(), Span, Label, Band, HoverTool'
+        comment: ColumnDataSource, Band, Span, Label, HoverTool with named renderer
+          — all idiomatic Bokeh patterns
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Band for area fill, HoverTool with vline mode, HTML export alongside
-          PNG
+        comment: Bokeh Band (area fill between columns), Span (infinite reference
+          lines), HoverTool mode=vline, CDP setDeviceMetricsOverride — library-distinctive
+          workflow
   verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
+  - selenium
+  - pillow
   techniques:
-  - annotations
   - hover-tooltips
   - html-export
-  - manual-ticks
+  - annotations
   patterns:
   - dataset-loading
   - columndatasource
@@ -234,6 +252,5 @@ impl_tags:
   - cumulative-sum
   - normalization
   styling:
-  - grid-styling
   - alpha-blending
   - edge-highlighting

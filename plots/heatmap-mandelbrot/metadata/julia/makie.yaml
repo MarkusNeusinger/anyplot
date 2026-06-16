@@ -1,0 +1,255 @@
+library: makie
+language: julia
+specification_id: heatmap-mandelbrot
+created: '2026-05-30T11:09:24Z'
+updated: '2026-05-30T11:43:28Z'
+generated_by: claude-sonnet
+workflow_run: 26682085557
+issue: 4431
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Smooth coloring via log2(log2(|z|)) correctly eliminates discrete banding; cyclic
+    mod-8 normalization is a visually effective choice that reveals fractal self-similarity
+  - 'Full Imprint palette compliance: imprint_seq colormap, correct theme-adaptive
+    backgrounds (#FAF8F1 light / #1A1A17 dark), all chrome tokens applied to every
+    element including the colorbar (labelcolor=INK, ticklabelcolor=INK_SOFT)'
+  - DataAspect() correctly preserves mathematical proportions as required by the spec
+  - Code is clean, linear, and fully deterministic — no unnecessary abstraction, no
+    functions or classes
+  - Both themes render correctly with no dark-on-dark failures; INK/INK_SOFT tokens
+    properly threaded through title, axis labels, ticks, spines, and colorbar
+  weaknesses:
+  - Colorbar tick labels at ticklabelsize=10 are slightly smaller than axis tick labels
+    (12pt) — minor size inconsistency that affects mobile readability; raise to 12
+    to match axis ticks
+  - Design excellence limited by standard heatmap approach — adding a subtle label
+    for the cardioid or period-2 bulb would enhance educational storytelling value
+    and push DE-01 toward publication quality
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "heatmap-mandelbrot · julia · makie · anyplot.ai" in dark ink (#1A1A17), clearly readable. Axis labels "Re(c)" and "Im(c)" in dark ink. Tick labels in INK_SOFT (#4A4A44). Colorbar label "Escape speed" rotated vertically on right side, readable. All chrome elements are visible against the light background.
+      Data: Mandelbrot set interior rendered in near-black (#0A0A0A). Exterior colored with imprint_seq (green #009E73 to blue #4467A3) with cyclic mod-8 normalization creating repeating teal-to-blue bands. The characteristic cardioid and period-2 bulb are clearly visible. Fractal boundary is well-resolved at 1600x900 grid.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light cream (#F0EFE8/INK), clearly readable against dark surface. Axis labels in INK (#F0EFE8). Tick labels in INK_SOFT (#B8B7B0). Colorbar label and tick labels also light-colored. No dark-on-dark failures detected.
+      Data: Colors are identical to light render — same green-to-blue cyclic banding, same near-black interior. Only chrome has flipped. Data color identity confirmed across themes.
+      Legibility verdict: PASS — all text readable, no dark-on-dark issues
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (titlesize=20, xlabelsize/ylabelsize=14,
+          tick labels=12). Colorbar tick labels at 10pt slightly small for mobile;
+          all main text well-proportioned.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; heatmap, colorbar, and text cleanly separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Fractal boundary beautifully resolved at 1600x900 grid; cyclic coloring
+          reveals layered structure.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue imprint_seq is perceptually uniform and CVD-safe; black
+          interior provides maximal contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: DataAspect() required by spec to preserve mathematical proportions;
+          canvas utilization good with colorbar filling horizontal space.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Re(c) and Im(c) are proper mathematical notation; colorbar labeled
+          Escape speed.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Correct imprint_seq cgrad([#009E73, #4467A3]) for single-polarity
+          continuous data; backgrounds #FAF8F1/#1A1A17; all chrome fully theme-adaptive.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured default: cyclic mod-8 smooth coloring is a
+          deliberate visualization choice that reveals fractal self-similarity. Clean
+          minimalist presentation.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, grid omitted (appropriate for heatmap),
+          generous margins, fully theme-adaptive chrome.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Strong visual hierarchy: black interior vs colorful exterior creates
+          immediate focal point. Fractal boundary draws the eye. Mathematical story
+          clearly communicated.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: Mandelbrot heatmap with escape-time coloring.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Smooth coloring via log2(log2(|z|)) formula, full set with cardioid
+          and period-2 bulb, axes labeled with real/imaginary values, interior colored
+          with distinct solid color, aspect ratio preserved via DataAspect().
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Re(c) [-2.5, 1.0], Y=Im(c) [-1.25, 1.25]; matches spec defaults
+          exactly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is heatmap-mandelbrot · julia · makie · anyplot.ai (correct
+          format); colorbar labeled Escape speed.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: bounded interior, smooth escape banding, fractal
+          boundary detail, cardioid and satellite bulbs.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real mathematical object (Mandelbrot set) with clear scientific/educational
+          context; not controversial.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Exact spec-default ranges; MAX_ITER=256 (better than spec's 100 minimum);
+          grid 1600x900 exceeds spec's >= 800x600 requirement.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: constants -> Mandelbrot computation -> figure
+          -> save; no functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic; pure mathematical computation, no randomness
+          needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie and Colors imported; both actively used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; efficient nested loop; NaN for interior is
+          clean; no over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png; uses current CairoMakie 0.22 API (size
+          not deprecated resolution).
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: heatmap! with coordinate vectors, DataAspect() for aspect control,
+          Colorbar in figure layout grid, nan_color for missing values, colorant literals
+          — all idiomatic Makie patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses Makie-specific features: layout grid system (fig[1,1], fig[1,2]),
+          DataAspect() for exact data-to-pixel mapping, nan_color parameter, cgrad
+          for continuous color scales.'
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - Colors
+  techniques:
+  - colorbar
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap

@@ -31,6 +31,10 @@ on:
           - letsplot
           - ggplot2
           - makie
+          - chartjs
+          - d3
+          - echarts
+          - muix
       issue_number:
         description: "Issue number (optional, for tracking)"
         required: false
@@ -124,6 +128,16 @@ jobs:
               LANGUAGE="julia"
               EXT=".jl"
               ;;
+            chartjs|d3|echarts|highcharts)
+              LANGUAGE="javascript"
+              EXT=".js"
+              ;;
+            muix)
+              # MUI X — JavaScript with framework=react, authored as TSX and
+              # bundled through the render harness's esbuild React branch.
+              LANGUAGE="javascript"
+              EXT=".tsx"
+              ;;
             *)
               LANGUAGE="python"
               EXT=".py"
@@ -140,7 +154,7 @@ jobs:
           echo "::notice::Generating $LANGUAGE/$LIBRARY for $SPEC_ID (issue: ${ISSUE:-none}, model: ${MODEL}, ext: ${EXT})"
 
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
         with:
           fetch-depth: 0
 
@@ -215,7 +229,7 @@ jobs:
           python-version: '3.13'
 
       - name: Install uv
-        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v8.1.0
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39  # v8.2.0
 
       - name: Install system dependencies
         run: |
@@ -241,12 +255,6 @@ jobs:
           source .venv/bin/activate
           uv pip install pillow pyyaml
 
-      - name: Setup Chrome for Highcharts
-        if: steps.inputs.outputs.library == 'highcharts'
-        uses: browser-actions/setup-chrome@2e1d749697dd1612b833dba4a722266286fbefcd  # v2
-        with:
-          chrome-version: stable
-
       - name: Setup R + ggplot2
         if: steps.inputs.outputs.language == 'r'
         uses: ./.github/actions/setup-r
@@ -254,6 +262,10 @@ jobs:
       - name: Setup Julia + Makie
         if: steps.inputs.outputs.language == 'julia'
         uses: ./.github/actions/setup-julia
+
+      - name: Setup Node + browser render harness
+        if: steps.inputs.outputs.language == 'javascript'
+        uses: ./.github/actions/setup-node
 
       # ========================================================================
       # Generate: Create implementation branch and code
@@ -410,7 +422,7 @@ jobs:
         id: claude
         continue-on-error: true
         timeout-minutes: 60
-        uses: anthropics/claude-code-action@24492741e0ccfdef4c1d19da8e11e0f373d07494  # v1
+        uses: anthropics/claude-code-action@11ba60486e4aec9ddfeafcf4bb3f00b028ac2c16  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: "--model ${{ steps.inputs.outputs.model }}"
@@ -430,7 +442,7 @@ jobs:
         if: steps.claude.outcome == 'failure'
         id: claude_retry
         timeout-minutes: 60
-        uses: anthropics/claude-code-action@24492741e0ccfdef4c1d19da8e11e0f373d07494  # v1
+        uses: anthropics/claude-code-action@11ba60486e4aec9ddfeafcf4bb3f00b028ac2c16  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: "--model ${{ steps.inputs.outputs.model }}"
@@ -526,6 +538,10 @@ jobs:
             # if julia exits non-zero after partial stdout.
             LANGUAGE_VERSION=$(julia -e 'print(VERSION)' 2>/dev/null | tail -n1)
             is_version "$LANGUAGE_VERSION" || LANGUAGE_VERSION="unknown"
+          elif [ "$LANGUAGE" = "javascript" ]; then
+            # `node --version` prints `v22.x.y`; strip the leading `v`.
+            LANGUAGE_VERSION=$(node --version 2>/dev/null | sed 's/^v//' | tail -n1)
+            is_version "$LANGUAGE_VERSION" || LANGUAGE_VERSION="unknown"
           else
             LANGUAGE_VERSION="$PYTHON_VERSION"
           fi
@@ -539,8 +555,10 @@ jobs:
           }
           get_r_version() {
             local v
-            v=$(RENV_CONFIG_STARTUP_QUIET=TRUE Rscript -e "cat(as.character(packageVersion('$1')))" 2>/dev/null | tail -n1)
-            is_version "$v" && printf '%s' "$v"
+            # `|| true` on the read + if/fi (not `&&`) on the check: neither may
+            # propagate a non-zero exit, or it aborts under `set -e`/`-o pipefail`.
+            v=$(RENV_CONFIG_STARTUP_QUIET=TRUE Rscript -e "cat(as.character(packageVersion('$1')))" 2>/dev/null | tail -n1) || true
+            if is_version "$v"; then printf '%s' "$v"; fi
           }
           get_julia_version() {
             # Pkg.dependencies() returns a Dict{UUID, PackageInfo}; locate the
@@ -555,8 +573,25 @@ jobs:
                   break
                 end
               end
-            " 2>/dev/null | tail -n1)
-            is_version "$v" && printf '%s' "$v"
+            " 2>/dev/null | tail -n1) || true
+            # `|| true` on the read + if/fi (not `&&`) on the check: neither may
+            # propagate a non-zero exit, or it aborts under `set -e`/`-o pipefail`.
+            if is_version "$v"; then printf '%s' "$v"; fi
+          }
+          get_npm_version() {
+            # Read the installed version straight out of the package's own
+            # package.json (restored by `npm ci` from the committed lockfile).
+            # NB: read the file via fs, NOT `require('<pkg>/package.json')`:
+            # packages with an `exports` map (d3, chart.js) block that subpath
+            # with ERR_PACKAGE_PATH_NOT_EXPORTED, while echarts happens to allow
+            # it — reading node_modules/<pkg>/package.json directly is uniform.
+            local v
+            # `|| true` on the read + if/fi (not `&&`) on the check guard BOTH
+            # abort points: otherwise `LIBRARY_VERSION=$(get_npm_version …)`
+            # inherits a non-zero exit and dies under `set -e`/`-o pipefail`
+            # before the `"unknown"` fallback can run.
+            v=$(node -p "JSON.parse(require('fs').readFileSync('node_modules/$1/package.json','utf8')).version" 2>/dev/null | tail -n1) || true
+            if is_version "$v"; then printf '%s' "$v"; fi
           }
 
           if [ "$LANGUAGE" = "r" ]; then
@@ -572,13 +607,25 @@ jobs:
                 LIBRARY_VERSION=$(get_julia_version "$LIBRARY")
                 ;;
             esac
+          elif [ "$LANGUAGE" = "javascript" ]; then
+            # Catalogue id `chartjs` maps to the npm package `chart.js` and
+            # `muix` to the scoped community package `@mui/x-charts`; `d3` and
+            # `echarts` match their npm names directly.
+            case "$LIBRARY" in
+              chartjs)
+                LIBRARY_VERSION=$(get_npm_version "chart.js")
+                ;;
+              muix)
+                LIBRARY_VERSION=$(get_npm_version "@mui/x-charts")
+                ;;
+              *)
+                LIBRARY_VERSION=$(get_npm_version "$LIBRARY")
+                ;;
+            esac
           else
             case "$LIBRARY" in
               letsplot)
                 LIBRARY_VERSION=$(get_pip_version "lets-plot")
-                ;;
-              highcharts)
-                LIBRARY_VERSION=$(get_pip_version "highcharts-core")
                 ;;
               *)
                 LIBRARY_VERSION=$(get_pip_version "$LIBRARY")
@@ -592,7 +639,6 @@ jobs:
               case "$LIBRARY" in
                 letsplot) PYTHON_MODULE="lets_plot" ;;
                 plotnine) PYTHON_MODULE="plotnine" ;;
-                highcharts) PYTHON_MODULE="highcharts_core" ;;
                 *) PYTHON_MODULE="$LIBRARY" ;;
               esac
               LIBRARY_VERSION=$(.venv/bin/python -c "import $PYTHON_MODULE; print(getattr($PYTHON_MODULE, '__version__', 'unknown'))" 2>/dev/null || echo "unknown")
@@ -604,11 +650,18 @@ jobs:
           fi
           echo "::notice::Library version: $LIBRARY = $LIBRARY_VERSION ($LANGUAGE runtime $LANGUAGE_VERSION, pipeline python $PYTHON_VERSION)"
 
-          # Interactive libraries additionally produce HTML previews (one per theme)
+          # Interactive libraries additionally produce HTML previews (one per theme).
+          # Python interactive libs are listed explicitly. JavaScript libs are
+          # interactive too (the browser render harness emits standalone
+          # plot-{light,dark}.html) — but gate on the files actually existing, so a
+          # lib/render that produced no HTML never points preview_html at a 404.
           HAS_HTML="false"
           case "$LIBRARY" in
-            plotly|bokeh|altair|highcharts|pygal|letsplot) HAS_HTML="true" ;;
+            plotly|bokeh|altair|pygal|letsplot) HAS_HTML="true" ;;
           esac
+          if [ "$LANGUAGE" = "javascript" ] && [ -f "$IMPL_DIR/plot-light.html" ] && [ -f "$IMPL_DIR/plot-dark.html" ]; then
+            HAS_HTML="true"
+          fi
 
           # Write metadata file using Python for proper YAML formatting
           # Pass all variables inline to avoid export/env issues
@@ -893,11 +946,18 @@ jobs:
           HTML_LIGHT=""
           HTML_DARK=""
           case "$LIBRARY" in
-            plotly|bokeh|altair|highcharts|pygal|letsplot)
+            plotly|bokeh|altair|pygal|letsplot)
               HTML_LIGHT="${BASE}/plot-light.html"
               HTML_DARK="${BASE}/plot-dark.html"
               ;;
           esac
+          # JS libs are interactive too — link the HTML only when the render
+          # produced it (mirrors the existence gate used for preview_html).
+          IMPL_DIR="plots/${SPEC_ID}/implementations/${LANGUAGE}"
+          if [ "$LANGUAGE" = "javascript" ] && [ -f "$IMPL_DIR/plot-light.html" ] && [ -f "$IMPL_DIR/plot-dark.html" ]; then
+            HTML_LIGHT="${BASE}/plot-light.html"
+            HTML_DARK="${BASE}/plot-dark.html"
+          fi
 
           BODY="## :art: ${LANGUAGE}/${LIBRARY} Preview
 

@@ -25,7 +25,7 @@ RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette (first series always #009E73)
 BRAND = "#009E73"
-SECONDARY = "#D55E00"
+SECONDARY = "#C475FD"
 
 # Generate synthetic classification data with imbalanced classes
 np.random.seed(42)

@@ -20,8 +20,8 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 BRAND = "#009E73"
-COLOR_2 = "#D55E00"
-COLOR_3 = "#0072B2"
+COLOR_2 = "#C475FD"
+COLOR_3 = "#4467A3"
 
 # Data - experimental temperature readings over time
 np.random.seed(42)

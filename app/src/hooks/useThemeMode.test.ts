@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { useThemeMode } from './useThemeMode';
+import { act, renderHook } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { useThemeMode } from 'src/hooks/useThemeMode';
 
 type MQListener = (e: MediaQueryListEvent) => void;
 
@@ -17,11 +18,19 @@ function installMatchMedia(initialDark: boolean) {
   let matches = initialDark;
   const listeners = new Set<MQListener>();
   const mq: MockMediaQuery = {
-    get matches() { return matches; },
-    set matches(v: boolean) { matches = v; },
+    get matches() {
+      return matches;
+    },
+    set matches(v: boolean) {
+      matches = v;
+    },
     media: '(prefers-color-scheme: dark)',
-    addEventListener: (_type, listener) => { listeners.add(listener); },
-    removeEventListener: (_type, listener) => { listeners.delete(listener); },
+    addEventListener: (_type, listener) => {
+      listeners.add(listener);
+    },
+    removeEventListener: (_type, listener) => {
+      listeners.delete(listener);
+    },
     _emit(next: boolean) {
       matches = next;
       const event = { matches: next, media: mq.media } as MediaQueryListEvent;
@@ -65,7 +74,9 @@ describe('useThemeMode', () => {
   it('system → light transition persists the choice', () => {
     const { result } = renderHook(() => useThemeMode());
 
-    act(() => { result.current.cycle(); });
+    act(() => {
+      result.current.cycle();
+    });
 
     expect(result.current.mode).toBe('light');
     expect(result.current.effective).toBe('light');
@@ -77,7 +88,9 @@ describe('useThemeMode', () => {
     localStorage.setItem('theme', 'light');
     const { result } = renderHook(() => useThemeMode());
 
-    act(() => { result.current.cycle(); });
+    act(() => {
+      result.current.cycle();
+    });
 
     expect(result.current.mode).toBe('dark');
     expect(result.current.effective).toBe('dark');
@@ -91,7 +104,9 @@ describe('useThemeMode', () => {
     const { result } = renderHook(() => useThemeMode());
     expect(result.current.mode).toBe('dark');
 
-    act(() => { result.current.cycle(); });
+    act(() => {
+      result.current.cycle();
+    });
 
     expect(result.current.mode).toBe('system');
     expect(result.current.effective).toBe('light');
@@ -103,7 +118,9 @@ describe('useThemeMode', () => {
     const { result } = renderHook(() => useThemeMode());
     expect(result.current.effective).toBe('light');
 
-    act(() => { mq._emit(true); });
+    act(() => {
+      mq._emit(true);
+    });
 
     expect(result.current.effective).toBe('dark');
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
@@ -114,7 +131,9 @@ describe('useThemeMode', () => {
     localStorage.setItem('theme', 'light');
     const { result } = renderHook(() => useThemeMode());
 
-    act(() => { mq._emit(true); }); // OS flips to dark — should be ignored
+    act(() => {
+      mq._emit(true);
+    }); // OS flips to dark — should be ignored
 
     expect(result.current.mode).toBe('light');
     expect(result.current.effective).toBe('light');
@@ -123,11 +142,15 @@ describe('useThemeMode', () => {
   it('setMode jumps directly to a target mode', () => {
     const { result } = renderHook(() => useThemeMode());
 
-    act(() => { result.current.setMode('dark'); });
+    act(() => {
+      result.current.setMode('dark');
+    });
     expect(result.current.mode).toBe('dark');
     expect(localStorage.getItem('theme')).toBe('dark');
 
-    act(() => { result.current.setMode('system'); });
+    act(() => {
+      result.current.setMode('system');
+    });
     expect(result.current.mode).toBe('system');
     expect(localStorage.getItem('theme')).toBeNull();
   });

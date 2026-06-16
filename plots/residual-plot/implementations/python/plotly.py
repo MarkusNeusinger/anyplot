@@ -27,7 +27,7 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Okabe-Ito palette
 BRAND = "#009E73"
-ACCENT = "#D55E00"
+ACCENT = "#C475FD"
 NEUTRAL = "#1A1A1A" if THEME == "light" else "#E8E8E0"
 
 # Data - Generate realistic regression scenario with varying residual patterns

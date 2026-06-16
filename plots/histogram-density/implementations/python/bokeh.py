@@ -25,7 +25,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (first series for histogram, second for PDF)
 COLOR_HIST = "#009E73"
-COLOR_PDF = "#D55E00"
+COLOR_PDF = "#C475FD"
 
 # Data - Test scores with normal-like distribution
 np.random.seed(42)

@@ -59,7 +59,7 @@ for t in teams:
     dept_totals[t["parent"]] = dept_totals.get(t["parent"], 0) + t["value"]
 
 # Okabe-Ito palette for departments (theme-independent data colors)
-okabe_ito = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+okabe_ito = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 dept_colors = {
     "Engineering": okabe_ito[0],  # bluish green
     "Sales": okabe_ito[1],  # vermillion

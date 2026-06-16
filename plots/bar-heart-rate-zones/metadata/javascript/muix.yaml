@@ -1,0 +1,277 @@
+library: muix
+language: javascript
+specification_id: bar-heart-rate-zones
+created: '2026-06-14T21:57:27Z'
+updated: '2026-06-14T22:21:46Z'
+generated_by: claude-sonnet
+workflow_run: 27513107434
+issue: 8649
+language_version: 22.22.3
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-heart-rate-zones/javascript/muix/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Correct semantic zone colors using Imprint palette members (Z1 muted grey, Z2
+    blue #4467A3, Z3 brand green #009E73, Z4 ochre #BD8233, Z5 matte red #AE3030)
+    — valid semantic exception since the spec explicitly mandates zone-conventional
+    colors'
+  - Opacity hierarchy (Z2 Endurance at full opacity, others at 75%) creates a clear
+    focal point on the dominant zone, guiding the viewer immediately to the 22-min
+    Z2 bar
+  - 'Complete spec compliance: all 5 zones in Z1→Z5 order, bar labels (format ''N
+    min''), HR boundary ranges as a bottom strip, Y-axis in minutes'
+  - Physiologically accurate data — 60-min total (8+22+15+12+3), realistic tempo-run
+    zone distribution, valid HR ranges (<125, 126-145, 146-162, 163-174, >174 bpm)
+  - 'Idiomatic MUI X usage: colorMap with type=''ordinal'' on xAxis for per-bar coloring,
+    barLabel callback for dynamic labels, valueFormatter with ctx.dataIndex for rich
+    tooltips — all distinctively MUI X features'
+  - Subtitle ('60-minute tempo run — time spent in each training intensity zone')
+    and HR ranges strip add narrative depth without cluttering the chart
+  weaknesses:
+  - 'Z1 Recovery bar label (''8 min'', color #F0EFE8 warm white) on the muted-grey
+    bar at 75% opacity in the light theme has ~2.6:1 contrast ratio — below the 3:1
+    threshold for large bold text. In dark theme contrast is ~5.7:1 (passes). Fix:
+    use a conditional bar label color (dark ink for the grey Z1 bar, warm white for
+    the darker-colored bars), or darken the Z1 bar color slightly to improve contrast.'
+  - 'HR boundary range strip uses left: 76+60=136 for centering, but the BarChart''s
+    band center offset may not align perfectly with the inner left margin of 76px
+    — minor positional drift visible at right side of strip.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "bar-heart-rate-zones · javascript · muix · anyplot.ai" at top-left in dark ink, clearly readable. Subtitle in softer dark ink below. Y-axis label "Time (minutes)" in inkSoft, visible. Y-axis tick labels (0–28 in steps of 2) in inkSoft, readable. X-axis zone labels ("Z1 Recovery" through "Z5 Maximum") in bold ink, clearly readable. HR boundary ranges at bottom ("< 125 bpm" through "> 174 bpm") in inkSoft, legible at full resolution.
+      Data: Five bars. Z1=muted grey (#6B6A63 at 75% opacity on cream ≈ #8F8E87 effective), Z2=Imprint blue (#4467A3, full opacity), Z3=brand green (#009E73 at 75% opacity), Z4=ochre (#BD8233 at 75%), Z5=matte red (#AE3030 at 75%). Bar labels ("8 min", "22 min", "15 min", "12 min", "3 min") in #F0EFE8 warm white inside each bar. Z2 Endurance is visually dominant (tallest + full opacity). Subtle horizontal grid lines.
+      Legibility verdict: PASS with caveat — all chrome readable; Z1 bar label "8 min" (warm white on mixed effective grey ~#8F8E87) has reduced contrast (~2.6:1, below 3:1 for large bold text). All other bar labels and chrome elements fully readable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface.
+      Chrome: Title and subtitle in light near-white (#F0EFE8 range) — clearly readable against dark background. Y-axis label and tick labels in light inkSoft tone — readable. X-axis zone labels in light ink — readable. HR boundary ranges at bottom in light inkSoft — legible. No dark-on-dark failures detected.
+      Data: Bar colors are identical to light render — same Imprint palette members with same opacity values (semantic zone colors unchanged). Z2 Endurance still at full opacity, others at 75%. Bar labels remain in #F0EFE8 warm white; on the dark background, the Z1 grey bar effective color is much darker (~#575650) giving ~5.7:1 contrast for the label — fully passes. Subtle horizontal grid lines in light-opacity rule color.
+      Legibility verdict: PASS — all elements readable, no dark-on-dark failures, data colors identical to light render confirming only chrome flipped.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 22px, subtitle 14px, x-tick
+          15px, y-label 14px, y-tick 13px, bar-label 16px bold, hr-range 12px). Title
+          spans ~54% of CSS mount width — within 50-70% range. All text readable in
+          both themes. Minor deduction: could be slightly larger for ideal title proportion
+          fill.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements in either render. Zone labels, bar labels,
+          HR ranges, and axis ticks all cleanly separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 5 bars clearly visible including the short Z5 bar (3 min). Bar
+          labels including '3 min' fit inside their respective bars. Excellent bar
+          sizing.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: true
+        comment: Zone colors are Imprint palette members, CVD-safe. Bar label color
+          (#F0EFE8 warm white) achieves ~5.7:1 on dark theme Z1 bar but only ~2.6:1
+          on light theme Z1 grey bar (below 3:1 for large bold text). Slight contrast
+          failure in one render.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills canvas well. Balanced margins (top 30, right 60, bottom
+          80, left 76). HR ranges strip and subtitle integrate cleanly. No content
+          cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis has 'Time (minutes)' with units. X-axis has zone names. Title
+          in correct format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Valid semantic exception: spec mandates zone-conventional colors,
+          implementation maps to Imprint members (muted=Z1, #4467A3=Z2, #009E73=Z3,
+          #BD8233=Z4, #AE3030=Z5). Backgrounds correct (#FAF8F1 light, #1A1A17 dark).
+          Data colors identical between themes. Chrome is theme-adaptive.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: intentional zone-semantic color mapping to Imprint
+          palette, opacity hierarchy to highlight dominant Z2 bar, subtitle + HR ranges
+          adding contextual depth. Clearly above defaults. Not quite publication-ready
+          but strong.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: horizontal-only grid, x-axis line and ticks disabled,
+          y-axis ticks disabled, legend hidden, grid and axis line colors from theme
+          tokens. Left y-axis spine still visible (minor). MUI X defaults still visible
+          in overall weight.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good: opacity hierarchy (Z2 full, others 75%) immediately directs
+          eye to dominant zone. Subtitle provides narrative context. HR ranges add
+          depth. Viewer can immediately identify Z2 as the primary training zone.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct vertical bar chart for time-in-zones visualization.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: 5 zones Z1-Z5 in order, zone-conventional colors,
+          bar duration labels (''N min''), HR boundary ranges (as bottom strip with
+          bpm ranges), Y-axis in minutes.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis shows Z1-Z5 in correct left-to-right order. Y-axis shows time
+          in minutes (0-28). All data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''bar-heart-rate-zones · javascript · muix · anyplot.ai''
+          — correct format. Zone names on x-axis replace legend (appropriate since
+          it''s a single-series chart with zone labels).'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all 5 zones with varied durations demonstrating realistic distribution.
+          Covers full Z1-Z5 spectrum from recovery to maximum effort.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral fitness context ('60-minute tempo run'). Physiologically
+          realistic zone distribution. Not abstract or controversial.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Total 8+22+15+12+3 = 60 min exactly matches stated 60-minute run.
+          Distribution is realistic for a tempo run (Z2 dominant at 37%). HR ranges
+          (<125, 126-145, 146-162, 163-174, >174 bpm) are physiologically accurate
+          for a recreational runner.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports → Data constants → default-exported Chart component. Clean
+          structure with no unnecessary abstractions.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic — all data hardcoded as constants, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: BarChart, Box, Typography — all three imported and used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, idiomatic React/MUI X code. Opacity storytelling approach
+          is elegant. No over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness handles file output (plot-light/dark.png + .html). skipAnimation
+          set. Uses community @mui/x-charts only.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expertly uses BarChart with xAxis colorMap, barLabel callback, valueFormatter
+          with context, sx selectors for SVG child elements, skipAnimation, window.ANYPLOT_SIZE
+          sizing, window.ANYPLOT_TOKENS for theme. Fully idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: colorMap={type:'ordinal', values, colors} on xAxis for per-bar coloring
+          is a distinctive MUI X feature. barLabel with callback, valueFormatter with
+          ctx.dataIndex, and sx SVG selectors (.MuiBarLabel-root, .MuiChartsAxis-line,
+          etc.) are all MUI X-specific patterns not easily replicated elsewhere.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

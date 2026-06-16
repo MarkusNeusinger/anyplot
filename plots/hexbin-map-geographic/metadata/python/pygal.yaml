@@ -1,214 +1,266 @@
 library: pygal
+language: python
 specification_id: hexbin-map-geographic
 created: '2026-01-20T21:17:05Z'
-updated: '2026-01-20T21:37:49Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21187394924
+updated: '2026-05-27T14:02:38Z'
+generated_by: claude-sonnet
+workflow_run: 26513744161
 issue: 3767
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/pygal/plot.html
-quality_score: 75
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/pygal/plot-dark.html
+quality_score: 84
 review:
   strengths:
-  - Excellent data scenario using NYC taxi pickups - a canonical hexbin use case
-  - Comprehensive tooltip information showing count, sum, and mean fare statistics
-    per cell
-  - Clean percentile-based binning ensures all 5 density levels have data points
-  - Geographic context with Manhattan outline and river boundaries adds realism
-  - Good use of pygal Style system for custom colormap and sizing
+  - Creative SVG post-processing converts pygal circle markers to flat-top hexagonal
+    polygons, achieving a true hexagonal appearance without native hexbin support
+  - Dual encoding with both color (imprint_seq gradient) and size variation communicates
+    density at two perceptual channels simultaneously
+  - Realistic NYC taxi pickup data with geographically accurate clusters around Times
+    Square, Lower Manhattan, and Midtown East
+  - 'Full aggregation coverage: count, sum, and mean are calculated per bin and exposed
+    in interactive HTML tooltips'
+  - Both light and dark renders are theme-correct with proper background colors and
+    readable text throughout
+  - Geographic context via Manhattan outline and river boundaries grounded in correct
+    coordinate data
   weaknesses:
-  - Markers are circular instead of hexagonal as required by the spec - pygal XY chart
-    only supports dots
-  - Grid is completely hidden which removes helpful reference lines for reading coordinates
-  - Some visual clutter from overlapping markers in high-density areas
-  - Title font size could be larger relative to the 4800x2700 canvas size
-  image_description: 'The plot displays a hexagonal binning map visualization of NYC
-    taxi pickup data across Manhattan. The visualization uses circular markers (not
-    true hexagons) sized and colored by density. The background is light water blue
-    (#E8F4F8) representing the surrounding waterways, with gray boundary lines approximating
-    Manhattan''s coastline, the Hudson River, and the East River. The color scale
-    follows a YlOrRd (Yellow-Orange-Red) sequential colormap with 5 density levels
-    from light yellow (Low: 1-2 pickups) through orange to dark red (High: 13+ pickups).
-    Three distinct clusters are visible: Financial District (lower left with high
-    density), Midtown (center with high density), and Upper East Side (upper right
-    with moderate density). Axis labels show "Longitude (°)" and "Latitude (°)" with
-    appropriate NYC coordinate ranges. The legend at the bottom shows all 5 density
-    categories with count ranges.'
+  - Geographic context is simplified hard-coded polygon coordinates rather than real
+    coastlines or street data — acceptable for pygal but limits spatial accuracy
+  - Hexagonal bins overlap in dense central areas due to size encoding, creating visual
+    noise that makes individual bin boundaries hard to trace
+  - One helper function (circles_to_hexagons) breaks pure KISS flat structure, though
+    it is technically justified by the SVG transformation requirement
+  - Design sophistication stays at the creative-utilitarian level rather than publication-ready
+    polish — geographic outline is minimal, no annotation callouts for key hotspots
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "hexbin-map-geographic · python · pygal · anyplot.ai" is dark text, clearly readable at top. X-axis label "Longitude (°)" and Y-axis label "Latitude (°)" are dark and readable. Tick labels (latitude ~40.70–40.82, longitude ~-74.03 to -73.92) are dark and legible. Legend at bottom shows 5 density bins with small swatches and labels (Low, Med-Low, Medium, Med-High, High) in dark text.
+      Data: Hexagonal shapes (achieved via SVG post-processing of pygal circle markers) rendered in a sequential gradient from #009E73 (green, low density) through teal/mid-teal to #4467A3 (blue, high density). Three size tiers are visible: small hexagons in the periphery (low density), progressively larger hexagons toward the dense center. Geographic Manhattan outline and river lines are rendered in a muted grey color. Three distinct density cluster zones are visible corresponding to Times Square, Lower Manhattan, and Midtown East.
+      Legibility verdict: PASS — all text is clearly readable against the warm off-white background. No "light on light" failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black consistent with #1A1A17 — correct theme surface, not pure black
+      Chrome: Title, axis labels, and tick labels are rendered in light-colored text, clearly readable against the dark background. Legend text at bottom is light and legible. No dark-on-dark failures detected anywhere in the render.
+      Data: Data colors are identical to the light render — same green (#009E73) through teal to blue (#4467A3) sequential gradient with matching size encoding. Geographic outlines appear in the theme-adapted muted color. The density clusters are clearly distinguishable on the dark surface.
+      Legibility verdict: PASS — all text is clearly readable against the near-black background. Data colors are identical to the light render confirming only chrome flipped between themes.
   criteria_checklist:
     visual_quality:
-      score: 30
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title and axis labels are readable but could be larger for 4800x2700
-          canvas; legend text is adequate
+        comment: 'All font sizes explicitly set (title=66, axis=56, major=44, legend=44).
+          Both themes readable. Minor deduction: legend entries small at mobile widths.'
       - id: VQ-02
         name: No Overlap
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Some markers overlap in high-density areas, particularly in Financial
-          District and Midtown clusters
+        comment: No text collisions. Data hexagons overlap in dense areas but this
+          is expected for density visualization; text and data elements are spatially
+          separated.
       - id: VQ-03
         name: Element Visibility
-        score: 6
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Markers are visible but circular instead of hexagonal; varying sizes
-          help distinguish density levels
+        comment: Hexagonal shapes clearly visible at all 5 density levels. Size encoding
+          effective. Minor visual noise in dense center where overlapping bins reduce
+          clarity.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: YlOrRd sequential colormap is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good canvas utilization but boundary lines extend beyond data area
-          creating some visual imbalance
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Longitude (°) and Latitude (°)'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'imprint_seq (#009E73 to #4467A3) is CVD-safe. Good luminance difference
+          across the 5 density levels.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 landscape, canvas gate passed. Good canvas utilization,
+          geographic data fills the plotting area well.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is completely hidden (transparent); legend is well placed but
-          no subtle grid for reference
+        passed: true
+        comment: 'X: ''Longitude (°)'', Y: ''Latitude (°)'' — both descriptive with
+          units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Sequential data uses imprint_seq stops (#009E73 → #4467A3). Geographic
+          boundaries use INK_MUTED (semantic muted anchor — appropriate). Background
+          #FAF8F1/#1A1A17. Both renders theme-correct.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: creative SVG hexagon hack + dual encoding (color+size)
+          + meaningful geographic context. Not publication-ready level but clearly
+          thoughtful design.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Grid removed, opacity 0.85, muted geographic outlines, clean legend.
+          Above default but pygal framework constraints limit full refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dual encoding (color+size) creates clear visual hierarchy. Dense
+          taxi hotspots visually prominent. Geographic context grounds spatial interpretation.
+          Viewer immediately identifies high-density zones.
     spec_compliance:
-      score: 22
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 6
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Implements hexbin aggregation logic but displays as circles, not
-          hexagons; spec says hexagonal cells
+        comment: Hexagonal binning map achieved via creative SVG post-processing.
+          Visual result correctly shows geographic density with hexagonal cells.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Lat/lon correctly mapped to Y/X axes
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Has count aggregation, sum/mean calculation, tooltips with statistics,
-          geographic boundaries overlay, sequential colormap
-      - id: SC-04
-        name: Data Range
+        comment: Hexagonal bins, sequential color gradient, size encoding, opacity,
+          hover tooltips, multiple aggregation methods (count/sum/mean), color legend
+          all present. Geographic context is simplified hard-coded outline rather
+          than real coastlines.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within plot bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Longitude, Y=Latitude correct. Color=density (sequential gradient).
+          Size=density reinforcement.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend shows 5 density levels with accurate count ranges
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Uses correct format with middle dot separator
+        comment: 'Title: ''hexbin-map-geographic · python · pygal · anyplot.ai'' —
+          exact required format. Legend: 5 density bins with count ranges (Low 1-2,
+          Med-Low 2-4, Medium 4-7, Med-High 7-13, High 13+).'
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows 3 distinct density clusters, varying density levels, but boundary
-          visualization could better show geographic context
+        comment: 'Shows hexagonal binning, multiple density levels, geographic context,
+          size variation, multiple aggregation types. Minor: continuous colormap discretized
+          into 5 bins.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: NYC taxi pickup data is a perfect, neutral, real-world use case for
-          hexbin maps
+        comment: NYC taxi pickup locations — highly realistic domain. Three geographically
+          accurate cluster centers (Times Square ~40.758°N/-73.985°W, Lower Manhattan
+          ~40.710°N/-74.010°W, Midtown East ~40.775°N/-73.960°W).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Coordinates are correct for Manhattan; fare values are realistic
-          for taxis
+        comment: Manhattan coordinate range correct (lat 40.70-40.82, lon -74.02 to
+          -73.93). 5000 points appropriate for hexbin visualization. Exponential fare
+          distribution realistic for taxi data.
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data generation, binning, chart creation,
-          save'
+        comment: 'One helper function (circles_to_hexagons) present but technically
+          justified for the SVG post-processing requirement. Main flow is flat: imports
+          → data → binning → chart → render → post-process → save.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: sys.path manipulation is necessary but adds complexity; defaultdict
-          is used appropriately
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: math, os, re, sys, defaultdict, cairosvg, numpy,
+          pygal, Style.'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and readable. sys.path manipulation necessary due to file naming
+          conflict with pygal library. No fake interactivity.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: No deprecated functions used
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves plot.png but also plot.html; the PNG is the required output
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current pygal API used.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses pygal XY chart, custom Style, rich tooltips, legend configuration,
-          and HTML export with CSS styling
+        comment: Correct chart type (pygal.XY), proper Style object, per-series dots_size,
+          legend_at_bottom with columns, xrange/range for axis limits. Above default
+          of 3.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: SVG post-processing to convert circles to hexagons is a distinctive
+          and creative pygal technique. None label to exclude geographic boundaries
+          from legend is a clever library feature. Interactive HTML output with per-point
+          tooltips leverages pygal's interactivity. Well above default of 1.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - cairosvg
   techniques:
   - hover-tooltips
   - html-export
-  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
@@ -216,4 +268,3 @@ impl_tags:
   - binning
   styling:
   - alpha-blending
-  - custom-colormap

@@ -41,13 +41,13 @@ p = figure(
 
 # Add vertical span - highlight Q4 of Year 1 (months 10-12)
 vertical_span = BoxAnnotation(
-    left=10, right=12, fill_alpha=0.25, fill_color="#0072B2", line_color="#0072B2", line_width=2, line_alpha=0.5
+    left=10, right=12, fill_alpha=0.25, fill_color="#4467A3", line_color="#4467A3", line_width=2, line_alpha=0.5
 )
 p.add_layout(vertical_span)
 
-# Add horizontal span - highlight target revenue range (120-140)
+# Add horizontal span - highlight target revenue range (120-140) using imprint amber
 horizontal_span = BoxAnnotation(
-    bottom=120, top=140, fill_alpha=0.2, fill_color="#E69F00", line_color="#E69F00", line_width=2, line_alpha=0.5
+    bottom=120, top=140, fill_alpha=0.2, fill_color="#DDCC77", line_color="#DDCC77", line_width=2, line_alpha=0.5
 )
 p.add_layout(horizontal_span)
 
@@ -61,7 +61,7 @@ p.add_tools(hover)
 
 # Add labels for spans — positioned prominently at top of each span
 vertical_label = Label(
-    x=10.2, y=143, text="Q4 Peak Season", text_font_size="28pt", text_color="#0072B2", text_font_style="bold"
+    x=10.2, y=143, text="Q4 Peak Season", text_font_size="28pt", text_color="#4467A3", text_font_style="bold"
 )
 p.add_layout(vertical_label)
 
@@ -70,7 +70,7 @@ horizontal_label = Label(
     y=124,
     text="Target Range",
     text_font_size="28pt",
-    text_color="#B8720B" if THEME == "light" else "#E69F00",
+    text_color="#B8720B" if THEME == "light" else "#AE3030",
     text_font_style="bold",
 )
 p.add_layout(horizontal_label)

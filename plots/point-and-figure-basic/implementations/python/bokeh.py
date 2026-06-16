@@ -26,9 +26,9 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette positions used
 X_COLOR = "#009E73"  # position 1 — brand green, bullish X columns
-O_COLOR = "#D55E00"  # position 2 — vermillion, bearish O columns
-SUPPORT_COLOR = "#0072B2"  # position 3 — blue, ascending support line
-RESISTANCE_COLOR = "#CC79A7"  # position 4 — purple, descending resistance line
+O_COLOR = "#AE3030"  # imprint red — bearish O columns
+SUPPORT_COLOR = "#4467A3"  # position 3 — blue, ascending support line
+RESISTANCE_COLOR = "#BD8233"  # position 4 — purple, descending resistance line
 
 # Data
 np.random.seed(42)

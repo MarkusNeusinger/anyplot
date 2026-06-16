@@ -18,7 +18,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito colors (first series is always #009E73)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Comparing salary distributions across three departments
 np.random.seed(42)
@@ -40,9 +40,9 @@ ax.set_facecolor(PAGE_BG)
 bins = np.linspace(20000, 150000, 35)
 
 # Plot overlapping histograms with transparency
-ax.hist(engineering, bins=bins, alpha=0.5, label="Engineering", color=OKABE_ITO[0], edgecolor=INK_SOFT, linewidth=1.5)
-ax.hist(marketing, bins=bins, alpha=0.5, label="Marketing", color=OKABE_ITO[1], edgecolor=INK_SOFT, linewidth=1.5)
-ax.hist(sales, bins=bins, alpha=0.5, label="Sales", color=OKABE_ITO[2], edgecolor=INK_SOFT, linewidth=1.5)
+ax.hist(engineering, bins=bins, alpha=0.5, label="Engineering", color=IMPRINT[0], edgecolor=INK_SOFT, linewidth=1.5)
+ax.hist(marketing, bins=bins, alpha=0.5, label="Marketing", color=IMPRINT[1], edgecolor=INK_SOFT, linewidth=1.5)
+ax.hist(sales, bins=bins, alpha=0.5, label="Sales", color=IMPRINT[2], edgecolor=INK_SOFT, linewidth=1.5)
 
 # Labels and styling
 ax.set_xlabel("Annual Salary ($)", fontsize=20, color=INK)

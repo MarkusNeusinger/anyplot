@@ -56,7 +56,7 @@ plot = (
     ggplot(df, aes(x="temperature", y="energy"))
     + geom_point(size=4, alpha=0.65, color=BRAND)
     + geom_smooth(
-        method="lm", formula="y ~ I(x) + I(x**2)", se=True, color="#D55E00", fill="#E69F00", alpha=0.25, size=2
+        method="lm", formula="y ~ I(x) + I(x**2)", se=True, color="#C475FD", fill="#AE3030", alpha=0.25, size=2
     )
     + annotate("text", x=38, y=115, label=annotation_text, ha="right", va="top", size=17, color=INK)
     + labs(

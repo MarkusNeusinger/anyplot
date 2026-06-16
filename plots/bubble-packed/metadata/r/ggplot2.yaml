@@ -1,0 +1,279 @@
+library: ggplot2
+language: r
+specification_id: bubble-packed
+created: '2026-05-29T23:04:19Z'
+updated: '2026-05-29T23:23:01Z'
+generated_by: claude-sonnet
+workflow_run: 26666281907
+issue: 992
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - 'Full spec compliance: correct packed bubble chart with force simulation, area-proportional
+    circle sizing, and sector-based color grouping'
+  - 'Imprint palette applied correctly — brand green #009E73 as Consumer (first series),
+    all 5 sectors mapped to canonical palette positions in order'
+  - Excellent real-world dataset (global tech market revenue by segment) with realistic
+    proportions across 21 named items in 5 sectors
+  - Clean theme_void approach with PAGE_BG-colored bubble borders creating visual
+    separation between touching circles — a polished detail
+  - 'Both light and dark themes render correctly: backgrounds are #FAF8F1 and #1A1A17
+    respectively, legend chrome flips correctly, data colors stay identical'
+  weaknesses:
+  - 'Canvas utilization ~55-65%: the bubble cluster leaves notable empty space in
+    the bottom-right quadrant of the square canvas — coord_equal() constrains auto-limits
+    to the data extent; consider manually setting axis limits or scaling the pack
+    output to fill more of the 6×6 inch canvas'
+  - 'Dark ink labels (INK=#1A1A17) on medium-dark Enterprise blue circles (#4467A3)
+    in the light render have ~2.3:1 contrast — below WCAG AA for small text; switching
+    to a white or #FFFDF6 label for dark-background bubbles (sectors with luminance
+    < 0.1) would improve legibility'
+  - pack_circles() function deviates from KISS Imports→Data→Plot→Save structure; using
+    the `packcircles` package would simplify packing code and likely improve packing
+    quality
+  - Bubble labels at geom_text size=2.2mm are at the minimum readable floor; increasing
+    to 2.6-2.8mm would improve readability when the PNG is scaled to mobile widths
+    (~400px)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "bubble-packed · r · ggplot2 · anyplot.ai" in dark INK (#1A1A17), centered, 12pt — readable. No axis labels (theme_void — appropriate). Legend on right with elevated #FFFDF6 background and soft INK_SOFT border; "Sector" title in dark ink, 5 sector entries in INK_SOFT — all readable.
+      Data: 21 circles in 5 Imprint palette colors — Consumer=#009E73 (green), Infrastructure=#C475FD (lavender), Enterprise=#4467A3 (blue), Fintech=#BD8233 (ochre), Emerging=#AE3030 (red). Alpha=0.85 with PAGE_BG-colored borders. Circles packed with sector clustering visible. Labels in dark INK (#1A1A17) on bubbles large enough to hold text (>=0.24 radius). Most labels are readable; dark text on the Enterprise blue bubbles (#4467A3) has limited contrast (~2.3:1) but is still legible due to bold face.
+      Layout: Bubble cluster fills center-left of canvas; some empty space in bottom-right (~35-40% of canvas unused). Legend positioned top-right.
+      Legibility verdict: PASS — all title/legend text clearly readable; bubble labels readable at full size though dark-on-blue contrast is suboptimal.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title in INK=#F0EFE8 (light cream) — clearly visible. Legend with ELEVATED_BG=#242420 background and INK_SOFT border; legend text in #B8B7B0 — readable against dark background. No dark-on-dark failures detected.
+      Data: All 5 sector colors are identical to the light render — Consumer green, Infrastructure lavender, Enterprise blue, Fintech ochre, Emerging red — data palette unchanged. Bubble labels rendered in LABEL_COLOR=#FFFFFF (white) — excellent contrast against all colored bubbles. The Enterprise blue bubbles now show white text with good contrast.
+      Legibility verdict: PASS — all text clearly readable, no dark-on-dark failures, white bubble labels are an improvement over the light render's dark-on-blue contrast.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title=12pt, labels=2.2mm, legend=8/10pt).
+          Readable at full size in both themes. Minor: dark labels on Enterprise blue
+          (#4467A3) have ~2.3:1 contrast in light render — still legible due to bold
+          face but suboptimal.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text-on-text overlap. Dense center area is somewhat crowded but
+          labels remain distinct. Smaller bubbles correctly omit labels.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All circles clearly visible. Size variation effectively shows value
+          differences. Alpha=0.85 appropriate. Small unlabeled bubbles (AR/VR, EdTech,
+          Dev Tools etc.) still visible as colored circles.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe. Five distinct hue families (green/purple/blue/ochre/red)
+          clearly distinguishable.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square canvas appropriate for bubble chart. However, coord_equal()
+          auto-limits leave ~35-40% empty space in bottom-right. Bubble cluster could
+          fill canvas better.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis labels needed (theme_void, correct for packed bubble). Legend
+          provides full sector context. Title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Consumer (first series) = #009E73 ✓. All 5 sectors use canonical
+          Imprint positions 1-5 in order. Light bg=#FAF8F1, dark bg=#1A1A17. Data
+          colors identical across themes. Chrome flips correctly.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Strong design above library defaults: Imprint palette, clean void
+          theme, semi-transparent circles with PAGE_BG borders for visual separation.
+          Sector clustering adds sophistication. Not exceptional publication quality
+          but clearly intentional.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void() removes all chrome. Elevated legend background with
+          soft border. PAGE_BG-colored bubble edges create clean visual separation.
+          Generous margins (16px). Well-refined overall.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Size variation and sector clustering create clear visual hierarchy.
+          Large Consumer (Digital Ads, E-Commerce) and Enterprise (AI/ML) segments
+          stand out. Color coding makes sector identification immediate. Good focal
+          points through size contrast.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct packed bubble chart with force simulation packing circles
+          without overlap.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Area-proportional scaling (sqrt(value)*0.017), force simulation,
+          labels inside large circles, color encoding by sector group — all spec features
+          present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Value→circle area correctly mapped. Sector→color mapping correct.
+          No traditional X/Y axes appropriate for packed bubble.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'bubble-packed · r · ggplot2 · anyplot.ai' is exactly correct
+          format. Legend shows all 5 sectors with correct Imprint palette swatches.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 21 items across 5 sectors. Shows size variation (110-720B), sector
+          clustering, labels inside large circles, unlabeled small circles — covers
+          all chart features.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Global technology market segments with estimated revenue ($B). Real
+          sector names (Cloud, AI/ML, E-Commerce, Payments). Neutral business topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Revenue values in $B are plausible for tech sectors. Digital Ads
+          (~$720B) and E-Commerce (~$680B) as largest; Emerging tech (AR/VR $110B,
+          EdTech $130B) as smallest — proportions match real-world expectations.
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: pack_circles() function deviates from linear Imports→Data→Plot→Save
+          structure. However, the force simulation is genuinely complex enough to
+          warrant encapsulation. Minor KISS violation.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) at top of script.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, tibble, ragg — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: Complex force simulation (1500 iterations + tightening passes) is
+          somewhat over-engineered but serves the chart type. No fake UI elements.
+          Justified complexity but verbose.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png using ragg::agg_png. Current ggplot2 API
+          (linewidth= not size= for lines).
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Correct ggplot2 grammar: geom_polygon with aes(group), scale_fill_manual,
+          coord_equal(), theme_void. Building circle coordinates manually is the correct
+          approach without ggforce. Minor: could use packcircles package for cleaner
+          packing code.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses geom_polygon for custom circle rendering (creative use of ggplot2
+          layer). coord_equal() for aspect ratio preservation. theme_void() as deliberate
+          choice. Custom R force simulation demonstrates ggplot2 extensibility beyond
+          built-in geoms.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting

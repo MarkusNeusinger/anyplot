@@ -19,7 +19,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette for route types
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Seed for reproducibility
 np.random.seed(42)
@@ -192,7 +192,7 @@ for route in routes:
             curve = -0.2
 
     # Get route color from Okabe-Ito palette based on type
-    color = OKABE_ITO[route["type"]]
+    color = IMPRINT[route["type"]]
 
     # Draw arrow
     arrow = mpatches.FancyArrowPatch(
@@ -272,9 +272,9 @@ for station in stations:
 
 # Create legend
 legend_elements = [
-    mpatches.Patch(facecolor=OKABE_ITO[0], edgecolor=OKABE_ITO[0], label="Regional Express (RE)"),
-    mpatches.Patch(facecolor=OKABE_ITO[1], edgecolor=OKABE_ITO[1], label="Airport Service (AIR)"),
-    mpatches.Patch(facecolor=OKABE_ITO[2], edgecolor=OKABE_ITO[2], label="S-Bahn (S)"),
+    mpatches.Patch(facecolor=IMPRINT[0], edgecolor=IMPRINT[0], label="Regional Express (RE)"),
+    mpatches.Patch(facecolor=IMPRINT[1], edgecolor=IMPRINT[1], label="Airport Service (AIR)"),
+    mpatches.Patch(facecolor=IMPRINT[2], edgecolor=IMPRINT[2], label="S-Bahn (S)"),
 ]
 leg = ax.legend(handles=legend_elements, loc="upper right", fontsize=16, framealpha=0.95)
 if leg:

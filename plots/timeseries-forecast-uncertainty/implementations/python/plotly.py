@@ -17,11 +17,11 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+GRID = "rgba(26, 26, 23, 0.10)" if THEME == "light" else "rgba(240, 239, 232, 0.10)"
 
 # Okabe-Ito palette
 COLOR_HISTORICAL = "#009E73"  # Position 1 - brand green
-COLOR_FORECAST = "#D55E00"  # Position 2 - vermillion
+COLOR_FORECAST = "#C475FD"  # Position 2 - vermillion
 
 # Data generation
 np.random.seed(42)
@@ -62,8 +62,8 @@ fig.add_trace(
         x=dates_forecast + dates_forecast[::-1],
         y=np.concatenate([upper_95, lower_95[::-1]]),
         fill="toself",
-        fillcolor="rgba(213, 94, 0, 0.10)",
-        line=dict(color="rgba(213, 94, 0, 0)"),
+        fillcolor="rgba(196, 117, 253, 0.10)",
+        line=dict(color="rgba(196, 117, 253, 0)"),
         name="95% CI",
         showlegend=True,
         hoverinfo="skip",
@@ -76,8 +76,8 @@ fig.add_trace(
         x=dates_forecast + dates_forecast[::-1],
         y=np.concatenate([upper_80, lower_80[::-1]]),
         fill="toself",
-        fillcolor="rgba(213, 94, 0, 0.32)",
-        line=dict(color="rgba(213, 94, 0, 0)"),
+        fillcolor="rgba(196, 117, 253, 0.32)",
+        line=dict(color="rgba(196, 117, 253, 0)"),
         name="80% CI",
         showlegend=True,
         hoverinfo="skip",

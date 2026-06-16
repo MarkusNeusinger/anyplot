@@ -28,7 +28,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Study hours vs exam scores
 np.random.seed(42)
@@ -83,20 +83,20 @@ band = Band(
     lower="lower",
     upper="upper",
     source=band_source,
-    fill_color=OKABE_ITO[0],
+    fill_color=IMPRINT[0],
     fill_alpha=0.15,
-    line_color=OKABE_ITO[0],
+    line_color=IMPRINT[0],
     line_alpha=0.2,
     line_width=1,
 )
 p.add_layout(band)
 
 # Add regression line
-p.line("x", "y", source=line_source, line_color=OKABE_ITO[1], line_width=5, legend_label="Linear Regression")
+p.line("x", "y", source=line_source, line_color=IMPRINT[1], line_width=5, legend_label="Linear Regression")
 
 # Add scatter points with hover tooltip
 scatter = p.scatter(
-    "x", "y", source=scatter_source, size=16, color=OKABE_ITO[0], alpha=0.65, legend_label="Data Points"
+    "x", "y", source=scatter_source, size=16, color=IMPRINT[0], alpha=0.65, legend_label="Data Points"
 )
 
 # Add hover tooltip

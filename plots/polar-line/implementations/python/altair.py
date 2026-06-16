@@ -29,7 +29,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette (positions 1-2 for two series)
-OKABE_ITO = ["#009E73", "#D55E00"]
+IMPRINT = ["#009E73", "#C475FD"]
 
 # Data - Seasonal temperature pattern (cyclical)
 np.random.seed(42)
@@ -125,7 +125,7 @@ lines_chart = (
         y="y:Q",
         color=alt.Color(
             "city:N",
-            scale=alt.Scale(domain=["Northern City", "Southern City"], range=OKABE_ITO),
+            scale=alt.Scale(domain=["Northern City", "Southern City"], range=IMPRINT),
             legend=alt.Legend(
                 title="City",
                 titleFontSize=20,
@@ -150,7 +150,7 @@ points_chart = (
         x="x:Q",
         y="y:Q",
         color=alt.Color(
-            "city:N", scale=alt.Scale(domain=["Northern City", "Southern City"], range=OKABE_ITO), legend=None
+            "city:N", scale=alt.Scale(domain=["Northern City", "Southern City"], range=IMPRINT), legend=None
         ),
     )
 )

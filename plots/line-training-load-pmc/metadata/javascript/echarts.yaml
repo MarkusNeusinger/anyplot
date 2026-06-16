@@ -1,0 +1,261 @@
+library: echarts
+language: javascript
+specification_id: line-training-load-pmc
+created: '2026-06-13T21:10:25Z'
+updated: '2026-06-13T21:37:45Z'
+generated_by: claude-sonnet
+workflow_run: 27478772839
+issue: 8646
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-training-load-pmc/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Perfect spec compliance: all PMC features implemented correctly (CTL/ATL/TSB/TSS,
+    dual y-axis, two-toned TSB area, TSB=0 reference line, secondary axis)'
+  - Two-tone TSB (positive blue / negative matte-red) is a sophisticated and elegant
+    response to the spec's 'ideally two-toned' requirement, using correct Imprint
+    semantic color for negative form
+  - Phase annotations (Base/Intensity/Peak/Taper) via markArea with subtle background
+    shading create excellent narrative context and data storytelling unique to ECharts
+  - Deterministic xorshift LCG (seed=12345) produces physiologically realistic training
+    data with proper 42-day/7-day EWMA calculations and a realistic taper phase
+  - 'Correct Imprint palette usage throughout: brand green #009E73 for CTL (first
+    series rule), lavender for ATL, blue for positive TSB, matte red semantic anchor
+    for negative form, muted inkSoft for TSS bars'
+  weaknesses:
+  - Phase shading opacity (0.04) is essentially invisible in the dark render — consider
+    branching on isDark to increase to 0.07-0.08 for the dark theme so the phase regions
+    remain visible
+  - markArea and markLine annotation labels use fontSize 10 (CSS px, so 20 native
+    px at 2x DPR) — slightly small; 11-12px would improve legibility at smaller viewport
+    widths without overcrowding
+  - 'Axis lines are kept visible (axisLine: { show: true }) — removing the right/top
+    axis lines or reducing their opacity would add visual refinement toward the L-shaped
+    frame style'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface (#FAF8F1) — correct, not pure white.
+      Chrome: Title "Training Load PMC · line-training-load-pmc · javascript · echarts · anyplot.ai" appears at top center in dark ink at a scaled font size (~20px CSS, appropriate for the long string). Left y-axis label "Load (TSS units)" and right y-axis label "Form (TSB)" both readable. X-axis tick labels (Dec 16 → Jun 2) rendered in t.inkSoft at 13px CSS, clearly readable. Legend at bottom shows all four series correctly labeled.
+      Data: Brand green (#009E73) CTL/Fitness line (3.5px smooth) rises from ~38 to ~85 across the 180-day block. Lavender (#C475FD) ATL/Fatigue line (2.5px) shows higher volatility as expected from 7-day EWMA. Two-toned TSB: positive region filled in blue (#4467A3, opacity 0.45) above the zero line; negative region in matte red (#AE3030, opacity 0.40) below — two large red areas dominate Feb–May as the athlete accumulated fatigue. Muted gray daily TSS bars (opacity 0.35) form the background layer. Subtle phase shading (opacity 0.04) with italic labels "Base / Intensity / Peak / Taper" provide training phase context. Dashed vertical line marks peak CTL with "Peak" label.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title, axis labels, tick labels, and legend all rendered in light ink (t.ink / t.inkSoft) that reads cleanly against the dark surface. No dark-on-dark failures observed. Both y-axis labels and x-axis tick labels are clearly visible.
+      Data: Data colors are identical to the light render — brand green CTL, lavender ATL, blue positive TSB area, matte red negative TSB area, gray muted TSS bars. Colors read correctly on the dark surface. Phase shading at opacity 0.04 is essentially invisible in dark mode (very minor). The blue positive TSB region at the taper phase (late May/June) stands out clearly against the dark background as a bright recovery signal.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures detected.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title scaled to length; annotation/phase
+          labels at fontSize 10 CSS (20 native px at 2x) are slightly small but visible
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps with other text or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: CTL/ATL lines clearly visible; TSB areas well-styled; TSS bars appropriately
+          muted at opacity 0.35
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette applied; blue vs. matte-red TSB two-tone is CVD-distinguishable
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; grid with 80/90/80/62 margins well-proportioned;
+          legend at bottom does not overlap data
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Load (TSS units) and Form (TSB) both descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green); Imprint palette positions 1-3
+          for CTL/ATL/TSB+; matte red semantic anchor for negative TSB; backgrounds
+          #FAF8F1/#1A1A17; chrome theme-adaptive in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Two-tone TSB and phase annotations elevate above default (4); visual
+          hierarchy intentional (CTL 3.5px > ATL 2.5px > muted TSS bars); not yet
+          'strong design' (6)
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid subtle via t.grid token; tick marks hidden; TSS bars muted;
+          phase shading very subtle; axis lines still visible (not removed)
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Phase annotations and peak CTL vertical line provide good training
+          narrative; two-tone TSB communicates form state immediately; effective visual
+          hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct PMC chart: CTL/ATL smooth lines on primary axis, two-toned
+          TSB area on secondary axis, TSS bars'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: CTL/ATL EWMA lines, two-toned TSB (positive
+          blue/negative red), daily TSS bars, shared date x-axis, legend, TSB=0 reference
+          line, secondary y-axis'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct dual-axis mapping; CTL smoother than ATL (42-day vs 7-day
+          EWMA clearly visible)
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'Training Load PMC · line-training-load-pmc · javascript ·
+          echarts · anyplot.ai' follows {Descriptive} · {spec-id} · {lang} · {lib}
+          · anyplot.ai; legend correctly names all 4 series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Full PMC feature set: fitness buildup, fatigue spikes, form oscillations,
+          phase structure, taper recovery — all clearly visible'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 180-day endurance training block with realistic CTL/ATL/TSS values;
+          physiologically correct taper with rising TSB at end
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: CTL 30-85, ATL 25-115, TSB -35 to +30, TSS 0-175 are all realistic
+          endurance athlete ranges for a 6-month build
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes; clean data generation then single chart.setOption
+          call
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic xorshift LCG with fixed seed=12345; identical output
+          on every render
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses globals only (echarts, window.ANYPLOT_TOKENS, window.ANYPLOT_THEME)
+          — no unnecessary imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean tsbPos/tsbNeg split; legend.data array correctly hides _tsb_neg
+          from legend; good comments explaining design choices
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Current ECharts 5.5.1 API; harness produces plot-{theme}.html + .png
+          correctly
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expertly uses dual yAxisIndex, markLine, markArea, and legend.data
+          control — all idiomatic ECharts patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: markArea for phase background shading with labels is a distinctive
+          ECharts-specific feature; dual-axis, two-tone split series, and markLine
+          zero reference also ECharts-idiomatic
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - annotations
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending

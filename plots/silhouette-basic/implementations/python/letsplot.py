@@ -24,7 +24,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette - first series is always #009E73 (brand green)
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Clustering iris dataset into 3 groups
 np.random.seed(42)
@@ -76,7 +76,7 @@ df = pd.DataFrame(data_rows)
 df["x_start"] = 0  # Starting x position for horizontal bars
 
 # Map cluster indices to Okabe-Ito colors
-df["cluster_color"] = df["cluster_idx"].map({i: OKABE_ITO[i % len(OKABE_ITO)] for i in range(n_clusters)})
+df["cluster_color"] = df["cluster_idx"].map({i: IMPRINT[i % len(IMPRINT)] for i in range(n_clusters)})
 
 # Create annotation dataframe for cluster labels
 annotation_df = pd.DataFrame(
@@ -113,7 +113,7 @@ plot = (
     + geom_segment(aes(xend="silhouette", yend="y"), x=0, size=1.5)
     + geom_vline(xintercept=avg_silhouette, color=INK_SOFT, linetype="dashed", size=1)
     + geom_text(aes(x="x", y="y", label="label"), data=annotation_df, size=14, hjust=1, color=INK_SOFT)
-    + scale_color_manual(values=OKABE_ITO[:n_clusters])
+    + scale_color_manual(values=IMPRINT[:n_clusters])
     + labs(
         x="Silhouette Coefficient",
         y="Sample Index (sorted within cluster)",

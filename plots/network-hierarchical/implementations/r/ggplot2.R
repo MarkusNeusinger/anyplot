@@ -15,8 +15,8 @@ THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-OKABE_ITO   <- c("#009E73", "#D55E00", "#0072B2", "#CC79A7",
-                 "#E69F00", "#56B4E9", "#F0E442")
+IMPRINT   <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+                 "#AE3030", "#2ABCCD", "#954477")
 
 # --- Data: Organization hierarchy -------------------------------------------
 # Define nodes with their level (depth in tree)
@@ -99,7 +99,7 @@ p <- ggplot() +
   geom_point(
     data = nodes,
     aes(x = x, y = y),
-    color = OKABE_ITO[1], size = 12, alpha = 0.9
+    color = IMPRINT[1], size = 12, alpha = 0.9
   ) +
   # Add node labels
   geom_text(

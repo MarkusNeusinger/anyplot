@@ -19,13 +19,13 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette for data series
-MACD_COLOR = "#009E73"  # Brand green (first series)
-SIGNAL_COLOR = "#D55E00"  # Vermillion (second series)
+# imprint palette
+MACD_COLOR = "#009E73"  # green — MACD line
+SIGNAL_COLOR = "#BD8233"  # ochre — signal line (categorical contrast with MACD green)
 
-# Colorblind-safe histogram colors
-HIST_POSITIVE = "#0072B2"  # Blue
-HIST_NEGATIVE = "#D55E00"  # Vermillion (used for negative, distinct from signal line)
+# Histogram colors — semantic positive/negative
+HIST_POSITIVE = "#4467A3"  # blue — above zero
+HIST_NEGATIVE = "#AE3030"  # red — below zero
 
 # Configure seaborn styling
 sns.set_theme(
