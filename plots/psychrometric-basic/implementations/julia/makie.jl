@@ -1,7 +1,7 @@
 # anyplot.ai
 # psychrometric-basic: Psychrometric Chart for HVAC
-# Library: Makie.jl | Julia 1.11
-# Quality: pending | Created: 2026-06-16
+# Library: makie 0.22.10 | Julia 1.11.9
+# Quality: 88/100 | Created: 2026-06-16
 
 using CairoMakie
 using Colors
