@@ -1,15 +1,27 @@
-""" pyplots.ai
+"""anyplot.ai
 sparkline-basic: Basic Sparkline
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 78/100 | Created: 2025-12-23
+Library: pygal | Python 3.13
+Quality: pending | Created: 2025-12-23
 """
+
+import os
 
 import pygal
 from pygal.style import Style
 
 
-# Data - simulated daily sales trend with balanced variation
-# 30 data points with clear ups and downs, no dominant trend
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — data colors stay constant across themes
+BRAND = "#009E73"  # position 1 — sparkline trend line
+PEAK = "#4467A3"  # position 3 — blue dot marks the high point
+TROUGH = "#AE3030"  # position 5 — matte red dot marks the low point
+
+# Data — simulated daily sales trend with balanced ups and downs (no dominant drift)
 values = [
     65,
     72,
@@ -43,35 +55,38 @@ values = [
     58,
 ]
 
-# Find min/max indices for highlighting
-min_val = min(values)
+# Locate extrema to highlight with colored dots
 max_val = max(values)
-min_idx = values.index(min_val)
+min_val = min(values)
 max_idx = values.index(max_val)
+min_idx = values.index(min_val)
 
-# Custom style for sparkline - minimal and clean
+# Sparkline style — pure visualization: no axes, ticks, guides or legend.
+# foreground_strong drives the title, so it must carry the theme ink (the
+# previous version set it transparent, which hid the title entirely).
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="transparent",
-    foreground_strong="transparent",
-    foreground_subtle="transparent",
-    colors=("#306998", "#43A047", "#E53935"),  # Blue line, green max, red min
-    title_font_size=72,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=(BRAND, PEAK, TROUGH),
+    title_font_size=66,
     label_font_size=1,
     major_label_font_size=1,
     legend_font_size=1,
     value_font_size=1,
     tooltip_font_size=1,
     stroke_width=8,
-    opacity=1.0,
-    opacity_hover=1.0,
+    opacity=0.18,  # soft area fill under the trend line
+    opacity_hover=0.30,
 )
 
-# Compact sparkline aspect ratio (4:1) as per spec
+# Compress the line into a wide, short band centered in the 3200×1800 canvas so
+# it reads as a true sparkline (~4.5:1) while honoring the fixed output size.
 chart = pygal.Line(
-    width=4800,
-    height=1200,
+    width=3200,
+    height=1800,
     style=custom_style,
     show_x_labels=False,
     show_y_labels=False,
@@ -79,26 +94,31 @@ chart = pygal.Line(
     show_y_guides=False,
     show_legend=False,
     show_dots=False,
+    print_values=False,
     fill=True,
     interpolate="cubic",
-    margin=80,
-    title="sparkline-basic · pygal · pyplots.ai",
-    dots_size=20,
+    margin_top=560,
+    margin_bottom=560,
+    margin_left=70,
+    margin_right=70,
+    dots_size=28,
+    title="sparkline-basic · python · pygal · anyplot.ai",
 )
 
-# Add main sparkline data without dots
+# Trend line (filled area)
 chart.add("", values)
 
-# Create max point series - only the max point has a value, rest are None
-max_series = [None] * len(values)
-max_series[max_idx] = max_val
-chart.add("", max_series, stroke=False, show_dots=True, fill=False)
+# High point — single blue dot, no line, no fill
+peak_series = [None] * len(values)
+peak_series[max_idx] = max_val
+chart.add("", peak_series, stroke=False, show_dots=True, fill=False)
 
-# Create min point series - only the min point has a value, rest are None
-min_series = [None] * len(values)
-min_series[min_idx] = min_val
-chart.add("", min_series, stroke=False, show_dots=True, fill=False)
+# Low point — single red dot, no line, no fill
+trough_series = [None] * len(values)
+trough_series[min_idx] = min_val
+chart.add("", trough_series, stroke=False, show_dots=True, fill=False)
 
-# Save outputs
-chart.render_to_file("plot.html")
-chart.render_to_png("plot.png")
+# Save
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
