@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: stereonet-equal-area
 created: '2026-03-15T22:59:30Z'
-updated: '2026-06-16T21:20:54Z'
+updated: '2026-06-16T21:27:14Z'
 generated_by: claude-opus
 workflow_run: 27648386175
 issue: 4576
@@ -12,48 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stereonet
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stereonet-equal-area/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/stereonet-equal-area/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stereonet-equal-area/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - Correct lower-hemisphere equal-area (Schmidt) projection with primitive circle,
-    10° perimeter tick marks, degree labels every 30°, and cardinal N/E/S/W labels
-    — every spec feature is present.
-  - Great circles for planes plus poles-to-planes points, color-coded by feature_type
-    (Bedding/Joints/Faults) with an interactive click-to-hide legend.
-  - Kamb-style KDE pole-density overlay rendered as a distinctive Bokeh image_rgba
-    raster, ramped with imprint_seq (brand green → blue) and paired with an inset
-    Pole density colorbar.
-  - 'Imprint palette used in canonical order (first series = #009E73); data colors
-    are identical between light and dark renders, only chrome flips — fully theme-correct
-    (#FAF8F1 / #1A1A17).'
-  - 'Strong Bokeh distinctive features: HoverTool on poles, interactive legend, image_rgba
-    overlay, custom ColorBar. Exact 2400×2400 square canvas for the circular plot.'
-  - 'Clean KISS script: seeded RNG (42), flat top-level code, no unused imports, theme-adaptive
-    tokens threaded through every element.'
+  - 'Correct lower-hemisphere equal-area (Schmidt) projection: poles plotted at 90°
+    to each plane, great circles drawn for planar features, primitive circle with
+    North at top and 10° perimeter tick marks — all core spec requirements met.'
+  - 'Imprint palette applied correctly: Bedding=#009E73 (first series), Joints=#C475FD,
+    Faults=#4467A3 in canonical order; KDE density overlay built from imprint_seq
+    (green→blue) with a matching inset colorbar.'
+  - Theme adaptation is clean — data colors are identical between light and dark renders,
+    only chrome (background, ink, legend/colorbar frames) flips; no dark-on-dark or
+    light-on-light failures.
+  - 'Strong bokeh-distinctive feature usage: image_rgba raster density overlay, HoverTool
+    on poles, and interactive click-to-hide Legend — genuine library mastery, not
+    generic glyph plotting.'
+  - 'Polished layout: 2400×2400 square canvas correct for a circular plot, colorbar
+    inset into the empty bottom-left corner, balanced legend top-right, descriptive
+    subtitle, and self-import guard for the bokeh.py shadowing problem.'
   weaknesses:
-  - Great-circle multi_line traces are visually noisy — at line_alpha=0.38 they spray
-    densely across the whole net (especially toward the E side), competing with the
-    pole clusters for attention and slightly muddying the focal point. Consider lowering
-    alpha further (~0.20-0.25) or thinning to a representative subset of planes to
-    let the density clusters read as the primary story.
-  - The italic subtitle and the colorbar's numeric tick labels are small relative
-    to the 2400px canvas; when scaled to ~400px (mobile catalog thumbnail) they become
-    hard to read. Bumping subtitle/colorbar label sizes a few pt would improve mobile
-    legibility.
-  - 'DE could improve: a clearer visual hierarchy emphasizing the three pole clusters
-    over the dense great-circle web would raise the storytelling impact.'
+  - Great circles are rendered very faint (line_alpha=0.22, line_width=1.6) and form
+    a slightly noisy web of arcs across the upper-right of the net — the planar features
+    (a spec-required element) are barely distinguishable and read as background texture
+    rather than meaningful structure. Consider raising alpha slightly or per-feature-type
+    emphasis so planes are legible without overwhelming the poles.
+  - Spec asks for Kamb density contours; the implementation uses a filled KDE heatmap
+    instead. The density information is conveyed well, but discrete contour lines
+    (the geological convention) are absent — a minor deviation from the literal spec.
+  - Subtitle and 30°-interval degree labels become quite small when scaled to the
+    ~400px mobile preview; still readable but at the lower bound.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1), correct — not pure white, not dark.
-      Chrome: title "stereonet-equal-area · bokeh · anyplot.ai" in dark ink, bold and centered, fully readable. Degree labels (30°/60°/120°/150°/210°/240°/300°/330°) and cardinal N/E/S/W labels in soft dark gray around the perimeter, all legible. Italic subtitle "Lower-hemisphere equal-area (Schmidt) projection · Click legend to toggle" in muted gray at the bottom — readable but small. Inset "Pole density" colorbar bottom-left with 0–1 ticks.
-      Data: poles as filled points — Bedding green (#009E73) cluster top-center, Faults blue (#4467A3) cluster lower-left, Joints lavender (#C475FD) cluster lower-center. First categorical series is #009E73. Great-circle multi_lines in matching colors spray across the net (somewhat busy on the E side). Green→blue imprint_seq density blobs highlight the clusters. Primitive circle is a solid dark ring with tick marks every 10°.
-      Legibility verdict: PASS — all text readable against the light background.
+      Background: warm off-white (#FAF8F1), correct — not pure white.
+      Chrome: title "stereonet-equal-area · bokeh · anyplot.ai" in dark ink, centered and readable. Bold N/E/S/W cardinal labels and 30°/60°/120°/150°/210°/240°/300°/330° degree labels readable in soft ink. Subtitle (italic, muted) readable at bottom. Legend top-right (Bedding/Joints/Faults) and "Pole density" colorbar bottom-left both readable.
+      Data: Bedding poles green (#009E73) clustered top, Joints poles lavender (#C475FD) lower-right, Faults poles blue (#4467A3) lower-left. KDE density blobs use imprint_seq green→blue. First series is #009E73. Faint great-circle arcs sweep across the net.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17), correct — not pure black, not light.
-      Chrome: title in light ink, fully readable. Degree and cardinal labels in light gray (INK_SOFT #B8B7B0), clearly visible against the dark surface — no dark-on-dark failure. Subtitle in muted light gray, readable. Primitive circle and tick marks render in light ink. Inset colorbar legible with elevated-surface background.
-      Data: pole colors identical to the light render (green Bedding, blue Faults, lavender Joints); only the chrome flipped. Green→blue density overlay and great circles unchanged. Brand green #009E73 reads well on the dark surface.
-      Legibility verdict: PASS — all text readable against the dark background, no dark-on-dark issues.
+      Background: warm near-black (#1A1A17), correct — not pure black.
+      Chrome: title and cardinal/degree labels in light ink, clearly visible. Legend and colorbar frames flip to elevated dark surface with light text. No dark-on-dark failures.
+      Data: pole colors and density gradient identical to the light render — only chrome flipped. Density blobs and poles clearly distinguishable against the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 28
@@ -64,71 +63,72 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Fonts explicitly set; all text readable in both themes. Subtitle/colorbar
-          labels small at 400px mobile scale.
+        comment: Fonts explicitly set and large; readable in both themes. Subtitle/degree
+          labels near lower bound at 400px.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; legend and degree labels clear of data.
+        comment: No text collisions; legend, colorbar, subtitle well separated.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Poles prominent (size 24); great circles faint at alpha 0.38 and
-          visually cluttered.
+        comment: Poles prominent (size 24); great circles too faint at alpha 0.22
+          to read clearly.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint colors with good contrast.
+        comment: Imprint palette is CVD-safe; good contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exact 2400x2400 square; nothing clipped; colorbar nicely inset in
-          empty corner.
+        comment: 2400x2400 square correct; nothing clipped; colorbar nicely inset.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Degree + cardinal labels and descriptive title present.
+        comment: No traditional axes (stereonet); cardinal/degree labels and subtitle
+          describe the projection.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order, imprint_seq continuous,
-          correct theme backgrounds.'
+        comment: 'First series #009E73; canonical order; imprint_seq continuous; backgrounds
+          correct both themes.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Polished: inset colorbar, raster density overlay, theme-adaptive
-          tokens.'
+        comment: Custom stereonet, density overlay, inset colorbar, refined typography
+          — clearly above generic defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Axes hidden, subtle net grid (alpha 0.14), generous whitespace.
+        comment: Spines/axes off, subtle net grid, generous whitespace; faint great-circle
+          web slightly muddies refinement.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Density highlights clusters, but dense great-circle web dilutes the
-          focal point.
+        comment: Density blobs create focal clusters per feature type; great-circle
+          web slightly dilutes the focus.
     spec_compliance:
       score: 15
       max: 15
@@ -144,21 +144,20 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Great circles, poles, density contours, primitive circle, 10° ticks,
-          N label, legend, subtle grid — all present.
+        comment: Great circles, poles at 90°, density overlay, 10° ticks, N marker,
+          legend, subtle grid. Kamb→KDE is minor.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Strike/dip projected correctly to poles and great circles.
+        comment: Strike/dip correctly mapped to poles and great circles.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'stereonet-equal-area · bokeh · anyplot.ai'; legend
-          labels match feature types.
+        comment: Title format correct; legend labels match feature types.
     data_quality:
       score: 15
       max: 15
@@ -168,19 +167,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows great circles, poles, density, and three feature classes.
+        comment: Poles, great circles, density, three feature types all shown.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral structural-geology measurements.
+        comment: Plausible structural-geology strike/dip distributions; neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Strike 0-360, dip 0-90 — domain-correct.
+        comment: Degrees 0-360, dips clipped 5-89 — sensible domain values.
     code_quality:
       score: 10
       max: 10
@@ -190,7 +189,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes.
+        comment: Linear script, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -208,15 +207,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI.
+        comment: Appropriate complexity; real interactivity, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png + .html.
+        comment: Saves plot-{THEME}.png + .html via Selenium screenshot.
     library_features:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -224,34 +223,34 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: figure, ColumnDataSource, multi_line, scatter, image_rgba, glyph
-          renderers.
+        comment: figure/ColumnDataSource/glyphs/add_layout used idiomatically.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: HoverTool, interactive click-to-hide legend, image_rgba raster overlay,
-          custom ColorBar.
+        comment: image_rgba raster overlay, HoverTool, interactive click-to-hide legend,
+          ColorBar.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   - selenium
   techniques:
+  - polar-projection
+  - density-heatmap
   - colorbar
   - annotations
   - hover-tooltip
   - interactive-legend
   - raster-overlay
-  - polar-projection
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - kde
-  - gaussian-smoothing
   - coordinate-transform
+  - gaussian-smoothing
   styling:
   - publication-ready
   - theme-adaptive

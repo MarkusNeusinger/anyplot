@@ -1,7 +1,7 @@
 """ anyplot.ai
 stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)
 Library: bokeh 3.9.1 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-06-16
+Quality: 90/100 | Updated: 2026-06-16
 """
 
 import os
