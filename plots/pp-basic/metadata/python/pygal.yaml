@@ -1,44 +1,63 @@
 library: pygal
+language: python
 specification_id: pp-basic
 created: '2026-03-15T20:16:37Z'
-updated: '2026-03-15T20:43:25Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23118400186
+updated: '2026-06-16T19:33:36Z'
+generated_by: claude-opus
+workflow_run: 27641993697
 issue: 4587
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/pp-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/pp-basic/pygal/plot.html
-quality_score: 88
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pp-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pp-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pp-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pp-basic/python/pygal/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent data storytelling through three-tier classification with graduated dot
-    sizes creating immediate visual hierarchy
-  - Thoughtful realistic scenario (steel rod QC) with metallurgically plausible values
-  - Full spec compliance including square aspect ratio, correct CDF formulas, and
-    proper reference line
-  - Clean well-structured code with good comments explaining domain context
-  - Good use of pygal-specific features (tooltips, HTML export, stroke dash patterns)
+  - 'Correct P-P plot construction: theoretical CDF (fitted Normal via erf) on X,
+    empirical CDF i/(n+1) on Y, both axes locked to 0-1 on a square 2400x2400 canvas
+    that preserves the 45-degree diagonal''s meaning'
+  - Three-tier severity hierarchy (good/mild/strong deviation) encoded redundantly
+    by Imprint semantic colors AND graduated dot sizes (7/13/18px), creating a clear
+    focal point on the red strong-deviation clusters without relying on color alone
+  - Dashed neutral 45-degree reference line drawn first so data points sit on top;
+    theme-adaptive so it reads on both surfaces
+  - 'Flawless theme adaptation: warm off-white #FAF8F1 / near-black #1A1A17 backgrounds,
+    identical data colors across renders, all chrome legible in both themes with no
+    dark-on-dark or light-on-light failures'
+  - 'Distinctive pygal usage: interactive HTML export, fancy tooltips with per-point
+    Delta labels, legend_at_bottom, all driven through a single themed Style object'
+  - Realistic, neutral QC scenario (steel-rod tensile strength, compliant normal batch
+    + heat-treatment exponential drift) that genuinely produces visible S-shaped departures
+    from the diagonal
+  - 'Clean KISS script: seeded (np.random.seed(42)), no functions/classes, only used
+    imports, correct plot-{THEME}.png + .html output'
   weaknesses:
-  - Orange and red series are somewhat close in hue for some color vision deficiencies
-  - Good-fit dots (size 7) are slightly small relative to canvas
-  - 'Minor gap to 90: needs slightly more visual refinement on axis line styling'
-  image_description: 'The plot displays a P-P (Probability-Probability) plot on a
-    square canvas (3600x3600). The title reads "pp-basic · pygal · pyplots.ai" at
-    the top. The x-axis is labeled "Theoretical CDF (Normal Distribution)" and the
-    y-axis "Empirical CDF (Steel Rod Tensile Strength)", both ranging from 0 to 1
-    with ticks at 0.2 intervals. A subtle light gray diagonal reference line runs
-    from (0,0) to (1,1). Data points are classified into three color-coded groups:
-    blue dots for "Good Fit |Δ| ≤ 0.01 (88 pts)", orange dots for "Mild Deviation
-    0.01 < |Δ| ≤ 0.025 (79 pts)", and darker red dots for "Strong Deviation |Δ| >
-    0.025 (33 pts)". Dot sizes increase with deviation severity (7, 11, 15). The points
-    trace along the diagonal with a visible S-shaped departure in the middle and upper
-    portions, indicating the mixed normal+exponential data departs from pure normality.
-    The background is very light gray (#fafbfc) with subtle grid lines. Legend is
-    at the bottom with all four series clearly labeled.'
+  - Axis tick labels (0, 0.2 ... 1.0) sit on the smaller side relative to the title/axis
+    labels; when scaled to ~400px for mobile they remain legible but bumping major_label_font_size
+    slightly would improve the safety margin
+  - Severity tiers lean on a green-to-red progression; the amber mid-tier and graduated
+    dot sizes mitigate CVD risk well, but the green good-fit and red strong-dev series
+    are the primary color contrast a deuteranope must resolve
+  - The 45-degree reference line is quite thin in the light render and can be momentarily
+    lost under the dense good-fit band near the lower-left; a touch more stroke weight
+    or contrast would keep it readable end-to-end
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (~#FAF8F1), plot and page consistent.
+      Chrome: dark title "pp-basic · python · pygal · anyplot.ai" centered top; axis titles "Theoretical CDF (fitted Normal)" (X) and "Empirical CDF (steel-rod tensile strength)" (Y) clearly readable; tick labels 0–1 on both axes readable; subtle muted grid; bottom legend with 4 entries all legible.
+      Data: first data series (good fit) is brand green #009E73; mild dev amber #DDCC77; strong dev matte red #AE3030; neutral dark dashed 45-degree reference line. Points trace an S-shaped departure from the diagonal with red clusters at ~0.4 and ~0.7.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (~#1A1A17).
+      Chrome: light title and axis labels, light tick labels, subtle grid, bottom legend — all clearly readable; no dark-on-dark failures. Reference line flips to a light neutral stroke.
+      Data: data colors identical to the light render (green/amber/red unchanged); only chrome flipped. Same S-shaped deviation pattern.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -46,40 +65,46 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=72, labels=46, ticks=44, legend=34).
-          Readable. Legend text slightly small.
+        comment: All text readable in both themes; tick labels slightly small but
+          legible when scaled
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions. Legend well-spaced at bottom.
+        comment: No text collisions; dense good-fit overlap is expected data density
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Three dot sizes create good hierarchy. Good-fit dots slightly small
-          but visible.
+        comment: Graduated dot sizes adapt markers to severity/density
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/orange distinguishable. Orange and red somewhat close in hue.
+        comment: Green/amber/red Imprint anchors, redundantly encoded by dot size
+          so not color-only
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square aspect ratio per spec. Plot fills canvas well with balanced
-          margins.
+        comment: Square 2400x2400, nothing cut off, balanced proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with context and units.
+        comment: Descriptive axis titles with domain context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First data series #009E73, Imprint anchors, correct theme backgrounds
+          both renders'
     design_excellence:
       score: 15
       max: 20
@@ -89,21 +114,19 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, custom fonts, refined background, intentional color
-          hierarchy. Above defaults.
+        comment: Three-tier hierarchy, semantic palette, graduated dots, dashed reference
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: Subtle grid with custom guide colors, clean background, good spacing.
-      - id: DE-03
-        name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Three-tier classification with graduated dot sizes creates clear
-          visual hierarchy and tells deviation story.
+        comment: Subtle grid, generous whitespace, opacity blending
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Red strong-dev clusters form clear focal point guiding eye to misfit
     spec_compliance:
       score: 15
       max: 15
@@ -113,48 +136,48 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct P-P plot using XY scatter.
+        comment: Correct P-P plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Reference line, square ratio, correct CDF formulas, 0-1 axes all
-          present.
+        comment: 0-1 axes, 45-deg reference, square aspect, i/(n+1) ECDF, theoretical
+          CDF
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Theoretical CDF on X, empirical CDF on Y. All 200 points visible.
+        comment: Theoretical X / empirical Y, full 0-1 range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels descriptive with point counts.
+        comment: Title format correct; legend labels match series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows good fit and deviation regions. S-shaped departure visible.
+        comment: Shows S-shaped deviation across full range with three fit tiers
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Steel rod tensile strength QC scenario. Real-world, neutral, domain-specific.
+        comment: Neutral, plausible steel-rod tensile-strength QC scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 520 MPa ± 35 for steel rods is metallurgically plausible.
+        comment: 200 points, sensible MPa values, CDF 0-1
     code_quality:
       score: 10
       max: 10
@@ -164,60 +187,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, CDF, classification, style, chart, save.'
+        comment: Linear script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-commented, appropriate complexity.
+        comment: Clean, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html.
-    library_mastery:
-      score: 7
+        comment: plot-{THEME}.png + .html
+    library_features:
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Good use of pygal.XY, Style class, dict-based data points for custom
-          labels.
+        comment: pygal.XY + Style object + add() pattern, idiomatic
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: SVG tooltips, HTML export, stroke_dasharray, tooltip_fancy_mode,
-          dual output.
-  verdict: REJECTED
+        comment: Interactive HTML, fancy tooltips with per-point Delta, legend_at_bottom,
+          graduated dots
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
-  - html-export
+  - reference-line
+  - graduated-markers
+  - interactive-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
+  - severity-tiering
   dataprep:
-  - cumulative-sum
+  - empirical-cdf
+  - theoretical-cdf
+  - sorting
   styling:
-  - grid-styling
+  - publication-ready
+  - theme-adaptive
   - alpha-blending
+  - semantic-palette
