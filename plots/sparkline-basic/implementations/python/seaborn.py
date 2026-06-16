@@ -1,11 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 sparkline-basic: Basic Sparkline
-Library: seaborn 0.13.2 | Python 3.13.11
-
-Small-multiples KPI dashboard: one minimalist sparkline per metric.
-Each cell keeps the sparkline aesthetic (no axes, ticks, gridlines, or
-spines) while highlighting min, max, and the current (last) value — a
-listed spec application ("small multiples for comparing many series").
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-06-16
 """
 
 import os
