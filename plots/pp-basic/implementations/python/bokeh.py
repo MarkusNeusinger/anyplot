@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 pp-basic: Probability-Probability (P-P) Plot
-Library: bokeh | Python 3.14
-Quality: pending | Created: 2026-06-16
+Library: bokeh 3.9.1 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-06-16
 """
 
 import io
