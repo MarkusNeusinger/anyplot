@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 sparkline-basic: Basic Sparkline
 Library: plotnine 0.15.7 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-16
