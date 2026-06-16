@@ -22,8 +22,13 @@ const IMPRINT     = [
     colorant"#C475FD",  # 2 — joint set 1 (lavender)
     colorant"#4467A3",  # 3 — joint set 2 (blue)
 ]
-# Sequential Imprint scheme for the Kamb density contours (continuous data)
-const IMPRINT_SEQ = cgrad([colorant"#009E73", colorant"#4467A3"])
+# Kamb density contours render as a single neutral ink-derived layer (varying
+# alpha by level) so the density encoding reads as distinct from the colored
+# feature poles rather than competing with the green/blue categorical hues.
+const DENSITY_CMAP = cgrad([
+    RGBAf(INK_SOFT.r, INK_SOFT.g, INK_SOFT.b, 0.28f0),
+    RGBAf(INK_SOFT.r, INK_SOFT.g, INK_SOFT.b, 0.92f0),
+])
 
 # --- Equal-area projection (Schmidt net, lower hemisphere) ------------------
 # A downward unit vector (E, N, D) with D >= 0 maps onto the unit disk via the
@@ -148,7 +153,7 @@ end
 
 # Kamb density contours — highlight preferred pole orientations
 contour!(ax, grid, grid, density;
-    levels = levels, colormap = IMPRINT_SEQ, linewidth = 2.2)
+    levels = levels, colormap = DENSITY_CMAP, linewidth = 2.2)
 
 # Mean great circle per fabric element (representative plane)
 for s in 1:length(set_names)
@@ -199,9 +204,12 @@ axislegend(ax, "Lower-hemisphere equal area";
     titlecolor      = INK,
     framecolor      = INK_SOFT,
     framewidth      = 0.8,
-    labelsize       = 15,
-    titlesize       = 15,
-    patchsize       = (22, 22),
+    labelsize       = 13,
+    titlesize       = 13,
+    patchsize       = (18, 18),
+    padding         = (8, 8, 6, 6),
+    margin          = (6, 6, 6, 6),
+    rowgap          = 2,
 )
 
 # --- Save -------------------------------------------------------------------
