@@ -1,7 +1,7 @@
 // anyplot.ai
 // psychrometric-basic: Psychrometric Chart for HVAC
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-06-16
+// Library: echarts 5.5.1 | JavaScript 22.22.3
+// Quality: 90/100 | Created: 2026-06-16
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
