@@ -50,7 +50,9 @@ rh_df <- bind_rows(lapply(rh_levels, function(rh) {
 
 sat_df <- filter(rh_df, rh == 100)            # 100 % RH — saturation boundary
 rh_minor <- filter(rh_df, rh < 100)
-rh_lab <- rh_minor |> group_by(rh) |> slice_max(t, n = 1) |> ungroup()
+# stagger label offsets so converging high-RH curves near the top don't crowd
+rh_lab <- rh_minor |> group_by(rh) |> slice_max(t, n = 1) |> ungroup() |>
+  mutate(vj = ifelse(rh %% 20 == 0, -0.4, 1.3))
 
 # --- Constant wet-bulb temperature lines ------------------------------------
 wb_levels <- seq(0, 30, by = 5)
@@ -99,10 +101,10 @@ p <- ggplot() +
                fill = INK_MUTED, alpha = 0.16, color = NA) +
   # specific-volume lines (steep, dotted)
   geom_line(data = v_df, aes(t, w, group = v),
-            color = BLUE, linewidth = 0.4, linetype = "dotted") +
+            color = BLUE, linewidth = 0.5, linetype = "dotted") +
   # enthalpy lines (oblique, dashed)
   geom_line(data = h_df, aes(t, w, group = h),
-            color = LAV, linewidth = 0.4, linetype = "22") +
+            color = LAV, linewidth = 0.5, linetype = "22") +
   # wet-bulb lines (diagonal, dashed)
   geom_line(data = wb_df, aes(t, w, group = twb),
             color = CYAN, linewidth = 0.5, linetype = "longdash") +
@@ -134,17 +136,17 @@ p <- ggplot() +
 # --- Direct line labels -----------------------------------------------------
 p <- p +
   geom_text(data = rh_lab, aes(t, w, label = paste0(rh, "%")),
-            color = GREEN, size = 2.5, hjust = 1.15, vjust = -0.2,
+            color = GREEN, size = 2.5, hjust = 1.15, vjust = rh_lab$vj,
             fontface = "bold") +
   annotate("text", x = 28.5, y = W_sat(28.5), label = "Saturation (100% RH)",
            color = GREEN, size = 2.8, hjust = 1.05, vjust = -0.6,
            fontface = "bold", angle = 52) +
   geom_text(data = wb_lab, aes(t, w, label = twb),
-            color = CYAN, size = 2.4, hjust = 1.25, vjust = 1.7) +
+            color = CYAN, size = 2.7, hjust = 1.25, vjust = 1.7) +
   geom_text(data = h_lab, aes(t, w, label = h),
-            color = LAV, size = 2.3, hjust = 1.3, vjust = -1.0) +
+            color = LAV, size = 2.7, hjust = 1.3, vjust = -1.0) +
   geom_text(data = v_lab, aes(t, w, label = sprintf("%.2f", v)),
-            color = BLUE, size = 2.2, hjust = -0.1, vjust = 1.2) +
+            color = BLUE, size = 2.7, hjust = -0.1, vjust = 1.2) +
   # family descriptors (direct, colour-keyed)
   annotate("text", x = -9, y = 28.3, label = "Relative humidity",
            color = GREEN, size = 2.9, hjust = 0, fontface = "bold") +
