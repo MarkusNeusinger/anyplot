@@ -1,14 +1,26 @@
-""" pyplots.ai
+"""anyplot.ai
 star-chart-constellation: Star Chart with Constellations
-Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-18
+Library: matplotlib | Python 3.13
+Quality: pending | Created: 2026-06-16
 """
+
+import os
 
 import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
 
+
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+BRAND = "#009E73"  # Imprint palette position 1 — brightest stars
+AMBER = "#DDCC77"  # semantic anchor — ecliptic reference line
 
 np.random.seed(42)
 
@@ -276,126 +288,107 @@ edges = [
     ("Nash", "Kaus Media"),
 ]
 
-# Background stars
+# Background field stars (faint, for celestial-sphere context)
 n_bg = 300
 bg_ra_hours = np.random.uniform(0, 24, n_bg)
 bg_dec_deg = np.random.uniform(-45, 70, n_bg)
 bg_mag = np.random.uniform(4.0, 6.0, n_bg)
 
-# Extract star data
+# Extract named-star arrays
 star_names = list(stars.keys())
 star_ra_h = np.array([stars[s][0] for s in star_names])
 star_dec_d = np.array([stars[s][1] for s in star_names])
 star_mag = np.array([stars[s][2] for s in star_names])
 
-# Convert to radians for Aitoff projection
-# Aitoff expects longitude in [-pi, pi] and latitude in [-pi/2, pi/2]
-# RA: map 0-24h -> negate and shift so RA increases right-to-left (standard sky chart)
+
+# Project equatorial coords onto matplotlib's Aitoff all-sky projection.
+# Aitoff wants longitude in [-pi, pi] and latitude in [-pi/2, pi/2]; negate RA
+# so the sky increases right-to-left (standard star-chart convention).
 star_lon = -((star_ra_h - 12.0) * np.pi / 12.0)
 star_lat = star_dec_d * np.pi / 180.0
 bg_lon = -((bg_ra_hours - 12.0) * np.pi / 12.0)
 bg_lat = bg_dec_deg * np.pi / 180.0
 
-# Size mapping: brighter stars (lower mag) get larger points
-max_mag = 6.5
-min_mag = -1.5
-min_size = 10
-max_size = 420
+# Size mapping: brighter stars (lower magnitude) map to larger points
+max_mag, min_mag = 6.5, -1.5
+min_size, max_size = 5, 175
 star_sizes = max_size * ((max_mag - star_mag) / (max_mag - min_mag)) ** 1.5 + min_size
 bg_sizes = max_size * ((max_mag - bg_mag) / (max_mag - min_mag)) ** 1.5 + min_size
 
-# Color mapping by magnitude using a custom colormap (warm white to cool blue-gray)
-star_cmap = LinearSegmentedColormap.from_list(
-    "star_temp", ["#FFFFFF", "#E8E8FF", "#C8C8F0", "#A0A0D0", "#8888B8"], N=256
-)
-# Normalize magnitude to [0, 1] range for colormap (bright=0, dim=1)
+# Color mapping by magnitude — Imprint sequential cmap (brand green -> blue).
+# Brightest stars (low magnitude) get brand green; faintest fade to blue.
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", [BRAND, "#4467A3"])
 star_color_norm = np.clip((star_mag - min_mag) / (max_mag - min_mag), 0, 1)
-star_colors = star_cmap(star_color_norm)
+star_colors = imprint_seq(star_color_norm)
 
-# Create figure using matplotlib's Aitoff projection
-fig = plt.figure(figsize=(16, 9), facecolor="#0A0A2A")
-ax = fig.add_subplot(111, projection="aitoff", facecolor="#0A0A2A")
+# Plot — Aitoff all-sky projection
+fig = plt.figure(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax = fig.add_subplot(111, projection="aitoff", facecolor=PAGE_BG)
 
-# Plot background stars
-ax.scatter(bg_lon, bg_lat, s=bg_sizes, c="#707090", alpha=0.35, edgecolors="none", zorder=1)
+# Faint background field stars (context layer, muted)
+ax.scatter(bg_lon, bg_lat, s=bg_sizes, c=INK_MUTED, alpha=0.30, edgecolors="none", zorder=1)
 
-# Draw constellation lines
+# Constellation stick-figure lines (thin, semi-transparent structural ink)
 for s1, s2 in edges:
-    if s1 in stars and s2 in stars:
-        lon1 = -((stars[s1][0] - 12.0) * np.pi / 12.0)
-        lat1 = stars[s1][1] * np.pi / 180.0
-        lon2 = -((stars[s2][0] - 12.0) * np.pi / 12.0)
-        lat2 = stars[s2][1] * np.pi / 180.0
-        # Skip lines that wrap around the projection boundary
-        if abs(lon1 - lon2) > np.pi:
-            continue
-        ax.plot([lon1, lon2], [lat1, lat2], color="#3A5A8C", linewidth=1.4, alpha=0.55, zorder=2)
+    lon1 = -((stars[s1][0] - 12.0) * np.pi / 12.0)
+    lat1 = stars[s1][1] * np.pi / 180.0
+    lon2 = -((stars[s2][0] - 12.0) * np.pi / 12.0)
+    lat2 = stars[s2][1] * np.pi / 180.0
+    # Skip segments that would wrap across the projection boundary
+    if abs(lon1 - lon2) > np.pi:
+        continue
+    ax.plot([lon1, lon2], [lat1, lat2], color=INK_SOFT, linewidth=0.8, alpha=0.5, zorder=2)
 
-# Plot named stars with subtle glow effect using PathEffects
-ax.scatter(
-    star_lon,
-    star_lat,
-    s=star_sizes,
-    c=star_colors,
-    alpha=0.92,
-    edgecolors="white",
-    linewidth=0.3,
-    zorder=3,
-    path_effects=[pe.withSimplePatchShadow(offset=(0, 0), shadow_rgbFace="#4060A0", alpha=0.25, rho=0.4)],
-)
-# Extra glow layer for brightest stars (mag < 1.0)
+# Soft halo behind the brightest stars (mag < 1.0) for a gentle glow
 bright_mask = star_mag < 1.0
 ax.scatter(
     star_lon[bright_mask],
     star_lat[bright_mask],
-    s=star_sizes[bright_mask] * 2.5,
-    c="#4060B0",
-    alpha=0.08,
+    s=star_sizes[bright_mask] * 2.6,
+    c=BRAND,
+    alpha=0.10,
     edgecolors="none",
     zorder=2,
 )
 
-# Draw ecliptic (obliquity ~23.44 degrees)
-ecl_lon_range = np.linspace(-np.pi, np.pi, 500)
-# Ecliptic in equatorial coords: Dec = arcsin(sin(obliquity) * sin(ecliptic_lon))
-# Simplified: Dec = obliquity * sin(RA), mapping ecliptic longitude to RA
-ecl_lat = 23.44 * np.sin(-ecl_lon_range) * np.pi / 180.0
-ax.plot(
-    ecl_lon_range, ecl_lat, color="#8B6914", linewidth=1.8, alpha=0.5, linestyle=(0, (8, 4)), zorder=1, label="Ecliptic"
-)
+# Named stars — sized by magnitude, colored along the Imprint sequential ramp
+ax.scatter(star_lon, star_lat, s=star_sizes, c=star_colors, alpha=0.95, edgecolors=PAGE_BG, linewidth=0.4, zorder=3)
 
-# Label brightest stars (mag < 1.0) with smart offsets
+# Ecliptic — dashed amber reference curve (Dec ~ obliquity * sin(ecliptic lon))
+ecl_lon = np.linspace(-np.pi, np.pi, 500)
+ecl_lat = 23.44 * np.sin(-ecl_lon) * np.pi / 180.0
+ax.plot(ecl_lon, ecl_lat, color=AMBER, linewidth=1.4, alpha=0.75, linestyle=(0, (7, 4)), zorder=2, label="Ecliptic")
+
+# Label the brightest stars (mag < 1.0) with tuned offsets
 bright_offsets = {
-    "Sirius": (14, 12),
-    "Vega": (12, 12),
-    "Arcturus": (12, -16),
-    "Capella": (-58, 10),
-    "Rigel": (12, -16),
-    "Betelgeuse": (12, 12),
-    "Altair": (12, -16),
-    "Aldebaran": (-62, -12),
-    "Spica": (-50, -14),
-    "Pollux": (12, 12),
+    "Sirius": (8, 7),
+    "Vega": (7, 7),
+    "Arcturus": (7, -10),
+    "Capella": (-34, 6),
+    "Rigel": (7, -10),
+    "Betelgeuse": (7, 7),
+    "Altair": (7, -10),
+    "Aldebaran": (-38, -8),
+    "Spica": (-30, -9),
+    "Pollux": (7, 7),
 }
 for name, (ra, dec, mag, _) in stars.items():
     if mag < 1.0:
         lon = -((ra - 12.0) * np.pi / 12.0)
         lat = dec * np.pi / 180.0
-        offset = bright_offsets.get(name, (12, 10))
         ax.annotate(
             name,
             (lon, lat),
-            fontsize=14,
-            color="#C8C8E0",
-            alpha=0.88,
-            xytext=offset,
+            fontsize=7,
+            color=INK,
+            alpha=0.9,
+            xytext=bright_offsets.get(name, (7, 6)),
             textcoords="offset points",
-            fontweight="light",
             zorder=5,
-            path_effects=[pe.withStroke(linewidth=3, foreground="#0A0A2A", alpha=0.7)],
+            path_effects=[pe.withStroke(linewidth=2, foreground=PAGE_BG, alpha=0.8)],
         )
 
-# Constellation name labels at centroid with overlap avoidance
+# Constellation names placed near each group's centroid
 constellation_names = {
     "Ori": "Orion",
     "UMa": "Ursa Major",
@@ -408,7 +401,7 @@ constellation_names = {
     "Tau": "Taurus",
     "CMa": "Canis Major",
     "Aql": "Aquila",
-    "Boo": "Bo\u00f6tes",
+    "Boo": "Boötes",
     "Per": "Perseus",
     "Aur": "Auriga",
     "Vir": "Virgo",
@@ -420,15 +413,15 @@ constellation_names = {
     "Sgr": "Sagittarius",
 }
 
-# Manual offsets (in radians) for crowded regions — tuned to avoid overlap
+# Manual nudges (radians) to clear crowded regions
 label_offsets_rad = {
     "CrB": (0.0, -0.18),
     "Her": (0.15, 0.15),
     "Boo": (-0.15, -0.18),
     "Lyr": (-0.12, -0.15),
-    "Tau": (0.18, 0.12),
-    "Gem": (-0.08, 0.15),
-    "CMa": (-0.15, 0.18),
+    "Tau": (0.20, 0.16),
+    "Gem": (-0.14, 0.18),
+    "CMa": (-0.16, 0.20),
     "Dra": (0.0, 0.10),
     "Cyg": (0.10, 0.12),
     "Aql": (0.0, -0.15),
@@ -437,19 +430,16 @@ label_offsets_rad = {
     "Vir": (0.15, -0.20),
     "And": (0.0, 0.12),
     "Per": (0.0, -0.12),
-    "Ori": (0.08, -0.22),
+    "Ori": (0.10, -0.24),
     "Leo": (0.0, -0.10),
 }
 
 placed_labels = []
 for abbr, full_name in constellation_names.items():
-    members = [(s, stars[s]) for s in star_names if stars[s][3] == abbr]
-    if not members:
-        continue
-    member_lons = [-((d[0] - 12.0) * np.pi / 12.0) for _, d in members]
-    member_lats = [d[1] * np.pi / 180.0 for _, d in members]
-    cx = np.mean(member_lons)
-    cy = np.mean(member_lats) - 0.06
+    member_lon = [-((stars[s][0] - 12.0) * np.pi / 12.0) for s in star_names if stars[s][3] == abbr]
+    member_lat = [stars[s][1] * np.pi / 180.0 for s in star_names if stars[s][3] == abbr]
+    cx = np.mean(member_lon)
+    cy = np.mean(member_lat) - 0.06
 
     dx, dy = label_offsets_rad.get(abbr, (0.0, 0.0))
     cx += dx
@@ -458,7 +448,7 @@ for abbr, full_name in constellation_names.items():
     # Iterative nudge away from previously placed labels
     for _ in range(3):
         for px, py in placed_labels:
-            if abs(cx - px) < 0.22 and abs(cy - py) < 0.12:
+            if abs(cx - px) < 0.22 and abs(cy - py) < 0.11:
                 cy -= 0.13
                 break
         else:
@@ -469,53 +459,43 @@ for abbr, full_name in constellation_names.items():
         cx,
         cy,
         full_name,
-        fontsize=13,
-        color="#6A7A9A",
-        alpha=0.75,
+        fontsize=7.5,
+        color=INK_SOFT,
+        alpha=0.85,
         ha="center",
         va="top",
         fontstyle="italic",
         fontweight="medium",
         zorder=4,
-        path_effects=[pe.withStroke(linewidth=4, foreground="#0A0A2A", alpha=0.6)],
+        path_effects=[pe.withStroke(linewidth=2.5, foreground=PAGE_BG, alpha=0.7)],
     )
 
-# Style the Aitoff grid
-ax.grid(True, color="#152040", linewidth=0.4, alpha=0.35, linestyle=(0, (5, 8)))
-ax.tick_params(axis="both", colors="#4A5A7A", labelsize=16, length=0, labelcolor="#6A7A9A")
+# Style the coordinate grid + ticks
+ax.grid(True, color=INK, linewidth=0.5, alpha=0.15, linestyle=(0, (4, 6)))
+ax.tick_params(axis="both", colors=INK_SOFT, labelsize=8, length=0, labelcolor=INK_SOFT)
 
-# Customize RA tick labels to show hours
-# Aitoff default x-ticks are in degrees; replace with hour labels
+# Relabel Aitoff x-ticks (degrees) as Right Ascension hours
 xtick_locs = np.array([-150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150])
-xtick_rads = xtick_locs * np.pi / 180.0
-# Convert projected longitude back to RA hours: RA = 12 - lon*12/pi
 xtick_hours = 12.0 - xtick_locs / 15.0
-xtick_labels = [f"{int(h) % 24}h" for h in xtick_hours]
-ax.set_xticklabels(xtick_labels, fontsize=16, color="#6A7A9A")
+ax.set_xticklabels([f"{int(h) % 24}h" for h in xtick_hours], fontsize=8, color=INK_SOFT)
 
-# Title
+# Title + footer subtitle
 ax.set_title(
-    "star-chart-constellation \u00b7 matplotlib \u00b7 pyplots.ai",
-    fontsize=24,
-    fontweight="medium",
-    color="#C0C8E0",
-    pad=24,
+    "star-chart-constellation · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=16
 )
-
-# Add projection and coordinate info as text annotations
 fig.text(
     0.5,
-    0.02,
-    "Right Ascension (hours) \u2014 Aitoff Projection  |  Declination (\u00b0)",
+    0.045,
+    "Right Ascension (hours) — Aitoff projection  |  Declination (°)  |  point size ∝ brightness",
     ha="center",
-    fontsize=20,
-    color="#8A9ABB",
+    fontsize=9,
+    color=INK_SOFT,
 )
 
 # Ecliptic legend
-ax.legend(
-    loc="lower right", fontsize=16, facecolor="#0A0A2A", edgecolor="#2A3A5A", labelcolor="#8B6914", framealpha=0.8
-)
+leg = ax.legend(loc="lower right", fontsize=8, facecolor=ELEVATED_BG, edgecolor=INK_SOFT, framealpha=0.9)
+if leg:
+    plt.setp(leg.get_texts(), color=INK_SOFT)
 
-plt.tight_layout(rect=[0, 0.04, 1, 1])
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor=fig.get_facecolor())
+fig.subplots_adjust(left=0.05, right=0.95, top=0.90, bottom=0.10)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=fig.get_facecolor())
