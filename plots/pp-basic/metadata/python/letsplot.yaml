@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: pp-basic
 created: '2026-03-15T20:18:14Z'
-updated: '2026-06-16T19:20:50Z'
+updated: '2026-06-16T19:28:08Z'
 generated_by: claude-opus
 workflow_run: 27641637404
 issue: 4587
@@ -12,96 +12,116 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pp-basic/
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pp-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pp-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pp-basic/python/letsplot/plot-dark.html
-quality_score: 87
+quality_score: 93
 review:
   strengths:
-  - 'Correct P-P plot: empirical CDF vs theoretical normal CDF on a clean 0-1 square
-    canvas (coord_fixed) with a dashed 45-degree reference line, exactly as the spec
-    requires.'
-  - 'Strong data storytelling - signed deviation drives an imprint_div diverging fill
-    (matte-red below / blue above the diagonal) and marker size encodes |deviation|,
-    while a 95% Kolmogorov band and a ''Max deviation: +0.052'' annotation add diagnostic
-    context.'
-  - 'Correct continuous palette: scale_fill_gradient2(low #AE3030, mid PAGE_BG, high
-    #4467A3) is exactly imprint_div, the right choice for signed-deviation data; backgrounds
-    are #FAF8F1 / #1A1A17 and both renders are theme-correct.'
-  - Realistic, neutral data context (pharmaceutical tablet-weight QC, n=200) with
-    a reproducible seed; theoretical CDF computed inline via math.erf with no heavy
-    dependencies.
-  - 'Idiomatic lets-plot: layered geoms (ribbon + line + point + text), layer_tooltips
-    with formatted fields, and interactive HTML export alongside the PNG.'
+  - 'Textbook P-P plot: empirical CDF (i/(n+1)) on Y vs normal theoretical CDF on
+    X, square coord_fixed canvas, dashed 45-degree reference line — every spec note
+    honored'
+  - 'Sophisticated deviation encoding: points colored by signed deviation via imprint_div
+    (matte-red -> page-bg -> blue, midpoint 0) and sized by absolute deviation, turning
+    a plain diagnostic into a clear QC story'
+  - 'Excellent style-guide adherence: reference line uses the neutral ink anchor,
+    the 95% Kolmogorov confidence band uses the muted anchor as a soft fill, continuous
+    color uses imprint_div with the theme-adaptive midpoint'
+  - 'Strong lets-plot distinctive usage: layer_tooltips with formatted weight/deviation/region
+    lines plus interactive HTML export — features that couldn''t be replicated in
+    static plotnine/ggplot2'
+  - 'Theme chrome is correct and readable in both renders; backgrounds are #FAF8F1
+    / #1A1A17, all text uses theme-adaptive ink tokens'
+  - 'Realistic, neutral data: pharmaceutical tablet-weight QC (target 500mg with occasional
+    overfill skew) checked against a fitted normal — plausible scale and a meaningful
+    mild S-deviation'
   weaknesses:
-  - 'Heavy point-on-point overplotting: the 200 shape-21 circles (size range 3-7)
-    pile into a thick ''caterpillar'' band along the diagonal, so individual markers
-    and their deviation colors merge in the dense center - consider smaller markers
-    or lower alpha to reduce the rope effect.'
-  - panel_grid_major uses solid INK at size 0.3 (full-contrast) rather than the style
-    guide's subtle 15-25% opacity; gridlines read a touch prominent in the light render.
-    A lighter/lower-alpha grid would be more refined.
-  - In the dark render the near-zero deviation points are filled with the page background
-    (#1A1A17 midpoint) so they nearly vanish into the surface, relying only on the
-    INK_SOFT stroke for definition - acceptable but slightly muted.
+  - 'Dark render: near-fit points have fill = midpoint = PAGE_BG (#1A1A17) by design,
+    so the smallest/lowest-deviation markers along the diagonal rely almost entirely
+    on their INK_SOFT stroke for visibility — they read faintly. Visible but slightly
+    weak; consider a touch more stroke contrast or a minimum fill lightness for the
+    central band in dark mode.'
+  - 'Visual refinement is good but conventional for the grammar: both-axis grid plus
+    L-shaped axis lines are retained — fine for a scatter, but there is little beyond
+    a well-configured theme_minimal.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1) on both panel and plot surfaces - correct, not pure white.
-      Chrome: bold dark title "pp-basic · python · letsplot · anyplot.ai" and gray subtitle "QC Check: Tablet Weight Distribution vs. Normal Reference (n=200)"; axis titles "Theoretical CDF (Normal)" / "Empirical CDF" and 0-1 tick labels all clearly readable. Gridlines are medium-gray, slightly prominent but not dominant. Legend "Deviation (Empirical − Theoretical)" with diverging colorbar on the right. Italic "Max deviation: +0.052" annotation in the empty lower-right triangle, no overlap. All text readable.
-      Data: points form an S-shaped band hugging the dashed diagonal reference line, colored by imprint_div diverging scale (matte-red #AE3030 below, blue #4467A3 above, neutral mid); a soft gray Kolmogorov band fills the diagonal corridor. First/primary encoding is the continuous diverging fill (appropriate for signed deviation - brand green not expected here).
+      Background: warm off-white (#FAF8F1), not pure white. Correct.
+      Chrome: bold dark title "pp-basic · python · letsplot · anyplot.ai" with grey subtitle
+        "QC Check: Tablet Weight Distribution vs. Normal Reference (n=200)". Axis titles
+        "Theoretical CDF (Normal)" (x) and "Empirical CDF" (y), tick labels 0–1, all dark and
+        clearly readable. Subtle grey gridlines, both axes. Right-side gradient legend
+        "Deviation (Empirical − Theoretical)". Italic annotation "Max deviation: +0.052" sits in
+        the empty lower-right triangle. All text readable.
+      Data: ~200 circles hugging the dashed black 45° reference line, colored by signed deviation
+        on the imprint_div scale (matte-red below, near-neutral at fit, blue above) and sized by
+        |deviation|. A pale grey 95% Kolmogorov confidence band runs around the diagonal. This is
+        continuous-color data (no categorical first series), so the #009E73-first rule is N/A;
+        the diverging cmap stops are correct.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17) - correct, not pure black.
-      Chrome: light title/subtitle, light axis titles and tick labels, subtle light gridlines - all clearly readable, NO dark-on-dark failures. Dashed reference line flips to light. Legend frame and text readable on elevated dark fill.
-      Data: identical diverging red↔blue deviation colors and marker sizes as the light render; only chrome flipped. Near-zero-deviation points fill toward the dark page color so they read mainly via their light stroke, but remain visible.
-      Legibility verdict: PASS
+      Background: warm near-black (#1A1A17), not pure black. Correct.
+      Chrome: title/subtitle now light, axis titles and 0–1 ticks in light grey, gridlines subtle
+        dark-grey, legend frame on an elevated near-black panel, annotation light grey. No
+        dark-on-dark failures — all text readable.
+      Data: identical encoding to the light render — same red/blue diverging colors, same diagonal,
+        same band. The dashed reference line flips to light ink. The only differences are chrome and
+        the diverging midpoint (page background), so near-fit points have near-black fill and depend
+        on their light-grey stroke to stay visible — they read faintly but are still distinguishable.
+      Legibility verdict: PASS (minor: central near-fit markers are low-contrast in dark mode)
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set; all text readable in both themes.
+        comment: All font sizes explicitly set (title 16, subtitle 11, axis_title
+          12, axis_text 10, legend 10/11); well proportioned, readable in both themes
       - id: VQ-02
         name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap; annotation placed in empty lower-right triangle,
+          legend separated
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: No text overlap; heavy marker-on-marker overplotting along the diagonal.
-      - id: VQ-03
-        name: Element Visibility
-        score: 4
-        max: 6
-        passed: true
-        comment: Markers visible but dense band merges; dark-theme mid points muted.
+        comment: 200 points with size 2-5, alpha 0.65, stroke 0.7 — adapted to density;
+          central near-fit points slightly weak in dark mode (fill = bg, stroke carries
+          them)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red-blue diverging is CVD-distinguishable, good contrast.
+        comment: imprint_div red-blue is CVD-safe; stroke + alpha give definition
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400, nothing cut off, balanced labels.
+        comment: Square coord_fixed canvas (2400x2400, gate passed), balanced margins,
+          legend near plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with distribution noted.
+        comment: 'Descriptive: ''Theoretical CDF (Normal)'' / ''Empirical CDF'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_div used correctly; backgrounds theme-correct in both renders.
+        comment: 'Continuous data uses imprint_div (correct diverging stops + theme-adaptive
+          midpoint); backgrounds #FAF8F1/#1A1A17; chrome theme-correct both renders'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -109,20 +129,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Theme-adaptive chrome, diverging color, KS band, size encoding, annotation.
+        comment: 'Strong, clearly above defaults: dual deviation encoding (color+size),
+          confidence band, neutral reference line'
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: true
-        comment: theme_minimal, generous whitespace; grid a touch strong (solid INK).
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Deviation color + size + band + max-deviation callout create clear
-          hierarchy.
+        comment: theme_minimal, subtle grid, minor grid removed, generous whitespace
+          — good but conventional
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear QC narrative: band + color/size deviation + max-deviation
+          annotation guide the eye to the fit quality'
     spec_compliance:
       score: 15
       max: 15
@@ -132,48 +154,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct P-P plot.
+        comment: Correct P-P plot (cumulative probabilities both axes)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 45-deg line, 0-1 axes, square, i/(n+1) ECDF, theoretical CDF - all
-          present plus extras.
+        comment: 45° line, axes 0-1, square aspect, empirical CDF i/(n+1), theoretical
+          normal CDF, plus KS band
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=theoretical, y=empirical correct.
+        comment: Theoretical on X, empirical on Y; all data shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; legend labeled Deviation.
+        comment: Title 'pp-basic · python · letsplot · anyplot.ai'; deviation gradient
+          legend labeled
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows diagonal, S-shape deviation, confidence band.
+        comment: Shows above/below-diagonal deviation and mild S-shape; deviation
+          is modest
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Tablet-weight QC scenario, neutral and plausible.
+        comment: Pharmaceutical tablet-weight QC vs normal — real, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: n=200, CDFs 0-1, sensible weights.
+        comment: Weights ~500mg, CDF 0-1, small deviations — all plausible
     code_quality:
       score: 10
       max: 10
@@ -183,56 +207,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes.
+        comment: Linear imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: os, math erf/sqrt, numpy, pandas, lets_plot — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake UI.
+        comment: Clean, appropriate complexity for the encoding richness
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png + .html.
+        comment: Saves plot-{THEME}.png + .html via ggsave; current API
     library_features:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Layered ggplot grammar, scales, theme - idiomatic.
+        comment: Grammar-of-graphics layering, scales, coord_fixed, theme — idiomatic
+          lets-plot
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: layer_tooltips, interactive HTML export, coord_fixed.
+        comment: layer_tooltips with formatting + interactive HTML export — not replicable
+          in static plotnine/ggplot2
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - hover-tooltips
   - html-export
-  - annotations
-  - colorbar
   - layer-composition
+  - colorbar
   patterns:
   - data-generation
   dataprep: []
@@ -240,4 +266,4 @@ impl_tags:
   - custom-colormap
   - alpha-blending
   - edge-highlighting
-  - publication-ready
+  - grid-styling

@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 pp-basic: Probability-Probability (P-P) Plot
 Library: letsplot 4.10.1 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-06-16
+Quality: 93/100 | Updated: 2026-06-16
 """
 
 import os
