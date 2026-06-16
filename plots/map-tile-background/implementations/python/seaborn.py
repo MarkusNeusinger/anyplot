@@ -1,220 +1,252 @@
-""" pyplots.ai
+"""anyplot.ai
 map-tile-background: Map with Tile Background
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-20
+Library: seaborn 0.13.2 | Python 3.13.12
+Quality: 91/100 | Updated: 2026-06-16
 """
 
 import io
 import math
+import os
 import urllib.request
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap, Normalize
 from PIL import Image
 
 
-# Data: Weather stations in the San Francisco Bay Area
+# Theme-adaptive chrome (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+MIDPOINT = "#FAF8F1" if THEME == "light" else "#1A1A17"
+
+# Continuous data → Imprint diverging cmap, oriented cold-blue → neutral → hot-red
+# so the temperature reads with the conventional hot→red / cold→blue mapping.
+imprint_div = LinearSegmentedColormap.from_list("imprint_div", ["#4467A3", MIDPOINT, "#AE3030"])
+
+# Data: a curated, well-spread set of Bay Area weather stations (avoids the dense
+# southern cluster that caused label overlap in the previous attempt). Temperature
+# encodes the Bay's coast-to-inland microclimate gradient.
 np.random.seed(42)
 
 stations_data = {
     "name": [
         "SF Downtown",
-        "Oakland Airport",
-        "San Jose",
+        "Oakland",
         "Berkeley",
-        "Fremont",
-        "Palo Alto",
-        "Hayward",
         "Richmond",
         "Concord",
         "Walnut Creek",
         "Livermore",
-        "Redwood City",
-        "Mountain View",
-        "Sunnyvale",
-        "Santa Clara",
+        "Fremont",
+        "Hayward",
+        "Palo Alto",
+        "San Jose",
+        "Half Moon Bay",
     ],
-    "lat": [
-        37.7749,
-        37.7213,
-        37.3382,
-        37.8716,
-        37.5485,
-        37.4419,
-        37.6688,
-        37.9358,
-        37.9780,
-        37.9101,
-        37.6819,
-        37.4852,
-        37.3861,
-        37.3688,
-        37.3541,
-    ],
+    "lat": [37.7749, 37.8044, 37.8716, 37.9358, 37.9780, 37.9101, 37.6819, 37.5485, 37.6688, 37.4419, 37.3382, 37.4636],
     "lon": [
         -122.4194,
-        -122.2208,
-        -121.8863,
+        -122.2712,
         -122.2727,
-        -121.9886,
-        -122.1430,
-        -122.0808,
         -122.3477,
         -122.0311,
         -122.0652,
         -121.7680,
-        -122.2364,
-        -122.0839,
-        -122.0363,
-        -121.9552,
+        -121.9886,
+        -122.0808,
+        -122.1430,
+        -121.8863,
+        -122.4286,
     ],
-    "temperature": [18.5, 17.2, 22.1, 16.8, 20.5, 19.3, 18.9, 15.6, 24.2, 23.1, 25.8, 18.7, 21.4, 22.0, 21.8],
+    "temperature": [17.8, 19.4, 18.1, 16.9, 24.6, 23.5, 26.2, 21.0, 19.8, 20.3, 22.7, 15.4],
+    # Per-station label offset (points) + horizontal alignment, hand-tuned to
+    # keep every label clear of its marker and of its neighbours.
+    "off": [
+        (-9, 9, "right"),
+        (9, -13, "left"),
+        (9, 7, "left"),
+        (-9, 7, "right"),
+        (9, 7, "left"),
+        (9, -13, "left"),
+        (9, 7, "left"),
+        (9, -13, "left"),
+        (-9, -13, "right"),
+        (-9, 7, "right"),
+        (9, 7, "left"),
+        (9, -13, "left"),
+    ],
 }
 
 df = pd.DataFrame(stations_data)
 
-# Calculate bounds with padding
-lat_margin = 0.15
-lon_margin = 0.2
-min_lat = df["lat"].min() - lat_margin
-max_lat = df["lat"].max() + lat_margin
-min_lon = df["lon"].min() - lon_margin
-max_lon = df["lon"].max() + lon_margin
+# --- Web Mercator tiling -----------------------------------------------------
+ZOOM = 10  # city-level detail for a metro-area extent
+TILE = 256
+N = TILE * 2**ZOOM  # global pixel span at this zoom
 
-# Tile parameters
-zoom = 10  # Good detail for city-level view
-tile_size = 256
-n_tiles = 2**zoom
 
-# Convert bounds to tile coordinates (Web Mercator)
-x_min = int((min_lon + 180.0) / 360.0 * n_tiles)
-x_max = int((max_lon + 180.0) / 360.0 * n_tiles)
-y_min = int((1.0 - math.asinh(math.tan(math.radians(max_lat))) / math.pi) / 2.0 * n_tiles)
-y_max = int((1.0 - math.asinh(math.tan(math.radians(min_lat))) / math.pi) / 2.0 * n_tiles)
+def gx(lon):
+    return (lon + 180.0) / 360.0 * N
 
-tiles_x = x_max - x_min + 1
-tiles_y = y_max - y_min + 1
 
-# Fetch and stitch tiles from OpenStreetMap
-stitched = Image.new("RGB", (tiles_x * tile_size, tiles_y * tile_size))
-headers = {"User-Agent": "pyplots.ai/1.0 (educational visualization)"}
+def gy(lat):
+    r = math.radians(lat)
+    return (1.0 - math.asinh(math.tan(r)) / math.pi) / 2.0 * N
 
-for tx in range(x_min, x_max + 1):
-    for ty in range(y_min, y_max + 1):
-        url = f"https://tile.openstreetmap.org/{zoom}/{tx}/{ty}.png"
-        req = urllib.request.Request(url, headers=headers)
+
+# Padded data bounds, then expand to the 16:9 canvas aspect so the map fills the
+# whole frame without distorting the projection.
+pad_lon, pad_lat = 0.12, 0.14
+wx0, wx1 = gx(df["lon"].min() - pad_lon), gx(df["lon"].max() + pad_lon)
+wy_top, wy_bot = gy(df["lat"].max() + pad_lat), gy(df["lat"].min() - pad_lat)
+W, H = wx1 - wx0, wy_bot - wy_top
+ASPECT = 16 / 9
+if W / H < ASPECT:
+    new_w = H * ASPECT
+    cx = (wx0 + wx1) / 2
+    wx0, wx1 = cx - new_w / 2, cx + new_w / 2
+else:
+    new_h = W / ASPECT
+    cy = (wy_top + wy_bot) / 2
+    wy_top, wy_bot = cy - new_h / 2, cy + new_h / 2
+
+# Tiles covering the window
+tx0, tx1 = int(wx0 // TILE), int((wx1 - 1) // TILE)
+ty0, ty1 = int(wy_top // TILE), int((wy_bot - 1) // TILE)
+
+stitched = Image.new("RGB", ((tx1 - tx0 + 1) * TILE, (ty1 - ty0 + 1) * TILE))
+headers = {"User-Agent": "anyplot.ai/1.0 (educational visualization)"}
+for tx in range(tx0, tx1 + 1):
+    for ty in range(ty0, ty1 + 1):
+        url = f"https://tile.openstreetmap.org/{ZOOM}/{tx}/{ty}.png"
         try:
-            with urllib.request.urlopen(req, timeout=10) as response:
-                tile = Image.open(io.BytesIO(response.read()))
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                tile = Image.open(io.BytesIO(resp.read())).convert("RGB")
         except Exception:
-            tile = Image.new("RGB", (256, 256), (220, 220, 220))
-        px = (tx - x_min) * tile_size
-        py = (ty - y_min) * tile_size
-        stitched.paste(tile, (px, py))
+            tile = Image.new("RGB", (TILE, TILE), (224, 222, 214))
+        stitched.paste(tile, ((tx - tx0) * TILE, (ty - ty0) * TILE))
 
-# Calculate actual bounds of stitched tiles
-actual_min_lon = x_min / n_tiles * 360.0 - 180.0
-actual_max_lon = (x_max + 1) / n_tiles * 360.0 - 180.0
-actual_max_lat = math.degrees(math.atan(math.sinh(math.pi * (1 - 2 * y_min / n_tiles))))
-actual_min_lat = math.degrees(math.atan(math.sinh(math.pi * (1 - 2 * (y_max + 1) / n_tiles))))
+# Crop the stitched mosaic to the exact 16:9 window (in global-pixel coords)
+ox, oy = tx0 * TILE, ty0 * TILE
+cropped = stitched.crop((int(round(wx0 - ox)), int(round(wy_top - oy)), int(round(wx1 - ox)), int(round(wy_bot - oy))))
 
-# Convert data points to pixel coordinates (Web Mercator projection)
-pixel_x_list = []
-pixel_y_list = []
-for _, row in df.iterrows():
-    # X coordinate (linear in longitude)
-    x_pct = (row["lon"] - actual_min_lon) / (actual_max_lon - actual_min_lon)
+# Project station coordinates into the same global-pixel space
+df["gx"] = df["lon"].map(gx)
+df["gy"] = df["lat"].map(gy)
 
-    # Y coordinate (Mercator projection)
-    lat_rad = math.radians(row["lat"])
-    y_merc = math.log(math.tan(math.pi / 4 + lat_rad / 2))
-    y_min_merc = math.log(math.tan(math.pi / 4 + math.radians(actual_min_lat) / 2))
-    y_max_merc = math.log(math.tan(math.pi / 4 + math.radians(actual_max_lat) / 2))
-    y_pct = 1 - (y_merc - y_min_merc) / (y_max_merc - y_min_merc)
+# --- Plot --------------------------------------------------------------------
+sns.set_theme(style="white", font_scale=1.0)
 
-    pixel_x_list.append(x_pct * stitched.width)
-    pixel_y_list.append(y_pct * stitched.height)
+fig = plt.figure(figsize=(8, 4.5), dpi=400)  # → 3200 × 1800 px
+fig.patch.set_facecolor(PAGE_BG)
+ax = fig.add_axes([0, 0, 1, 1])  # full-bleed map
+ax.set_axis_off()
 
-df["pixel_x"] = pixel_x_list
-df["pixel_y"] = pixel_y_list
+ax.imshow(cropped, extent=[wx0, wx1, wy_bot, wy_top], aspect="auto", zorder=0)
+ax.set_xlim(wx0, wx1)
+ax.set_ylim(wy_bot, wy_top)
 
-# Set seaborn style
-sns.set_theme(style="white")
-
-# Create figure matching tile image aspect ratio
-fig_width = 16
-fig_height = fig_width * stitched.height / stitched.width
-fig, ax = plt.subplots(figsize=(fig_width, fig_height))
-
-# Display tile background
-ax.imshow(stitched, extent=[0, stitched.width, stitched.height, 0], aspect="auto", zorder=0)
-
-# Plot data points with seaborn
+norm = Normalize(vmin=df["temperature"].min(), vmax=df["temperature"].max())
 sns.scatterplot(
     data=df,
-    x="pixel_x",
-    y="pixel_y",
-    size="temperature",
+    x="gx",
+    y="gy",
     hue="temperature",
-    sizes=(200, 800),
-    palette="coolwarm",
+    size="temperature",
+    sizes=(170, 560),
+    palette=imprint_div,
+    hue_norm=norm,
     edgecolor="white",
-    linewidth=2,
-    alpha=0.85,
+    linewidth=1.8,
+    alpha=0.92,
     ax=ax,
     legend=False,
-    zorder=2,
+    zorder=3,
 )
 
-# Add station labels
+# Station labels with theme-adaptive callout boxes
 for _, row in df.iterrows():
+    dx, dy, ha = row["off"]
     ax.annotate(
         row["name"],
-        (row["pixel_x"], row["pixel_y"]),
-        xytext=(8, -8),
+        (row["gx"], row["gy"]),
+        xytext=(dx, dy),
         textcoords="offset points",
-        fontsize=11,
-        color="#222222",
+        fontsize=8.5,
+        ha=ha,
+        va="center",
+        color=INK,
         fontweight="bold",
-        bbox={"boxstyle": "round,pad=0.2", "facecolor": "white", "edgecolor": "none", "alpha": 0.8},
-        zorder=3,
+        bbox={"boxstyle": "round,pad=0.25", "facecolor": ELEVATED_BG, "edgecolor": "none", "alpha": 0.85},
+        zorder=4,
     )
 
-# Create colorbar for temperature
-sm = plt.cm.ScalarMappable(
-    cmap="coolwarm", norm=plt.Normalize(vmin=df["temperature"].min(), vmax=df["temperature"].max())
+# Title banner (overlaid on the full-bleed map, theme-adaptive box)
+title = "Bay Area Weather Stations · map-tile-background · seaborn · anyplot.ai"
+ax.text(
+    0.5,
+    0.955,
+    title,
+    transform=ax.transAxes,
+    ha="center",
+    va="center",
+    fontsize=round(14 * 67 / len(title)),
+    fontweight="bold",
+    color=INK,
+    bbox={"boxstyle": "round,pad=0.5", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.93},
+    zorder=6,
 )
+
+# Colorbar in a translucent panel, bottom-left (over Pacific water — no markers there)
+panel = ax.inset_axes([0.025, 0.05, 0.30, 0.105], zorder=5)
+panel.set_facecolor(ELEVATED_BG)
+panel.patch.set_alpha(0.92)
+panel.set_xticks([])
+panel.set_yticks([])
+for spine in panel.spines.values():
+    spine.set_edgecolor(INK_SOFT)
+    spine.set_linewidth(0.6)
+
+cax = ax.inset_axes([0.05, 0.075, 0.25, 0.022], zorder=6)
+sm = plt.cm.ScalarMappable(cmap=imprint_div, norm=norm)
 sm.set_array([])
-cbar = plt.colorbar(sm, ax=ax, shrink=0.6, pad=0.02, aspect=25)
-cbar.set_label("Temperature (°C)", fontsize=18, labelpad=15)
-cbar.ax.tick_params(labelsize=14)
-
-# Hide axes (map has its own reference)
-ax.set_xticks([])
-ax.set_yticks([])
-ax.set_xlabel("")
-ax.set_ylabel("")
-
-# Title
-ax.set_title(
-    "Bay Area Weather Stations · map-tile-background · seaborn · pyplots.ai", fontsize=24, fontweight="bold", pad=20
+cbar = fig.colorbar(sm, cax=cax, orientation="horizontal")
+cbar.outline.set_edgecolor(INK_SOFT)
+cbar.outline.set_linewidth(0.6)
+cbar.ax.tick_params(labelsize=7, color=INK_SOFT, labelcolor=INK_SOFT, length=2)
+ax.text(
+    0.175,
+    0.13,
+    "Temperature (°C)",
+    transform=ax.transAxes,
+    ha="center",
+    va="center",
+    fontsize=8.5,
+    fontweight="bold",
+    color=INK,
+    zorder=7,
 )
 
-# OpenStreetMap attribution (required by license)
+# OpenStreetMap attribution (required by license), bottom-right
 ax.text(
     0.99,
-    0.01,
+    0.025,
     "© OpenStreetMap contributors",
     transform=ax.transAxes,
-    fontsize=10,
     ha="right",
     va="bottom",
-    color="#333333",
-    bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "none", "alpha": 0.8},
-    zorder=4,
+    fontsize=7,
+    color=INK_MUTED,
+    bbox={"boxstyle": "round,pad=0.3", "facecolor": ELEVATED_BG, "edgecolor": "none", "alpha": 0.85},
+    zorder=6,
 )
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
