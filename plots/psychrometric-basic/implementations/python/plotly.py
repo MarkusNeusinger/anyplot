@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 psychrometric-basic: Psychrometric Chart for HVAC
 Library: plotly 6.8.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-06-16
+Quality: 92/100 | Updated: 2026-06-16
 """
 
 import os

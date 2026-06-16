@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: psychrometric-basic
 created: '2026-03-15T21:52:08Z'
-updated: '2026-06-16T23:05:51Z'
+updated: '2026-06-16T23:18:54Z'
 generated_by: claude-opus
 workflow_run: 27653554341
 issue: 4583
@@ -12,117 +12,102 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/psychrome
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/psychrometric-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/psychrometric-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/psychrometric-basic/python/plotly/plot-dark.html
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - 'Genuinely sophisticated, publication-grade psychrometric chart: saturation curve
-    (#009E73, width 5) reads as the prominent upper boundary, with RH, wet-bulb, enthalpy
-    and specific-volume families each given a distinct Imprint hue + dash style (solid/dash/dot/dashdot)
-    so they stay separable even under CVD.'
-  - 'All spec features present: 10-90% RH curves, diagonal wet-bulb and enthalpy lines,
-    specific-volume lines, shaded ASHRAE comfort zone polygon, and a labeled cooling-and-dehumidification
-    process path drawn as a red arrow between two state points (32 C/60% to 24 C/50%).'
-  - 'Physically correct data: ASHRAE 2017 saturation-pressure formulas at sea-level
-    101.325 kPa, fully deterministic (no RNG), realistic value ranges.'
-  - Property lines are labeled directly on the chart (per spec) rather than only in
-    a legend; graduated RH opacity and translucent label backgrounds are thoughtful
-    refinements.
-  - 'Strong plotly idiom + distinctive features: rich per-trace hovertemplates carrying
-    enthalpy via customdata, fill=toself comfort polygon, interactive HTML export
-    alongside the PNG.'
-  - Theme-adaptive chrome is correct in both renders; data colors are identical across
-    light/dark, only chrome flips. Title format and axis labels (with units) are exactly
-    right.
+  - 'Complete spec coverage: prominent green saturation curve, RH curves (10-90%),
+    dashed cyan wet-bulb lines, dotted ochre enthalpy lines, dash-dot lavender specific-volume
+    lines, shaded comfort zone, and a highlighted red cooling-and-dehumidification
+    process path with labeled state points (32 C/60% RH to 24 C/50% RH).'
+  - Each psychrometric property family gets a distinct Imprint hue AND a distinct
+    dash style (solid/dash/dot/dash-dot), giving robust redundant encoding that holds
+    up under CVD and in both themes.
+  - Property lines are labeled directly on the chart (per spec) using small theme-adaptive
+    background boxes, with deliberate label-offset logic documented in comments to
+    avoid collisions in the dense central region.
+  - 'Physically accurate: ASHRAE 2017 saturation-pressure formulas at 101.325 kPa,
+    graduated RH-curve opacity, and a precomputed saturation grid reused via np.interp.'
+  - 'Strong plotly idiom: graph_objects with per-trace hovertemplate + customdata
+    for rich interactive tooltips, rotated annotations (textangle), arrow annotations
+    for the process path, and HTML export.'
+  - 'Both renders are theme-correct (#FAF8F1 / #1A1A17), canvas is exactly 3200x1800,
+    and the title follows the mandated descriptive-prefix format.'
   weaknesses:
-  - 'Property-line label collisions near the saturation curve: the wet-bulb labels
-    (cyan) and enthalpy labels (ochre) both anchor at the saturation end and overlap
-    — "5"/"20", "20"/"60", "25 deg"/"80", "15 deg"/"40" sit on top of each other in
-    both renders. Stagger the wet-bulb vs enthalpy label anchor points (e.g. shift
-    enthalpy labels further up-left or wet-bulb labels down) so each curve label is
-    clearly separated.'
-  - 'Bottom-center cluster overlap: the "60%" RH label overlaps the "0.84" specific-volume
-    label, and the "40%" RH label sits directly against the red "24 C, 50% RH" state-point
-    annotation. Nudge these labels apart.'
-  - 'Dark render: the RH percentage labels in blue #4467A3 are somewhat low-contrast
-    against the near-black surface even with the translucent label background. Consider
-    lifting the label background opacity or brightening the RH label color in the
-    dark theme so they read as crisply as the cyan/ochre labels.'
-  - When the PNG is scaled to ~400 px mobile width, the dense 11-12px property labels
-    become hard to parse given how many lines cross the lower-left region; the overlaps
-    above compound this.
+  - 'The central region (~20-26 C, 8-13 g/kg) is crowded: the ''Comfort Zone'' label,
+    the ''24 C, 50% RH'' state-point label, the red process arrow, and the 15 deg/20
+    deg wet-bulb labels cluster together. They remain legible thanks to background
+    boxes, but the area is visually busy (VQ-02). Consider nudging the wet-bulb labels
+    or the state-point callouts slightly further apart.'
+  - Some property labels (wet-bulb, specific-volume, enthalpy) sit at ~11px (44 source-px)
+    which is on the small side for the densest zones; readable at full resolution
+    but tight when scaled toward mobile width (VQ-01).
+  - The red double-headed process arrow and the diagonal red process line both occupy
+    the same central space and read as slightly redundant; a single clearer directional
+    cue would sharpen the storytelling focal point (DE-03).
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (~#FAF8F1), confirmed — not pure white.
-      Chrome: title "psychrometric-basic · python · plotly · anyplot.ai" centered in dark ink, fully readable.
-        Axis titles "Dry-Bulb Temperature (°C)" and "Humidity Ratio (g/kg dry air)" and the 5-unit tick labels
-        are clear dark-on-light. Subtle grey grid. Legend box (top-left) on elevated #FFFDF6 with crisp entries.
-      Data: saturation curve in brand green #009E73 (thick, prominent upper boundary) — confirmed first series.
-        RH curves blue #4467A3, wet-bulb cyan #2ABCCD dashed, enthalpy ochre #BD8233 dotted, specific-volume
-        lavender #C475FD dash-dot, comfort-zone neutral polygon, red #AE3030 process arrow with two state points.
-      Legibility verdict: PASS for all major chrome/annotations. Minor: several property-line labels collide near
-        the saturation curve (wet-bulb vs enthalpy) and in the bottom-center cluster (60%/0.84, 40%/red annotation).
+      Background: warm off-white (#FAF8F1), correct.
+      Chrome: centered title "psychrometric-basic · python · plotly · anyplot.ai" in dark ink, fully visible. X-axis "Dry-Bulb Temperature (°C)" (-10..50) and Y-axis "Humidity Ratio (g/kg dry air)" (0..30) labels and gray tick labels all readable. Subtle grid. Top-left legend frame with all six entries readable.
+      Data: prominent thick green (#009E73) saturation curve as upper boundary; blue RH curves labeled 10/20/40/60/80%; cyan dashed wet-bulb lines labeled 0/5/15/20/25/30 deg; ochre dotted enthalpy lines labeled 20/40/60/80/100 (rotated); lavender dash-dot specific-volume lines (0.82, 0.84...) at right; gray-dashed shaded comfort-zone polygon with "Comfort Zone" label; red process path with two state-point callouts. First series is #009E73.
+      Legibility verdict: PASS (central region busy but every label has a background box and stays readable).
 
     Dark render (plot-dark.png):
-      Background: warm near-black (~#1A1A17), confirmed — not pure black.
-      Chrome: title and axis labels in light ink (#F0EFE8), tick labels in soft light grey — all clearly readable,
-        NO dark-on-dark failures. Grid is a subtle light translucent. Legend box on #242420 reads well.
-      Data: colors are IDENTICAL to the light render (green saturation, blue RH, cyan WB, ochre enthalpy,
-        lavender volume, red process) — only chrome flipped. Confirmed.
-      Legibility verdict: PASS overall. Caveat: the blue #4467A3 RH percentage labels are a bit low-contrast on
-        the near-black surface (still readable, but less crisp than the cyan/ochre labels). Same label-overlap
-        crowding as the light render near the saturation curve and bottom-center.
+      Background: warm near-black (#1A1A17), correct.
+      Chrome: title, axis labels, and tick labels in light ink (#F0EFE8 / #B8B7B0) all clearly readable; no dark-on-dark failures. Legend frame uses elevated dark fill, text readable.
+      Data: identical data colors to the light render (green saturation, blue RH, cyan wet-bulb, ochre enthalpy, lavender volume, red process, muted comfort zone). RH labels use a slightly brighter blue variant for legibility on dark while the curve color itself is unchanged. Only chrome flipped.
+      Legibility verdict: PASS (brand green and all property hues read well on the near-black surface).
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (10-16px), readable in both themes; dark-theme
-          blue RH labels borderline and small labels dense when scaled to mobile.
+        comment: Fonts explicitly set and readable in both themes; some property labels
+          small (~11px) in densest zones.
       - id: VQ-02
         name: No Overlap
-        score: 3
-        max: 6
-        passed: false
-        comment: Wet-bulb vs enthalpy labels collide near the saturation end; 60%/0.84
-          and 40%/red-annotation overlap in bottom-center. Main content still readable.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines well-differentiated by hue/dash/width; saturation prominent,
-          graduated RH opacity. Dense but well-managed.
+        comment: Central comfort-zone/process/wet-bulb labels crowd together but stay
+          legible via background boxes.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines differentiated by color, dash style, and width; saturation
+          curve prominent.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Distinguished by both hue and dash style — CVD-safe.
+        comment: CVD-safe Imprint hues plus redundant dash encoding; good contrast
+          both themes.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800), balanced margins, legend inside plot,
-          nothing cut off.
+        comment: Exactly 3200x1800; nothing clipped; balanced proportions.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units.
+        comment: Descriptive axis labels with units; correct title.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; all families from Imprint palette; backgrounds
-          #FAF8F1/#1A1A17; both themes correct.'
+        comment: 'First series #009E73; all property families use Imprint members;
+          backgrounds theme-correct.'
     design_excellence:
       score: 15
       max: 20
@@ -132,21 +117,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Strong custom per-property palette mapping, graduated opacity, intentional
-          hierarchy; label crowding holds it back from 8.
+        comment: Thoughtful per-family color+dash, graduated RH opacity, label background
+          boxes — well above generic defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: Subtle grid, translucent label backgrounds, clean layout.
-      - id: DE-03
-        name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: 'Clear focal point: red process arrow + shaded comfort zone tell
-          the HVAC story against the prominent saturation curve.'
+        comment: Subtle grid, clean axis lines, theme-adaptive label chrome.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear focal point via red process path and comfort zone, though arrow
+          + line are slightly redundant.
     spec_compliance:
       score: 15
       max: 15
@@ -156,27 +141,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct psychrometric chart with all property subtypes.
+        comment: Correct psychrometric chart.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: Saturation, RH, wet-bulb, enthalpy, specific volume, comfort zone,
-          process path, direct labeling — all present.
+          process path, direct labels all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=dry-bulb, y=humidity ratio, full -10..50 / 0..30 ranges.
+        comment: Dry-bulb x, humidity ratio y; full -10..50 C range shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'psychrometric-basic · python · plotly · anyplot.ai'; legend
-          proxies match property families.
+        comment: Mandated title format with descriptive prefix; legend labels match
+          traces.
     data_quality:
       score: 15
       max: 15
@@ -186,19 +171,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All property families + comfort zone + process path shown.
+        comment: All psychrometric property families represented.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real HVAC engineering scenario, ASHRAE formulas, neutral.
+        comment: ASHRAE formulas, sea-level pressure, realistic HVAC process and ASHRAE
+          comfort zone.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Physically correct ASHRAE 2017 values at sea-level 101.325 kPa.
+        comment: -10..50 C and 0..30 g/kg are sensible domain ranges.
     code_quality:
       score: 10
       max: 10
@@ -208,33 +194,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports->data->plot->save, no functions/classes.
+        comment: Linear script, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic from formulas, no RNG.
+        comment: Fully deterministic (computed from formulas, no RNG).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, plotly.graph_objects — all used.
+        comment: os, numpy, plotly all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-commented, appropriate complexity for the domain; no
-          fake UI.
+        comment: Clean, well-commented, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: write_image 800x450 scale=4 -> 3200x1800; plot-{THEME}.png + .html;
-          current API.
+        comment: Saves plot-{THEME}.png and .html; current API.
     library_features:
       score: 9
       max: 10
@@ -244,22 +228,23 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Idiomatic go.Figure/add_trace/add_annotation/update_layout.
+        comment: graph_objects, add_trace, add_annotation, update_layout — idiomatic
+          plotly.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Rich hovertemplates w/ customdata enthalpy, fill=toself polygon,
-          interactive HTML export.
-  verdict: REJECTED
+        comment: Per-trace hovertemplate + customdata tooltips, rotated/arrow annotations,
+          HTML export.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
-  - html-export
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
