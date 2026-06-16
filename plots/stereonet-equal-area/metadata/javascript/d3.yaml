@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: stereonet-equal-area
 created: '2026-06-16T21:38:23Z'
-updated: '2026-06-16T21:42:13Z'
+updated: '2026-06-16T21:51:08Z'
 generated_by: claude-opus
 workflow_run: 27649365601
 issue: 4576
@@ -12,46 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stereonet
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stereonet-equal-area/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/stereonet-equal-area/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stereonet-equal-area/javascript/d3/plot-dark.html
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - Correct lower-hemisphere equal-area (Schmidt) projection built from first principles
-    — poles plotted at 90 degrees to each plane, great circles for the three mean
-    planes, and a subtle equal-area net grid (meridians + parallels) exactly as the
-    spec requires.
-  - 'Canonical Imprint palette: Bedding #009E73 (brand green, first series), Joint
-    set 1 #C475FD, Joint set 2 #4467A3 — data colors are pixel-identical between light
-    and dark renders, only chrome flips.'
-  - 'Full structural-geology feature set present: primitive circle, degree tick marks
-    every 10 degrees with a tiered length hierarchy (90/30/10), North arrow + N/E/S/W
-    cardinal labels, Kamb-style pole-density contours, and a clean elevated legend
-    panel.'
-  - 'Idiomatic D3: d3.contourDensity for the density overlay, d3.geoPath for contour
-    rendering, d3.line with .defined() to break polylines where curves leave the net,
-    and a clipPath to mask the primitive circle.'
-  - Deterministic LCG (seed 42) + Box-Muller Gaussian scatter — reproducible, offline,
-    self-contained, no network loads.
+  - Correct lower-hemisphere equal-area (Schmidt) projection implemented from first
+    principles — vector math (trend/plunge, poles to planes, great/small circles)
+    is geologically sound and the area-preserving r = R·√2·sin(φ/2) mapping is exactly
+    right.
+  - 'Complete spec coverage: subtle equal-area net grid, primitive circle, 10° perimeter
+    ticks with 30°/90° emphasis, North arrow + N/E/S/W cardinals, great circles for
+    each set''s mean plane, poles as colored points, and Kamb-style density contours.'
+  - 'Imprint palette used correctly — first series Bedding is #009E73, Joint set 1
+    #C475FD, Joint set 2 #4467A3; data colors are identical across light/dark and
+    only chrome flips.'
+  - Density contours use graduated neutral fill-opacity so the three preferred-orientation
+    clusters read as clear focal points without clutter — strong data storytelling.
+  - 'Idiomatic D3: d3.contourDensity + d3.geoPath, d3.line().defined() to break curves
+    at the hemisphere boundary, clipPath for the primitive, and data-join (.data().join())
+    throughout.'
+  - 'Both themes are fully legible — title, legend, cardinals, and contour strokes
+    all read cleanly on #FAF8F1 and #1A1A17.'
   weaknesses:
-  - Density contours are very faint (inkSoft stroke at opacity 0.4) — in the light
-    render they barely register; nudging opacity or stroke-width up slightly would
-    make the 'preferred orientation' story read more strongly without crowding.
-  - Legend body text is 16px on the 1200px CSS mount; when the square plot is scaled
-    down to a ~400px mobile thumbnail the legend labels get small — a marginally larger
-    legend font would improve mobile legibility.
-  - Perimeter degree ticks are drawn as marks only, with no numeric azimuth labels;
-    this is acceptable but adding a few cardinal-degree numbers would aid orientation
-    reading.
+  - Several geometry helper functions (vecTP, cross, norm, poleVec, project, greatCircle,
+    smallCircle) push the code beyond strict KISS — justified by the projection math,
+    but it is the one place the implementation departs from a flat Imports→Data→Plot
+    structure.
+  - Small text (18px legend labels, perimeter tick marks) gets tight when the PNG
+    is scaled to ~400px mobile width; still readable but near the lower bound.
+  - Density contours are computed over all poles combined rather than per feature_type,
+    so the Kamb overlay is monochrome neutral rather than tinted per set — acceptable
+    and arguably cleaner, but a per-set density option could strengthen the link between
+    contours and clusters.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (~#FAF8F1), correct light surface — not pure white, not dark.
-      Chrome: title "stereonet-equal-area · javascript · d3 · anyplot.ai" centered in dark ink, fully readable. Legend panel (top-left) on a lighter elevated card with dark labels: Bedding, Joint set 1, Joint set 2, Pole density (Kamb) — all readable. N/E/S/W cardinal labels and North arrow in dark ink, readable. Equal-area net grid is subtle light gray. Perimeter degree ticks visible.
-      Data: Bedding poles = brand green #009E73 (central cluster), Joint set 1 = purple #C475FD (upper-right cluster), Joint set 2 = blue #4467A3 (lower-left cluster). Three great circles in matching colors arc across the net. First series confirmed #009E73. Pole markers have a page-bg stroke ring for separation. Density contours present but faint gray.
+      Background: warm off-white (~#FAF8F1), no pure-white rect painted over the mount.
+      Chrome: title "stereonet-equal-area · javascript · d3 · anyplot.ai" in dark ink, centered and fully visible at top. N/E/S/W cardinal labels and the North arrow are crisp dark glyphs. Perimeter degree ticks (every 10°, longer at 30°/90°) and the subtle gray equal-area net grid are all clearly visible. Legend panel (top-left, elevated off-white card) lists Bedding, Joint set 1, Joint set 2, Pole density (Kamb). All text readable.
+      Data: Bedding poles/great circle in #009E73 green, Joint set 1 in #C475FD purple, Joint set 2 in #4467A3 blue. Pole points (r=6) carry a thin page-bg stroke so they separate from the contours. Three neutral-gray Kamb density blobs sit under the clusters. First series confirmed #009E73.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black (~#1A1A17), correct dark surface — not pure black, not light.
-      Chrome: title in light ink, fully readable against the dark surface. Legend panel on a darker elevated card (#242420) with light labels, all readable — no dark-on-dark. Cardinal labels, North arrow, ticks in light ink, readable. Net grid subtle.
-      Data: identical to light render — green/purple/blue clusters and matching great circles in the exact same hues; only chrome flipped. Brand green #009E73 still clearly visible.
+      Background: warm near-black (~#1A1A17), not pure black.
+      Chrome: title and cardinals now light-colored and clearly readable; net grid and ticks render as subtle light-gray lines; legend card is the dark elevated surface with light label text. No dark-on-dark failures.
+      Data: identical green/purple/blue data colors to the light render — only chrome flipped. Density contour strokes are light-gray and visible against the dark surface.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -63,48 +65,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicit (22px title, 20px cardinals, 16px legend); all
-          readable both themes; legend slightly small at 400px mobile.
+        comment: All font sizes explicitly set (22/20/18px); fully readable both themes,
+          slightly tight at 400px mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions; legend panel clear of plot, clusters separated.
+        comment: No text collisions; legend panel clears the data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Poles r=6 with bg stroke ring, great circles 2.8px, ticks tiered
-          — all visible.
+        comment: Pole markers r=6 with bg stroke, great circles 2.8px, contours layered
+          — all visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple/blue distinguishable and CVD-reasonable.
+        comment: Green/purple/blue CVD-safe and also spatially separated; markers
+          stroked
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 (gate passed), stereonet centered, nothing clipped.
+        comment: Square 2400x2400 canvas gate passed; net fills canvas, balanced margins,
+          nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Cardinal directions + title; stereonet has no Cartesian axes.
+        comment: Cardinal + degree labeling appropriate for a stereonet; title present
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; canonical Imprint order; correct theme backgrounds
-          both renders.'
+        comment: 'First series #009E73; Imprint palette order; backgrounds #FAF8F1/#1A1A17;
+          colors identical across themes'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -112,21 +116,20 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Elevated legend card, tiered tick hierarchy, North arrow, clipPath
-          polish.
+        comment: Custom projection, elevated legend card, layered grid/contours/circles
+          — clearly above defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle net grid, no spines, generous whitespace.
+        comment: Subtle net grid, graduated contour opacity, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Color-coded clusters + great circles guide the eye; density contours
-          too faint to strongly emphasize focal points.
+        comment: Density contours create three clear focal clusters guiding the eye
     spec_compliance:
       score: 15
       max: 15
@@ -136,26 +139,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct lower-hemisphere equal-area Schmidt stereonet.
+        comment: Equal-area lower-hemisphere stereonet with all subtypes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Great circles, poles, density contours, primitive circle, 10-deg
-          ticks, N label, legend, subtle net grid all present.
+        comment: Net grid, primitive, 10deg ticks, North arrow/cardinals, great circles,
+          poles, Kamb contours all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: strike/dip mapped to poles (90deg to plane) and great circles correctly.
+        comment: strike/dip -> poles and great circles projected correctly
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; legend labels match feature sets.
+        comment: Title format correct; legend labels match the three sets + density
     data_quality:
       score: 15
       max: 15
@@ -165,19 +168,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three structural sets, planes, poles, density — full stereonet vocabulary.
+        comment: Three distinct sets with different strike/dip and spread; density
+          variation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Bedding + two joint sets, plausible neutral field-campaign data.
+        comment: Bedding + two joint sets from a mapping campaign — real, neutral
+          geology
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Strikes 0-360, dips clamped 2-89 — valid geological ranges.
+        comment: Dips clamped 2-89, strikes 0-360 — physically valid
     code_quality:
       score: 9
       max: 10
@@ -187,64 +192,61 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Several helper functions, but all are essential 3D-projection math
-          (vecTP, cross, project, greatCircle).
+        comment: Geometry helper functions necessary but depart from strict flat structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (42) + Box-Muller.
+        comment: Fixed-seed LCG + Box-Muller, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: d3 global only, no imports.
+        comment: No imports; uses d3 global per contract
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a stereonet; no fake UI.
+        comment: Clean, no fake UI, appropriate complexity for the math
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness emits plot-{theme}.png/.html; sizes svg from ANYPLOT_SIZE.
+        comment: 'Single svg to #container, harness emits plot-{theme}.png/.html'
     library_features:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: selectAll/data/join, d3.line with .defined, scales-free bespoke geometry
-          — idiomatic D3.
+        comment: data-join, d3.line().defined(), clipPath, scales — idiomatic D3
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: d3.contourDensity, d3.geoPath, clipPath — distinctive D3 capabilities.
+        comment: d3.contourDensity + d3.geoPath for the Kamb overlay is distinctively
+          D3
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - density-contours
-  - custom-projection
-  - clip-path
-  - polar-grid
+  - custom-legend
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - kde
-  - gaussian-sampling
   styling:
+  - alpha-blending
+  - edge-highlighting
   - publication-ready
-  - theme-adaptive
-  - elevated-legend
