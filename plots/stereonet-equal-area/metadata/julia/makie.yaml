@@ -1,0 +1,262 @@
+library: makie
+language: julia
+specification_id: stereonet-equal-area
+created: '2026-06-16T21:41:10Z'
+updated: '2026-06-16T21:59:04Z'
+generated_by: claude-opus
+workflow_run: 27649151535
+issue: 4576
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stereonet-equal-area/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stereonet-equal-area/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - 'Complete spec coverage: equal-area Schmidt (Lambert azimuthal) projection, mean
+    great circles per fabric element, poles to planes (plunge = 90 - dip), Kamb-style
+    density contours, primitive circle, 10-degree perimeter ticks with 30-degree majors,
+    N arrow + cardinal/azimuth labels, and a feature_type legend.'
+  - 'Repair feedback fully addressed: Kamb density contours now render in a single
+    neutral INK_SOFT-derived colormap (alpha varying by level), so the density layer
+    reads as visually distinct from the green/lavender/blue categorical poles instead
+    of competing with them.'
+  - Mathematically genuine projection and density field - real inverse equal-area
+    back-projection per grid node with an exponential counting-cone kernel summed
+    over all pole vectors; nothing faked.
+  - 'Fully palette-compliant: Bedding #009E73 (brand green) first, then lavender #C475FD
+    and blue #4467A3 in canonical Imprint order; density uses a neutral ink ramp,
+    not a categorical hue.'
+  - Both themes render cleanly with identical data colors and only chrome flipped;
+    all text readable, no dark-on-dark failures, brand green legible on both surfaces.
+  - 'Strong polish: elevated disk surface (ELEVATED_BG), subtle low-alpha graticule
+    (meridians + parallels every 10 degrees), hidden spines, white-stroked pole markers,
+    framed legend, square 2400x2400 canvas suited to a radially symmetric plot.'
+  weaknesses:
+  - 'DE-03 / DE-01: still room to push data storytelling further - the three clusters
+    are clear but there is no explicit hierarchy emphasizing a primary fabric element;
+    all three sets carry equal visual weight. Optional, not required.'
+  - Bottom-right legend sits fairly close to the primitive circle and the 150-degree
+    azimuth label; fully visible with adequate margin now, but a touch more separation
+    would be cleaner (minor VQ-05).
+  - Small projection helper functions (proj_x, proj_y, line_vec, great_circle) diverge
+    slightly from the KISS no-functions preference - justified by the genuine projection
+    math but costs a point on CQ-01.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1; stereonet disk on a slightly lighter elevated surface (#FFFDF6).
+      Chrome: title "stereonet-equal-area · julia · makie · anyplot.ai" in dark ink; bold N/E/S/W cardinals and grey azimuth numbers (30/60/120/150/210/240/300/330) ringing the perimeter with 10-degree degree ticks; solid dark north arrow above N; framed legend "Lower-hemisphere equal area" bottom-right. All readable.
+      Data: three pole clusters as white-stroked scatter points - Bedding #009E73 green (top-center), Joint set 1 lavender #C475FD (right/E), Joint set 2 blue #4467A3 (bottom/S) - with matching colored mean great circles arcing across the disk. Kamb density contours now render as neutral grey rings (INK_SOFT-derived, alpha by level), clearly distinct from the colored poles. Subtle low-alpha graticule visible. First series confirmed #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17; disk on #242420.
+      Chrome: title and cardinals in light ink #F0EFE8; azimuth/degree labels and primitive circle in soft light grey #B8B7B0 - all clearly legible, no dark-on-dark failures; north arrow rendered as a light/outlined triangle above N.
+      Data: identical to light render - green/lavender/blue poles and great circles unchanged; density contours grey and distinct. Only chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; fonts explicitly set. Azimuth/degree
+          numbers (13pt) are small but legible at full size.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions; clusters and contours separate cleanly.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Sparse poles get prominent white-stroked markers; great circles thick;
+          density contours visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender/blue CVD-safe Imprint trio; density now neutral so
+          no hue collision.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 (gate passed); balanced radial composition; nothing
+          clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Stereonet uses azimuth ring instead of axes; canonical title present.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; canonical Imprint order; neutral ink density
+          ramp; correct theme backgrounds.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom equal-area projection, elevated disk, north arrow, refined
+          graticule, clean neutral density layer.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines hidden, subtle low-alpha grid, generous whitespace, stroked
+          markers.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Density-vs-feature encoding now unambiguous after neutral-contour
+          fix; clear clusters, though no single focal hierarchy.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine lower-hemisphere equal-area Schmidt stereonet.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Great circles, poles, density contours, primitive circle, 10-deg
+          ticks, N arrow, legend - all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Dip direction/dip -> great circle; pole = normal (plunge=90-dip,
+          trend+180).
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Canonical title; legend labels Bedding/Joint set 1/Joint set 2 by
+          feature_type.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Three clustered fabric elements exercise great circles, poles, and
+          density together.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Plausible field campaign: bedding + two joint sets with realistic
+          dip directions/dips.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 49 measurements, dips clamped 2-88 deg, sensible spreads.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Top-level script but four projection helper functions (justified
+          by the math).
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie/Colors/ColorSchemes/Random/Statistics all used (cgrad,
+          mean).
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clear sectioning, no fake UI, appropriate complexity for the projection.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2; no bare plot.png.
+    library_features:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Idiomatic CairoMakie: Axis with DataAspect, lines!/scatter!/poly!/contour!/text!,
+          axislegend.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: contour! over a computed field, cgrad density ramp, DataAspect, theme-token
+          chrome - solid but not exotic.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - annotations
+  - custom-legend
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - matrix-construction
+  dataprep:
+  - kde
+  styling:
+  - publication-ready
+  - minimal-chrome
+  - edge-highlighting
