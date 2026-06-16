@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)
-Library: pygal 3.1.0 | Python 3.13
-Quality: regen from 78/100 | Updated: 2026-06-16
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-16
 """
 
 import os
