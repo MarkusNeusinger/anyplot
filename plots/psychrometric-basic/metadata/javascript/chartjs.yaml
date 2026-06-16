@@ -1,0 +1,247 @@
+library: chartjs
+language: javascript
+specification_id: psychrometric-basic
+created: '2026-06-16T23:23:53Z'
+updated: '2026-06-16T23:28:25Z'
+generated_by: claude-opus
+workflow_run: 27654359480
+issue: 4583
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/psychrometric-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/psychrometric-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/psychrometric-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/psychrometric-basic/javascript/chartjs/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Complete spec coverage: saturation curve (prominent 4px boundary), RH curves
+    10-100%, wet-bulb, enthalpy, and specific-volume line families, all computed from
+    ASHRAE psychrometric formulas at 101.325 kPa'
+  - Every property family is direct-labeled on the chart via a custom afterDatasetsDraw
+    plugin (not just a legend), and each family uses a distinct dash pattern + Imprint
+    color so lines stay separable where they cross
+  - 'Clear data storytelling: the red cooling+dehumidification process path with A/B
+    state points and a hand-drawn arrowhead is the unmistakable focal point, with
+    the comfort zone highlighted separately'
+  - 'Idiomatic Chart.js: scatter+showLine with a custom plugin using scales.getPixelForValue
+    for canvas annotation and generateLabels for a per-family legend; data colors
+    identical across themes, only chrome flips'
+  - 'Both light and dark renders are fully readable with correct warm backgrounds
+    (#FAF8F1 / #1A1A17) and no edge clipping'
+  weaknesses:
+  - The italic 'cooling + dehumidification' label sits directly on top of the red
+    process line in both renders — readable but slightly muddied; nudging it ~14px
+    further off the line would clean it up (minor VQ-02).
+  - The comfort-zone region reads more as two vertical green edge lines than a filled
+    rectangle — the rgba(0,158,115,0.2) fill is very faint and the polygon is a thin
+    curved sliver between the 30%/60% RH curves. The spec asks for a highlighted shaded
+    region; consider a stronger fill alpha (~0.3-0.35) so the zone reads as a clear
+    block.
+  - The chart is inherently dense (many crossing line families); RH percent labels
+    near the top edge sit close to the saturation/RH curves. Legible but tight — no
+    action strictly required.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (~#FAF8F1), correct light surface — not pure white.
+      Chrome: dark title "psychrometric-basic · javascript · chartjs · anyplot.ai" centered; X-axis "Dry-Bulb Temperature (°C)" bottom, Y-axis "Humidity Ratio (g water / kg dry air)" on the right (conventional for psychrometric charts); soft-ink ticks (-10..50, 0..30) all readable. 6-entry legend across the top. All chrome readable. PASS.
+      Data: blue RH/saturation curves (saturation prominent, thick), lavender dashed wet-bulb lines, ochre dotted enthalpy lines, cyan dash-dot specific-volume lines, green comfort zone, red process path A->B with arrowhead. First legend series (Comfort zone) is brand green #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (~#1A1A17), correct dark surface — not pure black.
+      Chrome: light title/labels/ticks all clearly visible against dark bg; no dark-on-dark failures (tick labels, axis titles, and on-canvas annotations all use light ink tokens). Legend text light and readable. PASS.
+      Data: identical colors to the light render — blue curves, lavender wet-bulb, ochre enthalpy, cyan volume, green comfort zone, red process path. Brand green #009E73 reads well on the dark surface. Only chrome flipped between themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes set; all readable both themes. Process-path label overlaps
+          the line slightly.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: '''cooling + dehumidification'' label sits on the red line; otherwise
+          clean.'
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Distinct dash patterns + colors per family; saturation curve prominent.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette, CVD-safe, redundant dash encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 (gate passed), nothing clipped, good proportions.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes labeled with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Backgrounds correct; data colors from Imprint, identical across themes.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom canvas annotations, direct labels, arrowhead, multi-family
+          lines — professional.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, no chartjunk, distinct dash patterns; inherently dense
+          chart.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Clear focal process path + comfort zone; process label slightly muddied.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct psychrometric chart.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: RH, wet-bulb, enthalpy, volume, saturation, process path, comfort
+          zone, direct labels — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Dry-bulb X, humidity ratio Y; full ranges shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exact; custom per-family legend.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All psychrometric property families shown.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: ASHRAE formulas at sea-level pressure; neutral, plausible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: -10..50 C, 0..30 g/kg — sensible HVAC domain.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Small helper arrow functions + plugin; justified by the math, but
+          not strictly flat.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; Chart is the global per harness contract.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-commented; interactive-lib tooltips are legitimate (not
+          fake UI).
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness owns output; current Chart.js 4.x API.
+    library_features:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: scatter+showLine, custom plugin, generateLabels — idiomatic Chart.js.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: afterDatasetsDraw plugin, scales.getPixelForValue, custom legend
+          — strong distinctive usage.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - alpha-blending
+  - publication-ready

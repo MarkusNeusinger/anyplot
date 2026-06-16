@@ -1,97 +1,119 @@
 library: altair
+language: python
 specification_id: psychrometric-basic
 created: '2026-03-15T21:55:16Z'
-updated: '2026-03-15T22:32:05Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23120046544
+updated: '2026-06-16T23:21:28Z'
+generated_by: claude-opus
+workflow_run: 27653734700
 issue: 4583
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/psychrometric-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/psychrometric-basic/altair/plot.html
+language_version: 3.13.13
+library_version: 6.2.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/psychrometric-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/psychrometric-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/psychrometric-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/psychrometric-basic/python/altair/plot-dark.html
 quality_score: 86
 review:
   strengths:
-  - Comprehensive psychrometric data computed from ASHRAE formulas with scientific
-    accuracy
-  - Excellent color-coded property line system with distinct hues, dash patterns,
-    and opacity hierarchy
-  - HVAC process path creates compelling visual focal point demonstrating practical
-    engineering application
-  - Comfort zone overlay adds real-world context for HVAC engineers
-  - Staggered RH label positions reduce overlap intelligently
-  - Interactive tooltips and point selection leverage Altair web-native strengths
-  - Full spec compliance with all required features present
+  - Exceptionally complete psychrometric chart — prominent thick saturation curve,
+    full 10-100% RH family, lavender wet-bulb lines, blue enthalpy lines, ochre specific-volume
+    lines, cyan shaded comfort zone, and a matte-red HVAC process path with two state-point
+    markers, all directly labelled on the chart.
+  - 'Thoughtful Imprint palette mapping: one canonical hue per moist-air property
+    family with the matte-red cooling/dehumidification path as a deliberate semantic
+    focal point; first series is brand green #009E73.'
+  - Physically grounded ASHRAE-2017 saturation-pressure formulas over the standard
+    atmosphere (101.325 kPa); fully deterministic, no RNG.
+  - 'Correct theme-adaptive chrome — data colors identical across light/dark, only
+    chrome flips; backgrounds are #FAF8F1 / #1A1A17 and canvas is exactly 3200x1800
+    (gate passed).'
+  - 'Idiomatic Altair: alt.layer composition ordered faint-grid-first/focal-last,
+    detail grouping for multi-line families, declarative scales, plus interactive
+    HTML tooltips.'
   weaknesses:
-  - Enthalpy and volume lines remain too faint (opacity 0.4-0.45) making them difficult
-    to trace across the chart
-  - Minor label crowding near the saturation curve where wet-bulb and enthalpy labels
-    converge
-  - Lambda with noqa suppression is a minor code smell
-  image_description: The plot displays a psychrometric chart with dry-bulb temperature
-    (°C) on the x-axis ranging from -10 to 50, and humidity ratio (g/kg) on the y-axis
-    from 0 to ~30. A thick dark blue saturation curve (100% RH) forms the upper boundary.
-    Nine additional RH curves (10%-90%) are drawn as lighter blue lines with percentage
-    labels staggered at various temperatures along the right side of the chart. Dashed
-    orange diagonal lines represent constant wet-bulb temperatures (0°C to 30°C in
-    5°C increments), labeled in bold orange near the saturation curve with slight
-    offsets. Dashed teal/cyan diagonal lines show constant enthalpy values, with labels
-    along the left edge. Dashed purple diagonal lines represent constant specific
-    volume (0.75-0.95 m³/kg), labeled near the bottom-right. A translucent green shaded
-    area marks the comfort zone (~20-26°C, approximately 6-13 g/kg) with an italic
-    "Comfort Zone" label. A bold red process path with filled circular markers connects
-    "Outdoor Air (35°C, 50% RH)" at the upper-right to "Supply Air (13°C, 100% RH)"
-    at the lower-left, illustrating a cooling and dehumidification process. The title
-    reads "psychrometric-basic · altair · pyplots.ai" with subtitle "Standard Atmosphere
-    (101.325 kPa) · HVAC Air Properties". Background is light gray (#fafbfc) with
-    very subtle gridlines.
+  - 'REGRESSION from attempt 1: the repair moved the ''25°C WB'' label to ~29°C where
+    it now collides with the red ''Outdoor Air (35°C, 50% RH)'' focal annotation.
+    In the DARK render the bright lavender ''25°C WB'' sits directly on top of ''50%
+    RH'', making that part of the focal state-point label illegible (in light it is
+    partially obscured but readable). Fix: push the red ''Outdoor Air'' text label
+    clearly above the 25°C WB line (increase the negative dy, e.g. dy=-30), and/or
+    move the ''25°C WB'' wet-bulb label down/left so the two no longer share the same
+    screen region.'
+  - Top-right label cluster (RH 100/80/60/50%, 0.94 m³/kg, 100 kJ/kg, 30°C WB) remains
+    tight near the saturation apex; the green saturation curve passes through the
+    '100%' glyphs. Distinguishable by color but crowded.
+  - 20+ small (10-12px) direct labels degrade at the 400px mobile srcset width; the
+    key RH/saturation labels could be bumped 1-2px.
+  - Dark-render matte-red process labels are the lowest-contrast chrome elements;
+    readable but the weakest on the near-black surface.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white ~#FAF8F1 (correct), view fill matches page.
+      Chrome: bold dark title "psychrometric-basic · python · altair · anyplot.ai" + soft-grey subtitle "Standard Atmosphere (101.325 kPa) · Moist-Air Properties for HVAC"; X-axis "Dry-Bulb Temperature (°C)" (-10..50), Y-axis "Humidity Ratio (g/kg)" (0..30) titles/ticks dark/soft, grid subtle ~15%. All chrome readable.
+      Data: brand green #009E73 thick saturation curve + 10-90% RH family, lavender #C475FD dashed wet-bulb, blue #4467A3 dashed enthalpy, ochre #BD8233 dotted specific-volume, cyan #2ABCCD shaded comfort zone, matte-red #AE3030 process path with two state-point dots. First series is #009E73.
+      Legibility verdict: FAIL (localized) — the lavender "25°C WB" label overlaps the red "Outdoor Air (35°C, 50% RH)" text; "50% RH" is partially obscured but still mostly readable here.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black ~#1A1A17 (correct).
+      Chrome: title, subtitle, axis titles, ticks and grid all flip to light/soft ink and are clearly readable — no dark-on-dark chrome failures. Brand green reads well on dark.
+      Data: colors identical to the light render (only chrome flipped).
+      Legibility verdict: FAIL — the bright lavender "25°C WB" label sits directly on top of the red "Outdoor Air (35°C, 50% RH)" focal annotation, rendering the "50% RH" portion illegible (the two text labels merge). A focal state-point label is broken on dark mode.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
-        passed: true
-        comment: Font sizes explicitly set (title 28pt, axis titles 22pt, ticks 18pt).
-          Property line labels at 11-13pt slightly small but readable with bold weight.
+        passed: false
+        comment: Fonts explicitly set, readable both themes EXCEPT the red 'Outdoor
+          Air (35°C, 50% RH)' focal label whose '50% RH' is obscured by the overlapping
+          '25°C WB' label in dark; many 10-12px labels also degrade at 400px mobile.
       - id: VQ-02
         name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: 'Repair-introduced collision: ''25°C WB'' label now overlaps the
+          red ''Outdoor Air'' state-point text (two labels merge in dark). Top-right
+          RH/volume cluster also tight.'
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Staggered RH labels reduce overlap effectively. Minor crowding near
-          saturation curve where wet-bulb and enthalpy labels converge.
-      - id: VQ-03
-        name: Element Visibility
-        score: 4
-        max: 6
-        passed: true
-        comment: Saturation curve prominent. Enthalpy (0.45) and volume (0.4) lines
-          remain too faint to trace easily.
+        comment: Property families separated by hue + distinct dash patterns; saturation
+          curve prominent at strokeWidth 3.5.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Colorblind-safe palette with distinct hues (blue, orange, teal, purple)
-          for each property type.
+        comment: CVD-safe Imprint hues + redundant dash encoding; no red-green-as-sole-signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization at 1600x900 with balanced margins.
+        comment: Exactly 3200x1800, gate passed, nothing clipped; pad-only canvas
+          logic.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units on both axes.
+        comment: Units on both axes; descriptive subtitle.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; all Imprint hues mapped semantically; backgrounds
+          correct both themes.'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -99,22 +121,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom color palette with intentional hierarchy. Professional technical
-          chart aesthetic above defaults.
+        comment: Sophisticated multi-layer composition with distinct dash families
+          and intentional hierarchy.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: View stroke removed, subtle grid (0.12 opacity), custom background,
-          domain color customized.
+        comment: No box frame, subtle grid, generous whitespace.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: HVAC process path creates focal point, comfort zone adds context,
-          opacity hierarchy guides viewer.
+        passed: false
+        comment: Clear focal point (red process path over receding grid), but the
+          focal annotation's label is muddied by the overlap in dark mode.
     spec_compliance:
       score: 15
       max: 15
@@ -124,27 +145,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct psychrometric chart with all required curve types.
+        comment: Correct psychrometric chart.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: RH curves, wet-bulb, enthalpy, volume, process
-          path, comfort zone, direct labels.'
+        comment: Saturation, RH family, wet-bulb, enthalpy, volume, comfort zone,
+          process path, direct labels — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct x/y mapping with appropriate ranges.
+        comment: Dry-bulb x / humidity-ratio y correct; full -10..50°C, 0..30 g/kg
+          domains.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, property lines labeled directly on chart per
-          spec.
+        comment: Title exactly 'psychrometric-basic · python · altair · anyplot.ai'
+          with descriptive subtitle; direct labels in lieu of legend (per spec).
     data_quality:
       score: 15
       max: 15
@@ -154,23 +176,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all thermodynamic property types with full temperature range
-          coverage.
+        comment: All psychrometric property families shown.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real HVAC engineering scenario with ASHRAE formulas at standard atmosphere.
+        comment: ASHRAE-2017 formulas, standard atmosphere, neutral HVAC context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard atmosphere, industry-standard ranges, physically correct
-          values.
+        comment: Sensible domain ranges and property increments.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -178,33 +198,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports, constants, data, plot, save.'
+        comment: Linear script, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic from thermodynamic equations.
+        comment: Fully deterministic (formula-driven, no RNG).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas — all used.
+        comment: All imports used; sys.path guard for the altair.py filename clash
+          is justified.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Lambda with noqa suppression, repeated humidity ratio calculations
-          in label positioning.
+        passed: true
+        comment: Appropriate complexity for a psychrometric chart; no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html, current Altair 6.0 API.
-    library_mastery:
+        comment: Saves plot-{theme}.png + .html; pad-only canvas; current Altair API.
+    library_features:
       score: 7
       max: 10
       items:
@@ -213,21 +233,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good declarative API with layered composition, proper encoding channels,
-          configure methods.
+        comment: alt.layer composition, detail grouping, declarative scales, OverlayMarkDef
+          points.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Interactive selection, rich tooltips, HTML export, declarative layered
-          composition.
+        comment: Layered grammar-of-graphics + interactive HTML tooltips; solid but
+          not extraordinary.
   verdict: REJECTED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - layer-composition
   - annotations
+  - layer-composition
   - hover-tooltips
   - html-export
   patterns:
@@ -236,5 +257,6 @@ impl_tags:
   dataprep:
   - interpolation
   styling:
+  - publication-ready
   - alpha-blending
   - grid-styling
