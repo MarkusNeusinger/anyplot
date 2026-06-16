@@ -76,6 +76,99 @@ const features = [
 
 const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
 
+// Generate every measurement first; collect all poles for the density pass.
+const allPoles = [];
+features.forEach((f) => {
+  f.planes = [];
+  for (let i = 0; i < f.count; i++) {
+    const dipDir = (gauss(f.ddMean, f.ddSd) + 360) % 360;
+    const dip = clamp(gauss(f.dipMean, f.dipSd), 2, 88);
+    f.planes.push({ dipDir, dip });
+    allPoles.push(poleXY(dipDir, dip));
+  }
+});
+
+// --- Kamb density contours over the pole population -------------------------
+// Kamb (1959): count poles falling inside a counting circle whose area is sized
+// so the expected uniform count is 3σ. Contours are drawn at successive σ levels
+// above that uniform background via marching squares over an equal-area grid.
+function kambContours(poles) {
+  const n = poles.length;
+  const rc = Math.sqrt(9 / (n + 9)); // counting-circle radius (3σ), primitive R=1
+  const rc2 = rc * rc;
+  const E = n * rc2; // expected count under a uniform distribution
+  const sigma = Math.sqrt(E * (1 - rc2));
+  const NX = 120,
+    NY = 120,
+    span = 2.1,
+    x0 = -1.05,
+    y0 = -1.05;
+  const dx = span / (NX - 1),
+    dy = span / (NY - 1);
+  const grid = new Float64Array(NX * NY);
+  let maxC = 0;
+  for (let j = 0; j < NY; j++) {
+    const gy = y0 + j * dy;
+    for (let i = 0; i < NX; i++) {
+      const gx = x0 + i * dx;
+      if (gx * gx + gy * gy > 1.0) continue; // only count inside the primitive
+      let c = 0;
+      for (const p of poles) {
+        const ex = p[0] - gx,
+          ey = p[1] - gy;
+        if (ex * ex + ey * ey <= rc2) c++;
+      }
+      grid[j * NX + i] = c;
+      if (c > maxC) maxC = c;
+    }
+  }
+  // Contour levels in σ above the uniform background; keep those the data reaches.
+  let levels = [2, 4, 6, 8].map((k) => E + k * sigma).filter((l) => l < maxC);
+  if (levels.length === 0) levels = [0.5 * maxC];
+
+  const frac = (a, b, level) => (level - a) / (b - a);
+  function edgePt(e, v0, v1, v2, v3, level, xL, yB) {
+    if (e === 0) return [xL + dx * frac(v0, v1, level), yB]; // bottom: BL→BR
+    if (e === 1) return [xL + dx, yB + dy * frac(v1, v2, level)]; // right: BR→TR
+    if (e === 2) return [xL + dx * frac(v3, v2, level), yB + dy]; // top: TL→TR
+    return [xL, yB + dy * frac(v0, v3, level)]; // left: BL→TL
+  }
+  // Marching-squares segment table (edges 0=bottom 1=right 2=top 3=left).
+  const tbl = {
+    1: [[3, 0]], 2: [[0, 1]], 3: [[3, 1]], 4: [[1, 2]],
+    5: [[3, 0], [1, 2]], 6: [[0, 2]], 7: [[3, 2]], 8: [[2, 3]],
+    9: [[0, 2]], 10: [[0, 1], [2, 3]], 11: [[1, 2]], 12: [[3, 1]],
+    13: [[0, 1]], 14: [[3, 0]],
+  };
+  const data = [];
+  for (const level of levels) {
+    for (let j = 0; j < NY - 1; j++) {
+      for (let i = 0; i < NX - 1; i++) {
+        const v0 = grid[j * NX + i],
+          v1 = grid[j * NX + i + 1],
+          v2 = grid[(j + 1) * NX + i + 1],
+          v3 = grid[(j + 1) * NX + i];
+        let idx = 0;
+        if (v0 > level) idx |= 1;
+        if (v1 > level) idx |= 2;
+        if (v2 > level) idx |= 4;
+        if (v3 > level) idx |= 8;
+        const segs = tbl[idx];
+        if (!segs) continue;
+        const xL = x0 + i * dx,
+          yB = y0 + j * dy;
+        for (const [a, b] of segs) {
+          data.push(edgePt(a, v0, v1, v2, v3, level, xL, yB));
+          data.push(edgePt(b, v0, v1, v2, v3, level, xL, yB));
+          data.push([null, null]);
+        }
+      }
+    }
+  }
+  return data;
+}
+const contourData = kambContours(allPoles);
+
 // --- Subtle equal-area net graticule (10° spacing about the N–S axis) -------
 const netData = [];
 function pushPath(pts) {
@@ -123,7 +216,7 @@ series.push({
   name: "Net grid",
   data: netData,
   color: t.grid,
-  lineWidth: 1,
+  lineWidth: 1.1,
   enableMouseTracking: false,
   showInLegend: false,
   marker: { enabled: false },
@@ -142,24 +235,17 @@ series.push({
 });
 
 features.forEach((f, idx) => {
-  const planes = [];
-  for (let i = 0; i < f.count; i++) {
-    const dipDir = (gauss(f.ddMean, f.ddSd) + 360) % 360;
-    const dip = clamp(gauss(f.dipMean, f.dipSd), 2, 88);
-    planes.push({ dipDir, dip });
-  }
-
   // Poles (scatter) — every measurement; clustering reveals preferred orientation.
   const poleId = "poles-" + idx;
   series.push({
     type: "scatter",
     id: poleId,
     name: f.name,
-    data: planes.map((p) => poleXY(p.dipDir, p.dip)),
+    data: f.planes.map((p) => poleXY(p.dipDir, p.dip)),
     color: f.color,
     marker: {
       symbol: f.symbol,
-      radius: 5.5,
+      radius: 5,
       lineWidth: 1,
       lineColor: t.pageBg,
     },
@@ -170,7 +256,7 @@ features.forEach((f, idx) => {
   const gcData = [];
   const stride = Math.max(1, Math.floor(f.count / f.nGreat));
   for (let i = 0; i < f.count; i += stride) {
-    for (const pt of greatCircle(planes[i].dipDir, planes[i].dip, 80)) gcData.push(pt);
+    for (const pt of greatCircle(f.planes[i].dipDir, f.planes[i].dip, 80)) gcData.push(pt);
     gcData.push([null, null]);
   }
   series.push({
@@ -179,12 +265,27 @@ features.forEach((f, idx) => {
     name: f.name + " planes",
     data: gcData,
     color: f.color,
-    lineWidth: 1.6,
-    opacity: 0.55,
+    lineWidth: 1.9,
+    opacity: 0.7,
     enableMouseTracking: false,
     marker: { enabled: false },
     zIndex: 3,
   });
+});
+
+// Kamb density contours — nested isolines over the pole clusters (zIndex below
+// the poles, above the graticule) directly mark preferred orientations.
+series.push({
+  type: "line",
+  name: "Kamb density",
+  data: contourData,
+  color: t.inkSoft,
+  opacity: 0.6,
+  lineWidth: 1.3,
+  cropThreshold: Infinity, // unsorted marching-squares segments must not be cropped
+  enableMouseTracking: false,
+  marker: { enabled: false },
+  zIndex: 4, // above the graticule & great circles, beneath the pole markers
 });
 
 // --- Cardinal labels (N/E/S/W) just outside the primitive ------------------
@@ -229,7 +330,7 @@ Highcharts.chart("container", {
     style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
   },
   subtitle: {
-    text: "Lower-hemisphere Schmidt net — poles (points) and great circles (planes)",
+    text: "Lower-hemisphere Schmidt net — poles, great circles & Kamb density contours",
     style: { color: t.inkSoft, fontSize: "14px" },
   },
   xAxis: {
