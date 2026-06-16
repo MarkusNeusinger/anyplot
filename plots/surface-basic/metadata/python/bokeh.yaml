@@ -1,164 +1,176 @@
 library: bokeh
+language: python
 specification_id: surface-basic
 created: '2025-12-23T21:54:52Z'
-updated: '2025-12-23T22:01:22Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20472388020
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/surface-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/surface-basic/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - 3d-projection
-  - patches
-  - colorbar
-  - annotations
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-06-16T19:19:14Z'
+generated_by: claude-opus
+workflow_run: 27641376521
+issue: 1013
+language_version: 3.13.13
+library_version: 3.9.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/bokeh/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - 'Excellent creative solution: Bokeh lacks native 3D support, but the implementation
-    cleverly uses patches with painters algorithm for depth-sorted 3D surface rendering'
-  - Proper use of Viridis256 colormap and LinearColorMapper for color encoding
-  - Clean isometric projection with configurable elevation and azimuth angles
-  - Subtle edge styling enhances 3D perception without being distracting
-  - Colorbar correctly shows Z value scale
-  - Good canvas utilization at 4800x2700 with appropriate font sizes
+  - Sophisticated manual isometric projection with painter's algorithm (back-to-front
+    quad sort) — overcomes bokeh's lack of native 3D and produces a convincing terrain
+    surface
+  - Correct Imprint sequential colormap (green->blue) for single-polarity elevation;
+    height AND color dual-encode elevation for strong depth perception
+  - 'Exact 3200x1800 canvas in both themes; backgrounds (#FAF8F1 / #1A1A17) and all
+    chrome tokens theme-correct, data colors identical across light/dark'
+  - 'Clean frameless composition: axes hidden, no grid, subtle INK_SOFT mesh edges
+    (line_alpha 0.22) that aid the read without competing with the fill'
+  - Title exactly matches required format; colorbar with descriptive 'Elevation (m)'
+    scale; floating x/y/z axis labels with units
   weaknesses:
-  - Axis labels are generic (X, Y, Z) without descriptive context or units
-  - Colorbar title Z Value is truncated/rotated, could be improved
-  - The HTML output is also generated which may not be necessary for static review
-  image_description: The plot displays a 3D surface rendered in 2D using an isometric
-    projection. The surface represents z = sin(x) * cos(y), showing smooth wave-like
-    undulations. The Viridis colormap is used, with yellow/green representing peaks
-    (z ≈ 0.5 to 1) and dark purple/blue representing valleys (z ≈ -1 to -0.5). The
-    title "surface-basic · bokeh · pyplots.ai" appears in the top-left corner. Axis
-    labels X, Y, and Z are placed around the plot in gray text. A vertical colorbar
-    on the right shows "Z Value" with tick marks from -0.5 to 0.5. The surface is
-    rendered with subtle blue (#306998) edge lines and the background is light gray
-    (#fafafa). The plot fills the canvas well with good proportions.
+  - '''Elevation (m)'' is labelled twice — once as the floating vertical axis label
+    on the left and again as the colorbar title on the right — minor redundancy; consider
+    relabelling the floating one or dropping the colorbar title'
+  - No numeric tick values on the projected easting/northing axes, so absolute x/y
+    positions can't be read from the surface (only the direction labels). Inherent
+    to the manual projection; corner labels (e.g. 0 / 10 km) could add the scale
+  - Floating axis-label positions are hardcoded relative to the projected data bounds
+    — works correctly here but is fragile to data-range changes
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (~#FAF8F1), correct — not pure white.
+      Chrome: title "surface-basic · python · bokeh · anyplot.ai" top-left in dark ink, fully readable. Floating axis labels "Easting (km)" (lower-right, angled), "Northing (km)" (lower-left, angled), "Elevation (m)" (left, vertical) in soft gray INK_SOFT, readable. Colorbar on right with "Elevation (m)" title and tick labels 500–1200, all readable.
+      Data: isometric 3D terrain surface filled with the Imprint sequential ramp — brand green #009E73 at low elevations rising to blue #4467A3 at the central peak. Subtle mesh edges visible. First/continuous color is brand green as required.
+      Legibility verdict: PASS — all text clearly visible on the light surface.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (~#1A1A17), correct — not pure black.
+      Chrome: title in light ink (#F0EFE8), readable. Same floating labels and colorbar in lighter INK_SOFT (#B8B7B0), all clearly visible — no dark-on-dark failures.
+      Data: identical surface, identical green->blue Imprint colors to the light render — only the chrome (background/text) flipped. Brand green clearly visible on the dark surface.
+      Legibility verdict: PASS — all text clearly visible on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and colorbar labels readable, axis labels slightly small but
-          acceptable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements
-      - id: VQ-03
-        name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Surface patches well-sized, subtle edge lines enhance 3D effect
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Viridis is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization, slight imbalance with empty bottom-left
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Labels present but generic (X, Y, Z without units or context)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Grid is subtle, colorbar present but title partially cut off
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct 3D surface plot
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X, Y, Z correctly assigned and projected
-      - id: SC-03
-        name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: Colorbar present, axis labels present, but no rotation (static image)
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Full surface visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
-        passed: true
-        comment: Colorbar labels correct but generic
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "surface-basic · bokeh · pyplots.ai"'
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
         score: 7
         max: 8
         passed: true
-        comment: Shows peaks and valleys of sin*cos surface well
-      - id: DQ-02
-        name: Realistic Context
+        comment: Title/labels/colorbar readable both themes; floating axis labels
+          at 38pt slightly small but legible
+      - id: VQ-02
+        name: No Overlap
         score: 6
-        max: 7
+        max: 6
         passed: true
-        comment: Mathematical function demo, plausible but generic
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: No text/data collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Surface, mesh edges and colorbar all clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe imprint_seq sequential ramp
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Exact 3200x1800; well-centered, nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units (km, m)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq + correct theme backgrounds; data colors identical across
+          themes
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Manual isometric projection + painter's algorithm; polished frameless
+          look
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No spines/grid, subtle mesh edges, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear central-peak focal point; height+color reinforce elevation
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Values -1 to 1 appropriate for trigonometric function
+        comment: Correct 3D surface via projection
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Smooth colormap, x/y/z labels, colorbar all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=easting, y=northing, z/color=elevation
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches required format
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Multiple Gaussian hills + a basin show full surface variation
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Terrain elevation over a 10km tile — neutral and plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Elevation 500–1200m, 0–10km grid — sensible domain values
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -166,40 +178,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → projection → plot → save'
+        comment: Module-level, no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set (though not strictly needed here)
+        comment: Fully deterministic synthetic surface
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Projection math is necessary and clear; no fake UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png but also plot.html
+        comment: Saves plot-{THEME}.png + .html; current API
     library_features:
-      score: 5
-      max: 5
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Creative use of patches for 3D surface, painter's algorithm for depth
-          sorting, LinearColorMapper, ColorBar, custom text annotations
+        comment: Idiomatic figure/patches/text/ColorBar/LinearColorMapper usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: LinearColorMapper+ColorBar and creative patches-based projection
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - 3d-projection
+  - colorbar
+  - annotations
+  - html-export
+  - patches
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
+  - custom-colormap
