@@ -85,10 +85,11 @@ text!(ax, 23.0, 8.0; text = "Comfort\nzone", color = INK_SOFT, fontsize = 12,
       align = (:center, :center), font = :bold)
 
 # --- Lines of constant specific volume (m³/kg) -------------------------------
-for (k, v) in enumerate(0.78:0.02:0.94)
+# Thinned family + lower alpha so the RH/saturation hierarchy reads cleanly upper-right.
+for (k, v) in enumerate(0.80:0.03:0.95)
     Wv = 1000 .* ((v .* 101.325 ./ (0.287042 .* (dry_bulb .+ 273.15))) .- 1) ./ 1.607858
     Wc = [(0.0 <= w <= ws) ? w : NaN for (w, ws) in zip(Wv, W_sat)]
-    lines!(ax, dry_bulb, Wc; color = (VOL_CYAN, 0.55), linewidth = 1.0,
+    lines!(ax, dry_bulb, Wc; color = (VOL_CYAN, 0.45), linewidth = 1.0,
            linestyle = :dashdot, label = k == 1 ? "Specific volume (m³/kg)" : nothing)
 end
 
@@ -122,13 +123,20 @@ for rh in 0.1:0.1:1.0
 end
 
 # --- Direct property labels --------------------------------------------------
-# Relative humidity: along the W ≈ 16 g/kg reading line
+# Relative humidity: along the W ≈ 16 g/kg reading line; curves that never reach it
+# (the drier 20 % line) are anchored a few °C inside the right edge so the label
+# clears the right spine.
 for rh in (0.2, 0.4, 0.6, 0.8, 1.0)
     Wr = 1000 .* 0.621945 .* (rh .* p_ws) ./ (P .- rh .* p_ws)
     i = findfirst(>=(16.0), Wr)
-    i === nothing && (i = length(dry_bulb))
-    text!(ax, dry_bulb[i], Wr[i]; text = "$(round(Int, rh * 100))%",
-          color = RH_GREEN, fontsize = 12, align = (:center, :bottom), font = :bold)
+    if i === nothing
+        i = findlast(<=(47.0), dry_bulb)
+        text!(ax, dry_bulb[i], Wr[i]; text = "$(round(Int, rh * 100))%",
+              color = RH_GREEN, fontsize = 12, align = (:right, :bottom), font = :bold)
+    else
+        text!(ax, dry_bulb[i], Wr[i]; text = "$(round(Int, rh * 100))%",
+              color = RH_GREEN, fontsize = 12, align = (:center, :bottom), font = :bold)
+    end
 end
 
 # Enthalpy: in the empty triangle just outside the saturation curve
@@ -178,8 +186,8 @@ scatter!(ax, [30.0, 14.0], [W1, W2]; color = PROC_ROSE, markersize = 13,
          strokecolor = PAGE_BG, strokewidth = 2)
 text!(ax, 30.5, W1; text = "①  return air", color = INK, fontsize = 13,
       align = (:left, :center), font = :bold)
-text!(ax, 13.0, W2; text = "②  supply air", color = INK, fontsize = 13,
-      align = (:right, :center), font = :bold)
+text!(ax, 13.0, W2 - 1.7; text = "②  supply air", color = INK, fontsize = 13,
+      align = (:right, :top), font = :bold)
 
 # --- Legend ------------------------------------------------------------------
 axislegend(ax; position = :rb, labelsize = 12, labelcolor = INK,
