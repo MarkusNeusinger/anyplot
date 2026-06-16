@@ -1,8 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)
-Library: bokeh | Python
-Lower-hemisphere equal-area (Schmidt net) projection.
-Imprint palette; theme-adaptive chrome.
+Library: bokeh 3.9.1 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-06-16
 """
 
 import os
