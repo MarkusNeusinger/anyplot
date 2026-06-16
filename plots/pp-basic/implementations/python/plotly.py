@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pp-basic: Probability-Probability (P-P) Plot
 Library: plotly 6.8.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-16
@@ -43,10 +43,14 @@ empirical_cdf = np.arange(1, n + 1) / (n + 1)
 # Theoretical CDF from fitted normal
 theoretical_cdf = stats.norm.cdf(observed_sorted, loc=mu, scale=sigma)
 
-# Deviation threshold for storytelling
+# Deviation threshold for storytelling — confine flagged points to the genuine
+# right tail (theoretical CDF > 0.8), where the added exponential mass makes the
+# data depart from the fitted normal. This keeps the red diamonds in the tail
+# region the annotation describes, rather than the distribution body.
 deviation = np.abs(empirical_cdf - theoretical_cdf)
-threshold = np.percentile(deviation, 85)
-is_deviant = deviation > threshold
+in_right_tail = theoretical_cdf > 0.8
+threshold = np.percentile(deviation, 75)
+is_deviant = in_right_tail & (deviation > threshold)
 
 # 95% confidence band (Kolmogorov-Smirnov)
 ks_band = 1.36 / np.sqrt(n)
@@ -86,7 +90,7 @@ fig.add_trace(
         x=theoretical_cdf[~is_deviant],
         y=empirical_cdf[~is_deviant],
         mode="markers",
-        marker={"size": 9, "color": BRAND, "opacity": 0.8, "line": {"width": 0.8, "color": PAGE_BG}},
+        marker={"size": 6.5, "color": BRAND, "opacity": 0.6, "line": {"width": 0.6, "color": PAGE_BG}},
         name="Within expected range",
         customdata=np.column_stack([observed_sorted[~is_deviant], deviation[~is_deviant]]),
         hovertemplate=(
