@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)
 Library: altair 6.2.1 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-16
@@ -114,23 +114,52 @@ df_cross = pd.DataFrame(
     }
 )
 
-# Density field via Gaussian KDE over the projection plane
-n_grid = 140
+# Density field via the Kamb (1959) counting-circle statistic — the standard
+# structural-geology method. A counting circle of fixed angular radius is sized
+# so that, for a uniform (random) fabric, the expected count within it has a
+# standard deviation of `sigma`; the local density is then the number of poles
+# falling inside the circle, expressed in units of sigma above that uniform
+# expectation. Contours at integer-sigma levels mark statistically significant
+# preferred orientations.
+n_grid = 160
 gx = np.linspace(-r_prim, r_prim, n_grid)
 gy = np.linspace(-r_prim, r_prim, n_grid)
 gxx, gyy = np.meshgrid(gx, gy)
-bw = 0.10
-density = np.zeros_like(gxx)
-for px, py in zip(pole_x, pole_y, strict=True):
-    density += np.exp(-((gxx - px) ** 2 + (gyy - py) ** 2) / (2 * bw**2))
-density /= len(pole_x) * 2 * np.pi * bw**2
+
+# Lower-hemisphere 3-D unit vectors for the poles, recovered from their
+# equal-area positions (angle from the vertical = 2*arcsin(r/sqrt(2))).
+pole_th = 2.0 * np.arcsin(np.clip(pole_r / np.sqrt(2), 0.0, 1.0))
+pole_vec = np.column_stack(
+    [np.sin(pole_th) * np.sin(pole_trend), np.sin(pole_th) * np.cos(pole_trend), -np.cos(pole_th)]
+)
+
+# Grid nodes mapped to the same lower-hemisphere unit vectors.
+node_r = np.hypot(gxx, gyy)
+node_th = 2.0 * np.arcsin(np.clip(node_r / np.sqrt(2), 0.0, 1.0))
+node_tr = np.arctan2(gxx, gyy)
+node_vec = np.stack([np.sin(node_th) * np.sin(node_tr), np.sin(node_th) * np.cos(node_tr), -np.cos(node_th)], axis=-1)
+
+# Kamb counting circle: cos-distance threshold and the sigma normalisation.
+n_poles = len(pole_vec)
+sigma = 3.0
+kamb_cos = 1.0 - sigma**2 / (n_poles + sigma**2)
+kamb_units = np.sqrt(n_poles * kamb_cos * (1.0 - kamb_cos))
+
+# Count poles inside each node's counting circle (cos of angular distance >=
+# threshold), then convert to sigma units with a 0.5 continuity correction.
+cos_dist = node_vec @ pole_vec.T
+counts = (cos_dist >= kamb_cos).sum(axis=-1)
+density = np.clip((counts - 0.5) / kamb_units, 0.0, None)
 density[gxx**2 + gyy**2 > r_prim**2] = 0.0
 
 # Smooth, continuous contour polylines via contourpy (the same iso-path engine
 # matplotlib uses) — connected vertex chains, not the disconnected per-cell
-# segments the earlier marching-squares hand-roll produced.
+# segments a marching-squares hand-roll would produce. Contour at integer-sigma
+# levels (2σ, 4σ, …); fall back to relative levels for a near-uniform fabric.
 dmax = float(np.nanmax(density))
-contour_levels = np.linspace(dmax * 0.2, dmax * 0.9, 5)
+contour_levels = np.arange(2.0, dmax, 2.0)
+if len(contour_levels) < 2:
+    contour_levels = np.linspace(dmax * 0.3, dmax * 0.9, 4)
 cgen = contour_generator(gx, gy, density, line_type="Separate")
 contour_rows = []
 for li, level in enumerate(contour_levels):
@@ -153,10 +182,10 @@ for ft in FEATURES:
     # near-perimeter clusters don't push the text onto the cardinal labels.
     norm = np.hypot(mx, my)
     if norm > 1e-6:
-        lr = min(norm + 0.22, 0.80)
+        lr = min(norm + 0.30, 0.86)
         lx, ly = mx / norm * lr, my / norm * lr
     else:
-        lx, ly = mx, my + 0.22
+        lx, ly = mx, my + 0.30
     mean_rows.append({"x": mx, "y": my, "lx": lx, "ly": ly, "feature_type": ft, "label": f"μ {ms:.0f}°/{md:.0f}°"})
 df_means = pd.DataFrame(mean_rows)
 
@@ -170,7 +199,7 @@ selection = alt.selection_point(fields=["feature_type"], bind="legend")
 # Density contour lines (imprint_seq, drawn beneath the data)
 contour_layer = (
     alt.Chart(df_contours)
-    .mark_line(strokeWidth=1.4, strokeCap="round", opacity=0.6)
+    .mark_line(strokeWidth=2.4, strokeCap="round", opacity=0.85)
     .encode(
         x=x_enc,
         y=y_enc,
@@ -205,7 +234,7 @@ great_circles = (
         detail="gc_id:N",
         order="order:O",
         color=alt.Color("feature_type:N", scale=color_scale, legend=None),
-        opacity=alt.condition(selection, alt.value(0.5), alt.value(0.06)),
+        opacity=alt.condition(selection, alt.value(0.32), alt.value(0.05)),
     )
     .add_params(selection)
 )
