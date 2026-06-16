@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 map-tile-background: Map with Tile Background
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-06-16
+Quality: 89/100 | Updated: 2026-06-16
 """
 
 import io

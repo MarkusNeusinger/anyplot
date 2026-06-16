@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: map-tile-background
 created: '2026-01-20T22:41:00Z'
-updated: '2026-06-16T19:48:53Z'
+updated: '2026-06-16T19:57:59Z'
 generated_by: claude-opus
 workflow_run: 27643096969
 issue: 3756
@@ -12,51 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - Genuinely fetches and stitches live OpenStreetMap tiles with a hand-rolled Web
-    Mercator projection, then auto-fits the data bounds and expands them to the exact
-    16:9 canvas — a real tile-background map, not a faked basemap.
-  - Required OSM attribution is present and styled in a theme-adaptive box, satisfying
-    the tile-provider license terms called out in the spec.
-  - Temperature is double-encoded via the Imprint diverging cmap (cold-blue → neutral
-    → hot-red) plus marker size, producing a clear coast-to-inland microclimate story
-    with Livermore as a natural focal point.
-  - Chrome (title banner, label callouts, colorbar panel, attribution) flips correctly
-    between light/dark themes while the colormap endpoints stay identical; theme-adaptive
-    midpoint follows the documented imprint_div pattern.
-  - Station labels use hand-tuned per-point offsets and translucent callout boxes,
-    keeping all 12 labels legible and clear of their markers in both renders.
+  - Genuinely fetches and stitches real OpenStreetMap tiles, projects lon/lat through
+    proper Web Mercator math, and crops to an exact 16:9 window so the basemap fills
+    the full-bleed canvas without distortion
+  - 'Theme-adaptive chrome threaded correctly: title banner, callout label boxes,
+    colorbar panel, and attribution all flip between light/dark while data colors
+    hold; both renders are fully readable'
+  - Continuous temperature encoded with the Imprint diverging cmap (cold-blue -> theme
+    midpoint -> hot-red) plus a dual ring/white-edge outline that guarantees marker
+    contrast against pale tiles
+  - Hand-tuned per-station label offsets keep all 12 callouts clear of their markers
+    and neighbours; required OSM attribution included per license
+  - Exact 3200x1800 canvas, KISS flat structure with no helper functions, clean imports,
+    deterministic
   weaknesses:
-  - 'Mid-temperature markers (e.g. Fremont, Hayward ~20-21°C) take the theme-adaptive
-    midpoint color: off-white in light, near-black in dark. The white edge keeps them
-    visible, but the light-render mid markers are slightly low-contrast against the
-    pale OSM tiles — consider a faint outer ring or a touch more edge contrast.'
-  - OSM tiles stay light in the dark render (no dark tile endpoint is fetched), so
-    the dark mode is chrome-only adaptation. This is the only sensible approach for
-    a tile-background map, but the map surface itself does not darken.
-  - Module-level gx()/gy() projection helpers technically depart from the strict no-functions
-    KISS preference; they are tiny and necessary for the .map() projection, so impact
-    is minimal.
-  - Only OpenStreetMap is used; the spec mentions supporting multiple tile providers
-    (Stamen/CartoDB/satellite). A single provider per implementation is reasonable,
-    but provider variety is not demonstrated.
+  - Only one tile provider (OpenStreetMap) is used; the spec mentions supporting multiple
+    providers (Stamen, CartoDB, satellite) and marker clustering for dense distributions
+    - neither is exercised, though both are reasonable to omit for a static 12-point
+    render
+  - The diverging colormap midpoint is theme-adaptive, so a near-midpoint station
+    (Fremont ~21 C) renders off-white in light mode and near-black in dark mode -
+    sensible for tile contrast but means that single value's fill is not identical
+    across themes
+  - Implementation is ~80% matplotlib composition (imshow, annotate, inset_axes, colorbar);
+    seaborn only draws the scatter layer, limiting distinctive seaborn-specific feature
+    usage
+  - Station labels at fontsize 8.5pt become tight when the render is scaled to ~400px
+    mobile width, and the bottom-left Palo Alto / Half Moon Bay callouts sit close
+    together
   image_description: |-
     Light render (plot-light.png):
-      Background: Full-bleed OpenStreetMap tile mosaic of the SF Bay Area — warm beige roads, green parks, pale-blue Pacific water. There is no separate plot background; the map fills the 3200×1800 canvas by design.
-      Chrome: Top title banner "Bay Area Weather Stations · map-tile-background · seaborn · anyplot.ai" in a cream (#FFFDF6) rounded box with dark text and a soft border — clearly readable. Station labels sit in light callout boxes with bold dark text. Bottom-left translucent panel holds the "Temperature (°C)" colorbar (16–26) with small dark tick labels. Bottom-right "© OpenStreetMap contributors" attribution in a light box. All chrome text readable.
-      Data: 12 station markers on the imprint_div diverging scale — cold-blue (#4467A3) for coastal stations (Richmond, SF Downtown, Half Moon Bay ~15-17°C), through near-white at the midpoint (Fremont/Hayward ~20-21°C), to hot-red (#AE3030) inland (Livermore, Concord ~25-26°C). Markers sized by temperature, white edge outline, alpha ~0.92. No #009E73 first-series (continuous data, N/A).
-      Legibility verdict: PASS (mid-temp light markers are slightly low-contrast on pale tiles but remain visible via the white edge and large size).
+      Background: Real OpenStreetMap tiles (warm beige roads, green parks, light-blue Pacific) filling the full-bleed 16:9 frame; the #FAF8F1 page background is only the savefig facecolor behind the opaque tile mosaic.
+      Chrome: Title banner "Bay Area Weather Stations · map-tile-background · seaborn · anyplot.ai" in a light elevated box with dark ink text, top-center, fully visible/not clipped. Station callout labels in pale rounded boxes with dark text. Colorbar panel bottom-left ("Temperature (°C)", 16–26 ticks) and "© OpenStreetMap contributors" bottom-right both readable. All chrome readable against the map.
+      Data: 12 weather-station markers sized + colored by temperature via the Imprint diverging cmap — coastal stations cool blue (#4467A3 end), inland Livermore/Concord hot red (#AE3030 end), Fremont near off-white midpoint. Each marker has a faint dark ring + white edge for separation.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Same light OpenStreetMap tile mosaic (standard OSM tiles cannot be themed dark; this is inherent to a tile-background map).
-      Chrome: Title banner, label callouts, colorbar panel, and attribution box all flip to dark surfaces (#242420) with light text (#F0EFE8) — no dark-on-dark failures; every label and tick is readable.
-      Data: Marker colormap endpoints identical to the light render (blue #4467A3 coastal, red #AE3030 inland). Only the diverging midpoint flips to near-black (#1A1A17) per the documented theme-adaptive imprint_div pattern, so mid-temp markers read as dark dots with a white edge — clearly visible against the light tiles.
-      Legibility verdict: PASS.
+      Background: Identical OSM tile mosaic (tiles do not theme-flip, by design — they are the geographic context). #1A1A17 page background only behind the opaque tiles.
+      Chrome: Title banner now in a dark elevated box (#242420) with light ink text — readable, no dark-on-dark. Callout label boxes dark with light text; colorbar panel and attribution dark/translucent with light text. All chrome readable; no dark-on-dark failures.
+      Data: Marker hues identical at the blue and red extremes; only the diverging-cmap midpoint adapts (Fremont renders near-black instead of off-white) to stay visible on the light tiles. Sizes and positions identical to the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -64,49 +65,48 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, labels, attribution readable in both themes; colorbar ticks
-          small (7pt) but legible
+        comment: All text readable in both themes, font sizes set; labels at 8.5pt
+          get tight at ~400px mobile scale
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Hand-tuned label offsets; mild crowding in the Berkeley/Oakland/Walnut
-          Creek cluster and Palo Alto/Half Moon Bay pair but no true overlap
+        comment: Hand-tuned offsets prevent overlap; bottom-left Palo Alto/Half Moon
+          Bay callouts sit close
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers large and size-scaled; mid-temp light markers slightly low-contrast
-          on pale tiles
+        comment: Sparse 12 points, large markers with ring + white edge, clearly visible
+          on tiles
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Blue-red diverging is CVD-safer than red-green; no red-green sole
-          signal
+        comment: Blue-red diverging is CVD-safe with strong contrast via outlines
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exact 3200×1800, full-bleed map, nothing clipped, good proportions
+        comment: Exact 3200x1800, full-bleed map, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes off (map); colorbar labeled 'Temperature (°C)' with units; descriptive
-          title
+        comment: No traditional axes (map); title descriptive, colorbar labeled with
+          units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Continuous data uses imprint_div; chrome flips correctly; theme-adaptive
-          midpoint follows documented pattern
+        comment: Imprint diverging cmap; theme-adaptive chrome; tile basemap is inherent
+          spec context
     design_excellence:
       score: 15
       max: 20
@@ -116,21 +116,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Translucent panels, callout boxes, full-bleed theme-adaptive map
-          — well above generic
+        comment: Polished callout boxes, translucent colorbar panel, computed title
+          size
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Minimal chrome (axes off), subtle borders, generous whitespace
+        comment: Minimal chrome (axis off), subtle translucent panels, generous composition
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color+size encode the coast-to-inland temperature gradient; Livermore
-          is a clear focal point
+        comment: Coast-to-inland temperature gradient with color+size hierarchy; map
+          context dominates
     spec_compliance:
       score: 15
       max: 15
@@ -140,20 +140,20 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine tile-background map with real OSM tiles
+        comment: 'Correct: real tile-background map with layered data points'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Tile background, contrasting outlined markers, auto-fit to data bounds,
-          attribution all present
+        comment: Tiles, markers on top, contrast outline, attribution, auto-fit zoom,
+          value encoding all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: lat/lon projected correctly; value → color + size
+        comment: lat/lon projected correctly; value -> color + size
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -170,36 +170,35 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Tiles, markers, color + size encoding, labels, colorbar, attribution
+        comment: Tiles, points, value encoding, labels — all aspects shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Bay Area weather stations with plausible neutral temperatures
+        comment: Bay Area weather stations, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temps 15.4–26.2°C and real lat/lon for the metro area
+        comment: Temps 15-26 C and accurate coordinates
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Two tiny gx/gy projection helpers depart slightly from no-functions
-          preference
+        comment: Flat, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42); data hardcoded/deterministic
+        comment: Seeded; deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -211,15 +210,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clear, well-commented; no fake UI
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png with facecolor; no bbox_inches='tight'
+        comment: Saves plot-{THEME}.png correctly
     library_features:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -227,15 +226,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: sns.scatterplot with hue/size/palette/hue_norm/sizes and set_theme
-          — idiomatic
+        comment: sns.scatterplot with hue/size/palette/hue_norm idiomatic; bulk is
+          matplotlib
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Uses seaborn's combined hue+size mapping, but tiles/projection/colorbar
-          are matplotlib/PIL
+        comment: Mostly matplotlib composition; seaborn only draws the scatter layer
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -245,12 +243,10 @@ impl_tags:
   - annotations
   - inset-axes
   patterns:
-  - data-generation
   - explicit-figure
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
-  - minimal-chrome
   - custom-colormap
+  - minimal-chrome
   - alpha-blending
   - edge-highlighting
