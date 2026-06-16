@@ -1,0 +1,253 @@
+library: highcharts
+language: javascript
+specification_id: psychrometric-basic
+created: '2026-06-16T23:16:01Z'
+updated: '2026-06-16T23:31:45Z'
+generated_by: claude-opus
+workflow_run: 27654015394
+issue: 4583
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/psychrometric-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/psychrometric-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/psychrometric-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/psychrometric-basic/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Comprehensive feature coverage: saturation curve (bold green hero), RH curves
+    10-100%, constant-enthalpy, wet-bulb, and specific-volume families all present,
+    plus a highlighted cooling-and-dehumidification process path with arrowhead and
+    a shaded comfort-zone polygon'
+  - Physically grounded data from ASHRAE RP-1485 saturation-pressure formula at sea-level
+    pressure (101.325 kPa) over -10 to 50 C, giving a realistic, neutral domain
+  - Direct on-chart labeling of every property family with PAGE_BG text-outline halos
+    so labels stay legible over crossing lines, exactly as the spec demands (not a
+    legend)
+  - 'Distinctive Highcharts mastery: chart.events.load uses this.renderer + axis.toPixels
+    to draw the comfort polygon, arrowhead, and rotated upper-left property key at
+    exact data coordinates'
+  - 'Strong theme adaptation: data colors identical across light/dark, chrome flips
+    correctly, backgrounds are warm off-white / near-black; line families separated
+    by color AND dash style (CVD-friendly)'
+  - Canvas exactly 3200x1800; title matches the mandated format
+  weaknesses:
+  - 'Duplicated header comment block: lines 1-4 (rewritten quality header) and lines
+    6-10 (original header) both ship, leaving a redundant ''anyplot.ai / psychrometric-basic
+    / Library:'' block. Harmless (all comments) but sloppy - collapse to one header
+    above the //# anyplot-orientation directive.'
+  - 'Information density hurts mobile (400px) readability: the many small 13px diagonal-line
+    labels and tick labels are illegible when scaled down, though the macro structure
+    (saturation curve, process path, comfort zone) stays clear. Inherent to psychrometric
+    charts but worth noting.'
+  - Minor label crowding where enthalpy/wet-bulb/specific-volume diagonals cross in
+    the mid-chart; halos keep them readable but a few endpoint labels sit close to
+    crossing lines.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (~#FAF8F1), correct - not pure white.
+      Chrome: title "psychrometric-basic · javascript · highcharts · anyplot.ai" and subtitle dark and readable; x-axis "Dry-bulb Temperature (°C)" bottom, y-axis "Humidity Ratio (g water / kg dry air)" on the right (opposite), all tick labels dark and crisp. Subtle grid.
+      Data: saturation curve bold green (#009E73 = palette[0], hero); RH curves blue; constant-enthalpy ochre dashed; wet-bulb cyan dotted; specific-volume rose long-dashed; red process path (State 1 -> State 2) with circular markers and arrowhead; lavender shaded comfort zone with "Comfort Zone" label. Upper-left rotated property-family key in matching colors.
+      Legibility verdict: PASS - all text readable at full size; halos keep direct labels clear over lines.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (~#1A1A17), correct - not pure black.
+      Chrome: title, subtitle, axis titles, and tick labels all light/readable against dark; no dark-on-dark failures. Grid subtle but visible.
+      Data: colors identical to light render (green saturation, blue RH, ochre enthalpy, cyan wet-bulb, rose specific volume, red process path, lavender comfort zone) - only chrome flipped. White State 1/State 2 and "Comfort Zone" labels readable. Rose "Specific volume (m³/kg)" key label verified readable on dark.
+      Legibility verdict: PASS - brand green and all property families visible; no dark-on-dark text.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Fonts explicitly set, readable in both themes; small 13px diagonal
+          labels suffer at 400px mobile scale
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Halos keep direct labels legible; minor crowding where diagonals
+          cross mid-chart
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line families separated by color, weight, and dash; saturation curve
+          prominent
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Families distinguished by dash style as well as color (CVD-safe)
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Exactly 3200x1800, nothing clipped, marginRight reserves space for
+          right y-axis and key
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes labeled with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Saturation = #009E73 palette[0]; Imprint palette; backgrounds theme-correct
+          in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Semantic color roles, custom SVG overlays, refined typography - well
+          above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, intentional dash styles, label halos, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Red process path and shaded comfort zone create a clear focal point
+          and narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct psychrometric chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Saturation, RH, wet-bulb, enthalpy, specific volume, process path
+          with arrow, comfort zone, direct labels - all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Dry-bulb x, humidity ratio y, full -10..50 C range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend disabled in favor of mandated direct
+          labeling
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All aspects of a psychrometric chart shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: ASHRAE formulas at sea-level pressure; neutral, plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: -10..50 C, 0..30 g/kg sensible for HVAC
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper functions used, but genuinely needed for psychrometric math
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic computed data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses Highcharts global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and well-commented; no fake UI. Duplicated header block is
+          a minor blemish
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness owns output; current Highcharts.chart API
+    library_features:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic spline/line series, plotOptions, per-point dataLabels
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: chart.events.load + this.renderer + axis.toPixels for data-coordinate
+          SVG overlays
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - direct-labeling
+  - custom-svg-overlay
+  - annotations
+  - dashed-lines
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - psychrometric-equations
+  styling:
+  - publication-ready
+  - theme-adaptive
