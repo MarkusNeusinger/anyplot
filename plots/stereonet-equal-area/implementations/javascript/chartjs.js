@@ -1,7 +1,7 @@
 // anyplot.ai
 // stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-06-16
+// Library: chartjs 4.4.7 | JavaScript 22.22.3
+// Quality: 87/100 | Created: 2026-06-16
 //# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
