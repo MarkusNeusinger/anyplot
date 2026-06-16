@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pp-basic: Probability-Probability (P-P) Plot
 Library: matplotlib 3.11.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-16
@@ -62,13 +62,35 @@ ax.plot([0, 1], [0, 1], color=INK, linewidth=1.6, linestyle="--", zorder=1, labe
 ax.scatter(
     theoretical_cdf,
     empirical_cdf,
-    s=90,
+    s=60,
     color=BRAND,
     alpha=0.8,
     edgecolors=PAGE_BG,
     linewidth=0.6,
     zorder=3,
     label="Sample (n=200)",
+)
+
+# Call out the S-shape: the secondary-supplier batch lifts the upper tail
+# above the diagonal. Annotate the point of largest positive departure.
+departure = empirical_cdf - theoretical_cdf
+tail_idx = int(np.argmax(departure))
+ax.annotate(
+    "heavier upper tail",
+    xy=(theoretical_cdf[tail_idx], empirical_cdf[tail_idx]),
+    xytext=(0.34, 0.84),
+    fontsize=8,
+    color=INK_SOFT,
+    ha="left",
+    va="center",
+    zorder=4,
+    arrowprops={
+        "arrowstyle": "->",
+        "color": INK_SOFT,
+        "linewidth": 0.9,
+        "alpha": 0.85,
+        "connectionstyle": "arc3,rad=-0.2",
+    },
 )
 
 # Style
