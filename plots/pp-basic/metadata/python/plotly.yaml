@@ -1,107 +1,137 @@
 library: plotly
+language: python
 specification_id: pp-basic
 created: '2026-03-15T20:17:31Z'
-updated: '2026-03-15T20:48:49Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23118400182
+updated: '2026-06-16T19:33:08Z'
+generated_by: claude-opus
+workflow_run: 27641816455
 issue: 4587
-python_version: 3.14.3
-library_version: 6.6.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/pp-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/pp-basic/plotly/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.8.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pp-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pp-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pp-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pp-basic/python/plotly/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent data storytelling with two-class marker differentiation and contextual
-    annotation
-  - 95% KS confidence band adds statistical rigor and visual sophistication
-  - Clean professional blue/orange palette with good colorblind accessibility
-  - Rich interactive hover tooltips via customdata/hovertemplate
-  - Perfect spec compliance with all requirements met including square aspect ratio
+  - 'Correct P-P plot: empirical CDF (i/(n+1)) vs fitted-normal theoretical CDF, both
+    axes pinned to [0,1] with an enforced square aspect ratio (scaleanchor) preserving
+    the diagonal''s meaning.'
+  - 'Strong data storytelling: heavier-right-tail points highlighted as red #AE3030
+    diamonds, a 45-degree neutral reference line, a 95% KS confidence band, and an
+    annotation explaining the detected process drift.'
+  - 'Perfect Imprint palette + theme chrome: brand green #009E73 for in-range points,
+    semantic matte-red #AE3030 for deviations, theme-adaptive neutral reference line
+    and muted band; both #FAF8F1 (light) and #1A1A17 (dark) renders are correct with
+    all text legible.'
+  - Redundant encoding (circle vs diamond, size, color) makes the two series CVD-safe
+    beyond hue alone.
+  - 'Idiomatic plotly with distinctive features: fill=''toself'' confidence band,
+    hovertemplate + customdata tooltips, and HTML export alongside the PNG.'
+  - 'Clean KISS code: linear imports->data->plot->save flow, np.random.seed(42), only
+    used imports, correct write_image at 600x600xscale4 = 2400x2400 square.'
   weaknesses:
-  - Lower-left markers somewhat densely packed at this marker size
-  - Could push visual refinement further with more typographic hierarchy
-  image_description: The plot displays a P-P (Probability-Probability) plot on a square
-    canvas with both axes ranging from 0 to 1. The x-axis is labeled "Theoretical
-    CDF (Normal)" and the y-axis "Empirical CDF". A dashed blue diagonal reference
-    line runs from (0,0) to (1,1) representing perfect normal fit, surrounded by a
-    light blue semi-transparent 95% KS confidence band. Blue circular markers show
-    data points "Within expected range", while orange diamond markers highlight "Tail
-    deviation" points that deviate significantly from the diagonal. An annotation
-    box with an orange border and arrow points to the upper-right region reading "Heavier
-    right tail → process drift detected". The legend is positioned in the upper-left
-    corner with four entries. The title reads "pp-basic · plotly · pyplots.ai". The
-    overall color scheme is blue (#306998) and orange (#E8833A) on a clean white background
-    with no grid lines.
+  - 'PIPELINE NOTE (not an implementation defect): the plot_images/plot-light.png
+    and plot-dark.png present at review time were STALE from attempt 1 (red diamonds
+    scattered across x=0.2-0.7, contradicting the annotation). The current committed
+    code confines deviant points to theoretical_cdf>0.8; I regenerated both renders
+    from the current code to review the true output. Ensure impl-merge regenerates
+    the published artifacts from the current code.'
+  - Within-range markers are on the small side (marker size 6.5 for 200 points) —
+    they read as a dense ribbon rather than distinct points. Slightly larger markers
+    (~8-9) would improve individual-point visibility without overplotting.
+  - Design polish is good but not yet publication-exceptional; DE-01/DE-02 could rise
+    with subtler band styling or a touch more typographic hierarchy.
+  image_description: |-
+    NOTE: plot_images/plot-light.png and plot-dark.png were stale (attempt-1 output: red diamonds scattered across the body x=0.2-0.7, inconsistent with the "Heavier right tail" annotation). Verified by running the current code: is_deviant points occur ONLY at theoretical_cdf in [0.83, 0.99]. Descriptions below are of FRESH renders regenerated from the current committed code (2400x2400 each).
+
+    Light render (plot-light.png):
+      Background: warm off-white ~#FAF8F1 (not pure white). Correct.
+      Chrome: title "pp-basic · python · plotly · anyplot.ai" in dark ink, centered, fully visible. X label "Theoretical CDF (Normal)", Y label "Empirical CDF", tick labels (0,0.2,...,1) all dark and readable. Legend box top-left with 4 entries readable. Annotation box (red border, light fill) top-right readable. All text readable.
+      Data: in-range points render in brand green #009E73 (circles); tail deviations in matte red #AE3030 (diamonds) confined to the right tail (x>0.8); dashed neutral 45-degree reference line; muted-grey 95% KS confidence band. First series is #009E73. Correct.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black ~#1A1A17 (not pure black). Correct.
+      Chrome: title, axis labels, ticks all light-colored and clearly readable; legend frame on elevated dark fill; annotation box on dark elevated fill with red border and light text. No dark-on-dark failures.
+      Data: identical data colors to light render (green #009E73 circles, red #AE3030 diamonds); only chrome flipped (reference line now light/white dashed, band darker grey). Data colors identical to light. Correct.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
-          18pt, legend 16pt, annotation 16pt'
+        comment: Fonts explicitly set (title 16, labels 12, ticks 10), readable in
+          both themes and at mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; legend, annotation, and axis labels clearly
-          separated
+        comment: Legend top-left and annotation top-right clear of data; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers visible with good opacity; lower-left region somewhat dense
-          but distinguishable
+        comment: Diamonds prominent; in-range markers (size 6.5, 200 pts) a touch
+          small, read as a ribbon
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/orange palette is colorblind-safe with excellent contrast
+        comment: Redundant shape+size+color encoding; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square aspect ratio 3600x3600px, plot fills canvas well with balanced
-          margins
+        comment: Square 2400x2400, balanced margins, good utilization; canvas gate
+          passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Theoretical CDF (Normal) and Empirical CDF'
+        comment: Descriptive CDF axes (dimensionless 0-1, no units needed)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint green first, semantic red anchor, neutral/muted chrome; both
+          backgrounds theme-correct
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Strong design with intentional blue/orange palette, confidence band
-          adds sophistication
+        comment: Thoughtful semantic color use, confidence band, annotation; above
+          configured-default
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid removed, outside ticks, subtle axis colors, clean whitespace
+        comment: No grid, L-frame, subtle band, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Clear focal point with deviation highlighting, annotation explains
-          insight, confidence band provides context
+        comment: Clear focal point on right-tail deviation via color/shape contrast
+          + annotation
     spec_compliance:
       score: 15
       max: 15
@@ -111,49 +141,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct P-P plot comparing empirical vs theoretical CDF
+        comment: Correct P-P plot, probabilities on both axes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: 0-1 axes, reference line, square ratio, plotting
-          position formula, fitted CDF'
+        comment: 45-deg line, square aspect, [0,1] axes, i/(n+1) ecdf, fitted-normal
+          theoretical CDF
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Theoretical CDF on x-axis, empirical on y-axis, full 0-1 range
+        comment: x=theoretical, y=empirical
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels descriptive and meaningful
+        comment: Title format exact; legend labels descriptive
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows good-fit and tail deviation regions, S-shaped deviation pattern
-          visible
+        comment: Shows the key deviation-from-diagonal feature via normal+exponential
+          mixture
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Process drift scenario is realistic quality control application
+        comment: Process-drift / QC scenario; plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 data points within spec range, sensible parameter values
+        comment: CDF values 0-1, sensible
     code_quality:
       score: 10
       max: 10
@@ -163,33 +193,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, computation, plotting, save'
+        comment: Linear, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: numpy, plotly.graph_objects, scipy.stats all used
+        comment: os, numpy, plotly.go, scipy.stats all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized; no fake functionality
+        comment: Appropriate complexity; hover is real plotly interactivity, not fake
+          UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png via write_image, also generates plot.html
-    library_mastery:
-      score: 7
+        comment: plot-{THEME}.png + .html, current API
+    library_features:
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -197,15 +228,13 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper go.Figure + add_trace pattern, customdata and hovertemplate
-          are advanced patterns
+        comment: Idiomatic go.Figure/add_trace/update_layout
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses customdata+hovertemplate, fill=toself for bands, HTML export
-          with CDN
+        comment: fill='toself' band, hovertemplate+customdata, HTML export
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -218,5 +247,5 @@ impl_tags:
   - data-generation
   dataprep: []
   styling:
+  - publication-ready
   - alpha-blending
-  - edge-highlighting
