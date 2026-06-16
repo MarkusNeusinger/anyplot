@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: sparkline-basic
 created: '2025-12-23T20:45:29Z'
-updated: '2026-06-16T19:34:21Z'
+updated: '2026-06-16T19:44:17Z'
 generated_by: claude-opus
 workflow_run: 27642428625
 issue: 1011
@@ -12,48 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sparkline
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/letsplot/plot-dark.html
-quality_score: 88
+quality_score: 93
 review:
   strengths:
-  - 'Genuine small-multiples KPI dashboard: six distinct trend shapes (rising users,
-    declining churn, volatile sessions) make every sparkline tell its own story.'
-  - Exceeds the spec's optional features cleanly - subtle area fill anchored to each
-    panel floor, plus semantic min (matte red), max (blue) and last-value (brand green)
-    highlight dots.
-  - 'Correct theme handling: warm off-white #FAF8F1 / warm near-black #1A1A17 backgrounds,
-    INK/INK_SOFT chrome tokens flip per theme while data colors stay identical.'
-  - 'First series is the mandated brand green #009E73; min/max use semantically appropriate
-    Imprint red/blue.'
-  - 'Idiomatic lets-plot: facet_wrap(ncol=3, scales=''free_y'') + theme_void() + layered
-    ribbon/line/point, with both PNG and interactive HTML exports.'
-  - 'Clean KISS code: no functions/classes, np.random.seed(42) for reproducibility,
-    all imports used, canvas exactly 3200x1800.'
+  - Small-multiples KPI dashboard is one of the spec's named applications, executed
+    cleanly with theme_void for pure sparkline chrome (no axes, ticks, or gridlines).
+  - 'Palette compliance is exact: brand green #009E73 line, semantic dots (matte red
+    #AE3030 = minimum, blue #4467A3 = maximum, green = latest), warm theme-adaptive
+    backgrounds — identical data colors across light and dark.'
+  - Distinct synthetic trend shape per metric (revenue, users, conversion, churn,
+    session, NPS) so each sparkline tells its own story; realistic and neutral KPI
+    context.
+  - 'All optional spec features present: min/max highlight dots, last-point reference
+    dot, subtle area fill anchored to each panel floor (alpha 0.10), and a thin 1.3
+    line for clarity at small size.'
+  - A single mapped geom_point layer drives a real legend key (minimum/maximum/latest),
+    an idiomatic lets-plot way to label the dots without a manual legend.
+  - 'Clean KISS code: seeded (np.random.seed(42)), no functions/classes, all imports
+    used, saves plot-{THEME}.png + .html.'
   weaknesses:
-  - The facet strip labels are wrapped in bordered rectangles (theme_void default
-    strip frame). For a 'pure minimalism' sparkline spec the box outlines read as
-    mild chartjunk - in dark mode the light box borders are slightly heavy. Consider
-    strip_background=element_blank() so only the label text remains.
-  - Each panel shows a faint dark horizontal baseline (the ribbon floor line) which
-    reads like an axis; the spec calls for 'no axes'. It works as the area baseline
-    but could be softened or dropped for a cleaner look.
-  - No legend/key explains that red=minimum, blue=maximum, green=last value. Min/max
-    highlighting is a sparkline convention, but a tiny caption or first-panel annotation
-    would remove ambiguity for new readers.
+  - 'Facet order is not honored: the code builds an ordered Categorical (Monthly Revenue
+    first) but facet_wrap renders the panels alphabetically (Active Users, Avg Session,
+    Churn Rate, ...). Cosmetic only, but the intended ordering is silently dropped
+    — consider a numeric prefix or accept alphabetical.'
+  - Six-panel small multiples gets tight at ~400 px mobile width; strip labels (13pt)
+    and the bottom legend (12pt) are borderline-small when the full canvas is scaled
+    down. Still readable, but the least-legible aspect.
+  - Design is restrained-but-conventional small multiples; storytelling relies on
+    the dots rather than any cross-panel emphasis or focal hierarchy.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1), correct - not pure white.
-      Chrome: centered title "sparkline-basic · python · letsplot · anyplot.ai" in dark ink, fully readable. Six facet strip labels (Active Users (K), Avg Session (min), Churn Rate (%), Conversion Rate (%), Monthly Revenue ($K), NPS Score) in dark-soft gray inside thin bordered boxes - all readable.
-      Data: brand green (#009E73) thin trend lines with a pale green area fill anchored to each panel's floor; matte-red dot marks each minimum, blue dot each maximum, green dot the last value. First series color is #009E73. PASS.
-      Legibility verdict: PASS - all title, strip-label and dot elements clearly visible against the light surface.
+      Background: warm off-white (#FAF8F1) across plot and all six facet panels — not pure white.
+      Chrome: centered title "sparkline-basic · python · letsplot · anyplot.ai" in dark ink, fully readable. Per-panel strip titles (Active Users (K), Avg Session (min), Churn Rate (%), Conversion Rate (%), Monthly Revenue ($K), NPS Score) in soft grey, readable. Bottom legend "minimum / maximum / latest" with colored swatches, readable. No axes/ticks/gridlines (sparkline by design).
+      Data: each panel a thin brand-green (#009E73) line with a faint green area fill; dots = red minimum (#AE3030), blue maximum (#4467A3), green latest (#009E73). First/only line series is #009E73. PASS.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17), correct - not pure black.
-      Chrome: same title in light ink (#F0EFE8), fully readable. Strip labels in light-soft gray (#B8B7B0) inside light-bordered boxes - readable, though the box outlines are a touch heavy on the dark surface. No dark-on-dark text failures.
-      Data: identical to light render - same brand-green lines, green area fill, and red/blue/green highlight dots in the same positions. Colors match the light render exactly; only chrome flipped. PASS.
-      Legibility verdict: PASS - all text readable against the dark surface, brand green still vivid.
+      Background: warm near-black (#1A1A17) across plot and panels — not pure black.
+      Chrome: title in light ink (#F0EFE8) readable; strip titles in light-grey (#B8B7B0) readable, no dark-on-dark; legend text light-grey readable. No dark-on-dark failures.
+      Data: identical colors to light render — green lines, faint green fill, red/blue/green dots. Only chrome (bg, text) flipped. PASS.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -61,49 +62,47 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 16pt and strip labels 13pt readable in both themes; could be
-          marginally larger but fine.
+        comment: Title 16pt, strip 13pt, legend 12pt readable in both themes; tight
+          at 400px mobile across 6 panels
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data across the six panels.
+        comment: No text/data collisions; legend clear of panels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Thin 1.3 lines + prominent 4.2 dots suit the sparse 45-point series.
+        comment: Thin 1.3 line + size 4.2 dots appropriate for sparse data
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint green/red/blue are CVD-safe with good contrast on both surfaces.
+        comment: Green/red/blue CVD-safe, semantic encoding
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Clean 3x2 grid at exact 3200x1800; minor deduction for heavy strip-label
-          box borders and the baseline rule.
+        comment: 3x2 grid, 3200x1800 exact, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes intentionally omitted (sparkline); strip labels carry units
-          (K, %, min, $K); title correct.
+        comment: No axes by design; strip titles carry units ($K, %, min)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Brand green first; semantic red/blue extremes; correct theme backgrounds;
-          both renders theme-correct.
+        comment: Brand green line, Imprint semantic dots, correct theme backgrounds,
+          both renders correct
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -111,22 +110,19 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Polished small-multiples KPI dashboard with area fill and semantic
-          dots - above defaults.
+        comment: Polished small multiples with subtle area fill and semantic dots
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: theme_void strips most chrome and whitespace is generous, but strip
-          boxes have borders and a baseline rule persists.
+        comment: theme_void, no strip background, generous margins, alpha 0.10 fill
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Distinct trend shapes plus min/max/last focal dots guide the eye;
-          lacks a key for the dot colors.
+        comment: Dots create focal points; distinct trend shapes per metric
     spec_compliance:
       score: 15
       max: 15
@@ -136,49 +132,47 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Sparklines as small multiples - exactly the spec.
+        comment: Correct minimalist sparklines, no chrome
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Thin clean line, no chrome, plus optional area fill and min/max/last
-          highlights.
+        comment: Min/max dots, last-point dot, area fill, thin line all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: day vs value with free_y so each panel shows its own shape.
+        comment: day->x, value->y, free_y per panel
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; no legend required for single-series
-          sparklines.
+        comment: Exact mandated title; legend labels match
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Trends, extremes and endpoints across six varied shapes.
+        comment: Trends + extremes + endpoints, full sparkline feature set
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible product KPIs over 45 days.
+        comment: Plausible neutral KPI metrics
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Revenue ~120K, users ~48K, conversion ~3%, NPS ~31 - all domain-sensible.
+        comment: 45 days, sensible per-metric ranges
     code_quality:
       score: 10
       max: 10
@@ -188,55 +182,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; single data-prep loop.
+        comment: No functions/classes, one prep loop
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Concise and readable; no fake UI.
+        comment: Well-commented, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png + plot-{THEME}.html; no bare plot.png.
+        comment: Saves plot-{THEME}.png + .html
     library_features:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Grammar of graphics, facet_wrap, layered geoms, theme_void
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: facet_wrap + theme_void + layered ribbon/line/point + ggsize - idiomatic
-          lets-plot.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: free_y small multiples and interactive HTML export leverage lets-plot
-          strengths.
+        comment: free_y facets, ggsize, HTML export, mapped legend via point layer
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - faceting
   - layer-composition
+  - custom-legend
   - html-export
   patterns:
   - data-generation
