@@ -1,10 +1,11 @@
-""" pyplots.ai
+"""anyplot.ai
 psychrometric-basic: Psychrometric Chart for HVAC
-Library: pygal 3.1.0 | Python 3.14.3
-Quality: 78/100 | Created: 2026-03-15
+Library: pygal | Python 3.13
+Quality: pending | Created: 2026-06-16
 """
 
 import math
+import os
 
 import cairosvg
 import numpy as np
@@ -12,177 +13,144 @@ import pygal
 from pygal.style import Style
 
 
-# Constants
-P_ATM = 101325.0  # Pa (standard atmosphere)
+# pygal stores its layout (margin_box + coordinate view) in transient state that
+# is discarded after render(); keeping it lets us place direct labels at exact
+# data coordinates instead of estimating the plot box.
+os.environ["PYGAL_KEEP_STATE"] = "1"
 
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-def sat_pressure(t_celsius):
-    """ASHRAE saturation vapor pressure (Pa) from dry-bulb temperature."""
-    tk = t_celsius + 273.15
-    if t_celsius >= 0:
-        ln_p = (
-            -5.8002206e3 / tk
-            + 1.3914993
-            - 4.8640239e-2 * tk
-            + 4.1764768e-5 * tk**2
-            - 1.4452093e-8 * tk**3
-            + 6.5459673 * math.log(tk)
-        )
-    else:
-        ln_p = (
-            -5.6745359e3 / tk
-            + 6.3925247
-            - 9.6778430e-3 * tk
-            + 6.2215701e-7 * tk**2
-            + 2.0747825e-9 * tk**3
-            - 9.4840240e-13 * tk**4
-            + 4.1635019 * math.log(tk)
-        )
-    return math.exp(ln_p)
+# Imprint palette — one hue family per psychrometric property type
+GREEN = "#009E73"  # comfort zone (good / comfort → green)
+BLUE = "#4467A3"  # relative-humidity curves (moisture / water → blue)
+CYAN = "#2ABCCD"  # wet-bulb temperature lines
+LAV = "#C475FD"  # specific-volume lines
+OCHRE = "#BD8233"  # enthalpy lines (energy → warm earth)
+RED = "#AE3030"  # HVAC process path (highlighted action)
 
+P_ATM = 101325.0  # Pa — standard sea-level atmosphere
 
-def humidity_ratio(t_celsius, rh):
-    """Humidity ratio (g/kg) from temperature and relative humidity (0-1)."""
-    pw = rh * sat_pressure(t_celsius)
-    return 0.62198 * pw / (P_ATM - pw) * 1000
+# Data — saturation vapour pressure grid (ASHRAE 2017), vectorised once
+t_grid = np.linspace(-15, 55, 1400)
+tk = t_grid + 273.15
+ln_pws = np.where(
+    t_grid >= 0,
+    -5.8002206e3 / tk
+    + 1.3914993
+    - 4.8640239e-2 * tk
+    + 4.1764768e-5 * tk**2
+    - 1.4452093e-8 * tk**3
+    + 6.5459673 * np.log(tk),
+    -5.6745359e3 / tk
+    + 6.3925247
+    - 9.6778430e-3 * tk
+    + 6.2215701e-7 * tk**2
+    + 2.0747825e-9 * tk**3
+    - 9.4840240e-13 * tk**4
+    + 4.1635019 * np.log(tk),
+)
+pws_grid = np.exp(ln_pws)
+wsat_grid = 0.62198 * pws_grid / (P_ATM - pws_grid) * 1000  # g/kg at saturation
 
-
-def specific_volume_w(t_celsius, sv_target):
-    """Solve analytically for humidity ratio (kg/kg) given temperature and target specific volume."""
-    tk = t_celsius + 273.15
-    return (sv_target * P_ATM / 1000 / (0.287042 * tk) - 1) / 1.6078
-
-
-# Data — precompute all psychrometric curves
-t_range = np.linspace(-10, 50, 250)
-pws_arr = np.array([sat_pressure(float(t)) for t in t_range])
-
+# Relative-humidity curves (10%–100%)
 rh_levels = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
+t_curve = np.linspace(-10, 50, 240)
+pws_curve = np.interp(t_curve, t_grid, pws_grid)
 rh_curves = {}
 for rh in rh_levels:
-    pts = []
-    for i, t in enumerate(t_range):
-        pw = rh * pws_arr[i]
-        w_gkg = 0.62198 * pw / (P_ATM - pw) * 1000
-        if 0 <= w_gkg <= 30:
-            pts.append((round(float(t), 2), round(w_gkg, 3)))
-    rh_curves[rh] = pts
+    pw = rh * pws_curve
+    w = 0.62198 * pw / (P_ATM - pw) * 1000
+    rh_curves[rh] = [(round(float(t), 2), round(float(wi), 3)) for t, wi in zip(t_curve, w, strict=True) if 0 <= wi <= 30]
 
-# Wet-bulb temperature lines (Stull 2011 approximation)
+# Constant wet-bulb lines (ASHRAE psychrometric energy balance, analytical)
 wb_temps = [0, 5, 10, 15, 20, 25, 30]
 wb_lines = {}
-for tw_target in wb_temps:
-    pts = []
-    for t in np.linspace(max(-10, tw_target), min(tw_target + 30, 50), 100):
-        t_f = float(t)
-        for rh_pct in np.linspace(1, 100, 500):
-            tw = (
-                t_f * math.atan(0.151977 * math.sqrt(rh_pct + 8.313659))
-                + math.atan(t_f + rh_pct)
-                - math.atan(rh_pct - 1.676331)
-                + 0.00391838 * rh_pct**1.5 * math.atan(0.023101 * rh_pct)
-                - 4.686035
-            )
-            if abs(tw - tw_target) < 0.25:
-                w_gkg = humidity_ratio(t_f, rh_pct / 100)
-                w_sat = humidity_ratio(t_f, 1.0)
-                if 0 <= w_gkg <= min(30, w_sat + 0.2):
-                    pts.append((round(t_f, 2), round(w_gkg, 3)))
-                break
-    if len(pts) > 2:
-        pts.sort(key=lambda p: p[0])
-        step = max(1, len(pts) // 30)
-        wb_lines[tw_target] = pts[::step]
+for tw in wb_temps:
+    pws_wb = float(np.interp(tw, t_grid, pws_grid))
+    w_swb = 0.62198 * pws_wb / (P_ATM - pws_wb)  # kg/kg at saturation
+    t_db = np.linspace(tw, 50, 120)
+    w = ((2501 - 2.326 * tw) * w_swb - 1.006 * (t_db - tw)) / (2501 + 1.86 * t_db - 4.186 * tw) * 1000
+    w_sat = np.interp(t_db, t_grid, wsat_grid)
+    wb_lines[tw] = [
+        (round(float(t), 2), round(float(wi), 3)) for t, wi, ws in zip(t_db, w, w_sat, strict=True) if 0 <= wi <= min(30, ws + 0.1)
+    ]
 
-# Specific volume lines — analytical solution
-sv_values = [0.80, 0.84, 0.88, 0.92, 0.96]
-sv_lines = {}
-for sv_target in sv_values:
-    pts = []
-    for t in np.linspace(-10, 50, 200):
-        t_f = float(t)
-        w_kgkg = specific_volume_w(t_f, sv_target)
-        w_gkg = w_kgkg * 1000
-        w_sat = humidity_ratio(t_f, 1.0)
-        if 0 <= w_gkg <= min(30, w_sat + 0.2):
-            pts.append((round(t_f, 2), round(w_gkg, 3)))
-    if len(pts) > 2:
-        pts.sort(key=lambda p: p[0])
-        step = max(1, len(pts) // 25)
-        sv_lines[sv_target] = pts[::step]
+# Constant enthalpy and specific-volume lines share the dry-bulb sweep
+t_line = np.linspace(-10, 50, 220)
+wsat_line = np.interp(t_line, t_grid, wsat_grid)
 
-# Enthalpy lines (h = 1.006*t + w*(2501 + 1.86*t), w in kg/kg)
 enthalpy_values = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 enthalpy_lines = {}
-for h_target in enthalpy_values:
-    pts = []
-    for t in np.linspace(-10, 50, 200):
-        t_f = float(t)
-        w_kgkg = (h_target - 1.006 * t_f) / (2501 + 1.86 * t_f)
-        w_gkg = w_kgkg * 1000
-        w_sat = humidity_ratio(t_f, 1.0)
-        if 0 <= w_gkg <= min(30, w_sat + 0.2):
-            pts.append((round(t_f, 2), round(w_gkg, 3)))
-    if len(pts) > 2:
-        pts.sort(key=lambda p: p[0])
-        step = max(1, len(pts) // 25)
-        enthalpy_lines[h_target] = pts[::step]
+for h in enthalpy_values:
+    w = (h - 1.006 * t_line) / (2501 + 1.86 * t_line) * 1000
+    enthalpy_lines[h] = [
+        (round(float(t), 2), round(float(wi), 3))
+        for t, wi, ws in zip(t_line, w, wsat_line, strict=True)
+        if 0 <= wi <= min(30, ws + 0.1)
+    ]
 
-# Comfort zone polygon (20-26°C, 30-60% RH)
-comfort_t = np.linspace(20, 26, 40)
-comfort_bottom = [humidity_ratio(float(t), 0.30) for t in comfort_t]
-comfort_top = [humidity_ratio(float(t), 0.60) for t in comfort_t]
-comfort_pts = [(round(float(t), 2), round(w, 3)) for t, w in zip(comfort_t, comfort_bottom, strict=True)] + [
-    (round(float(t), 2), round(w, 3)) for t, w in zip(reversed(comfort_t), reversed(comfort_top), strict=False)
-]
+sv_values = [0.80, 0.84, 0.88, 0.92, 0.96]
+sv_lines = {}
+for v in sv_values:
+    w = (v * P_ATM / 1000 / (0.287042 * (t_line + 273.15)) - 1) / 1.6078 * 1000
+    sv_lines[v] = [
+        (round(float(t), 2), round(float(wi), 3))
+        for t, wi, ws in zip(t_line, w, wsat_line, strict=True)
+        if 0 <= wi <= min(30, ws + 0.1)
+    ]
+
+# Comfort zone polygon (20–26 °C, 30–60% RH)
+ct = np.linspace(20, 26, 30)
+pws_c = np.interp(ct, t_grid, pws_grid)
+w_low = 0.62198 * (0.30 * pws_c) / (P_ATM - 0.30 * pws_c) * 1000
+w_high = 0.62198 * (0.60 * pws_c) / (P_ATM - 0.60 * pws_c) * 1000
+comfort_pts = [(round(float(t), 2), round(float(w), 3)) for t, w in zip(ct, w_low, strict=True)]
+comfort_pts += [(round(float(t), 2), round(float(w), 3)) for t, w in zip(ct[::-1], w_high[::-1], strict=True)]
 comfort_pts.append(comfort_pts[0])
 
-# HVAC process: cooling and dehumidification (35°C/60%RH → 24°C/50%RH)
-hvac_states = [(35.0, round(humidity_ratio(35, 0.60), 3)), (24.0, round(humidity_ratio(24, 0.50), 3))]
+# HVAC process path — cooling & dehumidification (35 °C/60% RH → 24 °C/50% RH)
+pa = 0.60 * float(np.interp(35.0, t_grid, pws_grid))
+pb = 0.50 * float(np.interp(24.0, t_grid, pws_grid))
+state_a = (35.0, round(0.62198 * pa / (P_ATM - pa) * 1000, 3))
+state_b = (24.0, round(0.62198 * pb / (P_ATM - pb) * 1000, 3))
 
-# Color palette — distinct families per property type
-blue_rh = ["#0d3b66", "#1a4d80", "#276099", "#3572b0", "#4384c4", "#5195d4", "#5fa5e0", "#6db5ea", "#7bc4f2", "#89d1f8"]
-orange_wb = "#d4792a"
-purple_sv = "#6a4c93"
-teal_enth = "#2a8a8a"
+# Style — palette assigned per series in add order (comfort first → brand green)
+palette = (GREEN,) + (BLUE,) * len(rh_levels) + (CYAN,) * len(wb_temps)
+palette += (LAV,) * len(sv_values) + (OCHRE,) * len(enthalpy_values) + (RED,)
 
-palette = tuple(blue_rh + [orange_wb] * 7 + [purple_sv] * 5 + [teal_enth] * 10 + ["#4caf6e", "#c62828"])
-
-# Style
 custom_style = Style(
-    background="#ffffff",
-    plot_background="#fafbfc",
-    foreground="#2d2d2d",
-    foreground_strong="#111111",
-    foreground_subtle="#e8ebef",
-    opacity=".85",
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK_SOFT,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    opacity="0.95",
     opacity_hover="1",
     colors=palette,
-    title_font_size=72,
-    label_font_size=42,
-    major_label_font_size=46,
-    legend_font_size=34,
-    value_font_size=34,
-    stroke_width=2.5,
-    title_font_family="Trebuchet MS, Helvetica Neue, sans-serif",
-    label_font_family="Trebuchet MS, Helvetica Neue, sans-serif",
-    major_label_font_family="Trebuchet MS, Helvetica Neue, sans-serif",
-    legend_font_family="Trebuchet MS, Helvetica Neue, sans-serif",
-    value_font_family="Trebuchet MS, Helvetica Neue, sans-serif",
-    tooltip_font_size=24,
-    tooltip_font_family="Trebuchet MS, Helvetica Neue, sans-serif",
-    transition="150ms ease-in",
-    value_colors=(),
-    guide_stroke_color="#eceef1",
-    major_guide_stroke_color="#dde1e6",
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    tooltip_font_size=30,
+    stroke_width=2.4,
+    font_family="Helvetica Neue, Helvetica, Arial, sans-serif",
+    guide_stroke_color=GRID,
+    major_guide_stroke_color=GRID,
 )
 
-# Chart — increased right margin to prevent label truncation
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
+    explicit_size=True,
     style=custom_style,
-    title="psychrometric-basic · pygal · pyplots.ai",
+    title="psychrometric-basic · python · pygal · anyplot.ai",
     x_title="Dry-Bulb Temperature (°C)",
     y_title="Humidity Ratio (g/kg)",
     show_legend=False,
@@ -192,195 +160,136 @@ chart = pygal.XY(
     show_y_guides=True,
     xrange=(-10, 50),
     range=(0, 30),
-    x_labels=list(range(-10, 55, 5)),
-    y_labels=list(range(0, 32, 2)),
-    x_labels_major_every=2,
-    y_labels_major_every=5,
-    show_minor_x_labels=True,
-    show_minor_y_labels=True,
+    x_labels=list(range(-10, 51, 5)),
+    y_labels=list(range(0, 31, 5)),
     print_values=False,
-    tooltip_border_radius=8,
-    tooltip_fancy_mode=True,
-    explicit_size=True,
-    spacing=25,
-    margin_bottom=60,
-    margin_top=70,
-    margin_left=80,
-    margin_right=180,
-    truncate_legend=-1,
-    js=[],
+    truncate_label=-1,
+    margin_top=30,
+    margin_bottom=20,
+    margin_left=30,
+    margin_right=40,
 )
 
-# RH curves — saturation (100%) thickest
-for rh in rh_levels:
-    rh_pct = int(rh * 100)
-    w = 5.5 if rh == 1.0 else max(2.2, 1.5 + rh * 2)
-    chart.add(f"{rh_pct}% RH", rh_curves[rh], show_dots=False, stroke_style={"width": w, "linecap": "round"})
+# Comfort zone first → brand green, and drawn beneath every property line
+chart.add("Comfort Zone", comfort_pts, show_dots=False, fill=True, stroke_style={"width": 2.4})
 
-# Wet-bulb lines — dashed orange
+# Relative-humidity curves — saturation (100%) thickest and most prominent
+for rh in rh_levels:
+    width = 6.0 if rh == 1.0 else 2.2
+    chart.add(
+        f"{int(rh * 100)}% RH",
+        rh_curves[rh],
+        show_dots=False,
+        stroke_style={"width": width, "linecap": "round", "linejoin": "round"},
+    )
+
+# Wet-bulb lines — dashed cyan
 for tw in wb_temps:
     chart.add(
         f"Tw={tw}°C",
-        wb_lines.get(tw, []),
+        wb_lines[tw],
         show_dots=False,
-        stroke_style={"width": 2.0, "dasharray": "12, 6", "linecap": "round"},
+        stroke_style={"width": 2.0, "dasharray": "12, 9", "linecap": "round"},
     )
 
-# Specific volume lines — dotted purple, increased width for visibility
-for sv in sv_values:
+# Specific-volume lines — dotted lavender
+for v in sv_values:
     chart.add(
-        f"v={sv} m\u00b3/kg",
-        sv_lines.get(sv, []),
+        f"v={v} m³/kg",
+        sv_lines[v],
         show_dots=False,
-        stroke_style={"width": 2.2, "dasharray": "4, 8", "linecap": "round"},
+        stroke_style={"width": 2.4, "dasharray": "2, 9", "linecap": "round"},
     )
 
-# Enthalpy lines — dash-dot teal
+# Enthalpy lines — dash-dot ochre
 for h in enthalpy_values:
     chart.add(
         f"h={h} kJ/kg",
-        enthalpy_lines.get(h, []),
+        enthalpy_lines[h],
         show_dots=False,
-        stroke_style={"width": 1.6, "dasharray": "14, 4, 4, 4", "linecap": "round"},
+        stroke_style={"width": 1.8, "dasharray": "16, 6, 3, 6", "linecap": "round"},
     )
 
-# Comfort zone — filled green
+# HVAC process path — bold red with state-point markers, on top
 chart.add(
-    "Comfort Zone (20\u201326\u00b0C, 30\u201360% RH)",
-    comfort_pts,
-    show_dots=False,
-    fill=True,
-    stroke_style={"width": 2.5, "linecap": "round"},
-)
-
-# HVAC process — bold red with dots at state points
-chart.add(
-    "Cooling & Dehumidification (A\u2192B)",
-    [
-        {"value": hvac_states[0], "label": "State A: 35\u00b0C, 60% RH"},
-        {"value": hvac_states[1], "label": "State B: 24\u00b0C, 50% RH"},
-    ],
+    "Cooling & Dehumidification",
+    [state_a, state_b],
     show_dots=True,
-    dots_size=14,
-    stroke_style={"width": 4.5, "linecap": "round"},
+    dots_size=13,
+    stroke_style={"width": 5.0, "linecap": "round"},
 )
 
-# Render SVG, then add direct labels via SVG text elements
-svg_content = chart.render(is_unicode=True)
+svg = chart.render(is_unicode=True)
 
-# Coordinate mapping for label placement
-plot_left = 80 + 120  # margin_left + y-axis labels space
-plot_right = 4800 - 180  # width - margin_right
-plot_top = 70 + 80  # margin_top + title space
-plot_bottom = 2700 - 60 - 80  # height - margin_bottom - x-axis space
+# Soften the comfort-zone fill so it tints rather than masks the RH curves. An inline
+# style attribute beats pygal's stylesheet fill-opacity; it targets the only filled
+# path (serie-0, the lone `line reactive` class without `nofill`).
+svg = svg.replace('class="line reactive"', 'class="line reactive" style="fill-opacity:0.16"', 1)
 
-x_min, x_max = -10, 50
-y_min, y_max = 0, 30
+# Direct labels — exact data→pixel mapping from pygal's own (linear) view transform
+ox, oy = chart.margin_box.left, chart.margin_box.top
+px_per_t = chart.view.x(1.0) - chart.view.x(0.0)
+px_per_w = chart.view.y(1.0) - chart.view.y(0.0)
+x_at_0 = ox + chart.view.x(0.0)
+y_at_0 = oy + chart.view.y(0.0)
 
+# Pixel coords for each property line, reused for placement and slope
+wb_px = {tw: [(x_at_0 + t * px_per_t, y_at_0 + w * px_per_w) for t, w in pts] for tw, pts in wb_lines.items()}
+en_px = {h: [(x_at_0 + t * px_per_t, y_at_0 + w * px_per_w) for t, w in pts] for h, pts in enthalpy_lines.items()}
+sv_px = {v: [(x_at_0 + t * px_per_t, y_at_0 + w * px_per_w) for t, w in pts] for v, pts in sv_lines.items()}
 
-def to_svg_x(val):
-    return plot_left + (val - x_min) / (x_max - x_min) * (plot_right - plot_left)
+labels = []
 
+# RH curve labels at staggered temperatures so they ride the curves without piling up
+rh_label_t = {1.0: 7, 0.8: 13, 0.6: 19, 0.4: 26, 0.2: 35}
+for rh, t_l in rh_label_t.items():
+    pws_l = float(np.interp(t_l, t_grid, pws_grid))
+    w_l = 0.62198 * (rh * pws_l) / (P_ATM - rh * pws_l) * 1000
+    sx = x_at_0 + t_l * px_per_t
+    sy = y_at_0 + w_l * px_per_w
+    labels.append((sx, sy - 14, f"{int(rh * 100)}%", BLUE, 36, "middle", 0))
 
-def to_svg_y(val):
-    return plot_bottom - (val - y_min) / (y_max - y_min) * (plot_bottom - plot_top)
+# Diagonal family labels — rotated to match each line's local slope
+diagonals = [
+    (wb_px, [5, 15, 25], 0.50, "Tw {k}°C", CYAN, 32),
+    (en_px, [20, 40, 60], 0.40, "h={k} kJ/kg", OCHRE, 32),
+    (sv_px, [0.84, 0.92], 0.66, "v={k} m³/kg", LAV, 30),
+]
+for line_px, keys, frac, template, color, size in diagonals:
+    for k in keys:
+        pts = line_px[k]
+        i = int(len(pts) * frac)
+        sx, sy = pts[i]
+        x0, y0 = pts[max(0, i - 4)]
+        x1, y1 = pts[min(len(pts) - 1, i + 4)]
+        ang = math.degrees(math.atan2(y1 - y0, x1 - x0))
+        labels.append((sx, sy - 12, template.format(k=k), color, size, "middle", ang))
 
+# Comfort zone, HVAC state points
+cz_pws = float(np.interp(23, t_grid, pws_grid))
+cz_w = 0.62198 * (0.45 * cz_pws) / (P_ATM - 0.45 * cz_pws) * 1000
+labels.append((x_at_0 + 23 * px_per_t, y_at_0 + cz_w * px_per_w, "Comfort Zone", GREEN, 36, "middle", 0))
 
-labels_svg = []
+ax, ay = x_at_0 + state_a[0] * px_per_t, y_at_0 + state_a[1] * px_per_w
+labels.append((ax + 24, ay - 16, "A · 35°C, 60% RH", RED, 34, "start", 0))
+bx, by = x_at_0 + state_b[0] * px_per_t, y_at_0 + state_b[1] * px_per_w
+labels.append((bx - 24, by - 18, "B · 24°C, 50% RH", RED, 34, "end", 0))
 
-# RH labels — positioned along curves where they're readable
-rh_label_temps = {1.0: 16, 0.9: 20, 0.8: 24, 0.7: 27, 0.6: 30, 0.5: 33, 0.4: 36, 0.3: 39, 0.2: 42, 0.1: 45}
-for rh in rh_levels:
-    rh_pct = int(rh * 100)
-    t_l = rh_label_temps[rh]
-    w_l = humidity_ratio(t_l, rh)
-    if 0 < w_l < 30:
-        sx, sy = to_svg_x(t_l), to_svg_y(w_l)
-        labels_svg.append(
-            f'<text x="{sx}" y="{sy - 10}" font-size="34" font-family="Trebuchet MS, sans-serif" '
-            f'fill="#0d3b66" font-weight="bold" text-anchor="middle">{rh_pct}%</text>'
-        )
+# A thin page-background halo (paint-order stroke) keeps labels legible over lines
+label_svg = []
+for sx, sy, text, fill, size, anchor, ang in labels:
+    transform = f' transform="rotate({ang:.1f},{sx:.1f},{sy:.1f})"' if abs(ang) > 0.5 else ""
+    label_svg.append(
+        f'<text x="{sx:.1f}" y="{sy:.1f}" font-size="{size}" '
+        f'font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-weight="bold" '
+        f'fill="{fill}" stroke="{PAGE_BG}" stroke-width="4" paint-order="stroke" '
+        f'text-anchor="{anchor}"{transform}>{text}</text>'
+    )
 
-# Wet-bulb labels — placed at 2/5 along line to separate from enthalpy labels
-for tw in wb_temps:
-    pts = wb_lines.get(tw, [])
-    if len(pts) > 4:
-        idx = 2 * len(pts) // 5  # place label at 2/5 of the line from left
-        p = pts[idx]
-        sx, sy = to_svg_x(p[0]), to_svg_y(p[1])
-        # Compute rotation angle from nearby points for alignment
-        p_prev = pts[max(0, idx - 1)]
-        p_next = pts[min(len(pts) - 1, idx + 1)]
-        dx = to_svg_x(p_next[0]) - to_svg_x(p_prev[0])
-        dy = to_svg_y(p_next[1]) - to_svg_y(p_prev[1])
-        angle = math.degrees(math.atan2(dy, dx))
-        labels_svg.append(
-            f'<text x="{sx}" y="{sy - 10}" font-size="30" font-family="Trebuchet MS, sans-serif" '
-            f'fill="{orange_wb}" font-weight="bold" text-anchor="middle" '
-            f'transform="rotate({angle:.1f},{sx},{sy - 10})">Tw {tw}\u00b0C</text>'
-        )
+svg = svg.replace("</svg>", "\n".join(label_svg) + "\n</svg>")
 
-# Specific volume labels — larger and placed at 1/3 position for visibility
-for sv in sv_values:
-    pts = sv_lines.get(sv, [])
-    if len(pts) > 4:
-        idx = len(pts) // 3
-        p = pts[idx]
-        sx, sy = to_svg_x(p[0]), to_svg_y(p[1])
-        p_prev = pts[max(0, idx - 1)]
-        p_next = pts[min(len(pts) - 1, idx + 1)]
-        dx = to_svg_x(p_next[0]) - to_svg_x(p_prev[0])
-        dy = to_svg_y(p_next[1]) - to_svg_y(p_prev[1])
-        angle = math.degrees(math.atan2(dy, dx))
-        labels_svg.append(
-            f'<text x="{sx}" y="{sy - 10}" font-size="32" font-family="Trebuchet MS, sans-serif" '
-            f'fill="{purple_sv}" font-weight="bold" text-anchor="middle" '
-            f'transform="rotate({angle:.1f},{sx},{sy - 10})">{sv} m\u00b3/kg</text>'
-        )
+# Save — theme-suffixed PNG (gallery) + interactive HTML (pygal is interactive)
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(svg)
 
-# Enthalpy labels — placed at 2/3 along line (separated from wet-bulb labels at 2/5)
-for h in [10, 30, 50, 70, 90]:
-    pts = enthalpy_lines.get(h, [])
-    if len(pts) > 4:
-        idx = 2 * len(pts) // 3
-        p = pts[idx]
-        sx, sy = to_svg_x(p[0]), to_svg_y(p[1])
-        p_prev = pts[max(0, idx - 1)]
-        p_next = pts[min(len(pts) - 1, idx + 1)]
-        dx = to_svg_x(p_next[0]) - to_svg_x(p_prev[0])
-        dy = to_svg_y(p_next[1]) - to_svg_y(p_prev[1])
-        angle = math.degrees(math.atan2(dy, dx))
-        labels_svg.append(
-            f'<text x="{sx}" y="{sy - 10}" font-size="30" font-family="Trebuchet MS, sans-serif" '
-            f'fill="{teal_enth}" font-weight="bold" text-anchor="middle" '
-            f'transform="rotate({angle:.1f},{sx},{sy - 10})">h={h} kJ/kg</text>'
-        )
-
-# Comfort zone label
-cz_x, cz_y = 23, humidity_ratio(23, 0.45)
-sx, sy = to_svg_x(cz_x), to_svg_y(cz_y)
-labels_svg.append(
-    f'<text x="{sx}" y="{sy}" font-size="38" font-family="Trebuchet MS, sans-serif" '
-    f'fill="#2e7d32" font-weight="bold" text-anchor="middle">Comfort Zone</text>'
-)
-
-# HVAC state point labels
-sx_a, sy_a = to_svg_x(hvac_states[0][0]), to_svg_y(hvac_states[0][1])
-labels_svg.append(
-    f'<text x="{sx_a + 20}" y="{sy_a - 20}" font-size="36" font-family="Trebuchet MS, sans-serif" '
-    f'fill="#c62828" font-weight="bold" text-anchor="start">A (35\u00b0C, 60%RH)</text>'
-)
-sx_b, sy_b = to_svg_x(hvac_states[1][0]), to_svg_y(hvac_states[1][1])
-labels_svg.append(
-    f'<text x="{sx_b - 20}" y="{sy_b - 20}" font-size="36" font-family="Trebuchet MS, sans-serif" '
-    f'fill="#c62828" font-weight="bold" text-anchor="end">B (24\u00b0C, 50%RH)</text>'
-)
-
-# Insert labels before closing </svg>
-label_block = "\n".join(labels_svg)
-svg_labeled = svg_content.replace("</svg>", f"{label_block}\n</svg>")
-
-with open("plot.html", "w") as f:
-    f.write(svg_labeled)
-
-cairosvg.svg2png(bytestring=svg_labeled.encode("utf-8"), write_to="plot.png")
+cairosvg.svg2png(bytestring=svg.encode("utf-8"), write_to=f"plot-{THEME}.png", output_width=3200, output_height=1800)
