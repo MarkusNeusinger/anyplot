@@ -186,7 +186,7 @@ for idx, ft in enumerate(["Bedding", "Joint", "Fault", "Foliation"]):
     ms = np.degrees(np.arctan2(np.sin(s_rad).mean(), np.cos(s_rad).mean())) % 360
     md = dips[mask].mean()
     # Smart label nudge: push outward from cluster centroid, away from cardinal labels
-    nudge_x, nudge_y = 0.0, -0.16
+    nudge_x, nudge_y = 0.0, -0.20
     for cx, cy, _ in cardinal_positions:
         dist = np.sqrt((mx - cx) ** 2 + (my - cy) ** 2)
         if dist < 0.45:
@@ -253,7 +253,7 @@ plot = (
         show_legend=False,
     )
     # Great circles
-    + geom_path(aes(x="x", y="y", group="group", color="feature_type"), data=gc_df, size=0.4, alpha=0.28)
+    + geom_path(aes(x="x", y="y", group="group", color="feature_type"), data=gc_df, size=0.35, alpha=0.18)
     # Confidence ellipses around each cluster
     + geom_polygon(
         aes(x="x", y="y", group="group", fill="feature_type"), data=ellipse_df, alpha=0.12, size=0, show_legend=False
@@ -284,7 +284,7 @@ plot = (
     + coord_fixed()
     + scale_x_continuous(limits=[-1.32, 1.32])
     + scale_y_continuous(limits=[-1.32, 1.32])
-    + labs(title="stereonet-equal-area · letsplot · pyplots.ai")
+    + labs(title="stereonet-equal-area · python · letsplot · anyplot.ai")
     + theme(
         plot_title=element_text(size=18, hjust=0.5, face="bold", color=INK, margin=[0, 0, 12, 0]),
         legend_title=element_text(size=14, face="bold", color=INK),
