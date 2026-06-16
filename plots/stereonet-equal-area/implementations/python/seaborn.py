@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)
-Library: seaborn 0.13.2 | Python 3.14.3
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-06-16
 """
 
 import os
