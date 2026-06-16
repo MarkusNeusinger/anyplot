@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bubble-packed: Basic Packed Bubble Chart
-Library: letsplot | Python 3.13
-Quality: pending | Created: 2026-06-16
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-06-16
 """
 
 import os
