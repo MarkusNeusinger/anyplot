@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 pp-basic: Probability-Probability (P-P) Plot
-Library: plotly | Imprint palette
+Library: plotly 6.8.0 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-06-16
 """
 
 import os
