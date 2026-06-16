@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 psychrometric-basic: Psychrometric Chart for HVAC
-Library: matplotlib | Python 3.13
-Quality: pending | Created: 2026-06-16
+Library: matplotlib 3.11.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-06-16
 """
 
 import os
