@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 pp-basic: Probability-Probability (P-P) Plot
-Library: plotnine 0.15.7 | Python 3.13.12
-Quality: 93/100 | Regenerated: 2026-06-16
+Library: plotnine 0.15.7 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-06-16
 """
 
 import os
