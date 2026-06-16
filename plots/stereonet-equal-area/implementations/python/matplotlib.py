@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)
 Library: matplotlib 3.11.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-16
@@ -50,7 +50,7 @@ feature_types = ["Bedding"] * 30 + ["Joint"] * 25 + ["Fault"] * 20
 # Visual hierarchy: Bedding is the primary focus (larger markers, bolder great circles)
 markers = {"Bedding": "o", "Joint": "s", "Fault": "^"}
 pole_sizes = {"Bedding": 130, "Joint": 85, "Fault": 85}
-gc_alpha = {"Bedding": 0.55, "Joint": 0.28, "Fault": 0.28}
+gc_alpha = {"Bedding": 0.55, "Joint": 0.38, "Fault": 0.38}
 gc_lw = {"Bedding": 1.6, "Joint": 0.9, "Fault": 0.9}
 
 # Pole orientations in equal-area (Schmidt) projection
