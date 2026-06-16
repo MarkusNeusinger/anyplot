@@ -1,77 +1,120 @@
-""" pyplots.ai
+""" anyplot.ai
 sparkline-basic: Basic Sparkline
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-23
+Library: plotly 6.8.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-06-16
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
 
-# Data - simulate daily sales trend over ~30 days
-np.random.seed(42)
-base = 100
-trend = np.linspace(0, 20, 30)  # Upward trend
-noise = np.random.randn(30) * 8
-values = base + trend + noise
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Create figure with minimal sparkline layout
+# Imprint palette
+BRAND = "#009E73"  # position 1 — the single data series (always first)
+PEAK = "#4467A3"  # position 3 — high / max marker
+TROUGH = "#AE3030"  # position 5 — semantic red for low / min marker
+AREA_FILL = "rgba(0,158,115,0.12)"  # brand green, soft area under the line
+
+# Data — inline daily stock closing prices (a classic sparkline use case)
+np.random.seed(42)
+n_days = 60
+daily_returns = np.random.randn(n_days) * 0.018
+prices = 180 * np.cumprod(1 + daily_returns)
+days = np.arange(n_days)
+
+min_idx = int(np.argmin(prices))
+max_idx = int(np.argmax(prices))
+
+# Plot — a single clean sparkline compressed into a wide, short band
 fig = go.Figure()
 
-# Main sparkline
+# Soft filled area beneath the line for the trend's shape
 fig.add_trace(
     go.Scatter(
-        x=list(range(len(values))), y=values, mode="lines", line={"color": "#306998", "width": 4}, hoverinfo="skip"
+        x=days,
+        y=prices,
+        mode="lines",
+        line={"color": BRAND, "width": 4, "shape": "spline", "smoothing": 0.6},
+        fill="tozeroy",
+        fillcolor=AREA_FILL,
+        hovertemplate="Day %{x}<br>$%{y:.2f}<extra></extra>",
+        name="Close",
     )
 )
 
-# Highlight min point (red dot)
-min_idx = int(np.argmin(values))
+# Min point (trough) — semantic red
 fig.add_trace(
     go.Scatter(
-        x=[min_idx], y=[values[min_idx]], mode="markers", marker={"color": "#E74C3C", "size": 16}, hoverinfo="skip"
-    )
-)
-
-# Highlight max point (green dot)
-max_idx = int(np.argmax(values))
-fig.add_trace(
-    go.Scatter(
-        x=[max_idx], y=[values[max_idx]], mode="markers", marker={"color": "#27AE60", "size": 16}, hoverinfo="skip"
-    )
-)
-
-# Highlight first and last points (Python Yellow)
-fig.add_trace(
-    go.Scatter(
-        x=[0, len(values) - 1],
-        y=[values[0], values[-1]],
+        x=[days[min_idx]],
+        y=[prices[min_idx]],
         mode="markers",
-        marker={"color": "#FFD43B", "size": 14},
-        hoverinfo="skip",
+        marker={"color": TROUGH, "size": 20, "line": {"color": PAGE_BG, "width": 3}},
+        hovertemplate="Low $%{y:.2f}<extra></extra>",
+        name="Low",
     )
 )
 
-# Sparkline layout - no axes, no labels, no gridlines
+# Max point (peak) — Imprint blue
+fig.add_trace(
+    go.Scatter(
+        x=[days[max_idx]],
+        y=[prices[max_idx]],
+        mode="markers",
+        marker={"color": PEAK, "size": 20, "line": {"color": PAGE_BG, "width": 3}},
+        hovertemplate="High $%{y:.2f}<extra></extra>",
+        name="High",
+    )
+)
+
+# Current (last) value — emphasized endpoint in brand green with a value label
+fig.add_trace(
+    go.Scatter(
+        x=[days[-1]],
+        y=[prices[-1]],
+        mode="markers+text",
+        marker={"color": BRAND, "size": 22, "line": {"color": PAGE_BG, "width": 3}},
+        text=[f"${prices[-1]:.0f}"],
+        textposition="top center",
+        textfont={"color": BRAND, "size": 18},
+        hovertemplate="Current $%{y:.2f}<extra></extra>",
+        name="Current",
+    )
+)
+
+# Style — pure sparkline: no axes, gridlines, ticks, or legend
+pad = (prices.max() - prices.min()) * 0.25
 fig.update_layout(
+    autosize=False,
     title={
-        "text": "sparkline-basic · plotly · pyplots.ai",
-        "font": {"size": 48},
+        "text": "sparkline-basic · python · plotly · anyplot.ai",
+        "font": {"size": 20, "color": INK},
         "x": 0.5,
         "xanchor": "center",
-        "y": 0.95,
+        "y": 0.9,
     },
     xaxis={"visible": False, "showgrid": False, "zeroline": False, "showticklabels": False},
-    yaxis={"visible": False, "showgrid": False, "zeroline": False, "showticklabels": False},
+    yaxis={
+        "visible": False,
+        "showgrid": False,
+        "zeroline": False,
+        "showticklabels": False,
+        "range": [prices.min() - pad, prices.max() + pad],
+        "domain": [0.36, 0.72],  # compress the line into a wide, short sparkline band
+    },
     showlegend=False,
-    template="plotly_white",
-    margin={"l": 100, "r": 100, "t": 200, "b": 100},
-    plot_bgcolor="rgba(0,0,0,0)",
-    paper_bgcolor="white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK_SOFT},
+    margin={"l": 70, "r": 70, "t": 120, "b": 70},
 )
 
-# Save PNG at 4800x2700 (sparkline uses full canvas but aspect ratio is wide)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-
-# Save interactive HTML
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save — hard target 3200 × 1800 (landscape)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
