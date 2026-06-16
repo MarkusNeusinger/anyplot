@@ -1,7 +1,7 @@
 // anyplot.ai
 // stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)
 // Library: highcharts 12.6.0 | JavaScript 22.22.3
-// Quality: 86/100 | Created: 2026-06-16
+// Quality: 88/100 | Created: 2026-06-16
 //# anyplot-orientation: square
 // anyplot.ai
 // stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)

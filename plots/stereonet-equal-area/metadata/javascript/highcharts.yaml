@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: stereonet-equal-area
 created: '2026-06-16T21:26:52Z'
-updated: '2026-06-16T21:30:59Z'
+updated: '2026-06-16T21:50:53Z'
 generated_by: claude-opus
 workflow_run: 27648828324
 issue: 4576
@@ -12,103 +12,102 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stereonet
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stereonet-equal-area/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/stereonet-equal-area/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stereonet-equal-area/javascript/highcharts/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - Genuine equal-area (Schmidt, lower-hemisphere) projection implemented from first
-    principles — poles and great circles are mathematically correct and stay within
-    the primitive circle.
-  - 'First series Bedding renders in brand green #009E73; Joint set #C475FD and Fault
-    #4467A3 follow Imprint canonical order, identical across light and dark renders.'
-  - 'Redundant encoding: each feature_type uses a distinct marker shape (circle /
-    triangle / diamond) in addition to color — CVD-safe.'
-  - Subtle gray net graticule and primitive circle sit beneath the data with 10-degree
-    perimeter tick marks and N/E/S/W cardinal labels, exactly as the spec requests.
-  - 'Clean theme-adaptive chrome: warm off-white #FAF8F1 / warm near-black #1A1A17
-    backgrounds, transparent chart, credits disabled, animation disabled.'
-  - 'Idiomatic Highcharts: linkedTo ties each great-circle line series to its pole
-    scatter series, zIndex layering, dataLabels for cardinal annotations.'
+  - Faithful Schmidt equal-area lower-hemisphere projection — equal-area radius r
+    = sqrt(2)*sin(rho/2) is correct, poles plotted at 90 degrees to each plane, great
+    circles swept in-plane.
+  - Genuine Kamb (1959) density contours computed via marching squares over an equal-area
+    grid — real statistical density analysis, not a decorative overlay.
+  - 'Correct Imprint palette: first series brand green #009E73, then lavender and
+    blue, with redundant marker shapes (circle/triangle/diamond) for CVD safety.'
+  - 'Both themes render correctly — data colors identical, only chrome flips; warm
+    off-white #FAF8F1 and warm near-black #1A1A17 backgrounds.'
+  - Square canvas yields a perfectly round net via symmetric plot-box margins; subtle
+    graticule, N/E/S/W cardinals, and perimeter tick marks every 10 degrees all present
+    per spec.
+  - Deterministic fixed-seed LCG + Box-Muller data generation; realistic structural-geology
+    values (bedding 24/118, joint set 74/212, fault 60/47).
   weaknesses:
-  - Kamb density contours over the pole data are missing — the spec Notes explicitly
-    require them to highlight preferred orientations. Pole clustering conveys this
-    visually, but the named feature is absent (drives SC-02 to 2/4). If core Highcharts
-    cannot draw contours (no heatmap/contour module loaded), approximate with concentric
-    tinted bands or a polygon hull around the densest pole cluster, or note the constraint.
-  - The bedding pole cluster is very dense and markers overlap heavily; the pageBg
-    edge stroke helps but individual poles are hard to separate in the cluster centre.
-    Slightly smaller radius or lower marker opacity in dense regions would read cleaner.
-  - Net graticule lines are quite faint on the dark render — verify the t.grid token
-    still reads as a visible-but-subtle line at mobile scale.
-  - Great circles use opacity 0.55 with lineWidth 1.6 — on the dark surface the bedding/fault
-    arcs are faint; a touch more lineWidth or opacity would strengthen the planar-feature
-    story.
+  - The ~23 great-circle arcs create visual clutter — they cross the pole clusters
+    and each other, slightly competing with the Kamb density story. Consider drawing
+    fewer representative great circles per feature (e.g. 3-4) or lowering their opacity
+    below 0.7.
+  - 'Duplicate header block at the top of the file: two ''// anyplot.ai'' header stanzas
+    are present (a header-rewrite artifact). The second stanza carries the required
+    License line; the first is stale (''Quality: 86/100''). Collapse to a single header
+    retaining the License line.'
+  - Kamb density contours use t.inkSoft, the same color as the primitive circle —
+    the contours can read ambiguously as structural chrome rather than data. A slightly
+    distinct subtle tone (or thinner weight) would separate density from the net frame.
+  - Several geometry helper functions (projLine, projVec, greatCircle, kambContours,
+    marching-squares table) deviate from strict KISS, though they are well justified
+    by the genuine complexity of the equal-area + density math.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1), correct — not pure white.
-      Chrome: title "stereonet-equal-area · javascript · highcharts · anyplot.ai" in dark ink, bold, fully visible at top. Subtitle "Lower-hemisphere Schmidt net — poles (points) and great circles (planes)" in soft ink. N/E/S/W cardinal labels dark and crisp just outside the primitive circle. 10-degree perimeter tick marks visible. Bottom legend: Bedding (green circle), Joint set (purple triangle), Fault (blue diamond) — all readable. No clipping at any edge.
-      Data: Bedding poles render in brand green #009E73 (clustered centre-left), Joint set poles in lavender #C475FD (clustered NE), Fault poles in blue #4467A3 (clustered SW); distinct marker shapes. Great circles in matching colors arc across the net. Subtle gray net graticule + primitive circle beneath the data.
-      Legibility verdict: PASS — all text clearly readable against the light background.
+      Background: warm off-white (~#FAF8F1), correct light surface.
+      Chrome: title "stereonet-equal-area · javascript · highcharts · anyplot.ai" in dark ink, fully readable; gray subtitle "Lower-hemisphere Schmidt net — poles, great circles & Kamb density contours" readable; N/E/S/W cardinal labels in dark ink just outside the primitive; perimeter tick marks every 10 degrees; bottom legend (Bedding / Joint set / Fault / Kamb density) readable. No light-on-light failures.
+      Data: brand green #009E73 Bedding poles (circle) clustered at net centre; lavender #C475FD Joint-set poles (triangle) upper-right; blue #4467A3 Fault poles (diamond) lower-left. Matching-color great-circle arcs sweep the net. Gray nested Kamb contours wrap each cluster. First series is #009E73 — confirmed.
+      Legibility verdict: PASS.
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17), correct — not pure black.
-      Chrome: title and subtitle in light ink, fully visible. N/E/S/W labels light and readable. Legend at bottom readable. No dark-on-dark text. No clipping.
-      Data: colors identical to light render — Bedding #009E73 green, Joint set #C475FD lavender, Fault #4467A3 blue; same marker shapes and positions. Only chrome flipped. Net graticule is faint but present.
-      Legibility verdict: PASS — all text readable; no dark-on-dark failures. Net grid lines are subtle (borderline faint) but data is clearly distinguishable.
+      Background: warm near-black (~#1A1A17), correct dark surface.
+      Chrome: title in light ink (~#F0EFE8) readable; subtitle, cardinals, tick marks, and legend all light-on-dark and readable. No dark-on-dark failures.
+      Data: identical hues to light render — green/lavender/blue poles in the same clusters, same great circles, same gray Kamb contours. Only chrome flipped. Brand green #009E73 clearly visible on the dark surface.
+      Legibility verdict: PASS.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 22px, subtitle/legend 14px, cardinals
-          16px); readable both themes.
+        comment: Title 22px, subtitle/legend 14px, cardinals 16px — all readable in
+          both themes.
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No text overlap; dense pole cluster is data density, mitigated by
-          edge strokes.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers radius 5.5 with pageBg edge stroke; great circles a touch
-          faint on dark.
+        comment: 'Minor: great-circle arcs cross pole clusters; dense clusters self-overlap
+          (expected for structural data, mitigated by edge strokes).'
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker radius 5 with theme-bg edge stroke; lines and contours visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint colors plus distinct marker shapes (redundant encoding).
+        comment: Green/lavender/blue + circle/triangle/diamond redundancy; CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas, round net well-centered, legend near plot, balanced
-          margins.
+        comment: Square 2400x2400, round net via symmetric margins, nothing clipped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes hidden (correct for stereonet); cardinal labels + subtitle provide
-          orientation.
+        comment: Cardinal directions + correct title; traditional axes N/A for a stereonet.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds
+        comment: 'First series #009E73, Imprint order, correct theme backgrounds in
           both renders.'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -116,23 +115,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom equal-area projection, graticule, distinct marker shapes —
-          well above defaults.
+        comment: Sophisticated custom projection, density contours, intentional marker
+          shapes.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Subtle net grid, primitive circle, tick marks; no chartjunk.
+        comment: Hidden axes, subtle graticule, generous margins; net slightly busy
+          with great circles.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Pole clustering reveals preferred orientations; three feature types
-          tell a structural story.
+        comment: Three colored clusters + density contours create clear focal points;
+          great circles add some competing noise.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -140,49 +140,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct equal-area lower-hemisphere stereonet.
+        comment: Correct equal-area lower-hemisphere Schmidt stereonet.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Kamb density contours (explicitly required in Notes) are missing.
+        passed: true
+        comment: Great circles, poles, Kamb contours, primitive, 10-deg ticks, N label,
+          legend, subtle grid all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Poles at 90deg to planes; great circles correctly projected.
+        comment: dip_direction/dip mapped; poles at 90 deg to plane; great circles
+          correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match feature_type.
+        comment: Title format correct; legend labels Bedding/Joint set/Fault/Kamb
+          density.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Poles + great circles + 3 feature types with distinct clusters; density-contour
-          aspect absent.
+        comment: Poles, great circles, density, three feature types — all stereonet
+          aspects shown.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Bedding / joint set / fault with realistic dip directions and dips
-          — neutral geology scenario.
+        comment: Plausible, neutral structural-geology orientations.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: dip 2-88deg, dip direction 0-360deg, plausible counts (46/34/17).
+        comment: Dip 0-90, azimuth 0-360, counts 46/34/17 — realistic.
     code_quality:
       score: 9
       max: 10
@@ -192,31 +194,33 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Helper functions used, but justified by genuine projection math.
+        comment: Several helper functions, justified by genuine projection/density
+          complexity.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG + Box-Muller, deterministic.
+        comment: Fixed-seed LCG + Box-Muller.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; uses Highcharts/ANYPLOT globals per contract.
+        comment: No imports; Highcharts global only.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI.
+        comment: Appropriate complexity, no fake UI; minor duplicate header stanza.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Transparent bg, animation:false; harness owns output.
+        comment: Highcharts.chart('container', ...), transparent bg, animation disabled;
+          harness writes outputs.
     library_features:
       score: 7
       max: 10
@@ -226,28 +230,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: scatter+line series, linkedTo, zIndex, dataLabels, plotOptions —
-          idiomatic.
+        comment: Idiomatic multi-series scatter/line, linkedTo legend grouping, zIndex
+          layering, per-point dataLabels.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: linkedTo coupling and hidden cartesian axes to host a custom projection.
-  verdict: REJECTED
+        comment: Builds a polar stereonet on a plain scatter chart (no polar module);
+          clever linkedTo + dataLabels cardinals.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
+  - polar-projection
   - annotations
-  - layer-composition
+  - custom-legend
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  - matrix-construction
+  dataprep:
+  - kde
+  - binning
   styling:
-  - minimal-chrome
-  - alpha-blending
-  - edge-highlighting
   - publication-ready
+  - minimal-chrome
+  - edge-highlighting
