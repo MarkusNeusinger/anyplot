@@ -1,0 +1,257 @@
+library: chartjs
+language: javascript
+specification_id: stereonet-equal-area
+created: '2026-06-16T21:38:03Z'
+updated: '2026-06-16T21:52:29Z'
+generated_by: claude-opus
+workflow_run: 27649257986
+issue: 4576
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stereonet-equal-area/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stereonet-equal-area/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/stereonet-equal-area/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stereonet-equal-area/javascript/chartjs/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Genuine lower-hemisphere equal-area (Schmidt) projection: poles plotted as the
+    plane normal (90deg to plane), great circles drawn for each plane, and a full
+    equatorial reference net every 10deg - mathematically correct, not faked.'
+  - Kamb density contours computed via marching-squares over a 64x64 sigma field highlight
+    the three preferred orientations exactly as the spec requests.
+  - 'Imprint palette used correctly: Bedding=#009E73 (brand, first series), Joint
+    set=#C475FD, Fault=#4467A3 in canonical order; data colors identical across light/dark,
+    only chrome flips.'
+  - 'Theme-adaptive chrome is clean in both renders - warm off-white #FAF8F1 / near-black
+    #1A1A17 surfaces, an elevated net card, readable title/subtitle/legend, and a
+    subtle grid that never competes with the data.'
+  - 'Strong visual hierarchy: faint feature-colored great circles (alpha 0.22) recede
+    so the solid poles and density contours stay the focal point; perimeter degree
+    ticks (major every 30deg) and a North arrow orient the reader.'
+  - Idiomatic Chart.js plugin (afterDatasetsDraw) plus generateLabels custom legend
+    - extends the library through its supported API rather than reaching for another
+    library.
+  weaknesses:
+  - Perimeter degree labels (15px) and the subtitle (14px) are on the small side and
+    would be hard to read when the PNG is scaled to ~400px mobile width - consider
+    bumping perimeter labels to ~17-18px.
+  - The faint great-circle bundle near the 120-150 perimeter is geologically inherent
+    (steeply dipping planes) but reads as slight clutter at the lower-right edge;
+    a touch lower alpha or thinner stroke there would tidy it.
+  - Implementation is a long custom-canvas plugin with several geometry helpers -
+    necessary for a stereonet, but it leans on raw canvas drawing rather than Chart.js's
+    own chart types (datasets is empty).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1) page surface with a slightly lighter elevated card (#FFFDF6) filling the net circle.
+      Chrome: title "stereonet-equal-area · javascript · chartjs · anyplot.ai" in dark ink, subtitle below it, perimeter degree labels (030..330) and "N" arrow in soft ink, bottom legend (Bedding / Joint set / Fault) - all clearly readable against the light surface.
+      Data: three pole clusters - green (#009E73) Bedding at center, lavender (#C475FD) Joint set upper-right, blue (#4467A3) Fault lower-left; faint feature-colored great circles; gray Kamb density contours ringing each cluster; subtle equal-area net grid. First series renders #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17) page surface with elevated near-black card (#242420) for the net.
+      Chrome: title, subtitle, degree labels, "N" arrow, and legend all in light ink - fully readable, no dark-on-dark failures.
+      Data: identical pole colors to the light render (green/lavender/blue), identical contours and net; only chrome flipped. Brand green stays visible.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Fonts explicitly set and readable in both themes; perimeter degree
+          labels (15px) and subtitle slightly small for ~400px mobile width
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data overlap; degree labels sit outside the primitive circle,
+          legend below
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Poles (5.5px, page-colored stroke) prominent for ~48 points; great
+          circles faint by design
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint hues plus spatial clustering; not hue-alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400, net fills canvas well, balanced margins, nothing
+          clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title + subtitle descriptive; perimeter degrees and N arrow serve
+          as the coordinate reference
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; canonical Imprint order; correct theme backgrounds;
+          data colors identical across themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom Schmidt net, elevated card, refined typography - clearly above
+          defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, no spines, generous whitespace; faint great-circle bundle
+          at lower-right slightly cluttered
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Density contours + focal poles vs receding great circles guide the
+          eye to preferred orientations
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct lower-hemisphere equal-area stereonet
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Great circles, poles, Kamb contours, primitive circle, 10deg ticks,
+          N label, feature colors+legend, subtle net - all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Equal-area projection correct; poles at 90deg to plane
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match feature types
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Three clusters with distinct orientations, scatter, and density variation
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Neutral field-campaign geology: bedding, joint set, fault'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Dip 0-90, azimuth 0-360, plausible orientations
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several geometry helpers + plugin object - warranted for a stereonet
+          but beyond strictly minimal
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses browser globals only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI; complexity appropriate to the projection math
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness emits plot-{theme}.png/html; animation:false set
+    library_features:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Chart.js plugin API (afterDatasetsDraw) + generateLabels custom
+          legend correctly
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom plugin + theme-token-driven legend distinctive, though core
+          is raw canvas drawing
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - annotations
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - matrix-construction
+  dataprep:
+  - kde
+  - binning
+  styling:
+  - publication-ready
+  - alpha-blending
+  - minimal-chrome
