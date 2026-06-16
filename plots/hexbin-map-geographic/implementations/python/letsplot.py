@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 hexbin-map-geographic: Hexagonal Binning Map
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-06-16
@@ -62,39 +62,111 @@ longitude = np.concatenate([manhattan_lon, midtown_lon, jfk_lon, lga_lon])
 
 df = pd.DataFrame({"lat": latitude, "lon": longitude})
 
-# Simplified basemap: NYC borough outlines for geographic context
+# Simplified basemap: faithful NYC borough outlines for geographic context.
+# Vertices trace the real coastlines of each borough (narrow Manhattan island,
+# Brooklyn's south/west waterfront, Queens' large NE landmass) so the clusters
+# sit plausibly inside their nominal borough.
+manhattan_lon_outline = [
+    -74.015,
+    -74.013,
+    -74.009,
+    -73.993,
+    -73.972,
+    -73.948,
+    -73.934,
+    -73.910,
+    -73.920,
+    -73.929,
+    -73.937,
+    -73.958,
+    -73.971,
+    -73.973,
+    -73.978,
+    -74.000,
+    -74.015,
+]
+manhattan_lat_outline = [
+    40.701,
+    40.731,
+    40.756,
+    40.782,
+    40.800,
+    40.829,
+    40.850,
+    40.872,
+    40.866,
+    40.834,
+    40.806,
+    40.776,
+    40.752,
+    40.733,
+    40.711,
+    40.703,
+    40.701,
+]
 manhattan_outline = pd.DataFrame(
     {
-        "lon": [-74.02, -73.97, -73.93, -73.91, -73.93, -73.97, -74.01, -74.02],
-        "lat": [40.70, 40.71, 40.78, 40.82, 40.88, 40.80, 40.73, 40.70],
-        "borough": ["Manhattan"] * 8,
-        "order": list(range(8)),
+        "lon": manhattan_lon_outline,
+        "lat": manhattan_lat_outline,
+        "borough": ["Manhattan"] * len(manhattan_lon_outline),
+        "order": list(range(len(manhattan_lon_outline))),
     }
 )
 
+brooklyn_lon_outline = [
+    -74.025,
+    -74.012,
+    -73.998,
+    -73.972,
+    -73.934,
+    -73.866,
+    -73.858,
+    -73.866,
+    -73.926,
+    -73.978,
+    -74.010,
+    -74.025,
+]
+brooklyn_lat_outline = [40.633, 40.640, 40.700, 40.704, 40.739, 40.694, 40.668, 40.629, 40.575, 40.574, 40.602, 40.633]
 brooklyn_outline = pd.DataFrame(
     {
-        "lon": [-74.04, -73.95, -73.85, -73.83, -73.86, -73.95, -74.03, -74.04],
-        "lat": [40.57, 40.57, 40.58, 40.64, 40.70, 40.70, 40.64, 40.57],
-        "borough": ["Brooklyn"] * 8,
-        "order": list(range(8)),
+        "lon": brooklyn_lon_outline,
+        "lat": brooklyn_lat_outline,
+        "borough": ["Brooklyn"] * len(brooklyn_lon_outline),
+        "order": list(range(len(brooklyn_lon_outline))),
     }
 )
 
+queens_lon_outline = [
+    -73.962,
+    -73.910,
+    -73.840,
+    -73.765,
+    -73.700,
+    -73.736,
+    -73.760,
+    -73.823,
+    -73.866,
+    -73.866,
+    -73.934,
+    -73.962,
+]
+queens_lat_outline = [40.741, 40.779, 40.792, 40.789, 40.745, 40.660, 40.605, 40.583, 40.629, 40.694, 40.739, 40.741]
 queens_outline = pd.DataFrame(
     {
-        "lon": [-73.96, -73.82, -73.70, -73.72, -73.76, -73.85, -73.93, -73.96],
-        "lat": [40.70, 40.60, 40.60, 40.73, 40.80, 40.81, 40.78, 40.70],
-        "borough": ["Queens"] * 8,
-        "order": list(range(8)),
+        "lon": queens_lon_outline,
+        "lat": queens_lat_outline,
+        "borough": ["Queens"] * len(queens_lon_outline),
+        "order": list(range(len(queens_lon_outline))),
     }
 )
 
 df_boroughs = pd.concat([manhattan_outline, brooklyn_outline, queens_outline], ignore_index=True)
 
-# Title — scale fontsize for length
+# Title — scale fontsize for length; kept compact so the full string (incl.
+# "anyplot.ai") sits inside the panel width and renders at uniform contrast.
 title = "NYC Taxi Pickups · hexbin-map-geographic · python · letsplot · anyplot.ai"
-title_size = max(11, round(16 * 67 / len(title)))
+title_size = max(11, round(13 * 60 / len(title)))
 
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
@@ -123,7 +195,7 @@ plot = (
     + geom_hex(
         aes(x="lon", y="lat"), data=df, bins=[40, 40], alpha=0.85, tooltips=layer_tooltips().line("Pickups|@..count..")
     )
-    + scale_fill_gradient(low="#009E73", high="#4467A3", name="Pickup\nCount")
+    + scale_fill_gradient(low="#009E73", high="#4467A3", name="Pickup\nCount", trans="log10")
     + labs(x="Longitude (°)", y="Latitude (°)", title=title)
     + coord_fixed(ratio=1.0, xlim=[-74.05, -73.68], ylim=[40.55, 40.90])
     + ggsize(800, 450)
