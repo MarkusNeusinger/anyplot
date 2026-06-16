@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 psychrometric-basic: Psychrometric Chart for HVAC
 Library: altair 6.2.1 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-06-16
+Quality: 86/100 | Updated: 2026-06-16
 """
 
 import os
