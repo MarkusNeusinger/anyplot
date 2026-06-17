@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bifurcation-basic: Bifurcation Diagram for Dynamical Systems
 Library: letsplot 4.10.1 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-17
@@ -43,6 +43,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID_COLOR = "rgba(26, 26, 23, 0.15)" if THEME == "light" else "rgba(240, 239, 232, 0.15)"
 
 # Imprint sequential colormap: brand green → blue (single-polarity continuous)
 IMPRINT_SEQ_LOW = "#009E73"
@@ -76,7 +77,11 @@ segments_df = pd.DataFrame({"r": bif_r, "ymin": [0.0] * 4, "ymax": [1.0] * 4})
 
 # Stagger labels at different y positions to avoid overlap
 labels_df = pd.DataFrame(
-    {"r": bif_r, "x": [0.93, 0.83, 0.73, 0.63], "label": ["Period-2", "Period-4", "Period-8", "Chaos"]}
+    {
+        "r": [3.0, 3.449, 3.58, 3.61],
+        "x": [0.93, 0.83, 0.73, 0.63],
+        "label": ["Period-2", "Period-4", "Period-8", "Chaos"],
+    }
 )
 
 # Feigenbaum constant annotation near onset of chaos
@@ -102,7 +107,7 @@ plot = (
     + geom_text(
         aes(x="r", y="x", label="label"),
         data=feigen_df,
-        size=3.5,
+        size=4.5,
         color=INK_MUTED,
         hjust=0,
         vjust=1,
@@ -128,8 +133,8 @@ plot = (
         axis_title=element_text(size=12, color=INK),
         plot_title=element_text(size=16, color=INK, face="bold"),
         plot_caption=element_text(size=9, color=INK_MUTED, face="italic"),
-        panel_grid_major_x=element_line(color=INK, size=0.2),
-        panel_grid_major_y=element_blank(),
+        panel_grid_major_x=element_line(color=GRID_COLOR, size=0.2),
+        panel_grid_major_y=element_line(color=GRID_COLOR, size=0.15),
         panel_grid_minor=element_blank(),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
