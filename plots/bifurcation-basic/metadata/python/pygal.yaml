@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: bifurcation-basic
 created: '2026-03-20T20:27:44Z'
-updated: '2026-06-17T05:21:32Z'
+updated: '2026-06-17T05:29:37Z'
 generated_by: claude-sonnet
 workflow_run: 27667234747
 issue: 4415
@@ -12,47 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bifurcati
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/python/pygal/plot-dark.html
-quality_score: 79
+quality_score: 82
 review:
   strengths:
-  - Correct bifurcation diagram with three dynamical regimes (stable, period-doubling,
-    chaotic) clearly distinguished by Imprint palette colors
-  - Variable-density sampling (more points in chaotic region) demonstrates scientific
-    understanding of the logistic map structure
-  - Dashed vertical lines at mathematically accurate bifurcation points (r≈3.0, 3.449,
-    3.544) guide the viewer through the period-doubling cascade
-  - Proper Imprint palette usage with full theme-adaptive chrome — backgrounds, text,
-    grid colors all adapt correctly between light and dark themes
-  - Per-point tooltip labels in the HTML output provide rich hover information (r
-    and x values) — a distinctive pygal interactive capability
-  - Correct transient discarding (200 iterations) and 100-iteration state sampling
-    per parameter value, matching spec requirements exactly
+  - 'Complete spec implementation — all required features present: period-doubling
+    cascade visible, bifurcation annotation lines at correct r values (3.0, 3.449,
+    3.544), density-appropriate opacity and dot size'
+  - Three dynamical regions cleanly color-coded with Imprint palette in canonical
+    order (green → lavender → blue); the 4th series uses muted semantic anchor for
+    the reference lines — correct
+  - Variable-density sampling allocates more points to richer structural regions (700
+    points in chaotic vs 250 in stable) — data visually tells the route-to-chaos story
+  - 'Full theme adaptation: light render has warm off-white #FAF8F1 background with
+    dark text; dark render has warm near-black #1A1A17 background with light text
+    — both pass legibility checks'
+  - KISS flat-script structure, seed set, all imports used, saves both PNG and HTML
+    as required for pygal
   weaknesses:
-  - 'Legend overlap: Four long-named series placed in one row (legend_at_bottom_columns=4)
-    at legend_font_size=44 causes severe text overlap, making the legend nearly unreadable
-    in both renders. Fix: reduce to legend_at_bottom_columns=2 (two rows of 2), or
-    shorten legend label strings, or reduce legend_font_size to ~28.'
-  - Design excellence is moderate — the chart is a well-configured library output
-    but lacks the visual polish to push past 4/8 for aesthetic sophistication. Reducing
-    spine/border visibility in pygal (if possible) or adding subtle refinement would
-    help.
-  - The CQ-01 KISS score is slightly reduced due to the moderate complexity of the
-    region-based sampling + downsampling logic, though this is partly justified by
-    the visualization type.
+  - X-axis tick labels for r=3.700 and r=3.800 overlap and run together (visible as
+    "3.7003.800" in both renders) — remove 3.700 or 3.800 from x_labels list, or reduce
+    minor tick density in the chaotic region
+  - Design Excellence is functional but not polished — consider removing or thinning
+    spines further and adding a subtle annotation or text callout near the first bifurcation
+    at r≈3.0 to create a visual focal point
+  - Legend label ranges show "r≈3.6–4.00" for the Chaotic Regime but the code uses
+    R_CHAOS=3.57 as the boundary — the label should read "r≈3.57–4.00" for accuracy
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "bifurcation-basic · python · pygal · anyplot.ai" is clearly readable in dark ink. Y-axis label "Steady-State Population (xₙ)" and X-axis label "Growth Rate Parameter (r)" are both legible. Tick labels (x: 2.500, 3.000, 3.200, 3.449, 3.544, 3.700, 3.800, 4.000; y: 0.0000–1.0000) are readable at canvas size.
-      Data: First series (Stable Fixed Point) renders in #009E73 brand green — a narrow horizontal band around x≈0.64, correct for period-1 attractor. Second series (Period-Doubling Cascade) in #C475FD lavender shows the characteristic pitchfork bifurcation structure. Third series (Chaotic Regime) in #4467A3 blue fills the right portion with the classic dense scatter. Three dashed vertical lines in INK_MUTED mark bifurcation points at r≈3.0, 3.449, 3.544.
-      Legend: PROBLEMATIC — four long-named legend entries in a single bottom row at font_size=44 causes severe overlap. Text from adjacent entries bleeds into each other, making the legend nearly unreadable.
-      Legibility verdict: FAIL (legend overlap renders legend unreadable; all other elements PASS)
+      Background: Warm off-white (#FAF8F1) — correct for light theme, not pure white
+      Chrome: Title "bifurcation-basic · python · pygal · anyplot.ai" clearly readable at top in dark ink. Y-axis label "Steady-State Population (xₙ)" and X-axis label "Growth Rate Parameter (r)" both readable. Tick labels visible at all positions, except r=3.700 and r=3.800 overlap and run together as "3.7003.800" — minor legibility defect in the right portion of the x-axis. Legend at bottom in 2 columns with all 4 series readable.
+      Data: First series (Stable Fixed Point) renders in #009E73 brand green — correct. Second series (Period-Doubling Cascade) in #C475FD lavender. Third series (Chaotic Regime) in #4467A3 blue. Dashed vertical annotation lines use INK_MUTED muted semantic anchor — appropriate for reference lines. Data opacity 0.55 creates density-shading effect; the bifurcation structure is clearly visible.
+      Legibility verdict: PASS (minor tick-label overlap at 3.700/3.800 noted)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
-      Chrome: Title, axis labels, and tick labels all use light ink (#F0EFE8 / #B8B7B0 range) — no dark-on-dark issues anywhere. All text clearly readable against the dark background.
-      Data: Colors are identical to the light render — green (#009E73), lavender (#C475FD), blue (#4467A3) — confirming only chrome (background, text) flips, not data colors. The chaotic region blue dots are slightly more visible against the dark background.
-      Legend: Same overlap problem as the light render — four items in one row are compressed and overlapping.
-      Legibility verdict: FAIL (legend overlap; all other elements PASS)
+      Background: Warm near-black (#1A1A17) — correct for dark theme, not pure black
+      Chrome: Title, axis labels, tick labels all rendered in light cream text — no dark-on-dark failures. Legend text clearly readable. Same tick overlap at 3.700/3.800 appears identically in dark render.
+      Data: Colors identical to light render — #009E73 green (Stable Fixed Point), #C475FD lavender (Period-Doubling Cascade), #4467A3 blue (Chaotic Regime). Dashed annotation lines remain visible. The bifurcation structure is equally clear.
+      Legibility verdict: PASS (same minor tick-label overlap noted; no dark-on-dark issues)
   criteria_checklist:
     visual_quality:
       score: 23
@@ -60,92 +56,87 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set (title=66, labels=56, ticks=44, legend=44).
-          Title, axis labels, tick labels all readable in both themes. Deduction:
-          legend_font_size=44 with four long labels in one row causes the legend text
-          to overlap, reducing its legibility.'
+        comment: Font sizes explicitly set (title=66, label=56, tick=44, legend=44).
+          All text readable in both themes. Minor tick overlap at 3.700/3.800 reduces
+          score slightly.
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Data area is clean with no overlapping elements. However, the legend
-          at bottom has four long-named series in a single row at 44pt — text from
-          adjacent entries overlaps severely, making the legend nearly unreadable.
-          Main chart content is readable.
+        passed: true
+        comment: X-axis tick labels 3.700 and 3.800 run together in both renders.
+          Main data and title text fully readable. Minor overlap only.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 'dots_size=1.2 with opacity=0.55 is appropriate for 50,000+ points.
-          All three dynamical regimes are clearly visible. Minor deduction: transition
-          zone between period-doubling and chaotic regions could have slightly better
-          density contrast.'
+        comment: dots_size=1.2 with opacity=0.55 appropriate for 100k+ point density.
+          Bifurcation structure clearly visible. Slight density in chaotic region
+          fine for this chart type.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green, lavender, blue are perceptually distinct with good CVD separation.
-          No red-green conflict.
+        comment: Imprint palette positions 1-3 used (green/lavender/blue). CVD-safe
+          combination. Alpha-blending aids discrimination in dense regions.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 'Canvas 3200x1800 with generous plot area. Good margins. Minor deduction:
-          legend overlap wastes some bottom space and reduces the effective use of
-          the legend area.'
+        comment: '3200x1800 landscape. Canvas gate passed. Balanced margins. Plot
+          fills good portion of canvas. Legend at bottom clean. Minor: tick overlap
+          area slightly awkward.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''Growth Rate Parameter (r)'', Y-axis: ''Steady-State Population
-          (xn)'' — both descriptive with mathematical notation.'
+        comment: 'X: ''Growth Rate Parameter (r)'' — descriptive with units. Y: ''Steady-State
+          Population (xₙ)'' — descriptive with units. Title format correct.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green). Multi-series follows Imprint
-          canonical order. Background #FAF8F1 (light) / #1A1A17 (dark). Text and chrome
-          adapt correctly between themes.'
+        comment: 'First series #009E73. Palette positions 1-3 in canonical order.
+          Dashed annotations use INK_MUTED muted anchor (correct semantic role). Backgrounds
+          #FAF8F1 (light) / #1A1A17 (dark). Data colors identical across themes.'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Well-configured library output. Three-color dynamical regime encoding
-          is thoughtful. Not exceptional — pygal's SVG rendering shows characteristic
-          frame/border that limits visual refinement options.
+        comment: Thoughtful region color-coding and dashed annotation lines elevate
+          above pure defaults. Variable-density sampling adds sophistication. Not
+          publication-ready but above average.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Grid lines shown subtly via INK_MUTED. Legend at bottom avoids blocking
-          data. However, full frame border is visible (pygal limitation), and the
-          legend overlap reduces the overall refinement impression.
+        comment: Dashed subtle guides (guide_stroke_dasharray), opacity on data points,
+          clean bottom legend. Pygal's SVG rendering limits spine removal. Some refinement
+          present.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Three-color encoding guides the viewer through the route to chaos.
-          Dashed vertical lines at bifurcation points (r≈3.0, 3.449, 3.544) explicitly
-          mark transitions. Variable-density sampling creates denser visual texture
-          in the chaotic region, reinforcing the narrative.
+        comment: Color progression (stable green → periodic lavender → chaotic blue)
+          tells the route-to-chaos story. Dashed bifurcation point lines guide the
+          eye to key transitions. Visual hierarchy present.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -153,32 +144,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bifurcation diagram using XY scatter with tiny points. Shows
-          logistic map route from stability to chaos.
+        comment: Correct bifurcation diagram using pygal.XY scatter. Logistic map
+          implemented correctly.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Small point size (1.2px), low alpha (0.55), full range 2.5-4.0, 200
-          transient iterations discarded, 100 state samples per r-value, dashed vertical
-          lines marking r≈3.0/3.449/3.544 as bifurcation points, variable-density
-          sampling in different regimes.
+        comment: 'All spec requirements met: small dots, low alpha, full period-doubling
+          cascade, bifurcation point labels, transient discarded (200 iterations),
+          r range 2.5-4.0, logistic map formula correct.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Growth Rate Parameter r (2.5-4.0), Y: Steady-State Population
-          x (0-1). Correct mapping.'
+        comment: r on X-axis, state values on Y-axis. Full ranges shown (2.5-4.0,
+          0.0-1.0).
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title 'bifurcation-basic · python · pygal · anyplot.ai' matches required
-          format exactly. Legend labels include region ranges but are overlapping
-          and hard to read — 1 point deducted.
+        comment: 'Title: ''bifurcation-basic · python · pygal · anyplot.ai'' — correct
+          format. Legend labels describe each dynamical region with r-range.'
     data_quality:
       score: 15
       max: 15
@@ -188,62 +177,59 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all three dynamical regimes: period-1 fixed point, period-doubling
-          cascade (period-2, 4, 8 visible), and full chaotic regime. Bifurcation points
-          marked.'
+        comment: 'Shows all aspects: stable fixed point, period-1/2/4 cascade, and
+          full chaotic regime. Complete route to chaos visible.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Logistic map is the canonical example in nonlinear dynamics and chaos
-          theory. Real scientific context, neutral topic.
+        comment: Logistic map is the canonical textbook example for chaos theory.
+          Scientific context, neutral, no controversial elements.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: r range 2.5-4.0 and x range 0-1 are mathematically correct for the
-          logistic map. Bifurcation points at r≈3.0, 3.449, 3.544 are accurate mathematical
-          values.
+        comment: r in [2.5, 4.0] and x in [0, 1] are mathematically correct for the
+          logistic map. Bifurcation points at correct r values.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Follows Imports → Data → Plot → Save pattern. Moderate complexity
-          from region-based sampling, downsampling, and annotation construction —
-          partially justified by the scientific nature of the visualization.
+        comment: 'Flat script: imports → constants → data generation → chart config
+          → render. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before data generation.
+        comment: np.random.seed(42) set at top.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pygal, pygal.style.Style — all imports are used.
+        comment: os, numpy, pygal, Style — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. No fake UI elements. Region-based data structure
-          is clear.
+        comment: Dict-based region tracking is clean. Downsampling logic is appropriate
+          for the density requirement. Per-point labels via dict format is correct
+          pygal API.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html — correct for pygal
-          as an interactive library.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current pygal API used.
     library_mastery:
       score: 7
       max: 10
@@ -253,24 +239,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses pygal.XY() with Style() theming, per-point dict format for tooltip
-          labels, js=[] to disable default JS, allow_interruptions=True for None-gap
-          handling, stroke_style dict for dashed lines — all idiomatic pygal patterns.
+        comment: Style object used correctly. XY chart type. Per-point dict format
+          with value+label keys. x_value_formatter, value_formatter, legend_at_bottom,
+          truncate_legend, js=[] all idiomatic.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Per-point {value, label} dict format for rich hover tooltips in HTML
-          output, dashed stroke_style via dict API, and generating interactive HTML
-          alongside PNG are distinctive pygal capabilities not available in static
-          libraries.
-  verdict: REJECTED
+        comment: Per-series stroke control (stroke=False vs True, custom stroke_style
+          with dasharray). allow_interruptions=True for annotation series with None
+          separators. Per-point tooltip metadata. HTML interactive output alongside
+          PNG. x_labels_major for major tick highlighting.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - html-export
   - manual-ticks
+  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
