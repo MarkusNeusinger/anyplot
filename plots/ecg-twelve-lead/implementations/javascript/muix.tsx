@@ -17,8 +17,11 @@ const isLight = window.ANYPLOT_THEME !== "dark";
 // series). ECG paper grid uses matte red (Imprint position 5) — the universally
 // recognised colour of clinical ECG paper — at theme-adaptive alpha.
 const TRACE = t.palette[0]; // #009E73 brand green
-const GRID_MINOR = isLight ? "rgba(174,48,48,0.16)" : "rgba(217,90,90,0.15)";
-const GRID_MAJOR = isLight ? "rgba(174,48,48,0.34)" : "rgba(217,90,90,0.32)";
+// Both themes derive from the same Imprint matte-red anchor (#AE3030 = rgba(174,48,48));
+// the dark theme simply raises the alpha so the grid stays visible on the near-black
+// surface, rather than introducing an off-palette brightened red.
+const GRID_MINOR = isLight ? "rgba(174,48,48,0.16)" : "rgba(174,48,48,0.40)";
+const GRID_MAJOR = isLight ? "rgba(174,48,48,0.34)" : "rgba(174,48,48,0.66)";
 
 // --- Synthetic ECG model (in-memory, deterministic) ------------------------
 // Normal sinus rhythm at 75 bpm. Each P-QRS-T complex is a sum of Gaussian
@@ -121,7 +124,7 @@ function LeadTrace(props) {
     <LineChart
       width={width}
       height={height}
-      margin={{ top: 16, right: 8, bottom: 8, left: 8 }}
+      margin={{ top: 24, right: 8, bottom: 8, left: 8 }}
       skipAnimation
       leftAxis={null}
       bottomAxis={null}
@@ -129,7 +132,7 @@ function LeadTrace(props) {
       yAxis={[{ min: Y_MIN, max: Y_MAX }]}
       series={[{ data: strip.ys, color: TRACE, showMark: false, curve: "linear" }]}
       sx={{
-        "& .MuiLineElement-root": { strokeWidth: 1.6, strokeLinejoin: "round" },
+        "& .MuiLineElement-root": { strokeWidth: 2.0, strokeLinejoin: "round" },
       }}
     />
   );
@@ -191,7 +194,7 @@ export default function Chart() {
         <span style={{ fontSize: 22, fontWeight: 700, color: t.ink }}>
           ecg-twelve-lead · javascript · muix · anyplot.ai
         </span>
-        <span style={{ fontSize: 14, color: t.inkSoft }}>
+        <span style={{ fontSize: 17, color: t.inkSoft }}>
           Normal sinus rhythm · 25 mm/s · 10 mm/mV · 1 mV calibration
         </span>
       </div>
@@ -231,14 +234,14 @@ export default function Chart() {
         <LineChart
           width={innerW}
           height={RHYTHM_H}
-          margin={{ top: 16, right: 8, bottom: 8, left: 8 }}
+          margin={{ top: 24, right: 8, bottom: 8, left: 8 }}
           skipAnimation
           leftAxis={null}
           bottomAxis={null}
           xAxis={[{ data: rhythm.xs, scaleType: "linear", min: 0, max: rhythm.xs[rhythm.xs.length - 1] }]}
           yAxis={[{ min: Y_MIN, max: Y_MAX }]}
           series={[{ data: rhythm.ys, color: TRACE, showMark: false, curve: "linear" }]}
-          sx={{ "& .MuiLineElement-root": { strokeWidth: 1.6, strokeLinejoin: "round" } }}
+          sx={{ "& .MuiLineElement-root": { strokeWidth: 2.0, strokeLinejoin: "round" } }}
         />
       </div>
     </div>
