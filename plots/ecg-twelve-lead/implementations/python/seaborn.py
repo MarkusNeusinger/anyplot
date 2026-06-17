@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ecg-twelve-lead: ECG/EKG 12-Lead Waveform Display
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-17
@@ -9,8 +9,9 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
+import pandas as pd
 import seaborn as sns
-from matplotlib.gridspec import GridSpec
+import seaborn.objects as so
 
 
 # Theme-adaptive chrome (Imprint)
@@ -40,7 +41,8 @@ sns.set_theme(
     },
 )
 
-# Data - synthetic normal sinus rhythm via a Gaussian P-QRS-T wave model
+# Data - synthetic normal sinus rhythm via a Gaussian P-QRS-T wave model, emitted
+# into one long-form (tidy) DataFrame so seaborn can facet the 12 leads natively.
 np.random.seed(42)
 sampling_rate = 1000
 duration = 2.5
@@ -83,6 +85,7 @@ def style_ecg_grid(ax, xmax, x_major, x_minor):
     """Render an axis as standard ECG paper: major/minor red grid, no ticks, framed."""
     ax.set_xlim(0, xmax)
     ax.set_ylim(-1.8, 2.0)
+    ax.set_title("")
     ax.xaxis.set_major_locator(ticker.MultipleLocator(x_major))
     ax.xaxis.set_minor_locator(ticker.MultipleLocator(x_minor))
     ax.yaxis.set_major_locator(ticker.MultipleLocator(0.5))
@@ -101,29 +104,43 @@ def style_ecg_grid(ax, xmax, x_major, x_minor):
         spine.set_linewidth(0.6)
 
 
-# Plot - clinical 3x4 grid + full-length rhythm strip on an exact 3200x1800 canvas
+# Clinical 3x4 lead order + a full-length Lead II rhythm strip below.
 lead_order = ["I", "aVR", "V1", "V4", "II", "aVL", "V2", "V5", "III", "aVF", "V3", "V6"]
+leads_df = pd.concat(
+    [pd.DataFrame({"time": time, "voltage": synth_ecg(time, lead_configs[lead]), "lead": lead}) for lead in lead_order],
+    ignore_index=True,
+)
+leads_df["lead"] = pd.Categorical(leads_df["lead"], categories=lead_order, ordered=True)
 
+rhythm_duration = duration * 4
+rhythm_time = np.linspace(0, rhythm_duration, int(sampling_rate * rhythm_duration))
+rhythm_df = pd.DataFrame({"time": rhythm_time, "voltage": synth_ecg(rhythm_time, lead_configs["II"])})
+
+# Plot - exact 3200x1800 canvas; an outer gridspec carves a 3x4 facet block and a
+# full-width rhythm strip into two subfigures, each drawn by the seaborn objects API.
 fig = plt.figure(figsize=(8, 4.5), dpi=400)
-gs = GridSpec(
-    4,
-    4,
-    figure=fig,
-    height_ratios=[1, 1, 1, 0.95],
-    left=0.025,
-    right=0.99,
-    top=0.90,
-    bottom=0.065,
-    hspace=0.16,
-    wspace=0.05,
+fig.set_facecolor(PAGE_BG)
+outer = fig.add_gridspec(2, 1, height_ratios=[3.05, 1.0], left=0.025, right=0.99, top=0.905, bottom=0.06, hspace=0.10)
+sf_leads = fig.add_subfigure(outer[0])
+sf_rhythm = fig.add_subfigure(outer[1])
+sf_leads.set_facecolor(PAGE_BG)
+sf_rhythm.set_facecolor(PAGE_BG)
+
+# 12 leads as a native seaborn facet grid via the objects interface.
+(
+    so.Plot(leads_df, x="time", y="voltage")
+    .facet(col="lead", order=lead_order, wrap=4)
+    .add(so.Line(color=BRAND, linewidth=0.9))
+    .limit(x=(0, duration), y=(-1.8, 2.0))
+    .label(x="", y="", title="")
+    .share(x=True, y=True)
+    .on(sf_leads)
+    .plot()
 )
 
 label_bbox = {"boxstyle": "square,pad=0.18", "facecolor": PAGE_BG, "edgecolor": "none", "alpha": 0.75}
-
-for idx, lead in enumerate(lead_order):
-    row, col = divmod(idx, 4)
-    ax = fig.add_subplot(gs[row, col])
-    sns.lineplot(x=time, y=synth_ecg(time, lead_configs[lead]), ax=ax, color=BRAND, linewidth=0.9)
+sf_leads.subplots_adjust(wspace=0.05, hspace=0.16)
+for ax, lead in zip(sf_leads.axes, lead_order, strict=True):
     style_ecg_grid(ax, duration, 0.2, 0.04)
     ax.text(
         0.03,
@@ -138,23 +155,24 @@ for idx, lead in enumerate(lead_order):
         bbox=label_bbox,
     )
 
-    # 1 mV calibration pulse in the first panel, parked low-left clear of the trace
-    if idx == 0:
-        cal_x0, cal_w = 0.04, 0.10
-        ax.plot(
-            [cal_x0, cal_x0, cal_x0 + cal_w, cal_x0 + cal_w],
-            [-1.45, -0.45, -0.45, -1.45],
-            color=INK,
-            linewidth=1.2,
-            zorder=8,
-        )
-        ax.text(cal_x0 + cal_w + 0.04, -0.95, "1 mV", fontsize=7.5, ha="left", va="center", color=INK_SOFT)
+# 1 mV calibration pulse in the first panel, parked low-left clear of the trace.
+cal_ax = sf_leads.axes[0]
+cal_x0, cal_w = 0.04, 0.10
+cal_ax.plot(
+    [cal_x0, cal_x0, cal_x0 + cal_w, cal_x0 + cal_w], [-1.45, -0.45, -0.45, -1.45], color=INK, linewidth=1.2, zorder=8
+)
+cal_ax.text(cal_x0 + cal_w + 0.10, -1.30, "1 mV", fontsize=7.5, ha="left", va="center", color=INK_SOFT)
 
-# Rhythm strip - Lead II running 10 s across the full width
-ax_rhythm = fig.add_subplot(gs[3, :])
-rhythm_duration = duration * 4
-rhythm_time = np.linspace(0, rhythm_duration, int(sampling_rate * rhythm_duration))
-sns.lineplot(x=rhythm_time, y=synth_ecg(rhythm_time, lead_configs["II"]), ax=ax_rhythm, color=BRAND, linewidth=0.8)
+# Rhythm strip - Lead II running across the full width, also drawn by the objects API.
+ax_rhythm = sf_rhythm.subplots()
+(
+    so.Plot(rhythm_df, x="time", y="voltage")
+    .add(so.Line(color=BRAND, linewidth=0.8))
+    .limit(x=(0, rhythm_duration), y=(-1.8, 2.0))
+    .label(x="", y="")
+    .on(ax_rhythm)
+    .plot()
+)
 style_ecg_grid(ax_rhythm, rhythm_duration, 1.0, 0.2)
 ax_rhythm.text(
     0.006,
