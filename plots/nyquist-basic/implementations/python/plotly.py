@@ -1,12 +1,29 @@
-""" pyplots.ai
+""" anyplot.ai
 nyquist-basic: Nyquist Plot for Control Systems
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 93/100 | Created: 2026-03-20
+Library: plotly 6.8.0 | Python 3.13.14
+Quality: 90/100 | Updated: 2026-06-17
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint categorical palette — positions used
+BRAND = "#009E73"  # position 1 — ALWAYS first series / main curve
+IMPRINT_BLUE = "#4467A3"  # position 3 — gain crossover marker
+IMPRINT_OCHRE = "#BD8233"  # position 4 — phase crossover marker
+CRITICAL_RED = "#AE3030"  # position 5 — semantic red for critical point
 
 # Data: Transfer function G(s) = 2 / (s+1)^3
 # Three identical poles at s = -1, no zeros
@@ -32,27 +49,19 @@ for idx in sign_changes:
 # Gain crossover: where |G| = 1
 gain_crossover_idx = np.argmin(np.abs(magnitude - 1.0))
 
-# Color palette — colorblind-safe (no red-green distinction)
-PYTHON_BLUE = "#306998"
-CRITICAL_RED = "#C44E52"
-GAIN_CROSS_COLOR = "#4C72B0"
-PHASE_CROSS_COLOR = "#DD8452"
-ANNOTATION_GRAY = "#555770"
-
 # Plot
 fig = go.Figure()
 
-# Unit circle for reference
-theta = np.linspace(0, 2 * np.pi, 200)
-fig.add_trace(
-    go.Scatter(
-        x=np.cos(theta),
-        y=np.sin(theta),
-        mode="lines",
-        line={"width": 1.5, "color": "rgba(140,140,160,0.3)", "dash": "dash"},
-        showlegend=False,
-        hoverinfo="skip",
-    )
+# Unit circle — idiomatic Plotly built-in shape (no coordinate trace needed)
+fig.add_shape(
+    type="circle",
+    x0=-1,
+    y0=-1,
+    x1=1,
+    y1=1,
+    line={"color": INK_MUTED, "dash": "dash", "width": 2},
+    fillcolor="rgba(0,0,0,0)",
+    opacity=0.5,
 )
 
 # Nyquist curve (positive frequencies ω ≥ 0)
@@ -61,7 +70,7 @@ fig.add_trace(
         x=real_part,
         y=imag_part,
         mode="lines",
-        line={"width": 3.5, "color": PYTHON_BLUE},
+        line={"width": 3.5, "color": BRAND},
         name="G(jω), ω ≥ 0",
         customdata=np.column_stack([omega, magnitude, phase_deg]),
         hovertemplate=(
@@ -82,7 +91,7 @@ fig.add_trace(
         x=real_part,
         y=-imag_part,
         mode="lines",
-        line={"width": 2.5, "color": PYTHON_BLUE, "dash": "dot"},
+        line={"width": 2.0, "color": BRAND, "dash": "dot"},
         name="G(jω), ω < 0",
         opacity=0.4,
         hoverinfo="skip",
@@ -111,7 +120,7 @@ for frac in [0.12, 0.32, 0.52]:
                 arrowhead=3,
                 arrowsize=2.0,
                 arrowwidth=2.5,
-                arrowcolor=PYTHON_BLUE,
+                arrowcolor=BRAND,
                 text="",
             )
 
@@ -138,7 +147,7 @@ fig.add_trace(
         x=[gc_re],
         y=[gc_im],
         mode="markers",
-        marker={"symbol": "circle", "size": 15, "color": GAIN_CROSS_COLOR, "line": {"width": 2, "color": "white"}},
+        marker={"symbol": "circle", "size": 15, "color": IMPRINT_BLUE, "line": {"width": 2, "color": PAGE_BG}},
         name=f"Gain crossover (ω≈{gc_omega:.2f})",
         hovertemplate=(
             f"Gain crossover<br>ω = {gc_omega:.2f} rad/s<br>|G| = 1<br>PM = {phase_margin:.1f}°<extra></extra>"
@@ -152,10 +161,10 @@ fig.add_annotation(
     showarrow=True,
     arrowhead=0,
     arrowwidth=1.2,
-    arrowcolor=GAIN_CROSS_COLOR,
-    ax=80,
-    ay=35,
-    font={"size": 14, "color": GAIN_CROSS_COLOR, "family": "Arial, sans-serif"},
+    arrowcolor=IMPRINT_BLUE,
+    ax=90,
+    ay=45,
+    font={"size": 12, "color": IMPRINT_BLUE, "family": "Arial, sans-serif"},
 )
 
 # Phase crossover frequency marker
@@ -169,12 +178,7 @@ if phase_crossover_idx is not None:
             x=[pc_re],
             y=[pc_im],
             mode="markers",
-            marker={
-                "symbol": "diamond",
-                "size": 17,
-                "color": PHASE_CROSS_COLOR,
-                "line": {"width": 2, "color": "white"},
-            },
+            marker={"symbol": "diamond", "size": 17, "color": IMPRINT_OCHRE, "line": {"width": 2, "color": PAGE_BG}},
             name=f"Phase crossover (ω≈{pc_omega:.2f})",
             hovertemplate=(
                 f"Phase crossover<br>ω = {pc_omega:.2f} rad/s<br>GM = {gain_margin_db:.1f} dB<extra></extra>"
@@ -188,17 +192,14 @@ if phase_crossover_idx is not None:
         showarrow=True,
         arrowhead=0,
         arrowwidth=1.2,
-        arrowcolor=PHASE_CROSS_COLOR,
-        ax=-90,
-        ay=-35,
-        font={"size": 14, "color": PHASE_CROSS_COLOR, "family": "Arial, sans-serif"},
+        arrowcolor=IMPRINT_OCHRE,
+        ax=-95,
+        ay=-50,
+        font={"size": 12, "color": IMPRINT_OCHRE, "family": "Arial, sans-serif"},
     )
 
-# Frequency annotations at selected points — placed to avoid overlap
-# ω=0.1 is far right (near DC gain), ω=0.5 is mid-curve
-# ω=1.0 replaces ω=2.0 to avoid crowding near origin
-# ω=3.0 replaces ω=5.0 to avoid crowding near phase crossover
-freq_label_config = [(0.1, 30, -28), (0.5, -35, -30), (1.0, -40, 25), (3.0, 25, 28)]
+# Frequency annotations at selected points — spread away from the crowded origin region
+freq_label_config = [(0.1, 45, -30), (0.5, -50, -35), (1.0, -55, 30), (3.0, 35, 32)]
 for f_label, ax_off, ay_off in freq_label_config:
     idx = np.argmin(np.abs(omega - f_label))
     fig.add_annotation(
@@ -208,59 +209,70 @@ for f_label, ax_off, ay_off in freq_label_config:
         showarrow=True,
         arrowhead=0,
         arrowwidth=0.8,
-        arrowcolor="rgba(85,87,112,0.4)",
+        arrowcolor=INK_MUTED,
         ax=ax_off,
         ay=ay_off,
-        font={"size": 13, "color": ANNOTATION_GRAY, "family": "Arial, sans-serif"},
+        font={"size": 11, "color": INK_MUTED, "family": "Arial, sans-serif"},
     )
 
-# Style — equal axis scaling via scaleanchor
+# Layout — square canvas (2400×2400) suits the symmetric Nyquist geometry
+title_text = "nyquist-basic · python · plotly · anyplot.ai"
 fig.update_layout(
+    autosize=False,
     title={
-        "text": "nyquist-basic · plotly · pyplots.ai",
-        "font": {"size": 28, "color": "#1A1A2E", "family": "Arial Black, Arial, sans-serif"},
+        "text": title_text,
+        "font": {"size": 16, "color": INK, "family": "Arial, sans-serif"},
         "x": 0.5,
         "xanchor": "center",
-        "y": 0.96,
     },
     xaxis={
-        "title": {"text": "Real Axis", "font": {"size": 22, "family": "Arial, sans-serif"}, "standoff": 12},
-        "tickfont": {"size": 18},
+        "title": {
+            "text": "Real Axis",
+            "font": {"size": 12, "color": INK, "family": "Arial, sans-serif"},
+            "standoff": 12,
+        },
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "zeroline": True,
         "zerolinewidth": 1.5,
-        "zerolinecolor": "rgba(0,0,0,0.18)",
+        "zerolinecolor": INK_SOFT,
         "showgrid": True,
         "gridwidth": 1,
-        "gridcolor": "rgba(0,0,0,0.04)",
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
         "constrain": "domain",
-        "range": [-1.6, 2.4],
+        "range": [-1.8, 2.5],
     },
     yaxis={
-        "title": {"text": "Imaginary Axis", "font": {"size": 22, "family": "Arial, sans-serif"}, "standoff": 12},
-        "tickfont": {"size": 18},
+        "title": {
+            "text": "Imaginary Axis",
+            "font": {"size": 12, "color": INK, "family": "Arial, sans-serif"},
+            "standoff": 12,
+        },
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "zeroline": True,
         "zerolinewidth": 1.5,
-        "zerolinecolor": "rgba(0,0,0,0.18)",
+        "zerolinecolor": INK_SOFT,
         "showgrid": True,
         "gridwidth": 1,
-        "gridcolor": "rgba(0,0,0,0.04)",
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
         "scaleanchor": "x",
         "scaleratio": 1,
     },
-    template="plotly_white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     legend={
-        "font": {"size": 14, "family": "Arial, sans-serif"},
-        "bgcolor": "rgba(255,255,255,0.94)",
-        "bordercolor": "rgba(0,0,0,0.06)",
+        "font": {"size": 10, "color": INK_SOFT, "family": "Arial, sans-serif"},
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
         "borderwidth": 1,
         "x": 0.01,
         "y": 0.99,
         "itemsizing": "constant",
     },
-    margin={"l": 80, "r": 40, "t": 100, "b": 70},
-    plot_bgcolor="white",
-    paper_bgcolor="#F7F8FB",
-    hoverlabel={"bgcolor": "white", "font_size": 14, "bordercolor": "#bbb"},
+    margin={"l": 80, "r": 40, "t": 80, "b": 60},
+    hoverlabel={"bgcolor": ELEVATED_BG, "font_size": 12, "bordercolor": INK_SOFT},
 )
 
 # Subtitle with transfer function
@@ -269,11 +281,11 @@ fig.add_annotation(
     xref="paper",
     yref="paper",
     x=0.5,
-    y=1.01,
+    y=1.055,
     showarrow=False,
-    font={"size": 17, "color": "#444", "family": "Courier New, monospace"},
+    font={"size": 12, "color": INK_SOFT, "family": "Courier New, monospace"},
 )
 
-# Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html")
+# Save — square 2400×2400 (suitable for symmetric Nyquist geometry)
+fig.write_image(f"plot-{THEME}.png", width=600, height=600, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
