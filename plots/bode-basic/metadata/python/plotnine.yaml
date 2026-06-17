@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: bode-basic
 created: '2026-03-21T20:48:02Z'
-updated: '2026-06-17T20:24:07Z'
+updated: '2026-06-17T20:32:45Z'
 generated_by: claude-sonnet
 workflow_run: 27716318086
 issue: 4411
@@ -12,49 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bode-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bode-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - Complete bode plot with dual-panel layout (magnitude + phase), logarithmic x-axis,
-    gain/phase margins annotated, and reference lines — all spec requirements met
-  - 'Semantic color assignment: matte red (#AE3030) for gain margin (instability distance),
-    blue (#4467A3) for phase margin, green (#009E73) for the main TF curve — intentional
-    and meaningful'
-  - Distinct crossover markers (square for phase crossover, circle for gain crossover)
-    plus vertical dotted guides in both panels — aids cross-panel tracing
-  - Third-order physically accurate transfer function G(s)=5/[(s+1)(0.5s+1)(0.2s+1)]
-    with realistic stability margins (GM=8 dB, PM=33°)
-  - 'Idiomatic plotnine: facet_wrap with scales=''free_y'', CategoricalDtype for panel
-    ordering, data-frame-per-geom pattern for annotations'
-  - Perfect palette compliance and theme adaptation — both light (#FAF8F1) and dark
-    (#1A1A17) renders pass readability checks with no dark-on-dark or light-on-light
-    failures
+  - 'Semantically motivated color choices: red (#AE3030) for gain margin (instability
+    risk), blue (#4467A3) for phase margin — both from Imprint palette with clear
+    semantic rationale'
+  - Redundant encoding via marker shapes (circle=gain crossover, square=phase crossover)
+    adds accessibility beyond color alone
+  - Vertical crossover guides spanning both panels help the reader trace relationships
+    between magnitude and phase panels
+  - 'Full theme-adaptive chrome: all tokens correctly branch on ANYPLOT_THEME; dark
+    render has no dark-on-dark issues'
+  - Idiomatic plotnine faceting with CategoricalDtype for panel order control is a
+    genuinely plotnine-specific pattern
   weaknesses:
-  - 'Excessive vertical gap between the two facet panels: panel_spacing_y=0.15 creates
-    a gap roughly 25-30% of the canvas height on a 4.5-inch figure — the panels look
-    separated and each curve appears vertically compressed. Reduce panel_spacing_y
-    to ~0.05 or 0.06.'
-  - geom_text annotation size=12 is in mm units (≈34pt), which is 3-5x the recommended
-    2.5-4mm range for plotnine annotation text. The 'GM = 8.0 dB' and 'PM = 33°' labels
-    appear disproportionately large relative to the panel height. Reduce to size=4
-    (≈11pt, well-readable at 3200×1800 without dominating the panels).
+  - Annotation labels (GM = 8.0 dB and PM = 33 degrees) are slightly crowded against
+    the adjacent crossover markers due to log-scale compression in the 0.5-1 Hz region;
+    placing labels with a larger x-offset (e.g., freq * 2.5-3.0) would improve readability,
+    especially at mobile scale
+  - 'DE-01 does not reach strong design tier: consider adding a descriptive title
+    prefix to add context and further differentiate the strip frame background'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "bode-basic · python · plotnine · anyplot.ai" in dark ink (#1A1A17), clearly visible. X-axis label "Frequency (Hz)" in dark ink with units. Facet strip labels "Magnitude (dB)" and "Phase (degrees)" in slightly lighter ink on elevated background (#FFFDF6). Tick labels at 0.1, 1, 10 Hz and dB/degree values all clearly readable in dark-on-light. Grid lines subtle (GRID_MAJOR=#D8D7D0).
-      Data: Main transfer function curve in brand green (#009E73), size=1.5, well visible. Dashed reference lines at 0 dB and -180° in muted gray (INK_SOFT). Red (#AE3030) vertical segment shows gain margin in magnitude panel; blue (#4467A3) segment shows phase margin in phase panel. Red square marker at phase crossover, blue circle at gain crossover. Bold "GM = 8.0 dB" (red) and "PM = 33°" (blue) annotation labels — these are noticeably large relative to the panel height.
-      Notable layout issue: Large vertical gap between the two facet panels (~25-30% of canvas height), making each panel look vertically compressed.
-      Legibility verdict: PASS — all text is readable against the light background. No light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct surface color, not pure white
+      Chrome: Title "bode-basic · python · plotnine · anyplot.ai" in dark ink, clearly readable; facet strip labels "Magnitude (dB)" and "Phase (degrees)" in dark text on slightly elevated background; x-axis label "Frequency (Hz)" in dark ink; tick labels (0.1, 1, 10) in INK_SOFT dark gray — all readable
+      Data: Transfer function line in brand green #009E73; blue circle (#4467A3) at gain crossover marker; red square (#AE3030) at phase crossover marker; red gain-margin segment; blue phase-margin segment; dashed reference lines at 0 dB and -180°; dotted vertical crossover guides; "GM = 8.0 dB" annotation in red; "PM = 33°" annotation in blue
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title and axis labels render in light-colored ink (#F0EFE8 / #B8B7B0), clearly visible against the dark surface. Facet strip backgrounds use elevated dark (#242420) with lighter text — all readable. Tick labels appear in light gray. Grid lines subtle (GRID_MAJOR=#3A3A36).
-      Data: Transfer function curve remains #009E73 (identical to light render). Red and blue margin segments/markers stay identical. Annotation labels "GM = 8.0 dB" and "PM = 33°" remain in #AE3030 and #4467A3 — both visible on the dark background. No dark-on-dark failure observed.
-      Same panel gap issue present as in the light render.
-      Legibility verdict: PASS — all text is readable against the dark background. No dark-on-dark issues. Data colors are identical to the light render (only chrome flipped).
+      Background: Warm near-black #1A1A17 — correct dark surface, not pure black
+      Chrome: Title, facet strip labels, x-axis label, and tick labels all render in light-colored text clearly readable against the dark background; strip backgrounds use dark-elevated color #242420; grid lines visible but subtle; no dark-on-dark failures detected
+      Data: All data colors identical to light render — brand green #009E73 curve, blue #4467A3 circle, red #AE3030 square, red and blue margin segments, dashed reference lines — confirming only chrome flips between themes
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -62,55 +55,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All sizes explicitly set; readable in both themes. geom_text size=12mm
-          (~34pt) is 3-5x the recommended 2.5-4mm range, producing disproportionately
-          large annotation labels relative to panel height.
+        comment: All font sizes explicitly set (title=12, axis_title=10, axis_text=8,
+          strip_text=9, geom_text=4mm); proportions balanced; minor weakness is annotation
+          label smallness at mobile scale
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render.
+        comment: Minor crowding around annotation labels and crossover markers due
+          to log-scale compression in 0.5-1 Hz region; text at freq*1.8 is functional
+          but tight
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Main curve at size=1.5 clearly visible, markers well-sized, reference
-          and crossover lines distinguishable.
+        comment: Transfer function line (size=1.5), margin segments (size=4.0), crossover
+          markers (size=5) all clearly visible and appropriately sized
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette colors used; red/blue margin markers also differentiated
-          by shape (square vs circle) for CVD safety.
+        comment: Imprint palette colors; circle vs square redundant encoding; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Excessive panel_spacing_y=0.15 creates a gap
-          ~25-30% of canvas height between the two facet panels, compressing each
-          curve vertically.
+        comment: Canvas 3200x1800 (8x4.5 in @ 400 dpi); dual panels fill canvas well;
+          tight panel_spacing_y=0.05 appropriate for Bode layout
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''Frequency (Hz)'' with units. Y-axis empty (appropriate
-          — facet strip labels ''Magnitude (dB)'' and ''Phase (degrees)'' serve this
-          purpose). Title correct.'
+        comment: Frequency (Hz) with units on x-axis; facet strip labels carry y-axis
+          units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Main series #009E73, margin colors from Imprint positions 5 and
-          3 with semantic meaning. Backgrounds #FAF8F1 / #1A1A17 correct. Chrome theme-adaptive
-          in both renders.'
+        comment: 'First series #009E73 (brand green); red #AE3030 for gain margin
+          (semantic); blue #4467A3 for phase margin; backgrounds #FAF8F1/#1A1A17;
+          full theme-adaptive chrome'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -118,26 +110,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default (4): intentional semantic color choices for margins,
-          distinct marker shapes (square/circle), crossover guide lines in both panels,
-          professional engineering aesthetics. Excessive panel gap is a noted aesthetic
-          flaw.'
+        comment: 'Above well-configured default: intentional semantic color choices,
+          redundant shape encoding, layered alpha values, coordinated color scheme.
+          Not yet at FiveThirtyEight-level polish.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Custom grid colors with specific sizes, elevated strip backgrounds,
-          panel borders. Some visual refinement visible beyond defaults, but panel_spacing_y
-          creates sloppy layout.
+        comment: Subtle grid (0.25 size, GRID_MAJOR token), elevated strip backgrounds,
+          tight panel spacing, alpha on decorative elements, correctly themed backgrounds
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color-coded stability margins with segments + markers + labels guide
-          the viewer directly to GM and PM. Vertical dotted guides connect crossover
-          events between panels. Clear visual hierarchy established.
+        comment: 'Strong technical storytelling: crossover frequencies highlighted
+          with markers and vertical guide lines spanning both panels, stability margins
+          annotated with computed values, reference lines at critical engineering
+          thresholds'
     spec_compliance:
       score: 15
       max: 15
@@ -147,31 +138,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct dual-panel bode plot: magnitude top, phase bottom, shared
-          log-scale x-axis via facet_wrap.'
+        comment: Correct dual-panel Bode plot (magnitude top, phase bottom), logarithmic
+          frequency axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: gain margin annotated, phase margin annotated,
-          0 dB reference line, -180° reference line, log x-axis, grid lines, crossover
-          markers.'
+        comment: Gain margin + phase margin annotated, reference lines at 0 dB and
+          -180 degrees, log-scale x-axis, grid lines all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'Correct: frequency on x (log), magnitude_db on y (magnitude panel),
-          phase_deg on y (phase panel). Display clipping is reasonable.'
+        comment: Frequency on shared log x-axis; magnitude and phase correctly mapped
+          via facet_wrap with free_y
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'bode-basic · python · plotnine · anyplot.ai' — correct format.
-          No legend (single main series; margin annotations are self-labeled with
-          text).
+        comment: Title bode-basic · python · plotnine · anyplot.ai matches required
+          format exactly; no legend (single curve), GM/PM annotations serve that role
     data_quality:
       score: 15
       max: 15
@@ -181,25 +170,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows magnitude AND phase response, both gain and phase margins,
-          0 dB / -180° reference lines, log-spaced frequency data with proper rolloff
-          behavior.
+        comment: 'Third-order system shows all key Bode features: flat passband, rolloff,
+          both crossover frequencies, gain margin, and phase margin'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Third-order open-loop TF G(s)=5/[(s+1)(0.5s+1)(0.2s+1)] — physically
-          accurate, stable system with poles at s=-1,-2,-5. Real-world control engineering
-          scenario.
+        comment: G(s) = 5/[(s+1)(0.5s+1)(0.2s+1)] is a textbook-realistic industrial
+          control system; poles at s=-1,-2,-5 are credible; neutral engineering context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequency range 0.03-30 Hz appropriate for this TF. Gain margin 8
-          dB and phase margin 33° are realistic (marginally stable but not critically
-          unstable). Display clipping ranges are sensible.
+        comment: Frequency range 0.032-31.6 Hz appropriate, magnitude -65 to 25 dB
+          realistic, GM=8.0 dB and PM=33 degrees are realistic stability margins
     code_quality:
       score: 10
       max: 10
@@ -209,37 +195,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean procedural: tokens → data computation → DataFrames → plot
-          layers → save. No functions or classes.'
+        comment: 'Linear flow: imports -> tokens -> data -> DataFrames -> plot ->
+          save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — all data from mathematical transfer function
-          evaluation, no random numbers.
+        comment: Fully deterministic; transfer function computation has no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols used; no unused imports.
+        comment: All plotnine imports used; numpy, pandas used; no dead imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the annotation-rich bode plot. No fake
-          UI elements or comments simulating interactivity.
+        comment: Clean, well-named variables; multiple DataFrames for different geom
+          layers are necessary for plotnine grammar-of-graphics approach
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via plot.save(). No bare plot.png. Current
-          plotnine API used.
+        comment: Saves as plot-{THEME}.png; current plotnine API
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -247,26 +231,24 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert ggplot grammar: facet_wrap with scales=''free_y'' for independent
-          y-axes, separate DataFrames per annotation geom, scale_x_log10 with custom
-          breaks and minor_breaks — all idiomatic plotnine.'
+        comment: 'Fully idiomatic plotnine: ggplot()+geom_*() layers, proper aes()
+          mappings, facet_wrap with scales=free_y, theme() for all styling'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses CategoricalDtype for explicit facet panel ordering, data-frame-per-geom
-          annotation pattern, free_y faceting for dual-scale panels. Plotnine/ggplot2-specific
-          patterns that couldn't easily be replicated in matplotlib without significant
-          restructuring.
-  verdict: REJECTED
+        comment: 'Strong plotnine-specific usage: pd.CategoricalDtype for facet panel
+          ordering, geom_segment/geom_hline/geom_vline with per-panel DataFrames keyed
+          to panel Categorical, scale_x_log10 with explicit breaks and minor_breaks'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - faceting
   - annotations
-  - manual-ticks
   - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
   - wide-to-long

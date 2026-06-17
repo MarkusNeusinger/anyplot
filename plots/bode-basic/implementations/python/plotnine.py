@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bode-basic: Bode Plot for Frequency Response
 Library: plotnine 0.15.7 | Python 3.13.14
-Quality: 87/100 | Updated: 2026-06-17
+Quality: 90/100 | Updated: 2026-06-17
 """
 
 import os
