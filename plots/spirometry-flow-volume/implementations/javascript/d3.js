@@ -1,3 +1,7 @@
+// anyplot.ai
+// spirometry-flow-volume: Spirometry Flow-Volume Loop
+// Library: d3 7.9.0 | JavaScript 22.22.3
+// Quality: 93/100 | Created: 2026-06-17
 //# anyplot-orientation: landscape
 // anyplot.ai
 // spirometry-flow-volume: Spirometry Flow-Volume Loop
