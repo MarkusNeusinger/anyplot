@@ -1,16 +1,31 @@
-""" pyplots.ai
+"""anyplot.ai
 nyquist-basic: Nyquist Plot for Control Systems
 Library: altair 6.0.0 | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-20
+Quality: 91/100 | Updated: 2026-06-17
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
-# Data - Nyquist plot for G(s) = 5 / ((s+1)(0.5s+1)(0.1s+1))
-# A stable third-order system with DC gain = 5
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette — first series always #009E73
+BRANCH_POS = "#009E73"  # positive frequency branch
+BRANCH_NEG = "#C475FD"  # negative frequency branch
+CRITICAL_COLOR = "#AE3030"  # semantic red for critical point
+CROSS_COLOR = "#BD8233"  # ochre for phase crossover marker
+
+# Data — G(s) = 5 / ((s+1)(0.5s+1)(0.1s+1)), a stable third-order system
 omega = np.concatenate(
     [np.logspace(-2, -0.5, 100), np.logspace(-0.5, 0.5, 250), np.logspace(0.5, 1.5, 200), np.logspace(1.5, 3, 100)]
 )
@@ -33,7 +48,7 @@ pos_df = pd.DataFrame(
     }
 )
 
-# Negative frequency branch (mirror about real axis)
+# Negative frequency branch — mirror about the real axis
 neg_df = pd.DataFrame(
     {
         "real": real_part,
@@ -53,46 +68,58 @@ unit_circle_df = pd.DataFrame({"ux": np.cos(theta), "uy": np.sin(theta), "idx": 
 # Critical point (-1, 0)
 critical_df = pd.DataFrame({"real": [-1.0], "imaginary": [0.0], "label": ["Critical Point (−1, 0)"]})
 
-# Find gain crossover (|G(jω)| = 1)
+# Gain crossover: |G(jω)| = 1
 magnitude = np.abs(G)
 gain_cross_idx = np.argmin(np.abs(magnitude - 1.0))
 gain_cross_omega = omega[gain_cross_idx]
 
-# Phase crossover: where imaginary part crosses zero (excluding near DC)
+# Phase crossover: imaginary part crosses zero (skip near-DC region)
 sign_changes = np.where(np.diff(np.sign(imag_part[30:])))[0] + 30
 phase_cross_idx = sign_changes[0] if len(sign_changes) > 0 else None
 phase_cross_omega = omega[phase_cross_idx] if phase_cross_idx is not None else None
 
-# Frequency markers along curve — offset label_y to avoid overlaps
+# Frequency markers — ω=5 omitted to avoid crowding near critical point
 freq_annotations = []
-for w_mark, dy_px in [(0.5, -18), (1.0, -18), (5.0, -18)]:
+for w_mark, dy_sign in [(0.5, -1), (1.0, -1), (2.0, -1)]:
     idx = np.argmin(np.abs(omega - w_mark))
     freq_annotations.append(
-        {"real": real_part[idx], "imaginary": imag_part[idx], "label": f"ω = {w_mark}", "dy_px": dy_px}
+        {"real": real_part[idx], "imaginary": imag_part[idx], "label": f"ω = {w_mark}", "above": dy_sign < 0}
     )
-
-# ω = 2.0 and gain crossover (ω ≈ 2.7) are close — place on opposite sides
-idx_2 = np.argmin(np.abs(omega - 2.0))
-freq_annotations.append({"real": real_part[idx_2], "imaginary": imag_part[idx_2], "label": "ω = 2.0", "dy_px": -20})
+# Gain crossover — placed below the curve point, clear of other labels
 freq_annotations.append(
     {
         "real": real_part[gain_cross_idx],
         "imaginary": imag_part[gain_cross_idx],
         "label": f"ω ≈ {gain_cross_omega:.1f} (|G|=1)",
-        "dy_px": 20,
+        "above": False,
     }
 )
-
-# Phase crossover is near the critical point — annotate it separately
-# to avoid overlap with the critical point label
-if phase_cross_idx is not None:
-    phase_cross_real = real_part[phase_cross_idx]
-    phase_cross_imag = imag_part[phase_cross_idx]
-    phase_cross_label = f"ω ≈ {phase_cross_omega:.1f} (phase crossover)"
-
 freq_df = pd.DataFrame(freq_annotations)
 
-# Arrow indicators for direction of increasing frequency
+# Phase crossover annotation — separate layer for independent positioning
+phase_cross_layers = []
+if phase_cross_idx is not None:
+    pc_df = pd.DataFrame(
+        {
+            "real": [real_part[phase_cross_idx]],
+            "imaginary": [imag_part[phase_cross_idx]],
+            "label": [f"ω ≈ {phase_cross_omega:.1f} (phase ×)"],
+        }
+    )
+    pc_point = (
+        alt.Chart(pc_df)
+        .mark_point(shape="diamond", size=180, color=CROSS_COLOR, filled=True, opacity=0.85)
+        .encode(x=alt.X("real:Q"), y=alt.Y("imaginary:Q"), tooltip=[alt.Tooltip("label:N", title="Phase Crossover")])
+    )
+    # Label goes left of the diamond to avoid overlapping with critical point text
+    pc_text = (
+        alt.Chart(pc_df)
+        .mark_text(fontSize=10, color=CROSS_COLOR, fontWeight="bold", align="left", dx=12, dy=16)
+        .encode(x=alt.X("real:Q"), y=alt.Y("imaginary:Q"), text="label:N")
+    )
+    phase_cross_layers = [pc_point, pc_text]
+
+# Direction arrows showing increasing frequency
 arrow_rows = []
 for target_w in [0.8, 3.0]:
     idx = np.argmin(np.abs(omega - target_w))
@@ -110,64 +137,36 @@ for target_w in [0.8, 3.0]:
         )
 arrow_df = pd.DataFrame(arrow_rows)
 
-# Axis scales - 1:1 aspect ratio, tighter domain around data
-plot_range = 5.5
-x_scale = alt.Scale(domain=[-plot_range, plot_range], nice=False)
-y_scale = alt.Scale(domain=[-plot_range, plot_range], nice=False)
+# Axis — 1:1 aspect ratio: equal domain extent, square view
+# Data range: real ∈ [~-1.3, 5.0], imaginary ∈ [~-4.5, 4.5]
+# Use [-5.2, 5.2] on both axes; width=height so unit circle is circular
+PLOT_RANGE = 5.2
+x_scale = alt.Scale(domain=[-PLOT_RANGE, PLOT_RANGE], nice=False)
+y_scale = alt.Scale(domain=[-PLOT_RANGE, PLOT_RANGE], nice=False)
 
-branch_palette = ["#306998", "#e07b39"]
 branch_domain = ["ω ≥ 0 (positive)", "ω ≤ 0 (negative)"]
+branch_range = [BRANCH_POS, BRANCH_NEG]
 
-# Layer: Nyquist curve with conditional selection highlight
 highlight = alt.selection_point(fields=["branch"], bind="legend")
 
+# Nyquist curve — two branches, interactive legend selection
 nyquist_layer = (
     alt.Chart(nyquist_df)
-    .mark_line(strokeWidth=2.8)
+    .mark_line(strokeWidth=2.5)
     .encode(
-        x=alt.X(
-            "real:Q",
-            scale=x_scale,
-            title="Real Part — Re[G(jω)]",
-            axis=alt.Axis(
-                labelFontSize=16,
-                titleFontSize=20,
-                titleFontWeight="bold",
-                titleColor="#2a2a2a",
-                labelColor="#444444",
-                grid=False,
-                titlePadding=14,
-                domainColor="#aaaaaa",
-                tickColor="#aaaaaa",
-            ),
-        ),
-        y=alt.Y(
-            "imaginary:Q",
-            scale=y_scale,
-            title="Imaginary Part — Im[G(jω)]",
-            axis=alt.Axis(
-                labelFontSize=16,
-                titleFontSize=20,
-                titleFontWeight="bold",
-                titleColor="#2a2a2a",
-                labelColor="#444444",
-                grid=False,
-                titlePadding=14,
-                domainColor="#aaaaaa",
-                tickColor="#aaaaaa",
-            ),
-        ),
+        x=alt.X("real:Q", scale=x_scale, title="Real Part — Re[G(jω)]"),
+        y=alt.Y("imaginary:Q", scale=y_scale, title="Imaginary Part — Im[G(jω)]"),
         color=alt.Color(
             "branch:N",
-            scale=alt.Scale(domain=branch_domain, range=branch_palette),
+            scale=alt.Scale(domain=branch_domain, range=branch_range),
             legend=alt.Legend(
                 title="Frequency Branch",
-                titleFontSize=16,
-                labelFontSize=14,
-                symbolSize=180,
-                symbolStrokeWidth=3,
+                titleFontSize=10,
+                labelFontSize=10,
+                symbolSize=150,
+                symbolStrokeWidth=2.5,
                 orient="top-right",
-                offset=5,
+                offset=4,
             ),
         ),
         opacity=alt.condition(highlight, alt.value(0.9), alt.value(0.2)),
@@ -182,104 +181,77 @@ nyquist_layer = (
     .add_params(highlight)
 )
 
-# Layer: Unit circle
+# Unit circle reference
 unit_circle_layer = (
     alt.Chart(unit_circle_df)
-    .mark_line(strokeWidth=1.5, strokeDash=[6, 4], color="#cccccc", opacity=0.6)
+    .mark_line(strokeWidth=1.2, strokeDash=[5, 4], color=INK_SOFT, opacity=0.3)
     .encode(x=alt.X("ux:Q", scale=x_scale), y=alt.Y("uy:Q", scale=y_scale), order="idx:Q")
 )
 
-# Layer: Critical point (-1, 0) with pulsing ring
+# Critical point ring (emphasis) + cross marker
 critical_ring = (
     alt.Chart(critical_df)
-    .mark_point(shape="circle", size=800, strokeWidth=2, color="#d62728", filled=False, opacity=0.3)
+    .mark_point(shape="circle", size=650, strokeWidth=2, color=CRITICAL_COLOR, filled=False, opacity=0.3)
     .encode(x=alt.X("real:Q", scale=x_scale), y=alt.Y("imaginary:Q", scale=y_scale))
 )
-
-critical_layer = (
+critical_cross = (
     alt.Chart(critical_df)
-    .mark_point(shape="cross", size=500, strokeWidth=4, color="#d62728", filled=False)
+    .mark_point(shape="cross", size=380, strokeWidth=3.5, color=CRITICAL_COLOR, filled=False)
     .encode(
         x=alt.X("real:Q", scale=x_scale),
         y=alt.Y("imaginary:Q", scale=y_scale),
         tooltip=[alt.Tooltip("label:N", title="Critical Point")],
     )
 )
-
+# Label to the upper-right to separate from the phase crossover label on the left
 critical_text = (
     alt.Chart(critical_df)
-    .mark_text(fontSize=16, fontWeight="bold", color="#c5211e", align="right", dx=-18, dy=-16)
+    .mark_text(fontSize=10, fontWeight="bold", color=CRITICAL_COLOR, align="left", dx=16, dy=-22)
     .encode(x=alt.X("real:Q", scale=x_scale), y=alt.Y("imaginary:Q", scale=y_scale), text="label:N")
 )
 
-# Layer: Phase crossover annotation (positioned below critical point to avoid overlap)
-phase_cross_layers = []
-if phase_cross_idx is not None:
-    pc_df = pd.DataFrame({"real": [phase_cross_real], "imaginary": [phase_cross_imag], "label": [phase_cross_label]})
-    phase_cross_point = (
-        alt.Chart(pc_df)
-        .mark_point(shape="diamond", size=250, color="#8b4513", filled=True, opacity=0.85)
-        .encode(
-            x=alt.X("real:Q", scale=x_scale),
-            y=alt.Y("imaginary:Q", scale=y_scale),
-            tooltip=[alt.Tooltip("label:N", title="Phase Crossover")],
-        )
-    )
-    phase_cross_text = (
-        alt.Chart(pc_df)
-        .mark_text(fontSize=13, color="#8b4513", fontWeight="bold", align="left", dx=14, dy=18)
-        .encode(x=alt.X("real:Q", scale=x_scale), y=alt.Y("imaginary:Q", scale=y_scale), text="label:N")
-    )
-    phase_cross_layers = [phase_cross_point, phase_cross_text]
-
-# Layer: Frequency annotation points
+# Frequency annotation points
 freq_points = (
     alt.Chart(freq_df)
-    .mark_point(shape="circle", size=200, color="#306998", filled=True, opacity=0.85)
+    .mark_point(shape="circle", size=130, color=BRANCH_POS, filled=True, opacity=0.9)
     .encode(
         x=alt.X("real:Q", scale=x_scale),
         y=alt.Y("imaginary:Q", scale=y_scale),
         tooltip=[alt.Tooltip("label:N", title="Frequency")],
     )
 )
-
-# Split labels by dy offset to avoid overlap (Altair mark-level dy is static)
-freq_above = freq_df[freq_df["dy_px"] < 0].copy()
-freq_below = freq_df[freq_df["dy_px"] > 0].copy()
-
+freq_above_df = freq_df[freq_df["above"]].copy()
+freq_below_df = freq_df[~freq_df["above"]].copy()
 freq_labels_above = (
-    alt.Chart(freq_above)
-    .mark_text(fontSize=14, color="#333333", fontWeight="bold", align="left", dx=14, dy=-18)
+    alt.Chart(freq_above_df)
+    .mark_text(fontSize=10, color=INK_SOFT, fontWeight="bold", align="left", dx=10, dy=-14)
     .encode(x=alt.X("real:Q", scale=x_scale), y=alt.Y("imaginary:Q", scale=y_scale), text="label:N")
 )
-
 freq_labels_below = (
-    alt.Chart(freq_below)
-    .mark_text(fontSize=14, color="#333333", fontWeight="bold", align="left", dx=14, dy=20)
+    alt.Chart(freq_below_df)
+    .mark_text(fontSize=10, color=INK_SOFT, fontWeight="bold", align="left", dx=10, dy=16)
     .encode(x=alt.X("real:Q", scale=x_scale), y=alt.Y("imaginary:Q", scale=y_scale), text="label:N")
 )
 
-# Layer: Direction arrows
+# Direction arrows
 arrow_up_df = arrow_df[arrow_df["shape"] == "up"].copy()
 arrow_down_df = arrow_df[arrow_df["shape"] == "down"].copy()
-
 arrow_up_layer = (
     alt.Chart(arrow_up_df)
-    .mark_point(shape="triangle-up", size=280, filled=True, opacity=0.85)
+    .mark_point(shape="triangle-up", size=180, filled=True, opacity=0.85)
     .encode(
         x=alt.X("ax:Q", scale=x_scale),
         y=alt.Y("ay:Q", scale=y_scale),
-        color=alt.Color("branch:N", scale=alt.Scale(domain=branch_domain, range=branch_palette), legend=None),
+        color=alt.Color("branch:N", scale=alt.Scale(domain=branch_domain, range=branch_range), legend=None),
     )
 )
-
 arrow_down_layer = (
     alt.Chart(arrow_down_df)
-    .mark_point(shape="triangle-down", size=280, filled=True, opacity=0.85)
+    .mark_point(shape="triangle-down", size=180, filled=True, opacity=0.85)
     .encode(
         x=alt.X("ax:Q", scale=x_scale),
         y=alt.Y("ay:Q", scale=y_scale),
-        color=alt.Color("branch:N", scale=alt.Scale(domain=branch_domain, range=branch_palette), legend=None),
+        color=alt.Color("branch:N", scale=alt.Scale(domain=branch_domain, range=branch_range), legend=None),
     )
 )
 
@@ -288,7 +260,7 @@ combined = (
     unit_circle_layer
     + nyquist_layer
     + critical_ring
-    + critical_layer
+    + critical_cross
     + critical_text
     + freq_points
     + freq_labels_above
@@ -299,26 +271,62 @@ combined = (
 for layer in phase_cross_layers:
     combined = combined + layer
 
+# Square view (width=height) enforces 1:1 aspect ratio so the unit circle is circular
 chart = (
     combined.properties(
-        width=1200,
-        height=1200,
+        width=460,
+        height=460,
+        background=PAGE_BG,
         title=alt.Title(
-            "nyquist-basic · altair · pyplots.ai",
-            fontSize=28,
+            "nyquist-basic · python · altair · anyplot.ai",
+            fontSize=16,
             fontWeight="bold",
-            color="#1a1a1a",
+            color=INK,
             subtitle="G(s) = 5 / (s+1)(0.5s+1)(0.1s+1)  ·  Open-Loop Frequency Response",
-            subtitleFontSize=18,
-            subtitleColor="#555555",
-            subtitlePadding=10,
+            subtitleFontSize=12,
+            subtitleColor=INK_SOFT,
+            subtitlePadding=8,
             anchor="start",
-            offset=10,
+            offset=8,
         ),
     )
-    .configure_view(strokeWidth=0)
+    .configure_view(fill=PAGE_BG, stroke="transparent")
+    .configure_axis(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.10,
+        labelColor=INK_SOFT,
+        labelFontSize=10,
+        titleColor=INK,
+        titleFontSize=12,
+        titleFontWeight="bold",
+        titlePadding=10,
+    )
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        titleFontSize=10,
+        labelFontSize=10,
+    )
     .interactive()
 )
 
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+TW, TH = 2400, 2400
+
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+chart.save(f"plot-{THEME}.html")
+
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
