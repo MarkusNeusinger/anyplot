@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bifurcation-basic: Bifurcation Diagram for Dynamical Systems
-Library: bokeh 3.9.1 | Python 3.13.12
-Quality: 87/100 | Regenerated: 2026-06-17
+Library: bokeh 3.9.1 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-06-17
 """
 
 import os
