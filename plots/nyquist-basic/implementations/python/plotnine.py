@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 nyquist-basic: Nyquist Plot for Control Systems
 Library: plotnine 0.15.7 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-06-17
@@ -93,6 +93,8 @@ gain_margin_db = -20 * np.log10(mag[pc_idx])
 
 # Phase margin indicator: origin → gain crossover point
 gc_seg_df = pd.DataFrame({"x": [0.0], "y": [0.0], "xend": [G[gc_idx].real], "yend": [G[gc_idx].imag]})
+pm_label_x = float(G[gc_idx].real) * 0.55 + 0.25
+pm_label_y = float(G[gc_idx].imag) * 0.55 - 0.35
 
 # Frequency annotations with offsets — ω=3 pushed higher to avoid phase crossover crowding
 freq_annotations = [(0.1, 0.4, -0.5), (0.3, 0.6, -0.55), (0.7, 0.5, -0.55), (1.5, -0.7, 0.55), (3.0, 0.85, 1.15)]
@@ -155,7 +157,10 @@ plot = (
     )
     # Phase margin indicator: dotted line origin → gain crossover
     + geom_segment(
-        gc_seg_df, aes(x="x", y="y", xend="xend", yend="yend"), color=IMPRINT[2], size=0.6, linetype="dotted", alpha=0.6
+        gc_seg_df, aes(x="x", y="y", xend="xend", yend="yend"), color=IMPRINT[2], size=0.8, linetype="dotted", alpha=0.8
+    )
+    + annotate(
+        "text", x=pm_label_x, y=pm_label_y, label="Phase\nMargin", color=IMPRINT[2], size=3.0, ha="center", alpha=0.85
     )
     # Critical point: Imprint matte red — semantic anchor for critical/danger
     + geom_point(
@@ -237,7 +242,7 @@ plot = (
 
 # Frequency labels (theme-adaptive muted ink, size in mm per plotnine convention)
 for _, row in annot_df.iterrows():
-    plot = plot + annotate("text", x=row["lx"], y=row["ly"], label=row["label"], color=INK_MUTED, size=2.5)
+    plot = plot + annotate("text", x=row["lx"], y=row["ly"], label=row["label"], color=INK_MUTED, size=3.5)
 
 # Axes, scales, and theme — square canvas 2400×2400 (6in × 400dpi)
 # ylim matches x-range (9.6 units each) so coord_fixed fills the panel with no wasted space
