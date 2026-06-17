@@ -1,10 +1,19 @@
-""" pyplots.ai
+"""anyplot.ai
 star-chart-constellation: Star Chart with Constellations
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: 84/100 | Created: 2026-03-18
+Quality: pending | Created: 2026-03-18
 """
 
 import math
+import os
+import sys
+
+
+# Remove this file's directory from sys.path so `import pygal` resolves to the
+# installed package, not this script (which shares the same name).
+_this_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p or ".") != _this_dir]
+
 import xml.etree.ElementTree as ET
 
 import cairosvg
@@ -14,6 +23,21 @@ from pygal.style import Style
 
 
 np.random.seed(42)
+
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint sequential cmap (single-polarity): brand green -> blue.
+# Magnitude is continuous, so tiers sample this ramp; brightest tier == #009E73.
+SEQ_LO = "#009E73"
+SEQ_HI = "#4467A3"
+seq_lo = tuple(int(SEQ_LO[i : i + 2], 16) for i in (1, 3, 5))
+seq_hi = tuple(int(SEQ_HI[i : i + 2], 16) for i in (1, 3, 5))
+OCHRE = "#BD8233"  # Imprint position 4 — ecliptic = the Sun's warm path
 
 # Constellation data: stars as (name, RA_hours, Dec_degrees, apparent_magnitude)
 # Path order traces stick-figure lines without lifting pen (nodes may repeat for branches)
@@ -99,7 +123,7 @@ for cname, star_list in constellations.items():
     dr, dd = label_offsets.get(cname, (0, 3))
     centroids[cname] = (ra_c + dr, dec_c + dd)
 
-# Collect unique constellation stars for scatter plot
+# Collect unique constellation stars for the scatter
 seen_stars = set()
 all_stars = []
 for cname, star_list in constellations.items():
@@ -109,38 +133,47 @@ for cname, star_list in constellations.items():
             seen_stars.add(key)
             all_stars.append((name, ra, dec, mag, cname))
 
-# Background field stars (mag 3.5-5.0 per spec threshold)
-n_bg = 100
+# Background field stars (mag 3.5-5.0 per spec threshold) to fill the sky
+n_bg = 150
 bg_ra = np.random.uniform(3.0, 14.5, n_bg)
 bg_dec = np.random.uniform(-35, 68, n_bg)
 bg_mag = np.random.uniform(3.5, 5.0, n_bg)
 for i in range(n_bg):
     all_stars.append((f"HD {10000 + i}", bg_ra[i], bg_dec[i], bg_mag[i], None))
 
-# Magnitude tiers with distinct colors (brighter = lower magnitude = larger dot)
+# Magnitude tiers: (legend label, mag_lo, mag_hi, dot radius). Brighter = larger.
+# Colors sampled from the Imprint sequential ramp; brightest == #009E73.
+bright_size = 30
 tiers = [
-    ("\u2605 Mag < 1 (brightest)", lambda m: m < 1.0, 32),
-    ("\u2605 Mag 1\u20132", lambda m: 1.0 <= m < 2.0, 22),
-    ("\u2605 Mag 2\u20133", lambda m: 2.0 <= m < 3.0, 14),
-    ("\u2605 Mag 3\u20135 (faintest)", lambda m: m >= 3.0, 6),
+    ("★ Mag < 1 (brightest)", -2.0, 1.0, bright_size),
+    ("★ Mag 1–2", 1.0, 2.0, 21),
+    ("★ Mag 2–3", 2.0, 3.0, 14),
+    ("★ Mag 3–5 (faintest)", 3.0, 6.5, 8),
+]
+tier_colors = [
+    "#{:02X}{:02X}{:02X}".format(
+        *(round(seq_lo[k] + (seq_hi[k] - seq_lo[k]) * (j / (len(tiers) - 1))) for k in range(3))
+    )
+    for j in range(len(tiers))
 ]
 
 tier_data = {t[0]: [] for t in tiers}
 for name, ra, dec, mag, cname in all_stars:
     tooltip = f"{name} (mag {mag:.1f})"
     if cname:
-        tooltip += f" \u2014 {cname}"
-    for tname, cond, _ in tiers:
-        if cond(mag):
+        tooltip += f" — {cname}"
+    for tname, lo_m, hi_m, _ in tiers:
+        if lo_m <= mag < hi_m:
             tier_data[tname].append({"value": (ra, dec), "label": tooltip})
             break
 
-# Constellation line series data (ordered star path coordinates)
-const_line_data = {}
+# Constellation stick-figure lines as ONE series: a None break between each
+# constellation collapses 8 redundant legend entries into a single subtle layer.
+const_line_points = []
 for cname, star_list in constellations.items():
-    const_line_data[cname] = [
-        {"value": (ra, dec), "label": f"{name} \u2014 {cname}"} for name, ra, dec, mag in star_list
-    ]
+    for name, ra, dec, _mag in star_list:
+        const_line_points.append({"value": (ra, dec), "label": f"{name} — {cname}"})
+    const_line_points.append(None)
 
 # Ecliptic line (approximate path in equatorial coordinates)
 obliquity = 23.44
@@ -148,84 +181,82 @@ ecliptic_points = []
 for ra_h in np.linspace(3.0, 14.5, 50):
     ecl_lon_rad = math.radians(ra_h * 15.0)
     dec_ecl = obliquity * math.sin(ecl_lon_rad)
-    ecliptic_points.append({"value": (ra_h, dec_ecl), "label": f"Ecliptic ({ra_h:.1f}h, {dec_ecl:.1f}\u00b0)"})
+    ecliptic_points.append({"value": (ra_h, dec_ecl), "label": f"Ecliptic ({ra_h:.1f}h, {dec_ecl:.1f}°)"})
 
-# Style — dark night sky with subtle grid and brighter constellation lines
-n_series_const = len(constellations)
-line_color = "#3366aa"
-ecliptic_color = "#cc6633"
+# Style — theme-adaptive chrome; Imprint data colors stay constant across themes
 custom_style = Style(
-    background="#04041a",
-    plot_background="#060820",
-    foreground="#6680aa",
-    foreground_strong="#aabbdd",
-    foreground_subtle="#0c1228",
-    colors=((line_color,) * n_series_const + (ecliptic_color,) + ("#ffffff", "#ffd700", "#6eb5ff", "#556677")),
-    opacity=0.85,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=(INK_MUTED, OCHRE, *tier_colors),
+    opacity=0.9,
     opacity_hover=1.0,
-    title_font_size=34,
-    label_font_size=20,
-    major_label_font_size=20,
-    legend_font_size=17,
-    value_font_size=18,
-    tooltip_font_size=16,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    tooltip_font_size=36,
     title_font_family="Trebuchet MS, Helvetica, sans-serif",
     label_font_family="Trebuchet MS, Helvetica, sans-serif",
     major_label_font_family="Trebuchet MS, Helvetica, sans-serif",
     legend_font_family="Trebuchet MS, Helvetica, sans-serif",
     value_font_family="Trebuchet MS, Helvetica, sans-serif",
-    stroke_width=2.0,
+    stroke_width=2.5,
 )
 
-# Chart configuration
+# Chart configuration (Canvas hard rule: 3200x1800 landscape)
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="star-chart-constellation \u00b7 pygal \u00b7 pyplots.ai",
+    title="star-chart-constellation · python · pygal · anyplot.ai",
     x_title="Right Ascension (hours)",
-    y_title="Declination (\u00b0)",
+    y_title="Declination (°)",
+    allow_interruptions=True,
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=4,
-    legend_box_size=18,
+    legend_at_bottom_columns=3,
+    legend_box_size=28,
     stroke=True,
     dots_size=8,
     show_x_guides=True,
     show_y_guides=True,
     x_value_formatter=lambda x: f"{x:.0f}h",
-    value_formatter=lambda y: f"{y:.0f}\u00b0",
-    margin_top=20,
-    margin_bottom=60,
-    margin_left=20,
-    margin_right=20,
+    value_formatter=lambda y: f"{y:.0f}°",
+    margin_top=24,
+    margin_bottom=40,
+    margin_left=24,
+    margin_right=40,
     tooltip_border_radius=6,
     tooltip_fancy_mode=True,
     print_values=False,
-    truncate_legend=30,
-    spacing=10,
+    spacing=20,
 )
 
-# Constellation stick-figure lines (each constellation as its own series)
-for cname in constellations:
-    chart.add(cname, const_line_data[cname], dots_size=0)
+# Constellation stick-figure lines (single subtle layer, drawn first = behind stars)
+chart.add("Constellations", const_line_points, dots_size=0)
 
-# Ecliptic line
-chart.add("Ecliptic", ecliptic_points, dots_size=0)
+# Ecliptic line (dashed warm reference curve)
+chart.add("Ecliptic", ecliptic_points, dots_size=0, stroke_style={"dasharray": "16, 12"})
 
 # Star scatter by magnitude tier (stroke=False for dots only)
-for tname, _, size in tiers:
+for tname, _, _, size in tiers:
     chart.add(tname, tier_data[tname], dots_size=size, stroke=False)
 
 # Render SVG and add constellation name labels via XML post-processing
+ET.register_namespace("", "http://www.w3.org/2000/svg")
+ET.register_namespace("xlink", "http://www.w3.org/1999/xlink")
 svg_bytes = chart.render()
 tree = ET.fromstring(svg_bytes)
 ns = {"svg": "http://www.w3.org/2000/svg"}
 
-# Find two reference circles (brightest stars, r=32) to build coordinate mapping
+# Use two brightest-star circles (r == bright_size) to build a linear data->pixel map
 bright_stars_data = [(ra, dec) for _, ra, dec, mag, _ in all_stars if mag < 1.0]
 circles = tree.findall(".//svg:circle", ns)
-ref_circles = [(float(c.get("cx")), float(c.get("cy"))) for c in circles if c.get("r") == "32"]
+ref_circles = [(float(c.get("cx")), float(c.get("cy"))) for c in circles if c.get("r") == str(bright_size)]
 
 if len(ref_circles) >= 2 and len(bright_stars_data) >= 2:
     ra1, dec1 = bright_stars_data[0]
@@ -248,18 +279,20 @@ if len(ref_circles) >= 2 and len(bright_stars_data) >= 2:
         text_el.set("x", f"{svg_x:.1f}")
         text_el.set("y", f"{svg_y:.1f}")
         text_el.set("font-family", "Trebuchet MS, Helvetica, sans-serif")
-        text_el.set("font-size", "24")
-        text_el.set("fill", "#99aacc")
-        text_el.set("fill-opacity", "0.9")
+        text_el.set("font-size", "40")
+        text_el.set("fill", INK_SOFT)
+        text_el.set("fill-opacity", "0.95")
         text_el.set("text-anchor", "middle")
         text_el.set("font-style", "italic")
         text_el.text = cname
 
 svg_str = ET.tostring(tree, encoding="unicode")
 
-# Save HTML (SVG) version
-with open("plot.html", "w") as f:
+# Save interactive HTML (SVG) version
+with open(f"plot-{THEME}.html", "w") as f:
     f.write(svg_str)
 
-# Convert modified SVG to PNG
-cairosvg.svg2png(bytestring=svg_str.encode("utf-8"), write_to="plot.png")
+# Convert modified SVG to PNG at the exact canvas contract size
+cairosvg.svg2png(
+    bytestring=svg_str.encode("utf-8"), write_to=f"plot-{THEME}.png", output_width=3200, output_height=1800
+)
