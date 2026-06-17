@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: chord-basic
 created: '2026-06-17T02:04:57Z'
-updated: '2026-06-17T02:09:25Z'
+updated: '2026-06-17T02:16:42Z'
 generated_by: claude-opus
 workflow_run: 27660558286
 issue: 858
@@ -12,48 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chord-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chord-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chord-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chord-basic/javascript/echarts/plot-dark.html
-quality_score: 85
+quality_score: 86
 review:
   strengths:
-  - 'Idiomatic ECharts: a circular `graph` series is the correct native stand-in for
-    a chord type ECharts lacks — entities on a ring, curved arcs carrying flow, with
-    `emphasis.focus: ''adjacency''` for hover highlighting.'
-  - Imprint palette applied in canonical order with brand green `#009E73` on the first
-    entity (Africa); all six entity colors are identical across light and dark, only
-    chrome flips.
-  - Chord width is genuinely proportional to flow magnitude (`width = 1.5 + value
-    * 0.8`) and node symbolSize encodes total throughput, giving real visual hierarchy
-    (Asia/Europe read as hubs).
-  - 'Directional arrowheads (`edgeSymbol: [''none'',''arrow'']`) render bidirectional
-    pairs as distinct chords, satisfying the spec''s bidirectional requirement.'
-  - 'Clean, KISS, deterministic hard-coded data; `animation: false` set; tooltips
-    defined for the interactive HTML output; node borders use `pageBg` for crisp separation.'
+  - Idiomatic circular `graph` series — the correct ECharts equivalent for a native
+    chord type, with a clear code comment explaining the choice
+  - Imprint palette applied in canonical order (Africa=#009E73 brand green first,
+    then lavender/blue/ochre/red/cyra), identical across both themes
+  - Node size encodes total throughput and chord width is proportional to flow magnitude
+    with a sensible minimum-width + opacity floor that keeps 1–2M flows legible
+  - Bidirectional flows rendered as separate directed chords with arrow edge symbols,
+    satisfying the spec requirement
+  - Interactive tooltip formatter shows exact flow values and node totals; emphasis
+    focus:adjacency adds genuine distinctive ECharts polish
+  - Title follows the mandated `{Descriptive} · {spec-id} · {language} · {library}
+    · anyplot.ai` format and is readable in both themes
+  - Deterministic hard-coded data, clean KISS structure, square canvas passes the
+    dimension gate
   weaknesses:
-  - 'The top entity node (S. America) sits directly under the title text — the red
-    circle crowds/slightly overlaps the ''chord-basic'' word of the title in both
-    renders. Nudge the circular layout center down (e.g. center: [''50%'',''58%''])
-    or reduce the ring radius so the topmost node clears the title band.'
-  - The thinnest chords (value 1-2M, e.g. Africa→Oceania, S.America→Asia) are faint
-    at opacity 0.55 — consider a slightly higher minimum width or opacity floor so
-    low-volume flows stay legible when scaled to mobile width.
-  - No explicit legend; entity identity relies on node labels + color. Acceptable
-    for a labeled chord, but a compact legend or keeping labels fully clear of crossing
-    arcs would harden identification.
-  image_description: |-
-    Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1), transparent series over the container surface — not pure white.
-      Chrome: title "Migration Between Continents · chord-basic · javascript · echarts · anyplot.ai" in dark ink, centered, fully readable. Six entity labels (Africa, Asia, Europe, N. America, S. America, Oceania) in dark ink, all readable. NOTE: the S. America node at top-center crowds the title text slightly (the red circle abuts the "chord-basic" word).
-      Data: six distinct nodes in Imprint canonical order — Africa #009E73 brand green, Asia #C475FD lavender, Europe #4467A3 blue, N. America #BD8233 ochre, S. America #AE3030 matte red, Oceania #2ABCCD cyan. Curved arcs colored by source node, widths proportional to flow, arrowheads showing direction. First series (Africa) confirmed brand green.
-      Legibility verdict: PASS (minor title/top-node crowding, but all text readable).
-
-    Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17) — not pure black.
-      Chrome: title and all six entity labels render in light ink (#F0EFE8), clearly readable; no dark-on-dark failures. Same slight S. America node / title crowding as the light render.
-      Data: identical entity colors and chord geometry to the light render — only chrome (background + text) flipped. Brand green Africa remains vivid; all six hues hold.
-      Legibility verdict: PASS (no dark-on-dark; all text legible).
+  - Chords bundle tightly and overlap heavily near the Asia node at the bottom, creating
+    a slightly muddy crossing region — consider nudging curveness or spreading low-value
+    chords so individual flows stay traceable (minor; inherent to chord layouts)
+  - Without a legend, low-volume thin chords (1–2M) can be hard to attribute to a
+    source at a glance; node-coloured chords help but tracing in the dense center
+    still takes effort
+  - Design refinement is good but not exceptional — node-throughput sizing and adjacency
+    emphasis are the main storytelling devices
+  image_description: "Light render (plot-light.png):\n  Background: warm off-white\
+    \ (~#FAF8F1), correct light surface — not pure white.\n  Chrome: title \"Migration\
+    \ Between Continents · chord-basic · javascript · echarts · anyplot.ai\" in dark\
+    \ ink, centered, fully readable. Node labels (Africa, Asia, Europe, N. America,\
+    \ S. America, Oceania) in dark ink beside each node, all clearly readable.\n \
+    \ Data: six ring nodes each a distinct Imprint colour — Africa green #009E73 (brand,\
+    \ first), Asia lavender, Europe blue, N. America ochre, S. America matte red,\
+    \ Oceania cyan. Curved chords coloured by source node, widths proportional to\
+    \ flow. First series is #009E73. \n  Legibility verdict: PASS\n\nDark render (plot-dark.png):\n\
+    \  Background: warm near-black (~#1A1A17), correct dark surface — not pure black.\n\
+    \  Chrome: title and all node labels rendered in light ink, fully readable against\
+    \ the dark surface — no dark-on-dark failures.\n  Data: node and chord colours\
+    \ are identical to the light render (only chrome flipped). Africa still #009E73\
+    \ green, same lavender/blue/ochre/red/cyan nodes, same chord widths and curvature.\n\
+    \  Legibility verdict: PASS"
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -61,48 +63,47 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 26px, labels 19px, readable both themes; title runs long (~78
-          chars) but within bounds.
+        comment: Title 26pt, node labels 19pt, readable in both themes; slightly small
+          when scaled to ~400px but title carries it
       - id: VQ-02
         name: No Overlap
-        score: 4
-        max: 6
-        passed: false
-        comment: Top S. America node crowds/touches the title text; central arc crossings
-          are expected for a chord.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Nodes and most chords prominent; thinnest 1-2M chords a touch faint
-          at opacity 0.55.
+        comment: No text-text overlap; chords bundle/overlap near Asia node (inherent
+          to chord layout)
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Chord widths scaled to value with min-width + opacity floor; nodes
+          sized by throughput
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; 6 distinct hues, good contrast.
+        comment: Imprint palette is CVD-safe; distinct hues per entity
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square, gate passed; balanced radial layout, but top node
-          crowds the title band.
+        comment: Square 2400x2400, gate passed; ring well-centered, title band reserved
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes (chord); descriptive title with context, node labels present.
+        comment: No axes (chord); descriptive title present
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green first (Africa), canonical order, #FAF8F1/#1A1A17 backgrounds,
-          both themes correct.'
+        comment: 'First series #009E73; canonical Imprint order; backgrounds #FAF8F1/#1A1A17;
+          both themes correct'
     design_excellence:
       score: 11
       max: 20
@@ -112,21 +113,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Throughput-scaled nodes + source-colored chords + adjacency emphasis
-          show real design thought.
+        comment: Node-size encoding, node borders, curved chords, opacity floor —
+          above defaults
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Clean, no chartjunk, node borders tied to bg; faint thin chords cost
-          some refinement.
+        comment: Minimal chrome, generous whitespace, clean ring
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Node sizing creates hub focal points (Asia/Europe); arrows tell direction.
+        comment: Throughput-based node sizing creates hierarchy; source-coloured chords
+          aid reading
     spec_compliance:
       score: 15
       max: 15
@@ -136,29 +137,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: ECharts has no native chord; circular graph is the prompt-endorsed
-          idiomatic equivalent — entities on a ring with proportional arcs.
+        comment: Circular graph = idiomatic ECharts chord equivalent (no native chord
+          type)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct entity colors, proportional chord widths, bidirectional
-          pairs as separate arrowed chords, tooltips for HTML.
+        comment: Distinct colors, proportional widths, separate bidirectional chords,
+          tooltips
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: source/target/value mapped to links; node size = throughput; all
-          flows shown.
+        comment: source/target/value mapped; 6 entities, 18 connections (within 4-20
+          / 10-100)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches '{Descriptive} · {spec-id} · {language} · {library}
-          · anyplot.ai'; entities self-labeled.
+        comment: Title format correct with descriptive prefix; node labels serve as
+          legend
     data_quality:
       score: 15
       max: 15
@@ -168,20 +169,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multiple entities, bidirectional flows, varied widths, throughput
-          sizing — full chord vocabulary.
+        comment: Bidirectional flows, varied magnitudes, multiple source/target pairs
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Continental migration flows in millions — plausible and neutral.
+        comment: Inter-continental migration flows — plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 1-15M, sensible for the domain.
+        comment: 1–15 million range, sensible for migration
     code_quality:
       score: 10
       max: 10
@@ -191,50 +191,48 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes; small inline arrow helpers are idiomatic JS.
+        comment: Flat script, small arrow helpers only
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded deterministic data, no RNG.
+        comment: Hard-coded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports — echarts global per harness contract.
+        comment: No imports; uses echarts global per harness contract
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clear, well-commented, no fake UI.
+        comment: Clear, well-commented, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness emits plot-{theme}.png + .html; animation:false; current
-          API.
+        comment: Harness emits plot-{theme}.png + .html; animation:false set
     library_features:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: graph + circular layout, tokens, emphasis focus adjacency, edgeSymbol
-          arrows — textbook ECharts.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Adjacency-focus emphasis, circular layout, symbolSize encoding, item/edge
-          tooltips — ECharts-specific strengths.
+        comment: graph/circular layout, setOption, tooltip formatter — recommended
+          ECharts patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: emphasis focus:adjacency, edgeSymbol arrows, throughput sizing
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -246,6 +244,5 @@ impl_tags:
   - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
-  - alpha-blending
   - edge-highlighting
+  - alpha-blending
