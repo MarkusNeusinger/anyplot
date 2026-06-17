@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 nyquist-basic: Nyquist Plot for Control Systems
 Library: altair 6.2.1 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-06-17
@@ -78,9 +78,9 @@ sign_changes = np.where(np.diff(np.sign(imag_part[30:])))[0] + 30
 phase_cross_idx = sign_changes[0] if len(sign_changes) > 0 else None
 phase_cross_omega = omega[phase_cross_idx] if phase_cross_idx is not None else None
 
-# Frequency markers — ω=5 omitted to avoid crowding near critical point
+# Frequency markers — ω=2.0 omitted to avoid overlap with gain crossover at ≈2.0
 freq_annotations = []
-for w_mark, dy_sign in [(0.5, -1), (1.0, -1), (2.0, -1)]:
+for w_mark, dy_sign in [(0.5, -1), (1.0, -1)]:
     idx = np.argmin(np.abs(omega - w_mark))
     freq_annotations.append(
         {"real": real_part[idx], "imaginary": imag_part[idx], "label": f"ω = {w_mark}", "above": dy_sign < 0}
@@ -111,10 +111,10 @@ if phase_cross_idx is not None:
         .mark_point(shape="diamond", size=180, color=CROSS_COLOR, filled=True, opacity=0.85)
         .encode(x=alt.X("real:Q"), y=alt.Y("imaginary:Q"), tooltip=[alt.Tooltip("label:N", title="Phase Crossover")])
     )
-    # Label goes left of the diamond to avoid overlapping with critical point text
+    # Label goes below-left of the diamond, away from the critical point label above
     pc_text = (
         alt.Chart(pc_df)
-        .mark_text(fontSize=10, color=CROSS_COLOR, fontWeight="bold", align="left", dx=12, dy=16)
+        .mark_text(fontSize=10, color=CROSS_COLOR, fontWeight="bold", align="right", dx=-12, dy=22)
         .encode(x=alt.X("real:Q"), y=alt.Y("imaginary:Q"), text="label:N")
     )
     phase_cross_layers = [pc_point, pc_text]
@@ -184,7 +184,7 @@ nyquist_layer = (
 # Unit circle reference
 unit_circle_layer = (
     alt.Chart(unit_circle_df)
-    .mark_line(strokeWidth=1.2, strokeDash=[5, 4], color=INK_SOFT, opacity=0.3)
+    .mark_line(strokeWidth=1.5, strokeDash=[5, 4], color=INK_SOFT, opacity=0.5)
     .encode(x=alt.X("ux:Q", scale=x_scale), y=alt.Y("uy:Q", scale=y_scale), order="idx:Q")
 )
 
@@ -203,10 +203,10 @@ critical_cross = (
         tooltip=[alt.Tooltip("label:N", title="Critical Point")],
     )
 )
-# Label to the upper-right to separate from the phase crossover label on the left
+# Label to the upper-right; use INK for contrast on both light/dark themes
 critical_text = (
     alt.Chart(critical_df)
-    .mark_text(fontSize=10, fontWeight="bold", color=CRITICAL_COLOR, align="left", dx=16, dy=-22)
+    .mark_text(fontSize=10, fontWeight="bold", color=INK, align="left", dx=16, dy=-22)
     .encode(x=alt.X("real:Q", scale=x_scale), y=alt.Y("imaginary:Q", scale=y_scale), text="label:N")
 )
 
