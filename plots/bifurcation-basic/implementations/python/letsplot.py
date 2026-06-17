@@ -1,19 +1,55 @@
-""" pyplots.ai
+"""anyplot.ai
 bifurcation-basic: Bifurcation Diagram for Dynamical Systems
-Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 93/100 | Created: 2026-03-20
+Library: letsplot | Python
+Quality: — | Created: 2026-06-17
 """
+
+import os
 
 import numpy as np
 import pandas as pd
-from lets_plot import *  # noqa: F403
-from lets_plot.export import ggsave as export_ggsave
+from lets_plot import (
+    LetsPlot,
+    aes,
+    coord_cartesian,
+    element_blank,
+    element_line,
+    element_rect,
+    element_text,
+    geom_point,
+    geom_segment,
+    geom_text,
+    ggplot,
+    ggsave,
+    ggsize,
+    guides,
+    labs,
+    sampling_pick,
+    scale_color_gradient,
+    scale_x_continuous,
+    scale_y_continuous,
+    theme,
+    theme_minimal,
+)
 
 
-LetsPlot.setup_html()  # noqa: F405
+LetsPlot.setup_html()
 
-# Data - Logistic map: x(n+1) = r * x(n) * (1 - x(n))
-# Higher resolution in chaotic regime for denser visualization
+THEME = os.getenv("ANYPLOT_THEME", "light")
+
+# Theme-adaptive chrome tokens
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint sequential colormap: brand green → blue (single-polarity continuous)
+IMPRINT_SEQ_LOW = "#009E73"
+IMPRINT_SEQ_HIGH = "#4467A3"
+
+# Data — Logistic map: x(n+1) = r * x(n) * (1 - x(n))
+# Denser sampling in the chaotic regime for richer visualization
 r_stable = np.linspace(2.5, 3.45, 600)
 r_chaotic = np.linspace(3.45, 4.0, 1600)
 r_values = np.concatenate([r_stable, r_chaotic])
@@ -34,7 +70,7 @@ for r in r_values:
 
 df = pd.DataFrame({"r": np.array(r_all), "x": np.array(x_all)})
 
-# Key bifurcation points
+# Key bifurcation points with dashed guide lines
 bif_r = [3.0, 3.449, 3.544, 3.5699]
 segments_df = pd.DataFrame({"r": bif_r, "ymin": [0.0] * 4, "ymax": [1.0] * 4})
 
@@ -43,83 +79,66 @@ labels_df = pd.DataFrame(
     {"r": bif_r, "x": [0.93, 0.83, 0.73, 0.63], "label": ["Period-2", "Period-4", "Period-8", "Chaos"]}
 )
 
-# Feigenbaum point annotation
+# Feigenbaum constant annotation near onset of chaos
 feigen_df = pd.DataFrame({"r": [3.5699], "x": [0.05], "label": ["δ ≈ 4.669 (Feigenbaum)"]})
 
-# Plot with perceptually uniform viridis-based gradient
 plot = (
-    ggplot(df, aes(x="r", y="x", color="r"))  # noqa: F405
-    + geom_point(  # noqa: F405
-        size=0.4,
-        alpha=0.35,
-        tooltips="none",
-        show_legend=False,
-        sampling=sampling_pick(n=220000),  # noqa: F405
-    )
-    + scale_color_gradientn(  # noqa: F405
-        colors=["#440154", "#414487", "#2A788E", "#22A884", "#7AD151"], name="r"
-    )
-    + geom_segment(  # noqa: F405
-        aes(x="r", y="ymin", xend="r", yend="ymax"),  # noqa: F405
+    ggplot(df, aes(x="r", y="x", color="r"))
+    + geom_point(size=0.4, alpha=0.35, tooltips="none", show_legend=False, sampling=sampling_pick(n=220000))
+    # Imprint sequential colormap for the continuous r parameter
+    + scale_color_gradient(low=IMPRINT_SEQ_LOW, high=IMPRINT_SEQ_HIGH, guide="none")
+    + geom_segment(
+        aes(x="r", y="ymin", xend="r", yend="ymax"),
         data=segments_df,
-        color="#AAAAAA",
+        color=INK_SOFT,
         size=0.3,
         linetype="dashed",
         inherit_aes=False,
         tooltips="none",
     )
-    + geom_text(  # noqa: F405
-        aes(x="r", y="x", label="label"),  # noqa: F405
-        data=labels_df,
-        size=13,
-        color="#555555",
-        hjust=0.5,
-        vjust=0,
-        inherit_aes=False,
+    + geom_text(
+        aes(x="r", y="x", label="label"), data=labels_df, size=4, color=INK_SOFT, hjust=0.5, vjust=0, inherit_aes=False
     )
-    + geom_text(  # noqa: F405
-        aes(x="r", y="x", label="label"),  # noqa: F405
+    + geom_text(
+        aes(x="r", y="x", label="label"),
         data=feigen_df,
-        size=11,
-        color="#777777",
+        size=3.5,
+        color=INK_MUTED,
         hjust=0,
         vjust=1,
         fontface="italic",
         nudge_x=0.02,
         inherit_aes=False,
     )
-    + guides(color="none")  # noqa: F405
-    + labs(  # noqa: F405
+    + guides(color="none")
+    + labs(
         x="Growth Rate (r)",
         y="Population (x)",
-        title="bifurcation-basic · letsplot · pyplots.ai",
+        title="bifurcation-basic · python · letsplot · anyplot.ai",
         caption="Logistic map: x(n+1) = r · x(n) · (1 − x(n))",
     )
-    + scale_x_continuous(  # noqa: F405
-        breaks=[2.5, 2.75, 3.0, 3.25, 3.5, 3.75, 4.0], expand=[0.02, 0], format=".2f"
-    )
-    + scale_y_continuous(  # noqa: F405
-        breaks=[0.0, 0.2, 0.4, 0.6, 0.8, 1.0], expand=[0.02, 0], format=".1f"
-    )
-    + coord_cartesian(ylim=[0, 1])  # noqa: F405
-    + ggsize(1600, 900)  # noqa: F405
-    + theme_minimal()  # noqa: F405
-    + theme(  # noqa: F405
-        axis_text=element_text(size=16, color="#555555"),  # noqa: F405
-        axis_title=element_text(size=20, color="#333333"),  # noqa: F405
-        plot_title=element_text(size=24, color="#222222", face="bold"),  # noqa: F405
-        plot_caption=element_text(size=13, color="#888888", face="italic"),  # noqa: F405
-        panel_grid_major_x=element_line(color="#E8E8E8", size=0.3),  # noqa: F405
-        panel_grid_major_y=element_blank(),  # noqa: F405
-        panel_grid_minor=element_blank(),  # noqa: F405
-        plot_background=element_rect(fill="#FAFAFA", color="#FAFAFA"),  # noqa: F405
-        panel_background=element_rect(fill="#FAFAFA", color="#FAFAFA"),  # noqa: F405
-        axis_ticks=element_line(color="#CCCCCC", size=0.3),  # noqa: F405
-        axis_line=element_line(color="#CCCCCC", size=0.4),  # noqa: F405
+    + scale_x_continuous(breaks=[2.5, 2.75, 3.0, 3.25, 3.5, 3.75, 4.0], expand=[0.02, 0], format=".2f")
+    + scale_y_continuous(breaks=[0.0, 0.2, 0.4, 0.6, 0.8, 1.0], expand=[0.02, 0], format=".1f")
+    + coord_cartesian(ylim=[0, 1])
+    # Canvas: ggsize(800, 450) × scale=4 → 3200×1800 px (landscape)
+    + ggsize(800, 450)
+    + theme_minimal()
+    + theme(
+        axis_text=element_text(size=10, color=INK_SOFT),
+        axis_title=element_text(size=12, color=INK),
+        plot_title=element_text(size=16, color=INK, face="bold"),
+        plot_caption=element_text(size=9, color=INK_MUTED, face="italic"),
+        panel_grid_major_x=element_line(color=INK, size=0.2),
+        panel_grid_major_y=element_blank(),
+        panel_grid_minor=element_blank(),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        axis_ticks=element_line(color=INK_SOFT, size=0.3),
+        axis_line=element_line(color=INK_SOFT, size=0.4),
         plot_margin=[30, 40, 20, 20],
     )
 )
 
-# Save
-export_ggsave(plot, filename="plot.png", path=".", scale=3)
-export_ggsave(plot, filename="plot.html", path=".")
+# Save PNG (scale=4 → 3200×1800 px) and interactive HTML
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, f"plot-{THEME}.html", path=".")
