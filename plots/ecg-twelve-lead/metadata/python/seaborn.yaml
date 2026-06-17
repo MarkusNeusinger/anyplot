@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: ecg-twelve-lead
 created: '2026-03-19T20:06:51Z'
-updated: '2026-06-17T03:11:26Z'
+updated: '2026-06-17T03:21:21Z'
 generated_by: claude-opus
 workflow_run: 27662891721
 issue: 4554
@@ -12,43 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecg-twelv
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 93
 review:
   strengths:
-  - 'Highly convincing clinical replication: standard 3x4 lead layout (I/aVR/V1/V4,
-    II/aVL/V2/V5, III/aVF/V3/V6) plus a full-width Lead II rhythm strip, exactly as
-    a real 12-lead ECG printout.'
-  - Authentic ECG-paper grid using the Imprint matte-red (#AE3030) as a semantic anchor
-    with major/minor lines, framed panels, and ticks removed for a true paper look.
-  - Brand green (#009E73) single trace is crisp and identical across both themes;
-    the green-on-monitor cardiac look is a strong thematic fit.
-  - Realistic Gaussian P-QRS-T morphology with lead-specific gains (inverted aVR,
-    deep S in V1, progressive R-wave) and a 1 mV calibration pulse — clinically plausible
-    normal sinus rhythm.
-  - Exact 3200x1800 canvas, no bbox_inches trimming; scale footer '25 mm/s · 10 mm/mV'
-    and seed-based reproducibility.
+  - 'Authentic clinical fidelity: standard 3x4 lead layout in the correct column order
+    (I/aVR/V1/V4, II/aVL/V2/V5, III/aVF/V3/V6) plus a full-length Lead II rhythm strip,
+    a 1 mV calibration pulse, and a 25 mm/s / 10 mm/mV scale footer — all the hallmarks
+    a clinician expects.'
+  - 'Distinctive seaborn objects API (so.Plot) usage: native faceting (.facet(col,
+    wrap=4)) onto subfigures with .share()/.on(), which is genuinely idiomatic modern
+    seaborn rather than a thin matplotlib wrapper.'
+  - Realistic synthetic ECG via a Gaussian P-Q-R-S-T wave model with per-lead morphology
+    (e.g. inverted aVR, deep S in V1), seeded for reproducibility.
+  - 'Imprint-correct color use: single data series is brand green #009E73, and the
+    iconic ECG paper grid uses the Imprint matte-red #AE3030 as a justified medical/blood
+    semantic anchor; both backgrounds theme-correct.'
+  - Clean theme adaptation — lead labels carry a PAGE_BG bbox so they stay readable
+    on both surfaces; chrome flips while data color stays identical.
   weaknesses:
-  - The '1 mV' caption sits very close to the calibration-pulse bracket in the first
-    panel — readable but slightly cramped; nudge it a touch right or down for cleaner
-    separation (VQ-01/VQ-02 minor).
-  - 'seaborn''s contribution is thin: the figure is largely matplotlib (GridSpec,
-    ticker, manual grid/spines) with seaborn used only for sns.lineplot + sns.set_theme
-    — limited distinctive-library showcase (LM-02).'
-  - Two helper functions (synth_ecg, style_ecg_grid) deviate slightly from the strict
-    KISS 'no functions' guideline, though they are well-justified given the 13 repeated
-    panels (CQ-01 minor).
+  - 'Dark render: the red ECG grid at alpha 0.55 on #1A1A17 reads somewhat dim — real
+    ECG paper is light, so the ''paper'' effect is less convincing on dark. Consider
+    nudging grid_major_alpha slightly higher (~0.6) or a marginally lighter red for
+    the dark theme to keep the paper texture legible.'
+  - The '1 mV' calibration label (fontsize 7.5) and the '25 mm/s · 10 mm/mV' footer
+    (fontsize 8) are quite small; readable at full 3200x1800 but borderline when scaled
+    to ~400 px mobile width.
+  - Two helper functions (synth_ecg, style_ecg_grid) are well-justified for DRY across
+    12 leads + rhythm strip, but technically deviate from the strict KISS 'no functions'
+    guideline.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (~#FAF8F1), correct light surface — not pure white.
-      Chrome: dark title "ecg-twelve-lead · python · seaborn · anyplot.ai" centered and fully readable; bold dark lead labels (I, aVR, V1, V4, ... II rhythm strip) in subtle off-white boxes, all readable; footer "25 mm/s · 10 mm/mV" in muted dark, readable; "1 mV" calibration caption readable.
-      Data: ECG traces in brand green #009E73; ECG-paper grid in matte red #AE3030 (major/minor). First/only series is #009E73.
-      Legibility verdict: PASS
+      Background: warm off-white (#FAF8F1) across figure, subfigures, and all panels — not pure white.
+      Chrome: title "ecg-twelve-lead · python · seaborn · anyplot.ai" in dark medium ink, fully visible above the grid, not clipped. Bold black lead labels (I, aVR, V1, V4, II, ...) sit in the top-left of each panel inside a subtle off-white bbox. "1 mV" calibration text and "25 mm/s · 10 mm/mV" footer in muted ink, both readable. No axis tick labels (ECG convention — units conveyed by grid + footer).
+      Data: ECG traces are brand green #009E73, clearly distinguishable. Grid is light matte-red ECG paper (#AE3030) with major (0.5mm-equivalent) and minor lines. Calibration pulse drawn as a dark step in panel I lower-left.
+      Legibility verdict: PASS — all text legible against the light surface; no light-on-light.
 
     Dark render (plot-dark.png):
-      Background: warm near-black (~#1A1A17), correct dark surface — not pure black.
-      Chrome: light/white title and bold white lead labels, all clearly readable against the dark surface; no dark-on-dark text anywhere; footer in soft light grey, readable.
-      Data: identical green #009E73 traces and red #AE3030 grid as the light render — only chrome flipped, data colors unchanged.
-      Legibility verdict: PASS
+      Background: warm near-black (#1A1A17) — not pure black.
+      Chrome: title and lead labels in light ink (#F0EFE8), labels sit on off-dark bbox, fully readable. Footer in muted light ink, legible. Title not clipped.
+      Data: traces are the SAME brand green #009E73 as the light render (data color identical; only chrome flipped). Grid is a darker red — visible and reads as ECG paper but slightly dim.
+      Legibility verdict: PASS — no dark-on-dark; all titles/labels/footer readable against the near-black background. Brand green visible on both surfaces.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -59,69 +62,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All labels/title/footer readable in both themes; '1 mV' caption slightly
-          cramped near calibration bracket
+        comment: Title, lead labels, footer readable in both themes; 1 mV (7.5pt)
+          and footer (8pt) small for mobile scaling
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Lead-label boxes mask traces cleanly; no real text/data collisions
+        comment: Lead labels boxed in panel corners, calibration parked clear of trace;
+          no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 0.9pt green traces crisp against red grid in both themes
+        comment: Green traces and red grid clearly visible at appropriate line widths
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single green data series on red chrome; red/green not used as categorical
-          signal
+        comment: Green trace on warm bg; red is grid chrome not data, so no red-green
+          data conflict
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exact 3200x1800; clinical layout, nothing clipped
+        comment: Canvas gate passed (3200x1800); balanced 3x4 + rhythm strip, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Ticks intentionally removed for ECG paper; scale footer supplies
-          units
+        comment: No traditional axis labels (ECG convention); units in footer; title
+          correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
         comment: 'First series #009E73; grid #AE3030 semantic exception; backgrounds
-          #FAF8F1/#1A1A17'
+          #FAF8F1/#1A1A17 correct'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Convincing clinical ECG-paper aesthetic, well above generic defaults
+        comment: High-fidelity ECG paper replication, calibration pulse, scale footer;
+          dark-mode grid slightly dim
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Subtle major/minor grid, framed panels, generous whitespace
+        comment: Spines styled as grid frame, ticks removed, generous whitespace,
+          subtle major/minor grid
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Conventional clinical layout with rhythm-strip anchor; readable hierarchy
+        comment: Clinical 3x4 reading order plus full-width rhythm strip anchor guides
+          the viewer
     spec_compliance:
       score: 15
       max: 15
@@ -131,27 +140,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-channel 12-lead ECG display
+        comment: Correct multi-channel 12-lead ECG waveform display
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 3x4 grid, rhythm strip, paper grid, calibration pulse, labeled leads,
-          scale markers all present
+        comment: 3x4 grid in correct column order, rhythm strip, major/minor ECG grid,
+          calibration pulse, lead labels, scale markers
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time (s) vs voltage (mV) across all 12 leads + rhythm strip
+        comment: time x voltage(mV) per lead; realistic P-QRS-T morphology; all 12
+          leads
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'ecg-twelve-lead · python · seaborn · anyplot.ai';
-          no legend needed (single series)
+        comment: Title exact format; single series so no legend needed
     data_quality:
       score: 15
       max: 15
@@ -161,20 +170,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full P-QRS-T morphology with lead-specific polarities (inverted aVR,
-          deep S in V1)
+        comment: All 12 leads with distinct morphologies (inverted aVR, deep S in
+          V1) and full P-QRS-T
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Normal sinus rhythm at 72 bpm, neutral and plausible
+        comment: Plausible normal sinus rhythm at 72 bpm, neutral medical context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Amplitudes within typical mV ranges per spec
+        comment: Amplitudes within spec ranges (P 0.1-0.25, QRS up to ~1.2, T 0.1-0.35mV);
+          2.5s strips
     code_quality:
       score: 9
       max: 10
@@ -184,8 +194,8 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Two well-justified helper functions for 13 repeated panels; mild
-          deviation from no-functions guideline
+        comment: Two well-justified DRY helpers (synth_ecg, style_ecg_grid) but technically
+          deviate from no-functions guideline
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -197,50 +207,51 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: os, plt, ticker, np, pd, sns, so all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; clean and readable
+        comment: Clear structure, no fake UI; calibration pulse is a real ECG element
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png at 400 dpi, no bbox_inches
+        comment: Saves plot-{THEME}.png at exact dims, no bbox_inches
     library_features:
-      score: 4
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: sns.lineplot + sns.set_theme used, but layout is mostly matplotlib
-          GridSpec
+        comment: seaborn objects API faceting + sns.set_theme, high-level idiomatic
+          usage
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: Little seaborn-specific functionality; figure is largely matplotlib
+        passed: true
+        comment: so.Plot faceting onto subfigures with .share()/.on() — distinctive
+          modern seaborn
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - small-multiples
-  - subplot-grid
+  - faceting
+  - subplots
   - annotations
-  - custom-gridlines
+  - manual-ticks
   patterns:
   - data-generation
+  - explicit-figure
   - iteration-over-groups
-  dataprep:
-  - signal-synthesis
+  dataprep: []
   styling:
   - publication-ready
-  - theme-adaptive
-  - custom-grid
+  - grid-styling
+  - minimal-chrome
