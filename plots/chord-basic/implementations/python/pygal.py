@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 chord-basic: Basic Chord Diagram
 Library: pygal 3.1.0 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-17
@@ -173,15 +173,28 @@ for s, t, v in flows:
     tx1, ty1 = cx + chord_r * math.cos(t_a1), cy - chord_r * math.sin(t_a1)
     tx2, ty2 = cx + chord_r * math.cos(t_a2), cy - chord_r * math.sin(t_a2)
 
+    # Inset the quadratic control point toward — but short of — the hub: thick
+    # corridors dive deep to the center, thin ones stay shallow, so the many
+    # low-magnitude ribbons no longer pile up on a single point at the hub.
+    depth = 0.55 + 0.35 * (v / max_val)
+    c1x, c1y = (sx1 + tx1) / 2, (sy1 + ty1) / 2
+    c2x, c2y = (tx2 + sx2) / 2, (ty2 + sy2) / 2
+    q1x, q1y = c1x + depth * (cx - c1x), c1y + depth * (cy - c1y)
+    q2x, q2y = c2x + depth * (cx - c2x), c2y + depth * (cy - c2y)
+
     opacity = 0.30 + 0.55 * (v / max_val)
     path = (
         f"M {sx1:.1f},{sy1:.1f} "
-        f"Q {cx:.1f},{cy:.1f} {tx1:.1f},{ty1:.1f} "
+        f"Q {q1x:.1f},{q1y:.1f} {tx1:.1f},{ty1:.1f} "
         f"A {chord_r:.1f},{chord_r:.1f} 0 0,1 {tx2:.1f},{ty2:.1f} "
-        f"Q {cx:.1f},{cy:.1f} {sx2:.1f},{sy2:.1f} "
+        f"Q {q2x:.1f},{q2y:.1f} {sx2:.1f},{sy2:.1f} "
         f"A {chord_r:.1f},{chord_r:.1f} 0 0,0 {sx1:.1f},{sy1:.1f} Z"
     )
-    svg_elems.append(f'<path d="{path}" fill="{IMPRINT_PALETTE[s]}" fill-opacity="{opacity:.2f}" stroke="none"/>')
+    tip = f"{continents[s]} → {continents[t]}: {v}k/yr"
+    svg_elems.append(
+        f'<path d="{path}" fill="{IMPRINT_PALETTE[s]}" fill-opacity="{opacity:.2f}" '
+        f'stroke="none"><title>{tip}</title></path>'
+    )
 
 # Node arcs — filled annular sectors on the perimeter, one per continent
 for i in range(n):
@@ -196,7 +209,11 @@ for i in range(n):
         f"L {ix2:.1f},{iy2:.1f} "
         f"A {r_inner:.1f},{r_inner:.1f} 0 0,0 {ix1:.1f},{iy1:.1f} Z"
     )
-    svg_elems.append(f'<path d="{sector}" fill="{IMPRINT_PALETTE[i]}" stroke="{PAGE_BG}" stroke-width="3"/>')
+    tip = f"{continents[i]}: {totals[i]}k/yr total flow"
+    svg_elems.append(
+        f'<path d="{sector}" fill="{IMPRINT_PALETTE[i]}" stroke="{PAGE_BG}" '
+        f'stroke-width="3"><title>{tip}</title></path>'
+    )
 
 # Continent labels just outside their arc, colored for identity
 for i, name in enumerate(continents):
