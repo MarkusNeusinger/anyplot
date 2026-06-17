@@ -1,13 +1,30 @@
-""" pyplots.ai
+""" anyplot.ai
 ecg-twelve-lead: ECG/EKG 12-Lead Waveform Display
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 92/100 | Created: 2026-03-19
+Library: altair 6.2.1 | Python 3.13.13
+Quality: 94/100 | Updated: 2026-06-17
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
+
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"  # Imprint palette position 1 — the ECG trace (single data series)
+
+# Theme-adaptive ECG paper: pink printout on light, dark red-tinted paper on dark
+ECG_PAPER = "#FFF0EC" if THEME == "light" else "#2B1A18"
+GRID_FINE = "#E8B4B4" if THEME == "light" else "#4A2A28"
+GRID_BOLD = "#C87872" if THEME == "light" else "#6E3C38"
+PAPER_EDGE = "#D4908A" if THEME == "light" else "#5A3A36"
+ANNOT = "#AE3030" if THEME == "light" else "#E68B82"  # Imprint matte red — wave annotations
 
 # Data — Synthetic ECG using Gaussian-based waveform model
 np.random.seed(42)
@@ -62,7 +79,6 @@ grid_layout = [["I", "aVR", "V1", "V4"], ["II", "aVL", "V2", "V5"], ["III", "aVF
 
 # Build combined dataframe for all 12 leads with row/col position
 all_leads = []
-label_records = []
 for row_idx, row_leads in enumerate(grid_layout):
     for col_idx, lead_name in enumerate(row_leads):
         df = pd.DataFrame({"time": t, "voltage": lead_signals[lead_name]})
@@ -70,44 +86,40 @@ for row_idx, row_leads in enumerate(grid_layout):
         df["row"] = row_idx
         df["col"] = col_idx
         all_leads.append(df)
-        label_records.append({"lead": lead_name, "row": row_idx, "col": col_idx})
 leads_df = pd.concat(all_leads, ignore_index=True)
-labels_df = pd.DataFrame(label_records)
 
-# ECG paper grid styling
-grid_bg = "#FFF0EC"
-grid_line_color = "#E8B4B4"
-grid_bold_color = "#C87872"
+# Chart dimensions — kept small so vl-convert padding still fits 3200x1800
+panel_w = 181
+panel_h = 75
+rhythm_h = 60
+col_spacing = 6
+row_spacing = 6
+x_domain = [0, duration]
+y_domain = [-1.2, 1.5]
 
-# Grid line data
+# ECG paper grid line data (fine at ~1mm, bold at ~5mm)
 fine_h_lines = pd.DataFrame({"y": np.arange(-1.5, 1.61, 0.1)})
 bold_h_lines = pd.DataFrame({"y": np.arange(-1.5, 1.61, 0.5)})
 fine_v_lines = pd.DataFrame({"x": np.arange(0, duration + 0.01, 0.04)})
 bold_v_lines = pd.DataFrame({"x": np.arange(0, duration + 0.01, 0.2)})
 
-# Chart dimensions
-panel_w = 380
-panel_h = 200
-x_domain = [0, duration]
-y_domain = [-1.2, 1.5]
-
 # Reusable grid layers — created once, used in all panels
 grid_layers = (
     alt.Chart(fine_h_lines)
-    .mark_rule(color=grid_line_color, strokeWidth=0.5, opacity=0.5)
+    .mark_rule(color=GRID_FINE, strokeWidth=0.5, opacity=0.6)
     .encode(y=alt.Y("y:Q", scale=alt.Scale(domain=y_domain), axis=None))
     + alt.Chart(bold_h_lines)
-    .mark_rule(color=grid_bold_color, strokeWidth=1.2, opacity=0.65)
+    .mark_rule(color=GRID_BOLD, strokeWidth=1.2, opacity=0.7)
     .encode(y=alt.Y("y:Q", scale=alt.Scale(domain=y_domain), axis=None))
     + alt.Chart(fine_v_lines)
-    .mark_rule(color=grid_line_color, strokeWidth=0.5, opacity=0.5)
+    .mark_rule(color=GRID_FINE, strokeWidth=0.5, opacity=0.6)
     .encode(x=alt.X("x:Q", scale=alt.Scale(domain=x_domain), axis=None))
     + alt.Chart(bold_v_lines)
-    .mark_rule(color=grid_bold_color, strokeWidth=1.2, opacity=0.65)
+    .mark_rule(color=GRID_BOLD, strokeWidth=1.2, opacity=0.7)
     .encode(x=alt.X("x:Q", scale=alt.Scale(domain=x_domain), axis=None))
 )
 
-# Plot — Build 3x4 lead grid using facet-like data-driven approach
+# Plot — Build 3x4 lead grid using layered hconcat/vconcat composition
 rows = []
 for row_idx, row_leads in enumerate(grid_layout):
     show_x = row_idx == 2
@@ -119,7 +131,7 @@ for row_idx, row_leads in enumerate(grid_layout):
             alt.X(
                 "time:Q",
                 scale=alt.Scale(domain=x_domain),
-                axis=alt.Axis(title="Time (s)", titleFontSize=20, labelFontSize=18, tickCount=6),
+                axis=alt.Axis(title="Time (s)", titleFontSize=12, labelFontSize=10, tickCount=6),
             )
             if show_x
             else alt.X("time:Q", scale=alt.Scale(domain=x_domain), axis=None)
@@ -127,53 +139,48 @@ for row_idx, row_leads in enumerate(grid_layout):
 
         signal_layer = (
             alt.Chart(lead_df)
-            .mark_line(strokeWidth=1.8, interpolate="monotone")
-            .encode(
-                x=x_enc, y=alt.Y("voltage:Q", scale=alt.Scale(domain=y_domain), axis=None), color=alt.value("#1a1a1a")
-            )
+            .mark_line(strokeWidth=1.4, interpolate="monotone", color=BRAND)
+            .encode(x=x_enc, y=alt.Y("voltage:Q", scale=alt.Scale(domain=y_domain), axis=None))
         )
 
         label_df = pd.DataFrame({"x": [0.06], "y": [1.35], "text": [lead_name]})
         label_layer = (
             alt.Chart(label_df)
-            .mark_text(fontSize=20, fontWeight="bold", align="left", baseline="top")
+            .mark_text(fontSize=12, fontWeight="bold", align="left", baseline="top", color=INK)
             .encode(
                 x=alt.X("x:Q", scale=alt.Scale(domain=x_domain)),
                 y=alt.Y("y:Q", scale=alt.Scale(domain=y_domain)),
                 text="text:N",
-                color=alt.value("#222222"),
             )
         )
 
         panel = (grid_layers + signal_layer + label_layer).properties(width=panel_w, height=panel_h)
         lead_charts.append(panel)
-    rows.append(alt.hconcat(*lead_charts, spacing=4))
+    rows.append(alt.hconcat(*lead_charts, spacing=col_spacing))
 
 # Rhythm strip — full-length Lead II across bottom
 rhythm_df = pd.DataFrame({"time": t, "voltage": lead_signals["II"]})
 rhythm_signal = (
     alt.Chart(rhythm_df)
-    .mark_line(strokeWidth=2.0, interpolate="monotone")
+    .mark_line(strokeWidth=1.6, interpolate="monotone", color=BRAND)
     .encode(
         x=alt.X(
             "time:Q",
             scale=alt.Scale(domain=x_domain),
-            axis=alt.Axis(title="Time (s)", titleFontSize=20, labelFontSize=18, tickCount=10),
+            axis=alt.Axis(title="Time (s)", titleFontSize=12, labelFontSize=10, tickCount=10),
         ),
         y=alt.Y("voltage:Q", scale=alt.Scale(domain=y_domain), axis=None),
-        color=alt.value("#1a1a1a"),
     )
 )
 
 rhythm_label_df = pd.DataFrame({"x": [0.12], "y": [1.35], "text": ["II (rhythm)"]})
 rhythm_label = (
     alt.Chart(rhythm_label_df)
-    .mark_text(fontSize=20, fontWeight="bold", align="left", baseline="top")
+    .mark_text(fontSize=12, fontWeight="bold", align="left", baseline="top", color=INK)
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=x_domain)),
         y=alt.Y("y:Q", scale=alt.Scale(domain=y_domain)),
         text="text:N",
-        color=alt.value("#222222"),
     )
 )
 
@@ -181,62 +188,69 @@ rhythm_label = (
 cal_df = pd.DataFrame({"time": [0.0, 0.0, 0.04, 0.04, 0.08, 0.08], "voltage": [0.0, 1.0, 1.0, 0.0, 0.0, 0.0]})
 cal_signal = (
     alt.Chart(cal_df)
-    .mark_line(strokeWidth=2.0)
-    .encode(
-        x=alt.X("time:Q", scale=alt.Scale(domain=x_domain)),
-        y=alt.Y("voltage:Q", scale=alt.Scale(domain=y_domain)),
-        color=alt.value("#1a1a1a"),
-    )
+    .mark_line(strokeWidth=1.6, color=INK)
+    .encode(x=alt.X("time:Q", scale=alt.Scale(domain=x_domain)), y=alt.Y("voltage:Q", scale=alt.Scale(domain=y_domain)))
 )
 cal_label_df = pd.DataFrame({"x": [0.04], "y": [1.12], "text": ["1 mV"]})
 cal_label = (
     alt.Chart(cal_label_df)
-    .mark_text(fontSize=16, fontWeight="bold", align="center", baseline="bottom")
+    .mark_text(fontSize=10, fontWeight="bold", align="center", baseline="bottom", color=INK_SOFT)
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=x_domain)),
         y=alt.Y("y:Q", scale=alt.Scale(domain=y_domain)),
         text="text:N",
-        color=alt.value("#222222"),
     )
 )
 
-# Waveform annotation on Lead II panel — label P, QRS, T morphology
+# Waveform annotation on rhythm strip — label P, QRS, T morphology
 annot_data = pd.DataFrame({"x": [0.16, 0.26, 0.42], "y": [0.35, 1.25, 0.50], "text": ["P", "R", "T"]})
 annot_layer = (
     alt.Chart(annot_data)
-    .mark_text(fontSize=16, fontWeight="bold", fontStyle="italic", align="center", dy=-10)
+    .mark_text(fontSize=11, fontWeight="bold", fontStyle="italic", align="center", dy=-8, color=ANNOT)
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=x_domain)),
         y=alt.Y("y:Q", scale=alt.Scale(domain=y_domain)),
         text="text:N",
-        color=alt.value("#B04040"),
     )
 )
 
 rhythm_strip = (grid_layers + rhythm_signal + rhythm_label + cal_signal + cal_label + annot_layer).properties(
-    width=panel_w * 4 + 12, height=150
+    width=panel_w * 4 + col_spacing * 3, height=rhythm_h
 )
 
 # Style — Combine all rows and rhythm strip
 chart = (
-    alt.vconcat(*rows, rhythm_strip, spacing=4)
+    alt.vconcat(*rows, rhythm_strip, spacing=row_spacing)
     .properties(
         title=alt.Title(
-            "ecg-twelve-lead · altair · pyplots.ai",
-            fontSize=28,
+            "ecg-twelve-lead · python · altair · anyplot.ai",
+            fontSize=18,
             fontWeight="bold",
+            color=INK,
             anchor="middle",
             subtitle=["Normal Sinus Rhythm · 72 BPM · 12-Lead ECG", "25 mm/s · 10 mm/mV"],
-            subtitleFontSize=18,
-            subtitleColor="#666666",
-            offset=10,
+            subtitleFontSize=12,
+            subtitleColor=INK_SOFT,
+            offset=8,
         )
     )
-    .configure_view(strokeWidth=0.5, stroke="#D4908A", fill=grid_bg, cornerRadius=2)
-    .configure_concat(spacing=4)
-    .configure(background="#FFFFFF", padding={"left": 20, "right": 20, "top": 10, "bottom": 10})
+    .configure_view(strokeWidth=0.6, stroke=PAPER_EDGE, fill=ECG_PAPER, cornerRadius=2)
+    .configure_concat(spacing=row_spacing)
+    .configure(background=PAGE_BG, padding={"left": 12, "right": 12, "top": 8, "bottom": 8})
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save — render then pad to the exact 3200x1800 landscape target (no crop)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+chart.save(f"plot-{THEME}.html")
+
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. Shrink panel/title sizes and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
