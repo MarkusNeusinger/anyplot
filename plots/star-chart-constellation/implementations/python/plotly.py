@@ -1,16 +1,82 @@
-""" pyplots.ai
+"""anyplot.ai
 star-chart-constellation: Star Chart with Constellations
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 85/100 | Created: 2026-03-18
+Library: plotly 6.8.0 | Python 3.14
+
+A celestial planisphere on an azimuthal-equidistant projection centred on the
+North Celestial Pole, so the sky boundary reads as a natural circle. Star
+apparent magnitude is double-encoded: brighter stars are both larger and pulled
+toward Imprint brand green via the `imprint_seq` continuous colormap; fainter
+stars shrink toward Imprint blue. Constellation stick-figures, a coordinate
+grid (RA spokes / Dec rings), the ecliptic and a faint Milky Way band complete
+the chart. Renders on both the light (#FAF8F1) and dark (#1A1A17) Imprint
+surfaces from a single theme-aware script.
 """
 
+import os
 from collections import defaultdict
 
 import numpy as np
 import plotly.graph_objects as go
 
 
-# Data - Notable stars with RA (hours), Dec (degrees), magnitude
+# Theme-adaptive chrome (Imprint tokens)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+if THEME == "light":
+    PAGE_BG = "#FAF8F1"
+    ELEVATED_BG = "#FFFDF6"
+    INK = "#1A1A17"
+    INK_SOFT = "#4A4A44"
+    INK_MUTED = "#6B6A63"
+    LINE_COL = "rgba(74,74,68,0.52)"
+    GRID_COL = "rgba(26,26,23,0.15)"
+    EQUATOR_COL = "rgba(26,26,23,0.30)"
+    BOUNDARY_COL = "rgba(74,74,68,0.55)"
+    BG_STAR_COL = "rgba(107,106,99,0.45)"
+    MW_COL = "rgba(107,106,99,0.06)"
+else:
+    PAGE_BG = "#1A1A17"
+    ELEVATED_BG = "#242420"
+    INK = "#F0EFE8"
+    INK_SOFT = "#B8B7B0"
+    INK_MUTED = "#A8A79F"
+    LINE_COL = "rgba(184,183,176,0.55)"
+    GRID_COL = "rgba(240,239,232,0.16)"
+    EQUATOR_COL = "rgba(240,239,232,0.32)"
+    BOUNDARY_COL = "rgba(184,183,176,0.55)"
+    BG_STAR_COL = "rgba(184,183,176,0.50)"
+    MW_COL = "rgba(168,167,159,0.10)"
+
+# Continuous Imprint colormap (sequential): brand green -> blue. Maps bright
+# (low magnitude) stars to #009E73 and faint stars toward #4467A3.
+IMPRINT_SEQ = [[0.0, "#009E73"], [1.0, "#4467A3"]]
+# Amber semantic anchor for the ecliptic reference line (constant across themes).
+ECLIPTIC_COL = "rgba(221,204,119,0.60)"
+
+
+# Azimuthal-equidistant projection centred on the North Celestial Pole.
+# Co-declination is the true radial distance (deg); RA is the azimuth.
+def project(ra_hours, dec_deg):
+    ra_rad = np.radians(np.asarray(ra_hours, dtype=float) * 15.0)
+    r = 90.0 - np.asarray(dec_deg, dtype=float)
+    return r * np.sin(ra_rad), r * np.cos(ra_rad)
+
+
+# Galactic (l, b) -> equatorial (RA hours, Dec deg), J2000 pole constants.
+def gal_to_eq(l_deg, b_deg):
+    lon = np.radians(l_deg)
+    b = np.radians(b_deg)
+    a_ngp = np.radians(192.85948)
+    d_ngp = np.radians(27.12825)
+    l_ncp = np.radians(122.93192)
+    sin_d = np.sin(d_ngp) * np.sin(b) + np.cos(d_ngp) * np.cos(b) * np.cos(l_ncp - lon)
+    dec = np.arcsin(sin_d)
+    yy = np.cos(b) * np.sin(l_ncp - lon)
+    xx = np.cos(d_ngp) * np.sin(b) - np.sin(d_ngp) * np.cos(b) * np.cos(l_ncp - lon)
+    ra = (a_ngp + np.arctan2(yy, xx)) % (2 * np.pi)
+    return np.degrees(ra) / 15.0, np.degrees(dec)
+
+
+# Data - Notable stars with RA (hours), Dec (degrees), magnitude, constellation
 np.random.seed(42)
 
 stars = {
@@ -144,11 +210,6 @@ stars = {
     "Gacrux": (12.52, -57.11, 1.64, "Cru"),
     "Delta Cru": (12.25, -58.75, 2.80, "Cru"),
 }
-
-# Add dimmer background stars
-bg_ra = np.random.uniform(0, 24, 200)
-bg_dec = np.random.uniform(-70, 70, 200)
-bg_mag = np.random.uniform(3.5, 5.0, 200)
 
 # Constellation line connections (pairs of star names)
 edges = [
@@ -288,81 +349,170 @@ constellation_names = {
     "Cru": "Crux",
 }
 
-# Convert RA (hours) to degrees for plotting
+# Geometry of the planisphere (radius = co-declination, degrees)
+R_BOUNDARY = 156.0  # outer frame, just beyond the southernmost catalogued stars
+DEC_RINGS = [60, 30, 0, -30, -60]  # labelled declination circles
+
+# Project the named stars
 star_names = list(stars.keys())
-ra_deg = np.array([stars[s][0] * 15 for s in star_names])
+ra_h = np.array([stars[s][0] for s in star_names])
 dec = np.array([stars[s][1] for s in star_names])
 mag = np.array([stars[s][2] for s in star_names])
+star_x, star_y = project(ra_h, dec)
 
-# Map magnitude to marker size (brighter = larger)
-max_size = 24
-min_size = 4
+# Magnitude -> marker size (brighter / lower magnitude = larger)
+max_size, min_size = 15.0, 2.5
 mag_min, mag_max = mag.min(), mag.max()
 sizes = max_size - (mag - mag_min) / (mag_max - mag_min) * (max_size - min_size)
 
-# Star color based on rough spectral type (magnitude as proxy)
-star_colors = []
-for m in mag:
-    if m < 0.5:
-        star_colors.append("#FFFDE8")
-    elif m < 1.5:
-        star_colors.append("#FFF8DC")
-    elif m < 2.5:
-        star_colors.append("#E8E4D4")
-    else:
-        star_colors.append("#C8C4B8")
+# Dimmer background star field, projected within the visible cap
+bg_ra = np.random.uniform(0, 24, 220)
+bg_dec = np.random.uniform(-58, 87, 220)
+bg_x, bg_y = project(bg_ra, bg_dec)
 
-# Background star sizes
-bg_ra_deg = bg_ra * 15
-bg_sizes = 2.0 * np.ones(len(bg_ra))
-
-# Plot
 fig = go.Figure()
 
-# Background stars
+# Milky Way band - faint filled great-circle ribbon (galactic latitude +/-12 deg)
+gl = np.linspace(0, 360, 361)
+mw_ra_top, mw_dec_top = gal_to_eq(gl, 12.0)
+mw_ra_bot, mw_dec_bot = gal_to_eq(gl[::-1], -12.0)
+mw_xt, mw_yt = project(mw_ra_top, mw_dec_top)
+mw_xb, mw_yb = project(mw_ra_bot, mw_dec_bot)
 fig.add_trace(
-    go.Scattergl(
-        x=bg_ra_deg,
-        y=bg_dec,
-        mode="markers",
-        marker={"size": bg_sizes, "color": "rgba(180,180,200,0.4)", "symbol": "circle"},
+    go.Scatter(
+        x=np.concatenate([mw_xt, mw_xb]),
+        y=np.concatenate([mw_yt, mw_yb]),
+        mode="lines",
+        fill="toself",
+        fillcolor=MW_COL,
+        line={"width": 0},
         hoverinfo="skip",
         showlegend=False,
     )
 )
 
-# Constellation lines - consolidated into single trace with None separators
-line_x = []
-line_y = []
+# Coordinate grid - declination rings + right-ascension spokes
+ring_x, ring_y = [], []
+for dec_ring in DEC_RINGS:
+    if dec_ring == 0:
+        continue  # equator drawn separately, emphasised
+    rr = 90.0 - dec_ring
+    th = np.linspace(0, 2 * np.pi, 240)
+    ring_x.extend((rr * np.cos(th)).tolist() + [None])
+    ring_y.extend((rr * np.sin(th)).tolist() + [None])
+
+spoke_x, spoke_y = [], []
+for h in range(0, 24, 2):
+    a = np.radians(h * 15)
+    spoke_x.extend([0.0, 150.0 * np.sin(a), None])
+    spoke_y.extend([0.0, 150.0 * np.cos(a), None])
+
+fig.add_trace(
+    go.Scatter(
+        x=ring_x + spoke_x,
+        y=ring_y + spoke_y,
+        mode="lines",
+        line={"color": GRID_COL, "width": 0.7},
+        hoverinfo="skip",
+        showlegend=False,
+    )
+)
+
+# Celestial equator (dec = 0) - emphasised reference circle
+th = np.linspace(0, 2 * np.pi, 300)
+fig.add_trace(
+    go.Scatter(
+        x=90.0 * np.cos(th),
+        y=90.0 * np.sin(th),
+        mode="lines",
+        line={"color": EQUATOR_COL, "width": 1.0},
+        hoverinfo="skip",
+        showlegend=False,
+    )
+)
+
+# Outer sky boundary
+fig.add_trace(
+    go.Scatter(
+        x=R_BOUNDARY * np.cos(th),
+        y=R_BOUNDARY * np.sin(th),
+        mode="lines",
+        line={"color": BOUNDARY_COL, "width": 1.2},
+        hoverinfo="skip",
+        showlegend=False,
+    )
+)
+
+# Ecliptic - amber dashed great circle (23.44 deg inclined to the equator)
+ecl_lon = np.linspace(0, 360, 361)
+obliquity = np.radians(23.44)
+ecl_ra = np.degrees(np.arctan2(np.sin(np.radians(ecl_lon)) * np.cos(obliquity), np.cos(np.radians(ecl_lon)))) / 15.0
+ecl_dec = np.degrees(np.arcsin(np.sin(np.radians(ecl_lon)) * np.sin(obliquity)))
+ecl_x, ecl_y = project(ecl_ra % 24, ecl_dec)
+fig.add_trace(
+    go.Scatter(
+        x=ecl_x,
+        y=ecl_y,
+        mode="lines",
+        line={"color": ECLIPTIC_COL, "width": 1.4, "dash": "dash"},
+        name="Ecliptic",
+        hoverinfo="skip",
+        showlegend=False,
+    )
+)
+
+# Constellation stick-figure lines (projected, single trace with separators)
+line_x, line_y = [], []
 for s1, s2 in edges:
     if s1 in stars and s2 in stars:
-        x1, x2 = stars[s1][0] * 15, stars[s2][0] * 15
-        y1, y2 = stars[s1][1], stars[s2][1]
-        if abs(x2 - x1) > 180:
-            continue
-        line_x.extend([x1, x2, None])
-        line_y.extend([y1, y2, None])
+        x1, y1 = project(stars[s1][0], stars[s1][1])
+        x2, y2 = project(stars[s2][0], stars[s2][1])
+        line_x.extend([float(x1), float(x2), None])
+        line_y.extend([float(y1), float(y2), None])
 
 fig.add_trace(
-    go.Scattergl(
-        x=line_x,
-        y=line_y,
-        mode="lines",
-        line={"color": "rgba(100,149,237,0.6)", "width": 1.8},
-        hoverinfo="skip",
-        showlegend=False,
+    go.Scatter(
+        x=line_x, y=line_y, mode="lines", line={"color": LINE_COL, "width": 1.2}, hoverinfo="skip", showlegend=False
     )
 )
 
-# Named stars
+# Background stars (WebGL for the dense field)
 fig.add_trace(
     go.Scattergl(
-        x=ra_deg,
-        y=dec,
+        x=bg_x, y=bg_y, mode="markers", marker={"size": 1.6, "color": BG_STAR_COL}, hoverinfo="skip", showlegend=False
+    )
+)
+
+# Named stars - size + Imprint-sequential colour both encode magnitude
+fig.add_trace(
+    go.Scattergl(
+        x=star_x,
+        y=star_y,
         mode="markers",
-        marker={"size": sizes, "color": star_colors, "line": {"width": 0}, "opacity": 0.95},
+        marker={
+            "size": sizes,
+            "color": mag,
+            "colorscale": IMPRINT_SEQ,
+            "cmin": -1.5,
+            "cmax": 3.8,
+            "opacity": 0.95,
+            "line": {"width": 0},
+            "colorbar": {
+                "title": {"text": "Apparent magnitude", "font": {"size": 11, "color": INK}, "side": "top"},
+                "orientation": "h",
+                "x": 0.5,
+                "xanchor": "center",
+                "y": -0.06,
+                "yanchor": "top",
+                "len": 0.46,
+                "thickness": 14,
+                "tickfont": {"size": 9, "color": INK_SOFT},
+                "tickvals": [-1, 0, 1, 2, 3],
+                "outlinewidth": 0,
+            },
+        },
         text=[
-            f"{name}<br>Mag: {stars[name][2]:.2f}<br>{constellation_names.get(stars[name][3], stars[name][3])}"
+            f"{name}<br>Mag {stars[name][2]:.2f}<br>{constellation_names.get(stars[name][3], stars[name][3])}"
             for name in star_names
         ],
         hoverinfo="text",
@@ -370,99 +520,103 @@ fig.add_trace(
     )
 )
 
-# Constellation labels at centroid of each group - using annotations for reliable rendering
-groups = defaultdict(list)
-for name in star_names:
-    c = stars[name][3]
-    groups[c].append((stars[name][0] * 15, stars[name][1]))
+# Annotations: constellation labels, grid labels, brightest-star labels
+ann = []
 
-constellation_annotations = []
-for abbr, positions in groups.items():
-    cx = np.mean([p[0] for p in positions])
-    cy = np.mean([p[1] for p in positions]) + 4.0
-    constellation_annotations.append(
+# Constellation names at each group's projected centroid, nudged radially out
+groups = defaultdict(list)
+for i, name in enumerate(star_names):
+    groups[stars[name][3]].append((star_x[i], star_y[i]))
+centroids = {}
+for abbr, pts in groups.items():
+    centroids[abbr] = (float(np.mean([p[0] for p in pts])), float(np.mean([p[1] for p in pts])))
+    if len(pts) < 2:
+        continue  # skip single-star constellations to avoid clutter
+    cx, cy = centroids[abbr]
+    rad = np.hypot(cx, cy) or 1.0
+    ann.append(
         {
-            "x": cx,
-            "y": cy,
+            "x": cx + cx / rad * 9.0,
+            "y": cy + cy / rad * 9.0,
             "text": constellation_names.get(abbr, abbr),
             "showarrow": False,
-            "font": {"size": 14, "color": "rgba(160,195,255,0.92)", "family": "Arial"},
-            "yanchor": "bottom",
+            "font": {"size": 10, "color": INK_SOFT, "family": "Arial"},
         }
     )
 
-# Bright star name annotations (mag < 0.5)
+# Brightest stars (mag < 0.2) get individual labels, pushed away from the
+# constellation-name centroid so the two labels never collide.
 for i, name in enumerate(star_names):
-    if mag[i] < 0.5:
-        constellation_annotations.append(
+    if mag[i] < 0.2:
+        cx, cy = centroids[stars[name][3]]
+        dx, dy = star_x[i] - cx, star_y[i] - cy
+        d = np.hypot(dx, dy)
+        if d < 1.0:  # star sits on the centroid -> push radially outward instead
+            dx, dy = star_x[i], star_y[i]
+            d = np.hypot(dx, dy) or 1.0
+        ann.append(
             {
-                "x": ra_deg[i],
-                "y": dec[i] + 2.0,
+                "x": float(star_x[i] + dx / d * 9.0),
+                "y": float(star_y[i] + dy / d * 9.0),
                 "text": name,
                 "showarrow": False,
-                "font": {"size": 11, "color": "rgba(200,215,240,0.75)", "family": "Arial"},
-                "yanchor": "bottom",
+                "font": {"size": 9, "color": INK, "family": "Arial"},
             }
         )
 
-# Ecliptic line (approximate) as dashed curve
-ecliptic_ra = np.linspace(0, 360, 360)
-obliquity = 23.44
-ecliptic_dec = obliquity * np.sin(np.radians(ecliptic_ra))
-fig.add_trace(
-    go.Scattergl(
-        x=ecliptic_ra,
-        y=ecliptic_dec,
-        mode="lines",
-        line={"color": "rgba(220,160,60,0.3)", "width": 1.2, "dash": "dash"},
-        hoverinfo="skip",
-        showlegend=False,
-        name="Ecliptic",
+# Declination ring labels (placed along a clear gap between spokes)
+for dec_ring in DEC_RINGS:
+    rr = 90.0 - dec_ring
+    a = np.radians(7)
+    dec_label = f"{dec_ring:+d}°" if dec_ring != 0 else "0°"
+    ann.append(
+        {
+            "x": float(rr * np.sin(a)),
+            "y": float(rr * np.cos(a)),
+            "text": dec_label,
+            "showarrow": False,
+            "font": {"size": 9, "color": INK_MUTED, "family": "Arial"},
+        }
     )
+
+# Right-ascension labels around the outer rim
+for h in range(0, 24, 2):
+    a = np.radians(h * 15)
+    ann.append(
+        {
+            "x": float((R_BOUNDARY + 6) * np.sin(a)),
+            "y": float((R_BOUNDARY + 6) * np.cos(a)),
+            "text": f"{h}h",
+            "showarrow": False,
+            "font": {"size": 9, "color": INK_SOFT, "family": "Arial"},
+        }
+    )
+
+# North Celestial Pole marker at the centre
+ann.append(
+    {"x": 0, "y": -7, "text": "NCP", "showarrow": False, "font": {"size": 8.5, "color": INK_MUTED, "family": "Arial"}}
 )
 
-# Style
+axis_off = {"visible": False, "showgrid": False, "zeroline": False, "range": [-(R_BOUNDARY + 14), R_BOUNDARY + 14]}
+
 fig.update_layout(
     title={
-        "text": "star-chart-constellation · plotly · pyplots.ai",
-        "font": {"size": 28, "color": "#C0D0E8", "family": "Arial"},
+        "text": "star-chart-constellation · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK, "family": "Arial"},
         "x": 0.5,
         "xanchor": "center",
         "y": 0.97,
     },
-    plot_bgcolor="#0A0E1A",
-    paper_bgcolor="#060A14",
-    xaxis={
-        "title": {"text": "Right Ascension", "font": {"size": 22, "color": "#7890A8"}},
-        "tickfont": {"size": 16, "color": "#5A7090"},
-        "range": [360, 0],
-        "dtick": 30,
-        "gridcolor": "rgba(60,80,120,0.18)",
-        "gridwidth": 1,
-        "showgrid": True,
-        "zeroline": False,
-        "tickvals": [h * 15 for h in range(0, 25, 2)],
-        "ticktext": [f"{h}h" for h in range(0, 25, 2)],
-        "linecolor": "rgba(60,80,120,0.3)",
-    },
-    yaxis={
-        "title": {"text": "Declination (°)", "font": {"size": 22, "color": "#7890A8"}},
-        "tickfont": {"size": 16, "color": "#5A7090"},
-        "range": [-75, 75],
-        "dtick": 15,
-        "gridcolor": "rgba(60,80,120,0.18)",
-        "gridwidth": 1,
-        "showgrid": True,
-        "zeroline": False,
-        "linecolor": "rgba(60,80,120,0.3)",
-        "ticksuffix": "°",
-    },
-    margin={"l": 80, "r": 40, "t": 70, "b": 70},
-    width=1600,
-    height=900,
-    annotations=constellation_annotations,
+    autosize=False,
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
+    xaxis={**axis_off, "scaleanchor": "y", "scaleratio": 1},
+    yaxis=dict(axis_off),
+    margin={"l": 40, "r": 40, "t": 70, "b": 90},
+    annotations=ann,
 )
 
-# Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save - square 2400 x 2400 (600 x 600 @ scale 4)
+fig.write_image(f"plot-{THEME}.png", width=600, height=600, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
