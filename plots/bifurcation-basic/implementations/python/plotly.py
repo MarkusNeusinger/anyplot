@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bifurcation-basic: Bifurcation Diagram for Dynamical Systems
 Library: plotly 6.8.0 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-17
@@ -60,31 +60,36 @@ fig.add_trace(
 
 # Key bifurcation points (period-doubling cascade → chaos). The spec explicitly
 # asks for these labels — reference lines use the neutral/structural ink token.
-# The last three are tightly packed in r, so labels are staggered across two
-# rows (alternating y) and anchored outward to avoid overlap.
+# The last three cluster tightly in r, so each callout floats above the plot on
+# its own (ax, ay) pixel offset with a short leader line back to its exact r:
+# Period-4 sits up-left, Period-8 highest/center, Chaos-onset up-right — giving
+# the three boxes clear horizontal + vertical separation even at mobile width.
 bifurcation_points = [
-    (3.0, "Period-2", 1.04, "center"),
-    (3.449, "Period-4", 1.04, "right"),
-    (3.544, "Period-8", 1.135, "center"),
-    (chaos_onset, "Chaos onset", 1.04, "left"),
+    (3.0, "Period-2", 0, -46),
+    (3.449, "Period-4", -52, -40),
+    (3.544, "Period-8", 4, -84),
+    (chaos_onset, "Chaos onset", 50, -40),
 ]
 
 annotations = []
-for r_bif, label, y_lab, anchor in bifurcation_points:
+for r_bif, label, ax, ay in bifurcation_points:
     fig.add_vline(x=r_bif, line={"color": INK_SOFT, "width": 1.5, "dash": "dot"})
     annotations.append(
         {
             "x": r_bif,
-            "y": y_lab,
-            "yref": "paper",
+            "y": 1.0,
+            "ax": ax,
+            "ay": ay,
             "text": f"<b>{label}</b><br>r ≈ {r_bif}",
-            "showarrow": False,
+            "showarrow": True,
+            "arrowhead": 0,
+            "arrowwidth": 1,
+            "arrowcolor": INK_SOFT,
             "font": {"size": 14, "color": INK, "family": "Arial, sans-serif"},
             "bgcolor": ELEVATED_BG,
             "bordercolor": INK_SOFT,
             "borderwidth": 1,
-            "borderpad": 4,
-            "xanchor": anchor,
+            "borderpad": 3,
         }
     )
 
