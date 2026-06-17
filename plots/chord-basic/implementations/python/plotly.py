@@ -1,51 +1,58 @@
-""" pyplots.ai
+""" anyplot.ai
 chord-basic: Basic Chord Diagram
-Library: plotly 6.5.2 | Python 3.14
-Quality: 88/100 | Updated: 2026-04-06
+Library: plotly 6.8.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-06-17
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — 6 hues for 6 entities (first series always #009E73)
+COLORS = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
+COLORS_DIM = [
+    "rgba(0,158,115,0.28)",
+    "rgba(196,117,253,0.28)",
+    "rgba(68,103,163,0.28)",
+    "rgba(189,130,51,0.28)",
+    "rgba(174,48,48,0.28)",
+    "rgba(42,188,205,0.28)",
+]
+
 # Data: Migration flows between 6 continents (bidirectional, millions of people)
 continents = ["Africa", "Asia", "Europe", "N. America", "S. America", "Oceania"]
 n = len(continents)
 
-# Flow matrix (row = source, col = target) - realistic migration patterns
 flow_matrix = np.array(
     [
-        [0, 15, 25, 10, 5, 3],  # Africa to others
-        [12, 0, 30, 20, 8, 15],  # Asia to others
-        [20, 35, 0, 25, 12, 10],  # Europe to others
-        [8, 18, 22, 0, 15, 5],  # N. America to others
-        [6, 10, 18, 20, 0, 4],  # S. America to others
-        [2, 12, 8, 6, 3, 0],  # Oceania to others
+        [0, 5, 8, 3, 2, 1],  # Africa to others
+        [4, 0, 10, 7, 3, 5],  # Asia to others
+        [7, 12, 0, 8, 4, 3],  # Europe to others
+        [3, 6, 7, 0, 5, 2],  # N. America to others
+        [2, 3, 6, 7, 0, 1],  # S. America to others
+        [1, 4, 3, 2, 1, 0],  # Oceania to others
     ]
 )
 
-# Colors: Python Blue first, then colorblind-safe palette
-# Replaced green (#2E8B57) with teal (#00B4D8) for deuteranopia accessibility
-colors = ["#306998", "#FFD43B", "#00B4D8", "#DC143C", "#9370DB", "#FF8C00"]
-colors_dim = [
-    "rgba(48,105,152,0.4)",
-    "rgba(255,212,59,0.4)",
-    "rgba(0,180,216,0.4)",
-    "rgba(220,20,60,0.4)",
-    "rgba(147,112,219,0.4)",
-    "rgba(255,140,0,0.4)",
-]
-
-# Calculate totals for each continent
+# Totals per continent and dominant corridor for storytelling
 totals = flow_matrix.sum(axis=0) + flow_matrix.sum(axis=1)
 total_flow = flow_matrix.sum()
 
-# Identify the dominant corridor for storytelling emphasis
 max_flow_idx = np.unravel_index(np.argmax(flow_matrix + flow_matrix.T), flow_matrix.shape)
 dominant_src, dominant_tgt = max_flow_idx
 dominant_flow = flow_matrix[dominant_src, dominant_tgt] + flow_matrix[dominant_tgt, dominant_src]
 
-# Calculate arc positions around the circle
+# Arc positions around the circle
 gap = 0.02
 arc_starts = []
 arc_ends = []
@@ -55,44 +62,33 @@ for total in totals:
     arc_ends.append(current_pos + (total / total_flow) * (1 - n * gap))
     current_pos = arc_ends[-1] + gap
 
-# Create figure
+# Figure
 fig = go.Figure()
 
-# Draw outer arcs with gradient-like layered effect
+# Outer translucent ring + inner solid arc for each continent
 for i in range(n):
     angles_outer = np.linspace(2 * np.pi * arc_starts[i] - np.pi / 2, 2 * np.pi * arc_ends[i] - np.pi / 2, 100)
-    # Outer ring (thicker, slightly transparent for depth)
-    x_o = 1.02 * np.cos(angles_outer)
-    y_o = 1.02 * np.sin(angles_outer)
     angles_rev = angles_outer[::-1]
-    x_i = 0.98 * np.cos(angles_rev)
-    y_i = 0.98 * np.sin(angles_rev)
 
     fig.add_trace(
         go.Scatter(
-            x=np.concatenate([x_o, x_i]),
-            y=np.concatenate([y_o, y_i]),
+            x=np.concatenate([1.02 * np.cos(angles_outer), 0.98 * np.cos(angles_rev)]),
+            y=np.concatenate([1.02 * np.sin(angles_outer), 0.98 * np.sin(angles_rev)]),
             fill="toself",
-            fillcolor=colors_dim[i],
-            line={"color": "rgba(255,255,255,0)", "width": 0},
+            fillcolor=COLORS_DIM[i],
+            line={"color": "rgba(0,0,0,0)", "width": 0},
             hoverinfo="skip",
             showlegend=False,
         )
     )
 
-    # Inner ring (solid color, main arc)
-    x_outer = 1.0 * np.cos(angles_outer)
-    y_outer = 1.0 * np.sin(angles_outer)
-    x_inner = 0.94 * np.cos(angles_rev)
-    y_inner = 0.94 * np.sin(angles_rev)
-
     fig.add_trace(
         go.Scatter(
-            x=np.concatenate([x_outer, x_inner]),
-            y=np.concatenate([y_outer, y_inner]),
+            x=np.concatenate([np.cos(angles_outer), 0.94 * np.cos(angles_rev)]),
+            y=np.concatenate([np.sin(angles_outer), 0.94 * np.sin(angles_rev)]),
             fill="toself",
-            fillcolor=colors[i],
-            line={"color": "white", "width": 0.5},
+            fillcolor=COLORS[i],
+            line={"color": PAGE_BG, "width": 0.5},
             hovertemplate=(
                 f"<b>{continents[i]}</b><br>"
                 f"Outgoing: {int(flow_matrix[i].sum())}M<br>"
@@ -106,8 +102,8 @@ for i in range(n):
         )
     )
 
-# Draw chords with enhanced visibility and storytelling
-min_chord_width = 0.008  # Minimum visual width for thin chords
+# Chords — width proportional to flow magnitude
+min_chord_width = 0.010
 for i in range(n):
     src_pos = arc_starts[i]
     for j in range(n):
@@ -117,12 +113,10 @@ for i in range(n):
         flow = flow_matrix[i, j]
         chord_width = max((flow / total_flow) * (1 - n * gap), min_chord_width)
 
-        # Highlight dominant corridor with higher opacity
         is_dominant = (i == dominant_src and j == dominant_tgt) or (i == dominant_tgt and j == dominant_src)
-        opacity = 0.72 if is_dominant else 0.45
-        line_width = 1.0 if is_dominant else 0.3
+        opacity = 0.75 if is_dominant else 0.50
+        line_width = 2.0 if is_dominant else 0.3
 
-        # Target position offset based on prior incoming flows
         tgt_base = arc_starts[j]
         tgt_offset = sum(
             max((flow_matrix[k, j] / total_flow) * (1 - n * gap), min_chord_width)
@@ -130,13 +124,11 @@ for i in range(n):
             if flow_matrix[k, j] > 0
         )
 
-        # Source arc endpoints
         src_angle1 = 2 * np.pi * src_pos - np.pi / 2
         src_angle2 = 2 * np.pi * (src_pos + chord_width) - np.pi / 2
         sx1, sy1 = 0.94 * np.cos(src_angle1), 0.94 * np.sin(src_angle1)
         sx2, sy2 = 0.94 * np.cos(src_angle2), 0.94 * np.sin(src_angle2)
 
-        # Target arc endpoints
         tgt_start = tgt_base + tgt_offset
         tgt_end = tgt_start + chord_width
         tgt_angle1 = 2 * np.pi * tgt_start - np.pi / 2
@@ -144,33 +136,26 @@ for i in range(n):
         tx1, ty1 = 0.94 * np.cos(tgt_angle1), 0.94 * np.sin(tgt_angle1)
         tx2, ty2 = 0.94 * np.cos(tgt_angle2), 0.94 * np.sin(tgt_angle2)
 
-        # Build chord path with smoother bezier curves
         src_angles = np.linspace(src_angle1, src_angle2, 20)
-        src_x = 0.94 * np.cos(src_angles)
-        src_y = 0.94 * np.sin(src_angles)
-
         t = np.linspace(0, 1, 40)
         bez1_x = (1 - t) ** 2 * sx2 + 2 * (1 - t) * t * 0 + t**2 * tx1
         bez1_y = (1 - t) ** 2 * sy2 + 2 * (1 - t) * t * 0 + t**2 * ty1
 
         tgt_angles = np.linspace(tgt_angle1, tgt_angle2, 20)
-        tgt_x = 0.94 * np.cos(tgt_angles)
-        tgt_y = 0.94 * np.sin(tgt_angles)
-
         bez2_x = (1 - t) ** 2 * tx2 + 2 * (1 - t) * t * 0 + t**2 * sx1
         bez2_y = (1 - t) ** 2 * ty2 + 2 * (1 - t) * t * 0 + t**2 * sy1
 
-        chord_x = np.concatenate([src_x, bez1_x, tgt_x, bez2_x])
-        chord_y = np.concatenate([src_y, bez1_y, tgt_y, bez2_y])
+        chord_x = np.concatenate([0.94 * np.cos(src_angles), bez1_x, 0.94 * np.cos(tgt_angles), bez2_x])
+        chord_y = np.concatenate([0.94 * np.sin(src_angles), bez1_y, 0.94 * np.sin(tgt_angles), bez2_y])
 
         fig.add_trace(
             go.Scatter(
                 x=chord_x,
                 y=chord_y,
                 fill="toself",
-                fillcolor=colors[i],
+                fillcolor=COLORS[i],
                 opacity=opacity,
-                line={"color": colors[i], "width": line_width},
+                line={"color": COLORS[i], "width": line_width},
                 hovertemplate=(
                     f"<b>{continents[i]} → {continents[j]}</b><br>"
                     f"Flow: {flow}M people<br>"
@@ -184,17 +169,14 @@ for i in range(n):
 
         src_pos += chord_width
 
-# Add continent labels around the perimeter (horizontal for clarity)
+# Continent labels at perimeter
 for i in range(n):
     mid_pos = (arc_starts[i] + arc_ends[i]) / 2
     angle = 2 * np.pi * mid_pos - np.pi / 2
-    label_radius = 1.16
-
-    lx = label_radius * np.cos(angle)
-    ly = label_radius * np.sin(angle)
+    lx = 1.17 * np.cos(angle)
+    ly = 1.17 * np.sin(angle)
     angle_deg = np.degrees(angle) % 360
 
-    # Anchor text toward the circle center for clean alignment
     if 45 < angle_deg < 135:
         xanchor, yanchor = "center", "bottom"
     elif 135 <= angle_deg < 225:
@@ -207,72 +189,76 @@ for i in range(n):
     fig.add_annotation(
         x=lx,
         y=ly,
-        text=f"<b>{continents[i]}</b> <span style='font-size:17px;color:#888'>{int(totals[i])}M</span>",
-        font={"size": 20, "color": colors[i], "family": "Arial, Helvetica, sans-serif"},
+        text=(f"<b>{continents[i]}</b><span style='font-size:11px;color:{INK_SOFT}'> {int(totals[i])}M</span>"),
+        font={"size": 14, "color": COLORS[i], "family": "Arial, Helvetica, sans-serif"},
         showarrow=False,
         xanchor=xanchor,
         yanchor=yanchor,
     )
 
-# Subtitle annotation for storytelling
+# Subtitle
 fig.add_annotation(
-    text=(
-        f"Europe–Asia corridor dominates at <b>{dominant_flow}M</b> combined flow"
-        "  ·  Chord width proportional to flow magnitude"
-    ),
+    text=f"Europe–Asia dominates at <b>{dominant_flow}M</b>  ·  chord width ∝ flow",
     xref="paper",
     yref="paper",
     x=0.5,
-    y=0.955,
+    y=0.965,
     showarrow=False,
-    font={"size": 17, "color": "#666666", "family": "Arial, Helvetica, sans-serif"},
+    font={"size": 14, "color": INK_MUTED, "family": "Arial, Helvetica, sans-serif"},
     xanchor="center",
 )
 
-# Layout with refined styling
+# Title with scaled fontsize for long string
+title = "Migration Flows Between Continents · chord-basic · python · plotly · anyplot.ai"
+title_len = len(title)
+title_fontsize = round(16 * 67 / title_len) if title_len > 67 else 16
+title_fontsize = max(title_fontsize, 11)
+
 fig.update_layout(
+    autosize=False,
     title={
-        "text": "Migration Flows Between Continents · chord-basic · plotly · pyplots.ai",
-        "font": {"size": 28, "color": "#222222", "family": "Arial Black, Arial, sans-serif"},
+        "text": title,
+        "font": {"size": title_fontsize, "color": INK, "family": "Arial Black, Arial, sans-serif"},
         "x": 0.5,
         "xanchor": "center",
-        "y": 0.98,
+        "y": 0.99,
+        "yanchor": "top",
     },
-    xaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "showline": False, "range": [-1.5, 1.5]},
+    xaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "showline": False, "range": [-1.38, 1.38]},
     yaxis={
         "showgrid": False,
         "zeroline": False,
         "showticklabels": False,
         "showline": False,
-        "range": [-1.6, 1.4],
+        "range": [-1.38, 1.38],
         "scaleanchor": "x",
     },
-    template="plotly_white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     showlegend=True,
     legend={
-        "font": {"size": 18, "family": "Arial, Helvetica, sans-serif"},
-        "title": {"text": "<b>Continents</b>", "font": {"size": 18, "color": "#444"}},
-        "x": 0.98,
-        "y": 0.02,
+        "font": {"size": 11, "family": "Arial, Helvetica, sans-serif", "color": INK_SOFT},
+        "title": {"text": "<b>Continents</b>", "font": {"size": 12, "color": INK}},
+        "x": 0.99,
+        "y": 0.01,
         "xanchor": "right",
         "yanchor": "bottom",
-        "bgcolor": "rgba(255,255,255,0.9)",
-        "bordercolor": "#ddd",
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
         "borderwidth": 1,
-        "tracegroupgap": 6,
+        "tracegroupgap": 3,
         "itemsizing": "constant",
     },
-    margin={"l": 20, "r": 20, "t": 80, "b": 15},
-    plot_bgcolor="white",
-    paper_bgcolor="#FAFAFA",
+    margin={"l": 30, "r": 30, "t": 75, "b": 55},
     hovermode="closest",
     hoverlabel={
-        "bgcolor": "white",
-        "bordercolor": "#ccc",
-        "font": {"size": 16, "family": "Arial, Helvetica, sans-serif", "color": "#333"},
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "font": {"size": 13, "family": "Arial, Helvetica, sans-serif", "color": INK},
     },
 )
 
-# Save outputs
-fig.write_image("plot.png", width=1200, height=1200, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save — square canvas (2400×2400) ideal for circular chord diagram
+fig.write_image(f"plot-{THEME}.png", width=600, height=600, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
