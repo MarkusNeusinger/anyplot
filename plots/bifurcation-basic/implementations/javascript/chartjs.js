@@ -1,7 +1,7 @@
 // anyplot.ai
 // bifurcation-basic: Bifurcation Diagram for Dynamical Systems
 // Library: chartjs 4.4.7 | JavaScript 22.22.3
-// Quality: 86/100 | Created: 2026-06-17
+// Quality: 89/100 | Created: 2026-06-17
 
 const t = window.ANYPLOT_TOKENS;
 const rgba = (hex, a) => { const [r,g,b] = [1,3,5].map(o=>parseInt(hex.slice(o,o+2),16)); return `rgba(${r},${g},${b},${a})`; };
