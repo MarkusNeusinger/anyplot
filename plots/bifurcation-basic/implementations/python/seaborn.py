@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bifurcation-basic: Bifurcation Diagram for Dynamical Systems
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-06-17
+Quality: 91/100 | Updated: 2026-06-17
 """
 
 import os
