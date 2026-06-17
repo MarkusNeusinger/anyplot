@@ -1,121 +1,129 @@
 library: bokeh
+language: python
 specification_id: column-stratigraphic
 created: '2026-03-15T22:55:12Z'
-updated: '2026-03-15T23:23:49Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23121198781
+updated: '2026-06-17T00:59:03Z'
+generated_by: claude-opus
+workflow_run: 27658049042
 issue: 4573
-python_version: 3.14.3
-library_version: 3.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/bokeh/plot.html
-quality_score: 89
+language_version: 3.13.13
+library_version: 3.9.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/python/bokeh/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent visual design with domain-appropriate color palette and redundant hatch
-    pattern encoding for accessibility
-  - Strong data storytelling through the K-Pg boundary focal point and age bracket
-    grouping
-  - Full spec compliance with all required features implemented
-  - Good use of Bokeh-specific features (hatch patterns, HoverTool, Span, dual HTML/PNG
-    output)
-  - Clean typography hierarchy with 4 distinct size levels
-  - Professional visual refinement (subtle grid, removed outline, hidden x-axis)
+  - Five distinct lithologies each encoded redundantly by Imprint color AND FGDC-style
+    hatch (stipple, dashes, brick crosshatch, circles, diagonal) — colorblind-safe
+    double encoding that reads in both themes
+  - 'K-Pg boundary rendered as a semantic focal point: dashed Imprint-red Span at
+    100 m with a labelled, framed event marker — strong data storytelling and a clear
+    visual anchor'
+  - Geological age brackets (Eocene/Paleocene/Late Cretaceous) on the left with rotated
+    italic labels and bracket lines, formation names cleanly placed to the right of
+    each layer — no overlap
+  - Realistic, neutral Western-Interior section with genuine formation names (Uinta,
+    Wasatch, Green River, Pierre, Niobrara, Dakota) and sensible 0-200 m depths increasing
+    downward per spec convention
+  - Real bokeh interactivity (per-layer HoverTool tooltips) plus interactive HTML
+    artifact — distinctive library features, not faked UI
+  - Canvas exactly 3200x1800 in both renders; toolbar disabled, min_border reservations
+    prevent edge clipping; clean theme-token threading (INK/INK_SOFT/PAGE_BG/ELEVATED_BG)
+    so chrome flips correctly while data colors stay identical
   weaknesses:
-  - 'Geological age ordering is reversed: Eocene (younger) appears below Late Cretaceous
-    (older) in the depth column, and Leadville Fm is assigned incorrect age'
-  - Boundary depth labels at 13pt are noticeably smaller than other text elements
-  - Some horizontal space wasted to the right of formation labels
-  image_description: 'The plot displays a vertical stratigraphic column spanning 0–200m
-    depth (increasing downward). Ten geological layers are rendered as wide rectangular
-    blocks, each filled with a distinct color and hatch pattern: Sandstone (warm wheat
-    with dot pattern), Shale (gray with horizontal dashes), Limestone (light blue
-    with cross/plus pattern), Siltstone (olive green with diagonal hatching), and
-    Conglomerate (orange with circle pattern). A prominent red dashed line marks the
-    K-Pg Boundary (~66 Ma) at 88m depth with a bold red label on a white background.
-    Formation names (Dakota Fm, Mancos Fm, Niobrara Fm, Pierre Fm, Fox Hills Fm, Dawson
-    Fm, Green River Fm, Leadville Fm, Wasatch Fm, Uinta Fm) are labeled in bold on
-    the right side. Age brackets with vertical bracket lines (Late Cretaceous, Paleocene,
-    Eocene) appear on the left in italic. Small gray depth labels mark each layer
-    boundary. The title reads "column-stratigraphic · bokeh · pyplots.ai" in the upper
-    left. A lithology legend titled "Lithology" with all 5 rock types sits in the
-    upper right on a cream background. The y-axis is labeled "Depth (m)" in bold.
-    The background is a warm off-white, grid is very subtle dashed lines, x-axis is
-    hidden, and the outline is removed.'
+  - 'VQ-07 minor: brand green #009E73 is assigned to Sandstone, but the legend''s
+    first entry (by first-appearance order) is Siltstone in amber #BD8233 — the canonical
+    ''first series = #009E73'' rule wants the leading legend swatch to be brand green.
+    Colors are all valid Imprint members so impact is small; consider ordering the
+    legend so the green series leads, or document the semantic mapping.'
+  - 'DE-02/DE-03: a few adjacent depth ticks crowd slightly (150/166/184 and 66/84)
+    given the FixedTicker uses every layer boundary; readable but a touch dense at
+    the bottom of the column.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white ~#FAF8F1 (confirmed, not pure white). Border fill matches.
+      Chrome: dark title "column-stratigraphic · python · bokeh · anyplot.ai" top-left; bold rotated "Depth (m)" y-axis label; y-tick labels (0,22,40,66,84,100,120,150,166,184,200) in soft ink; age labels Eocene/Paleocene/Late Cretaceous rotated italic on left with bracket lines; formation names (Uinta Fm ... Dakota Fm) in dark bold to the right; "Lithology" legend on far right. All text clearly readable. PASS.
+      Data: 10 stacked layers with Imprint fills + hatch — Siltstone amber #BD8233 diagonal, Sandstone #009E73 stipple, Shale #C475FD dashes, Conglomerate #2ABCCD circles, Limestone #4467A3 crosshatch. Brand green #009E73 present (Sandstone). K-Pg dashed red rule + framed label at 100 m.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black ~#1A1A17 (confirmed, not pure black). Elevated legend/marker panels slightly lighter.
+      Chrome: title, "Depth (m)", ticks, age labels and formation names all in light ink (#F0EFE8 / #B8B7B0) — clearly visible, no dark-on-dark failures. Outline frame visible in soft ink. PASS.
+      Data: identical fill colors and hatch patterns to the light render — only chrome flipped. K-Pg red marker still reads, label box on elevated dark surface. Brand green still visible on the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 36pt, axis 28pt, ticks 22pt,
-          labels 19pt, legend 20-22pt). Boundary depth labels at 13pt are smaller
-          but readable.
+        comment: All text readable in both themes; explicit pt sizes set (50/42/34pt)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Formation labels, age brackets, depth marks
-          all well-separated.
+        comment: Formation/age labels and legend cleanly separated, no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All layers clearly visible with distinct colors and hatch patterns.
-          Good 2px line widths on boundaries.
+        comment: Hatch patterns + fills distinct; thick boundary lines clear
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette + redundant hatch encoding = CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Colorblind-safe palette (wheat, gray, blue, olive, orange) with redundant
-          hatch pattern encoding.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good vertical utilization. Some wasted horizontal space between formation
-          labels and legend.
+        comment: Exact 3200x1800, balanced, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis labeled Depth (m) with units. X-axis appropriately hidden.
-          Title follows convention.
+        comment: Depth (m) with units; x-axis correctly hidden for column
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: All Imprint + correct theme backgrounds, but leading legend swatch
+          is amber Siltstone, not brand green
     design_excellence:
-      score: 16
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Custom domain-appropriate palette, intentional typography hierarchy,
-          warm background, styled legend, K-Pg red accent. Above defaults but not
-          publication-perfect.
+        comment: Polished geological symbology, refined palette, intentional
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Outline removed, x-axis hidden, grid subtle (alpha 0.12 dashed),
-          minor ticks removed, softened axis colors, generous padding.
+        comment: Spines/grid removed, generous whitespace; ticks slightly dense at
+          base
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: K-Pg boundary creates strong focal point. Age brackets provide geological
-          narrative. Depth ticks guide viewer through sequence.
+        comment: K-Pg red anchor + age grouping create clear focal point
     spec_compliance:
       score: 15
       max: 15
@@ -125,53 +133,47 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct vertical column with stacked rectangular blocks for geological
-          layers.
+        comment: Vertical stratigraphic column
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: hatch patterns (5 types), formation names, age labels
-          with brackets, depth scale, layer boundaries.'
+        comment: 5 patterns, formations, ages, depth scale, boundaries, downward depth
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Depth increases downward as specified. All 10 layers from 0-200m
-          displayed.
+        comment: Depth on y, all 10 layers shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend with all 5 lithology types labeled.
+        comment: Exact mandated title; legend labels match lithologies
     data_quality:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 5 lithology types, 10 layers, varying thicknesses, 3 periods, K-Pg
-          boundary. Missing unconformity (optional).
+        comment: All plot-type aspects covered
       - id: DQ-02
         name: Realistic Context
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: 'Real formation names but geological ages reversed: Eocene (younger)
-          deeper than Cretaceous (older). Leadville Fm age incorrect.'
+        passed: true
+        comment: Genuine formation names, plausible & neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Layer thicknesses 8-28m realistic. Total 200m sensible for stratigraphic
-          section.
+        comment: 0-200 m, sensible thicknesses
     code_quality:
       score: 10
       max: 10
@@ -181,33 +183,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports, data, styles, plot, annotations, save. No
-          functions or classes.'
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data, no random elements.
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized code with logical sections. No fake UI elements.
+        comment: Clear comments, real interactivity not fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Current Bokeh 3.9 API.
-    library_mastery:
+        comment: Saves plot-{THEME}.png + .html
+    library_features:
       score: 8
       max: 10
       items:
@@ -216,27 +217,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, figure with Range1d, rect glyphs with
-          hatch, Label/Span models, Legend with LegendItem, HoverTool.
+        comment: ColumnDataSource, quad, Span, Legend/LegendItem, add_layout — idiomatic
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Bokeh-specific: native hatch patterns, HoverTool with tooltips,
-          Span model, dual PNG+HTML output, Legend model with custom styling.'
-  verdict: REJECTED
+        comment: HoverTool tooltips + interactive HTML, Span boundary rule
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - annotations
   - hover-tooltips
-  - custom-legend
   - html-export
+  - manual-ticks
+  - custom-legend
   patterns:
-  - iteration-over-groups
+  - data-generation
   - columndatasource
+  - iteration-over-groups
   dataprep: []
   styling:
-  - grid-styling
+  - publication-ready
+  - minimal-chrome
   - edge-highlighting
