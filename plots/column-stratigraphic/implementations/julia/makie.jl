@@ -32,6 +32,13 @@ const IMPRINT_PALETTE = [
 const FILL_ALPHA = THEME == "light" ? 0.42 : 0.52
 pattern_ink = RGBAf(INK.r, INK.g, INK.b, 0.82)
 
+# Coal is rendered with a theme-stable dark fill so it always reads as
+# semantic black/coal (rather than flipping to the near-white INK token in
+# dark mode); its cleat partings use a fixed pale stroke that shows on it in
+# both themes.
+const COAL_FILL  = colorant"#2E2E28"
+const COAL_CLEAT = RGBAf(0.80, 0.79, 0.73, 0.65)
+
 # --- Synthetic borehole section (depth increases downward, metres) ----------
 tops       = [0.0, 24.0, 58.0, 82.0, 120.0, 140.0, 176.0, 200.0, 214.0]
 bottoms    = [24.0, 58.0, 82.0, 120.0, 140.0, 176.0, 200.0, 214.0, 232.0]
@@ -53,7 +60,7 @@ lith_color = Dict(
     "Siltstone"    => IMPRINT_PALETTE[4],
     "Conglomerate" => IMPRINT_PALETTE[6],
     "Dolostone"    => IMPRINT_PALETTE[7],
-    "Coal"         => INK,
+    "Coal"         => COAL_FILL,
 )
 
 # Depth of the unconformity (drawn as a wavy boundary instead of a straight rule)
@@ -62,7 +69,7 @@ const UNCONFORMITY = 120.0
 # --- Lithology pattern painter ----------------------------------------------
 # Draws an FGDC/USGS-style texture clipped to the rectangle [x0,x1]×[ytop,ybot].
 # Reused for the column blocks and the legend swatches.
-function add_pattern!(ax, lith, x0, x1, ytop, ybot; ink, page)
+function add_pattern!(ax, lith, x0, x1, ytop, ybot; ink)
     w  = x1 - x0
     h  = ybot - ytop
     px = w * 0.05
@@ -177,7 +184,7 @@ function add_pattern!(ax, lith, x0, x1, ytop, ybot; ink, page)
             yy = ytop + f * h
             push!(segs, Point2f(x0 + px, yy), Point2f(x1 - px, yy))
         end
-        linesegments!(ax, segs; color = RGBAf(page.r, page.g, page.b, 0.7), linewidth = 1.2)
+        linesegments!(ax, segs; color = COAL_CLEAT, linewidth = 1.2)
     end
 end
 
@@ -214,7 +221,7 @@ ax = Axis(
 )
 
 hidexdecorations!(ax)
-xlims!(ax, 0.0, 14.0)
+xlims!(ax, 0.0, 11.8)
 ylims!(ax, 240.0, -24.0)   # inverted y: 0 m at top, deepest layer at the bottom
 
 # Column geometry
@@ -234,7 +241,7 @@ for i in eachindex(tops)
 
     poly!(ax, Rect2f(X0, ytop, X1 - X0, ybot - ytop);
           color = fillc, strokewidth = 0)
-    add_pattern!(ax, lith, X0, X1, ytop, ybot; ink = pattern_ink, page = PAGE_BG)
+    add_pattern!(ax, lith, X0, X1, ytop, ybot; ink = pattern_ink)
 end
 
 # --- Layer boundaries (solid) + one wavy unconformity -----------------------
@@ -266,16 +273,19 @@ for i in eachindex(tops)
           align = (:left, :center), color = INK, fontsize = 13)
 end
 
-# Unconformity annotation
-text!(ax, X1 + 0.06, UNCONFORMITY; text = "⌇ unconformity",
+# Unconformity annotation: a thin leader nudges the label clear of the column
+# edge into the open whitespace, between the two adjacent formation rows.
+lines!(ax, [X1, 6.9], [UNCONFORMITY, UNCONFORMITY];
+       color = INK_MUTED, linewidth = 1.0, linestyle = :dot)
+text!(ax, 7.0, UNCONFORMITY; text = "unconformity",
       align = (:left, :center), color = INK_MUTED, fontsize = 11.5)
 
 # --- Lithology legend (pattern key, upper right) ----------------------------
-text!(ax, 10.2, -14.0; text = "Lithology", align = (:left, :center),
+text!(ax, 8.9, -14.0; text = "Lithology", align = (:left, :center),
       color = INK, fontsize = 14)
 
-sw_x0 = 10.2
-sw_x1 = 11.3
+sw_x0 = 8.9
+sw_x1 = 10.0
 sw_h  = 17.0
 for (k, lith) in enumerate(lith_order)
     yc = 6.0 + (k - 1) * 29.0
@@ -287,7 +297,7 @@ for (k, lith) in enumerate(lith_order)
 
     poly!(ax, Rect2f(sw_x0, yt, sw_x1 - sw_x0, sw_h);
           color = fillc, strokecolor = INK_SOFT, strokewidth = 1.2)
-    add_pattern!(ax, lith, sw_x0, sw_x1, yt, yb; ink = pattern_ink, page = PAGE_BG)
+    add_pattern!(ax, lith, sw_x0, sw_x1, yt, yb; ink = pattern_ink)
 
     text!(ax, sw_x1 + 0.15, yc; text = lith,
           align = (:left, :center), color = INK_SOFT, fontsize = 13)
