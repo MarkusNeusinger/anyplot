@@ -1,47 +1,56 @@
 library: bokeh
+language: python
 specification_id: bode-basic
 created: '2026-03-21T20:47:21Z'
-updated: '2026-03-21T21:17:07Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23388395472
+updated: '2026-06-17T21:14:41Z'
+generated_by: claude-sonnet
+workflow_run: 27716079326
 issue: 4411
-python_version: 3.14.3
-library_version: 3.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bode-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bode-basic/bokeh/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 3.9.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bode-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bode-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bode-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bode-basic/python/bokeh/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent spec compliance with all required Bode plot features (dual panel, GM/PM
-    annotations, reference lines, log scale)
-  - Strong design with stability region shading (BoxAnnotation) adding meaningful
-    visual context
-  - Colorblind-safe Wong palette with clear visual hierarchy between curve, GM, and
-    PM elements
-  - Interactive HTML output with HoverTool leverages Bokeh distinctive strengths
-  - Deterministic, physically realistic transfer function data
+  - 'Perfect spec compliance: dual-panel Bode with shared log axis, both stability
+    margins annotated with segments and labels, reference lines at 0 dB and -180°'
+  - 'Semantic color choices: red for gain margin (stability risk), lavender for phase
+    margin — exceeds ordinal ordering with meaningful design intent'
+  - BoxAnnotation shading elegantly communicates stable/unstable regions without extra
+    annotation clutter
+  - Both light and dark themes fully implemented with correct Imprint palette and
+    adaptive chrome tokens
+  - 'Idiomatic Bokeh patterns: shared x_range, ColumnDataSource, HoverTool, Span,
+    BoxAnnotation, column() layout'
+  - Realistic third-order transfer function with engineering-appropriate margin values
+    (GM ~10.7 dB, PM ~22.5°)
   weaknesses:
-  - 'Minor: style_plot() helper function could be inlined for stricter KISS compliance'
-  - Reference label font sizes (16pt) are slightly small relative to the 4800px canvas
-  image_description: The plot displays a Bode plot with two vertically stacked panels
-    on a light gray (#FAFAFA) background. The top panel shows magnitude (dB) vs frequency
-    (Hz) on a logarithmic x-axis, with a blue (#306998) curve starting at ~45 dB at
-    0.1 Hz and declining steadily. A dashed gray 0 dB reference line is labeled "0
-    dB" in small italic text. The gain margin is annotated in vermillion (#D55E00)
-    with "GM = 10.7 dB" text, two orange dots, and a dotted vertical segment between
-    the magnitude at phase crossover and 0 dB. A purple (#7570B3) dot marks the gain
-    crossover on the 0 dB line. A subtle light blue shading fills the region above
-    0 dB. The bottom panel shows phase (°) vs frequency (Hz) with the same shared
-    log x-axis. The blue curve starts near -90° and rolls off past -270°. A dashed
-    gray -180° reference line is labeled "-180°". The phase margin is annotated in
-    purple with "PM = 29.5°" text, two purple dots, and a dotted vertical segment.
-    An orange dot marks the phase crossover at -180°. A subtle light orange shading
-    fills the region below -180°. The title "bode-basic · bokeh · pyplots.ai" appears
-    at the top left. Grid lines are subtle with dashed styling. All axis labels include
-    units.
+  - Annotation labels for GM and PM at 24pt are smaller than tick labels (34pt); key
+    engineering values should be at least as prominent as tick labels; increase GM/PM
+    Label text_font_size to 32pt
+  - Reference labels 0 dB and -180 degrees at 20pt are the smallest text elements;
+    increase to 28pt so they register as readable reference context
+  - Axis labels render in Bokeh default italic style; add axis_label_text_font_style=normal
+    on both axes of both figures for cleaner typography consistent with the professional
+    aesthetic
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface.
+      Chrome: Title "bode-basic · python · bokeh · anyplot.ai" in dark ink, clearly readable. Y-axis labels "Magnitude (dB)" and "Phase (°)" visible in dark text (Bokeh default italic style). X-axis label "Frequency (Hz)" at bottom of phase panel. Tick labels (-100, -80, ..., 40 dB; -80, -100, ...; 10^-1 through 10^3) all readable in dark ink. Subtle grid at alpha=0.15.
+      Data: Brand-green (#009E73) magnitude curve rolling from +43 dB to -110 dB. Red (#AE3030) markers and segment annotating gain margin (GM = 10.7 dB). Lavender (#C475FD) markers and segment annotating phase margin (PM = 22.5°). Dashed reference lines at 0 dB and -180°. Green-tinted BoxAnnotation above 0 dB, red-tinted BoxAnnotation below -180°.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface.
+      Chrome: Title visible in light off-white text. Axis labels "Magnitude (dB)", "Phase (°)", "Frequency (Hz)" in light text — all readable against dark background. Tick labels in lighter gray (#B8B7B0 range) — clearly readable, no dark-on-dark failures. Grid lines subtle.
+      Data: Data colors identical to light render — brand green, red, and lavender all identical. BoxAnnotation fills adapt to dark-tinted versions at same 6% alpha. No colors lost against dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -49,64 +58,81 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (28pt title, 22pt labels, 18pt ticks).
-          Reference labels at 16pt slightly small.
+        comment: 'Title, axis labels, tick labels all readable in both themes. Minor
+          deduction: annotation labels (GM/PM) at 24pt and reference labels (0 dB,
+          -180 degrees) at 20pt are smaller than tick labels (34pt), slightly reducing
+          prominence of key engineering values.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text anywhere.
+        comment: No text overlaps in either light or dark render.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Lines at line_width=4 clearly visible. Markers at size=16 adequate
-          but could be slightly larger.
+        comment: 500-point Bode curves at line_width=4 are clean and clear; crossover
+          markers at size=18 clearly visible; reference lines and BoxAnnotations visible
+          without competing with data.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Colorblind-safe Wong palette with good contrast.
+        comment: Imprint palette used throughout; semantic red for gain margin (stability
+          risk), lavender for phase margin. CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Dual-panel layout fills canvas well with balanced margins.
+        comment: Canvas gate passed. 3200x1800 landscape with two 900px panels stacking
+          cleanly. No clipping or overflow detected.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: All labels descriptive with units.
+        comment: Magnitude (dB), Phase (degrees), Frequency (Hz) all present with
+          units. Title exact match.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 for Bode curves; semantic red #AE3030 for gain
+          margin; lavender #C475FD for phase margin. Background #FAF8F1 light / #1A1A17
+          dark. Both themes correct.'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom Wong palette, styled background, stability region shading
-          — clearly above defaults.
+        comment: 'Above default: semantic color choices, BoxAnnotation shading for
+          stable/unstable regions, consistent Imprint palette, adaptive chrome. Annotation
+          size inconsistency limits polish.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Subtle dashed grid, tick marks removed, outline removed, custom background,
-          generous margins.
+        comment: outline_line_color=None, grid at alpha=0.15, minor ticks disabled,
+          toolbar disabled. Axis labels render in Bokeh default italic style — missing
+          explicit axis_label_text_font_style='normal'.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: GM/PM annotations create focal points. Region shading guides stability
-          interpretation.
+        comment: BoxAnnotation fills communicate stable/unstable regions; dotted segments
+          demonstrate margin measurement; annotations label key engineering values.
+          Clear focal points at crossover frequencies.
     spec_compliance:
       score: 15
       max: 15
@@ -116,112 +142,123 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dual-panel Bode plot.
+        comment: 'Correct dual-panel Bode plot: magnitude on top, phase on bottom,
+          shared logarithmic frequency axis.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: dual panel, GM/PM annotations, reference
-          lines, log scale, grid.'
+        comment: Gain margin annotated (segment + label + markers), phase margin annotated
+          (segment + label + markers), 0 dB reference line, -180 degree reference
+          line, logarithmic frequency scale, grid lines on both panels.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct frequency vs magnitude/phase mapping.
+        comment: 'X: frequency (Hz) log-scaled in both panels; Y top: magnitude (dB);
+          Y bottom: phase (degrees). 500 log-spaced points over 0.1-1000 Hz.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No legend needed for single-series.
+        comment: Title is exactly 'bode-basic · python · bokeh · anyplot.ai'. No legend
+          needed for single line series with annotations.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Third-order transfer function shows characteristic rolloff, GM, PM.
-          Could show resonance peak for fuller coverage.
+        comment: Third-order open-loop transfer function; gain crossover and phase
+          crossover computed and annotated; full magnitude rolloff and phase rolloff
+          shown.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world control systems scenario with physically meaningful transfer
-          function.
+        comment: Third-order industrial control system with poles at 5 Hz and 50 Hz;
+          GM ~10.7 dB (above 6 dB minimum), PM ~22.5° (marginally stable). Neutral
+          domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic frequency range and gain/phase values.
+        comment: 500 log-spaced points give smooth curves; magnitude +43 to -110 dB
+          and phase -90 to -270 degrees are correct for the transfer function order.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Uses style_plot() helper function, deviating from pure KISS pattern.
+        comment: No functions or classes; linear procedural code.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic transfer function calculation.
+        comment: Fully deterministic from fixed parameters (K=100, w1, w2).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used; no extraneous imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized code. No fake functionality.
+        comment: sys.path manipulation documented; color tokens at top; theme branching
+          clear.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Current Bokeh API.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png; current Bokeh API.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: ColumnDataSource, shared x_range, column layout, Span/Label/BoxAnnotation
-          models. Idiomatic Bokeh.
+        comment: ColumnDataSource, shared x_range, column() layout, HoverTool with
+          vline mode, Span, BoxAnnotation, Label — all idiomatic Bokeh.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: HoverTool with vline mode and HTML export are distinctive Bokeh features.
+        comment: HoverTool with custom tooltip format, BoxAnnotation for shaded stability
+          regions, shared x_range for linked panels — genuinely Bokeh-specific features.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
+  - pillow
   techniques:
-  - annotations
   - hover-tooltips
   - html-export
+  - annotations
   - subplots
   patterns:
-  - data-generation
   - columndatasource
+  - data-generation
   dataprep: []
   styling:
-  - grid-styling
+  - alpha-blending
