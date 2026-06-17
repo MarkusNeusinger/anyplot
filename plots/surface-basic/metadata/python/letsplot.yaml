@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: surface-basic
 created: '2025-12-23T22:01:09Z'
-updated: '2026-06-17T01:19:37Z'
+updated: '2026-06-17T01:33:29Z'
 generated_by: claude-sonnet
 workflow_run: 27658906283
 issue: 1013
@@ -12,131 +12,139 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/surface-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/letsplot/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - Technically impressive 2D projection of a 3D surface using painter's algorithm
-    — valid approach for letsplot which lacks native 3D support
-  - Correct use of imprint_div diverging colormap with theme-adaptive midpoint (FAF8F1
-    light / 1A1A17 dark)
-  - Complete theme adaptation for both light and dark renders; all chrome tokens correctly
-    applied
-  - 'Clean KISS code structure: necessary complexity (painter''s algorithm, depth
-    sort) is well-contained'
-  - 'Full feature coverage: sin(x)*cos(y) function shows peaks, valleys, and saddle
-    points clearly'
-  - Saves both .png and .html outputs per letsplot convention
+  - Creative 3D surface simulation using painter's algorithm and 2D projection — impressive
+    given letsplot's lack of native 3D support, and the visual result is convincing
+    in both themes
+  - Imprint diverging colormap (`imprint_div`) correctly applied with theme-adaptive
+    midpoint (off-white in light, near-black in dark), producing the correct surface
+    appearance in both renders
+  - 'Full theme-adaptive chrome: all six chrome tokens (PAGE_BG, ELEVATED_BG, INK,
+    INK_SOFT, DIV_MID) correctly branched on ANYPLOT_THEME, with zero dark-on-dark
+    or light-on-light failures'
+  - Peak and valley annotations add guided data storytelling — viewer immediately
+    locates z≈+1 and z≈−1 extrema without searching
+  - All font sizes explicitly set (plot_title=16, axis_title=12, axis_text=10, legend_text=10,
+    legend_title=12, geom_text size=3.5mm) with well-proportioned result at 3200×1800
+    px
+  - Clean, linear code structure with no functions or classes; painter's algorithm
+    implementation is well-organized with clear comments; zip(strict=True) is a nice
+    Pythonic safety touch
   weaknesses:
-  - 'Title is missing the required language component — current: "surface-basic ·
-    letsplot · anyplot.ai", required: "surface-basic · python · letsplot · anyplot.ai"'
-  - 'Design Excellence below approval threshold: the projection is sophisticated but
-    the overall composition lacks publication-ready polish — consider removing remaining
-    axis spines, adding annotation for a key feature (e.g. saddle point), or increasing
-    whitespace around the plot area'
-  - 'Library Mastery low: core 3D rendering is manual numpy/pandas; letsplot is only
-    used for the final grammar layer — try to use any letsplot-specific features (e.g.
-    geom_contour or coordinated theme elements) to increase library contribution'
-  - 'DE-02: Visual refinement is good but not complete — axis lines (panel axis_line)
-    are still visible as frame lines in both renders, which competes with the 3D illusion;
-    setting axis_line=element_blank() would give a cleaner frameless surface look'
+  - Annotation text (geom_text size=3.5mm) resolves to ~53px in the 3200×1800 export
+    — readable but slightly small for annotations that carry key insight (peak z≈+1,
+    valley z≈−1); increase to size=4.5 or 5 for better prominence
+  - '3D rotation not supported: letsplot outputs a fixed-angle 2D projection; the
+    spec asks interactive libraries to ''enable rotation to explore the surface from
+    different angles'' — the HTML file has hover tooltips but no rotation (inherent
+    letsplot limitation; acceptable but worth noting)'
+  - 'DE-01 ceiling: the aesthetic is clean and above defaults but not yet FiveThirtyEight-level;
+    could benefit from a subtle shading layer or vignette on the projection edges
+    to strengthen perceived depth, or a brief subtitle note explaining the math function'
+  - LM-02 distinctive features are present (layer_tooltips with custom .line() format,
+    HTML export) but the core rendering technique (geom_polygon + painter's algorithm)
+    is transferable to plotnine without modification — a more letsplot-native approach
+    would push LM-02 higher
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light surface background.
-      Chrome: Title "surface-basic · letsplot · anyplot.ai" in dark ink at top-left (note: missing "python ·" language component). Axis labels "X (projected)" bottom and "Z (height)" left are clearly readable in dark ink. Tick labels visible and legible. Legend "Z Value" at right with elevated background box.
-      Data: 3D surface projection of sin(x)*cos(y) rendered via geom_polygon with painter's algorithm depth sort. Blue (#4467A3) for positive peaks, red (#AE3030) for negative valleys, near-neutral midpoint for zero crossings — correctly matching imprint_div diverging colormap. Polygon mesh edges in muted ink color create a subtle grid structure on the surface.
-      Legibility verdict: PASS — all text readable; theme colors correctly applied.
+      Background: Warm off-white (#FAF8F1) — clearly visible as a cream surface, not pure white.
+      Chrome: Title "surface-basic · python · letsplot · anyplot.ai" at top-left in dark ink (#1A1A17), occupying ~65% of plot width. Y-axis label "Z (height)" in dark ink, X-axis label "X (projected)" in dark ink. Tick labels in secondary ink (#4A4A44), ranging -1.5 to 1.5 on Y, -4 to 4 on X. All text readable against light background. Legend titled "Z Value" with color gradient strip on right side, legible.
+      Data: 3D surface simulation of sin(x)*cos(y) via painter's algorithm. Blue (#4467A3) at peaks (z≈+1, upper-right), transitioning through off-white midpoint to matte-red (#AE3030) at valleys (z≈−1, front-left). Polygon edges rendered in #4A4A44 at size=0.15, providing subtle depth grid. Annotations "peak  z ≈ +1" and "valley  z ≈ −1" visible in dark ink.
+      Legibility verdict: PASS — all text clearly readable; no light-on-light failures detected.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface background.
-      Chrome: Title, axis labels, tick labels all render in light ink (#F0EFE8 / #B8B7B0) — clearly readable against the dark background. Legend box uses elevated dark background (#242420) with light-colored text. No dark-on-dark failures.
-      Data: Surface polygon colors are identical to light render — blue peaks, red valleys, neutral midpoint. Only the theme-adaptive midpoint of the diverging scale correctly flips from #FAF8F1 to #1A1A17, making the near-zero region blend into the dark background appropriately and enhancing contrast of the peaks.
-      Legibility verdict: PASS — all text readable; no dark-on-dark issues found.
+      Background: Warm near-black (#1A1A17) — clearly visible as a dark warm surface, not pure black.
+      Chrome: Title in light cream (#F0EFE8), axis labels in light cream, tick labels in secondary light (#B8B7B0). Legend box styled with #242420 fill and #B8B7B0 border. Polygon edges rendered in #B8B7B0 (light in dark mode), providing visible depth grid. All chrome elements readable against dark background; no dark-on-dark text failures detected.
+      Data: Identical data colors to light render — blue (#4467A3) at peaks, matte-red (#AE3030) at valleys. The theme-adaptive diverging midpoint shifts to #1A1A17, so mid-value polygons blend smoothly with the dark background (expected and correct imprint_div behavior). Annotations "peak  z ≈ +1" and "valley  z ≈ −1" visible in light cream ink.
+      Legibility verdict: PASS — all text clearly readable; no dark-on-dark failures; data colors identical to light render.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=16, axis_title=12, axis_text=10,
-          legend=10/12). Text readable in both themes at full resolution.
+        comment: 'All font sizes explicitly set (title=16, axis_title=12, axis_text=10,
+          legend=10/12, geom_text=3.5mm). Well-proportioned at 3200x1800. Minor: annotation
+          labels at size=3.5mm resolve to ~53px in the export — readable but slightly
+          small for key insight annotations.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps; painter's algorithm handles polygon depth ordering;
-          legend separate from surface.
+        comment: No overlap between any text elements, annotations, or the legend.
+          Peak and valley annotations are well-positioned away from each other and
+          the legend.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Surface polygons clearly visible at alpha=1.0; polygon borders (size=0.15,
-          INK_SOFT color) provide mesh structure without dominating.
+        comment: Surface polygons clearly visible; diverging colormap creates strong
+          visual contrast between peaks and valleys; polygon edges provide depth cues.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Diverging red-blue colormap is CVD-safe (red and blue are distinguishable
-          under most CVD types). Luminance contrast between peaks and valleys is strong.
+        comment: Imprint diverging (red-blue) is CVD-safe. No red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well; margins adequate; colorbar well-positioned
-          at right; 800x450 ggsize with scale=4 produces correct 3200x1800 canvas.
+        comment: Canvas gate passed (3200x1800). Plot fills canvas well with balanced
+          margins. Legend nicely integrated on right.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"X (projected)" and "Z (height)" are descriptive and contextually
-          appropriate for the 2D projection approach. Colorbar labeled "Z Value".'
+        comment: Title correct format. X-axis 'X (projected)' and Y-axis 'Z (height)'
+          are descriptive for a 2D-projected surface. The original Y data dimension
+          is folded into the projection depth, so two visible axes labeled correctly.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_div correctly used (low=#AE3030, mid=theme-adaptive, high=#4467A3)
-          for diverging continuous data. Backgrounds #FAF8F1 (light) and #1A1A17 (dark).
-          All chrome theme-adaptive and correct in both renders.'
+        comment: 'imprint_div correctly applied: low=#AE3030, high=#4467A3, mid=DIV_MID
+          (theme-adaptive). Plot backgrounds #FAF8F1 light / #1A1A17 dark. All chrome
+          tokens theme-adaptive.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: 'Above well-configured default: the painter''s algorithm 3D projection
-          is sophisticated and the diverging palette is well-chosen. However, the
-          composition lacks publication-ready polish — axis frame lines compete with
-          3D illusion, no annotations or storytelling elements.'
+        passed: true
+        comment: 'Above defaults: custom Imprint diverging palette, full theme-adaptive
+          chrome, painter''s algorithm produces visually striking result. Not yet
+          FiveThirtyEight-level — could add depth shading or more visual hierarchy.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Grid removed (panel_grid=element_blank()), legend has elevated background,
-          polygon borders are tastefully thin (0.15). Axis lines remain visible as
-          a frame, which slightly competes with the 3D illusion. Good but not perfect
-          refinement.
+        passed: true
+        comment: Panel grid removed, axis lines removed, polygon edges very subtle
+          (size=0.15), theme_minimal base. Good refinement; slightly more margin polish
+          could push this higher.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: 'Diverging colormap creates natural visual hierarchy: blue peaks
-          and red valleys immediately communicate positive/negative function regions.
-          Above default data-display but no annotations, no explicit focal point,
-          no guided narrative.'
+        passed: true
+        comment: Annotations guide viewer to peak (z≈+1) and valley (z≈−1). Diverging
+          colormap creates natural visual hierarchy around zero. Viewer immediately
+          sees the extrema. Good storytelling.
     spec_compliance:
       score: 14
       max: 15
@@ -146,32 +154,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 2D projection of 3D surface using painter's algorithm — the only
-          feasible approach in letsplot (no native 3D). Correctly represents continuous
-          surface of f(x,y).
+        comment: Output is clearly a 3D surface plot, correctly visualizing a 2-variable
+          function as a continuous surface with height+color encoding.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Colorbar present, axis labels for all relevant dimensions, 40x40
-          grid (within 30-50 spec range), sin(x)*cos(y) function with peaks/valleys/saddle
-          points.
+        comment: 'Smooth colormap (imprint_div) ✓, axis labels ✓, colorbar ✓, 40x40
+          grid (within 30-50 spec range) ✓. Missing: rotation for interactive exploration
+          (letsplot HTML has hover tooltips but no 3D rotation — inherent library
+          limitation).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X and Y grid coordinates correctly projected; Z mapped to both height
-          (Y-axis in projection) and fill color. All data visible.
+        comment: 40x40 grid, z=sin(x)*cos(y), x/y from -3 to 3. All data correctly
+          mapped and visible.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title is "surface-basic · letsplot · anyplot.ai" — missing required
-          "python" language component. Should be "surface-basic · python · letsplot
-          · anyplot.ai".
+        passed: true
+        comment: Title 'surface-basic · python · letsplot · anyplot.ai' exactly matches
+          required format. Legend 'Z Value' is descriptive.
     data_quality:
       score: 15
       max: 15
@@ -181,23 +188,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'sin(x)*cos(y) on a 40x40 grid shows all surface features: positive
-          peaks, negative valleys, saddle points, and zero crossings — comprehensive
-          feature coverage.'
+        comment: Shows peaks, valleys, and saddle points. 40x40 grid provides good
+          coverage. Full range of sin(x)*cos(y) visible.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mathematical function visualization (sin*cos) is a standard, neutral,
-          and comprehensible scenario for demonstrating 3D surface plots.
+        comment: Classic mathematical function z=sin(x)*cos(y) — clear scientific
+          context, non-controversial.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: x/y range -3 to 3 appropriate for sin/cos functions; z range -1 to
-          1 is mathematically correct for sin(x)*cos(y).
+        comment: x/y from -3 to 3 shows ~2 complete oscillation periods. Z range -1
+          to +1 is the correct theoretical maximum for sin*cos.
     code_quality:
       score: 10
       max: 10
@@ -207,65 +213,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save. Painter's algorithm loop is
-          necessary complexity for the 2D projection approach, not over-engineering.
+        comment: 'Linear structure: imports → tokens → data → projection → quads →
+          plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Data is deterministic (meshgrid + sin/cos).
+        comment: np.random.seed(42) set. Data is deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports from lets_plot are used. os, numpy, pandas all used.
-          No unused imports.
+        comment: All 14 letsplot imports are used. os, numpy, pandas all used. No
+          unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized code. zip(..., strict=True) is a nice Pythonic
-          touch. Painter's algorithm is justified and clearly structured. No fake
-          UI.
+        comment: Painter's algorithm cleanly implemented. zip(strict=True) is Pythonic.
+          No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct filenames.
-          Current letsplot API used.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct path parameter
+          in ggsave.
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: ggplot grammar is used correctly with geom_polygon, aes() mappings,
-          scale_fill_gradient2, labs, theme, ggsize. However, the core 3D rendering
-          is done in numpy/pandas outside letsplot — letsplot is only used for the
-          final rendering layer.
+        passed: true
+        comment: 'Very idiomatic letsplot: ggplot grammar, geom_polygon with group
+          aesthetic, scale_fill_gradient2, layer_tooltips with custom format, theme()
+          with element functions, ggsize+ggsave with scale=4.'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: HTML export (ggsave .html) and scale_fill_gradient2 with theme-adaptive
-          midpoint are letsplot-specific. The geom_polygon with group aesthetic for
-          painter's algorithm is a clever use of ggplot primitives. But no distinctively
-          letsplot-only feature is leveraged.
-  verdict: REJECTED
+        passed: true
+        comment: 'layer_tooltips with .line(''Z value: @z{.3f}'') is distinctly letsplot.
+          HTML export included. Core painter''s algorithm via geom_polygon is transferable
+          to plotnine — not uniquely letsplot.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - 3d-projection
-  - html-export
+  - annotations
   - colorbar
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
@@ -273,4 +278,5 @@ impl_tags:
   dataprep: []
   styling:
   - custom-colormap
-  - edge-highlighting
+  - alpha-blending
+  - minimal-chrome
