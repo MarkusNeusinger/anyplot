@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: bode-basic
 created: '2026-06-17T20:23:46Z'
-updated: '2026-06-17T20:33:10Z'
+updated: '2026-06-17T20:42:58Z'
 generated_by: claude-sonnet
 workflow_run: 27716780013
 issue: 4411
@@ -12,49 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bode-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bode-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 92
 review:
   strengths:
-  - 'Perfect spec implementation: dual-panel Bode plot with magnitude (top) and phase
-    (bottom), logarithmic x-axis, 0 dB and -180° reference lines, gain and phase margin
-    annotations — all present and correct'
-  - Analytically correct frequency response for G(s) = 10/(s(s+1)(s+5)) with proper
-    interpolated gain margin (~9.5 dB) and phase margin (~25.4°) calculations using
-    approx()
-  - Both light and dark themes correctly implemented — all chrome tokens (INK, INK_SOFT,
-    INK_MUTED, PAGE_BG, ELEVATED_BG) applied consistently; data colors identical between
-    themes
-  - 'Idiomatic ggplot2: geom_hline(data = ref_df, aes(yintercept = yint)) for per-facet
-    reference lines is the correct grammar-of-graphics pattern; scale_x_log10 with
-    outer() for minor breaks is R-idiomatic'
-  - 'Semantically meaningful crossover markers: blue (#4467A3) for gain crossover,
-    red (#AE3030) for phase crossover — both from Imprint palette and visually distinguishable'
+  - 'Perfect spec compliance: all required Bode plot features implemented (dual-panel,
+    reference lines, GM/PM annotations, log-scale, grid)'
+  - Excellent idiomatic ggplot2 usage — per-facet data injection pattern into individual
+    geoms is a hallmark of sophisticated ggplot2 code
+  - Realistic analytical transfer function G(s) = 10/(s(s+1)(s+5)) with physically
+    meaningful stability margins (GM=9.5 dB, PM=25.4°)
+  - 'Clean dual-theme adaptation: chrome tokens flip correctly in both renders, data
+    colors identical between light and dark'
+  - Stability zone shading between crossover frequencies adds genuine visual storytelling
+  - 'Semantic Imprint palette color assignment: blue (#4467A3) for gain crossover,
+    red (#AE3030) for phase crossover — idiomatic semantic anchoring'
   weaknesses:
-  - Panel borders use full box frame (panel.border = element_rect(color = INK_SOFT,
-    fill = NA)) — style guide default is to remove top and right spines for a more
-    refined L-shaped frame; replace panel.border with axis.line = element_line(color
-    = INK_SOFT) and remove the boxed border
-  - 'Design not yet publication-ready: no spine removal, no additional visual emphasis
-    beyond annotations — to reach DE-01 ≥ 6, add a shaded or colored region indicating
-    the stable operating zone (between crossover frequencies or below 0 dB), or use
-    stronger font hierarchy for the margin annotation values'
-  - Annotation labels at geom size=2.8 (~8 pt) are at the minimum readable threshold;
-    increase to size=3.5 to improve mobile readability
-  - 'library(dplyr) is imported but no explicit dplyr functions are called (tibble::tibble()
-    uses the :: namespace directly) — remove unused import or replace tibble::tibble()
-    with a plain data.frame()'
+  - 'DE-01 below ceiling: design is technically accomplished but slightly functional
+    in aesthetic register — annotation boxes and shading are present but no typographic
+    hierarchy variation or focal emphasis beyond the required annotations'
+  - 'VQ-01 minor: dual-panel layout compresses each panel; tick labels at 8pt are
+    at the lower readable threshold for the landscape canvas'
+  - 'LM-02: does not fully exploit ggplot2 highest-level features such as annotation_logticks()
+    for polished log-axis tick marks'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — correct theme surface.
-      Chrome: Title "bode-basic · r · ggplot2 · anyplot.ai" in bold dark ink (#1A1A17), spanning ~45% of canvas width, clearly readable. Strip labels "Magnitude (dB)" and "Phase (°)" in bold INK at 10pt on elevated background (#FFFDF6) — readable. Axis label "Frequency (Hz)" at 10pt in INK — readable. Tick labels at 8pt in INK_SOFT (#4A4A44) — readable. Dashed reference lines in INK_MUTED. All chrome elements are clearly visible against the warm off-white background.
-      Data: Single frequency response curve in brand green #009E73 — first series correct. Upper panel shows magnitude (dB) descending from ~25 dB at low frequency to ~-120 dB at high frequency. Lower panel shows phase rolling from ~-90° to ~-270°. Blue vertical dotted line (#4467A3) marks gain crossover, red vertical dotted line (#AE3030) marks phase crossover. Annotation boxes with elevated fill show "GM = 9.5 dB" and "PM = 25.4°". 0 dB and -180° dashed reference lines visible.
-      Legibility verdict: PASS — all text readable. Minor note: annotation labels at size=2.8 (~8pt) match tick label size and are on the small side for mobile scaling.
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
+      Chrome: Title "bode-basic · r · ggplot2 · anyplot.ai" bold dark ink at top-left. Strip labels "Magnitude (dB)" and "Phase (°)" bold dark ink. X-axis label "Frequency (Hz)" dark ink. Tick labels in INK_SOFT (#4A4A44). All chrome clearly readable.
+      Data: Brand green (#009E73) response curve at linewidth 1.0. Dashed reference lines at 0 dB and -180° in muted ink. Blue (#4467A3) dotted vertical for gain crossover; red (#AE3030) dotted vertical for phase crossover. Subtle green-tinted stability zone shading between crossovers. Rounded annotation boxes "GM = 9.5 dB" and "PM = 25.4°" on elevated (#FFFDF6) backgrounds.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black consistent with #1A1A17 — correct dark theme surface.
-      Chrome: Title uses off-white #F0EFE8 (INK in dark mode) — clearly readable against near-black background. Strip labels use #F0EFE8 on elevated dark strip background (#242420) — readable. Tick labels use INK_SOFT (#B8B7B0) — light gray on near-black, readable. Axis label "Frequency (Hz)" in #F0EFE8 — readable. No dark-on-dark failures detected. Dashed reference lines visible as lighter gray on dark background.
-      Data: Frequency response curve retains identical brand green #009E73 — data colors match light render exactly. Blue and red crossover markers remain visible on dark background. Annotation boxes use #242420 fill with #F0EFE8 text — readable. Grid lines are subtle (adjustcolor with alpha=0.12 of dark INK equivalent) and appropriately understated.
-      Legibility verdict: PASS — all text readable; chrome correctly flips between themes while data colors remain constant.
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black.
+      Chrome: Title, strip labels, axis label, and tick labels all rendered in light ink (#F0EFE8 / #B8B7B0). Elevated strip backgrounds (#242420). Annotation boxes use dark elevated background. No dark-on-dark failures detected.
+      Data: Brand green (#009E73) curve — identical to light render. Blue and red crossover markers identical. Annotation box labels readable against dark elevated background. Stability zone shading visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -65,82 +56,78 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=12pt, axis.title=10pt, axis.text=8pt,
-          strip.text=10pt, annotations=2.8 geom units). Well-proportioned at desktop.
-          Minor deduction: annotation labels at ~8pt are borderline for mobile scaling.'
+        comment: 'Title 12pt bold, strip labels 10pt bold, axis title 10pt, tick labels
+          8pt — all readable in both themes. Minor deduction: dual-panel layout compresses
+          each panel slightly.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Annotations placed in open areas away from curves.
+        comment: GM and PM annotation boxes positioned cleanly in separate panels;
+          no collision with curves or crossover markers.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Frequency response lines at linewidth=1.0, reference lines at 0.6,
-          crossover markers at 0.7 — all clearly visible. 500 smooth data points render
-          as continuous curve.
+        comment: Response curves clearly visible (linewidth 1.0); stability zone shading
+          subtle; crossover dotted lines distinguishable by color and linestyle.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single data series in brand green. Crossover markers use blue and
-          red from Imprint palette. No red-green sole signal. CVD-safe.
+        comment: Brand green primary curve; crossover markers use blue/red from Imprint
+          palette with redundant linestyle encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Dual panels balanced. No overflow.
-          Good proportions.
+        comment: 3200x1800 px (8x4.5 in @400dpi). Canvas gate passed. Dual-panel proportions
+          balanced; no clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'x-axis: ''Frequency (Hz)'' with units. y-axis: NULL with panel strip
-          titles ''Magnitude (dB)'' and ''Phase (°)'' serving as labels with units
-          — appropriate for faceted Bode plot.'
+        comment: 'x-axis: Frequency (Hz) with units. Facet strip labels carry y-axis
+          units per panel. Title correct.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73. Background #FAF8F1 light / #1A1A17 dark. Crossover
-          markers use Imprint palette positions 3 and 5. All chrome tokens theme-adaptive.
-          Both renders pass.'
+        comment: 'Main curve #009E73 (brand green). Crossover markers #4467A3 and
+          #AE3030 from Imprint palette. Backgrounds #FAF8F1 light / #1A1A17 dark.
+          Both themes correct.'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Clean and well-configured, but at the 'well-configured library default'
-          level. Thoughtful use of two Imprint colors for crossover markers, but not
-          at publication-ready sophistication.
+        passed: true
+        comment: Semantic color assignment for crossover markers; stability zone shading;
+          rounded elevated annotation boxes. Above default; not exceptional art direction.
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Grid uses adjustcolor with alpha=0.12 (subtle, refined). Annotation
-          boxes have label.r rounded corners and thin border. However, full box panel
-          borders are kept (not L-shaped spines) — deviates from style guide default.
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Stability margin annotations with GM/PM values create visual focus.
-          Reference lines at 0 dB and -180° clearly delineate stability boundaries.
-          Crossover markers guide the viewer to the key frequencies. Good storytelling
-          for a control systems plot, but lacks shading of stable/unstable regions.
+        comment: Panel borders removed; axis lines retained; subtle alpha-adjusted
+          grid; elevated strip backgrounds; clean margins.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Reference lines anchor critical thresholds; stability zone communicates
+          safety margin interval; GM/PM annotations directly label the engineering
+          insight.
     spec_compliance:
       score: 15
       max: 15
@@ -150,28 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dual-panel Bode plot with magnitude (top) and phase (bottom).
+        comment: 'Correct dual-panel Bode plot: magnitude on top, phase on bottom.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Log-scale x-axis, dual panels, 0 dB reference, -180° reference, gain
-          margin annotation, phase margin annotation — all present.
+        comment: Dual-panel, 0 dB and -180 reference lines, gain margin annotation,
+          phase margin annotation, log-scale frequency axis, grid lines — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Frequency on shared log x-axis, magnitude in dB on top panel, phase
-          in degrees on bottom panel — all correct.
+        comment: Frequency in Hz on x (log scale); dB in magnitude panel; degrees
+          in phase panel. 500 log-spaced points from 0.005-50 Hz.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'bode-basic · r · ggplot2 · anyplot.ai' correct. No legend
-          needed (single series; panels serve as y-axis label.
+        comment: 'Title: ''bode-basic · r · ggplot2 · anyplot.ai''. No legend needed
+          for single series; panel identity via facet strip labels.'
     data_quality:
       score: 15
       max: 15
@@ -181,24 +168,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows magnitude response with resonance rolloff, phase response with
-          full -90° to -270° range, both stability margins annotated.
+        comment: Shows magnitude and phase; both crossover frequencies marked; stability
+          margins annotated; stability zone shaded; reference lines at critical thresholds.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: G(s) = 10/(s(s+1)(s+5)) is a standard control systems type-1 plant
-          with two real poles — realistic, neutral, engineering context.
+        comment: 'G(s) = 10/(s(s+1)(s+5)): physically meaningful type-1 third-order
+          control system. Realistic engineering scenario; not controversial.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequency range 0.005-50 Hz is sensible for this transfer function.
-          dB range and phase range match the analytical response accurately.
+        comment: Frequency range 0.005-50 Hz, 500 log-spaced points. Magnitude ~+25
+          to -120 dB. Sensible values for this transfer function class.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -206,55 +193,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: tokens → data computation → plot → save. No functions
-          or classes.'
+        comment: Pure sequential script; no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic (analytical formula). No set.seed() needed.
+        comment: 'Fully deterministic: analytical transfer function, no random elements.'
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: library(dplyr) imported but not used — all tibble calls use tibble::tibble()
-          with explicit namespace. Remove library(dplyr) or switch to plain data.frame().
+        passed: true
+        comment: Only ggplot2 and ragg imported explicitly; tibble used via namespace.
+          All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity. No over-engineering. No fake UI.
+        comment: Clean idiomatic pipeline; per-facet data injection via separate dataframes;
+          linear interpolation for crossover detection.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via sprintf(). Uses ragg::agg_png device
-          correctly.
+        comment: Saves as plot-{THEME}.png; uses current ggplot2 API (linewidth= not
+          size=); ragg device explicit.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Exemplary ggplot2 grammar: facet_wrap with free_y scales; per-facet
+          geoms via data=subset_df; scale_x_log10 with minor_breaks; geom_label for
+          rounded callout boxes.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses facet_wrap with scales='free_y', geom_hline(data=, aes=) for
-          per-facet reference lines, scale_x_log10 with custom breaks — all idiomatic
-          ggplot2 grammar. Proper theme() layering.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: geom_hline(data = ref_df, aes(yintercept = yint)) for per-facet reference
-          lines is a distinctly ggplot2 grammar-of-graphics pattern. outer(1:9, 10^(-3:2))
-          for log minor breaks is R-idiomatic.
-  verdict: REJECTED
+        comment: 'Strong use of ggplot2-distinctive patterns: per-facet data injection,
+          facet strip customization, log-scale with minor tick grid, rounded annotation
+          labels. Solid but could leverage annotation_logticks() for further polish.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -266,4 +253,4 @@ impl_tags:
   dataprep:
   - interpolation
   styling:
-  - grid-styling
+  - alpha-blending
