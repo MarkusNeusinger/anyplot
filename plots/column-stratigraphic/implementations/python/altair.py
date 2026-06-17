@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 column-stratigraphic: Stratigraphic Column with Lithology Patterns
 Library: altair 6.2.1 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-06-17
@@ -89,24 +89,29 @@ lithology_colors = {
     "Conglomerate": LITHO_CYAN,
 }
 
-# Lithology pattern symbols approximating FGDC/USGS texture conventions
-pattern_symbols = {
-    "Sandstone": "· · · · · · · ·",
-    "Shale": "— — — — — —",
-    "Limestone": "▤ ▤ ▤ ▤ ▤ ▤",
-    "Siltstone": "╌ ╌ ╌ ╌ ╌ ╌",
-    "Conglomerate": "◯ ◯ ◯ ◯ ◯ ◯",
-}
+# Lithology pattern glyphs approximating FGDC/USGS texture conventions. Single
+# motif per rock type, tiled across the full column width (rows × columns) so each
+# layer reads as a true fill texture rather than a centered band.
+pattern_symbols = {"Sandstone": "·", "Shale": "—", "Limestone": "▤", "Siltstone": "╌", "Conglomerate": "◯"}
 
-# Multiple pattern rows per layer for a denser, more prominent texture fill
+# Column horizontal span (data units within x_domain) — the rectangles and the
+# tiled texture share these bounds.
+COL_L, COL_R = 3.2, 10.7
+
+# Texture grid: tile each layer with rows (depth) × columns (across the width) of
+# the lithology glyph, so the pattern fills the whole rectangle.
+n_cols = 11
+col_x = [COL_L + 0.35 + i * ((COL_R - COL_L - 0.7) / (n_cols - 1)) for i in range(n_cols)]
 pattern_rows = []
 for _, row in layers.iterrows():
     layer_height = row["bottom"] - row["top"]
     n_rows = max(2, int(layer_height / 6))
     spacing = layer_height / (n_rows + 1)
+    sym = pattern_symbols[row["lithology"]]
     for i in range(n_rows):
         depth = row["top"] + spacing * (i + 1)
-        pattern_rows.append({"depth": depth, "pattern": pattern_symbols[row["lithology"]]})
+        for xp in col_x:
+            pattern_rows.append({"depth": depth, "pattern": sym, "x_mid": xp})
 pattern_df = pd.DataFrame(pattern_rows)
 
 # Age groups — one bracket per contiguous geological period
@@ -184,15 +189,14 @@ rects = (
             alt.Tooltip("thickness:Q", title="Thickness (m)"),
         ],
     )
-    .transform_calculate(x="3.0", x2="10.5")
+    .transform_calculate(x=f"{COL_L}", x2=f"{COL_R}")
 )
 
-# Dense pattern texture overlay — dark ink reads on every Imprint fill in both themes
+# Tiled pattern texture overlay — dark ink reads on every Imprint fill in both themes
 pattern_text = (
     alt.Chart(pattern_df)
-    .mark_text(fontSize=12, color="#1A1A17", opacity=0.72, fontWeight="bold")
+    .mark_text(fontSize=13, color="#1A1A17", opacity=0.68, fontWeight="bold")
     .encode(y=alt.Y("depth:Q"), x=alt.X("x_mid:Q", scale=alt.Scale(domain=x_domain)), text="pattern:N")
-    .transform_calculate(x_mid="6.75")
 )
 
 # Formation name labels — to the right of the column
@@ -200,7 +204,7 @@ formation_labels = (
     alt.Chart(layers)
     .mark_text(fontSize=12, fontWeight="bold", align="left", color=INK)
     .encode(y=alt.Y("mid_depth:Q"), x=alt.X("x_pos:Q", scale=alt.Scale(domain=x_domain)), text="formation:N")
-    .transform_calculate(x_pos="11.0")
+    .transform_calculate(x_pos=f"{COL_R + 0.4}")
 )
 
 # Thickness annotations — far-right lane, tertiary text
@@ -211,20 +215,22 @@ thickness_labels = (
     .transform_calculate(x_pos="19.6", label="datum.thickness + ' m'")
 )
 
-# Age period labels — far-left lane
-age_labels = (
-    alt.Chart(age_df)
-    .mark_text(fontSize=12, fontStyle="italic", fontWeight="bold", align="right", color=INK)
-    .encode(y=alt.Y("mid_depth:Q"), x=alt.X("x_pos:Q", scale=alt.Scale(domain=x_domain)), text="age:N")
-    .transform_calculate(x_pos="1.4")
-)
-
-# Age bracket vertical lines
+# Age bracket vertical lines — far-left, just clear of the depth-axis numerals
 age_brackets_v = (
     alt.Chart(age_df)
     .mark_rule(strokeWidth=2.0, color=INK_SOFT)
     .encode(y=alt.Y("top:Q"), y2="bottom:Q", x=alt.X("x_pos:Q", scale=alt.Scale(domain=x_domain)))
-    .transform_calculate(x_pos="1.7")
+    .transform_calculate(x_pos="0.35")
+)
+
+# Age period labels — left-aligned immediately right of the bracket so the long
+# italic period names sit in their own lane between the bracket and the column,
+# never reaching back into the depth-axis tick numbers (140/160/180).
+age_labels = (
+    alt.Chart(age_df)
+    .mark_text(fontSize=10, fontStyle="italic", fontWeight="bold", align="left", color=INK)
+    .encode(y=alt.Y("mid_depth:Q"), x=alt.X("x_pos:Q", scale=alt.Scale(domain=x_domain)), text="age:N")
+    .transform_calculate(x_pos="0.9")
 )
 
 # Age bracket horizontal ticks (top and bottom of each age group)
@@ -238,7 +244,7 @@ age_bracket_ticks = (
     alt.Chart(bracket_ticks_df)
     .mark_rule(strokeWidth=2.0, color=INK_SOFT)
     .encode(y=alt.Y("depth:Q"), x=alt.X("x1:Q", scale=alt.Scale(domain=x_domain)), x2="x2:Q")
-    .transform_calculate(x1="1.7", x2="2.0")
+    .transform_calculate(x1="0.35", x2="0.7")
 )
 
 # Unconformity markers — red dashed lines crossing the column at age boundaries
@@ -246,16 +252,16 @@ unconformity_rules = (
     alt.Chart(unconformity_df)
     .mark_rule(strokeWidth=3.0, color=UNCONFORMITY, strokeDash=[8, 4])
     .encode(y=alt.Y("depth:Q"), x=alt.X("x1:Q", scale=alt.Scale(domain=x_domain)), x2="x2:Q")
-    .transform_calculate(x1="3.0", x2="10.5")
+    .transform_calculate(x1=f"{COL_L}", x2=f"{COL_R}")
 )
 
-# Unconformity labels — pinned to the left edge of the column (own lane, no crowding
-# with formation names on the right or age labels on the far left)
+# Unconformity labels — pinned just inside the column's left edge, lifted clear of
+# the layer texture above the dashed rule
 unconformity_labels_chart = (
     alt.Chart(unconformity_df)
-    .mark_text(fontSize=11, color=UNCONFORMITY, fontWeight="bold", align="left", dy=-8)
+    .mark_text(fontSize=12, color=UNCONFORMITY, fontWeight="bold", align="left", dy=-11)
     .encode(y=alt.Y("depth:Q"), x=alt.X("x_pos:Q", scale=alt.Scale(domain=x_domain)), text="label:N")
-    .transform_calculate(x_pos="3.2")
+    .transform_calculate(x_pos=f"{COL_L + 0.15}")
 )
 
 # Compose all layers
@@ -273,7 +279,7 @@ chart = (
         + unconformity_labels_chart
     )
     .properties(
-        width=640,
+        width=700,
         height=280,
         title=alt.Title(
             title,
