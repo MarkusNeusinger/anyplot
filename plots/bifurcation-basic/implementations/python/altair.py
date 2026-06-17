@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bifurcation-basic: Bifurcation Diagram for Dynamical Systems
 Library: altair 6.2.1 | Python 3.13.14
 Quality: 84/100 | Updated: 2026-06-17
@@ -139,7 +139,7 @@ chart = (
         height=275,
         background=PAGE_BG,
         title=alt.Title(
-            "bifurcation-basic · altair · anyplot.ai",
+            "bifurcation-basic · python · altair · anyplot.ai",
             fontSize=16,
             fontWeight="bold",
             color=INK,
