@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 spirometry-flow-volume: Spirometry Flow-Volume Loop
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-17
@@ -122,6 +122,11 @@ chart = pygal.XY(
     margin_right=60,
     xrange=(-0.2, 5.6),
     range=(-7.5, 10.5),
+    x_labels=[0, 1, 2, 3, 4, 5],
+    x_labels_major=[0, 1, 2, 3, 4, 5],
+    y_labels=[-5, 0, 5, 10],
+    show_x_labels=True,
+    show_y_labels=True,
     show_minor_x_labels=False,
     show_minor_y_labels=False,
     truncate_legend=-1,
@@ -191,7 +196,7 @@ for g in root.iter(f"{ns}g"):
             label.set("font-family", "DejaVu Sans, Helvetica, Arial, sans-serif")
             label.set("fill", PEF_RED)
             label.set("font-weight", "bold")
-            label.text = f"PEF = {flow_exp[pef_idx]:.1f} L/s"
+            label.text = f"PEF = {pef:.1f} L/s"
         break
 
 # Clinical values callout box (upper-right, where the loop leaves the canvas open)
