@@ -1,0 +1,242 @@
+library: makie
+language: julia
+specification_id: bifurcation-basic
+created: '2026-06-17T05:22:49Z'
+updated: '2026-06-17T05:49:08Z'
+generated_by: claude-sonnet
+workflow_run: 27667344153
+issue: 4415
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - 'Perfect spec compliance: logistic map, correct parameter range [2.5,4.0], bifurcation
+    labels at r~3.0/3.449/3.544'
+  - Density visualization (markersize=1, alpha=0.10) correctly adapted to 200,000
+    points
+  - Thorough theme-token application via with_theme — all chrome correctly flips between
+    light and dark
+  - Subtle chaotic-region polygon shading adds interpretive context without clutter
+  - Clean idiomatic Julia code with sizehint! performance optimization
+  weaknesses:
+  - 'DE-01 moderate (5/8): design is clean but not publication-ready; a density-adaptive
+    colormap (imprint_seq) on the scatter points based on r-value would elevate visual
+    sophistication'
+  - 'LM-02 partial (3/5): correct Makie idioms but lacks highly distinctive features
+    — density colormap with Colorbar legend or a custom recipe would push this higher'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1) — correct anyplot light surface
+      Chrome: title "bifurcation-basic · julia · makie · anyplot.ai" in dark ink (#1A1A17), readable at ~60% canvas width; axis labels "Growth rate  r" / "Population x" in dark ink; tick labels in INK_SOFT (#4A4A44); all clearly readable against light background
+      Data: #009E73 (Imprint brand green), markersize=1, alpha=0.10; creates density visualization — stable line in period-1, two branches in period-2, finer split for period-4, dense scatter for chaotic regime; three dashed vertical reference lines + "Period-2"/"Period-4"/"Period-8" labels; subtle chaotic-region polygon shading
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17) — correct anyplot dark surface
+      Chrome: title and axis labels in light ink (#F0EFE8); tick labels in INK_SOFT (#B8B7B0); no dark-on-dark failure detected; all text clearly readable against dark background
+      Data: colors identical to light render (#009E73 green); bifurcation structure equally clear; alpha slightly higher (0.13) for dark-theme contrast; density visualization is visually striking on dark surface
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (titlesize=20, axis labels=14, ticks=12);
+          proportions balanced; readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Period labels staggered at y=0.93/0.86/0.93 avoiding collision; no
+          text-data overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: markersize=1 + alpha=0.10/0.13 correctly adapted to 200,000 points;
+          density structure clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single Imprint green; CVD-safe; sufficient contrast on both backgrounds
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; plot fills canvas well with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Growth rate r / Population x are descriptive logistic map parameter
+          names
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: '#009E73 data color; correct PAGE_BG for both themes; INK/INK_SOFT
+          tokens applied; data color identical across themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: custom with_theme, chaotic-region shading, clean
+          composition; not yet publication-ready'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No grid (appropriate), top/right spines removed, subtle chaotic shading,
+          generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Period labels + dashed lines guide viewer through cascade; chaotic
+          shading emphasizes transition; visual hierarchy present
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct bifurcation diagram for logistic map with full period-doubling
+          cascade
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Logistic map, 200-iteration warmup, 100 kept, r in [2.5,4.0], markersize=1
+          alpha, bifurcation labels at r~3.0/3.449/3.544
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: r on x-axis, state x on y-axis; full data visible in [0, 1.05]
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Exact format: bifurcation-basic · julia · makie · anyplot.ai; no
+          legend needed for single series'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Complete route to chaos visible: period-1, period-2, period-4, chaotic
+          regime'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Logistic map is the canonical textbook example of nonlinear dynamics;
+          neutral scientific domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: r in [2.5,4.0] spans full route; x in [0,1] mathematically correct;
+          200k points appropriate density
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Constants -> Data -> Plot -> Save; no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic Julia; sizehint! performance optimization; no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png; uses size= (correct Makie 0.20+ API);
+          with_theme is current best practice
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: with_theme for theme application, Figure/Axis OOP API, native primitives
+          (scatter!, vlines!, text!, poly!) — all idiomatic CairoMakie
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses with_theme (Makie-distinctive) and poly! for shading; stops
+          short of highly distinctive features like Colorbar or density colormap
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
