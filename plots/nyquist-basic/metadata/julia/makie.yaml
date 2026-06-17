@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: nyquist-basic
 created: '2026-06-17T22:41:05Z'
-updated: '2026-06-17T22:47:49Z'
+updated: '2026-06-17T23:05:28Z'
 generated_by: claude-sonnet
 workflow_run: 27723659864
 issue: 4412
@@ -12,49 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/nyquist-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - 'Perfect spec compliance: all required Nyquist features implemented (critical
-    point marker, unit circle, direction arrows, frequency annotations, 1:1 aspect
-    ratio)'
-  - 'Excellent data quality: mathematically correct transfer function G(s)=1/(s(s+1)(0.5s+1))
-    with correct phase crossover at ω=√2 rad/s and gain margin of 3'
-  - 'Full palette compliance: Imprint palette used correctly — primary Nyquist curve
-    in brand green #009E73, semantic red #AE3030 for critical point X-marker, Imprint
-    positions 4 and 6 for crossover markers'
-  - 'Perfect code quality: clean KISS structure, Random.seed!(42), all imports used,
-    no fake UI elements'
-  - 'Both themes render correctly — light background #FAF8F1, dark background #1A1A17,
-    all chrome adapts properly with INK/INK_SOFT tokens, no dark-on-dark failures'
-  - 'Strong visual hierarchy: semantic red X-marker for critical point dominates attention,
-    green curve as primary element, direction arrows guide frequency progression'
+  - 'Full spec compliance: all required Nyquist features (critical point, unit circle,
+    direction arrows, frequency annotations, 1:1 aspect) correctly implemented'
+  - Frequency-colormap (imprint_seq) on the Nyquist curve is a technically elegant
+    and distinctive use of continuous color encoding
+  - 'Stability narrative: gain margin segment, phase margin callout, and bottom stability
+    Label guide the viewer to the key insight'
+  - Theme-adaptive chrome is complete and correct — both renders are fully readable
+    with no dark-on-dark or light-on-light failures
+  - Idiomatic Makie layout (grid cells, Colorbar/Label as layout elements) showcases
+    library strengths
   weaknesses:
-  - Tick label sizes not explicitly set (xticklabelsize, yticklabelsize missing from
-    Axis constructor) — add xticklabelsize=12, yticklabelsize=12 for full VQ-01 compliance
-  - Upper half of the plot (y > 0) is largely empty since the Nyquist curve for this
-    transfer function is concentrated in the lower half — consider adjusting ylims
-    to [-4.5, 2.5] or similar to reduce wasted upper space while keeping the unit
-    circle visible
-  - Design Excellence is average — DE-01=4 (well-configured Makie defaults), DE-02=4
-    (good refinements but not polished), DE-03=4 (good hierarchy but could be stronger
-    with a gain/phase margin annotation or subtitle explaining stability); add Makie-distinctive
-    visual polish to push DE scores higher
-  - 'LM-02: Implementation uses standard Makie primitives competently but doesn''t
-    showcase particularly distinctive Makie features — consider using Makie''s Observable/Colorbar
-    or a more complex Makie-specific layout trick to demonstrate library mastery'
+  - Colorbar (width=18 figure-units → ~36px in final PNG) is too thin to convey the
+    frequency scale legibly; increasing to width=28–32 or relocating would help
+  - Annotation cluster near critical point ("(-1, 0)", "GM = 3.0", "ω = √2 rad/s")
+    is spatially tight — slight crowding at small x∈[−1, 0], y≈0 region
+  - The asymmetric axis limits (x range 3.7 vs y range 6.0 with DataAspect) leave
+    noticeable empty space in upper and right regions within the square canvas; tightening
+    ylims to (−3.5, 1.5) would improve canvas utilisation
+  - Annotation font sizes (11pt → 22px effective) are at the low end for a 2400×2400
+    canvas; bumping to 12–13pt would improve mobile readability
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
-      Chrome: Title "nyquist-basic · julia · makie · anyplot.ai" in dark ink, fully readable. Axis labels "Real" (x) and "Imaginary" (y) in dark ink at 14pt. Tick labels (-2, -1, 0, 1, 2 on both axes) in INK_SOFT medium-gray, clearly readable. Grid lines are very subtle (12% opacity), barely noticeable. Left and bottom spines only (top/right removed).
-      Data: Primary Nyquist curve in brand green #009E73, thick linewidth=2.8, curves from upper-right through center, passes through critical region near (-1, 0) and spirals downward. Direction arrows (5 green arrowheads) show increasing-frequency direction on the curve. Dashed unit circle in blue #4467A3 at 45% alpha. Critical point (-1, 0) marked with large red X (#AE3030) at markersize=22. Phase crossover marked with ochre circle (#BD8233) at (-1/3, 0). Gain crossover marked with cyan diamond (#2ABCCD) near (-0.9, -0.4). Annotations "ω = √2 rad/s" (ochre) and "(-1, 0)" (red) placed near their markers. Legend in upper-right with subtle elevated-bg frame.
-      Legibility verdict: PASS — all text elements readable, Imprint palette used correctly, no light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "nyquist-basic · julia · makie · anyplot.ai" in dark ink — clearly readable. Axis labels "Real" (x) and "Imaginary" (y) readable. Tick labels (-2, -1, 0, 1 on x; -4, -2, 0, 2 on y) readable in secondary ink tone.
+      Data: Nyquist curve rendered with imprint_seq colormap (green #009E73 at low ω → blue #4467A3 at high ω). Orange circle (ochre, palette[4]) at phase crossover (−1/3, 0). Cyan diamond (palette[6]) at gain crossover. Red X (matte-red, palette[5]) at critical point (−1, 0). Dashed unit circle in muted blue. Direction arrows on curve.
+      Legibility verdict: PASS — all text readable against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black.
-      Chrome: Title in light cream ink (#F0EFE8), fully readable against dark background. Axis labels in light ink. Tick labels in INK_SOFT light-gray (#B8B7B0), clearly readable. Grid lines subtle. Spines in lighter soft ink. Legend frame subtle. No dark-on-dark failures detected.
-      Data: All data colors identical to light render — Nyquist curve in same #009E73 green, critical point same #AE3030 red X, phase crossover same ochre circle, gain crossover same cyan diamond, unit circle same dashed blue. Only chrome (background, text, grid, legend box) flips between themes.
-      Legibility verdict: PASS — all text readable against dark background, chrome correctly adapts, data colors identical to light render, brand green #009E73 clearly visible on dark surface.
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and axis labels switch to light cream text (INK = #F0EFE8). Tick labels in soft secondary tone (INK_SOFT = #B8B7B0). Legend box uses elevated dark background (#242420) with light text. Grid lines are subtle lighter stripes. No dark-on-dark failures observed.
+      Data: Colors identical to light render — same green→blue gradient curve, same ochre circle, cyan diamond, and red X. Brand green #009E73 clearly visible.
+      Legibility verdict: PASS — all text clearly distinguishable from near-black background
   criteria_checklist:
     visual_quality:
       score: 27
@@ -62,90 +54,83 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, annotation sizes explicitly set; tick label sizes
-          (xticklabelsize, yticklabelsize) not set — fall to library defaults. All
-          text readable at canvas size and in both themes.
+        comment: All sizes explicitly set (title=20, labels=14, ticks=12, legend/annotations=11).
+          Readable in both themes. Annotation text at 11pt (22px effective) is at
+          the low end for 2400×2400.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text or data elements. Annotations for critical point
-          and phase crossover are close but distinct. Legend does not overlap curve.
+        comment: No severe overlap; annotation cluster near critical point ((-1,0),
+          GM=3.0, ω=√2 rad/s labels) is slightly dense near y=0.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 'All elements clearly visible: curve linewidth=2.8, critical point
-          markersize=22, crossover markers markersize=16, direction arrows visible.
-          Unit circle at 45% alpha appropriately subtle.'
+        comment: Nyquist curve (linewidth=2.8), markers (size 16-22), direction arrows
+          all clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe. Multiple marker shapes (circle, diamond,
-          xcross) provide redundant encoding beyond color. No red-green sole-signal
-          issue.
+        comment: Distinct shape+color per marker; CVD-safe Imprint palette; frequency-colormap
+          adds redundant encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas appropriate for 1:1 aspect ratio Nyquist
-          plot. Canvas gate passed. Upper half of plot mostly empty (y > 0) since
-          Nyquist curve for this transfer function concentrates below the real axis
-          — minor wasted space.
+        comment: Square canvas correct for Nyquist 1:1 aspect. DataAspect with asymmetric
+          limits (x 3.7, y 6.0 units) creates portrait axis in square canvas, leaving
+          empty space. Colorbar (width=18 → 36px) is very thin.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes labeled 'Real' and 'Imaginary' — correct for complex plane.
-          No units needed (dimensionless complex plane). Title format correct.
+        comment: '''Real'' and ''Imaginary'' are correct conventional labels for complex
+          plane; no units needed. Title format correct.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Primary Nyquist curve uses #009E73 (brand green). Other series use
-          Imprint positions 3, 4, 5, 6 in semantic roles. Critical point in semantic
-          red #AE3030 appropriate. Light bg #FAF8F1 and dark bg #1A1A17 correct. Both
-          themes pass chrome check.'
+        comment: 'Nyquist curve uses ANYPLOT_SEQ (imprint_seq). Markers use Imprint
+          palette[4/5/6]. Background #FAF8F1/#1A1A17. Chrome fully theme-adaptive.
+          Data colors identical across both renders.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured Makie output with thoughtful semantic color choices
-          and marker shapes. Looks like a polished library default rather than FiveThirtyEight-level
-          design. Above generic (2) but not exceptional (6+).
+        passed: true
+        comment: Thoughtful design with frequency-encoded colormap, multiple annotated
+          features, stability summary. Above defaults but not publication-ready.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Spines removed (top/right), grid at 12% opacity, reference lines
-          at 25% alpha, legend with 30% alpha frame, tick colors set to INK_SOFT.
-          Multiple refinements beyond defaults but not every detail polished.
+        passed: true
+        comment: Top/right spines removed, subtle 12% alpha grid, theme-correct chrome,
+          semi-transparent legend frame. Colorbar too thin to contribute visual weight
+          proportional to role.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: 'Clear visual hierarchy: semantic red X-marker draws eye to critical
-          point; green curve as primary; direction arrows guide frequency reading;
-          annotations explain key engineering values. Above default (2) — viewer sees
-          the stability story. Lacks a gain/phase margin label or stability conclusion
-          text.'
+        passed: true
+        comment: 'Clear narrative: direction arrows, annotated crossover markers,
+          gain-margin segment, PM label, stability conclusion Label. Clear focal point
+          at critical-point region.'
     spec_compliance:
       score: 15
       max: 15
@@ -155,29 +140,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Nyquist plot: imaginary vs real part of G(jω) as frequency
-          varies.'
+        comment: Correct Nyquist plot in the complex plane.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: critical point marker, unit circle, frequency
-          annotations, direction arrows, 1:1 aspect ratio, axes labeled Real/Imaginary.'
+        comment: Critical point marked, unit circle drawn, frequency annotations at
+          crossovers, direction arrows, 1:1 aspect (DataAspect), axes labelled Real/Imaginary.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=real part, Y=imaginary part, 800 logarithmically spaced frequency
-          points. Correct mapping.
+        comment: Re(G(jω)) on x, Im(G(jω)) on y; 800 log-spaced points from ω=0.04
+          to 100 rad/s.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'nyquist-basic · julia · makie · anyplot.ai' matches required
-          format. Legend labels correctly identify curve and markers.
+        comment: Title 'nyquist-basic · julia · makie · anyplot.ai' correct. Legend
+          labels descriptive and accurate.
     data_quality:
       score: 15
       max: 15
@@ -187,25 +171,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows Nyquist curve, unit circle, critical point, gain crossover,
-          phase crossover, direction of increasing frequency — all key Nyquist plot
-          features.
+        comment: Shows full Nyquist locus, unit circle, critical point, gain/phase
+          crossover, directional sense, stability margins and verdict.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic control engineering transfer function G(s)=1/(s(s+1)(0.5s+1)).
-          Stable system with gain margin=3. Real-world industrial process controller
-          example.
+        comment: Classic control-theory textbook transfer function G(s)=1/[s(s+1)(0.5s+1)];
+          neutral engineering context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Phase crossover at ω=√2 rad/s mathematically correct. Gain margin=3
-          factually correct for this transfer function. 800 points logarithmically
-          from 0.04 to 100 rad/s appropriate.
+        comment: Phase crossover at ω=√2 (gain margin=3, ~9.5 dB) and phase margin
+          ≈33° are mathematically correct for the chosen transfer function.
     code_quality:
       score: 10
       max: 10
@@ -215,36 +196,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → theme tokens → data computation → plot
-          assembly → save. No functions or classes.'
+        comment: 'Linear: imports → constants → data → plot → save. No classes or
+          unnecessary abstractions.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set. Data is deterministic frequency response calculation.
+        comment: Random.seed!(42) set; data is deterministic (mathematical formula).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie (plotting), Colors (colorant literals), Random (seed)
-          — all three used.
+        comment: Only CairoMakie, Colors, Random — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean idiomatic Julia/Makie. Arrow loop is appropriately explicit.
-          No fake UI or over-engineering.
+        comment: Clean, appropriate complexity. Direction-arrow loop over 3 indices
+          is justified.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-$(THEME).png with px_per_unit=2. Correct API usage.
+        comment: save("plot-$(THEME).png", fig; px_per_unit = 2) correct.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -252,28 +232,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Uses Makie''s high-level API idiomatically: Axis with full theme
-          tokens, lines!, scatter!, arrows!, hlines!, vlines!, text!, axislegend with
-          position/styling. DataAspect() for 1:1 constraint. All correct Makie patterns.'
+        comment: Makie grid layout (fig[1,1]/[1,2]/[2,1:2]), Colorbar as layout element,
+          Label as layout element, axislegend, DataAspect(), hlines!/vlines!/arrows!
+          — all idiomatic CairoMakie.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: DataAspect() for geometric aspect constraint, arrows! for direction
-          indicators, RGBAf for type-safe color with alpha, axislegend styling — these
-          are Makie-specific but fairly standard. Doesn't showcase a deeply distinctive
-          Makie capability that couldn't be easily replicated in matplotlib.
-  verdict: REJECTED
+        passed: true
+        comment: Composable grid layout with Colorbar and Label as first-class layout
+          citizens, frequency-colormap on line plot via color=array, DataAspect()
+          for exact aspect control — distinctive Makie features.
+  verdict: APPROVED
 impl_tags:
-  dependencies:
-  - colors
+  dependencies: []
   techniques:
+  - colorbar
   - annotations
-  - layer-composition
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
+  - custom-colormap
   - alpha-blending
   - edge-highlighting
