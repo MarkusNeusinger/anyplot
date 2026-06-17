@@ -1,13 +1,24 @@
-""" pyplots.ai
+"""anyplot.ai
 chord-basic: Basic Chord Diagram
 Library: altair 6.0.0 | Python 3.14
-Quality: 87/100 | Updated: 2026-04-06
+Quality: 87/100 | Updated: 2026-06-17
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
+
+# Theme-adaptive chrome (Imprint palette tokens)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Data - Migration flows between continents (thousands of people, bidirectional)
 flows_data = [
@@ -30,14 +41,14 @@ flows_data = [
 
 df = pd.DataFrame(flows_data)
 
-# Square canvas for chord diagram (3600x3600 at scale_factor=3)
+# Internal layout domain (square). Mapped to a small Altair view + padded to 2400x2400.
 W, H = 1200, 1200
 CX, CY = W / 2, H / 2 + 20
 R_OUTER, R_INNER, R_CHORD = 440, 410, 398
 
-# Entity ordering and color palette (colorblind-safe, maximally distinct hues)
+# Entity ordering and Imprint palette (canonical order 1->6, colorblind-safe)
 entities = ["Europe", "North America", "Asia", "Africa", "South America", "Oceania"]
-colors = ["#306998", "#FFD43B", "#2A9D8F", "#E76F51", "#7B2D8E", "#4ECDC4"]
+colors = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 color_scale = alt.Scale(domain=entities, range=colors)
 
 # Compute entity totals and angular positions
@@ -188,15 +199,15 @@ chord_base_encode = {
 major_chords = (
     alt.Chart(chords_df[chords_df["major"]])
     .mark_line(filled=True, strokeWidth=0)
-    .encode(**chord_base_encode, opacity=alt.condition(hover, alt.value(0.82), alt.value(0.55)))
+    .encode(**chord_base_encode, opacity=alt.condition(hover, alt.value(0.85), alt.value(0.6)))
     .add_params(hover)
 )
 
-# Minor chords - lower opacity, highlighted on hover
+# Minor chords - lower opacity, but kept legible against the surface
 minor_chords = (
     alt.Chart(chords_df[~chords_df["major"]])
     .mark_line(filled=True, strokeWidth=0)
-    .encode(**chord_base_encode, opacity=alt.condition(hover, alt.value(0.65), alt.value(0.3)))
+    .encode(**chord_base_encode, opacity=alt.condition(hover, alt.value(0.7), alt.value(0.45)))
     .add_params(hover)
 )
 
@@ -220,7 +231,7 @@ labels_right = (
     .encode(**label_enc)
 )
 
-# Flow total annotations under entity labels
+# Flow total annotations under entity labels (theme-adaptive tertiary ink)
 total_enc = {
     "x": alt.X("x:Q", scale=x_scale, axis=None),
     "y": alt.Y("y:Q", scale=y_scale, axis=None),
@@ -229,13 +240,13 @@ total_enc = {
 
 totals_left = (
     alt.Chart(labels_df[labels_df["align"] == "left"])
-    .mark_text(fontSize=14, align="left", dy=18, color="#777777")
+    .mark_text(fontSize=14, align="left", dy=18, color=INK_MUTED)
     .encode(**total_enc)
 )
 
 totals_right = (
     alt.Chart(labels_df[labels_df["align"] == "right"])
-    .mark_text(fontSize=14, align="right", dy=18, color="#777777")
+    .mark_text(fontSize=14, align="right", dy=18, color=INK_MUTED)
     .encode(**total_enc)
 )
 
@@ -243,52 +254,23 @@ totals_right = (
 top2 = df.nlargest(2, "value")
 annot_rows = []
 for i, (_, r) in enumerate(top2.iterrows()):
-    annot_rows.append({"x": 40, "y": H - 60 - i * 26, "text": f"{r['source']} \u2192 {r['target']}: {r['value']}k"})
+    annot_rows.append({"x": 40, "y": H - 60 - i * 26, "text": f"{r['source']} → {r['target']}: {r['value']}k"})
 
 annot_df = pd.DataFrame(annot_rows)
 annot_title = (
     alt.Chart(pd.DataFrame([{"x": 40, "y": H - 28, "text": "Top Flows"}]))
-    .mark_text(fontSize=16, fontWeight="bold", align="left", color="#444444")
+    .mark_text(fontSize=16, fontWeight="bold", align="left", color=INK)
     .encode(x=alt.X("x:Q", scale=x_scale, axis=None), y=alt.Y("y:Q", scale=y_scale, axis=None), text="text:N")
 )
 center_annot = (
     alt.Chart(annot_df)
-    .mark_text(fontSize=14, align="left", color="#555555")
+    .mark_text(fontSize=14, align="left", color=INK_SOFT)
     .encode(x=alt.X("x:Q", scale=x_scale, axis=None), y=alt.Y("y:Q", scale=y_scale, axis=None), text="text:N")
 )
 
-# Manual legend (bottom-right corner)
-legend_y_top = 250
-legend_spacing = 38
-legend_x = W - 130
-legend_items = pd.DataFrame(
-    [
-        {"entity": e, "color": c, "x": legend_x, "y": legend_y_top - i * legend_spacing}
-        for i, (e, c) in enumerate(zip(entities, colors, strict=True))
-    ]
-)
-
-legend_title = (
-    alt.Chart(pd.DataFrame([{"x": legend_x, "y": legend_y_top + 35, "text": "Region"}]))
-    .mark_text(fontSize=20, fontWeight="bold", align="left", baseline="middle")
-    .encode(x=alt.X("x:Q", scale=x_scale, axis=None), y=alt.Y("y:Q", scale=y_scale, axis=None), text="text:N")
-)
-
-legend_squares = (
-    alt.Chart(legend_items)
-    .mark_square(size=250, stroke=None)
-    .encode(
-        x=alt.X("x:Q", scale=x_scale, axis=None),
-        y=alt.Y("y:Q", scale=y_scale, axis=None),
-        color=alt.Color("entity:N", scale=color_scale, legend=None),
-    )
-)
-
-legend_labels = (
-    alt.Chart(legend_items)
-    .mark_text(fontSize=18, align="left", dx=14, baseline="middle")
-    .encode(x=alt.X("x:Q", scale=x_scale, axis=None), y=alt.Y("y:Q", scale=y_scale, axis=None), text="entity:N")
-)
+# Direct color-coded labeling replaces a detached legend: each region name is
+# printed in its own entity color next to its arc (see labels_left/right above),
+# which is the color key — cleaner than a redundant separate legend box.
 
 # Compose all layers
 chart = (
@@ -302,26 +284,38 @@ chart = (
         totals_right,
         annot_title,
         center_annot,
-        legend_squares,
-        legend_labels,
-        legend_title,
     )
     .properties(
-        width=W,
-        height=H,
+        width=535,
+        height=535,
+        padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
         title=alt.Title(
-            text="chord-basic · altair · pyplots.ai",
-            subtitle="Dominant migration corridors highlighted — Africa→Europe and S. America→N. America lead",
-            fontSize=28,
-            subtitleFontSize=16,
-            subtitleColor="#666666",
+            text="chord-basic · python · altair · anyplot.ai",
+            subtitle="Migration between continents — dominant corridors highlighted",
+            fontSize=22,
+            subtitleFontSize=13,
+            color=INK,
+            subtitleColor=INK_SOFT,
             anchor="middle",
-            offset=20,
+            offset=16,
         ),
     )
-    .configure_view(strokeWidth=0)
-    .configure(background="#FAFAFA", padding={"left": 30, "right": 30, "top": 10, "bottom": 30})
+    .configure(background=PAGE_BG, view=alt.ViewConfig(strokeWidth=0, stroke=None, fill=PAGE_BG))
 )
 
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save PNG (square target 2400x2400), then PAD-only to exact target. Never crop.
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+chart.save(f"plot-{THEME}.html")
+
+TW, TH = 2400, 2400
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
