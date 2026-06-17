@@ -1,8 +1,7 @@
 // anyplot.ai
 // nyquist-basic: Nyquist Plot for Control Systems
-// Library: Highcharts 12.6.0 | Node 22
-// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
-// Quality: pending | Created: 2026-06-17
+// Library: highcharts 12.6.0 | JavaScript 22.22.3
+// Quality: 89/100 | Created: 2026-06-17
 //# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
