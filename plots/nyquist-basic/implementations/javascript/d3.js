@@ -1,7 +1,7 @@
 // anyplot.ai
 // nyquist-basic: Nyquist Plot for Control Systems
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-06-17
+// Library: d3 7.9.0 | JavaScript 22.22.3
+// Quality: 88/100 | Created: 2026-06-17
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
