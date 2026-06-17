@@ -1,0 +1,260 @@
+library: makie
+language: julia
+specification_id: bode-basic
+created: '2026-06-17T20:32:18Z'
+updated: '2026-06-17T20:50:35Z'
+generated_by: claude-sonnet
+workflow_run: 27716895958
+issue: 4411
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bode-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bode-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Correct dual-panel Bode plot with magnitude (dB) on top and phase (degrees) on
+    bottom sharing a linked log-scale x-axis
+  - 'All spec requirements implemented: gain margin and phase margin annotated with
+    values, 0 dB and -180 degree reference lines, log-spaced 600-point frequency data
+    from 0.01 to 10000 Hz'
+  - 'Thoughtful color coding: blue (Imprint position 3) for gain margin, matte red
+    (Imprint position 5) for phase margin — semantic use of Imprint palette anchors'
+  - Minor x-grid (xminorgridvisible) is an excellent touch for log-scale Bode plots,
+    aiding frequency reading between decades
+  - axis_style named tuple spread for shared axis attributes is idiomatic and DRY
+  - Perfect spec, data, and code quality scores — deterministic transfer function
+    data, clean imports, correct save path pattern
+  - Both light and dark themes render correctly with no dark-on-dark failures
+  weaknesses:
+  - Annotation font size (13pt) is on the small side for the 3200x1800 canvas — at
+    mobile widths (400px) the GM and PM labels may be hard to read; consider raising
+    to 15pt
+  - rowgap!(fig.layout, 1, 10) sets the gap at index 1 (between title row 0 and magnitude
+    row 1), leaving the inter-panel gap at the Makie default — verify the gap between
+    magnitude and phase panels is not too large
+  - DE-01 Aesthetic Sophistication is at 5/8 — the color-coded margin annotations
+    show design intent but overall styling is clean-minimal without exceptional touches
+    like custom legend frames or typographic hierarchy
+  image_description: "Light render (plot-light.png):\n  Background: Warm off-white\
+    \ (#FAF8F1) — correct, not pure white.\n  Chrome: Title \"bode-basic · julia ·\
+    \ makie · anyplot.ai\" in dark INK (#1A1A17) at fontsize 20, centered above both\
+    \ panels and readable. Y-axis labels \"Magnitude (dB)\" and \"Phase (°)\" in INK;\
+    \ \"Frequency (Hz)\" x-axis label in INK. Tick labels in INK_SOFT (#4A4A44) —\
+    \ clearly visible. \n  Data: Green (#009E73) Bode magnitude curve rolls off smoothly\
+    \ from ~+20 dB to ~-230 dB across the log-scale frequency range. Blue dotted vertical\
+    \ line at phase crossover (~5 Hz) with \"GM ≈ 20.9 dB\" annotation in blue (#4467A3).\
+    \ Red dotted vertical line at gain crossover (~10 Hz) with \"PM ≈ 46.9°\" annotation\
+    \ in red (#AE3030). Dashed reference lines at 0 dB and -180°. Green (#009E73)\
+    \ phase curve rolls from ~-90° to ~-270°.\n  Legibility verdict: PASS — all text\
+    \ is readable against the warm off-white background.\n\nDark render (plot-dark.png):\n\
+    \  Background: Warm near-black (#1A1A17) — correct, not pure black.\n  Chrome:\
+    \ Title in light INK (#F0EFE8), clearly visible. Axis labels in INK (#F0EFE8).\
+    \ Tick labels in INK_SOFT (#B8B7B0) — visible against dark background. No dark-on-dark\
+    \ failure.\n  Data: Green curve (#009E73) identical to light render — same color,\
+    \ same shape. Blue and red dotted vertical lines with annotations identical to\
+    \ light render. Reference lines in INK_SOFT at 15% opacity subtle but visible.\n\
+    \  Legibility verdict: PASS — all chrome adapts correctly; data colors are identical\
+    \ to light render."
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; annotation text at 13pt is on the
+          small side for mobile widths
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements; annotations placed offset from
+          vertical lines
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines at linewidth 2.5 clearly visible; reference lines at 1.2 readable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette; no red-green as sole discriminator (blue
+          vs red for margins)
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 canvas; two equal panels with appropriate spacing;
+          title proportions fine
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Magnitude (dB), Phase (°), Frequency (Hz) all descriptive with units;
+          title matches spec format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; GM marker uses Imprint[3]=#4467A3; PM marker
+          uses Imprint[5]=#AE3030; backgrounds correct for both themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: semantic color coding for margins (blue GM / red
+          PM), clean Imprint palette, minimal design intent'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle 15% opacity grid, minor x-grid at 7% opacity
+          for log-scale navigation, INK_SOFT for reference lines
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear focal point on stability margins; color-coded vertical lines
+          span both panels; annotated values guide reader
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct dual-panel Bode plot: magnitude top, phase bottom'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: GM and PM annotations; 0 dB and -180 reference lines; log scale;
+          grid lines; linked axes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Frequency (Hz) log-scale x-axis; magnitude (dB) and phase (deg) correctly
+          mapped to separate y-axes
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly bode-basic · julia · makie · anyplot.ai; no legend
+          needed (annotations serve the purpose)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full Bode plot with both panels, stability margins in both panels,
+          reference lines, 600 log-spaced points
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Physically meaningful Type-1 third-order open-loop system; realistic
+          stability margins (GM~21 dB, PM~47 deg)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 6-decade frequency range 0.01-10000 Hz; magnitude and phase ranges
+          appropriate for the system order
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes; clean procedural structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic transfer function computation; no random seed
+          needed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie (plotting) and Colors (colorant) — both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: axis_style named tuple spread is elegant; no fake UI; named constants
+          clean
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-THEME.png via joinpath(@__DIR__, ...) with px_per_unit=2
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: linkxaxes!, Label(fig[0,1]) for figure title, axis_style tuple spread,
+          rowgap!, RGBAf for alpha colors — distinctly idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: xminorgridvisible + xminorgridcolor for log-scale navigation, Makie
+          grid layout system (fig[row,col]), linkxaxes!
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  - linked-axes
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
