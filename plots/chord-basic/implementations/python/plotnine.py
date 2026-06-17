@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 chord-basic: Basic Chord Diagram
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2026-06-17
+Library: plotnine 0.15.7 | Python 3.13.13
+Quality: 93/100 | Created: 2026-06-17
 """
 
 import os
