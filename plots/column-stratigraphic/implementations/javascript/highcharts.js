@@ -105,6 +105,32 @@ Highcharts.chart("container", {
           tex.kids.forEach((c) => R.createElement(c.tag).attr(c.attrs).add(pat));
           pat.add(R.defs);
         });
+
+        // --- Left-side geologic time scale: group consecutive layers by period
+        // and draw a labelled bracket spanning each period's depth range. This
+        // fills the otherwise-empty left band and satisfies the spec hint that
+        // age/period names belong on the left side.
+        const periods = [];
+        layers.forEach((l) => {
+          const name = l.age.split(" · ")[0];
+          const prev = periods[periods.length - 1];
+          if (prev && prev.name === name) prev.bottom = l.bottom;
+          else periods.push({ name, top: l.top, bottom: l.bottom });
+        });
+        const yA = this.yAxis[0];
+        const xLine = this.plotLeft + 34; // vertical spine of the bracket
+        const xTip = xLine + 16; // horizontal caps point toward the column
+        periods.forEach((p) => {
+          const yTop = yA.toPixels(p.top);
+          const yBot = yA.toPixels(p.bottom);
+          R.path(["M", xTip, yTop, "L", xLine, yTop, "L", xLine, yBot, "L", xTip, yBot])
+            .attr({ stroke: t.inkSoft, "stroke-width": 1.5, fill: "none" })
+            .add();
+          R.text(p.name, xTip + 14, (yTop + yBot) / 2 + 6)
+            .attr({ align: "left" })
+            .css({ color: t.ink, fontSize: "17px", fontWeight: "600" })
+            .add();
+        });
       },
     },
   },
