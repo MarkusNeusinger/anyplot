@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bifurcation-basic: Bifurcation Diagram for Dynamical Systems
-Library: plotnine 0.15.3 | Python 3.14.3
-Quality: regen from 93 | Created: 2026-06-17
+Library: plotnine 0.15.7 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-17
 """
 
 import os
