@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: bode-basic
 created: '2026-06-17T20:33:57Z'
-updated: '2026-06-17T20:40:35Z'
+updated: '2026-06-17T21:13:14Z'
 generated_by: claude-sonnet
 workflow_run: 27717018503
 issue: 4411
@@ -12,47 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bode-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bode-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bode-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bode-basic/javascript/chartjs/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Correct and idiomatic Chart.js dual-panel layout using flex CSS and two independent
-    chart instances
-  - Custom afterDraw plugin correctly uses xScale.getPixelForValue() / yScale.getPixelForValue()
-    for precise annotation placement
-  - scatter + showLine correctly handles the logarithmic axis (line type does not
-    support log axes in Chart.js)
-  - 'Perfectly deterministic data: third-order transfer function with analytically
-    computed gain/phase crossover frequencies'
-  - Full Imprint palette compliance with theme-adaptive chrome; both renders are legible
-    with no dark-on-dark failures
-  - 'All mandatory spec features present: 0 dB and -180° reference lines, margin annotations
-    in both panels'
+  - Mathematically correct transfer function with resonance peak and full stability
+    margin calculation (PM=49.4°, GM=16.6 dB)
+  - Custom afterDraw plugins for L-frame spine removal and color-coded margin annotations
+    using Chart.js scale API (getPixelForValue)
+  - Custom logarithmic tick callback producing clean powers-of-10 labels (0.01, 0.1,
+    1, 10, 100, 1000)
+  - 'Full Imprint palette compliance — #009E73 first series, correct lavender/blue
+    for crossover markers, theme-adaptive chrome (background, text, grid) flips correctly'
+  - 'Complete spec compliance: dual-panel layout, shared log frequency axis (top hides
+    ticks), 0 dB and -180° reference lines, PM and GM annotations with vertical markers,
+    grid lines for reading margin values'
   weaknesses:
-  - GM freq annotation in phase panel is uninformative — labels frequency marker only;
-    replace with quantitative label showing phase-crossover frequency (e.g. omega_pc
-    = 10 rad/s)
-  - Annotation canvas font is 13 px CSS (26 px source), slightly smaller than tick
-    labels (14 px); increase to 14-15 px for better mobile readability
-  - Transfer function uses only real poles — monotonically decreasing magnitude with
-    no resonance peak; spec example calls for resonance; use second-order underdamped
-    factor (zeta < 1) to show peak
-  - Chart.js default box frame (all four borders) retained around both panels; remove
-    top/right borders for style-guide L-frame
+  - Annotation labels (PM, GM, ω_pc) rendered at 14px bold — functional but slightly
+    small given they carry the key insight values; consider 16–18px for these labels
+    to give them more visual prominence relative to the axis tick labels
+  - 'Design quality is functional/professional but not publication-beautiful: the
+    log scale''s dense vertical gridlines make the chart slightly busy; the DE score
+    is pulled by the utilitarian look vs. a truly polished engineering visualization'
+  - Factory functions (makeMarginPlugin, makeLFramePlugin, addPanel) deviate from
+    strict KISS — justified by Chart.js plugin patterns but adds code volume
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot light surface.
-      Chrome: Title "bode-basic · javascript · chartjs · anyplot.ai" at top in dark ink, fully readable. Y-axis labels "Magnitude (dB)" (top panel) and "Phase (°)" (bottom panel) rotated, clearly legible. X-axis label "Frequency (rad/s)" at bottom readable. Tick labels (0.01, 0.1, 1, 10, 100, 1000 on x; dB values on y) readable. Grid lines subtle.
-      Data: Brand green (#009E73) primary curves for both magnitude and phase. Lavender (#C475FD) dashed vertical at phase-margin crossover with "PM = 46.7°" annotation in both panels. Blue (#4467A3) dashed vertical at gain-margin crossover with "GM = 21.0 dB" (magnitude panel) and "GM freq" (phase panel). Dashed reference lines at 0 dB and -180°.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "bode-basic · javascript · chartjs · anyplot.ai" in dark ink (~22px, spans ~50% of width), Y-axis labels "Magnitude (dB)" and "Phase (°)" in dark ink (~16px), X-axis label "Frequency (rad/s)" at bottom. All tick labels in secondary ink color (~14px). All text clearly readable against the light background.
+      Data: Magnitude panel (top) shows frequency response in #009E73 brand green (3px line), with horizontal dashed reference at 0 dB in inkSoft. Phase margin vertical marker in #C475FD lavender (dashed), gain margin vertical marker in #4467A3 blue (dashed). Annotations "PM = 49.4°" in lavender and "GM = 16.6 dB" in blue. Phase panel (bottom) shows phase rolloff in #009E73, with -180° reference line, repeated crossover markers and annotation labels. Resonance peak visible in magnitude around ω≈5 rad/s.
+      Legibility verdict: PASS — all text readable, proportions balanced
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface.
-      Chrome: Title and all axis/tick labels render in light ink, clearly readable against dark background. No dark-on-dark failures. Grid lines subtle against dark surface.
-      Data: Brand green (#009E73) identical to light render. Lavender and blue margin markers unchanged. All annotation text readable against dark background.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title visible in light (#F0EFE8) ink. Axis labels, tick labels all light-colored against dark background. Grid lines subtle. No dark-on-dark failures observed — every text element flips correctly to light chrome.
+      Data: Data colors identical to light render — #009E73 green main lines, #C475FD lavender phase-margin markers, #4467A3 blue gain-margin markers. Reference lines in inkSoft (lighter grey). Annotations color-coded identically.
+      Legibility verdict: PASS — all text readable in dark theme, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -60,50 +57,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title/axis/tick labels all readable in both themes; annotation text
-          at 13px CSS is borderline small at mobile width
+        comment: All font sizes explicitly set (title=22px, axis labels=16px, ticks=14px,
+          annotations=14px bold). All text readable in both themes. Annotation labels
+          at 14px are functional but slightly small for key insight values.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No major collisions; PM annotation in phase panel is tight but clear
+        comment: No overlapping text elements. PM/GM annotations well-positioned relative
+          to vertical marker lines.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Primary line borderWidth:3 prominent; reference dashes and margin
-          verticals clearly distinguishable
+        comment: Main lines 3px, reference lines 1px dashed, marker lines 1.5px dashed
+          — well-differentiated hierarchy. 500-point line with pointRadius=0 renders
+          cleanly.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette positions 1-3; CVD-safe; no red-green sole-signal
-          pairing
+        comment: 'Imprint palette: green/lavender/blue — CVD-safe with distinct hue
+          separation.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Dual-panel flex layout well-proportioned; no overflow or clipping
+        comment: 'Dual-panel flex layout fills the 3200x1800 canvas well. Both panels
+          use responsive: true / maintainAspectRatio: false — correct.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Magnitude (dB), Phase (deg), Frequency (rad/s) with units; canonical
-          title format
+        comment: Magnitude (dB), Phase (°), Frequency (rad/s) — all with units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Imprint order for margin markers; backgrounds
-          #FAF8F1/#1A1A17; colors identical across themes'
+        comment: 'First series #009E73, lavender and blue for crossover markers (palette[1],
+          palette[2]). pageBg used for container background. Chrome adaptive in both
+          themes.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -111,22 +112,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above default; intentional dashed reference lines and palette colors
-          for margins; custom afterDraw annotations. Chart.js default box frame remains.
+        comment: Custom L-frame plugin, color-coded annotations with matching vertical
+          markers, log tick formatter — clearly above library defaults. Dense log-scale
+          gridlines make it slightly busy; functional/professional rather than publication-beautiful.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Above default; legend correctly suppressed; grid subtle. Box frame
-          around panels is Chart.js default and not removed.
+        comment: 'L-frame applied (top/right spines removed via afterDraw), border:
+          {display: false} on scales. Grid uses t.grid token (subtle). Logarithmic
+          scale produces dense vertical gridlines which is expected for Bode plots
+          but adds visual weight.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Above default; clear visual hierarchy; GM freq label in phase panel
-          is generic
+        comment: Color-coded vertical crossover markers with matching annotation labels
+          highlight PM and GM values. Line width hierarchy (3px main / 1.5px markers
+          / 1px reference) guides the eye. Resonance peak clearly visible.
     spec_compliance:
       score: 15
       max: 15
@@ -136,114 +141,118 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dual-panel Bode plot, magnitude top, phase bottom
+        comment: 'Correct dual-panel Bode plot: magnitude top, phase bottom.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Log frequency axis, 0 dB reference, -180 deg reference, gain margin,
-          phase margin annotations, grid lines
+        comment: 'All spec features present: shared log frequency axis, 0 dB reference,
+          -180° reference, gain margin annotation, phase margin annotation, grid lines.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Frequency on log x-axis; magnitude (dB) and phase (deg) on respective
-          y-axes; full range covered
+        comment: Frequency (log) on X, magnitude (dB) on top Y, phase (°) on bottom
+          Y. All data visible across full range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly bode-basic · javascript · chartjs · anyplot.ai;
-          legend appropriately omitted
+        comment: Title is 'bode-basic · javascript · chartjs · anyplot.ai'. Legend
+          hidden (correct for this layout — axis titles and annotations convey all
+          information).
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Third-order transfer function shows gain rolloff, phase rolloff,
-          and both stability margins. No resonance peak — real poles only; spec example
-          calls for resonance.
+        comment: Shows resonance peak, phase rolloff, 0 dB crossing, -180° crossing,
+          PM and GM values — complete Bode plot feature coverage.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic control systems example, PM=46.7deg GM=21.0dB, physically
-          realistic and neutral
+        comment: Realistic open-loop transfer function (type-1 system with underdamped
+          complex pole pair at ωn=5 rad/s, ζ=0.1). Neutral engineering context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequency 0.01-1000 rad/s, magnitude -80 to 40 dB, phase 0 to -270
-          deg — appropriate for third-order system
+        comment: PM=49.4° and GM=16.6 dB are realistic stability margins. Frequency
+          range 0.01–1000 rad/s appropriate for this system.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: addPanel() and makeMarginPlugin() are minimal justified helpers
+        comment: Uses factory functions (addPanel, makeLFramePlugin, makeMarginPlugin)
+          — justified by Chart.js plugin pattern but deviates from strict KISS.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Pure mathematical data; fully deterministic
+        comment: Deterministic mathematical computation of transfer function — no
+          RNG needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; Chart used as global per harness contract
+        comment: No imports; uses global window.ANYPLOT_TOKENS and window.Chart correctly.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and readable; Object.assign config merging idiomatic; no fake
-          UI
+        comment: Clean, well-structured. No fake UI elements. Plugin patterns are
+          idiomatic for Chart.js.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Output handled by harness; uses Chart.js 4.4.7 API correctly
+        comment: 'animation: false, responsive: true, maintainAspectRatio: false —
+          all mandatory flags set correctly.'
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: scatter+showLine for log axes; responsive/maintainAspectRatio/animation
-          flags set correctly; plugin via plugins array
+        comment: Scatter type with showLine:true for continuous lines, logarithmic
+          scale type, custom plugins, Object.assign for config extension — all idiomatic
+          Chart.js.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom afterDraw plugin with canvas API; logarithmic axis type with
-          custom ticks.callback; flex-container multi-chart layout is not Chart.js
-          native
+        comment: afterDraw plugin with xScale.getPixelForValue()/yScale.getPixelForValue()
+          for pixel-accurate annotations, custom tick callback for log axis — distinctly
+          Chart.js features.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - subplots
+  - annotations
   - manual-ticks
   patterns:
   - data-generation
