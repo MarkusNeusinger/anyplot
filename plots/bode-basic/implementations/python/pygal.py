@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bode-basic: Bode Plot for Frequency Response
 Library: pygal 3.1.0 | Python 3.13.14
 Quality: 84/100 | Updated: 2026-06-17
@@ -234,8 +234,8 @@ except OSError:
     font_bold = ImageFont.load_default()
     font_reg = font_bold
 
-# Magnitude annotation panel — upper right of top panel
-ann_x, ann_y = 1900, 50
+# Magnitude annotation panel — upper right of top panel, below title area
+ann_x, ann_y = 1900, 130
 ann_w, ann_h = 1250, 195
 draw.rounded_rectangle(
     [(ann_x, ann_y), (ann_x + ann_w, ann_y + ann_h)], radius=12, fill=ELEVATED_BG, outline=INK_MUTED, width=1
