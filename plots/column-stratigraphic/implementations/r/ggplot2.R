@@ -115,7 +115,7 @@ wave$y <- UNCONFORMITY + 1.8 * sin(wave$x * 2 * pi * 7)
 p <- ggplot() +
     geom_rect(data = layers,
               aes(xmin = 0, xmax = 1, ymin = top, ymax = bottom, fill = lithology),
-              color = NA, alpha = 0.55) +
+              color = NA, alpha = 0.62) +
     geom_segment(data = seg_df, aes(x = x, xend = xend, y = y, yend = yend),
                  color = INK, linewidth = 0.35) +
     geom_point(data = dot_df, aes(x = x, y = y), color = INK, size = 0.9) +
@@ -126,8 +126,8 @@ p <- ggplot() +
               aes(xmin = 0, xmax = 1, ymin = top, ymax = bottom),
               fill = NA, color = INK_SOFT, linewidth = 0.5) +
     geom_path(data = wave, aes(x = x, y = y), color = INK, linewidth = 0.9) +
-    annotate("text", x = 0.5, y = UNCONFORMITY - 6.5, label = "unconformity",
-             fontface = "italic", size = 2.8, color = INK_SOFT) +
+    annotate("text", x = -0.12, y = UNCONFORMITY, label = "unconformity",
+             hjust = 1, fontface = "italic", size = 2.8, color = INK_SOFT) +
     geom_text(data = layers,
               aes(x = 1.1, y = (top + bottom) / 2 - 3.8, label = formation),
               hjust = 0, fontface = "bold", size = 3.3, color = INK) +
@@ -142,7 +142,7 @@ p <- ggplot() +
     scale_y_reverse(breaks = seq(0, 250, 25),
                     expand = expansion(mult = c(0.03, 0.03))) +
     coord_cartesian(xlim = c(-1.5, 2.6), clip = "off") +
-    guides(fill = guide_legend(override.aes = list(alpha = 1))) +
+    guides(fill = guide_legend(override.aes = list(alpha = 0.62))) +
     labs(title = "column-stratigraphic · r · ggplot2 · anyplot.ai",
          y = "Depth (m)", x = NULL) +
     theme_minimal(base_size = 9) +
