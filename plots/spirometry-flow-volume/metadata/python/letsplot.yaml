@@ -1,51 +1,58 @@
 library: letsplot
+language: python
 specification_id: spirometry-flow-volume
 created: '2026-03-18T22:17:22Z'
-updated: '2026-03-18T22:49:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23269661047
+updated: '2026-06-17T04:14:52Z'
+generated_by: claude-opus
+workflow_run: 27665018632
 issue: 4557
-python_version: 3.14.3
-library_version: 4.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/letsplot/plot.html
-quality_score: 90
+language_version: 3.13.14
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/python/letsplot/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent clinical data storytelling with measured vs predicted overlay communicating
-    the obstructive pattern
-  - Professional color-coded annotation system (orange PEF, purple FEV1, gray clinical
-    summary) with styled label backgrounds
-  - All specification requirements fully met including PEF/FEV1/FVC annotations, predicted
-    normal dashed overlay, and closed loop shape
-  - Realistic spirometry data values representing a clinically meaningful mild obstructive
-    pattern
-  - Clean well-structured code with good use of lets-plot ggplot grammar and interactive
-    tooltips
+  - 'First measured series is brand green #009E73 and identical across both themes;
+    theme-adaptive chrome (#FAF8F1 / #1A1A17 backgrounds) is correctly threaded through
+    title, axes, ticks, grid and legend.'
+  - 'Closed flow-volume loop is anatomically correct: sharp rise to PEF, roughly linear
+    expiratory decline, symmetric U-shaped inspiratory limb below zero, with a zero-flow
+    reference line.'
+  - All spec clinical annotations present and legible — PEF marker (ochre), FEV1 marker
+    (lavender diamond), and a summary box with FEV1 / FVC / PEF / FEV1-FVC ratio.
+  - Dashed predicted-normal reference loop overlaid with subtle ribbon fills for both
+    measured and predicted interiors, giving a clear measured-vs-normal contrast and
+    visual hierarchy.
+  - 'Idiomatic lets-plot: grammar-of-graphics layering, merged color+linetype legend,
+    interactive layer_tooltips, and dual PNG+HTML export at the correct 3200x1800
+    canvas.'
   weaknesses:
-  - Legend displays color swatches rather than line samples so solid vs dashed distinction
-    is not communicated in the legend
-  - Panel border/spines still visible - removing would improve visual refinement
-  - Predicted loop extends close to the right x-axis edge with minimal padding
-  image_description: 'The plot displays a spirometry flow-volume loop on a light off-white
-    (#FAFAFA) background. Two loops are visible: a measured patient loop (solid blue
-    #306998 line with light blue ribbon fill) and a predicted normal loop (dashed
-    gray #9CA3AF line with light gray ribbon fill). The measured expiratory limb rises
-    sharply from 0 to PEF at ~8.5 L/s near volume 0.3 L, then declines roughly linearly
-    to FVC at 4.2 L. The inspiratory limb forms a symmetric U-shaped curve dipping
-    to about -6 L/s. The predicted normal loop is larger, extending to ~4.8 L volume
-    and ~10.2 L/s PEF. An orange (#D97706) circle marks PEF with an amber-background
-    label "PEF: 8.5 L/s". A purple (#7C3AED) diamond marks FEV1 on the expiratory
-    curve with a purple label on a light purple background. A clinical summary bar
-    at top center shows FEV1, FVC, PEF, and FEV1/FVC ratio in a gray box. A red-bordered
-    box at the bottom shows the clinical diagnosis of mild obstructive pattern. A
-    horizontal gray zero-flow reference line separates expiratory and inspiratory
-    regions. The legend in the upper right shows "Measured" (blue) and "Predicted
-    Normal" (gray). X-axis: "Volume (L)", Y-axis: "Flow (L/s)". Title: "spirometry-flow-volume
-    · letsplot · pyplots.ai" in bold dark text.'
+  - 'Top region is slightly busy: the clinical summary text box and the legend both
+    sit in the upper band near the expiratory peak; consider nudging the summary box
+    down/left for more breathing room.'
+  - In the dark render the legend key swatches carry a heavy dark fill (ribbon-in-legend
+    artifact) that looks marginally less polished than the rest of the chrome.
+  - Predicted-normal curve uses theme-muted ink-grey rather than a second Imprint
+    categorical color — acceptable as a de-emphasized reference, but it is the one
+    data series whose hue shifts between themes.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (~#FAF8F1), correct.
+      Chrome: bold dark title "spirometry-flow-volume · python · letsplot · anyplot.ai" top-left; axis titles "Volume (L)" / "Flow (L/s)" and numeric ticks all dark and clearly readable; subtle warm-grey horizontal gridlines only; legend top-right (Measured / Predicted normal) with elevated off-white frame.
+      Data: measured loop solid brand green #009E73; predicted-normal loop dashed muted grey; ochre PEF dot + "PEF 8.5 L/s" label; lavender FEV1 diamond + "FEV1 at 3.1 L" label; translucent green and grey ribbon fills inside the loops; black-outlined clinical summary box reads "FEV1 3.1 L · FVC 4.2 L · PEF 8.5 L/s · FEV1/FVC 74%".
+      Legibility verdict: PASS — every text element is dark-on-light and crisp.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (~#1A1A17), correct.
+      Chrome: light/white title and axis text, light ticks, subtle dark-grey gridlines, legend with dark elevated frame and light text — all clearly readable.
+      Data: measured loop is the same brand green #009E73; PEF ochre and FEV1 lavender accents identical to the light render; predicted-normal is a light dashed grey (theme-muted ink). Annotation text inside the off-dark label boxes is readable.
+      Legibility verdict: PASS — no dark-on-dark text; all chrome flips correctly while the green/ochre/lavender data colors stay constant.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -53,67 +60,68 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt, axis
-          text 16pt, legend 15pt, annotations 11-12pt'
+        comment: Fonts explicitly sized; all text readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text labels well-separated with no collisions
+        comment: Opaque label boxes; no text collisions with data or each other.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Measured line size=2.0, predicted size=1.2, markers size 7-8, ribbon
-          fills enhance visibility
+        comment: Prominent loop lines, visible markers, subtle ribbon fills.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/ochre/lavender are CVD-safe with good contrast.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue, gray, orange, purple are all colorblind-safe with good luminance
-          contrast
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good layout but predicted loop extends close to right x-axis edge
+        comment: Canvas gate passed; good proportions, nothing clipped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Volume (L) and Flow (L/s) descriptive with units
+        comment: Volume (L) / Flow (L/s) with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; correct backgrounds; Imprint accents.'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Strong design with intentional color coding, styled label backgrounds,
-          ribbon fills, off-white background
+        comment: Ribbon fills, clinical accents, refined typography.
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: X-grid removed, subtle y-grid, custom background, generous margins.
-          Panel border still present
-      - id: DE-03
-        name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Good clinical narrative with measured vs predicted overlay, color-coded
-          annotations, clinical summary and diagnostic interpretation
+        comment: Spines/ticks removed, y-only subtle grid, generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear focal markers and measured-vs-predicted contrast; top band
+          a touch busy.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -121,27 +129,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct flow-volume loop with expiratory and inspiratory limbs
+        comment: Correct flow-volume loop.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: PEF annotation, clinical values, predicted
-          overlay, distinct styling'
+        comment: PEF + FEV1/FVC/PEF annotations + dashed predicted overlay + closed
+          loop.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Volume on x-axis, flow on y-axis, correct orientation
+        comment: Volume x / Flow y; both limbs shown.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend shows color swatches instead of line
-          samples with linetype distinction
+        comment: Mandated title format; legend Measured/Predicted normal.
     data_quality:
       score: 15
       max: 15
@@ -151,22 +158,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: both limbs, PEF, FEV1, measured vs predicted,
-          clinical values, diagnostic interpretation'
+        comment: Both limbs, PEF, FEV1, FVC, ratio, predicted reference.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic spirometry data with clinically meaningful mild obstructive
-          pattern
+        comment: Plausible neutral mild-obstructive pattern (FEV1/FVC 74%).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: FVC 4.2L, PEF 8.5 L/s, predicted FVC 4.8L, PEF 10.2 L/s all within
-          realistic clinical ranges
+        comment: PEF 8.5 L/s, FVC 4.2 L are realistic spirometry values.
     code_quality:
       score: 10
       max: 10
@@ -176,61 +180,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear structure with no functions or classes
+        comment: Flat script, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at top
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, lets_plot imported and all used
+        comment: os/numpy/pandas/lets_plot all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized code with logical sections, appropriate complexity
+        comment: Clear sectioning, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with ggsave at scale=3, also generates HTML
-    library_mastery:
-      score: 7
+        comment: Saves plot-{THEME}.png and .html.
+    library_features:
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Good ggplot grammar usage: geom layers, aes mappings, scale_color_manual,
-          geom_ribbon, guide_legend with override_aes'
+        comment: Grammar-of-graphics layering, manual scales, merged legend.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layer_tooltips() with fluent API for interactive hover info
-          and HTML export - distinctive to lets-plot
+        comment: Interactive layer_tooltips + HTML export unique to lets-plot.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - interactive-tooltips
+  - ribbon-fill
   - annotations
-  - layer-composition
-  - hover-tooltips
-  - html-export
+  - reference-overlay
+  - marker-highlight
   patterns:
   - data-generation
   dataprep:
   - interpolation
   styling:
+  - publication-ready
   - alpha-blending
-  - grid-styling
+  - theme-adaptive
