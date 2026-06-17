@@ -1,21 +1,44 @@
-""" pyplots.ai
+"""anyplot.ai
 bode-basic: Bode Plot for Frequency Response
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-21
+Library: plotly | Python
 """
+
+import os
+import sys
+
+
+# This file is named plotly.py — remove its directory from sys.path so
+# 'import plotly' resolves to the installed package, not this script.
+_here = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p or os.getcwd()) != _here]
 
 import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 
-# Data - Third-order open-loop transfer function: H(s) = K / (s/p1 + 1)(s/p2 + 1)(s/p3 + 1)
-# with one lightly-damped complex pair to show a resonance peak
+# Theme — Imprint palette chrome tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+GRID_MINOR = "rgba(26,26,23,0.07)" if THEME == "light" else "rgba(240,239,232,0.07)"
+
+# Imprint palette colors
+CLR_MAIN = "#009E73"  # Imprint green (position 1) — main Bode curve
+CLR_GAIN = "#BD8233"  # Imprint ochre (position 4) — gain margin annotation
+CLR_PHASE = "#C475FD"  # Imprint lavender (position 2) — phase margin annotation
+
+# Data — Third-order open-loop transfer function:
+# H(s) = K / [(s/p1 + 1)(s/p2 + 1)(s²/wn² + 2ζs/wn + 1)]
+# Underdamped complex pair shows resonance peak and meaningful stability margins
 K = 40
 p1 = 2 * np.pi * 1  # real pole at 1 Hz
 p2 = 2 * np.pi * 10  # real pole at 10 Hz
-wn = 2 * np.pi * 100  # resonance frequency 100 Hz
-zeta = 0.3  # underdamped for visible peak
+wn = 2 * np.pi * 100  # resonance at 100 Hz
+zeta = 0.3  # underdamped — produces visible resonance peak
 
 frequency_hz = np.logspace(-1, 4, 800)
 omega = 2 * np.pi * frequency_hz
@@ -43,22 +66,16 @@ if pc_found:
     pc_mag = magnitude_db[pc_idx]
     gain_margin = -pc_mag
 
-# Colors - colorblind-safe: orange for gain margin, purple for phase margin
-# Orange vs purple is clearly distinguishable under all color vision types
-clr_main = "#306998"
-clr_gain = "#E8590C"
-clr_phase = "#7B2D8E"
+# Figure — dual-panel Bode layout
+fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08, row_heights=[0.55, 0.45])
 
-# Plot
-fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.06, row_heights=[0.55, 0.45])
-
-# Magnitude trace
+# Magnitude trace (Imprint green — first series)
 fig.add_trace(
     go.Scatter(
         x=frequency_hz,
         y=magnitude_db,
         mode="lines",
-        line={"color": clr_main, "width": 3},
+        line={"color": CLR_MAIN, "width": 2.5},
         name="Magnitude",
         showlegend=False,
     ),
@@ -67,21 +84,26 @@ fig.add_trace(
 )
 
 # 0 dB reference line
-fig.add_hline(y=0, row=1, col=1, line={"color": "#AAAAAA", "width": 1, "dash": "dash"})
+fig.add_hline(y=0, row=1, col=1, line={"color": INK_SOFT, "width": 1, "dash": "dash"})
 
-# Phase trace
+# Phase trace (same Imprint green — single-system Bode)
 fig.add_trace(
     go.Scatter(
-        x=frequency_hz, y=phase_deg, mode="lines", line={"color": clr_main, "width": 3}, name="Phase", showlegend=False
+        x=frequency_hz,
+        y=phase_deg,
+        mode="lines",
+        line={"color": CLR_MAIN, "width": 2.5},
+        name="Phase",
+        showlegend=False,
     ),
     row=2,
     col=1,
 )
 
 # -180 degree reference line
-fig.add_hline(y=-180, row=2, col=1, line={"color": "#AAAAAA", "width": 1, "dash": "dash"})
+fig.add_hline(y=-180, row=2, col=1, line={"color": INK_SOFT, "width": 1, "dash": "dash"})
 
-# Gain margin annotation (orange, solid line, diamond markers)
+# Gain margin (Imprint ochre — position 4, orange-toned for warm stability indicator)
 if pc_found:
     fig.add_shape(
         type="rect",
@@ -89,8 +111,8 @@ if pc_found:
         x1=pc_freq * 1.25,
         y0=pc_mag,
         y1=0,
-        fillcolor=clr_gain,
-        opacity=0.1,
+        fillcolor=CLR_GAIN,
+        opacity=0.12,
         line={"width": 0},
         row=1,
         col=1,
@@ -100,8 +122,8 @@ if pc_found:
             x=[pc_freq, pc_freq],
             y=[pc_mag, 0],
             mode="lines+markers",
-            line={"color": clr_gain, "width": 2.5},
-            marker={"size": 10, "symbol": "diamond"},
+            line={"color": CLR_GAIN, "width": 2},
+            marker={"size": 8, "symbol": "diamond"},
             showlegend=False,
         ),
         row=1,
@@ -114,32 +136,33 @@ if pc_found:
         showarrow=True,
         arrowhead=0,
         arrowwidth=1.5,
-        arrowcolor=clr_gain,
-        ax=75,
+        arrowcolor=CLR_GAIN,
+        ax=65,
         ay=0,
-        font={"size": 17, "color": clr_gain},
-        bgcolor="rgba(255,255,255,0.9)",
-        bordercolor=clr_gain,
+        font={"size": 12, "color": CLR_GAIN},
+        bgcolor=ELEVATED_BG,
+        bordercolor=CLR_GAIN,
         borderwidth=1.5,
-        borderpad=5,
+        borderpad=4,
         xref="x",
         yref="y",
         row=1,
         col=1,
     )
+    # Cross-panel marker on phase plot
     fig.add_trace(
         go.Scatter(
             x=[pc_freq],
             y=[-180],
             mode="markers",
-            marker={"size": 12, "color": clr_gain, "symbol": "diamond"},
+            marker={"size": 10, "color": CLR_GAIN, "symbol": "diamond"},
             showlegend=False,
         ),
         row=2,
         col=1,
     )
 
-# Phase margin annotation (purple, dashed line, square markers)
+# Phase margin (Imprint lavender — position 2, purple-toned for stability indicator)
 if gc_found:
     fig.add_shape(
         type="rect",
@@ -147,8 +170,8 @@ if gc_found:
         x1=gc_freq * 1.25,
         y0=gc_phase,
         y1=-180,
-        fillcolor=clr_phase,
-        opacity=0.1,
+        fillcolor=CLR_PHASE,
+        opacity=0.12,
         line={"width": 0},
         row=2,
         col=1,
@@ -158,8 +181,8 @@ if gc_found:
             x=[gc_freq, gc_freq],
             y=[gc_phase, -180],
             mode="lines+markers",
-            line={"color": clr_phase, "width": 2.5, "dash": "dash"},
-            marker={"size": 10, "symbol": "square"},
+            line={"color": CLR_PHASE, "width": 2, "dash": "dash"},
+            marker={"size": 8, "symbol": "square"},
             showlegend=False,
         ),
         row=2,
@@ -172,81 +195,100 @@ if gc_found:
         showarrow=True,
         arrowhead=0,
         arrowwidth=1.5,
-        arrowcolor=clr_phase,
-        ax=-75,
+        arrowcolor=CLR_PHASE,
+        ax=-65,
         ay=0,
-        font={"size": 17, "color": clr_phase},
-        bgcolor="rgba(255,255,255,0.9)",
-        bordercolor=clr_phase,
+        font={"size": 12, "color": CLR_PHASE},
+        bgcolor=ELEVATED_BG,
+        bordercolor=CLR_PHASE,
         borderwidth=1.5,
-        borderpad=5,
+        borderpad=4,
         xref="x2",
         yref="y2",
         row=2,
         col=1,
     )
+    # Cross-panel marker on magnitude plot
     fig.add_trace(
         go.Scatter(
             x=[gc_freq],
             y=[0],
             mode="markers",
-            marker={"size": 12, "color": clr_phase, "symbol": "square"},
+            marker={"size": 10, "color": CLR_PHASE, "symbol": "square"},
             showlegend=False,
         ),
         row=1,
         col=1,
     )
 
-# Style
+# Layout — theme-adaptive chrome
 fig.update_layout(
-    title={"text": "bode-basic · plotly · pyplots.ai", "font": {"size": 28, "color": "#333333"}, "x": 0.5, "y": 0.97},
-    template="plotly_white",
+    autosize=False,
+    title={
+        "text": "bode-basic · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
+        "x": 0.5,
+        "y": 0.98,
+    },
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     showlegend=False,
-    margin={"l": 90, "r": 50, "t": 70, "b": 65},
-    plot_bgcolor="rgba(250,250,252,1)",
+    margin={"l": 80, "r": 40, "t": 70, "b": 60},
 )
 
+# X-axes (log scale — shared between both panels)
 fig.update_xaxes(
     type="log",
     row=2,
     col=1,
-    title={"text": "Frequency (Hz)", "font": {"size": 22}},
-    tickfont={"size": 18},
+    title={"text": "Frequency (Hz)", "font": {"size": 12, "color": INK}},
+    tickfont={"size": 10, "color": INK_SOFT},
     showgrid=True,
-    gridcolor="rgba(0,0,0,0.06)",
+    gridcolor=GRID,
     gridwidth=1,
-    minor={"showgrid": True, "gridcolor": "rgba(0,0,0,0.03)"},
+    linecolor=INK_SOFT,
+    zerolinecolor=INK_SOFT,
+    minor={"showgrid": True, "gridcolor": GRID_MINOR},
 )
 fig.update_xaxes(
     type="log",
     row=1,
     col=1,
-    tickfont={"size": 18},
+    tickfont={"size": 10, "color": INK_SOFT},
     showgrid=True,
-    gridcolor="rgba(0,0,0,0.06)",
+    gridcolor=GRID,
     gridwidth=1,
-    minor={"showgrid": True, "gridcolor": "rgba(0,0,0,0.03)"},
+    linecolor=INK_SOFT,
+    zerolinecolor=INK_SOFT,
+    minor={"showgrid": True, "gridcolor": GRID_MINOR},
 )
 
+# Y-axes
 fig.update_yaxes(
     row=1,
     col=1,
-    title={"text": "Magnitude (dB)", "font": {"size": 22}},
-    tickfont={"size": 18},
+    title={"text": "Magnitude (dB)", "font": {"size": 12, "color": INK}},
+    tickfont={"size": 10, "color": INK_SOFT},
     showgrid=True,
-    gridcolor="rgba(0,0,0,0.06)",
+    gridcolor=GRID,
     gridwidth=1,
+    linecolor=INK_SOFT,
+    zerolinecolor=INK_SOFT,
+    range=[-80, 45],  # tighter range — focuses on gain margin region, avoids -225 dB compression
 )
 fig.update_yaxes(
     row=2,
     col=1,
-    title={"text": "Phase (degrees)", "font": {"size": 22}},
-    tickfont={"size": 18},
+    title={"text": "Phase (degrees)", "font": {"size": 12, "color": INK}},
+    tickfont={"size": 10, "color": INK_SOFT},
     showgrid=True,
-    gridcolor="rgba(0,0,0,0.06)",
+    gridcolor=GRID,
     gridwidth=1,
+    linecolor=INK_SOFT,
+    zerolinecolor=INK_SOFT,
 )
 
-# Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save — landscape 3200 × 1800 (width=800, height=450, scale=4)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
