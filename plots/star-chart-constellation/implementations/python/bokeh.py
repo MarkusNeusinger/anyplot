@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 star-chart-constellation: Star Chart with Constellations
-Library: bokeh | Python 3.14
-Quality: pending | Created: 2026-06-17
+Library: bokeh 3.9.1 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-06-17
 """
 
 import os
