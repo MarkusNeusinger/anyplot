@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: star-chart-constellation
 created: '2026-03-18T21:15:06Z'
-updated: '2026-06-17T00:07:56Z'
+updated: '2026-06-17T00:14:26Z'
 generated_by: claude-opus
 workflow_run: 27656083875
 issue: 4560
@@ -12,47 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/star-char
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/star-chart-constellation/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 88
 review:
   strengths:
-  - Real catalogued star data (positions, magnitudes, IAU constellations) with hand-authored
-    stick-figure edges — highly authentic and neutral subject matter
-  - Correct stereographic projection centred on RA=12h/Dec=30 with RA flipped east-left,
-    giving a natural circular northern-sky boundary
-  - Magnitude correctly inverted and encoded by BOTH size and opacity (brighter =
-    larger + more opaque), never colour — keeps Imprint identity intact
-  - 'Brand green #009E73 used as the leading data series for constellation lines;
-    backgrounds are exactly #FAF8F1 (light) / #1A1A17 (dark); data colours identical
-    across themes with only chrome flipping'
-  - 'Idiomatic plotnine grammar: layered geom_segment/geom_point/geom_text, coord_fixed
-    for true aspect, theme_void for minimal chrome, and merged size+alpha legends
-    via guides()'
-  - Thoughtful manual label de-cluttering via per-constellation (dx,dy) nudges, plus
-    RA/Dec coordinate grid with labelled meridians and parallels
+  - 'Genuinely beautiful celestial-atlas aesthetic: stereographic projection with
+    a circular sky boundary, constellation stick-figures in Imprint brand green (#009E73)
+    as the leading data series, and stars rendered as theme-ink engraving marks sized
+    + opacity-scaled by apparent magnitude.'
+  - Real astronomical data — 90 named stars across 22 constellations (Orion, Ursa
+    Major, Cassiopeia, Scorpius, etc.) with accurate RA/Dec/magnitude, plus 230 procedural
+    background stars for sky depth.
+  - Magnitude correctly inverted for sizing (brighter/lower-mag = larger, more opaque)
+    and a single merged size+alpha legend via guide_legend — idiomatic plotnine.
+  - RA/Dec coordinate grid (declination rings + RA meridians) drawn with projection-aware
+    clipping to the circular boundary, with labeled tick marks (0h-21h, 0deg-60deg).
+  - 'Perfect theme adaptation: warm off-white #FAF8F1 (light) and warm near-black
+    #1A1A17 (dark) backgrounds; brand-green constellation lines identical across both
+    renders; all chrome legible in both themes.'
+  - Title exactly matches mandated format; square 2400x2400 canvas passes the dimension
+    gate; clean imports, seeded RNG, theme_void for a minimal atlas chrome.
   weaknesses:
-  - Circumpolar core is crowded — labels such as URSA MINOR, URSA MAJOR, DRACO, LYRA,
-    AQUILA, COR. BOREALIS and BOOTES sit close together near the centre; all remain
-    readable but breathing room is tight. Consider slightly smaller label size or
-    wider nudges for the densest cluster.
-  - Tick labels (RA hours / Dec degrees) are small at geom_text size=6; legible at
-    full 2400px but approach the lower bound when scaled to ~400px mobile.
-  - A small project() helper function is defined (mild CQ-01 KISS deviation), though
-    justified by the projection maths being applied to multiple coordinate arrays.
+  - Minor label crowding in the circumpolar core (URSA MAJOR / URSA MINOR / DRACO
+    / AURIGA / COR. BOREALIS / BOOTES) and around RA tick labels (12h/9h) — readable
+    but tight; further de-clutter nudges or a slightly smaller label size could open
+    it up.
+  - Star marks use the theme-ink token (dark in light theme, pale in dark theme),
+    so the star color flips between renders. This is justified (magnitude is encoded
+    by size+opacity, not color, and the primary green data series IS identical) but
+    is a slight deviation from the strict identical-data-colors expectation.
+  - A single project() helper function is used for the stereographic transform — necessary
+    and reused for stars/grid, but slightly outside the strict KISS no-functions guideline.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1) parchment-atlas surface — not pure white, not dark. PASS.
-      Chrome: title "star-chart-constellation · python · plotnine · anyplot.ai" in soft dark ink, top-centre, fully visible. Italic-bold constellation names (ORION, URSA MAJOR, SCORPIUS, ...) in soft grey ink, readable. RA/Dec tick labels (6h, 9h, 15h, 18h, 20°, 40°, 60°) in muted ink. Legend "Apparent magnitude" (0–5) framed top-right, all readable. No clipping at any edge.
-      Data: constellation stick-figures in brand green #009E73; stars rendered as dark ink dots sized + opacity-scaled by magnitude (Sirius largest near Canis Major). Subtle declination rings + RA meridians grid.
-      Legibility verdict: PASS — all text clearly readable against the light background.
+      Background: warm off-white (~#FAF8F1), correct.
+      Chrome: title "star-chart-constellation · python · plotnine · anyplot.ai" in soft dark-grey, fully readable. Constellation names in italic bold dark-grey, readable. RA/Dec tick labels (40°, 20°, 18h, 15h, 12h, 9h, 6h, 0°/20°/40°/60°) in muted grey, readable. Legend "Apparent magnitude" box top-right with dark dot swatches sized 0-5, fully visible inside canvas.
+      Data: constellation stick-figures in brand green #009E73 (first/primary series). Stars rendered as dark ink dots sized + opacity-scaled by magnitude (Sirius largest near Canis Major). Faint grid rings.
+      Legibility verdict: PASS — all text readable on the light surface; no clipping at canvas edges.
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17) night-sky surface — not pure black, not light. PASS.
-      Chrome: title and labels flipped to pale warm ink (light text), fully readable; no dark-on-dark anywhere. Legend frame visible with light text. RA/Dec ticks readable. No clipping.
-      Data: constellation lines remain identical brand green #009E73; stars now pale warm-white dots, same size/opacity magnitude encoding as light render — only chrome flipped, data colours identical. Grid subtle but visible.
-      Legibility verdict: PASS — all text clearly readable against the dark background; no legibility failures.
+      Background: warm near-black (~#1A1A17), correct.
+      Chrome: title and labels flip to light/pale tones, all clearly readable on the night-sky surface. No dark-on-dark failures. Legend text light, readable.
+      Data: constellation stick-figures in the SAME brand green #009E73 (chrome flipped, primary data color identical). Stars rendered as pale warm-white dots (theme-ink token flips), magnitude-sized identically to light render. Grid rings subtle.
+      Legibility verdict: PASS — all text readable on the dark surface; brand green visible on both surfaces as expected.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -60,73 +64,67 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; tick labels small (size=6) but
-          legible — slight risk at 400px mobile
+        comment: All text readable in both themes; minor tightness in crowded core
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Circumpolar core crowded but de-cluttered via nudges; no severe text-on-text
-          collisions
+        comment: Minor label crowding in circumpolar core, no severe collisions
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Bright stars prominent, faint bg stars small with low alpha — excellent
-          density handling
+        comment: Stars sized + alpha-scaled by magnitude; good density handling for
+          ~320 stars
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green + ink, strong contrast, CVD-safe; magnitude not colour-encoded
+        comment: Green vs ink high contrast, CVD-safe, no red-green dependence
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 passes canvas gate; circular sky well-centred, nothing
-          cut off
+        comment: Square 2400x2400 passes gate; nothing cut off; good proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Mandated title correct; RA/Dec coordinate ticks labelled with units
-          (h, deg)
+        comment: RA/Dec ticks labeled; title descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1 / #1A1A17; both renders
-          theme-correct'
+        comment: 'First series #009E73; backgrounds correct both themes; magnitude
+          via size not color'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Refined parchment/night-sky star-atlas aesthetic; intentional encoding
-          choices
+        comment: Polished celestial-atlas look, projection + engraving aesthetic
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: theme_void removes all chrome, very subtle grid, generous whitespace
+        comment: theme_void, subtle grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear brightness hierarchy via size/opacity; constellation figures
-          guide the eye
+        comment: Magnitude hierarchy + named constellations guide the eye
     spec_compliance:
       score: 15
       max: 15
@@ -136,26 +134,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Star chart with stereographic projection and constellation stick-figures
+        comment: Star chart with constellation lines, projection, grid
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Magnitude sizing, lines, grid, labels, projection, mag threshold
-          all present
+        comment: Projection, inverted magnitude sizing, stick-figures, grid, labels,
+          ticks all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: RA/Dec projected to x/y correctly; full northern sky shown
+        comment: RA/Dec projected correctly, magnitude->size
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; magnitude legend present and labelled
+        comment: Title exact mandated format; magnitude legend present
     data_quality:
       score: 15
       max: 15
@@ -165,19 +163,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all star-chart aspects: magnitude, constellations, grid, projection'
+        comment: Shows projection, magnitude range, 22 constellations, grid
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real catalogued stars and magnitudes; neutral, plausible
+        comment: Real star positions/magnitudes, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic magnitude range (-1.46 to ~5.5)
+        comment: Magnitudes -1.5 to 5.5, RA 0-24h, Dec sensible
     code_quality:
       score: 9
       max: 10
@@ -187,14 +185,14 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: One project() helper for projection maths — small deviation, justified
-          by reuse
+        comment: One project() helper — justified/reused but outside strict no-function
+          rule
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) for background stars
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -206,15 +204,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-commented, no fake UI
+        comment: Clear, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png; current API
+        comment: Saves plot-{THEME}.png
     library_features:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -222,27 +220,34 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Layered grammar of graphics, coord_fixed, theme_void, scale_*_continuous
+        comment: Grammar-of-graphics layering, geom_segment/geom_point/geom_text,
+          coord_fixed, scales
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Merged size+alpha legends via guides(); geom_segment stick-figures
+        comment: Merged size+alpha legend via guide_legend; layered segment network
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - stereographic-projection
+  - size-encoding
+  - alpha-encoding
+  - network-edges
   - annotations
-  - layer-composition
   - custom-legend
-  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
+  - coordinate-transform
   dataprep:
-  - normalization
+  - projection
+  - centroid-aggregation
+  - clipping
   styling:
-  - minimal-chrome
+  - publication-ready
+  - theme-adaptive
   - alpha-blending
-  - dark-theme
+  - minimal-chrome

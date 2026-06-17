@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 star-chart-constellation: Star Chart with Constellations
 Library: plotnine 0.15.7 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-06-17
+Quality: 88/100 | Updated: 2026-06-17
 """
 
 import os
