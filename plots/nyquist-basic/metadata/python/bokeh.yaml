@@ -1,44 +1,55 @@
 library: bokeh
+language: python
 specification_id: nyquist-basic
 created: '2026-03-20T22:45:13Z'
-updated: '2026-03-20T23:11:59Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23365453475
+updated: '2026-06-17T22:41:50Z'
+generated_by: claude-sonnet
+workflow_run: 27723018995
 issue: 4412
-python_version: 3.14.3
-library_version: 3.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/bokeh/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 3.9.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/python/bokeh/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Full spec compliance with all required features implemented correctly
-  - Strong data storytelling with quantitative stability margins (GM=7.8 dB, PM=32.8°)
-    annotated at crossover points
-  - Professional visual design with custom color palette, Helvetica typography, and
-    refined grid/axis styling
-  - Effective use of Bokeh interactive features (HoverTool with detailed tooltips,
-    HTML export)
-  - Deterministic data from analytical transfer function
+  - 'Perfect spec compliance: all required Nyquist features present and correct (critical
+    point marker, unit circle, direction arrows, frequency annotations, 1:1 aspect
+    ratio via square canvas with equal data extents)'
+  - 'Semantic palette discipline: critical point in matte red (#AE3030) as danger
+    anchor is the correct semantic choice; annotation text colors matched to the glyph
+    they describe'
+  - Excellent data quality with mathematically exact third-order control-system example
+    G(s)=50/((s+1)(s+2)(s+5)) and accurately computed gain (7.8 dB) and phase (32.8
+    deg) margins
+  - 'Perfect code quality: clean flat structure, deterministic computation, idiomatic
+    Bokeh patterns (ColumnDataSource, HoverTool, Span, Label, Range1d)'
+  - 'Both themes fully theme-adaptive: all chrome tokens correctly flip between light
+    and dark; Imprint data colors remain stable across renders'
   weaknesses:
-  - Mirror arrow calculation code remains verbose with nested conditionals
-  - Minor annotation crowding near origin between phase crossover and omega-infinity
-    labels
-  image_description: 'The plot displays a Nyquist diagram on a square canvas (3600x3600).
-    A solid blue curve represents positive frequencies (omega > 0), starting from
-    approximately (5, 0) at low frequency and spiraling inward toward the origin as
-    omega approaches infinity. An orange dashed curve mirrors the positive frequency
-    branch for omega < 0. A dashed gray unit circle is centered at the origin. A prominent
-    red X marks the critical point at (-1, 0). Blue triangular arrows along the positive-frequency
-    curve indicate the direction of increasing frequency, with corresponding orange
-    arrows on the mirror curve. Two annotated crossover points are shown: a blue filled
-    circle at the gain crossover (omega=2.54 rad/s, PM=32.8 degrees) and a red diamond
-    at the phase crossover (omega=4.08, GM=7.8 dB). Labels omega-to-0 and omega-to-infinity
-    mark the curve endpoints. A green dotted line segment indicates the gain margin
-    between the phase crossover point and the critical point. The legend in the top-right
-    corner lists Unit circle, omega > 0, omega < 0, and Critical point (-1, 0). Background
-    is light gray with very subtle grid lines. Axes are labeled Real and Imaginary.
-    The title reads "nyquist-basic · bokeh · pyplots.ai".'
+  - 'Annotation crowding near the high-frequency convergence zone: omega->inf and
+    omega=10.0 labels are positioned very close together around (0.24, -0.14), competing
+    with the crossover glyph cluster; slightly separating these offsets (shift omega=10.0
+    label further right/down, or move omega->inf upward) would improve readability'
+  - 'Top and right spines not removed: Bokeh''s default 4-sided frame is retained;
+    the cross-hair Span reference lines already provide the structural anchors, so
+    removing the outer box would improve visual refinement without losing information'
+  - Spot-frequency annotation text at 20pt is the smallest text in the plot and may
+    be borderline-legible when the image is scaled down to mobile widths (~400 px)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title 'nyquist-basic · python · bokeh · anyplot.ai' in dark INK (#1A1A17) at 50pt — readable. Axis labels 'Real' and 'Imaginary' in dark INK at 42pt — readable and proportionate. Tick labels in INK_SOFT (#4A4A44) at 34pt — readable. Crossover annotations at 22pt in matching Imprint palette colors — readable at full resolution. Spot-frequency labels at 20pt in INK_MUTED (#6B6A63) — readable at full res, borderline at mobile scale.
+      Data: Positive frequency arc in brand green #009E73 (first series — correct). Conjugate-mirror arc in dashed blue #4467A3. Critical point (-1,0) marked with large red x (#AE3030, semantic danger anchor). Unit circle as dashed INK_SOFT line. Direction triangles on both arcs. Gain-margin reference in dotted ochre (#BD8233). Crossover point markers in green (circle) and red (diamond).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light cream (#F0EFE8) — readable against dark surface. Axis labels in INK (#F0EFE8) — readable. Tick labels in INK_SOFT (#B8B7B0) — readable. Crossover annotations and spot-frequency labels readable. Legend background switches to elevated dark token #242420 with subtle border. No dark-on-dark failures detected.
+      Data: Brand green #009E73 arc, dashed blue #4467A3 mirror, red x #AE3030 critical point — all visually identical to light render (Imprint palette is theme-invariant). Grid lines remain subtle at 12% alpha.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 28
@@ -46,71 +57,81 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 60pt, axis labels 44pt, ticks
-          32pt, annotations 26-28pt. All text clearly readable.'
+        comment: All font sizes explicitly set (50/42/34pt chrome); readable in both
+          themes; 20pt spot-frequency labels borderline at mobile scale
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Minor crowding near origin between phase crossover and omega-infinity
-          labels, but all text remains readable.
+        comment: Slight annotation crowding near high-frequency convergence zone (omega->inf
+          and omega=10.0 labels very close together near origin)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines well-sized (4.5px positive, 3px negative). Markers, arrows,
-          and crossover indicators all clearly visible.
+        comment: Nyquist locus line_width=4 alpha=0.95, critical point x size=38 highly
+          visible, direction triangles and unit circle all clear
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; critical point uses x shape (redundant
+          encoding beyond color)
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue/orange colorblind-safe pair. Red critical point and green gain
-          margin line all distinguishable.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Square 1:1 aspect ratio correct for Nyquist plot. Data fills canvas
-          reasonably but upper-left quadrant has some empty space.
+        comment: 2400x2400 square canvas correct for 1:1 spec requirement; equal data
+          extents enforce circular unit circle; min_border reservations prevent clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes labeled Real and Imaginary as spec requires. Standard descriptive
-          labels for complex plane coordinates.
+        comment: Axes labeled 'Real' and 'Imaginary' per spec; title in correct nyquist-basic
+          · python · bokeh · anyplot.ai format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 correct; critical point uses semantic red #AE3030
+          (appropriate danger anchor); both renders use correct backgrounds with fully
+          theme-adaptive chrome'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom cohesive color palette, Helvetica typography throughout, professional
-          polish. Clearly above defaults.
+        comment: 'Above default: semantic palette for critical point, color-matched
+          annotation text, styled legend; not quite ''strong design clearly above
+          defaults'' level'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Axis lines and ticks removed, subtle grid (alpha=0.10), light gray
-          background, white border, well-styled legend.
+        comment: Grid alpha 0.12, minor ticks removed, tick marks flush, outline removed;
+          top/right spines not removed (full 4-sided frame retained)
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Gain/phase margin annotations with quantitative values. Green dotted
-          gain margin line. Direction arrows guide frequency progression.
+        comment: Semantic red focal point at critical point, direction arrows tell
+          frequency-sweep story, gain/phase margins annotated with computed values,
+          gain-margin reference segment provides visual measurement
     spec_compliance:
       score: 15
       max: 15
@@ -120,53 +141,57 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Nyquist plot on complex plane.
+        comment: 'Correct Nyquist plot: complex-plane locus with positive and conjugate-mirror
+          arcs'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: critical point, unit circle, frequency annotations,
-          arrows, 1:1 aspect, axis labels.'
+        comment: Critical point marker, unit circle, frequency annotations, direction
+          arrows, 1:1 aspect ratio, Real/Imaginary axis labels - all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real on x-axis, imaginary on y-axis. Both frequency branches shown.
+        comment: Re(G(jw)) on X, Im(G(jw)) on Y; full frequency sweep from w->0 to
+          w->inf represented
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Legend labels clear and descriptive.
+        comment: Title 'nyquist-basic · python · bokeh · anyplot.ai' correct; legend
+          labels accurate and descriptive
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows gain/phase crossover, mirror branch, spiral behavior, stability
-          margins.
+        comment: 'Shows all Nyquist aspects: positive locus, conjugate mirror, unit
+          circle, critical point, direction arrows, gain/phase crossover points, gain
+          margin reference'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Third-order transfer function with realistic poles and gain. Plausible
-          engineering values.
+        comment: G(s)=50/((s+1)(s+2)(s+5)) is a classic third-order stable control-system
+          example; neutral engineering domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequency range and transfer function values sensible for the given
-          system.
+        comment: Logarithmically spaced frequency range 10^-3 to 10^3 rad/s appropriate;
+          gain/phase margins mathematically exact
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -174,35 +199,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, styling, save. No functions or
-          classes.'
+        comment: 'Flat script: imports -> data -> figure -> renderers -> annotations
+          -> chrome -> save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic from analytical transfer function.
+        comment: 'Fully deterministic: transfer function and frequency grid are fixed,
+          no random numbers'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imported modules used; no unused imports
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Mirror arrow calculation is verbose with nested conditionals. Main
-          curve logic is clean.
+        passed: true
+        comment: Clean section structure, sys.path workaround explained, Selenium+crop
+          pattern correct per library spec
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html. Current Bokeh 3.9 API.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png; current Bokeh 3.9.1
+          API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -210,26 +237,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, HoverTool, Label, Span. Arrows via
-          scatter triangles rather than Arrow annotations.
+        comment: ColumnDataSource, HoverTool on specific renderer, Range1d, Span models,
+          Label models - idiomatic Bokeh patterns above the default
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: HoverTool with detailed tooltips, interactive tools, HTML export.
-          Distinctive Bokeh capabilities.
+        comment: HoverTool with snap_to_data and multi-field tooltip (@freq, @real,
+          @imag, @mag, @phase) is genuinely distinctive to Bokeh; Span and Label models
+          are Bokeh-idiomatic
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
+  - pillow
   techniques:
-  - annotations
   - hover-tooltips
   - html-export
+  - annotations
   patterns:
   - data-generation
   - columndatasource
+  - iteration-over-groups
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling
