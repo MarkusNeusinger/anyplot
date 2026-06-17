@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 column-stratigraphic: Stratigraphic Column with Lithology Patterns
-Library: pygal | Python 3.14
-Quality: pending | Created: 2026-06-17
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-06-17
 """
 
 import os
