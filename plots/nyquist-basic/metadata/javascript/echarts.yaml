@@ -1,0 +1,249 @@
+library: echarts
+language: javascript
+specification_id: nyquist-basic
+created: '2026-06-17T22:54:49Z'
+updated: '2026-06-17T23:15:32Z'
+generated_by: claude-sonnet
+workflow_run: 27723925645
+issue: 4412
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/javascript/echarts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Complete spec compliance: all six required features (critical point, unit circle,
+    frequency annotations, direction arrows, 1:1 aspect ratio, correct axis labels)
+    implemented correctly'
+  - Mathematically correct Nyquist curve for G(s)=1/(s(s+1)(s+2)); gain crossover
+    at ω≈√2 verified; stable system correctly shown not encircling (-1,0)
+  - 'Excellent Imprint palette discipline: brand green for primary curve, semantic
+    matte red (palette[4]) for critical point, Imprint blue (palette[2]) for frequency
+    markers'
+  - Theme-adaptive chrome throughout both renders using t.ink / t.inkSoft / t.grid
+    tokens — dark render fully readable with no dark-on-dark failures
+  - symbolRotate callback using tangent vector math for automatic arrow direction
+    is an elegant ECharts-specific technique
+  weaknesses:
+  - Frequency annotation labels for 1, 2, and 5 rad/s are crowded near the real-axis
+    crossing — use offset tuning or move 5 rad/s label to a less congested position
+  - Direction arrow at arrowIndices[0] (index 60, ω≈0.08 rad/s) is placed off-screen
+    (Im≈−6.2) and never visible — replace with index ~100 (ω≈0.17 rad/s) for a fully
+    visible third arrow
+  - DE-01/DE-03 could be strengthened by a markLine or callout annotation showing
+    the gain margin distance from the real-axis crossing (−0.167) to the critical
+    point (−1)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "nyquist-basic · javascript · echarts · anyplot.ai" bold/centered, readable; axis labels "Real" (x) and "Imaginary" (y) in bold dark ink; tick labels in secondary ink; legend text readable
+      Data: Nyquist curve in brand green #009E73; critical point (-1,0) as matte red diamond (#AE3030); frequency markers in Imprint blue (#4467A3); unit circle as dashed semi-transparent gray; direction arrows in brand green
+      Legibility verdict: PASS — all text clearly readable against warm off-white background; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title, axis labels, tick labels all flip to light-colored (#F0EFE8 range) and remain fully readable; no dark-on-dark failures detected; grid lines subtle and visible
+      Data: Colors identical to light render — brand green Nyquist curve, matte red critical point, Imprint blue frequency markers, semi-transparent gray unit circle
+      Legibility verdict: PASS — all text readable against near-black surface; dark-on-dark check passes
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; slight crowding in 1/2/5 rad/s annotation
+          cluster
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor crowding between 1, 2, 5 rad/s labels near real-axis crossing;
+          all readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All elements appropriately sized: curve width 2.5, critical point
+          size 18, markers size 9, arrows size 13'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette, CVD-safe, adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas for 1:1 aspect ratio; axis ranges ±3.5 units both axes;
+          canvas gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Real and Imaginary labels correct for Nyquist plot
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: palette[0] for curve, palette[4] semantic red for critical point,
+          palette[2] for markers; transparent bg; theme-adaptive chrome
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Intentional color hierarchy: green curve, semantic red critical
+          point, blue markers; axis lines hidden; above generic defaults'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axis lines removed, subtle grid via t.grid token, unit circle at
+          55% opacity, legend item height trimmed
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Red critical point as focal element; direction arrows narrate frequency
+          sweep; green/red/blue hierarchy guides viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Nyquist complex-plane plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Critical point marker, unit circle, frequency annotations, direction
+          arrows, 1:1 aspect ratio, correct axis labels — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Real on X, imaginary on Y; 500 log-spaced points; mathematically
+          correct for G(s)=1/(s(s+1)(s+2))
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title nyquist-basic · javascript · echarts · anyplot.ai correct;
+          legend shows Nyquist Curve and Unit Circle
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All Nyquist aspects: frequency sweep, gain/phase crossover, critical
+          point proximity, unit circle reference'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Canonical 3rd-order type-1 control system G(s)=1/(s(s+1)(s+2)); physically
+          meaningful stable system
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct axis ranges; phase crossover at ω≈√2 within annotated range;
+          gain margin ~6dB visible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean data→init→option flow; minimal logspace helper justified for
+          browser JS
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic mathematical computation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed; harness-provided globals used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Concise; symbolRotate callback clever; nearest-frequency search clean
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: animation:false set; echarts.init without explicit dimensions; no
+          filesystem calls
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Multi-series composition; emphasis disabled; tooltip with custom
+          formatter; per-series symbolSize and symbolRotate
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: symbolRotate callback with tangent vector; per-data-point label override;
+          multi-series overlay for complex-plane plot
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
