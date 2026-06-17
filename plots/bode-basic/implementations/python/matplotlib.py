@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bode-basic: Bode Plot for Frequency Response
 Library: matplotlib 3.11.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-17
@@ -8,6 +8,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy import signal
 
 
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -22,20 +23,26 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Imprint palette — 8 hues, theme-independent, hybrid-v3 sort
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Third-order open-loop transfer function:
-# H(s) = K / ((s/w1 + 1)(s/w2 + 1)(s/w3 + 1))
-# Three poles at 1, 10, and 80 Hz with gain K=20
-K = 20
-poles_hz = np.array([1.0, 10.0, 80.0])
-poles_rad = 2 * np.pi * poles_hz
+# Data — stable third-order open-loop transfer function with complex conjugate poles:
+# H(s) = K * wn^2 / ((s^2 + 2*zeta*wn*s + wn^2) * (1 + s/wp))
+# Underdamped second-order pair (zeta=0.2, fn=50 Hz) → clear +8 dB resonance peak
+# High-frequency pole at 300 Hz; K=1.0 gives GM ≈ 8 dB and PM ≈ 23°
+fn = 50.0
+zeta = 0.2
+K = 1.0
+wn = 2 * np.pi * fn
+wp = 2 * np.pi * 300.0
 
-frequency_hz = np.logspace(-1, 3, 500)
+# Coefficients: denominator of (s^2 + 2*zeta*wn*s + wn^2)(s/wp + 1)
+num = [K * wn**2]
+den = [1.0 / wp, 1.0 + 2 * zeta * wn / wp, 2 * zeta * wn + wn**2 / wp, wn**2]
+
+sys = signal.TransferFunction(num, den)
+frequency_hz = np.logspace(-1, 3, 600)
 omega = 2 * np.pi * frequency_hz
-jw = 1j * omega
-
-H = K / np.prod([(jw / p + 1) for p in poles_rad], axis=0)
-magnitude_db = 20 * np.log10(np.abs(H))
-phase_deg = np.degrees(np.unwrap(np.angle(H)))
+_, magnitude_db, phase_deg_raw = signal.bode(sys, w=omega)
+# scipy.signal.bode does not unwrap phase — unwrap to avoid -180° / +180° jumps
+phase_deg = np.unwrap(phase_deg_raw, period=360)
 
 # Compute gain crossover (0 dB crossing)
 sign_changes_mag = np.diff(np.sign(magnitude_db))
@@ -76,22 +83,25 @@ ax_phase.set_facecolor(PAGE_BG)
 GM_COLOR = IMPRINT_PALETTE[2]  # blue #4467A3 — gain margin
 PM_COLOR = IMPRINT_PALETTE[1]  # lavender #C475FD — phase margin
 
+ANNOT_BBOX = {"facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.9, "boxstyle": "round,pad=0.3"}
+
 # Magnitude plot
 ax_mag.semilogx(frequency_hz, magnitude_db, color=IMPRINT_PALETTE[0], linewidth=2.5)
 ax_mag.axhline(y=0, color=INK_SOFT, linewidth=1, linestyle="--", alpha=0.6)
 
 # Gain margin annotation
 if phase_crossover_freq is not None:
-    ax_mag.vlines(phase_crossover_freq, gain_at_pc, 0, colors=GM_COLOR, linewidth=2.5)
+    ax_mag.vlines(phase_crossover_freq, gain_at_pc, 0, colors=GM_COLOR, linewidth=2.0)
     ax_mag.plot(phase_crossover_freq, gain_at_pc, "o", color=GM_COLOR, markersize=8, zorder=5)
     ax_mag.annotate(
         f"GM = {gain_margin:.1f} dB",
         xy=(phase_crossover_freq, (gain_at_pc + 0) / 2),
-        xytext=(phase_crossover_freq * 3, (gain_at_pc + 0) / 2 + 8),
+        xytext=(phase_crossover_freq * 3, (gain_at_pc + 0) / 2 + 4),
         fontsize=8,
         color=GM_COLOR,
         fontweight="bold",
         arrowprops={"arrowstyle": "->", "color": GM_COLOR, "lw": 1.5},
+        bbox=ANNOT_BBOX,
     )
 
 # Phase plot
@@ -100,16 +110,17 @@ ax_phase.axhline(y=-180, color=INK_SOFT, linewidth=1, linestyle="--", alpha=0.6)
 
 # Phase margin annotation
 if gain_crossover_freq is not None:
-    ax_phase.vlines(gain_crossover_freq, -180, phase_at_gc, colors=PM_COLOR, linewidth=2.5)
+    ax_phase.vlines(gain_crossover_freq, -180, phase_at_gc, colors=PM_COLOR, linewidth=2.0)
     ax_phase.plot(gain_crossover_freq, phase_at_gc, "o", color=PM_COLOR, markersize=8, zorder=5)
     ax_phase.annotate(
         f"PM = {phase_margin:.1f}°",
         xy=(gain_crossover_freq, (-180 + phase_at_gc) / 2),
-        xytext=(gain_crossover_freq * 6, (-180 + phase_at_gc) / 2 + 20),
+        xytext=(gain_crossover_freq * 3, (-180 + phase_at_gc) / 2 - 15),
         fontsize=8,
         color=PM_COLOR,
         fontweight="bold",
         arrowprops={"arrowstyle": "->", "color": PM_COLOR, "lw": 1.5},
+        bbox=ANNOT_BBOX,
     )
 
 # Style — Magnitude panel
@@ -124,6 +135,7 @@ ax_mag.spines["left"].set_color(INK_SOFT)
 ax_mag.spines["bottom"].set_color(INK_SOFT)
 ax_mag.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 ax_mag.xaxis.grid(True, alpha=0.1, linewidth=0.8, color=INK)
+ax_mag.set_ylim(-25, 15)
 
 # Style — Phase panel
 ax_phase.set_xlabel("Frequency (Hz)", fontsize=10, color=INK)
