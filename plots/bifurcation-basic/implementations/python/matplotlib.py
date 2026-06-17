@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bifurcation-basic: Bifurcation Diagram for Dynamical Systems
-Library: matplotlib | Python
-Imprint palette, theme-adaptive chrome.
+Library: matplotlib 3.11.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-06-17
 """
 
 import os
