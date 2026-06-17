@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 nyquist-basic: Nyquist Plot for Control Systems
-Library: pygal 3.1.0 | Python 3.14.3
-Quality: 76/100 | Created: 2026-03-20
+Library: pygal 3.1.0 | Python 3.13.14
+Quality: 83/100 | Updated: 2026-06-17
 """
 
 import math
