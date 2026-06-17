@@ -1,13 +1,29 @@
-""" pyplots.ai
+"""anyplot.ai
 star-chart-constellation: Star Chart with Constellations
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-18
+Library: altair 6.2.1 | Python 3.x | Imprint palette
+Quality: regen from 90 | Updated: 2026-06-16
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
+
+# Theme-adaptive chrome (Imprint palette)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette
+BRAND = "#009E73"  # brand green — brightest stars / first series
+BLUE = "#4467A3"  # dim stars / constellation lines
+AMBER = "#DDCC77"  # warning/focal anchor — Summer Triangle highlight
 
 # Data - Stars and constellations for a northern sky view
 np.random.seed(42)
@@ -101,7 +117,7 @@ stars_data = [
     ("Theta Aur", 5.99, 37.21, 2.62, "Aur"),
 ]
 
-# Background filler stars
+# Background filler stars (dim field) — magnitude threshold keeps clutter down
 n_filler = 200
 filler_ra = np.random.uniform(0, 24, n_filler)
 filler_dec = np.random.uniform(-20, 75, n_filler)
@@ -126,14 +142,12 @@ r = np.cos(dec_rad) / (1.0 + np.sin(dec_rad))
 stars["proj_x"] = r * np.sin(ra_rad)
 stars["proj_y"] = -r * np.cos(ra_rad)
 
-# Invert magnitude for sizing: brighter stars get larger points
+# Invert magnitude for sizing: brighter stars (lower magnitude) get larger points
 mag_min, mag_max = stars["magnitude"].min(), stars["magnitude"].max()
-stars["size"] = ((mag_max - stars["magnitude"]) / (mag_max - mag_min)) * 450 + 20
+stars["size"] = ((mag_max - stars["magnitude"]) / (mag_max - mag_min)) * 600 + 30
 
-# Star color based on magnitude (warm tones for bright, cool for dim)
-stars["star_color"] = np.where(
-    stars["magnitude"] < 1.0, "#FFF8E1", np.where(stars["magnitude"] < 2.5, "#FFFDE7", "#90A4AE")
-)
+named_stars = stars[stars["constellation"] != "field"].copy()
+field_stars = stars[stars["constellation"] == "field"].copy()
 
 # Constellation line edges (pairs of star_id)
 edges_list = [
@@ -233,7 +247,6 @@ for s1, s2 in edges_list:
 edges_df = pd.DataFrame(edge_rows)
 
 # Constellation label positions (centroid of named stars in projected space)
-named_stars = stars[stars["constellation"] != "field"]
 label_df = named_stars.groupby("constellation").agg(proj_x=("proj_x", "mean"), proj_y=("proj_y", "mean")).reset_index()
 constellation_names = {
     "Ori": "Orion",
@@ -255,19 +268,20 @@ constellation_names = {
 label_df["name"] = label_df["constellation"].map(constellation_names)
 
 # Custom label offsets to eliminate overlap in crowded regions
+# (Hercules / Corona Borealis pushed further apart vs. previous attempt)
 label_offsets = {
     "Cas": (0.06, -0.12),
     "Per": (-0.06, 0.10),
     "UMa": (0.16, -0.12),
-    "Lyr": (-0.14, -0.06),
+    "Lyr": (-0.15, -0.07),
     "Cyg": (0.10, 0.06),
-    "Aur": (0.10, -0.06),
+    "Aur": (0.10, 0.05),
     "Aql": (-0.12, 0.08),
-    "Her": (0.12, 0.14),
-    "CrB": (0.10, -0.12),
+    "Her": (0.17, 0.19),
+    "CrB": (0.07, -0.20),
     "Dra": (-0.10, -0.08),
     "Boo": (-0.10, 0.08),
-    "Tau": (0.08, 0.10),
+    "Tau": (0.10, -0.05),
 }
 for abbr, (dx, dy) in label_offsets.items():
     mask = label_df["constellation"] == abbr
@@ -335,16 +349,16 @@ ra_lines_df = pd.DataFrame(ra_lines_data)
 
 # RA labels at the boundary
 ra_label_df = ra_lines_df.copy()
-ra_label_df["lx"] = ra_label_df["x2"] * 1.06
-ra_label_df["ly"] = ra_label_df["y2"] * 1.06
+ra_label_df["lx"] = ra_label_df["x2"] * 1.07
+ra_label_df["ly"] = ra_label_df["y2"] * 1.07
 
-# Magnitude legend data
+# Magnitude legend data (size classes, lower-right inside the plot)
 legend_stars = pd.DataFrame(
     [
-        {"lx": 0.92, "ly": -0.72, "lsize": 430, "label": "mag < 1"},
-        {"lx": 0.92, "ly": -0.80, "lsize": 240, "label": "mag 1-2.5"},
-        {"lx": 0.92, "ly": -0.88, "lsize": 100, "label": "mag 2.5-4"},
-        {"lx": 0.92, "ly": -0.96, "lsize": 30, "label": "mag 4-6"},
+        {"lx": 0.92, "ly": -0.72, "lsize": 620, "label": "mag < 1"},
+        {"lx": 0.92, "ly": -0.80, "lsize": 330, "label": "mag 1-2.5"},
+        {"lx": 0.92, "ly": -0.88, "lsize": 140, "label": "mag 2.5-4"},
+        {"lx": 0.92, "ly": -0.96, "lsize": 45, "label": "mag 4-6"},
     ]
 )
 
@@ -359,112 +373,125 @@ boundary_df = pd.DataFrame(
 # Plot domain
 plot_bound = 1.22
 
+# Shared magnitude→size scale (brighter = larger)
+size_scale = alt.Scale(domain=[stars["size"].min(), stars["size"].max()], range=[12, 700])
+
 # Interactive selection for constellation highlighting
 highlight = alt.selection_point(fields=["constellation"], on="pointerover", empty=False)
 
-# Stars layer with interactive highlight
-star_points = (
-    alt.Chart(stars)
-    .mark_circle()
-    .encode(
-        x=alt.X(
-            "proj_x:Q",
-            axis=alt.Axis(labels=False, ticks=False, domain=False, title=""),
-            scale=alt.Scale(domain=[-plot_bound, plot_bound]),
-        ),
-        y=alt.Y(
-            "proj_y:Q",
-            axis=alt.Axis(labels=False, ticks=False, domain=False, title=""),
-            scale=alt.Scale(domain=[-plot_bound, plot_bound]),
-        ),
-        size=alt.Size("size:Q", legend=None, scale=alt.Scale(range=[8, 500])),
-        color=alt.Color("star_color:N", legend=None, scale=None),
-        opacity=alt.condition(highlight, alt.value(1.0), alt.value(0.85)),
-        tooltip=["star_id:N", "magnitude:Q", "constellation:N", "ra:Q", "dec:Q"],
-    )
-    .add_params(highlight)
+X_AXIS = alt.X(
+    "proj_x:Q",
+    axis=alt.Axis(labels=False, ticks=False, domain=False, title="", grid=False),
+    scale=alt.Scale(domain=[-plot_bound, plot_bound]),
+)
+Y_AXIS = alt.Y(
+    "proj_y:Q",
+    axis=alt.Axis(labels=False, ticks=False, domain=False, title="", grid=False),
+    scale=alt.Scale(domain=[-plot_bound, plot_bound]),
 )
 
-# Constellation lines layer
-lines = (
-    alt.Chart(edges_df)
-    .mark_rule(strokeWidth=1.5, opacity=0.5)
-    .encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q", color=alt.value("#5C9DC8"))
-)
-
-# Summer Triangle highlight lines (dashed golden)
-triangle_lines = (
-    alt.Chart(triangle_edges)
-    .mark_rule(strokeWidth=1.2, strokeDash=[6, 4], opacity=0.6)
-    .encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q", color=alt.value("#FFD54F"))
-)
-
-# Summer Triangle label
-triangle_label = (
-    alt.Chart(st_label_df)
-    .mark_text(fontSize=13, fontStyle="italic", opacity=0.7)
-    .encode(x="proj_x:Q", y="proj_y:Q", text=alt.value("Summer Triangle"), color=alt.value("#FFD54F"))
-)
-
-# Constellation labels layer
-labels = (
-    alt.Chart(label_df)
-    .mark_text(fontSize=15, fontWeight="bold", dy=-22, opacity=0.85)
-    .encode(x="proj_x:Q", y="proj_y:Q", text="name:N", color=alt.value("#80CBC4"))
-)
-
-# Declination grid circles
-dec_grid = (
-    alt.Chart(dec_circles_df)
-    .mark_line(strokeDash=[4, 6], strokeWidth=0.6, opacity=0.18)
-    .encode(x="gx:Q", y="gy:Q", detail="dec_label:N", order="order:Q", color=alt.value("#546E7A"))
+# Boundary circle layer
+boundary = (
+    alt.Chart(boundary_df)
+    .mark_line(strokeWidth=1.2, opacity=0.4)
+    .encode(x="bx:Q", y="by:Q", order="order:Q", color=alt.value(INK_SOFT))
 )
 
 # RA radial grid lines
 ra_grid = (
     alt.Chart(ra_lines_df)
-    .mark_rule(strokeDash=[4, 6], strokeWidth=0.6, opacity=0.18)
-    .encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q", color=alt.value("#546E7A"))
+    .mark_rule(strokeDash=[4, 6], strokeWidth=0.8, opacity=0.28)
+    .encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q", color=alt.value(INK_SOFT))
 )
 
-# RA hour labels around the boundary
+# Declination grid circles
+dec_grid = (
+    alt.Chart(dec_circles_df)
+    .mark_line(strokeDash=[4, 6], strokeWidth=0.8, opacity=0.28)
+    .encode(x="gx:Q", y="gy:Q", detail="dec_label:N", order="order:Q", color=alt.value(INK_SOFT))
+)
+
+# RA hour labels around the boundary (made more prominent per prior review)
 ra_labels = (
     alt.Chart(ra_label_df)
-    .mark_text(fontSize=11, opacity=0.35)
-    .encode(x="lx:Q", y="ly:Q", text="ra_label:N", color=alt.value("#78909C"))
+    .mark_text(fontSize=12, opacity=0.7)
+    .encode(x="lx:Q", y="ly:Q", text="ra_label:N", color=alt.value(INK_SOFT))
 )
 
-# Magnitude legend - star markers
+# Field (filler) stars — muted, recede behind the data
+field_points = (
+    alt.Chart(field_stars)
+    .mark_circle(opacity=0.55)
+    .encode(x=X_AXIS, y=Y_AXIS, size=alt.Size("size:Q", legend=None, scale=size_scale), color=alt.value(INK_MUTED))
+)
+
+# Constellation stick-figure lines (Imprint blue, semi-transparent)
+lines = (
+    alt.Chart(edges_df)
+    .mark_rule(strokeWidth=1.6, opacity=0.5)
+    .encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q", color=alt.value(BLUE))
+)
+
+# Summer Triangle highlight lines (dashed amber — focal anchor)
+triangle_lines = (
+    alt.Chart(triangle_edges)
+    .mark_rule(strokeWidth=2.0, strokeDash=[6, 4], opacity=0.9)
+    .encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q", color=alt.value(AMBER))
+)
+
+# Named constellation stars — brand green, sized by magnitude (brighter = larger).
+# Solid brand keeps the stars clearly distinct from the blue stick-figure lines.
+star_points = (
+    alt.Chart(named_stars)
+    .mark_circle(color=BRAND, stroke=PAGE_BG, strokeWidth=0.6)
+    .encode(
+        x=X_AXIS,
+        y=Y_AXIS,
+        size=alt.Size("size:Q", legend=None, scale=size_scale),
+        opacity=alt.condition(highlight, alt.value(1.0), alt.value(0.95)),
+        tooltip=["star_id:N", "magnitude:Q", "constellation:N", "ra:Q", "dec:Q"],
+    )
+    .add_params(highlight)
+)
+
+# Constellation labels (primary ink, theme-adaptive)
+labels = (
+    alt.Chart(label_df)
+    .mark_text(fontSize=14, fontWeight="bold", dy=-20, opacity=0.95)
+    .encode(x="proj_x:Q", y="proj_y:Q", text="name:N", color=alt.value(INK))
+)
+
+# Summer Triangle label
+triangle_label = (
+    alt.Chart(st_label_df)
+    .mark_text(fontSize=13, fontStyle="italic", fontWeight="bold", opacity=0.95)
+    .encode(x="proj_x:Q", y="proj_y:Q", text=alt.value("Summer Triangle"), color=alt.value(AMBER))
+)
+
+# Magnitude legend - star markers (brand green)
 legend_points = (
     alt.Chart(legend_stars)
-    .mark_circle(opacity=0.9, color="#FFFDE7")
+    .mark_circle(opacity=0.95, color=BRAND)
     .encode(
         x=alt.X("lx:Q", scale=alt.Scale(domain=[-plot_bound, plot_bound])),
         y=alt.Y("ly:Q", scale=alt.Scale(domain=[-plot_bound, plot_bound])),
-        size=alt.Size("lsize:Q", legend=None, scale=alt.Scale(range=[8, 500])),
+        size=alt.Size("lsize:Q", legend=None, scale=size_scale),
     )
 )
 
 # Magnitude legend - text labels
 legend_text = (
     alt.Chart(legend_stars)
-    .mark_text(fontSize=13, align="left", dx=18, opacity=0.7)
-    .encode(x="lx:Q", y="ly:Q", text="label:N", color=alt.value("#B0BEC5"))
+    .mark_text(fontSize=13, align="left", dx=20, opacity=0.85)
+    .encode(x="lx:Q", y="ly:Q", text="label:N", color=alt.value(INK_SOFT))
 )
 
 # Legend title
 legend_title_df = pd.DataFrame([{"lx": 0.92, "ly": -0.62}])
 legend_title = (
     alt.Chart(legend_title_df)
-    .mark_text(fontSize=14, fontWeight="bold", align="left", opacity=0.8)
-    .encode(x="lx:Q", y="ly:Q", text=alt.value("Magnitude"), color=alt.value("#80CBC4"))
-)
-
-# Boundary circle layer
-boundary = (
-    alt.Chart(boundary_df)
-    .mark_line(strokeWidth=1.0, opacity=0.3)
-    .encode(x="bx:Q", y="by:Q", order="order:Q", color=alt.value("#546E7A"))
+    .mark_text(fontSize=14, fontWeight="bold", align="left", opacity=0.95)
+    .encode(x="lx:Q", y="ly:Q", text=alt.value("Magnitude"), color=alt.value(INK))
 )
 
 # Combine all layers
@@ -476,6 +503,7 @@ chart = (
         + ra_labels
         + lines
         + triangle_lines
+        + field_points
         + star_points
         + labels
         + triangle_label
@@ -484,32 +512,39 @@ chart = (
         + legend_title
     )
     .properties(
-        width=1200,
-        height=1200,
+        width=480,
+        height=480,
+        background=PAGE_BG,
         title=alt.Title(
-            text="star-chart-constellation · altair · pyplots.ai",
-            subtitle="Stereographic Projection from North Celestial Pole  ·  Highlighting the Summer Triangle",
-            fontSize=28,
-            subtitleFontSize=17,
+            text="star-chart-constellation · python · altair · anyplot.ai",
+            subtitle="Stereographic projection from the north celestial pole · Summer Triangle highlighted",
+            fontSize=16,
+            subtitleFontSize=12,
             anchor="middle",
-            color="#E0E0E0",
-            subtitleColor="#78909C",
+            color=INK,
+            subtitleColor=INK_SOFT,
             offset=12,
         ),
     )
-    .configure_view(fill="#0A1628", strokeWidth=0)
-    .configure_axis(
-        labelFontSize=16,
-        titleFontSize=20,
-        labelColor="#78909C",
-        titleColor="#90A4AE",
-        gridColor="#1A2A3A",
-        gridOpacity=0.3,
-        domainColor="#37474F",
-    )
-    .configure_title(color="#E0E0E0")
+    .configure_view(fill=PAGE_BG, strokeWidth=0)
+    .configure_axis(grid=False, domainColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
+    .configure_title(color=INK)
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save PNG (square target) + interactive HTML
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+chart.save(f"plot-{THEME}.html")
+
+# Pad-only to the exact square canvas target (no crop — see altair library prompt)
+TW, TH = 2400, 2400
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
