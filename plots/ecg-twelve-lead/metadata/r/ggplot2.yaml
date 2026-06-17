@@ -1,0 +1,239 @@
+library: ggplot2
+language: r
+specification_id: ecg-twelve-lead
+created: '2026-06-17T03:25:16Z'
+updated: '2026-06-17T03:28:51Z'
+generated_by: claude-opus
+workflow_run: 27663459490
+issue: 4554
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
+review:
+  strengths:
+  - Authentic clinical 3x4 lead layout (I/aVR/V1/V4, II/aVL/V2/V5, III/aVF/V3/V6)
+    plus a full-length Lead II rhythm strip at the bottom — exactly the standard hospital
+    format the spec asks for.
+  - coord_fixed(ratio=1) over a manually drawn 1mm/5mm minor/major grid reproduces
+    genuine square ECG-paper boxes — a distinctive, idiomatic ggplot2 technique.
+  - 'Per-lead P-QRS-T morphology is medically realistic: rS pattern in V1-V2, tall
+    R in V4-V6, fully inverted aVR, sensible mV amplitudes at ~72 bpm.'
+  - 1 mV calibration pulses on the left margin of every row and the 25 mm/s / 10 mm/mV
+    scale called out in the subtitle.
+  - 'Perfect theme adaptation — brand-green #009E73 trace identical across both renders,
+    only chrome (page background, grid red, labels) flips; both pass readability.'
+  weaknesses:
+  - ECG traces are thin (linewidth 0.42) and the subtitle (8.5pt) is small; both remain
+    readable at full size but lose some clarity when scaled to ~400px mobile width
+    — could nudge trace linewidth up slightly.
+  - Design polish is high but data storytelling is inherently uniform across the 12
+    leads — no single focal lead is emphasized (acceptable for a faithful clinical
+    replica, not a deduction beyond default headroom).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (~#FAF8F1), correct.
+      Chrome: centered bold dark title "ecg-twelve-lead · r · ggplot2 · anyplot.ai" and grey subtitle ("Synthetic normal sinus rhythm (~72 bpm) · 25 mm/s · 10 mm/mV · 1 mV calibration"), both clearly readable. Lead labels (I, aVR, V1, V4, II, aVL, V2, V5, III, aVF, V3, V6, plus bottom II) are bold dark ink, readable. Classic ECG red/pink grid with subtle minor lines and bolder major lines.
+      Data: green ECG traces (first/only series = #009E73) with realistic P-QRS-T complexes; black calibration step pulses at the left of each row.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (~#1A1A17), correct.
+      Chrome: title and subtitle now light, fully readable. Lead labels rendered in light ink — no dark-on-dark failure. Grid uses a lighter red/pink (#D98C8C) so it stays visible on the dark surface.
+      Data: identical green #009E73 traces — data color unchanged from light render, only chrome flipped. Calibration pulses light.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title/subtitle/lead labels readable in both themes; thin traces +
+          8.5pt subtitle slightly small at 400px
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Lead labels sit in clear space above each trace; no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Green traces clearly visible against subtle grid in both renders
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green trace vs red grid distinguished by structure not just hue;
+          CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); balanced margins, nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: ECG grid + calibration serve as scale; subtitle states units (25mm/s,
+          10mm/mV)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Trace #009E73; backgrounds correct per theme; red grid is spec-mandated
+          ECG-paper semantic color'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Authentic ECG-paper replica with coord_fixed square boxes, calibration
+          pulses, realistic morphology
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void, no spines, alpha-graded grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Standard clinical arrangement aids recognition; no single emphasized
+          focal lead
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Multi-channel 12-lead ECG waveform display
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 3x4 grid, rhythm strip, ECG paper grid, calibration, scale, labels
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: time->x, mV->y; all 12 leads + rhythm strip shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; single series needs no legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 12 leads with distinct lead-specific morphology + rhythm strip
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible normal sinus rhythm, neutral medical context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Normal mV amplitudes, ~72 bpm, proper calibration
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script; only a trivial col_x helper
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all used; tibble namespaced
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-commented, appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png
+    library_features:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: geom_vline/hline grid, geom_path traces, theme_void — idiomatic grammar
+          of graphics
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: coord_fixed(ratio=1) for authentic square ECG boxes; layered manual
+          grid
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - grid-styling
+  - alpha-blending
