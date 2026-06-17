@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" anyplot.ai
 bode-basic: Bode Plot for Frequency Response
-Library: pygal 3.1.0 | Python 3.14.3
-Quality: 88/100 | Updated: 2026-06-17
+Library: pygal 3.1.0 | Python 3.13.14
+Quality: 84/100 | Updated: 2026-06-17
 """
 
 import io
