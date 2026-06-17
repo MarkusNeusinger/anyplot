@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bode-basic: Bode Plot for Frequency Response
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-17
@@ -26,6 +26,7 @@ GM_COLOR = IMPRINT_PALETTE[2]  # blue — gain margin
 PM_COLOR = IMPRINT_PALETTE[3]  # ochre — phase margin
 
 sns.set_theme(
+    context="notebook",
     style="ticks",
     rc={
         "figure.facecolor": PAGE_BG,
@@ -112,14 +113,15 @@ ax_mag.plot(phase_cross_freq, mag_at_phase_cross, "o", color=GM_COLOR, markersiz
 ax_mag.plot(phase_cross_freq, 0, "o", color=GM_COLOR, markersize=7, zorder=5)
 gm_mid_y = (mag_at_phase_cross + 0) / 2
 ax_mag.annotate(
-    f"GM = {gain_margin:.1f} dB",
+    f"GM\n{gain_margin:.1f} dB",
     xy=(phase_cross_freq, gm_mid_y),
     xytext=(phase_cross_freq * 6, gm_mid_y + 14),
     fontsize=9,
     fontweight="bold",
+    multialignment="center",
     color=GM_COLOR,
     arrowprops={"arrowstyle": "->", "color": GM_COLOR, "lw": 1.4},
-    bbox={"boxstyle": "round,pad=0.3", "fc": ELEVATED_BG, "ec": GM_COLOR, "alpha": 0.92},
+    bbox={"boxstyle": "round,pad=0.4", "fc": ELEVATED_BG, "ec": GM_COLOR, "alpha": 0.92, "lw": 1.5},
 )
 
 # Phase margin — markers and annotation in the phase panel
@@ -128,14 +130,15 @@ ax_phase.plot(gain_cross_freq, phase_at_gain_cross, "o", color=PM_COLOR, markers
 ax_phase.plot(gain_cross_freq, -180, "o", color=PM_COLOR, markersize=7, zorder=5)
 pm_mid_y = (phase_at_gain_cross + (-180)) / 2
 ax_phase.annotate(
-    f"PM = {phase_margin:.1f}°",
+    f"PM\n{phase_margin:.1f}°",
     xy=(gain_cross_freq, pm_mid_y),
     xytext=(gain_cross_freq * 5, pm_mid_y + 20),
     fontsize=9,
     fontweight="bold",
+    multialignment="center",
     color=PM_COLOR,
     arrowprops={"arrowstyle": "->", "color": PM_COLOR, "lw": 1.4},
-    bbox={"boxstyle": "round,pad=0.3", "fc": ELEVATED_BG, "ec": PM_COLOR, "alpha": 0.92},
+    bbox={"boxstyle": "round,pad=0.4", "fc": ELEVATED_BG, "ec": PM_COLOR, "alpha": 0.92, "lw": 1.5},
 )
 
 # Title — length check for fontsize scaling (baseline 67 chars)
@@ -151,9 +154,9 @@ ax_phase.set_ylabel("Phase (°)", fontsize=10, color=INK)
 ax_phase.tick_params(axis="both", labelsize=8)
 ax_phase.set_yticks([-90, -135, -180, -225, -270])
 
-# Spine removal
-sns.despine(ax=ax_mag)
-sns.despine(ax=ax_phase)
+# Spine removal — offset=8 adds the characteristic seaborn axis-spine gap
+sns.despine(ax=ax_mag, offset=8)
+sns.despine(ax=ax_phase, offset=8)
 for ax in [ax_mag, ax_phase]:
     for spine in ax.spines.values():
         spine.set_color(INK_SOFT)
